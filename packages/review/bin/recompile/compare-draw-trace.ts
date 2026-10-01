@@ -7,7 +7,7 @@
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
-import { drawTrace } from '../../../source/recompile/model-draw-trace.mjs';
+import { drawTrace } from '../../../source/recompile/model-draw-trace.ts';
 import { AI_DIALS } from '@sixam/source/fnaf2';
 
 const hash = (value) => createHash('sha256').update(value).digest('hex');
@@ -138,7 +138,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   }
   result.provenance = {
     toolSha256: fileHash(new URL(import.meta.url)),
-    modelTraceToolSha256: fileHash(new URL('../../../source/recompile/model-draw-trace.mjs', import.meta.url)),
+    modelTraceToolSha256: fileHash(new URL('../../../source/recompile/model-draw-trace.ts', import.meta.url)),
     patchSha256: fileHash(new URL('../../../source/recompile/mmfparser-chowdren-mobile.patch', import.meta.url)),
     configSha256: fileHash(new URL('../../../source/recompile/fnaf2-config.py', import.meta.url)),
     ...Object.fromEntries(['binary', 'input', 'save'].filter((key) => args[key]).map((key) => [`${key}Sha256`, fileHash(args[key])])),

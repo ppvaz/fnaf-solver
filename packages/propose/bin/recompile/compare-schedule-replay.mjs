@@ -39,7 +39,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { compareTrace } from '../../../review/bin/recompile/compare-draw-trace.ts';
-import { MODEL_SOURCES, simOptionsFrom } from '../../../source/recompile/model-draw-trace.mjs';
+import { MODEL_SOURCES, simOptionsFrom } from '../../../source/recompile/model-draw-trace.ts';
 import { DEFAULT_PROFILE, controlPoints, harnessInput, winnerSchedule, modelContacts } from './schedule-to-input.mjs';
 import { withModelOptions } from './rebuild-options-census.mjs';
 
@@ -361,7 +361,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     toolSha256: fileHash(new URL(import.meta.url)),
     compareToolSha256: fileHash(new URL('../../../review/bin/recompile/compare-draw-trace.ts', import.meta.url)),
     scheduleToolSha256: fileHash(new URL('./schedule-to-input.mjs', import.meta.url)),
-    modelTraceToolSha256: fileHash(new URL('../../../source/recompile/model-draw-trace.mjs', import.meta.url)),
+    modelTraceToolSha256: fileHash(new URL('../../../source/recompile/model-draw-trace.ts', import.meta.url)),
     modelSourceSha256: Object.fromEntries(MODEL_SOURCES.map((path) => [rel(path), fileHash(path)])),
     patchSha256: fileHash(new URL('../../../source/recompile/mmfparser-chowdren-mobile.patch', import.meta.url)),
     configSha256: fileHash(new URL('../../../source/recompile/fnaf2-config.py', import.meta.url)),

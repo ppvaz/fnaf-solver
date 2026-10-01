@@ -20,7 +20,7 @@ directory (`/private/tmp/fnaf2-recompile.*` on the dev machine).
 | `fnaf2-config.py` | Chowdren `--config`: `get_missing_image` for placeholder image handle `(0,0)`, and an `init()` hook that synthesizes `game.extensions` entries from the frame items (`Layer` → native writer; `Multiple Touch` / `Android object` / `AndroidPlus` / `iOS Plus Object` → generic `ObjectWriter` stub). |
 | `probe-unknown-params.py` | Dumps every event parameter whose code is past `parameterLoaders`, with the ACE it attaches to and its raw bytes. Requires the `Parameter.read` capture patch. |
 | `probe-onloop.py` | Prints every `OnLoop` condition and its parameter loader — the probe that showed mobile loops are numeric `Short` indices, not name expressions. |
-| `model-draw-trace.mjs` | The simulator's `Random(N)` draws frame by frame (draws so far, LCG state), in the shape the harness traces: two runs of one night and seed that spend the same draws every frame read the same stream, and the first frame where the counts part is where to look. Refuses a `@sixam/core` resolved outside its own checkout (a worktree without `npm ci` loads the parent's model). MODEL_ONLY. |
+| `model-draw-trace.ts` | The simulator's `Random(N)` draws frame by frame (draws so far, LCG state), in the shape the harness traces: two runs of one night and seed that spend the same draws every frame read the same stream, and the first frame where the counts part is where to look. Refuses a `@sixam/core` resolved outside its own checkout (a worktree without `npm ci` loads the parent's model). MODEL_ONLY. |
 | `sourced-model-options.json` | Explicit diagnostic variant enabling the model's existing sourced flags. It does not change core defaults or establish fidelity. |
 | `sourced-rebuild-model-options.json` | The origin set plus `sourcedFootstepDraws`, `footstepCamMarkers`, `sourcedBoxCountdown`, `sourcedPuppetMoveOrder`, `sourcedHourTable`, and for Custom Night `sourcedParkedMarker`, `sourcedCustomDialOrder` and `sourcedCam8Cancel`: the options under which the model matches the rebuilt no-input Nights 1-6 and the uniform Custom Nights up to each night's terminal loop. Since the replay splits (2026-09-27, late) it also carries `sourcedPromotedMoves`, `sourcedValue5` (in place of `frameValue5` 1), `sourcedOfficeFootsteps`, `sourcedBlackoutClockEnd`, `sourcedBDrainOrder`, `sourcedRoutePass`, `sourcedOfficeRolls`, `sourcedAnimationCount`, `sourcedGatedEvery`, `sourcedBBMoves`, `sourcedExposureValue5` and `sourcedRouteViewDraws`, under which the Night 1, 5 and 7 winner replays match the rebuild to their last or terminal update. Diagnostic; defaults unchanged. |
 | `sourced-rebuild-model-options-20260927a.json` | The rebuild set as it stood before the Nights 6-7 options (`sourcedParkedMarker`, `sourcedCustomDialOrder`, `sourcedCam8Cancel`), byte for byte: the file `rebuild-options-census-20260927` scored (`packages/propose/bin/recompile/rebuild-options-census.mjs --options`). A snapshot, never edited; a census of the current set is a new record. |
@@ -31,7 +31,7 @@ directory (`/private/tmp/fnaf2-recompile.*` on the dev machine).
 | `fixtures/night{2,3,4,5}-before.ini`, `fixtures/continue.input` | Saves holding only `level=N` (Continue loads `max(1, min(5, level))`) and the Continue tap, through its 16 x 16 touch zone at [64,528,80,544]. No game assets. |
 | `fixtures/night6-before.ini`, `fixtures/night6.input` | A save with `beatgame=1` (the title's g1 shows 6th Night from it) and the tap on 6th Night's centre (its touch zone is [64,584,464,648] on the frozen binary). |
 | `fixtures/night7-before.ini`, `fixtures/night7-{dials0,dials20,preset}.{input,json}`, `fixtures/night7-{dials0,dials20}-5x2.input` | A save with `beatgame=1` and `beat6=1` (Custom Night's g26/g50 gates), the title tap, portrait taps on the customize frame and Ready; each `.json` is the dial vector for `--custom-night`. The `-5x2` inputs tap the same dials on the corrected 5 x 2 grid (binaries from `4151d2a` on); the originals tap the frozen binary's stair-stepped grid. |
-| `sourced-origin-model-options.json` | The same sourced flags plus the frame-time hook at 60 fps (`frameMs` 50/3, `frameValue5` 1) and `sourcedEveryOrigin`: every countdown loads on the loop it is first reached. `model-draw-trace.mjs` turns the two hook constants into per-frame functions. Diagnostic; defaults unchanged. |
+| `sourced-origin-model-options.json` | The same sourced flags plus the frame-time hook at 60 fps (`frameMs` 50/3, `frameValue5` 1) and `sourcedEveryOrigin`: every countdown loads on the loop it is first reached. `model-draw-trace.ts` turns the two hook constants into per-frame functions. Diagnostic; defaults unchanged. |
 | `make-android-fonts.py` | Writes Chowdren's font bank from Roboto TTFs held outside the repository at the font bank's pixel sizes (13-43, bold 43): the face Android substitutes for the game's Consolas and Tahoma, drawn at `|lfHeight|` px. Output `Chowdren/fonts/AndroidSans.dat`, next to the converter; no font data is committed. |
 | `native-frame.py` | Scales harness snaps (1024 x 768) to the phone's 2400 x 1080 MediaProjection frame as Display Mode FULL does, with bilinear filtering as the phone's frames show, and prints per-rectangle distances to a phone frame. Frames stay outside the repository. |
 | `sprite-override.py`, `sprite-override.patch` | Host tool, no gate. The patch (on `Chowdren/base/image.cpp`, independent of the mobile patch) adds `CHOWDREN_IMAGE_OVERRIDE=<id>=<png>[,<id>=<png>...]`: when image `<id>` loads from `Assets.dat` its pixels come from the PNG, scale-fitted into the image's own width and height (aspect kept, premultiplied bilinear) and anchored bottom-centre; hotspot and action point stay the asset's, and a PNG of exactly that size is copied as it is. The script writes such a PNG: `CUTOUT --out PNG (--size WxH \| --assets FILE --target ID) [--base PNG \| --base-image ID] [--box X,Y,W,H \| --box diff] [--fit contain\|height] [--gain G\|R,G,B] [--image-count N]` trims an RGBA cutout, fits it into the box at its bottom centre, and composites it over a base image when one is named (`--box diff` is where the target differs from the base). Cutouts, output PNGs and anything read from `Assets.dat` stay outside the repository. |
@@ -380,7 +380,7 @@ seventh. The model's frame-origin rule (`32e3cf6`) counted its countdowns as
 loaded on a frame 0 it never plays, one loop early; it was chosen to match the
 model's own `f % N` timers, not measured. `sourcedEveryOrigin` (default off,
 requires the frame-time hook) loads a frame-1 reach on frame 1
-(`packages/core/test/every-origin.test.js`). On the retained child-timer
+(`packages/core/test/every-origin.test.ts`). On the retained child-timer
 binary (`3d680796`) it moves the first divergence from office tick 5 to tick
 11100 (`night1-flagfallback-origin-20260927.json`, `recompile-draw-f1cd6c2a6a970199`).
 
@@ -417,7 +417,7 @@ equivalence claim; MODEL_ONLY with `rebuilt-runtime` fidelity throughout.
 
 **The whole office visit (later still).** Three more one-loop and geometry
 differences, each read from the source before it was encoded, each a
-default-off option (`packages/core/test/rebuild-order.test.js`):
+default-off option (`packages/core/test/rebuild-order.test.ts`):
 
 - `footstepCamMarkers`: the CCN puts CAM 01-04 under `hear footsteps` -- its
   264 x 151 image is opaque at every pixel, every character is an opaque
@@ -606,7 +606,7 @@ centre; the inputs tap at measured points outside every other zone. Harness
 dumps just before Ready read all ten dials at 0 and at 20.
 
 **Three mechanisms**, each read from the dump and the CCN before encoding. Each
-is a default-off option, tested in `packages/core/test/rebuild-order.test.js`.
+is a default-off option, tested in `packages/core/test/rebuild-order.test.ts`.
 With all three on, Nights 1-6 give byte-identical model traces.
 
 - `sourcedParkedMarker` (first divergence at 0 dials: tick 1212, a g498
@@ -615,7 +615,7 @@ With all three on, Nights 1-6 give byte-identical model traces.
   `night number` into `night`. `night` is frame-local (no global flag in the
   CCN) with initial value 0, so g486 parks `your view` on CAM 09 every night.
   The rebuild's dump puts it inside CAM 09's box on Custom Night. The model's
-  `parkedCamera(7) = 10` (and `packages/source/test/sourcetest.mjs`'s g486-487 check) did not
+  `parkedCamera(7) = 10` (and `packages/source/test/sourcetest.ts`'s g486-487 check) did not
   account for g632's order. It matters before the first raise (g4 still opens
   CAM 07): the g498 draws and the flash target.
 - `sourcedCustomDialOrder` (at 20: tick 60, g781's first Golden Freddy hall
@@ -858,7 +858,7 @@ Open:
 - A counter watch in the harness, so a record can carry the rebuild's attacker.
 
 **The Toy view draws, sourced (2026-09-27, later).** `sourcedPromotedViewDraws`
-(default off; `packages/core/test/promoted-view-draws.test.js`) keys g366/g368/g419
+(default off; `packages/core/test/promoted-view-draws.test.ts`) keys g366/g368/g419
 on the promoted state, value 0 == 2. It uses the existing g344-g358 promotion
 test, independent of the footstep option, and writes the fade counter
 (g344-g360, C = 10) at promotion, not at the roll. A move made without a
@@ -904,7 +904,7 @@ clears it and g489 re-sets it while lit, both after the moves g380-g383. So a
 move on the boundary loop still sees 1. The model's hooked clock cleared its
 latch at the top of the tick, before the rolls and moves.
 
-`sourcedHallLatchOrder` (default off, `hall-latch-order.test.js`) defers the
+`sourcedHallLatchOrder` (default off, `hall-latch-order.test.ts`) defers the
 reset, and the re-assert while a light is held, to just after the moves. It is
 in the rebuild set now; the no-input ladder is unchanged.
 `*-replay-latch-20260927.json`:
@@ -933,7 +933,7 @@ Counter and object watches):
 
   The sheet rolls everyone (g333-g343) before any promotion (g344-g358) or move
   (g380 on). `sourcedRollsBeforeMoves` (default off,
-  `rolls-before-moves.test.js`) runs the promotions and moves after g343.
+  `rolls-before-moves.test.ts`) runs the promotions and moves after g343.
 
 Both are in the rebuild set, and every no-input night is unchanged
 (`*-replay-rolls-20260927.json`):
@@ -1025,7 +1025,7 @@ model's `blackout.active`) and flags the refused contact. v1 is not modelled.
 For a one-shot tap, g618 and g619 read it as 0. The Sim queue carries no release
 for a tap, so the model reads a touch only on its press update. The sheet
 re-reads a finger that is still down. Contract:
-`packages/core/test/drop-flag-order.test.js` (`test:contracts`), including
+`packages/core/test/drop-flag-order.test.ts` (`test:contracts`), including
 "off leaves the default unchanged".
 
 The ledger offsets, derived from the dump for a touch read on update F. A
@@ -1060,7 +1060,7 @@ The three replays, re-run over the same retained traces (`agent-schedule/`
 runs; trace hashes equal to the first records'). They use the recipe above with
 `--model-options packages/source/recompile/sourced-rebuild-dropflag-model-options.json`.
 A record now also names the model files it measured (`modelSourceSha256`).
-`model-draw-trace.mjs` refuses a `@sixam/core` that resolves outside its
+`model-draw-trace.ts` refuses a `@sixam/core` that resolves outside its
 own checkout: a worktree without `npm ci` loads the parent checkout's model, and
 the first Night 1 run here measured the parent's unchanged model without saying
 so.
@@ -1189,7 +1189,7 @@ below still score the retained traces and read the watched Counters through
 `--counter-trace`.
 
 **Promotion gates the move (`sourcedPromotedMoves`,
-`packages/core/test/promoted-moves.test.js`).** Night 7 k3, tick 1800: the model
+`packages/core/test/promoted-moves.test.ts`).** Night 7 k3, tick 1800: the model
 moved Mangle CAM 02 -> CAM 01 (g397) on her roll loop and drew her g703 footstep
 there, and the rebuild did both a loop later. The watch (`new foxy` values 0-2,
 Counters `decide path`, `viewing`, `viewing hall light`) shows value 0 = 1 at
@@ -1212,7 +1212,7 @@ The option is in `sourced-rebuild-model-options.json`. The dated snapshots are
 unchanged. Scope: one seed, three bindings, host rebuild only, MODEL_ONLY with
 `rebuilt-runtime` fidelity. No phone claim, no promotion, no default changed.
 
-**Global value 5 from the timer (`sourcedValue5`, `packages/core/test/value5.test.js`).**
+**Global value 5 from the timer (`sourcedValue5`, `packages/core/test/value5.test.ts`).**
 Night 7 tick 2044 and Night 5 tick 7460: the blackout flicker's first g517 draw
 came one update earlier in the rebuild. A watch of `blackout` values 0-1 and the
 `in danger` Counter shows the encounter start at 2025 (clock 1 at its end), and
@@ -1243,7 +1243,7 @@ status, compared updates and first mismatch on all nine nights.
 | Night 7 `k3` | 2044 -> **2100** | `night7-k3-replay-value5-20260927.json`, `recompile-replay-1a13eb91f66cea4e` |
 
 **Footsteps at the office opening (`sourcedOfficeFootsteps`,
-`packages/core/test/office-footsteps.test.js`).** Night 7 tick 2100: one more
+`packages/core/test/office-footsteps.test.ts`).** Night 7 tick 2100: one more
 draw in the rebuild on a roll loop. The watched blackout flicker's `Random(50)`
 and `decide path` place it: the flicker took the same LCG draw on both sides,
 and `decide path` (g744) took the draw after the model's. So the extra draw sits
@@ -1271,7 +1271,7 @@ persistent split, and only two runs that rejoin, 21714 and 23400.
 | Night 7 `k3` | 2100 -> **2324** | `night7-k3-replay-officefootsteps-20260927.json`, `recompile-replay-ad22e514332da620` |
 
 **The encounter ends on the clock (`sourcedBlackoutClockEnd`,
-`packages/core/test/blackout-clock-end.test.js`).** Night 5 tick 7740: the
+`packages/core/test/blackout-clock-end.test.ts`).** Night 5 tick 7740: the
 rebuild drew the g539 `Random(500)/night` repel one update before the model, and
 every Night 7 encounter ended the same way (tick 2324, a one-update slip). The
 watched clock reads 300 at the end of 2324, with `in danger` back to 0 on that
@@ -1290,7 +1290,7 @@ The no-input ladder re-scores unchanged.
 | Night 7 `k3` | 2324 -> **3562** | `night7-k3-replay-blackoutend-20260927.json`, `recompile-replay-e9390ac2828cd9ac` |
 
 **Value 1 is read before it drains (`sourcedBDrainOrder`,
-`packages/core/test/b-drain-order.test.js`).** Night 1 tick 21714: the model
+`packages/core/test/b-drain-order.test.ts`).** Night 1 tick 21714: the model
 promoted Toy Bonnie, moved him to CAM 03 and drew his footstep a loop before
 the rebuild. The watch (`new bonnie` values 0-2) shows value 1 at 400 through
 the camera flash's last loop (21314), 0.999979 at the end of 21713, 0 at the end
@@ -1319,7 +1319,7 @@ earlier match holds. The no-input ladder re-scores unchanged.
 | Night 7 `k3` | 3562 -> **3563** | `night7-k3-replay-bdrain-20260927.json`, `recompile-replay-e875497e32c149d6` |
 
 **Promotions, then moves (`sourcedRoutePass`,
-`packages/core/test/route-pass.test.js`).** Night 1 tick 23400: the model moved
+`packages/core/test/route-pass.test.ts`).** Night 1 tick 23400: the model moved
 Toy Chica into the hall a hop ahead of the rebuild. The watch (`new chica`
 values 0-2) shows her accepted roll discarded at 21715 (value 0 back to 0).
 That is g356, which reads Toy Bonnie still on CAM 09 on the loop he moves off
@@ -1345,7 +1345,7 @@ no-input ladder re-scores unchanged.
 | Night 7 `k3` | 3563 -> 3563 | `night7-k3-replay-routepass-20260927.json`, `recompile-replay-698e031d9d9abd4c` |
 
 **The rolls at the office opening, as the sheet keeps them (`sourcedOfficeRolls`,
-`packages/core/test/office-rolls.test.js`).** Night 5 tick 9301: one more
+`packages/core/test/office-rolls.test.ts`).** Night 5 tick 9301: one more
 rebuild draw a loop after a roll. Instance dumps before and after update 9301
 show Mangle on `in office` go from value 0 = 1 to 2 with value 2 = 9. Her roll
 passed on 9300, a one-second loop on which g358 still read the hall latch set.
@@ -1370,7 +1370,7 @@ Balloon Boy roll at 122 draws g702, and so does his arrival there within value
 | Night 7 `k3` | 3563 -> 3563 | `night7-k3-replay-officerolls-20260927.json`, `recompile-replay-6851a5ade5a612a7` |
 
 **The animation count (`sourcedAnimationCount`,
-`packages/core/test/animation-count.test.js`).** Night 7 tick 3563: W. Freddy
+`packages/core/test/animation-count.test.ts`).** Night 7 tick 3563: W. Freddy
 was promoted a loop early. The watch shows g378's return, and its value 1 =
 1500, on 2063 in the rebuild, where the model returned him on 2062. g378 needs
 `mask` == 2. The model's mask reached fully on one update before the sheet's g9,
@@ -1394,7 +1394,7 @@ unchanged.
 | Night 7 `k3` | 3563 -> **6534** | `night7-k3-replay-animcount-20260927.json`, `recompile-replay-cd7291a573920040` |
 
 **The gated one-second countdowns join the set (`sourcedGatedEvery`, existing,
-`gated-every.test.js`).** Night 7 tick 6534 and Night 5 tick 11936: a mask-tick
+`gated-every.test.ts`).** Night 7 tick 6534 and Night 5 tick 11936: a mask-tick
 sendback came five or six loops earlier in the rebuild. On Night 7 it was
 Balloon Boy's g294, the draw at 6534 and his leave in the `balloon boy` watch.
 On Night 5 it was Mangle's g401. g907 is `mask` == 2 then `Every 1000`, and
@@ -1411,7 +1411,7 @@ unchanged. The no-input ladder re-scores unchanged.
 | Night 7 `k3` | 6534 -> **6600** | `night7-k3-replay-gatedevery-20260927.json`, `recompile-replay-860bf7e1c7e8fe74` |
 
 **Balloon Boy's hops in the move pass (`sourcedBBMoves`,
-`packages/core/test/bb-moves.test.js`).** Night 7 tick 6600: on a roll loop
+`packages/core/test/bb-moves.test.ts`).** Night 7 tick 6600: on a roll loop
 where Balloon Boy hopped CAM 07 -> CAM 03, the rebuild drew once more. Instance
 dumps before and after 6600 show the hop (value 2 = 9 on CAM 03) and the three
 Withereds promoted on the same loop. g342 rolls him with the others and g359
@@ -1432,7 +1432,7 @@ no-input ladder re-scores unchanged.
 | Night 7 `k3` | 6600 -> **20449** | `night7-k3-replay-bbmoves-20260927.json`, `recompile-replay-f81579a9b8242381` |
 
 **Foxy's and Golden Freddy's exposure add value 5 (`sourcedExposureValue5`,
-`packages/core/test/exposure-value5.test.js`).** Night 7 tick 20449: Withered
+`packages/core/test/exposure-value5.test.ts`).** Night 7 tick 20449: Withered
 Foxy's g846 retreat, and its `500 + Random(500)` draw, came a loop earlier in
 the rebuild. Instance dumps before and after 20449 show his value 9 at 700 and
 value 1 at 0.999997, then value 1 = 817 on CAM 08. The `old foxy` watch shows
@@ -1455,7 +1455,7 @@ stream match, not an event or state equivalence.
 | Night 7 `k3` | 20449 -> **none** (25,201 of 25,201 updates) | `night7-k3-replay-exposure-20260927.json`, `recompile-replay-53fe6fd991029473` |
 
 **The Toy view draws inside the move pass (`sourcedRouteViewDraws`,
-`packages/core/test/route-view-draws.test.js`).** Night 5 tick 22241: one more
+`packages/core/test/route-view-draws.test.ts`).** Night 5 tick 22241: one more
 rebuild draw on the loop Toy Bonnie was promoted and moved off CAM 09. Instance
 dumps before and after 22241 show him leave CAM 09 for CAM 03 while `your view`,
 on CAM 09, takes value 1 = 134: g366's `50 + Random(100)`. g366 and g368 sit

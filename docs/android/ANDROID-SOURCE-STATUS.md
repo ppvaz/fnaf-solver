@@ -6,7 +6,7 @@ August 2025. Community PC mechanics and strategies are useful leads, but a rule
 enters the Android simulator only when the Android event sheet, an Android
 experiment, or an explicitly labeled approximation supports it.
 
-## The ledger is enforced by `packages/source/test/sourcetest.mjs` (2026-08-20)
+## The ledger is enforced by `packages/source/test/sourcetest.ts` (2026-08-20)
 
 A rule entering this ledger used to be an assertion about the engine that
 nothing checked. The engine's other checks are population statistics —
@@ -1086,7 +1086,7 @@ is a grading-model correction, not a new simulated rule.
 | Mechanic | Evidence / implementation status |
 | --- | --- |
 | Night clock and movement cadence | Global 1000 ms ticker, 70 ticks/hour, movement opportunity every 5000 ms |
-| Movement RNG and the AI table | `Random(20)+1 <= AI`, with the Puppet's bare `<=` variant (g494-497). The per-night/per-hour levels are implemented 2026-08-23 from g673-684 (table), g787 (Custom Night dials), g804 (Golden Freddy below night 6), g815-821 (Puppet) and the caps g829/g830/g856-863. Rebuild the table from the dump with `packages/source/decompile/aimap.py`. **Generator sourced 2026-08-25 from the APK runtime:** `RunLoop/CRun.random` advances `graine = (graine * 31415 + 1) & 0xffff` and returns `(graine * N) >>> 16`; absent a frame seed chunk, `CRun` seeds it from the low 16 bits of `System.currentTimeMillis()`. `src/rng.js` is the bit-exact port and `sourcetest.mjs` pins its vectors, scaling, seed truncation, and four disjoint 16,384-state cycles. |
+| Movement RNG and the AI table | `Random(20)+1 <= AI`, with the Puppet's bare `<=` variant (g494-497). The per-night/per-hour levels are implemented 2026-08-23 from g673-684 (table), g787 (Custom Night dials), g804 (Golden Freddy below night 6), g815-821 (Puppet) and the caps g829/g830/g856-863. Rebuild the table from the dump with `packages/source/decompile/aimap.py`. **Generator sourced 2026-08-25 from the APK runtime:** `RunLoop/CRun.random` advances `graine = (graine * 31415 + 1) & 0xffff` and returns `(graine * N) >>> 16`; absent a frame seed chunk, `CRun` seeds it from the low 16 bits of `System.currentTimeMillis()`. `src/rng.js` is the bit-exact port and `sourcetest.ts` pins its vectors, scaling, seed truncation, and four disjoint 16,384-state cycles. |
 | Main route graph | Re-extracted 2026-08-20 from the true-name dump, including the off-camera `hall stage 1`/`hall stage 2` transit markers (120/121) |
 | Per-edge monitor gates | Final approaches use cams-up conditions; Toy Bonnie's polarity is inverted (monitor DOWN + `right light`); Toy Chica's final hop is unconditioned |
 | Office-light movement latch | Physical light state is immediate; the `viewing hall light` latch persists to the next one-second event and guards only specific route edges (W. Chica and Toy Bonnie exempt) |

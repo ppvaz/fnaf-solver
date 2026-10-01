@@ -792,9 +792,9 @@ export class Sim {
   }
 
   // A unit's move. It was named `advance`, which PlantModel's port clock (plant.js) shadowed, so every
-  // PlantModel night threw at its first move (packages/source/test/plant-facade.test.js).
+  // PlantModel night threw at its first move (packages/source/test/plant-facade.test.ts).
   advanceUnit(u) { return units.advance.call(this, u); }
-  // The old name, for callers outside the Sim (simtest.mjs moves a unit by hand); a PlantModel shadows it.
+  // The old name, for callers outside the Sim (simtest.ts moves a unit by hand); a PlantModel shadows it.
   advance(u) { return units.advance.call(this, u); }
 }
 

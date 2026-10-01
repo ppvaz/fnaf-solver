@@ -14,7 +14,7 @@
 // So this file asserts the mechanisms directly, one case per group citation,
 // against a hand-driven Sim. A failure here names the group that broke.
 //
-//   node packages/source/test/sourcetest.mjs
+//   node packages/source/test/sourcetest.ts
 import { pathToFileURL } from 'node:url';
 import * as C from '@sixam/source/fnaf2';
 import { Sim } from '@sixam/source/fnaf2';
@@ -586,7 +586,7 @@ eq('g494-497', "the Puppet's bare <= roll is 16/20 at AI 15",
   // 10/20 is the same table with the dials copied in, so the levels the rest
   // of this file asserts have to fall out of it.
   const s = bare({ night: 7 });
-  eq('g787', 'every 10/20 dial is 20', C.AI_BY_NIGHT[7][0].set.bb, C.AI_10_20);
+  eq('g787', 'every 10/20 dial is 20', (C.AI_BY_NIGHT[7][0].set as any).bb, C.AI_10_20);
   eq('g856-863', '...held at 15 for the seven', s.ai.toychica, C.STALLED_AI);
   eq('g829', '...at 17 for Foxy', s.ai.foxy, C.FOXY_AI);
   eq('g830', '...and at 10 for Golden Freddy',

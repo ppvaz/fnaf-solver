@@ -18,7 +18,7 @@
 // Structural checks cover the rest: every row cites the group it came from,
 // and no clock is missing its source.
 //
-//   node packages/source/test/test-night-models.mjs
+//   node packages/source/test/test-night-models.ts
 
 import {
   GAMES, GAME_IDS, PACKAGES, scheduleFor, peakFor, canActIn, nightsOf,
@@ -219,9 +219,9 @@ for (const game of GAME_IDS) {
       row.night && typeof row.night.op === 'string');
   }
   for (const [id, roll] of Object.entries(model.rolls)) {
-    ok(`${game}.${id} roll cites a group`, Number.isInteger(roll.group));
-    ok(`${game}.${id} roll has a period`, roll.everyMs > 0);
-    ok(`${game}.${id} roll has a bound`, roll.bound > 0);
+    ok(`${game}.${id} roll cites a group`, Number.isInteger((roll as any).group));
+    ok(`${game}.${id} roll has a period`, (roll as any).everyMs > 0);
+    ok(`${game}.${id} roll has a bound`, (roll as any).bound > 0);
   }
 }
 
@@ -273,7 +273,7 @@ for (const game of GAME_IDS) {
   ok('the left door can be closed and flashed',
     follow.actions.leftDoor.close && follow.actions.leftDoor.flashlight);
   ok('the closet can be closed but not flashed',
-    follow.actions.closet.close && !follow.actions.closet.flashlight);
+    follow.actions.closet.close && !(follow.actions.closet as any).flashlight);
   eq('the bed has no station action', Object.keys(follow.actions.bed).length, 0);
   // The doors are reached by different hitzones and are never co-located.
   ok('the two doors are separate stations',

@@ -54,7 +54,7 @@ const sha256 = data => createHash('sha256').update(data).digest('hex');
 const expand = path => (typeof path === 'string' && path ? (path.startsWith('~/') ? join(homedir(), path.slice(2)) : path) : null);
 const isInt = (value, min, max) => Number.isInteger(value) && value >= min && value <= max;
 const tally = (items, key) => items.reduce((counts, item) => { for (const value of key(item)) counts[value] = (counts[value] ?? 0) + 1; return counts; },
-  /** @type {Record<string, number>} */ ({}));
+  ({} as Record<string, number>));
 
 /** Is `path` the directory `root` or inside it, after resolving links? */
 function inside(root, path) {
@@ -91,9 +91,8 @@ function readAt(fd, position, length) {
 /**
  * The application CCN inside an APK: found by the zip central directory, copied out stored or
  * inflated, never by a shell. Returns null when the APK holds none.
- * @param {string} apk @param {string} out
  */
-export function extractCcn(apk, out) {
+export function extractCcn(apk: string, out: string) {
   const fd = openSync(apk, 'r');
   try {
     const size = fstatSync(fd).size;
@@ -149,9 +148,8 @@ function fileKind(path) {
 
 /**
  * The truth surface over the caller's own local dumps.
- * @param {{root: string, env?: Record<string, string | undefined>}} options
  */
-export function createTruth({ root, env = process.env }) {
+export function createTruth({ root, env = process.env }: {root: string, env?: Record<string, string | undefined>}) {
   const vaultPath = env[VAULT_ENV] ? resolve(expand(env[VAULT_ENV])) : join(root, VAULT_FILE);
   const loaded = new Map();
 
@@ -181,8 +179,8 @@ export function createTruth({ root, env = process.env }) {
     return path ? resolve(dirname(vaultPath), path) : null;
   };
 
-  /** Whether a dump is configured for this game here: what describe reads. @param {string} name */
-  function status(name) {
+  /** Whether a dump is configured for this game here: what describe reads. */
+  function status(name: string) {
     const game = gameOf(name);
     if (!game) return { configured: false, reason: `${JSON.stringify(name)} is not a registered game` };
     const { config, error } = readVault();
@@ -236,8 +234,7 @@ export function createTruth({ root, env = process.env }) {
 
   // --- events ------------------------------------------------------------------------------------
 
-  /** @param {{game?: string, query?: Record<string, any>}} args */
-  function events({ game: name, query } = {}) {
+  function events({ game: name, query }: {game?: string, query?: Record<string, any>} = {}) {
     const game = gameOf(name);
     if (!game) return gameRefusal(name);
     if (query === null || typeof query !== 'object' || Array.isArray(query))
@@ -283,9 +280,9 @@ export function createTruth({ root, env = process.env }) {
     }
     const target = global !== undefined ? { kind: 'global', slot: global }
       : group !== undefined ? { kind: 'group' }
-        : value !== undefined ? { kind: 'value', handles: new Set(handles), slot: value }
-          : flag !== undefined ? { kind: 'flag', handles: new Set(handles), index: flag }
-            : { kind: 'object', handles: new Set(handles) };
+        : value !== undefined ? { kind: 'value', handles: new Set<number>(handles), slot: value }
+          : flag !== undefined ? { kind: 'flag', handles: new Set<number>(handles), index: flag }
+            : { kind: 'object', handles: new Set<number>(handles) };
     const matches = findEvents(dump, k, target, { access, frame: frame ?? null, group: group ?? null, alias: game.alias });
     if (target.kind === 'group' && !matches.length)
       return badArgument(`the ${game.alias} dump has no group g${group} in frame ${frame}`, 'truth events over an object lists the groups that exist');
@@ -318,8 +315,7 @@ export function createTruth({ root, env = process.env }) {
 
   // --- object ------------------------------------------------------------------------------------
 
-  /** @param {{game?: string, name?: string, handle?: number}} args */
-  function object({ game: name, name: objectName, handle } = {}) {
+  function object({ game: name, name: objectName, handle }: {game?: string, name?: string, handle?: number} = {}) {
     const game = gameOf(name);
     if (!game) return gameRefusal(name);
     if ((objectName === undefined) === (handle === undefined))
@@ -374,8 +370,7 @@ export function createTruth({ root, env = process.env }) {
     return { cli, dotnet, missing, dumperMatches };
   }
 
-  /** @param {{path?: string, game?: string}} args */
-  function decode({ path, game: name } = {}) {
+  function decode({ path, game: name }: {path?: string, game?: string} = {}) {
     const game = gameOf(name);
     if (!game) return badArgument(`decode binds the dump to the game you name, and ${JSON.stringify(name ?? null)} is not one: it never infers the game from the file`,
       `name one of ${TRUTH_GAMES.map(item => item.alias).join(', ')}`);
@@ -467,15 +462,14 @@ export function createTruth({ root, env = process.env }) {
     });
   }
 
-  /** A citable group, read back: fnaf://truth/<game>/frame/<n>/group/<g>. @param {string} uri */
-  function readUri(uri) {
+  /** A citable group, read back: fnaf://truth/<game>/frame/<n>/group/<g>. */
+  function readUri(uri: string) {
     const match = TRUTH_URI.exec(uri ?? '');
     if (!match) return null;
     return events({ game: match[1], query: { frame: Number(match[2]), group: Number(match[3]) } });
   }
 
-  /** @param {{op?: string, [key: string]: any}} args */
-  function call({ op, ...args } = {}) {
+  function call({ op, ...args }: {op?: string, [key: string]: any} = {}) {
     if (op === 'events') return events(args);
     if (op === 'object') return object(args);
     if (op === 'decode') return decode(args);

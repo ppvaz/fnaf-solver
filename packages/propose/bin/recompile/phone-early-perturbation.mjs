@@ -15,7 +15,7 @@ import { cumulative, maskPresses, scoreWindows, windowCodes, WINDOW_MS } from '.
 import { LEDGERS } from './compare-schedule-replay.mjs';
 import { inputs } from './phone-stream-census.mjs';
 import { fanOut, predeclared, sweepArgs } from './sweep-common.mjs';
-import { drawTrace } from '../../../source/recompile/model-draw-trace.mjs';
+import { drawTrace } from '../../../source/recompile/model-draw-trace.ts';
 import { RNG_INCREMENT, RNG_MASK, RNG_MULTIPLIER } from '../../../source/src/games/fnaf2/rng.ts';
 
 export const SCHEMA = 'phone-early-perturbation-v1';

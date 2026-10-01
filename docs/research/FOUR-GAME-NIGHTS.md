@@ -106,7 +106,7 @@ three expansion targets, not the fewest. Its own three background draws
 rolls.
 
 The reader agrees with this repository's own independent account of FNaF 2's
-unconditional draws (`packages/source/test/unconditional-draws.test.js`, which
+unconditional draws (`packages/source/test/unconditional-draws.test.ts`, which
 names g58, g59, g192 and g822): it finds exactly those three timer-driven
 sites, and correctly does not call g822 timer-forced because it is a
 `StartOfFrame`, not a timer.
@@ -645,7 +645,7 @@ node packages/propose/bin/census/census.mjs --game fnaf4 --night 5 --policy comm
 node packages/propose/bin/census/test-fnaf4-census.mjs
 ```
 
-Gated by `packages/source/decompile/test-nightmap.py`, `packages/source/test/test-night-models.mjs` and
+Gated by `packages/source/decompile/test-nightmap.py`, `packages/source/test/test-night-models.ts` and
 `packages/propose/bin/census/test-fnaf1-census.mjs`, `packages/propose/bin/census/test-fnaf3-census.mjs` and
 `packages/propose/bin/census/test-fnaf4-census.mjs`, all in `npm run test:unit`. The model censuses
 need no game content; `--start` selects a disjoint seed block for the three

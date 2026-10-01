@@ -19,8 +19,8 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "PlantModel",
       "conformanceFixtures": [
-        "packages/source/test/sourcetest.mjs",
-        "packages/source/test/simtest.mjs"
+        "packages/source/test/sourcetest.ts",
+        "packages/source/test/simtest.ts"
       ]
     },
     {
@@ -40,8 +40,8 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateControlCommand",
       "conformanceFixtures": [
-        "packages/source/test/contracts.test.js",
-        "packages/source/test/control-catalog.test.js",
+        "packages/source/test/contracts.test.ts",
+        "packages/source/test/control-catalog.test.ts",
         "packages/propose/bin/policy/test-policy-interpreter.mjs"
       ]
     },
@@ -105,7 +105,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateQualification",
       "conformanceFixtures": [
-        "packages/source/test/contracts.test.js",
+        "packages/source/test/contracts.test.ts",
         "packages/kernel/test/venue-identity.test.ts"
       ]
     },

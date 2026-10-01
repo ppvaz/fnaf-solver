@@ -45,9 +45,9 @@ if (kernelChanged)
   for (const test of ['kernel', 'venue-identity', 'claim-envelope'])
     add(`test:packages/kernel/test/${test}.test.js`, 'node', [`packages/kernel/test/${test}.test.js`]);
 if (kernelChanged || sourceChanged || coreChanged) {
-  add('source-contracts', 'node', ['packages/source/test/contracts.test.js']);
-  add('control-catalog', 'node', ['packages/source/test/control-catalog.test.js']);
-  add('source-mechanics', 'node', ['packages/source/test/sourcetest.mjs']);
+  add('source-contracts', 'node', ['packages/source/test/contracts.test.ts']);
+  add('control-catalog', 'node', ['packages/source/test/control-catalog.test.ts']);
+  add('source-mechanics', 'node', ['packages/source/test/sourcetest.ts']);
 }
 if (sourceChanged || coreChanged || proposeChanged || playModelChanged) {
   // The closed loop is the device work's spine (ROADMAP Track A); its gates

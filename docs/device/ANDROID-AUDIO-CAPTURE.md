@@ -236,7 +236,7 @@ Night-1 phone call, not the music-box tune; unverified candidates are s0020
 (tonal), s0009 (noise), s0010 (74 s loop, g66).
 
 Modelled as `WIND_TICK_SAMPLE`/`WIND_TICK_FRAMES` in `config.js`, emitted as a
-`wind-tick` event, pinned by `sourcetest.mjs`.
+`wind-tick` event, pinned by `sourcetest.ts`.
 
 ## Discrete SFX are on the fast mixer and NOT captured — settled 2026-08-29
 

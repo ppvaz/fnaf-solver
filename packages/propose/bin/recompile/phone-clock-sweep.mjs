@@ -28,7 +28,7 @@ import {
   cumTick, cumulative, loadConfig, mapSchedule, maskPresses, officeClock, phoneSchedule, checkPressFile,
   compareOutcome, scoreWindows, traceColumns, traceTick, windowCodes,
 } from './phone-encounter-replay.mjs';
-import { drawTrace, MODEL_SOURCES } from '../../../source/recompile/model-draw-trace.mjs';
+import { drawTrace, MODEL_SOURCES } from '../../../source/recompile/model-draw-trace.ts';
 import { LEDGERS } from './compare-schedule-replay.mjs';
 import { modelContacts } from './schedule-to-input.mjs';
 import { currentPath } from '@sixam/review/renamed-path';

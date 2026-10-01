@@ -332,7 +332,7 @@ Each step is useful alone and none requires the next.
    dump is found through the untracked `packages/source/decompile/local-vault.json`
    or `$SIXAM_TRUTH_VAULT`; with none, `truth` refuses naming the decode and
    `describe` reports gap 2 closed with `no local dump configured on this host`.
-   Checked on a synthetic dump only (`packages/source/test/truth.test.js`); on
+   Checked on a synthetic dump only (`packages/source/test/truth.test.ts`); on
    this host the estimator reproduced the table above from the four local
    copies, FNaF 1 `K=0`, FNaF 2 `K=28`, FNaF 3 and 4 `K=29`, each at 1.0000,
    and nothing it read was committed. Open: where each object is *placed*

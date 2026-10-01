@@ -352,7 +352,7 @@ the check cannot be satisfied by changing all three copies to round together —
 which would silently re-aim every coordinate this project has calibrated.
 
 This is the shape this document's own closing section names as the sanctioned
-answer: `sourcetest.mjs:533`'s second Fusion LCG, asserted bit-exact against
+answer: `sourcetest.ts:533`'s second Fusion LCG, asserted bit-exact against
 `src/rng.js`, is "the one duplication in the repository that is a *control*
 rather than a hazard … the pattern findings 2 and 6 are missing." Shell cannot
 import JS, so for a cross-language constant the control **is** the fix.
@@ -592,7 +592,7 @@ Recorded so they can be dropped rather than carried:
 `plans/07`'s "Intentional overlap — do not merge by default" and
 `FNAF-BOT-IMPLEMENTATION-COMPARISON.md` both hold up. In particular:
 `screenstate.py` vs `screencheck` is a genuine watchdog/classifier split;
-`sourcetest.mjs:533`'s second Fusion LCG is the one duplication in the
+`sourcetest.ts:533`'s second Fusion LCG is the one duplication in the
 repository that is a *control* rather than a hazard — it is asserted bit-exact
 against `src/rng.js` over 20,000 draws, and it is the pattern findings 2 and 6
 are missing.

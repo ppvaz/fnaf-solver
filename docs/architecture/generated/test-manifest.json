@@ -407,7 +407,7 @@
       "determinismSignals": [],
       "fixedSleeps": [],
       "sharedResources": [],
-      "subprocesses": false,
+      "subprocesses": true,
       "measurement": {
         "status": "NOT_MEASURED",
         "runs": 0,
@@ -4026,7 +4026,7 @@
       "determinismSignals": [],
       "fixedSleeps": [],
       "sharedResources": [],
-      "subprocesses": false,
+      "subprocesses": true,
       "measurement": {
         "status": "NOT_MEASURED",
         "runs": 0,
@@ -4257,7 +4257,7 @@
       }
     },
     {
-      "id": "packages/source/test/animation-count.test.js",
+      "id": "packages/source/test/animation-count.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4275,7 +4275,7 @@
       }
     },
     {
-      "id": "packages/source/test/b-drain-order.test.js",
+      "id": "packages/source/test/b-drain-order.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4293,7 +4293,7 @@
       }
     },
     {
-      "id": "packages/source/test/bb-moves.test.js",
+      "id": "packages/source/test/bb-moves.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4311,7 +4311,7 @@
       }
     },
     {
-      "id": "packages/source/test/blackout-clock-end.test.js",
+      "id": "packages/source/test/blackout-clock-end.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4329,7 +4329,7 @@
       }
     },
     {
-      "id": "packages/source/test/blackout-draws.test.js",
+      "id": "packages/source/test/blackout-draws.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4347,7 +4347,7 @@
       }
     },
     {
-      "id": "packages/source/test/contracts.test.js",
+      "id": "packages/source/test/contracts.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4365,7 +4365,7 @@
       }
     },
     {
-      "id": "packages/source/test/control-catalog.test.js",
+      "id": "packages/source/test/control-catalog.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4385,7 +4385,7 @@
       }
     },
     {
-      "id": "packages/source/test/drop-flag-order.test.js",
+      "id": "packages/source/test/drop-flag-order.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4403,7 +4403,7 @@
       }
     },
     {
-      "id": "packages/source/test/drop-light-order.test.js",
+      "id": "packages/source/test/drop-light-order.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4421,7 +4421,7 @@
       }
     },
     {
-      "id": "packages/source/test/event-draws.test.js",
+      "id": "packages/source/test/event-draws.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4439,7 +4439,7 @@
       }
     },
     {
-      "id": "packages/source/test/every-origin.test.js",
+      "id": "packages/source/test/every-origin.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4457,7 +4457,7 @@
       }
     },
     {
-      "id": "packages/source/test/exposure-value5.test.js",
+      "id": "packages/source/test/exposure-value5.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4475,7 +4475,7 @@
       }
     },
     {
-      "id": "packages/source/test/footstep-draws.test.js",
+      "id": "packages/source/test/footstep-draws.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4493,7 +4493,7 @@
       }
     },
     {
-      "id": "packages/source/test/footstep-value2.test.js",
+      "id": "packages/source/test/footstep-value2.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4511,7 +4511,7 @@
       }
     },
     {
-      "id": "packages/source/test/foxy-chain.test.js",
+      "id": "packages/source/test/foxy-chain.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4529,7 +4529,7 @@
       }
     },
     {
-      "id": "packages/source/test/foxy-move-value2.test.js",
+      "id": "packages/source/test/foxy-move-value2.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4547,7 +4547,7 @@
       }
     },
     {
-      "id": "packages/source/test/frame-time-hook.test.js",
+      "id": "packages/source/test/frame-time-hook.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4565,7 +4565,7 @@
       }
     },
     {
-      "id": "packages/source/test/gated-every.test.js",
+      "id": "packages/source/test/gated-every.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4583,7 +4583,7 @@
       }
     },
     {
-      "id": "packages/source/test/hall-latch-order.test.js",
+      "id": "packages/source/test/hall-latch-order.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4601,7 +4601,7 @@
       }
     },
     {
-      "id": "packages/source/test/last-view-pause.test.js",
+      "id": "packages/source/test/last-view-pause.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4619,7 +4619,7 @@
       }
     },
     {
-      "id": "packages/source/test/mangle-return.test.js",
+      "id": "packages/source/test/mangle-return.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4637,7 +4637,7 @@
       }
     },
     {
-      "id": "packages/source/test/mask-animation-input.test.js",
+      "id": "packages/source/test/mask-animation-input.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4655,7 +4655,7 @@
       }
     },
     {
-      "id": "packages/source/test/monitor-down-draw.test.js",
+      "id": "packages/source/test/monitor-down-draw.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4675,7 +4675,7 @@
       }
     },
     {
-      "id": "packages/source/test/monitor-raise-gate.test.js",
+      "id": "packages/source/test/monitor-raise-gate.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4693,7 +4693,7 @@
       }
     },
     {
-      "id": "packages/source/test/office-footsteps.test.js",
+      "id": "packages/source/test/office-footsteps.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4711,7 +4711,7 @@
       }
     },
     {
-      "id": "packages/source/test/office-rolls.test.js",
+      "id": "packages/source/test/office-rolls.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4729,7 +4729,7 @@
       }
     },
     {
-      "id": "packages/source/test/plant-facade.test.js",
+      "id": "packages/source/test/plant-facade.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4747,7 +4747,7 @@
       }
     },
     {
-      "id": "packages/source/test/promoted-moves.test.js",
+      "id": "packages/source/test/promoted-moves.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4765,7 +4765,7 @@
       }
     },
     {
-      "id": "packages/source/test/promoted-view-draws.test.js",
+      "id": "packages/source/test/promoted-view-draws.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4783,7 +4783,7 @@
       }
     },
     {
-      "id": "packages/source/test/propertytest.mjs",
+      "id": "packages/source/test/propertytest.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4801,7 +4801,7 @@
       }
     },
     {
-      "id": "packages/source/test/puppet-glitch-draws.test.js",
+      "id": "packages/source/test/puppet-glitch-draws.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4819,7 +4819,7 @@
       }
     },
     {
-      "id": "packages/source/test/random-image-draw.test.js",
+      "id": "packages/source/test/random-image-draw.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4837,7 +4837,7 @@
       }
     },
     {
-      "id": "packages/source/test/rebuild-order.test.js",
+      "id": "packages/source/test/rebuild-order.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4855,7 +4855,7 @@
       }
     },
     {
-      "id": "packages/source/test/roll-draws.test.js",
+      "id": "packages/source/test/roll-draws.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4873,7 +4873,7 @@
       }
     },
     {
-      "id": "packages/source/test/rolls-before-moves.test.js",
+      "id": "packages/source/test/rolls-before-moves.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4891,7 +4891,7 @@
       }
     },
     {
-      "id": "packages/source/test/route-forks.test.js",
+      "id": "packages/source/test/route-forks.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4909,7 +4909,7 @@
       }
     },
     {
-      "id": "packages/source/test/route-pass.test.js",
+      "id": "packages/source/test/route-pass.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4927,7 +4927,7 @@
       }
     },
     {
-      "id": "packages/source/test/route-view-draws.test.js",
+      "id": "packages/source/test/route-view-draws.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4945,7 +4945,7 @@
       }
     },
     {
-      "id": "packages/source/test/second-pass.test.js",
+      "id": "packages/source/test/second-pass.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4963,7 +4963,7 @@
       }
     },
     {
-      "id": "packages/source/test/seed-recoverytest.mjs",
+      "id": "packages/source/test/seed-recoverytest.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4981,7 +4981,7 @@
       }
     },
     {
-      "id": "packages/source/test/sheet-order.test.js",
+      "id": "packages/source/test/sheet-order.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4999,7 +4999,7 @@
       }
     },
     {
-      "id": "packages/source/test/simtest.mjs",
+      "id": "packages/source/test/simtest.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -5017,7 +5017,7 @@
       }
     },
     {
-      "id": "packages/source/test/sourcetest.mjs",
+      "id": "packages/source/test/sourcetest.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -5028,7 +5028,7 @@
       "sharedResources": [
         "device-transport"
       ],
-      "subprocesses": false,
+      "subprocesses": true,
       "measurement": {
         "status": "NOT_MEASURED",
         "runs": 0,
@@ -5037,7 +5037,7 @@
       }
     },
     {
-      "id": "packages/source/test/test-night-models.mjs",
+      "id": "packages/source/test/test-night-models.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -5055,7 +5055,7 @@
       }
     },
     {
-      "id": "packages/source/test/truth.test.js",
+      "id": "packages/source/test/truth.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -5073,7 +5073,7 @@
       }
     },
     {
-      "id": "packages/source/test/unconditional-draws.test.js",
+      "id": "packages/source/test/unconditional-draws.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -5091,7 +5091,7 @@
       }
     },
     {
-      "id": "packages/source/test/value5.test.js",
+      "id": "packages/source/test/value5.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -5109,7 +5109,7 @@
       }
     },
     {
-      "id": "packages/source/test/vent-cam-draws.test.js",
+      "id": "packages/source/test/vent-cam-draws.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -5127,7 +5127,7 @@
       }
     },
     {
-      "id": "packages/source/test/view-draws.test.js",
+      "id": "packages/source/test/view-draws.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,

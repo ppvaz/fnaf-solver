@@ -6,7 +6,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { schedule } from '../plans/minus-toys-plan.mjs';
 import { ATTACKERS, LEDGERS, compareScheduleReplay, counterSeries, mismatchRuns, rebuiltAttacker, transitions, watchSeries } from './compare-schedule-replay.mjs';
-import { drawTrace } from '../../../source/recompile/model-draw-trace.mjs';
+import { drawTrace } from '../../../source/recompile/model-draw-trace.ts';
 import { controlPoints, expandRows, frameOf, harnessInput, harnessRows, winnerSchedule, modelContacts } from './schedule-to-input.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../..');

@@ -12,7 +12,7 @@
     "./fnaf2": "./src/games/fnaf2/index.ts",
     "./fnaf3": "./src/games/fnaf3/index.ts",
     "./fnaf4": "./src/games/fnaf4/index.ts",
-    "./truth": "./decompile/truth.mjs",
+    "./truth": "./decompile/truth.ts",
     "./truth/read": "./src/truth/index.ts",
     "./games/*": "./src/games/*"
   }

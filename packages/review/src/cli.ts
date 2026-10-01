@@ -58,7 +58,7 @@ const USAGE = `Usage: npm run review -- query promotions [--envelope] [--write F
   fnaf-solver MCP server calls). Each prints a claim-envelope-v1: exit 0 for a claim, 1 for a
   refusal. promote never writes an attestation or an edge; it proposes one or refuses.
 
-  truth reads your own local dump of the game's event sheet (packages/source/decompile/truth.mjs):
+  truth reads your own local dump of the game's event sheet (packages/source/decompile/truth.ts):
   it is found through packages/source/decompile/local-vault.json (untracked) or $SIXAM_TRUTH_VAULT,
   and truth decode makes one from an APK or CCN on this host with the local CTFAK dumper. The
   repository ships the decoder, never the decoded data.`;

@@ -48,9 +48,8 @@ const group = (index, conditions, actions) =>
  *   frame 1 g4  reads global 3, toggles lamp flag 4, and carries a parameter printed only as a class name
  *   frame 1 g5  reads a global the dumper renders as a space (9, 10 or 13), a negated condition on label
  *   frame 1 g6  sets a lamp flag whose number is the tally's value, computed at run time
- * @param {{k?: number}} [options]
  */
-export function syntheticDump({ k = SYNTHETIC_K } = {}) {
+export function syntheticDump({ k = SYNTHETIC_K }: {k?: number} = {}) {
   const h = name => eventHandle(name, k);
   const lines = [
     join(['GAME', 'Synthetic Fixture', 'BUILD', 296, 'FRAMES', 2]),
@@ -83,8 +82,8 @@ export function syntheticDump({ k = SYNTHETIC_K } = {}) {
 /** A rendered-form sheet (the older per-frame form), which the truth reader refuses: built from pieces. */
 export const renderedSheet = () => ['FRAME 01: Room  (1 event groups)', '='.repeat(34), '', ['---', 'group', '0', '---'].join(' '), ''].join('\n');
 
-/** A stored-method zip holding one entry, as an APK holds its CCN. @param {string} name @param {Buffer} data */
-export function storedZip(name, data) {
+/** A stored-method zip holding one entry, as an APK holds its CCN. */
+export function storedZip(name: string, data: Buffer) {
   const crcTable = Array.from({ length: 256 }, (_, n) => { let c = n; for (let j = 0; j < 8; j += 1) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; return c >>> 0; });
   let crc = 0xffffffff;
   for (const byte of data) crc = crcTable[(crc ^ byte) & 0xff] ^ (crc >>> 8);

@@ -5,7 +5,7 @@
 import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
 import * as C from '../src/games/fnaf2/config.ts';
-import { contactEdges, drawTrace } from '../recompile/model-draw-trace.mjs';
+import { contactEdges, drawTrace } from '../recompile/model-draw-trace.ts';
 
 const QUIET = { night: 7, seed: 3, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false, boxEnabled: false, foxyEnabled: false,
                 sourcedDropLightOrder: true };

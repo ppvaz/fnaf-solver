@@ -22,7 +22,7 @@ import { Worker, isMainThread, parentPort, workerData } from 'node:worker_thread
 import { cumulative, loadConfig, maskPresses, prepare, scoreWindows, windowCodes, WINDOW_MS } from './phone-encounter-replay.mjs';
 import { LEDGERS } from './compare-schedule-replay.mjs';
 import { modelContacts } from './schedule-to-input.mjs';
-import { drawTrace } from '../../../source/recompile/model-draw-trace.mjs';
+import { drawTrace } from '../../../source/recompile/model-draw-trace.ts';
 import { currentPath } from '@sixam/review/renamed-path';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../..');

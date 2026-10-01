@@ -95,7 +95,7 @@ const QUIET = { bbEnabled: false, foxyEnabled: false, gfEnabled: false, boxEnabl
 }
 
 // The coach must not call an input safe when the model says it ends the night
-// (moved from packages/source/test/simtest.mjs, 2026-09-30: it tests the trainer's Coach, not the Sim).
+// (moved from packages/source/test/simtest.ts, 2026-09-30: it tests the trainer's Coach, not the Sim).
 // Grading is per step and lopsided: `mask-off` has 450 ms of room early and
 // about 50 ms late, because the mask blocks the hall flash that resets Foxy.
 {

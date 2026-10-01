@@ -18,7 +18,7 @@
 //
 // Every table in this directory is regenerable with
 // `packages/source/decompile/nightmap.py --game <game> --table --clock --rolls`, and
-// `packages/source/test/test-night-models.mjs` checks the encoded tables against figures
+// `packages/source/test/test-night-models.ts` checks the encoded tables against figures
 // derived independently of them.
 // ---------------------------------------------------------------------------
 

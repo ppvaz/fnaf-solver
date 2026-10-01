@@ -21,7 +21,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { isUnknown, validateClaimEnvelope } from '@sixam/kernel';
 import { CACHE_ENV, NO_LOCAL_DUMP, VAULT_ENV } from '@sixam/source/truth';
-import { syntheticDump } from '../../../packages/source/test/fixtures/truth-dump.mjs';
+import { syntheticDump } from '../../../packages/source/test/fixtures/truth-dump.ts';
 
 const root = resolve(import.meta.dirname, '../../..');
 const temp = await mkdtemp(join(tmpdir(), 'fnaf-solver-mcp-'));

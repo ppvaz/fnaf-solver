@@ -10,7 +10,7 @@ import {
   check as checkEncounters, cumulative, landingLatency, maskPresses, mapSchedule, nativeResponses,
   officeClock, phoneSchedule, traceColumns, traceTick, windowCodes, WINDOW_MS, OFFICE_FRAME,
 } from './phone-encounter-replay.mjs';
-import { drawTrace, MODEL_SOURCES } from '../../../source/recompile/model-draw-trace.mjs';
+import { drawTrace, MODEL_SOURCES } from '../../../source/recompile/model-draw-trace.ts';
 import { LEDGERS } from './compare-schedule-replay.mjs';
 import { controlPoints, formatRows, harnessRows, modelContacts } from './schedule-to-input.mjs';
 import { currentPath } from '@sixam/review/renamed-path';

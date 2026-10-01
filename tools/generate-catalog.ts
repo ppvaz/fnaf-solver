@@ -60,13 +60,13 @@ const toolCommands = [...toolsIndex.matchAll(/^\| `([^`]+)` \| ([^|]+) \|/gm)].m
 const contractRegister = JSON.parse(await readFile(join(ROOT, 'packages/kernel/contracts/register.json'), 'utf8'));
 const protocols = contractRegister.contracts.filter(item => ['wire', 'process'].includes(item.kind));
 const contractEvidence = {
-  'plant-model-v1': ['packages/source/test/sourcetest.mjs', 'packages/source/test/simtest.mjs'],
-  'semantic-control-v1': ['packages/source/test/contracts.test.js', 'packages/source/test/control-catalog.test.js',
+  'plant-model-v1': ['packages/source/test/sourcetest.ts', 'packages/source/test/simtest.ts'],
+  'semantic-control-v1': ['packages/source/test/contracts.test.ts', 'packages/source/test/control-catalog.test.ts',
     'packages/propose/bin/policy/test-policy-interpreter.mjs'],
   'policy-program-v1': ['packages/propose/test/policygrammartest.mjs', 'packages/propose/bin/policy/test-policy-ir.mjs',
     'packages/propose/test/policy-game.test.js'],
   'controller-v1': ['packages/propose/test/reactivetest.mjs', 'packages/propose/test/cycle-controller.test.js'],
-  'qualification-v1': ['packages/source/test/contracts.test.js', 'packages/kernel/test/venue-identity.test.ts'],
+  'qualification-v1': ['packages/source/test/contracts.test.ts', 'packages/kernel/test/venue-identity.test.ts'],
   'qualification-v2': ['packages/kernel/test/venue-identity.test.ts', 'packages/play/test/venue-preflight.test.ts'],
   'venue-identity-v1': ['packages/kernel/test/venue-identity.test.ts', 'packages/play/test/android-venue.test.ts'],
   'venue-check-v1': ['packages/kernel/test/venue-identity.test.ts', 'packages/play/test/venue-preflight.test.ts'],

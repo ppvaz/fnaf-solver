@@ -7,7 +7,7 @@
  * geometry and placed instances, and per event group a GROUP record followed
  * by its condition and action rows, each ending in a PARAMS field whose
  * parameters are joined by ` || `. Nothing here holds or ships a dump: the
- * caller's own local file is read by packages/source/decompile/truth.mjs and
+ * caller's own local file is read by packages/source/decompile/truth.ts and
  * handed in as text (Plan 28: "the server ships the decoder, not the decoded
  * data").
  *

@@ -102,7 +102,7 @@ For each checked item:
 1. Record PC version/hash, frame, group/event number, object identity, conditions,
    actions, and timer units in a private extraction notebook.
 2. Add only the derived rule and a compact event reference to this ledger.
-3. Add a minimal deterministic regression in `packages/source/test/simtest.mjs` (or a focused
+3. Add a minimal deterministic regression in `packages/source/test/simtest.ts` (or a focused
    test) before changing the simulator.
 4. Label the implementation `PC-confirmed`, `Android-confirmed`, or an explicit
    platform branch. Do not merge two ports into one rule merely because both

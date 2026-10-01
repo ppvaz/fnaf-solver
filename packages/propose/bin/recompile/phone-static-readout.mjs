@@ -20,7 +20,7 @@ import { isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { loadConfig, officeClock, traceColumns } from './phone-encounter-replay.mjs';
 import { inputs } from './phone-stream-census.mjs';
 import { fanOut, predeclared, sha256, sweepArgs } from './sweep-common.mjs';
-import { drawTrace } from '../../../source/recompile/model-draw-trace.mjs';
+import { drawTrace } from '../../../source/recompile/model-draw-trace.ts';
 import { RNG_INCREMENT, RNG_MASK, RNG_MULTIPLIER } from '../../../source/src/games/fnaf2/rng.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../..');

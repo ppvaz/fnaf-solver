@@ -15,7 +15,7 @@ import {
   nativeResponses, responseCoverage, mapResponses, mapSchedule,
   responseEvidence, deriveResponseExperiment, loadConfig, prepare,
 } from './phone-encounter-replay.mjs';
-import { drawTrace, measuredClock } from '../../../source/recompile/model-draw-trace.mjs';
+import { drawTrace, measuredClock } from '../../../source/recompile/model-draw-trace.ts';
 import { committedVersion } from './phone-input-bracket-sweep.mjs';
 import { currentPath } from '@sixam/review/renamed-path';
 

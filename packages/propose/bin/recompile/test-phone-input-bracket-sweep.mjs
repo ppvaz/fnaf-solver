@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { check, committedVersion, recordedModelFiles } from './phone-input-bracket-sweep.mjs';
-import { MODEL_SOURCES } from '../../../source/recompile/model-draw-trace.mjs';
+import { MODEL_SOURCES } from '../../../source/recompile/model-draw-trace.ts';
 
 const root = new URL('../../../../', import.meta.url);
 const read = (path) => readFileSync(new URL(path, root), 'utf8');

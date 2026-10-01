@@ -2,9 +2,9 @@
 // Stock-APK RNG hypothesis tooling.
 //
 // Examples:
-//   node packages/source/test/seed-recovery.mjs window --center-ms 1760000000123 --half-width-ms 8
-//   node packages/source/test/seed-recovery.mjs clock-window clock-sample.json
-//   node packages/source/test/seed-recovery.mjs filter trace.json
+//   node packages/source/test/seed-recovery.ts window --center-ms 1760000000123 --half-width-ms 8
+//   node packages/source/test/seed-recovery.ts clock-window clock-sample.json
+//   node packages/source/test/seed-recovery.ts filter trace.json
 //
 // `filter` accepts the JSON contract documented in
 // docs/device/RNG-SEED-RECOVERY.md. Roll filtering can scan all 65,536 seeds;
@@ -64,11 +64,11 @@ function print(valueToPrint) {
 function usage() {
   process.stderr.write([
     'usage:',
-    '  seed-recovery.mjs window --center-ms MS --half-width-ms MS',
-    '  seed-recovery.mjs window --start-ms MS --end-ms MS',
-    '  seed-recovery.mjs clock-window SAMPLE.json',
-    '  seed-recovery.mjs marker-window SAMPLE.json --host-marker-ms MS',
-    '  seed-recovery.mjs filter TRACE.json [--mode=rolls|events]',
+    '  seed-recovery.ts window --center-ms MS --half-width-ms MS',
+    '  seed-recovery.ts window --start-ms MS --end-ms MS',
+    '  seed-recovery.ts clock-window SAMPLE.json',
+    '  seed-recovery.ts marker-window SAMPLE.json --host-marker-ms MS',
+    '  seed-recovery.ts filter TRACE.json [--mode=rolls|events]',
   ].join('\n') + '\n');
   process.exitCode = 2;
 }

@@ -469,7 +469,7 @@
     {
       "id": "contract.device-profile-v1",
       "kind": "CONTRACT",
-      "path": "packages/source/test/control-catalog.test.js",
+      "path": "packages/source/test/control-catalog.test.ts",
       "line": 4,
       "relation": "REFERENCES"
     },
@@ -634,13 +634,13 @@
     {
       "id": "contract.plant-model-v1",
       "kind": "CONTRACT",
-      "path": "packages/source/test/simtest.mjs",
+      "path": "packages/source/test/simtest.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
       "id": "contract.plant-model-v1",
       "kind": "CONTRACT",
-      "path": "packages/source/test/sourcetest.mjs",
+      "path": "packages/source/test/sourcetest.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -698,7 +698,7 @@
     {
       "id": "contract.qualification-v1",
       "kind": "CONTRACT",
-      "path": "packages/source/test/contracts.test.js",
+      "path": "packages/source/test/contracts.test.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -819,19 +819,19 @@
     {
       "id": "contract.semantic-control-v1",
       "kind": "CONTRACT",
-      "path": "packages/source/test/contracts.test.js",
+      "path": "packages/source/test/contracts.test.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
       "id": "contract.semantic-control-v1",
       "kind": "CONTRACT",
-      "path": "packages/source/test/control-catalog.test.js",
+      "path": "packages/source/test/control-catalog.test.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
       "id": "contract.semantic-control-v1",
       "kind": "CONTRACT",
-      "path": "packages/source/test/control-catalog.test.js",
+      "path": "packages/source/test/control-catalog.test.ts",
       "line": 4,
       "relation": "REFERENCES"
     },

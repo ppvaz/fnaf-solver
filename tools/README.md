@@ -48,7 +48,7 @@ assets.
 | Check the built page in Chrome | `node tools/test.ts --browser` |
 | See non-asserting policy diagnostics too | `node tools/test.ts --reports` |
 | Serve or make the self-contained trainer | `npm run serve:trainer`, `npm run build:trainer` (the trainer's own tools and tests: [`apps/trainer/README.md`](../apps/trainer/README.md)) |
-| Test the canonical or BB-aware strategy | `packages/source/test/simtest.mjs`, `packages/propose/parked/minus7/reactive-pilot.mjs` |
+| Test the canonical or BB-aware strategy | `packages/source/test/simtest.ts`, `packages/propose/parked/minus7/reactive-pilot.mjs` |
 | Compare policy families under execution error | `packages/propose/parked/minus7/policytest.mjs` |
 | Explore a strategy or cycle | `packages/propose/parked/minus7/cyclesearch.mjs` |
 | Run a night on the phone | `npm run night -- fnaf2\|fnaf1\|fnaf1-custom\|fnaf1-winner ... --live --confirm-live` (`apps/desktop/src/night.ts`), which runs that game's runner -- for FNaF 2 [`packages/play/bin/phone/night-run.sh`](../packages/play/README.md#running-a-night): records, runs the campaign, grades, packs the evidence, resets the game -- and packs FNaF 1 runs when they end. Without `--live --confirm-live` every runner is a dry run (ADR 0002). The handset serial comes from `FNAF_SERIAL` or the untracked local profile: `node packages/play/bin/phone/local-profile.ts set <serial>` once per host |

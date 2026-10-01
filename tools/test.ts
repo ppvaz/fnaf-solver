@@ -39,10 +39,10 @@ const ENGINE = [
   // First, because it is the only check that fails on a wrong *rule* rather
   // than a wrong *outcome*: the population checks below all pass with a
   // corrupted sourced constant.
-  ['sourcetest', ['../packages/source/test/sourcetest.mjs']],
+  ['sourcetest', ['../packages/source/test/sourcetest.ts']],
   // Stock-APK seed recovery is bounded to device-time windows or explicit
   // observed outcomes; it never turns an inferred candidate into authority.
-  ['seed recovery', ['../packages/source/test/seed-recoverytest.mjs']],
+  ['seed recovery', ['../packages/source/test/seed-recoverytest.ts']],
   // Plan 18 package 3: JavaScript/Python statistical primitives agree on
   // Wilson intervals, planning-N, two-proportion tests and fail-closed bars.
   ['stat helper', ['../packages/review/test/stat.test.ts']],
@@ -52,7 +52,7 @@ const ENGINE = [
   ['minus toys', ['../packages/propose/bin/minustoystest.mjs', '200', '--assert']],
   ['minus toys worst', ['../packages/propose/bin/minustoystest.mjs', '100', '--worst', '--assert']],
   ['minus toys no-split', ['../packages/propose/bin/minustoystest.mjs', '200', '--no-split', '--assert']],
-  ['simtest', ['../packages/source/test/simtest.mjs', '--sweep']],
+  ['simtest', ['../packages/source/test/simtest.ts', '--sweep']],
   ['hidreporttest', ['../packages/play/test/hid-report.test.ts']],
   // Plan 19 pkg 1: the stock-device observation model (OBSERVED/UNKNOWN facts,
   // sensor cadence + latency + drops) and the blackout-reactive controller
@@ -358,7 +358,7 @@ const ENGINE = [
   ['shell footguns', ['../packages/play/bin/phone/test-shell-footguns.sh']],
   // Plan 18 Package 4: bounded dependency-free properties for Sim state,
   // event determinism, and sourced Night-1 reachability.
-  ['engine properties', ['../packages/source/test/propertytest.mjs']],
+  ['engine properties', ['../packages/source/test/propertytest.ts']],
   // The indexes are how a cold session finds anything, and nothing recomputed
   // them: TOOLS.md was missing 47 of 137 scripts including grade-run.sh, and
   // docs/README.md was missing HID-MULTITOUCH.md. Cheap, so it runs here

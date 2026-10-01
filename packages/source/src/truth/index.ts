@@ -2,7 +2,7 @@
  * Truth's reading of a game's own event sheet (Plan 28 step 5): the tabular dump parsed into
  * fields, the per-build handle scramble K estimated from it, and the queries over both. Pure: it
  * takes the dump as text and reads no file. The caller's own dump is found and read, and a CCN is
- * decoded, by packages/source/decompile/truth.mjs, which is what `@sixam/source/truth` exports.
+ * decoded, by packages/source/decompile/truth.ts, which is what `@sixam/source/truth` exports.
  */
 export { DUMPER, DUMP_FORMAT, dumpShape, isTabularDump, parseDump, parseParameter, parseParameters, parseRow } from './dump.ts';
 export { COMMON_TYPE, OBJECT_TYPES, QUALIFIER_BIT, aceName, typeName } from './engine.ts';

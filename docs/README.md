@@ -116,7 +116,7 @@ Fusion build 296, August 2025.
 
 - [`ANDROID-SOURCE-STATUS.md`](android/ANDROID-SOURCE-STATUS.md) — the accuracy
   ledger, and the project's most load-bearing document. Enforced by
-  `packages/source/test/sourcetest.mjs` so a corrupted mechanism cannot hide behind unchanged
+  `packages/source/test/sourcetest.ts` so a corrupted mechanism cannot hide behind unchanged
   survival statistics.
 - [`UNIFIED-SOURCED-ENGINE-FACT-INDEX.md`](android/UNIFIED-SOURCED-ENGINE-FACT-INDEX.md)
   — every `[SOURCED]` engine fact in one place: a master constant table, then a

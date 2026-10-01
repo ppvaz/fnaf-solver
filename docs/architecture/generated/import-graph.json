@@ -146,7 +146,7 @@
     {
       "file": "apps/desktop/test/companion-mcp.test.ts",
       "imports": [
-        "../../../packages/source/test/fixtures/truth-dump.mjs",
+        "../../../packages/source/test/fixtures/truth-dump.ts",
         "@sixam/kernel",
         "@sixam/source/truth",
         "node:assert/strict",
@@ -2262,7 +2262,7 @@
     {
       "file": "packages/propose/bin/recompile/calib-replay.mjs",
       "imports": [
-        "../../../source/recompile/model-draw-trace.mjs",
+        "../../../source/recompile/model-draw-trace.ts",
         "./schedule-to-input.mjs",
         "node:crypto",
         "node:fs",
@@ -2274,7 +2274,7 @@
       "file": "packages/propose/bin/recompile/compare-schedule-replay.mjs",
       "imports": [
         "../../../review/bin/recompile/compare-draw-trace.ts",
-        "../../../source/recompile/model-draw-trace.mjs",
+        "../../../source/recompile/model-draw-trace.ts",
         "./rebuild-options-census.mjs",
         "./schedule-to-input.mjs",
         "node:crypto",
@@ -2295,7 +2295,7 @@
     {
       "file": "packages/propose/bin/recompile/phone-clock-sweep.mjs",
       "imports": [
-        "../../../source/recompile/model-draw-trace.mjs",
+        "../../../source/recompile/model-draw-trace.ts",
         "./compare-schedule-replay.mjs",
         "./phone-encounter-replay.mjs",
         "./schedule-to-input.mjs",
@@ -2309,7 +2309,7 @@
     {
       "file": "packages/propose/bin/recompile/phone-early-perturbation.mjs",
       "imports": [
-        "../../../source/recompile/model-draw-trace.mjs",
+        "../../../source/recompile/model-draw-trace.ts",
         "../../../source/src/games/fnaf2/rng.ts",
         "./compare-schedule-replay.mjs",
         "./phone-encounter-replay.mjs",
@@ -2326,7 +2326,7 @@
         "../../../play/src/sensors/fnaf2/button-strokes.ts",
         "../../../review/bin/recompile/compare-draw-trace.ts",
         "../../../review/venue-grid/encounter-replay.ts",
-        "../../../source/recompile/model-draw-trace.mjs",
+        "../../../source/recompile/model-draw-trace.ts",
         "../plans/bundle.mjs",
         "../plans/minus-toys-plan.mjs",
         "./compare-schedule-replay.mjs",
@@ -2342,7 +2342,7 @@
     {
       "file": "packages/propose/bin/recompile/phone-input-bracket-sweep.mjs",
       "imports": [
-        "../../../source/recompile/model-draw-trace.mjs",
+        "../../../source/recompile/model-draw-trace.ts",
         "./compare-schedule-replay.mjs",
         "./phone-encounter-replay.mjs",
         "./schedule-to-input.mjs",
@@ -2365,7 +2365,7 @@
     {
       "file": "packages/propose/bin/recompile/phone-static-readout.mjs",
       "imports": [
-        "../../../source/recompile/model-draw-trace.mjs",
+        "../../../source/recompile/model-draw-trace.ts",
         "../../../source/src/games/fnaf2/rng.ts",
         "./phone-encounter-replay.mjs",
         "./phone-stream-census.mjs",
@@ -2379,7 +2379,7 @@
     {
       "file": "packages/propose/bin/recompile/phone-stream-census.mjs",
       "imports": [
-        "../../../source/recompile/model-draw-trace.mjs",
+        "../../../source/recompile/model-draw-trace.ts",
         "./compare-schedule-replay.mjs",
         "./phone-encounter-replay.mjs",
         "./schedule-to-input.mjs",
@@ -2477,7 +2477,7 @@
     {
       "file": "packages/propose/bin/recompile/rebuild-options-census.mjs",
       "imports": [
-        "../../../source/recompile/model-draw-trace.mjs",
+        "../../../source/recompile/model-draw-trace.ts",
         "../census/winner-census.mjs",
         "../census/winner-phase-census.mjs",
         "../plans/bundle.mjs",
@@ -2552,7 +2552,7 @@
     {
       "file": "packages/propose/bin/recompile/test-phone-encounter-replay.mjs",
       "imports": [
-        "../../../source/recompile/model-draw-trace.mjs",
+        "../../../source/recompile/model-draw-trace.ts",
         "./phone-encounter-replay.mjs",
         "./phone-input-bracket-sweep.mjs",
         "@sixam/review/renamed-path",
@@ -2568,7 +2568,7 @@
     {
       "file": "packages/propose/bin/recompile/test-phone-input-bracket-sweep.mjs",
       "imports": [
-        "../../../source/recompile/model-draw-trace.mjs",
+        "../../../source/recompile/model-draw-trace.ts",
         "./phone-input-bracket-sweep.mjs",
         "node:assert/strict",
         "node:crypto",
@@ -2601,7 +2601,7 @@
     {
       "file": "packages/propose/bin/recompile/test-rebuild-options-census.mjs",
       "imports": [
-        "../../../source/recompile/model-draw-trace.mjs",
+        "../../../source/recompile/model-draw-trace.ts",
         "../census/winner-census.mjs",
         "./rebuild-options-census.mjs",
         "@sixam/review/renamed-path",
@@ -2616,7 +2616,7 @@
     {
       "file": "packages/propose/bin/recompile/test-schedule-replay.mjs",
       "imports": [
-        "../../../source/recompile/model-draw-trace.mjs",
+        "../../../source/recompile/model-draw-trace.ts",
         "../plans/minus-toys-plan.mjs",
         "./compare-schedule-replay.mjs",
         "./schedule-to-input.mjs",
@@ -3519,7 +3519,7 @@
     {
       "file": "packages/review/bin/recompile/compare-draw-trace.ts",
       "imports": [
-        "../../../source/recompile/model-draw-trace.mjs",
+        "../../../source/recompile/model-draw-trace.ts",
         "@sixam/source/fnaf2",
         "node:crypto",
         "node:fs",
@@ -3545,7 +3545,7 @@
     {
       "file": "packages/review/bin/recompile/test-compare-draw-trace.ts",
       "imports": [
-        "../../../source/recompile/model-draw-trace.mjs",
+        "../../../source/recompile/model-draw-trace.ts",
         "./compare-draw-trace.ts",
         "@sixam/source/fnaf2",
         "node:assert/strict"
@@ -3938,7 +3938,7 @@
       ]
     },
     {
-      "file": "packages/source/decompile/truth.mjs",
+      "file": "packages/source/decompile/truth.ts",
       "imports": [
         "../src/index.ts",
         "../src/truth/index.ts",
@@ -3952,7 +3952,7 @@
       ]
     },
     {
-      "file": "packages/source/recompile/model-draw-trace.mjs",
+      "file": "packages/source/recompile/model-draw-trace.ts",
       "imports": [
         "@sixam/source/fnaf2",
         "\\.\\/([\\w-]+\\.ts)",
@@ -4257,7 +4257,7 @@
       ]
     },
     {
-      "file": "packages/source/test/animation-count.test.js",
+      "file": "packages/source/test/animation-count.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict",
@@ -4265,7 +4265,7 @@
       ]
     },
     {
-      "file": "packages/source/test/b-drain-order.test.js",
+      "file": "packages/source/test/b-drain-order.test.ts",
       "imports": [
         "../src/games/fnaf2/movement-clock.ts",
         "../src/games/fnaf2/plant-model.ts",
@@ -4273,28 +4273,28 @@
       ]
     },
     {
-      "file": "packages/source/test/bb-moves.test.js",
+      "file": "packages/source/test/bb-moves.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
-      "file": "packages/source/test/blackout-clock-end.test.js",
+      "file": "packages/source/test/blackout-clock-end.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
-      "file": "packages/source/test/blackout-draws.test.js",
+      "file": "packages/source/test/blackout-draws.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
-      "file": "packages/source/test/contracts.test.js",
+      "file": "packages/source/test/contracts.test.ts",
       "imports": [
         "../src/clockwork/control-contracts.ts",
         "../src/games/fnaf2/plant.ts",
@@ -4306,7 +4306,7 @@
       ]
     },
     {
-      "file": "packages/source/test/control-catalog.test.js",
+      "file": "packages/source/test/control-catalog.test.ts",
       "imports": [
         "../src/clockwork/control-contracts.ts",
         "../src/clockwork/index.ts",
@@ -4318,23 +4318,23 @@
       ]
     },
     {
-      "file": "packages/source/test/drop-flag-order.test.js",
+      "file": "packages/source/test/drop-flag-order.test.ts",
       "imports": [
-        "../recompile/model-draw-trace.mjs",
+        "../recompile/model-draw-trace.ts",
         "../src/games/fnaf2/config.ts",
         "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
-      "file": "packages/source/test/drop-light-order.test.js",
+      "file": "packages/source/test/drop-light-order.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
-      "file": "packages/source/test/event-draws.test.js",
+      "file": "packages/source/test/event-draws.test.ts",
       "imports": [
         "../src/games/fnaf2/config.ts",
         "../src/games/fnaf2/plant-model.ts",
@@ -4343,42 +4343,42 @@
       ]
     },
     {
-      "file": "packages/source/test/every-origin.test.js",
+      "file": "packages/source/test/every-origin.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
-      "file": "packages/source/test/exposure-value5.test.js",
+      "file": "packages/source/test/exposure-value5.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
-      "file": "packages/source/test/fixtures/truth-decoder-stub.mjs",
+      "file": "packages/source/test/fixtures/truth-decoder-stub.ts",
       "imports": [
-        "./truth-dump.mjs",
+        "./truth-dump.ts",
         "node:fs"
       ]
     },
     {
-      "file": "packages/source/test/footstep-draws.test.js",
+      "file": "packages/source/test/footstep-draws.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
-      "file": "packages/source/test/footstep-value2.test.js",
+      "file": "packages/source/test/footstep-value2.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
-      "file": "packages/source/test/foxy-chain.test.js",
+      "file": "packages/source/test/foxy-chain.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
         "../src/games/fnaf2/rng.ts",
@@ -4386,14 +4386,14 @@
       ]
     },
     {
-      "file": "packages/source/test/foxy-move-value2.test.js",
+      "file": "packages/source/test/foxy-move-value2.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
-      "file": "packages/source/test/frame-time-hook.test.js",
+      "file": "packages/source/test/frame-time-hook.test.ts",
       "imports": [
         "../src/games/fnaf2/config.ts",
         "../src/games/fnaf2/plant-model.ts",
@@ -4401,70 +4401,70 @@
       ]
     },
     {
-      "file": "packages/source/test/gated-every.test.js",
+      "file": "packages/source/test/gated-every.test.ts",
       "imports": [
         "../src/games/fnaf2/index.ts",
         "node:assert/strict"
       ]
     },
     {
-      "file": "packages/source/test/hall-latch-order.test.js",
+      "file": "packages/source/test/hall-latch-order.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
-      "file": "packages/source/test/last-view-pause.test.js",
+      "file": "packages/source/test/last-view-pause.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
-      "file": "packages/source/test/mangle-return.test.js",
+      "file": "packages/source/test/mangle-return.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
-      "file": "packages/source/test/mask-animation-input.test.js",
+      "file": "packages/source/test/mask-animation-input.test.ts",
       "imports": [
         "../src/games/fnaf2/index.ts",
         "node:assert/strict"
       ]
     },
     {
-      "file": "packages/source/test/monitor-down-draw.test.js",
+      "file": "packages/source/test/monitor-down-draw.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
-      "file": "packages/source/test/monitor-raise-gate.test.js",
+      "file": "packages/source/test/monitor-raise-gate.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
-      "file": "packages/source/test/office-footsteps.test.js",
+      "file": "packages/source/test/office-footsteps.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
-      "file": "packages/source/test/office-rolls.test.js",
+      "file": "packages/source/test/office-rolls.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
-      "file": "packages/source/test/plant-facade.test.js",
+      "file": "packages/source/test/plant-facade.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
         "../src/games/fnaf2/plant.ts",
@@ -4472,50 +4472,42 @@
       ]
     },
     {
-      "file": "packages/source/test/promoted-moves.test.js",
+      "file": "packages/source/test/promoted-moves.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
-      "file": "packages/source/test/promoted-view-draws.test.js",
+      "file": "packages/source/test/promoted-view-draws.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
-      "file": "packages/source/test/propertytest.mjs",
+      "file": "packages/source/test/propertytest.ts",
       "imports": [
         "@sixam/source/fnaf2",
         "node:assert/strict"
       ]
     },
     {
-      "file": "packages/source/test/puppet-glitch-draws.test.js",
+      "file": "packages/source/test/puppet-glitch-draws.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
-      "file": "packages/source/test/random-image-draw.test.js",
+      "file": "packages/source/test/random-image-draw.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
-      "file": "packages/source/test/rebuild-order.test.js",
-      "imports": [
-        "../src/games/fnaf2/config.ts",
-        "../src/games/fnaf2/plant-model.ts",
-        "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/source/test/roll-draws.test.js",
+      "file": "packages/source/test/rebuild-order.test.ts",
       "imports": [
         "../src/games/fnaf2/config.ts",
         "../src/games/fnaf2/plant-model.ts",
@@ -4523,14 +4515,22 @@
       ]
     },
     {
-      "file": "packages/source/test/rolls-before-moves.test.js",
+      "file": "packages/source/test/roll-draws.test.ts",
+      "imports": [
+        "../src/games/fnaf2/config.ts",
+        "../src/games/fnaf2/plant-model.ts",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/source/test/rolls-before-moves.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
-      "file": "packages/source/test/route-forks.test.js",
+      "file": "packages/source/test/route-forks.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
         "../src/games/fnaf2/rng.ts",
@@ -4538,42 +4538,42 @@
       ]
     },
     {
-      "file": "packages/source/test/route-pass.test.js",
+      "file": "packages/source/test/route-pass.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
-      "file": "packages/source/test/route-view-draws.test.js",
+      "file": "packages/source/test/route-view-draws.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
-      "file": "packages/source/test/second-pass.test.js",
+      "file": "packages/source/test/second-pass.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
-      "file": "packages/source/test/seed-recovery.mjs",
+      "file": "packages/source/test/seed-recovery.ts",
       "imports": [
         "@sixam/source/fnaf2",
         "node:fs"
       ]
     },
     {
-      "file": "packages/source/test/seed-recoverytest.mjs",
+      "file": "packages/source/test/seed-recoverytest.ts",
       "imports": [
         "@sixam/source/fnaf2",
         "node:assert/strict"
       ]
     },
     {
-      "file": "packages/source/test/sheet-order.test.js",
+      "file": "packages/source/test/sheet-order.test.ts",
       "imports": [
         "../src/games/fnaf2/config.ts",
         "../src/games/fnaf2/plant-model.ts",
@@ -4581,20 +4581,20 @@
       ]
     },
     {
-      "file": "packages/source/test/simtest.mjs",
+      "file": "packages/source/test/simtest.ts",
       "imports": [
         "@sixam/source/fnaf2"
       ]
     },
     {
-      "file": "packages/source/test/sourcetest.mjs",
+      "file": "packages/source/test/sourcetest.ts",
       "imports": [
         "@sixam/source/fnaf2",
         "node:url"
       ]
     },
     {
-      "file": "packages/source/test/test-night-models.mjs",
+      "file": "packages/source/test/test-night-models.ts",
       "imports": [
         "@sixam/source",
         "@sixam/source/fnaf2",
@@ -4602,9 +4602,9 @@
       ]
     },
     {
-      "file": "packages/source/test/truth.test.js",
+      "file": "packages/source/test/truth.test.ts",
       "imports": [
-        "./fixtures/truth-dump.mjs",
+        "./fixtures/truth-dump.ts",
         "@sixam/kernel",
         "@sixam/source/truth",
         "@sixam/source/truth/read",
@@ -4617,7 +4617,7 @@
       ]
     },
     {
-      "file": "packages/source/test/unconditional-draws.test.js",
+      "file": "packages/source/test/unconditional-draws.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
         "../src/games/fnaf2/rng.ts",
@@ -4625,21 +4625,21 @@
       ]
     },
     {
-      "file": "packages/source/test/value5.test.js",
+      "file": "packages/source/test/value5.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
-      "file": "packages/source/test/vent-cam-draws.test.js",
+      "file": "packages/source/test/vent-cam-draws.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"
       ]
     },
     {
-      "file": "packages/source/test/view-draws.test.js",
+      "file": "packages/source/test/view-draws.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
         "node:assert/strict"

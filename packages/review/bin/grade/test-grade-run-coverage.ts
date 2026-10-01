@@ -66,7 +66,7 @@ const SIBLING_EXCLUDED = new Map([
   ['coverage.py', 'group-coverage report over the dump; answers what is unread, not what a run did'],
   ['extract-samples.sh', 'asset extraction helper for the audio path'],
   ['regen-dump.sh', 'regenerates the event-sheet dump from the APK'],
-  ['truth.mjs', 'the truth surface (Plan 28 step 5) over the caller\'s own local dump, called by the MCP truth tool and npm run review -- truth; it reads source, not a run, and is gated by packages/source/test/truth.test.js'],
+  ['truth.ts', 'the truth surface (Plan 28 step 5) over the caller\'s own local dump, called by the MCP truth tool and npm run review -- truth; it reads source, not a run, and is gated by packages/source/test/truth.test.ts'],
   // packages/play/bin/phone
   ['game-screen.py', 'native title identity reader used before setup, not a completed-night grader; calibration retained in companion-game-screen-20260927.json'],
   ['game-teardown.sh', 'a lifecycle action that runs AFTER a night and before there is anything to grade: it stops a target game only once title-observe.py has confirmed the title, so the post-night sequence finishes and the save is banked. It sends one force-stop and reads no run artifact; gated by test-game-teardown.sh'],

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { compareTrace } from './compare-draw-trace.ts';
-import { drawTrace } from '../../../source/recompile/model-draw-trace.mjs';
+import { drawTrace } from '../../../source/recompile/model-draw-trace.ts';
 import { AI_DIALS, Rng } from '@sixam/source/fnaf2';
 
 const settings = { night: 1, seed: 24850, frame: 3, frames: 20 };

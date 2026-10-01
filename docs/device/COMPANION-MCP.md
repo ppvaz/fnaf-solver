@@ -84,7 +84,7 @@ your local dump, read back; a refusal where none is configured).
 
 The verbs live in [`packages/review/src/solver.mjs`](../../packages/review/src/solver.ts),
 so the MCP server, the review CLI and a later wiki or desk share one verb table;
-`truth` is Source's own reading, [`packages/source/decompile/truth.mjs`](../../packages/source/decompile/truth.mjs).
+`truth` is Source's own reading, [`packages/source/decompile/truth.ts`](../../packages/source/decompile/truth.ts).
 Not here yet (Plan 28 step 6): `sim.*` and `device.*` over the gated simulation
 and device paths.
 

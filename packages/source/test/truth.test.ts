@@ -1,6 +1,6 @@
 // truth.* (Plan 28 step 5) over a synthetic dump: the parse, the handle scramble K, the events and
 // object queries, the refusals, and decode through a stand-in decoder. Every fixture is synthetic
-// (fixtures/truth-dump.mjs); no answer carries a line of the dump; and every tracked truth file
+// (fixtures/truth-dump.ts); no answer carries a line of the dump; and every tracked truth file
 // passes tools/dump-text-check.ts, which does catch the text the fixture generates.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 import { isUnknown, validateClaimEnvelope } from '@sixam/kernel';
 import { NO_LOCAL_DUMP, VAULT_ENV, createTruth, extractCcn } from '@sixam/source/truth';
 import { estimateHandleScramble, parseDump, parseParameter, truthUri } from '@sixam/source/truth/read';
-import { STORED, SYNTHETIC_K, eventHandle, renderedSheet, storedZip, syntheticCcn, syntheticDump } from './fixtures/truth-dump.mjs';
+import { STORED, SYNTHETIC_K, eventHandle, renderedSheet, storedZip, syntheticCcn, syntheticDump } from './fixtures/truth-dump.ts';
 
 const ROOT = resolve(fileURLToPath(new URL('../../..', import.meta.url)));
 const temp = mkdtempSync(join(tmpdir(), 'truth-test-'));
@@ -53,9 +53,9 @@ try {
   const create = dump.frames[1].groups[2].actions[0].params[0];
   assert.deepEqual([create.loader, create.handle, create.position.parent, create.position.x], ['Create', eventHandle('crate'), eventHandle('lamp'), 10]);
   // The dumper's global-value rendering: a digit string above 26, the character with that code at or below it, and one space for 9, 10 and 13.
-  assert.equal(parseParameter(['49', 'GlobalValue', 'GlobalValue30'].join(':')).slot, 30);
-  assert.equal(parseParameter(['49', 'GlobalValue', `GlobalValue${String.fromCharCode(0)}`].join(':')).slot, 0);
-  assert.ok(isUnknown(parseParameter(['49', 'GlobalValue', 'GlobalValue '].join(':')).slot), 'a global rendered as a space is UNKNOWN');
+  assert.equal((parseParameter(['49', 'GlobalValue', 'GlobalValue30'].join(':')) as any).slot, 30);
+  assert.equal((parseParameter(['49', 'GlobalValue', `GlobalValue${String.fromCharCode(0)}`].join(':')) as any).slot, 0);
+  assert.ok(isUnknown((parseParameter(['49', 'GlobalValue', 'GlobalValue '].join(':')) as any).slot), 'a global rendered as a space is UNKNOWN');
   assert.equal(parseParameter(['29', 'IntParam', 'CTFAK.CCN.Chunks.Frame.IntParam'].join(':')).parsed, false);
   assert.deepEqual(parseParameter(['32', 'Click', '0-0'].join(':')), { code: 32, loader: 'Click', parsed: true, button: 0, double: false });
   checks += 1;
@@ -178,7 +178,7 @@ try {
   const absent = refused(none.decode({ path: ccn, game: 'fnaf2' }), 'decoder-absent', 'no toolchain');
   assert.match(absent.remedy, /CTFAK_SRC/);
   const cache = join(temp, 'cache');
-  const stub = join(ROOT, 'packages/source/test/fixtures/truth-decoder-stub.mjs');
+  const stub = join(ROOT, 'packages/source/test/fixtures/truth-decoder-stub.ts');
   const decodeVault = vault('decode.json', { games: {}, cache, decoder: { dotnet: process.execPath, ctfakCli: stub } });
   const decoding = truthWith(decodeVault);
   refused(truthWith(vault('cache-in-repo.json', { cache: join(ROOT, 'artifacts', 'truth-cache'), decoder: { dotnet: process.execPath, ctfakCli: stub } }))
@@ -203,8 +203,8 @@ try {
   // --- the dump-text check: tracked files pass it, the generated text does not --------------------
   const check = file => spawnSync(process.execPath, [join(ROOT, 'tools/dump-text-check.ts'), file], { encoding: 'utf8' });
   const tracked = ['packages/source/src/truth/dump.ts', 'packages/source/src/truth/engine.ts', 'packages/source/src/truth/handles.ts',
-    'packages/source/src/truth/query.ts', 'packages/source/src/truth/index.ts', 'packages/source/decompile/truth.mjs',
-    'packages/source/test/truth.test.js', 'packages/source/test/fixtures/truth-dump.mjs', 'packages/source/test/fixtures/truth-decoder-stub.mjs'];
+    'packages/source/src/truth/query.ts', 'packages/source/src/truth/index.ts', 'packages/source/decompile/truth.ts',
+    'packages/source/test/truth.test.ts', 'packages/source/test/fixtures/truth-dump.ts', 'packages/source/test/fixtures/truth-decoder-stub.ts'];
   for (const file of tracked) {
     const result = check(join(ROOT, file));
     assert.equal(result.status, 0, `${file} carries dump-shaped text:\n${result.stderr}`);

@@ -65,7 +65,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { Sim } from '@sixam/source/fnaf2';
 import { STRATEGY_REGISTRY, compileBundle, validateWinner } from '../plans/bundle.mjs';
 import { PRESET_KNOBS, loadPresets, runNight } from '../plans/night7-presets.mjs';
-import { simOptionsFrom } from '../../../source/recompile/model-draw-trace.mjs';
+import { simOptionsFrom } from '../../../source/recompile/model-draw-trace.ts';
 import { committedWinners, designBlock, forkBlocks, gitState, phoneCohorts } from '../census/winner-census.mjs';
 import { heldOutSeeds } from '../census/winner-phase-census.mjs';
 import { winnerTag } from '@sixam/kernel';
@@ -412,7 +412,7 @@ export function buildRecord({ merged, count, all, winnerHashes, cohorts, git, da
       optionSets: sets.map(({ id, modelOptions }) => ({ id, modelOptions })),
       injection: 'a setter on Sim.prototype.opts merges the set into the constructor\'s own opts object while a replay ' +
         'runs, so options read in the constructor are exact; each replay asserts its Sim carries the set; frameMs and ' +
-        'frameValue5 become constant per-frame functions (model-draw-trace.mjs simOptionsFrom)',
+        'frameValue5 become constant per-frame functions (model-draw-trace.ts simOptionsFrom)',
       policyFamily: 'the committed winner-v1 bindings as emitted (minus-toys and minus7 schedules), each at its own ' +
         'anchorEpochMs + phaseOffsetMs, and the Night 7 preset schedule (PRESET_KNOBS, golden-freddy, epoch 0); no ' +
         'schedule is searched or selected here',

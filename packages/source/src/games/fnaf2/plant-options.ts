@@ -469,7 +469,7 @@ export function defaultSimOptions() {
     // model frame 7, where the model fires them on frame 6. On: a countdown
     // first reached on frame 1 loads there, like any later first reach.
     // Requires the frame-time hook, whose countdowns replace the f % N
-    // cadences (identical to them at 50/3 ms, frame-time-hook.test.js).
+    // cadences (identical to them at 50/3 ms, frame-time-hook.test.ts).
     sourcedEveryOrigin: false,
     // Global value 5 as the sheet writes it (requires frameMs). g1236, the office's last group (Always),
     // sets value 5 = Min(4, (TimerValue - global 0) / D) and then global 0 = TimerValue, so every loop reads

@@ -5,7 +5,7 @@ not started. Do after plan 02 — it reuses the strategy-picker work.
 
 **Engine sourcing: DONE (2026-08-24).** Work item 1 is complete. §4 gaps 1-7 were
 decoded in the 2026-08-20 sweep; the four that were still unmodelled are now
-implemented and asserted in `packages/source/test/sourcetest.mjs` (118 -> 130 cases): the
+implemented and asserted in `packages/source/test/sourcetest.ts` (118 -> 130 cases): the
 post-mask flash lockout (gap 6 — `mask` reaches 0 only when the mmaskOff
 animation ends, g10/g11, and Foxy's reset runs through it via g489 -> g745),
 the `in danger` gate on every light (g75/g76/g77, g83/g88), the per-frame vent

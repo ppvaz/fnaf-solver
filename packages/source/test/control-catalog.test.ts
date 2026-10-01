@@ -60,10 +60,10 @@ assert.equal(GAME_CONTROLS[FNAF1].cameraRange, 'UNKNOWN(unmapped-view-ids)');
 }
 
 // -- semantic-control-v1 is parametric by game.
-const command = (control, game) => validateControlCommand({ schema: 'control-command-v1', id: 'c',
+const command = (control, game?) => validateControlCommand({ schema: 'control-command-v1', id: 'c',
   action: { kind: 'press', control }, requestedAt: { clock: 'game-frame', value: 0 },
   source: { controller: 'test' } }, game === undefined ? undefined : { game });
-const accepts = (control, game) => { try { command(control, game); return true; } catch { return false; } };
+const accepts = (control, game?) => { try { command(control, game); return true; } catch { return false; } };
 
 for (const control of [...FNAF2_IDS, 'light', 'hall', 'ventL', 'ventR', 'cam:0', 'cam:12'])
   assert.ok(accepts(control, FNAF2), `FNaF 2 accepts ${control}`);

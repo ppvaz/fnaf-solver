@@ -621,7 +621,7 @@ Two things to measure on a Night 1 run:
 
    Modelled as `WIND_TICK_SAMPLE = 33` / `WIND_TICK_FRAMES = s(0.5)` (30 frames
    at 60 fps), emitted as a `wind-tick` event in `tickBox` and pinned by
-   `sourcetest.mjs` ("g637/g644"). Consistent with how every other Fusion
+   `sourcetest.ts` ("g637/g644"). Consistent with how every other Fusion
    `Time:` condition here is modelled frame-locked (g263's 200 ms, the 5 s
    interval). Because the timer is **global and free-running** (`loops: 0`,
    attached to Backdrop, not restarted on wind press/release), the tick *edges*

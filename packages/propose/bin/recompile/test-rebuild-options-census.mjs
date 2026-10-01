@@ -30,7 +30,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Sim } from '@sixam/source/fnaf2';
-import { simOptionsFrom } from '../../../source/recompile/model-draw-trace.mjs';
+import { simOptionsFrom } from '../../../source/recompile/model-draw-trace.ts';
 import { KIND, OPTIONS_FILE, bindingSubjects, mcnemarExact, optionSets, seedBlocks, subjects, verdict, wilson95, withModelOptions }
   from './rebuild-options-census.mjs';
 import { committedWinners } from '../census/winner-census.mjs';

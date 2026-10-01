@@ -13,7 +13,7 @@ the same commit.
   [`ON-DEVICE-VALIDATION.md`](../device/ON-DEVICE-VALIDATION.md), and
   `docs/android/ANDROID-SOURCE-STATUS.md` §"The simulator prices nothing".
 - **Canonical authority:** [`ANDROID-SOURCE-STATUS.md`](ANDROID-SOURCE-STATUS.md)
-  is the enforced ledger (`packages/source/test/sourcetest.mjs`, one case per group citation).
+  is the enforced ledger (`packages/source/test/sourcetest.ts`, one case per group citation).
   Everything below traces to it, to [`ANDROID-CAMERA-STALL.md`](ANDROID-CAMERA-STALL.md),
   [`ANDROID-OFFICE-ENDGAME.md`](ANDROID-OFFICE-ENDGAME.md),
   [`ANDROID-GROUP-MAP.md`](ANDROID-GROUP-MAP.md),
@@ -798,7 +798,7 @@ inside an editor-disabled folder. The nine second-pass clusters resolved to:
 one real gap (the blackout lockout, §8), one wrong constant (`MASK_ANIM_OFF`),
 five inert/implemented, two dead code.
 
-`sourcetest.mjs` runs first in `node tools/test.ts --engine`, one case per
+`sourcetest.ts` runs first in `node tools/test.ts --engine`, one case per
 group citation (currently ≈130 cases), and names the failing group rather than
 the symptom. **When a row in this file changes, its owning document and its
 `sourcetest` case change in the same commit** — otherwise the row is

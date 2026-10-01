@@ -70,7 +70,7 @@ const QUIET1 = { night: 1, seed: 7, lethal: false, stalledEnabled: false, bbEnab
 {
   const firstHop = opts => {
     const s = new Sim({ ...QUIET1, ...opts });   // tickPuppet runs at the end of tickBox
-    const p = /** @type {any} */ (s.puppet);
+    const p = (s.puppet as any);
     p.out = true; p.stage = C.PUPPET_ESCAPE_STAGES; p.stunUntil = 0; s.ai.puppet = 20;   // every one-second roll arms a hop
     let armed = -1;
     let n = s.events.length;
@@ -184,7 +184,7 @@ assert.throws(() => new Sim({ night: 7, sourcedCustomDialOrder: true }), /requir
     s.rng.chance = () => true; s.rng.int = a => a;
     s.frame = 300;
     s.rollAllFiveSecond();
-    const u = id => /** @type {any} */ (s.units.find(x => x.id === id));
+    const u = id => (s.units.find(x => x.id === id) as any);
     return ['withfreddy', 'withbonnie', 'withchica'].map(id => [u(id).path[u(id).idx], u(id).pending]);
   };
   assert.deepEqual(at(false), [[7, false], [7, false], [4, false]], 'off: all three leave CAM 08 together');
@@ -192,7 +192,7 @@ assert.throws(() => new Sim({ night: 7, sourcedCustomDialOrder: true }), /requir
   // Story nights: Chica's roll waits (g347) while Bonnie stands on CAM 08, and his departure discards it.
   const held = knob => {
     const s = new Sim({ night: 3, seed: 1, lethal: false, sourcedRouteForks: true, sourcedCam8Cancel: knob });
-    const u = id => /** @type {any} */ (s.units.find(x => x.id === id));
+    const u = id => (s.units.find(x => x.id === id) as any);
     u('withchica').pending = true;
     s.advance(u('withbonnie'));
     return u('withchica').pending;

@@ -22,7 +22,7 @@ assert.throws(() => validateClockRef({ clock: 'wall-clock', value: 1 }), /declar
 assert.equal(canonicalJson({ b: 1, a: 2 }), '{"a":2,"b":1}\n');
 assert.equal(stableHash({ a: 1 }), stableHash({ a: 1 }));
 const vectors = readFileSync(fileURLToPath(new URL('./fixtures/fact-message-v1.jsonl', import.meta.url)), 'utf8').trim().split('\n');
-assert.equal(decodeFactMessage(vectors[0] + '\n').value, true);
+assert.equal((decodeFactMessage(vectors[0] + '\n') as any).value, true);
 assert.equal(decodeFactMessage(vectors[1] + '\n').state, 'UNKNOWN');
 const commandVectors = readFileSync(fileURLToPath(new URL('./fixtures/semantic-control-v1.jsonl', import.meta.url)), 'utf8').trim().split('\n').map(line => JSON.parse(line));
 assert.doesNotThrow(() => validateControlCommand(commandVectors[0]));

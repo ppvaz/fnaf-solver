@@ -5,7 +5,7 @@
 // seed that spend the same number of draws on every frame read the same
 // stream; the first frame where the counts part is where to look.
 //
-//   node packages/source/recompile/model-draw-trace.mjs --night 1 --seed 24850 [--frames 600] [--inputs FILE] [--model-options FILE]
+//   node packages/source/recompile/model-draw-trace.ts --night 1 --seed 24850 [--frames 600] [--inputs FILE] [--model-options FILE]
 //
 // --inputs replays `frame press|release action` rows (the simulator's own
 // action names). MODEL_ONLY: this reads the model, never the game.
@@ -62,9 +62,8 @@ export function simOptionsFrom(modelOptions) {
  * A measured clock for the frame-time hook: `frameTimes[f - 1]` is frame f's timer delta in ms (the
  * harness's office update f - 1 under CHOWDREN_FRAME_TIMES), 50/3 past the list; global value 5 is the
  * sheet's min(4, delta / (1000 / 60)). Requires the options to carry the hook already (frameMs).
- * @param {number[]} frameTimes
  */
-export function measuredClock(frameTimes) {
+export function measuredClock(frameTimes: number[]) {
   if (!Array.isArray(frameTimes) || !frameTimes.length || !frameTimes.every((ms) => Number.isFinite(ms) && ms > 0))
     throw new Error('frameTimes must be a non-empty list of positive ms');
   const frameMs = (/** @type {number} */ f) => frameTimes[f - 1] ?? 1000 / 60;
@@ -85,11 +84,11 @@ export function drawTrace({ night, seed, frames, rows = [], contacts = null, cus
   }
   const simOptions = simOptionsFrom(modelOptions);
   if (frameTimes) {
-    if (!modelOptions.frameMs) throw new Error('a measured clock replaces the frame-time hook: the options must carry frameMs');
+    if (!(modelOptions as any).frameMs) throw new Error('a measured clock replaces the frame-time hook: the options must carry frameMs');
     const clock = measuredClock(frameTimes);
     // sourcedValue5 derives global value 5 from frameMs as g1236 writes it (the previous loop's delta over its
     // 32.32 divisor), and refuses a frameValue5 beside it: the measured clock then supplies frameMs alone.
-    Object.assign(simOptions, modelOptions.sourcedValue5 ? { frameMs: clock.frameMs } : clock);
+    Object.assign(simOptions, (modelOptions as any).sourcedValue5 ? { frameMs: clock.frameMs } : clock);
   }
   let draws = 0;
   // Sim's constructor spends draws too (for example Foxy's initial readyAt).
@@ -137,7 +136,7 @@ export function contactEdges(contacts) {
   return rows;
 }
 
-if (process.argv[1] && process.argv[1].endsWith('model-draw-trace.mjs')) {
+if (process.argv[1] && process.argv[1].endsWith('model-draw-trace.ts')) {
   const rows = inputs ? readFileSync(inputs, 'utf8').split('\n').filter((l) => l.trim() && !l.startsWith('#'))
     .map((l) => { const [f, op, action] = l.trim().split(/\s+/); return [Number(f), op, action]; }) : [];
   const modelOptions = optionsFile ? JSON.parse(readFileSync(optionsFile, 'utf8')) : {};

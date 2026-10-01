@@ -125,7 +125,7 @@ one `throw` got wrong) are asserted only on fixed or swept seeds.
 **Done when.** Each property runs in the engine suite and, on an injected
 regression, prints a minimal failing seed rather than the first one hit.
 
-**Bounded foundation landed 2026-08-30.** `packages/source/test/propertytest.mjs` runs a
+**Bounded foundation landed 2026-08-30.** `packages/source/test/propertytest.ts` runs a
 reproducible 64-seed campaign without a dependency, shrinks a failing seed to
 the first failing seed in that campaign, and covers snapshot/restore
 bit-identity plus continuation, same-seed event determinism, and the sourced

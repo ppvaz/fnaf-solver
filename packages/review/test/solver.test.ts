@@ -115,7 +115,7 @@ for (const game of GAMES) {
 }
 refusal(solver.describe({ game: 'fnaf5' }), 'invalid-argument', 'an unregistered game');
 
-// --- truth: with no local dump it refuses and names the decode (packages/source/test/truth.test.js reads one) ---
+// --- truth: with no local dump it refuses and names the decode (packages/source/test/truth.test.ts reads one) ---
 const noDump = refusal(solver.truth({ op: 'events', game: 'fnaf2', query: { global: 1 } }), 'no-local-dump', 'truth events with no dump');
 assert.match(noDump.remedy, /npm run review -- truth decode/);
 refusal(solver.truth({ op: 'object', game: 'fnaf4', name: 'x' }), 'no-local-dump', 'truth object with no dump');

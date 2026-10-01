@@ -18,7 +18,7 @@
 // later captured interval dt becomes clamp(round(dt / 16.667), 1, 3) updates -- Fusion's catch-up, the first
 // taking dt - (n - 1) ms and each catch-up 1 ms (the rule the model's encounter replays use; `raw` keeps one
 // update per captured frame). The rebuild spends exactly these deltas (CHOWDREN_FRAME_TIMES) and the model
-// gets them through its frame-time hook (model-draw-trace.mjs measuredClock). A night with no trace runs at
+// gets them through its frame-time hook (model-draw-trace.ts measuredClock). A night with no trace runs at
 // a constant 60 Hz on both sides.
 //
 // The presses. The schedule is the winner binding's own rows at the night's measured release (originMs after
@@ -50,7 +50,7 @@ import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { compareTrace } from '../../../review/bin/recompile/compare-draw-trace.ts';
-import { MODEL_SOURCES } from '../../../source/recompile/model-draw-trace.mjs';
+import { MODEL_SOURCES } from '../../../source/recompile/model-draw-trace.ts';
 import { LEDGERS, compareLedger, counterSeries, mismatchRuns, outcomes, watchSeries } from './compare-schedule-replay.mjs';
 import { controlPoints, expandRows, frameOf, formatRows, harnessRows, modelContacts } from './schedule-to-input.mjs';
 import { STRATEGY_REGISTRY, validateWinner } from '../plans/bundle.mjs';
