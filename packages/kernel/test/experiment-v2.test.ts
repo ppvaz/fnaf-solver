@@ -11,8 +11,9 @@ import {
   validateExperimentResultV2, validateExperimentSpecV2, validateRate, validateSeedSet,
 } from '../src/contracts/index.ts';
 
-const refuses = (fn, pattern, what) => assert.throws(fn, error => error instanceof TypeError && pattern.test(error.message), what);
-const clone = value => JSON.parse(JSON.stringify(value));
+const refuses = (fn: () => unknown, pattern: RegExp, what: string) =>
+  assert.throws(fn, error => error instanceof TypeError && pattern.test(error.message), what);
+const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value));
 
 assert.ok(CONTRACTS.includes('experiment-spec-v2') && CONTRACTS.includes('experiment-result-v2'));
 assert.ok(CONTRACTS.includes('experiment-spec-v1') && CONTRACTS.includes('experiment-result-v1'), 'v1 stays registered');
@@ -36,7 +37,8 @@ refuses(() => validateSeed({ provenance: 'natural', belief: 'candidates', candid
 refuses(() => validateSeed({ provenance: 'natural', belief: 'unknown', origin: 0 }), /nothing else/, 'origin is a time zero, not a seed field');
 
 // Seed sets and their derivations.
-const range = (name, from, to) => ({ name, derivation: { kind: 'explicit-range', from, to }, provenance: 'natural', count: to - from + 1 });
+const range = (name: string, from: number, to: number) =>
+  ({ name, derivation: { kind: 'explicit-range' as const, from, to }, provenance: 'natural' as const, count: to - from + 1 });
 const development = range('development', 0, 2999);
 const heldOut = range('held-out', 40000, 42999);
 assert.equal(validateSeedSet(development), development);
@@ -79,27 +81,28 @@ const spec = {
   decidingQuery: { text: 'count the classes by their held-out losses', block: 'heldOut' },
   stoppingRule: { kind: 'fixed-sample', text: 'both blocks run to the end; nothing is added' },
 };
-assert.equal(validateExperimentSpecV2(spec), spec);
+const validSpec = validateExperimentSpecV2(spec);
+assert.equal(validSpec, spec);
 refuses(() => validateExperiment(spec), /experiment spec is incomplete/, 'a v2 spec is not read as v1');
-const broken = (edit, pattern, what) => { const copy = clone(spec); edit(copy); refuses(() => validateExperimentSpecV2(copy), pattern, what); };
+const broken = (edit: (s: typeof spec) => void, pattern: RegExp, what: string) => { const copy = clone(spec); edit(copy); refuses(() => validateExperimentSpecV2(copy), pattern, what); };
 broken(s => { s.explanations = s.explanations.slice(0, 1); }, /at least two competing explanations/, 'one explanation competes with nothing');
 broken(s => { s.explanations[1].id = 'E1-flat'; }, /used twice/, 'a repeated explanation id');
 broken(s => { s.explanations[0].assumptions = []; }, /assumptions/, 'an explanation with no assumptions');
 broken(s => { s.explanations[2].predicts.when.measure = 'winRate'; }, /not one the separating observation names/, 'a prediction over an unnamed measure');
 broken(s => { s.explanations[2].predicts.when.op = 'approx'; }, /op must be/, 'an unknown comparison');
-broken(s => { s.explanations[2].predicts.when = { all: [] }; }, /at least one predicate/, 'an empty conjunction');
+broken(s => { (s.explanations[2].predicts as { when: unknown }).when = { all: [] }; }, /at least one predicate/, 'an empty conjunction');
 broken(s => { s.cohort.heldOut = range('held-out', 2000, 4999); }, /shares 1000 seed/, 'an overlapping held-out block');
 broken(s => { s.cohort.heldOut.name = 'development'; }, /its own name/, 'a held-out block without its own name');
 broken(s => { s.cohort.heldOut = range('held-out', 65000, 70000); }, /outside its population/, 'a block outside its population');
 broken(s => { s.cohort.population.size = 2000; }, /larger than its population/, 'a block larger than its population');
-broken(s => { delete s.family; }, /policy family/, 'a census without its policy family');
+broken(s => { delete (s as Partial<typeof spec>).family; }, /policy family/, 'a census without its policy family');
 broken(s => { s.decidingQuery.block = 'development'; }, /decided on heldOut/, 'a query decided on the block it was developed on');
 broken(s => { s.stoppingRule.kind = 'until-significant'; }, /stopping rule/, 'an optional-stopping rule');
 broken(s => { s.purpose = 'sandbox'; }, /purpose/, 'there is no sandbox');
 broken(s => { s.claimLevel = 'MEASURED'; }, /claim level/, 'a source label is not a claim level');
 const diagnostic = clone(spec);
 diagnostic.purpose = 'diagnostic';
-delete diagnostic.family;
+delete (diagnostic as Partial<typeof spec>).family;
 assert.ok(validateExperimentSpecV2(diagnostic), 'a diagnostic sweep names the explanation it tests, not a family');
 
 // Rates.
@@ -116,21 +119,23 @@ refuses(() => validateRate({ ...rate, method: 'bootstrap' }), /method must be/, 
 refuses(() => validateRate({ ...rate, confidence: 1 }), /confidence/, 'a sampled interval at confidence 1');
 
 // A result.
-const tag = (id, holds) => ({ id, status: holds ? 'surviving' : 'ruled-out', evidence: { holds, values: { classesLosing: 0, classesPartial: 0 } } });
+const tag = (id: string, holds: boolean) => ({ id, status: holds ? 'surviving' : 'ruled-out', evidence: { holds, values: { classesLosing: 0, classesPartial: 0 } } });
 const result = {
   schema: 'experiment-result-v2', specId: 'fixture-band', specSha256: 'b'.repeat(64), claimLevel: 'MODEL_ONLY',
   observations: { block: 'heldOut', values: { classesLosing: 0, classesPartial: 0 } },
   explanations: [tag('E1-flat', true), tag('E2-perforated', false), tag('E3-seeded', false)],
   rates: [rate], stopped: { rule: 'fixed-sample', reached: 'both blocks ran to the end' },
 };
-assert.equal(validateExperimentResultV2(result, spec), result);
-const bad = (edit, pattern, what) => { const copy = clone(result); edit(copy); refuses(() => validateExperimentResultV2(copy, spec), pattern, what); };
+assert.equal(validateExperimentResultV2(result, validSpec), result);
+const bad = (edit: (r: typeof result) => void, pattern: RegExp, what: string) => {
+  const copy = clone(result); edit(copy); refuses(() => validateExperimentResultV2(copy, validSpec), pattern, what);
+};
 bad(r => { r.explanations.pop(); }, /not the spec's/, 'an untagged explanation');
 bad(r => { r.explanations.push(tag('E1-flat', true)); }, /once/, 'an explanation tagged twice');
 bad(r => { r.explanations[0].status = 'ruled-out'; }, /survives exactly when/, 'a tag its own evidence contradicts');
 bad(r => { r.explanations[0].status = 'undecided'; }, /status must be/, 'a third status');
-bad(r => { delete r.observations.values.classesPartial; }, /classesPartial is missing/, 'a separating measure not observed');
-bad(r => { r.observations.values.classesPartial = 'UNKNOWN'; }, /finite number/, 'an UNKNOWN read as a number');
+bad(r => { delete (r.observations.values as { classesPartial?: number }).classesPartial; }, /classesPartial is missing/, 'a separating measure not observed');
+bad(r => { (r.observations.values as { classesPartial: unknown }).classesPartial = 'UNKNOWN'; }, /finite number/, 'an UNKNOWN read as a number');
 bad(r => { r.specId = 'other'; }, /answers other/, 'a result for another spec');
 bad(r => { r.rates[0].interval = { lo: 0.9, hi: 0.95 }; }, /holds the rate/, 'a result rate outside its interval');
 bad(r => { r.observations.block = 'development'; }, /deciding block/, 'observations from the development block');

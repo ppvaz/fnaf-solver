@@ -7,8 +7,10 @@ import {
   CLAIM_ENVELOPE_SCHEMA, CLAIM_FIELDS, ENVELOPE_STATUSES, REFUSAL_FIELDS, REPOSITORY_TARGET, claimEnvelope, isEnvelopeLabel,
   isRefusal, refusalEnvelope, unknown, unknownsIn, validateClaimEnvelope, validateEnvelopeLabel,
 } from '../src/index.ts';
+import type { ClaimEnvelope } from '../src/index.ts';
 
-const refuses = (fn, pattern, what) => assert.throws(fn, error => error instanceof TypeError && pattern.test(error.message), what);
+const refuses = (fn: () => unknown, pattern: RegExp, what: string) =>
+  assert.throws(fn, error => error instanceof TypeError && pattern.test(error.message), what);
 
 // The shape, pinned field for field.
 assert.equal(CLAIM_ENVELOPE_SCHEMA, 'claim-envelope-v1');
@@ -19,7 +21,7 @@ for (const list of [CLAIM_FIELDS, REFUSAL_FIELDS, ENVELOPE_STATUSES]) assert.ok(
 assert.equal(REPOSITORY_TARGET, 'repository');
 
 // A golden claim: Plan 28's example in kernel labels.
-const golden = {
+const golden: ClaimEnvelope = {
   schema: 'claim-envelope-v1',
   claim: { night: 6, reached: 'SixAM' },
   label: 'DEVICE_MEASURED',
@@ -34,12 +36,14 @@ assert.equal(validateClaimEnvelope(golden), golden);
 const { schema: _schema, ...fields } = golden;
 assert.deepEqual(claimEnvelope(fields), golden, 'the constructor adds the schema and nothing else');
 assert.ok(!isRefusal(golden));
+// Every input read back through this is a claim, not a refusal.
+const claimOf = (value: unknown) => validateClaimEnvelope(value) as ClaimEnvelope;
 
 // Labels: a ClaimLevel, a named SourceLabel, or UNKNOWN(reason) -- never a default, never bare.
 for (const label of ['MODEL_ONLY', 'FIXTURE', 'DEVICE_MEASURED', 'SOURCED', 'CALIBRATED', 'MEASURED', 'INFERRED', 'MODEL'])
-  assert.equal((validateClaimEnvelope({ ...golden, label }) as any).label, label);
+  assert.equal(claimOf({ ...golden, label }).label, label);
 const why = unknown('a coverage map joins several labels');
-assert.equal((validateClaimEnvelope({ ...golden, label: why }) as any).label, why);
+assert.equal(claimOf({ ...golden, label: why }).label, why);
 assert.ok(isEnvelopeLabel(why) && !isEnvelopeLabel('UNKNOWN') && !isEnvelopeLabel('WIN'));
 refuses(() => validateEnvelopeLabel(undefined), /needs a label/, 'a missing label');
 refuses(() => validateClaimEnvelope({ ...golden, label: 'UNKNOWN' }), /needs its reason/, 'a bare UNKNOWN label');
@@ -53,20 +57,20 @@ const partial = { ...golden, claim: { night: 6, deathAt: unknown('the executor n
 refuses(() => validateClaimEnvelope(partial), /claim\.deathAt/, 'a kernel UNKNOWN nobody owns up to');
 refuses(() => validateClaimEnvelope({ ...partial, claim: { anchor: 'UNKNOWN(not-traced)' } }), /claim\.anchor/,
   "a catalog-style UNKNOWN(reason) nobody owns up to");
-assert.equal((validateClaimEnvelope({ ...partial, notMeasured: ['the death time'] }) as any).notMeasured.length, 1);
+assert.equal(claimOf({ ...partial, notMeasured: ['the death time'] }).notMeasured.length, 1);
 assert.deepEqual(unknownsIn({ a: [1, 'UNKNOWN'], b: { c: why } }), [{ path: 'a[1]', reason: null }, { path: 'b.c', reason: why.reason }]);
 assert.deepEqual(unknownsIn('UNKNOWN(no-effect-reader)'), [{ path: '', reason: 'no-effect-reader' }]);
 assert.deepEqual(unknownsIn({ note: 'the word UNKNOWN inside text is not a value' }), []);
 
 // Target, citations, status, reproducer.
 for (const target of ['com.scottgames.fnaf2', 'com.scottgames.fivenightsatfreddys', 'repository', why])
-  assert.equal((validateClaimEnvelope({ ...golden, target }) as any).target, target);
+  assert.equal(claimOf({ ...golden, target }).target, target);
 refuses(() => validateClaimEnvelope({ ...golden, target: 'FNaF 2' }), /target/, 'a target that is not a package');
 refuses(() => validateClaimEnvelope({ ...golden, cite: [] }), /cite/, 'an answer that cites nothing');
 refuses(() => validateClaimEnvelope({ ...golden, cite: ['a path with spaces'] }), /cite/, 'a citation with whitespace');
-assert.equal((validateClaimEnvelope({ ...golden, status: 'superseded', supersededBy: 'native-fps-regrade' }) as any).status, 'superseded');
-assert.equal((validateClaimEnvelope({ ...golden, status: 'retracted' }) as any).status, 'retracted');
-assert.equal((validateClaimEnvelope({ ...golden, status: 'retracted', supersededBy: 'input-cancel-correction' }) as any).status, 'retracted');
+assert.equal(claimOf({ ...golden, status: 'superseded', supersededBy: 'native-fps-regrade' }).status, 'superseded');
+assert.equal(claimOf({ ...golden, status: 'retracted' }).status, 'retracted');
+assert.equal(claimOf({ ...golden, status: 'retracted', supersededBy: 'input-cancel-correction' }).status, 'retracted');
 refuses(() => validateClaimEnvelope({ ...golden, status: 'superseded' }), /superseded it/, 'superseded by nothing');
 refuses(() => validateClaimEnvelope({ ...golden, supersededBy: 'x' }), /standing claim/, 'a standing claim with a successor');
 refuses(() => validateClaimEnvelope({ ...golden, status: 'open' }), /status/, 'a status outside the three');

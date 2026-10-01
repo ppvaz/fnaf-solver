@@ -205,7 +205,6 @@
       "debt:apps/desktop/test": 29,
       "debt:apps/trainer/test": 24,
       "debt:apps/wiki/test": 1,
-      "debt:packages/kernel/test": 10,
       "debt:packages/play/bin": 78,
       "debt:packages/play/games": 133,
       "debt:packages/play/test": 62,

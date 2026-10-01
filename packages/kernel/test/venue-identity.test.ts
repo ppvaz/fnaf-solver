@@ -27,7 +27,7 @@ assert.throws(() => validateVenueIdentity({ ...bound, handsetHash: 'FAKE0SERIAL1
 assert.throws(() => makeVenueIdentity({ ...readings, securityPatch: null }), /securityPatch is unread and has no reason/,
   'UNKNOWN is a value with a reason, never a default');
 const partly = makeVenueIdentity({ ...readings, securityPatch: null }, { securityPatch: 'getprop empty' });
-assert.equal(partly.unknown.securityPatch, 'getprop empty');
+assert.equal(partly.unknown?.securityPatch, 'getprop empty');
 assert.throws(() => validateVenueIdentity(partly, { requireKnown: true }), /securityPatch is unknown/);
 
 // Unbound: the observed identity is recorded, nothing is refused.
@@ -50,16 +50,16 @@ assert.equal(code.status, 'DRIFT');
 assert.equal(code.refuses, true);
 assert.deepEqual(code.drift.map(item => [item.field, item.from, item.to]),
   [['versionName', '2.0.7', '2.0.8'], ['versionCode', '26', '27']]);
-assert.match(code.message, /versionCode 26 -> 27/);
-assert.match(code.remedy, /re-qualify/);
-assert.match(code.remedy, /roll the game back/);
+assert.match(code.message ?? '', /versionCode 26 -> 27/);
+assert.match(code.remedy ?? '', /re-qualify/);
+assert.match(code.remedy ?? '', /roll the game back/);
 
 // The 09-27 case: the same build reinstalled, only lastUpdateTime moves.
 const reinstall = compareVenueIdentity({ observed: observed({ lastUpdateTime: '2026-09-27 01:34:10' }), bindings: byQualification });
 assert.equal(reinstall.status, 'DRIFT');
 assert.deepEqual(reinstall.drift, [{ field: 'lastUpdateTime', from: '2026-09-11 09:58:42',
   to: '2026-09-27 01:34:10', source: 'qualification', id: 'q-1' }]);
-assert.match(reinstall.message, /lastUpdateTime 2026-09-11 09:58:42 -> 2026-09-27 01:34:10/);
+assert.match(reinstall.message ?? '', /lastUpdateTime 2026-09-11 09:58:42 -> 2026-09-27 01:34:10/);
 
 // An OS update: fingerprint and patch; rolling the game back does not help.
 const os = compareVenueIdentity({ observed: observed({
@@ -67,13 +67,13 @@ const os = compareVenueIdentity({ observed: observed({
 bindings: byQualification });
 assert.equal(os.status, 'DRIFT');
 assert.deepEqual(os.drift.map(item => item.field), ['buildFingerprint', 'securityPatch']);
-assert.doesNotMatch(os.remedy, /roll the game back/);
-assert.match(os.remedy, /cannot be rolled back/);
+assert.doesNotMatch(os.remedy ?? '', /roll the game back/);
+assert.match(os.remedy ?? '', /cannot be rolled back/);
 
 // Another handset.
 const handset = compareVenueIdentity({ observed: observed({ handsetHash: 'sha256-fedcba9876543210' }), bindings: byQualification });
 assert.deepEqual(handset.drift.map(item => item.field), ['handsetHash']);
-assert.match(handset.remedy, /different handset/);
+assert.match(handset.remedy ?? '', /different handset/);
 
 // Every drift field refuses on its own.
 for (const field of VENUE_DRIFT_FIELDS) {

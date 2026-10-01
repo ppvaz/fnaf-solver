@@ -9,7 +9,8 @@ import {
   unknown, validateAnnotation, validateClaimLevel, validateGameRun, validateInterval, validateOutcome, validateSourceLabel,
 } from '../src/index.ts';
 
-const refuses = (fn, pattern, what) => assert.throws(fn, error => error instanceof TypeError && pattern.test(error.message), what);
+const refuses = (fn: () => unknown, pattern: RegExp, what: string) =>
+  assert.throws(fn, error => error instanceof TypeError && pattern.test(error.message), what);
 
 // Closed enums, frozen.
 for (const list of [CLAIM_LEVELS, SOURCE_LABELS, OUTCOME_KINDS, RUN_MODES, CUSTODY_CLASSES, GAME_RUN_FIELDS,
@@ -52,7 +53,8 @@ const foxy = death({ by: 'Withered Foxy', how: 'hall flash missed', rule: 'g389'
 assert.equal(validateOutcome(foxy), foxy);
 assert.equal(validateOutcome(death({ by: why, how: why, rule: why, at: why })).kind, 'Death');
 assert.equal(validateOutcome(why), why, 'an UNKNOWN outcome is the kernel UNKNOWN value');
-assert.equal((sixAm([{ by: 'Balloon Boy', how: 'inside', rule: 'g907', at: why }]) as any).wouldDie.length, 1);
+// sixAm builds a SixAM, which carries the deaths it survived.
+assert.equal((sixAm([{ by: 'Balloon Boy', how: 'inside', rule: 'g907', at: why }]) as { readonly wouldDie?: readonly unknown[] }).wouldDie?.length, 1);
 refuses(() => validateOutcome({ kind: 'Win' }), /kind/, 'an outcome the kernel does not name');
 refuses(() => validateOutcome({ kind: 'SixAM', by: 'Foxy' }), /no by/, 'a 6 AM with a death field');
 refuses(() => validateOutcome({ kind: 'Aborted' }), /why/, 'an abort without why');

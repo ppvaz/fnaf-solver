@@ -5,8 +5,8 @@
 // acceptance; those remain bench obligations.
 import { FACT_MESSAGE_SCHEMA, MAX_FACT_MESSAGE_BYTES, MAX_CYCLE_ACTIONS, encodeFactMessage, decodeFactMessage, messageToFact, FactLinkReceiver, SafeCycleHandoff } from '@sixam/kernel/time';
 
-const check = (condition, message) => { if (!condition) throw new Error(message); };
-const expectThrow = (fn, message) => {
+const check = (condition: unknown, message: string) => { if (!condition) throw new Error(message); };
+const expectThrow = (fn: () => unknown, message: string) => {
   let threw = false;
   try { fn(); } catch { threw = true; }
   check(threw, message);
@@ -17,7 +17,7 @@ const observedLine = encodeFactMessage({
   source: 'pixel-watch', calibrationProfile: 'g56-native-v1',
   t_observed: 1200, t_received: 1260, latencyMin: 40, latencyMax: 90,
 });
-const observed: any = decodeFactMessage(observedLine);
+const observed = decodeFactMessage(observedLine);
 check(observed.schema === FACT_MESSAGE_SCHEMA && observed.state === 'OBSERVED' &&
       observed.value === true && observedLine.endsWith('\n'),
   'observed fact did not round-trip as a newline-delimited message');
@@ -31,7 +31,7 @@ const unknownLine = encodeFactMessage({
   confidence: 0, source: 'pixel-watch', calibrationProfile: null,
   t_received: 1400, latencyMin: 0, latencyMax: 0,
 });
-const unknown: any = decodeFactMessage(unknownLine);
+const unknown = decodeFactMessage(unknownLine);
 check(unknown.state === 'UNKNOWN' && unknown.reason === 'read-dropped' &&
       !Object.hasOwn(unknown, 'value'), 'UNKNOWN fact carried a false value');
 
@@ -77,7 +77,7 @@ handoff.noteLink(50);
 const secondDue = handoff.due(200);
 check(secondDue.length === 1 && secondDue[0].id === 'mask',
   'approved action was not released at its boundary');
-check(handoff.due(400).length === 0 && handoff.status(400).approval.emitted === 2,
+check(handoff.due(400).length === 0 && handoff.status(400).approval?.emitted === 2,
   'completed safe cycle did not remain drained');
 
 const droppedLink = new SafeCycleHandoff({ linkTimeoutMs: 100 });
