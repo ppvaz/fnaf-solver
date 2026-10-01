@@ -154,6 +154,7 @@ longer rebuilds.
   written one, so `tools/test-type-debt.ts` counts written `any` and `x!` per
   area: an area without a `typeDebt` entry in `tools/quality-baseline.json`
   carries none (`packages/kernel/src` first), and the others only shrink.
+  The pass that wrote `any` to get there (`tools/ts-strict.ts`, 7a8393f0) is retired.
 - A validator takes `unknown`, narrows it with the kernel's guards (`isRecord`,
   `isList`, `isOneOf`, `isText`, `fail(): never`, `@sixam/kernel` labels) and
   ends with `return value as unknown as T`: the one assertion where a checked

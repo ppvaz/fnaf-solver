@@ -569,6 +569,13 @@
       ]
     },
     {
+      "file": "packages/kernel/src/contracts/campaign-records.ts",
+      "imports": [
+        "../labels.ts",
+        "../types.ts"
+      ]
+    },
+    {
       "file": "packages/kernel/src/contracts/experiment.ts",
       "imports": [
         "../labels.ts",
@@ -580,21 +587,26 @@
     {
       "file": "packages/kernel/src/contracts/index.ts",
       "imports": [
+        "../labels.ts",
         "./campaign-records.ts",
         "./experiment.ts",
         "./qualification.ts",
+        "./types.ts",
         "./venue-identity.ts"
       ]
     },
     {
       "file": "packages/kernel/src/contracts/qualification.ts",
       "imports": [
+        "../labels.ts",
+        "../types.ts",
         "./venue-identity.ts"
       ]
     },
     {
       "file": "packages/kernel/src/contracts/venue-identity.ts",
       "imports": [
+        "../labels.ts",
         "../types.ts"
       ]
     },
@@ -639,6 +651,18 @@
         "./labels.ts",
         "./time/interval.ts",
         "./types.ts"
+      ]
+    },
+    {
+      "file": "packages/kernel/src/time/event-clocks.ts",
+      "imports": [
+        "../labels.ts"
+      ]
+    },
+    {
+      "file": "packages/kernel/src/time/fact-link.ts",
+      "imports": [
+        "../labels.ts"
       ]
     },
     {
@@ -4981,17 +5005,6 @@
       ]
     },
     {
-      "file": "tools/test-ts-strict.ts",
-      "imports": [
-        "node:assert/strict",
-        "node:child_process",
-        "node:fs",
-        "node:os",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
       "file": "tools/test-type-debt.ts",
       "imports": [
         "./gate-kit.ts",
@@ -5016,16 +5029,6 @@
         "${spec}",
         "...",
         "m",
-        "node:child_process",
-        "node:fs",
-        "node:path",
-        "node:url",
-        "typescript"
-      ]
-    },
-    {
-      "file": "tools/ts-strict.ts",
-      "imports": [
         "node:child_process",
         "node:fs",
         "node:path",
