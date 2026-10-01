@@ -1,0 +1,258 @@
+{
+ "schema": "experiment-spec-v2",
+ "id": "s2-region-readout-night7-0of20",
+ "kind": "confirm",
+ "purpose": "pre-registered measurement: does the native static readout, without a frame trace, read the office generator's state on the phone",
+ "claimLevel": "DEVICE_MEASURED native region frames against MODEL_ONLY predictions",
+ "date": "2026-10-01",
+ "step": "ROADMAP S2a: the instrument for a valid seed measurement",
+ "question": "On a Custom Night with every dial at 0, does the camera static, read off the Companion's static_view rectangle on every copied frame and no frame trace, identify the office generator's state in k3's winding windows, consecutively consistent with the draws the model spends between them?",
+ "hypothesis": {
+  "source": "docs/evidence/full06-readout-dial-design-20261001.json: with every dial at 0 the night's own draws are the clock-timed rolls, and a window's predicted static agrees across press rules on 0.85-1.00 of g58 periods and under a constant 60 Hz clock on 0.79-1.00; the calibration record below shows the analysis recovers a planted stream and finds none in a null night.",
+  "statement": "E-readout: the static's coefficient on the phone is the model's g58 draw, so the generator states read in consecutive winding windows are separated by the model's own draw count.",
+  "alternatives": [
+   "E-blind: the native readout cannot resolve the static at this night's measured noise and gain: the power check fails, verdict UNINFORMATIVE (an instrument result, not a game result).",
+   "E-stream: the readout resolves planted states at the night's own strength, but the phone's consecutive windows are not separated by the model's draw count: NOT_SUPPORTED, the model's draw accounting at 0/20 or its g58 rule differs from the phone's."
+  ]
+ },
+ "night": {
+  "winner": "packages/propose/bindings/fnaf2/campaign-night7-k3-winner.json",
+  "winnerSha256": "7d45d04cffdb353af3127f375f755a6b66a3eb597fb22e6fc993350ee7bf2d78",
+  "night": 7,
+  "customNight": {
+   "withfreddy": 0,
+   "withbonnie": 0,
+   "withchica": 0,
+   "foxy": 0,
+   "toyfreddy": 0,
+   "toybonnie": 0,
+   "toychica": 0,
+   "mangle": 0,
+   "bb": 0,
+   "golden": 0
+  },
+  "modelSeed": 0,
+  "modelSeedNote": "At every dial 0 no roll succeeds and no unit moves, so the model's game state at a window's injection does not depend on the seed; the generator state is what each window scans.",
+  "releaseAfterRunStartMs": 2516.2,
+  "releaseNote": "Nominal (seedToFirstFrameMs + k3's registered aim), used only by the calibration; the analysis uses the measured release from the night's pack (--derive-inputs).",
+  "staticReadout": {
+   "region": "static_view",
+   "model": "packages/play/profiles/fnaf2/moto-g56/static-view-moto-g56-v207.json",
+   "modelSha256": "fd8f4159d36c1758b14cac0b2b28ab7fa04488ae94f36c7cf8fb3e8c2390d067"
+  },
+  "command": "packages/play/bin/phone/night-run.sh --live --confirm-live --label k3-0of20-sr01 --bundle <device:emit of the k3 winner> --night 7 --serial <the local profile's> --profile hid-mediaprojection --dials '<customNight above>' --frame-trace --static-readout --no-trace --no-video --no-grade --venue-binding docs/evidence/venue-binding-hid-mediaprojection-20260930.json --qualification docs/evidence/qualification-hid-mediaprojection-night7-k3-20260915.json",
+  "inputs": "After the night: phone-region-readout.ts --derive-inputs <run> --predeclaration <this file> --out <inputs>, which reads origin.anchor's onsetDeviceMs and releasedAimMs from the committed pack and hashes captures/static-readouts/<run>.jsonl; nothing in it is chosen."
+ },
+ "method": {
+  "seedToFirstFrameMs": 83.2,
+  "seedToFirstFrameSource": "the two k3 Night 7 frame-traced measurements, full-06 81.0 and full-04 85.4 ms (packages/propose/bin/recompile/phone-encounter-nights.json); their mean, the scanned offsets absorbing the difference",
+  "offsets": [
+   -6,
+   -5,
+   -4,
+   -3,
+   -2,
+   -1,
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6
+  ],
+  "injectLeadMs": 200,
+  "clock": "a constant 60 Hz model clock from the run start; a frame at image time t after the onset shows update floor((t + seedToFirstFrameMs) / 16.667) + o, o scanned per state over `offsets` (the null distribution scans the same)"
+ },
+ "windows": [
+  {
+   "name": "wind-1",
+   "fromMs": 10400,
+   "toMs": 13700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-2",
+   "fromMs": 20400,
+   "toMs": 23700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-3",
+   "fromMs": 30400,
+   "toMs": 33700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-4",
+   "fromMs": 40400,
+   "toMs": 43700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-5",
+   "fromMs": 50400,
+   "toMs": 53700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-6",
+   "fromMs": 60400,
+   "toMs": 63700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-7",
+   "fromMs": 70400,
+   "toMs": 73700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-8",
+   "fromMs": 80400,
+   "toMs": 83700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-9",
+   "fromMs": 90400,
+   "toMs": 93700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-10",
+   "fromMs": 100400,
+   "toMs": 103700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-11",
+   "fromMs": 110400,
+   "toMs": 113700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-12",
+   "fromMs": 120400,
+   "toMs": 123700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-13",
+   "fromMs": 130400,
+   "toMs": 133700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-14",
+   "fromMs": 140400,
+   "toMs": 143700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-15",
+   "fromMs": 150400,
+   "toMs": 153700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-16",
+   "fromMs": 160400,
+   "toMs": 163700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-17",
+   "fromMs": 170400,
+   "toMs": 173700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-18",
+   "fromMs": 180400,
+   "toMs": 183700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-19",
+   "fromMs": 190400,
+   "toMs": 193700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-20",
+   "fromMs": 200400,
+   "toMs": 203700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  }
+ ],
+ "decisionRule": {
+  "minR": 0.85,
+  "minMargin": 0.08,
+  "aliasSteps": 5,
+  "consistencyDraws": 10,
+  "supportConsistentPairs": 5,
+  "refuteConsistentPairs": 1,
+  "text": "Per window, every generator state is injected and scored (detrended r of predicted coefficient against period-mean luma, best over offsets); the reading is identifyReading (top r at least minR and leading the best state more than aliasSteps generator steps away by minMargin). Consecutive windows' top states are compared with the model's draws between their injections: a pair is consistent when they differ by at most consistencyDraws. SUPPORTED when at least supportConsistentPairs of the 19 pairs are consistent, NOT_SUPPORTED at most refuteConsistentPairs, INCONCLUSIVE between. A random pair is consistent about (2 * consistencyDraws + 1) / 65,536 of the time."
+ },
+ "powerCheck": {
+  "states": [
+   12345,
+   777
+  ],
+  "referenceState": 1,
+  "rule": "The night's own noise SD and gain are estimated from its frames in the windows (readoutStrength); each planted state is written at that strength on the night's own frame times and analysed by the same rule. Unless both planted nights are SUPPORTED, the verdict is UNINFORMATIVE whatever the night's own analysis says."
+ },
+ "frameTrace": "Taken as a retained witness (the night's measured clock and press landings); the declared analysis does not read it. Companion 16 copies every frame to the region recorder with or without the trace (docs/evidence/companion16-region-under-trace-20261001.json).",
+ "calibration": {
+  "basis": "Single-window planted scans of 2026-10-01 at 30 frames per second, gain 30 luma per unit coefficient (artifacts/s2-region-readout-20261001/calib.log, summarized here): the planted state ranked first in all six (three windows x noise SD 1 and 2); the rule identified it in three of three at SD 1 and one of three at SD 2; three no-signal scans (gain 0) ranked it 3,904th to 29,992nd and their top r stayed at or under 0.796, below minR. The recorder now keeps 60 frames per second, twice the calibration's.",
+  "pending": "Whole-night planted (state 12345, SD 2) and no-signal calibrations of the consecutive-pair rule were still running when this was declared; they are recorded in docs/evidence/s2-region-readout-calibration-20261001.json and do not change this rule. The power check below, at the night's own strength, decides whether the night can be read."
+ },
+ "stoppingRule": {
+  "kind": "fixed-sample",
+  "text": "One night. A night that does not reach the office, whose recorder fails, or whose readout holds fewer than 20 frames in more than 5 of the 20 windows is not a measurement: its pack is kept and the night is run again under this predeclaration. No window, threshold, offset or detrend changes after the night; a change is a new predeclaration on a new night."
+ },
+ "tool": "node packages/propose/bin/recompile/phone-region-readout.ts --predeclaration <this file> --night-inputs <inputs> --workers 4 --out <result>",
+ "resultRecord": "docs/evidence/s2-region-readout-night7-0of20-20261001.json",
+ "rung": "None. SUPPORTED makes the native static readout an instrument for S2a (the phone's seed, read in-night) and for S4's seed-aware policies; it is not an outcome claim."
+}
