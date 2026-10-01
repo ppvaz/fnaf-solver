@@ -3,7 +3,11 @@
 // readout's prediction inside a winding window survive the clock a trace-free night would have? (ROADMAP S2,
 // exploratory characterization; MODEL_ONLY.)
 //
-//   node packages/propose/bin/recompile/phone-draw-sensitivity.ts --night full-06 [--frames 3000] [--out FILE.json]
+//   node packages/propose/bin/recompile/phone-draw-sensitivity.ts --night full-06 [--frames 3000] [--custom-night DIALS.json]
+//     [--out FILE.json]
+//
+// --custom-night replays the night's clock and contacts at another Custom Night dial vector (a design question:
+// which dials leave a readout window's draws independent of the presses), not the phone's own night.
 //
 // A. Draw sites. The production Sim replays the night on its measured clock twice: with the primary variant's
 //    contacts (each press on the update that drew its landing frame) and with the `sched` rule (the same clock,
@@ -130,13 +134,15 @@ function windowSequence(base, v, w, cumRef, state) {
 async function main(argv) {
   const args: any = { frames: '3000' };
   for (let i = 0; i < argv.length; i += 2) {
-    if (!['--night', '--frames', '--out'].includes(argv[i]) || !argv[i + 1]) throw new Error('see usage at top of file');
+    if (!['--night', '--frames', '--custom-night', '--out'].includes(argv[i]) || !argv[i + 1]) throw new Error('see usage at top of file');
     args[argv[i].slice(2)] = argv[i + 1];
   }
   if (!args.night) throw new Error('--night is required');
   const night = loadConfig(join(ROOT, CONFIG)).nights.find((n) => n.name === args.night);
   if (!night?.trace) throw new Error(`${args.night} has no frame trace`);
-  const base = inputs(args.night);
+  const measured = inputs(args.night);
+  const dials = args['custom-night'] ? JSON.parse(readFileSync(resolve(args['custom-night']), 'utf8')) : null;
+  const base = dials ? { ...measured, customNight: dials } : measured;
   const variants = clockVariants(night, base);
   const t0 = Date.now();
   const frames = Number(args.frames);
@@ -160,7 +166,7 @@ async function main(argv) {
     return { window: w.name, fromMs: w.fromMs, toMs: w.toMs, periods: ref.length, scores };
   });
   const result = {
-    schema: SCHEMA, claimLevel: 'MODEL_ONLY', night: args.night, exploratory: true,
+    schema: SCHEMA, claimLevel: 'MODEL_ONLY', night: args.night, exploratory: true, ...(dials ? { customNight: dials } : {}),
     model: Object.fromEntries(MODEL_SOURCES.map((p) => [p.slice(ROOT.length + (ROOT.endsWith('/') ? 0 : 1)), sha256(readFileSync(p))])),
     inputs: base.hashes,
     variants: variants.map((v) => ({ name: v.name, what: v.what, contactsSha256: sha256(JSON.stringify(v.contacts)), deltas: v.deltas.length })),

@@ -25,24 +25,29 @@ assert.deepEqual(rows.map((r) => [r.site, r.moved]), [['a@x.ts:1', false], ['b@x
 assert.deepEqual(rows[1].firstMoved, [3, 4]);
 assert.deepEqual(rows[2].firstMoved, [null, 7], 'a site only one replay reaches moves at its first draw');
 
-// --- the record
-const path = 'docs/evidence/full06-draw-sensitivity-20261001.json';
-let checked = 0;
-if (existsSync(join(ROOT, path))) {
-  const rec = JSON.parse(readFileSync(join(ROOT, path), 'utf8'));
-  const data = rec.result;
+// --- the records
+const checkResult = (data, label) => {
+  let n = 0;
   for (const r of data.drawSites.rows) {
-    const moved = r.draws[0] !== r.draws[1] || r.firstMoved !== null;
-    assert.equal(r.moved, moved, `${r.site}: MOVES flag`);
+    assert.equal(r.moved, r.draws[0] !== r.draws[1] || r.firstMoved !== null, `${label} ${r.site}: MOVES flag`);
     if (!r.moved) assert.equal(r.firstMoved, null);
-    checked += 1;
+    n += 1;
   }
   for (const w of data.readoutWindows.rows) {
-    assert.ok(w.periods >= 20, `${w.window}: a window of at least 20 periods`);
-    for (const s of w.scores) assert.ok(s.agreement >= 0 && s.agreement <= 1 && Math.abs(s.k) <= data.readoutWindows.shiftRange, `${w.window} ${s.variant}`);
-    checked += 1;
+    assert.ok(w.periods >= 20, `${label} ${w.window}: a window of at least 20 periods`);
+    for (const s of w.scores) assert.ok(s.agreement >= 0 && s.agreement <= 1 && Math.abs(s.k) <= data.readoutWindows.shiftRange, `${label} ${w.window} ${s.variant}`);
+    n += 1;
   }
+  return n;
+};
+const RECORDS = [['docs/evidence/full06-draw-sensitivity-20261001.json', 's2-draw-sensitivity', (rec) => [['played', rec.result]]],
+  ['docs/evidence/full06-readout-dial-design-20261001.json', 's2-readout-dial-design', (rec) => Object.entries(rec.results)]];
+let checked = 0;
+for (const [path, prefix, results] of RECORDS) {
+  if (!existsSync(join(ROOT, path))) continue;
+  const rec = JSON.parse(readFileSync(join(ROOT, path), 'utf8'));
+  for (const [label, data] of results(rec)) checked += checkResult(data, label);
   const { id, ...body } = rec;
-  assert.equal(id, `s2-draw-sensitivity-${createHash('sha256').update(canon(body)).digest('hex').slice(0, 16)}`, 'record id');
+  assert.equal(id, `${prefix}-${createHash('sha256').update(canon(body)).digest('hex').slice(0, 16)}`, `${path}: record id`);
 }
-console.log(`phone-draw-sensitivity: cycle, agreement and site fixtures${checked ? `, and the full-06 record's ${checked} rows re-derived` : ''}`);
+console.log(`phone-draw-sensitivity: cycle, agreement and site fixtures${checked ? `, and ${checked} rows of the full-06 records re-derived` : ''}`);

@@ -2484,7 +2484,7 @@
     },
     {
       "id": "packages/propose/bin/recompile/phone-draw-sensitivity.ts",
-      "invocation": "packages/propose/bin/recompile/phone-draw-sensitivity.ts --night N [--frames F] [--out FILE]",
+      "invocation": "packages/propose/bin/recompile/phone-draw-sensitivity.ts --night N [--frames F] [--custom-night DIALS.json] [--out FILE]",
       "kind": "report (exploratory, MODEL_ONLY)",
       "lifecycle": "supported"
     },

@@ -1,0 +1,1128 @@
+{
+ "schema": "evidence-record-v1",
+ "date": "2026-10-01",
+ "step": "ROADMAP S2 (S2a: the instrument for a valid seed measurement)",
+ "claimLevel": "MODEL_ONLY (full-06's measured clock and contacts, replayed at other Custom Night dial vectors)",
+ "question": "At which Custom Night dials does a static-readout window's predicted flicker stop depending on when presses land and on the clock, so that one measurement night can test the readout instrument itself?",
+ "exploratory": "A design characterization; it tests no predeclared rule. Companion record: docs/evidence/full06-draw-sensitivity-20261001.json (the 10/20 night as played).",
+ "tool": {
+  "path": "packages/propose/bin/recompile/phone-draw-sensitivity.ts",
+  "sha256": "6a65b87a0fd33c7b0f0144754c36b7750857d7ecc8bd1c6fd140f74fb5d2438c"
+ },
+ "results": {
+  "dials0": {
+   "schema": "phone-draw-sensitivity-v1",
+   "claimLevel": "MODEL_ONLY",
+   "night": "full-06",
+   "exploratory": true,
+   "customNight": {
+    "withfreddy": 0,
+    "withbonnie": 0,
+    "withchica": 0,
+    "foxy": 0,
+    "toyfreddy": 0,
+    "toybonnie": 0,
+    "toychica": 0,
+    "mangle": 0,
+    "bb": 0,
+    "golden": 0
+   },
+   "model": {
+    "packages/source/src/games/fnaf2/plant-model.ts": "b3ac9830946a8dd5843d1e42f0b18b20577eb757b59c9d74f2b7bd0bb9ee1af9",
+    "packages/source/src/games/fnaf2/config.ts": "9cca624ec427246601e181e7af887bb545a0325dac0fc4fd0268cf967591b15e",
+    "packages/source/src/games/fnaf2/rng.ts": "03a7da1c57cf6eb3e345df6290e30c8e7ad3f7fefd1964472806c31cb47e4a37",
+    "packages/source/src/games/fnaf2/attack-animation.ts": "24395e91ca3591dfe6411e0f3ae7175d7129c17229b3f5f7ab2f91dd40d217e1",
+    "packages/source/src/games/fnaf2/blackout-clock.ts": "cc0afa0ebe8720a7e8295ded2c0aa28746a38e431c90771eb6d6b8ff94414c43",
+    "packages/source/src/games/fnaf2/contact-input.ts": "81c854835a1b1a4b30e0193fde37e7b135b29bdc8b9ad07853251c964305b4cc",
+    "packages/source/src/games/fnaf2/movement-clock.ts": "1fe53bd164464e7f9776a460b917c588a306f8afb3d20b75a92c53835c3cdaf0",
+    "packages/source/src/games/fnaf2/plant-constants.ts": "9d4b593b6b55665c1311950e12b52357724b8206744df1e9ccb7d3d393423160",
+    "packages/source/src/games/fnaf2/plant-hall.ts": "442006d88dbdac004a49049f581bfab603977650b98b035f88cfae5fc5c1a297",
+    "packages/source/src/games/fnaf2/plant-office.ts": "207abd8744d93974a18e9433992aa94713d1bb986c823218ea5a714ab2e707b9",
+    "packages/source/src/games/fnaf2/plant-options.ts": "1287bde94d4f8fac2dede0bcd5e3689b7870afe554c30c9c2feb3b7f61c82db7",
+    "packages/source/src/games/fnaf2/plant-puppet.ts": "b115cf2c70462624bcad66a0de51797fed405f7bb12283397bb43fe76a8be692",
+    "packages/source/src/games/fnaf2/plant-sheet.ts": "d6dd683002c28fa98270a0c28cc92ae1c6f40c74cc3ca53e14a9ad1e4fd552d6",
+    "packages/source/src/games/fnaf2/plant-units.ts": "d8146200b0db0dca887d6abe68d91205b16234f38a91ad8bd5534ec7179649c3"
+   },
+   "inputs": {
+    "config": "26b89b453e2b483610c118c264d1eb0dbb5d06758ab53db283807ffc25d666d0",
+    "modelOptions": "d1ba74693da29dac953058c1ea5d41b553ac6d7494ce911f6e8c742ef487db4a",
+    "contacts": "c4ca5d3320b8a65c3522d3a3a072a79c7a10251447f5112a61a903d45da6c67f",
+    "frameTimes": "383d25c80bb3648e9199589ebce7b6782a510eacee4409df3c90e940869541cf"
+   },
+   "variants": [
+    {
+     "name": "landed",
+     "what": "the primary variant: measured clock, each press on its landing frame",
+     "contactsSha256": "c4ca5d3320b8a65c3522d3a3a072a79c7a10251447f5112a61a903d45da6c67f",
+     "deltas": 25435
+    },
+    {
+     "name": "sched",
+     "what": "the same clock, each press on the update of its send",
+     "contactsSha256": "62578d5b4247d371c2e2ca68411118b0877a356079e980381360d943fad4a848",
+     "deltas": 25435
+    },
+    {
+     "name": "const60",
+     "what": "a constant 60 Hz clock, presses mid-update (a night without a frame trace)",
+     "contactsSha256": "45896ebb9ae973f8d8280baaa52cdbacf3d43c90d66a017a8e0a634de3912a19",
+     "deltas": 0
+    },
+    {
+     "name": "thinned50",
+     "what": "the frame trace thinned to half its frames, catch-up rule",
+     "contactsSha256": "eb1be4d9be9752c4829b76bfffc84c9760d7a162529d68a444084b1d31e9066f",
+     "deltas": 22010
+    }
+   ],
+   "drawSites": {
+    "frames": 25200,
+    "horizon": 25200,
+    "replays": {
+     "landed": {
+      "last": 25200,
+      "outcome": "alive"
+     },
+     "sched": {
+      "last": 25200,
+      "outcome": "alive"
+     }
+    },
+    "rows": [
+     {
+      "site": "drawUnconditional@plant-sheet.ts:272",
+      "draws": [
+       9243,
+       9243
+      ],
+      "moved": false,
+      "firstMoved": null
+     },
+     {
+      "site": "drawViewed@plant-sheet.ts:40",
+      "draws": [
+       2,
+       3
+      ],
+      "moved": true,
+      "firstMoved": [
+       183,
+       171
+      ]
+     },
+     {
+      "site": "footstepDraws@plant-sheet.ts:251",
+      "draws": [
+       4,
+       4
+      ],
+      "moved": true,
+      "firstMoved": [
+       1207,
+       1507
+      ]
+     },
+     {
+      "site": "monitorDownLate@plant-sheet.ts:56",
+      "draws": [
+       45,
+       43
+      ],
+      "moved": true,
+      "firstMoved": [
+       208,
+       204
+      ]
+     },
+     {
+      "site": "randomImageDraw@plant-sheet.ts:228",
+      "draws": [
+       46,
+       44
+      ],
+      "moved": true,
+      "firstMoved": [
+       208,
+       204
+      ]
+     },
+     {
+      "site": "rollAllFiveSecond@plant-units.ts:185",
+      "draws": [
+       83,
+       83
+      ],
+      "moved": false,
+      "firstMoved": null
+     },
+     {
+      "site": "rollAllFiveSecond@plant-units.ts:193",
+      "draws": [
+       83,
+       83
+      ],
+      "moved": false,
+      "firstMoved": null
+     },
+     {
+      "site": "rollAllFiveSecond@plant-units.ts:210",
+      "draws": [
+       83,
+       83
+      ],
+      "moved": false,
+      "firstMoved": null
+     },
+     {
+      "site": "rollAllFiveSecond@plant-units.ts:228",
+      "draws": [
+       83,
+       83
+      ],
+      "moved": false,
+      "firstMoved": null
+     },
+     {
+      "site": "rollDecidePath@plant-units.ts:290",
+      "draws": [
+       419,
+       419
+      ],
+      "moved": false,
+      "firstMoved": null
+     },
+     {
+      "site": "rollUnit@plant-units.ts:165",
+      "draws": [
+       581,
+       581
+      ],
+      "moved": false,
+      "firstMoved": null
+     },
+     {
+      "site": "secondPassEarly@plant-sheet.ts:138",
+      "draws": [
+       419,
+       419
+      ],
+      "moved": false,
+      "firstMoved": null
+     },
+     {
+      "site": "secondPassEarly@plant-sheet.ts:141",
+      "draws": [
+       419,
+       419
+      ],
+      "moved": false,
+      "firstMoved": null
+     },
+     {
+      "site": "tick@plant-model.ts:583",
+      "draws": [
+       1,
+       1
+      ],
+      "moved": false,
+      "firstMoved": null
+     },
+     {
+      "site": "tickFoxyChain@plant-hall.ts:253",
+      "draws": [
+       3,
+       3
+      ],
+      "moved": true,
+      "firstMoved": [
+       14176,
+       13576
+      ]
+     }
+    ]
+   },
+   "readoutWindows": {
+    "injectedState": 12345,
+    "shiftRange": 30,
+    "rows": [
+     {
+      "window": "wind-1",
+      "fromMs": 10400,
+      "toMs": 13700,
+      "periods": 34,
+      "scores": [
+       {
+        "variant": "sched",
+        "k": 0,
+        "agreement": 1
+       },
+       {
+        "variant": "const60",
+        "k": 3,
+        "agreement": 0.8787878787878788
+       },
+       {
+        "variant": "thinned50",
+        "k": 0,
+        "agreement": 1
+       }
+      ]
+     },
+     {
+      "window": "wind-2",
+      "fromMs": 20400,
+      "toMs": 23700,
+      "periods": 34,
+      "scores": [
+       {
+        "variant": "sched",
+        "k": 0,
+        "agreement": 1
+       },
+       {
+        "variant": "const60",
+        "k": 2,
+        "agreement": 0.9705882352941176
+       },
+       {
+        "variant": "thinned50",
+        "k": 2,
+        "agreement": 1
+       }
+      ]
+     },
+     {
+      "window": "wind-3",
+      "fromMs": 30400,
+      "toMs": 33700,
+      "periods": 34,
+      "scores": [
+       {
+        "variant": "sched",
+        "k": 0,
+        "agreement": 0.9705882352941176
+       },
+       {
+        "variant": "const60",
+        "k": 2,
+        "agreement": 0.9705882352941176
+       },
+       {
+        "variant": "thinned50",
+        "k": 0,
+        "agreement": 0.7272727272727273
+       }
+      ]
+     },
+     {
+      "window": "wind-4",
+      "fromMs": 40400,
+      "toMs": 43700,
+      "periods": 34,
+      "scores": [
+       {
+        "variant": "sched",
+        "k": 0,
+        "agreement": 0.8823529411764706
+       },
+       {
+        "variant": "const60",
+        "k": 2,
+        "agreement": 1
+       },
+       {
+        "variant": "thinned50",
+        "k": -30,
+        "agreement": 0
+       }
+      ]
+     },
+     {
+      "window": "wind-5",
+      "fromMs": 50400,
+      "toMs": 53700,
+      "periods": 34,
+      "scores": [
+       {
+        "variant": "sched",
+        "k": 0,
+        "agreement": 0.9411764705882353
+       },
+       {
+        "variant": "const60",
+        "k": 2,
+        "agreement": 0.9393939393939394
+       },
+       {
+        "variant": "thinned50",
+        "k": 2,
+        "agreement": 0.7878787878787878
+       }
+      ]
+     },
+     {
+      "window": "wind-6",
+      "fromMs": 60400,
+      "toMs": 63700,
+      "periods": 34,
+      "scores": [
+       {
+        "variant": "sched",
+        "k": 0,
+        "agreement": 0.8529411764705882
+       },
+       {
+        "variant": "const60",
+        "k": 2,
+        "agreement": 0.8787878787878788
+       },
+       {
+        "variant": "thinned50",
+        "k": 2,
+        "agreement": 0.7272727272727273
+       }
+      ]
+     },
+     {
+      "window": "wind-7",
+      "fromMs": 70400,
+      "toMs": 73700,
+      "periods": 34,
+      "scores": [
+       {
+        "variant": "sched",
+        "k": 0,
+        "agreement": 0.9117647058823529
+       },
+       {
+        "variant": "const60",
+        "k": 2,
+        "agreement": 1
+       },
+       {
+        "variant": "thinned50",
+        "k": 2,
+        "agreement": 0.7647058823529411
+       }
+      ]
+     },
+     {
+      "window": "wind-8",
+      "fromMs": 80400,
+      "toMs": 83700,
+      "periods": 34,
+      "scores": [
+       {
+        "variant": "sched",
+        "k": 0,
+        "agreement": 0.9705882352941176
+       },
+       {
+        "variant": "const60",
+        "k": 2,
+        "agreement": 0.7941176470588235
+       },
+       {
+        "variant": "thinned50",
+        "k": 2,
+        "agreement": 0.8235294117647058
+       }
+      ]
+     },
+     {
+      "window": "wind-9",
+      "fromMs": 90400,
+      "toMs": 93700,
+      "periods": 34,
+      "scores": [
+       {
+        "variant": "sched",
+        "k": 0,
+        "agreement": 1
+       },
+       {
+        "variant": "const60",
+        "k": 2,
+        "agreement": 0.7941176470588235
+       },
+       {
+        "variant": "thinned50",
+        "k": 2,
+        "agreement": 0.5588235294117647
+       }
+      ]
+     },
+     {
+      "window": "wind-10",
+      "fromMs": 100400,
+      "toMs": 103700,
+      "periods": 34,
+      "scores": [
+       {
+        "variant": "sched",
+        "k": 0,
+        "agreement": 0.9411764705882353
+       },
+       {
+        "variant": "const60",
+        "k": 2,
+        "agreement": 0.8823529411764706
+       },
+       {
+        "variant": "thinned50",
+        "k": 0,
+        "agreement": 0.7272727272727273
+       }
+      ]
+     }
+    ]
+   },
+   "elapsedMs": 15018
+  },
+  "golden0": {
+   "schema": "phone-draw-sensitivity-v1",
+   "claimLevel": "MODEL_ONLY",
+   "night": "full-06",
+   "exploratory": true,
+   "customNight": {
+    "withfreddy": 20,
+    "withbonnie": 20,
+    "withchica": 20,
+    "foxy": 20,
+    "toyfreddy": 20,
+    "toybonnie": 20,
+    "toychica": 20,
+    "mangle": 20,
+    "bb": 20,
+    "golden": 0
+   },
+   "model": {
+    "packages/source/src/games/fnaf2/plant-model.ts": "b3ac9830946a8dd5843d1e42f0b18b20577eb757b59c9d74f2b7bd0bb9ee1af9",
+    "packages/source/src/games/fnaf2/config.ts": "9cca624ec427246601e181e7af887bb545a0325dac0fc4fd0268cf967591b15e",
+    "packages/source/src/games/fnaf2/rng.ts": "03a7da1c57cf6eb3e345df6290e30c8e7ad3f7fefd1964472806c31cb47e4a37",
+    "packages/source/src/games/fnaf2/attack-animation.ts": "24395e91ca3591dfe6411e0f3ae7175d7129c17229b3f5f7ab2f91dd40d217e1",
+    "packages/source/src/games/fnaf2/blackout-clock.ts": "cc0afa0ebe8720a7e8295ded2c0aa28746a38e431c90771eb6d6b8ff94414c43",
+    "packages/source/src/games/fnaf2/contact-input.ts": "81c854835a1b1a4b30e0193fde37e7b135b29bdc8b9ad07853251c964305b4cc",
+    "packages/source/src/games/fnaf2/movement-clock.ts": "1fe53bd164464e7f9776a460b917c588a306f8afb3d20b75a92c53835c3cdaf0",
+    "packages/source/src/games/fnaf2/plant-constants.ts": "9d4b593b6b55665c1311950e12b52357724b8206744df1e9ccb7d3d393423160",
+    "packages/source/src/games/fnaf2/plant-hall.ts": "442006d88dbdac004a49049f581bfab603977650b98b035f88cfae5fc5c1a297",
+    "packages/source/src/games/fnaf2/plant-office.ts": "207abd8744d93974a18e9433992aa94713d1bb986c823218ea5a714ab2e707b9",
+    "packages/source/src/games/fnaf2/plant-options.ts": "1287bde94d4f8fac2dede0bcd5e3689b7870afe554c30c9c2feb3b7f61c82db7",
+    "packages/source/src/games/fnaf2/plant-puppet.ts": "b115cf2c70462624bcad66a0de51797fed405f7bb12283397bb43fe76a8be692",
+    "packages/source/src/games/fnaf2/plant-sheet.ts": "d6dd683002c28fa98270a0c28cc92ae1c6f40c74cc3ca53e14a9ad1e4fd552d6",
+    "packages/source/src/games/fnaf2/plant-units.ts": "d8146200b0db0dca887d6abe68d91205b16234f38a91ad8bd5534ec7179649c3"
+   },
+   "inputs": {
+    "config": "26b89b453e2b483610c118c264d1eb0dbb5d06758ab53db283807ffc25d666d0",
+    "modelOptions": "d1ba74693da29dac953058c1ea5d41b553ac6d7494ce911f6e8c742ef487db4a",
+    "contacts": "c4ca5d3320b8a65c3522d3a3a072a79c7a10251447f5112a61a903d45da6c67f",
+    "frameTimes": "383d25c80bb3648e9199589ebce7b6782a510eacee4409df3c90e940869541cf"
+   },
+   "variants": [
+    {
+     "name": "landed",
+     "what": "the primary variant: measured clock, each press on its landing frame",
+     "contactsSha256": "c4ca5d3320b8a65c3522d3a3a072a79c7a10251447f5112a61a903d45da6c67f",
+     "deltas": 25435
+    },
+    {
+     "name": "sched",
+     "what": "the same clock, each press on the update of its send",
+     "contactsSha256": "62578d5b4247d371c2e2ca68411118b0877a356079e980381360d943fad4a848",
+     "deltas": 25435
+    },
+    {
+     "name": "const60",
+     "what": "a constant 60 Hz clock, presses mid-update (a night without a frame trace)",
+     "contactsSha256": "45896ebb9ae973f8d8280baaa52cdbacf3d43c90d66a017a8e0a634de3912a19",
+     "deltas": 0
+    },
+    {
+     "name": "thinned50",
+     "what": "the frame trace thinned to half its frames, catch-up rule",
+     "contactsSha256": "eb1be4d9be9752c4829b76bfffc84c9760d7a162529d68a444084b1d31e9066f",
+     "deltas": 22010
+    }
+   ],
+   "drawSites": {
+    "frames": 25200,
+    "horizon": 22759,
+    "replays": {
+     "landed": {
+      "last": 22759,
+      "outcome": "death:inside-office"
+     },
+     "sched": {
+      "last": 25200,
+      "outcome": "alive"
+     }
+    },
+    "rows": [
+     {
+      "site": "advance@plant-units.ts:511",
+      "draws": [
+       14,
+       12
+      ],
+      "moved": true,
+      "firstMoved": [
+       1506,
+       1806
+      ]
+     },
+     {
+      "site": "bbEnterOpening@plant-units.ts:144",
+      "draws": [
+       9,
+       9
+      ],
+      "moved": true,
+      "firstMoved": [
+       1826,
+       2419
+      ]
+     },
+     {
+      "site": "bbHop@plant-units.ts:129",
+      "draws": [
+       29,
+       30
+      ],
+      "moved": true,
+      "firstMoved": [
+       602,
+       1506
+      ]
+     },
+     {
+      "site": "bbHop@plant-units.ts:130",
+      "draws": [
+       9,
+       10
+      ],
+      "moved": true,
+      "firstMoved": [
+       1206,
+       2104
+      ]
+     },
+     {
+      "site": "blackoutFlicker@blackout-clock.ts:28",
+      "draws": [
+       4686,
+       4335
+      ],
+      "moved": true,
+      "firstMoved": [
+       2050,
+       2651
+      ]
+     },
+     {
+      "site": "drawUnconditional@plant-sheet.ts:272",
+      "draws": [
+       8349,
+       8349
+      ],
+      "moved": false,
+      "firstMoved": null
+     },
+     {
+      "site": "drawViewed@plant-sheet.ts:40",
+      "draws": [
+       2,
+       3
+      ],
+      "moved": true,
+      "firstMoved": [
+       183,
+       171
+      ]
+     },
+     {
+      "site": "footstepDraws@plant-sheet.ts:251",
+      "draws": [
+       131,
+       150
+      ],
+      "moved": true,
+      "firstMoved": [
+       602,
+       302
+      ]
+     },
+     {
+      "site": "monitorDownLate@plant-sheet.ts:56",
+      "draws": [
+       39,
+       39
+      ],
+      "moved": true,
+      "firstMoved": [
+       208,
+       204
+      ]
+     },
+     {
+      "site": "one@plant-sheet.ts:80",
+      "draws": [
+       83,
+       58
+      ],
+      "moved": true,
+      "firstMoved": [
+       2132,
+       2732
+      ]
+     },
+     {
+      "site": "randomImageDraw@plant-sheet.ts:228",
+      "draws": [
+       40,
+       40
+      ],
+      "moved": true,
+      "firstMoved": [
+       208,
+       204
+      ]
+     },
+     {
+      "site": "repelCooldown@plant-office.ts:183",
+      "draws": [
+       25,
+       24
+      ],
+      "moved": true,
+      "firstMoved": [
+       2330,
+       2933
+      ]
+     },
+     {
+      "site": "rollAllFiveSecond@plant-units.ts:185",
+      "draws": [
+       75,
+       75
+      ],
+      "moved": false,
+      "firstMoved": null
+     },
+     {
+      "site": "rollAllFiveSecond@plant-units.ts:193",
+      "draws": [
+       75,
+       75
+      ],
+      "moved": false,
+      "firstMoved": null
+     },
+     {
+      "site": "rollAllFiveSecond@plant-units.ts:210",
+      "draws": [
+       75,
+       75
+      ],
+      "moved": false,
+      "firstMoved": null
+     },
+     {
+      "site": "rollAllFiveSecond@plant-units.ts:228",
+      "draws": [
+       75,
+       75
+      ],
+      "moved": false,
+      "firstMoved": null
+     },
+     {
+      "site": "rollDecidePath@plant-units.ts:290",
+      "draws": [
+       378,
+       378
+      ],
+      "moved": false,
+      "firstMoved": null
+     },
+     {
+      "site": "rollUnit@plant-units.ts:165",
+      "draws": [
+       525,
+       525
+      ],
+      "moved": false,
+      "firstMoved": null
+     },
+     {
+      "site": "secondPassEarly@plant-sheet.ts:109",
+      "draws": [
+       0,
+       2
+      ],
+      "moved": true,
+      "firstMoved": [
+       null,
+       15377
+      ]
+     },
+     {
+      "site": "secondPassEarly@plant-sheet.ts:110",
+      "draws": [
+       9,
+       4
+      ],
+      "moved": true,
+      "firstMoved": [
+       3570,
+       7151
+      ]
+     },
+     {
+      "site": "secondPassEarly@plant-sheet.ts:138",
+      "draws": [
+       378,
+       378
+      ],
+      "moved": false,
+      "firstMoved": null
+     },
+     {
+      "site": "secondPassEarly@plant-sheet.ts:141",
+      "draws": [
+       378,
+       378
+      ],
+      "moved": false,
+      "firstMoved": null
+     },
+     {
+      "site": "secondPassFront@plant-sheet.ts:98",
+      "draws": [
+       4,
+       3
+      ],
+      "moved": true,
+      "firstMoved": [
+       9335,
+       5922
+      ]
+     },
+     {
+      "site": "secondPassFront@plant-sheet.ts:99",
+      "draws": [
+       5,
+       6
+      ],
+      "moved": true,
+      "firstMoved": [
+       2368,
+       2969
+      ]
+     },
+     {
+      "site": "secondPassLate@plant-sheet.ts:158",
+      "draws": [
+       5,
+       6
+      ],
+      "moved": true,
+      "firstMoved": [
+       1206,
+       1506
+      ]
+     },
+     {
+      "site": "tick@plant-model.ts:583",
+      "draws": [
+       1,
+       1
+      ],
+      "moved": false,
+      "firstMoved": null
+     },
+     {
+      "site": "tick@plant-model.ts:696",
+      "draws": [
+       1,
+       0
+      ],
+      "moved": true,
+      "firstMoved": [
+       22547,
+       null
+      ]
+     },
+     {
+      "site": "tickFoxyChain@plant-hall.ts:253",
+      "draws": [
+       1,
+       2
+      ],
+      "moved": true,
+      "firstMoved": [
+       11718,
+       8773
+      ]
+     },
+     {
+      "site": "ventCamDraws@plant-sheet.ts:220",
+      "draws": [
+       35,
+       30
+      ],
+      "moved": true,
+      "firstMoved": [
+       1506,
+       1806
+      ]
+     }
+    ]
+   },
+   "readoutWindows": {
+    "injectedState": 12345,
+    "shiftRange": 30,
+    "rows": [
+     {
+      "window": "wind-1",
+      "fromMs": 10400,
+      "toMs": 13700,
+      "periods": 34,
+      "scores": [
+       {
+        "variant": "sched",
+        "k": 0,
+        "agreement": 0.9705882352941176
+       },
+       {
+        "variant": "const60",
+        "k": 3,
+        "agreement": 0.8787878787878788
+       },
+       {
+        "variant": "thinned50",
+        "k": 0,
+        "agreement": 0.48484848484848486
+       }
+      ]
+     },
+     {
+      "window": "wind-2",
+      "fromMs": 20400,
+      "toMs": 23700,
+      "periods": 34,
+      "scores": [
+       {
+        "variant": "sched",
+        "k": 1,
+        "agreement": 0.8529411764705882
+       },
+       {
+        "variant": "const60",
+        "k": 2,
+        "agreement": 0.9705882352941176
+       },
+       {
+        "variant": "thinned50",
+        "k": 3,
+        "agreement": 0.9090909090909091
+       }
+      ]
+     },
+     {
+      "window": "wind-3",
+      "fromMs": 30400,
+      "toMs": 33700,
+      "periods": 34,
+      "scores": [
+       {
+        "variant": "sched",
+        "k": 1,
+        "agreement": 0.9705882352941176
+       },
+       {
+        "variant": "const60",
+        "k": 2,
+        "agreement": 0.9705882352941176
+       },
+       {
+        "variant": "thinned50",
+        "k": 1,
+        "agreement": 0.696969696969697
+       }
+      ]
+     },
+     {
+      "window": "wind-4",
+      "fromMs": 40400,
+      "toMs": 43700,
+      "periods": 34,
+      "scores": [
+       {
+        "variant": "sched",
+        "k": 0,
+        "agreement": 0.8823529411764706
+       },
+       {
+        "variant": "const60",
+        "k": 2,
+        "agreement": 1
+       },
+       {
+        "variant": "thinned50",
+        "k": -30,
+        "agreement": 0
+       }
+      ]
+     },
+     {
+      "window": "wind-5",
+      "fromMs": 50400,
+      "toMs": 53700,
+      "periods": 34,
+      "scores": [
+       {
+        "variant": "sched",
+        "k": 0,
+        "agreement": 0.9411764705882353
+       },
+       {
+        "variant": "const60",
+        "k": 2,
+        "agreement": 0.9090909090909091
+       },
+       {
+        "variant": "thinned50",
+        "k": 1,
+        "agreement": 0.6060606060606061
+       }
+      ]
+     },
+     {
+      "window": "wind-6",
+      "fromMs": 60400,
+      "toMs": 63700,
+      "periods": 34,
+      "scores": [
+       {
+        "variant": "sched",
+        "k": -1,
+        "agreement": 0.8529411764705882
+       },
+       {
+        "variant": "const60",
+        "k": 2,
+        "agreement": 0.7575757575757576
+       },
+       {
+        "variant": "thinned50",
+        "k": 1,
+        "agreement": 0.7272727272727273
+       }
+      ]
+     },
+     {
+      "window": "wind-7",
+      "fromMs": 70400,
+      "toMs": 73700,
+      "periods": 34,
+      "scores": [
+       {
+        "variant": "sched",
+        "k": 2,
+        "agreement": 0.7647058823529411
+       },
+       {
+        "variant": "const60",
+        "k": 4,
+        "agreement": 0.7878787878787878
+       },
+       {
+        "variant": "thinned50",
+        "k": 4,
+        "agreement": 0.6176470588235294
+       }
+      ]
+     },
+     {
+      "window": "wind-8",
+      "fromMs": 80400,
+      "toMs": 83700,
+      "periods": 34,
+      "scores": [
+       {
+        "variant": "sched",
+        "k": 0,
+        "agreement": 0.9705882352941176
+       },
+       {
+        "variant": "const60",
+        "k": 1,
+        "agreement": 0.8235294117647058
+       },
+       {
+        "variant": "thinned50",
+        "k": 0,
+        "agreement": 0.5294117647058824
+       }
+      ]
+     },
+     {
+      "window": "wind-9",
+      "fromMs": 90400,
+      "toMs": 93700,
+      "periods": 34,
+      "scores": [
+       {
+        "variant": "sched",
+        "k": 0,
+        "agreement": 0.8823529411764706
+       },
+       {
+        "variant": "const60",
+        "k": 2,
+        "agreement": 0.7941176470588235
+       },
+       {
+        "variant": "thinned50",
+        "k": 0,
+        "agreement": 0.4411764705882353
+       }
+      ]
+     },
+     {
+      "window": "wind-10",
+      "fromMs": 100400,
+      "toMs": 103700,
+      "periods": 34,
+      "scores": [
+       {
+        "variant": "sched",
+        "k": 2,
+        "agreement": 0.7941176470588235
+       },
+       {
+        "variant": "const60",
+        "k": 4,
+        "agreement": 0.7352941176470589
+       },
+       {
+        "variant": "thinned50",
+        "k": 1,
+        "agreement": 0.7272727272727273
+       }
+      ]
+     }
+    ]
+   },
+   "elapsedMs": 21347
+  }
+ },
+ "reading": {
+  "dials0": "Every dial at 0: the draws that move with press landing are only drawViewed@plant-sheet.ts:40, footstepDraws@plant-sheet.ts:251, monitorDownLate@plant-sheet.ts:56, randomImageDraw@plant-sheet.ts:228, tickFoxyChain@plant-hall.ts:253; inside the ten winding windows the sent-press prediction agrees with the landed one on 0.85-1.00 of periods at zero cycle shift, a constant 60 Hz clock on 0.79-1.00.",
+  "golden0": "Golden Freddy alone at 0 (the rest at 20) removes the hall roll but keeps the animatronic-driven draws moving (19 sites); sent presses agree on 0.76-0.97, the 60 Hz clock on 0.74-1.00.",
+  "design": "A Custom Night with every dial at 0 is the condition in which the readout's window prediction depends least on press landing and on the clock: the night's own draws there are the clock-timed rolls. A measurement night there, recorded with the native static readout on the Companion as installed (no frame trace), tests whether the static identifies the generator's state at all, before any 10/20 night asks it to."
+ },
+ "reproducer": "node packages/propose/bin/recompile/phone-draw-sensitivity.ts --night full-06 --frames 25200 --custom-night <dials.json> --out <result>, dials all 0, and all 20 with golden 0",
+ "gate": "node packages/propose/bin/recompile/test-phone-draw-sensitivity.ts",
+ "id": "s2-readout-dial-design-e10a0dcc751ec9e7"
+}

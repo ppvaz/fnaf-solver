@@ -226,9 +226,14 @@ Details:
     measured, or carried as a nuisance
     ([draw sensitivity](../docs/evidence/full06-draw-sensitivity-20261001.json),
     `s2-draw-sensitivity-ffde3e5ae1319d23`). On Companion 0.1.14 a frame
-    trace starves the region copier (0 of 553 frames), so the next
-    measurement night needs the Companion built from this tree (a venue
-    re-bind) or landing regions beside the static view.
+    trace starves the region copier (0 of 553 frames). With every Custom
+    Night dial at 0 the night's own draws are the clock-timed rolls, and the
+    in-window prediction agrees across press rules on 0.85-1.00 of periods at
+    zero shift and under a 60 Hz clock on 0.79-1.00
+    ([dial design](../docs/evidence/full06-readout-dial-design-20261001.json),
+    `s2-readout-dial-design-e10a0dcc751ec9e7`): a 0/20 measurement night,
+    native static readout without the trace, tests the instrument itself on
+    the Companion as installed.
   - **No office start state explains full-06 (pre-registered, MODEL_ONLY,
     INCONCLUSIVE).** All 65,536 start states were replayed on the night's
     measured clock and landed contacts. The measured seed agrees through
