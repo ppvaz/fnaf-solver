@@ -1426,7 +1426,7 @@
       "night": 7,
       "route": "Minus Toys",
       "tags": ["rebuild", "actuation", "death"],
-      "sources": ["tools/recompile/results/k3-rebuild-phone-20260929.json", "commit:6e2aece"],
+      "sources": ["tools/recompile/results/k3-rebuild-phone-20260929.json", "commit:80058f5"],
       "status": "standing",
       "supersededBy": null,
       "supersedes": null
@@ -1445,7 +1445,7 @@
       "night": 7,
       "route": "Minus Toys",
       "tags": ["model", "rebuild", "foxy", "fidelity"],
-      "sources": ["tools/recompile/results/model-foxy-move-value2-20260929.json", "commit:dbfe789"],
+      "sources": ["tools/recompile/results/model-foxy-move-value2-20260929.json", "commit:0209e29"],
       "status": "standing",
       "supersededBy": null,
       "supersedes": null
@@ -1464,7 +1464,7 @@
       "night": null,
       "route": null,
       "tags": ["model", "rebuild", "encounter", "foxy", "fidelity"],
-      "sources": ["tools/recompile/results/phone-encounters-20260930.json", "commit:dbfe789"],
+      "sources": ["tools/recompile/results/phone-encounters-20260930.json", "commit:0209e29"],
       "status": "standing",
       "supersededBy": null,
       "supersedes": null
@@ -1521,7 +1521,7 @@
       "night": 6,
       "route": null,
       "tags": ["model", "census", "retraction", "rebuild"],
-      "sources": ["docs/evidence/fnaf3-stage1-g275-census-20260930.json", "commit:2bc1d15"],
+      "sources": ["docs/evidence/fnaf3-stage1-g275-census-20260930.json", "commit:14933f7"],
       "status": "standing",
       "supersededBy": null,
       "supersedes": null
