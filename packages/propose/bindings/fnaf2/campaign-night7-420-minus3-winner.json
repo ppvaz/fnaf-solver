@@ -1,0 +1,84 @@
+{
+ "engineHash": "android-catalog-minus3-v1",
+ "gate": {
+  "claimLevel": "MODEL_ONLY",
+  "engineHash": "android-catalog-minus3-v1",
+  "nights": [
+   7
+  ],
+  "replayHash": "fnv1a-f1b23729",
+  "seeds": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8
+  ],
+  "status": "PASS",
+  "evidence": "Night 7 Custom Night 4/20 (withered Freddy, Bonnie, Chica and Foxy at 20, every other dial 0, Puppet 15), the minimal Minus 3 clear loop: hall flash, monitor, wind, camdrop per 10 s, no mask and no vent input; the cam:8 split is load-bearing. Canonical for 4/20 on Pedro's word, 2026-09-30. It is the as-run winner fnv1a-15124c58 (artifacts/night7-420-minus3/winner.json, the 6 AM night7-n7-420-minimal-m3-20260914T020543Z) with one change: the opening wind hold starts at +2083 ms and lasts 1767 ms instead of +2050 for 1800, so it clears the 434 ms after-monitor-raise-wind floor by 33 ms instead of 0 (test-seam-slack.mjs), the room taken out of the wind hold. Model at the 4/20 vector: 3000/3000 on seeds 1..3000 and 3000/3000 on heldOutSeeds(3000); the as-run control also 3000/3000 and 3000/3000; the same plan at 10/20 loses 30/30 (docs/evidence/night7-420-minus3-seam-shift-20260930.json). MODEL_ONLY until a run pack names this binding."
+ },
+ "knobs": {
+  "armingGapMs": 50,
+  "camdropLeadMs": 150,
+  "camdropMonitorMs": 33,
+  "camdropMs": 9000,
+  "camdropTailMs": 400,
+  "contactMs": 33,
+  "loopStartMs": 5000,
+  "maskOffMs": 4400,
+  "maskOnMs": 9600,
+  "observeUntilMs": 420000,
+  "openArmMs": 833,
+  "openCamdropAtMs": 4000,
+  "openCamdropLeadMs": 150,
+  "openCamdropMonitorMs": 33,
+  "openCamdropTailMs": 400,
+  "openLastViewedMs": 300,
+  "openMaskAtMs": 4650,
+  "openRaiseGapMs": 733,
+  "openViewMs": 0,
+  "openWindAtMs": 2083,
+  "openWindMs": 1767,
+  "periodMs": 10000,
+  "raiseMs": 5300,
+  "secondHallHoldMs": 200,
+  "secondHallMs": 4700,
+  "secondHallVent": true,
+  "stopAtMs": 419600,
+  "windAtMs": 5800,
+  "windMs": 3200,
+  "maskless": true,
+  "ventless": true
+ },
+ "nights": [
+  7
+ ],
+ "profile": "hid-mediaprojection",
+ "schema": "winner-v1",
+ "seeds": [
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8
+ ],
+ "strategy": "minus3",
+ "dials": {
+  "withfreddy": 20,
+  "withbonnie": 20,
+  "withchica": 20,
+  "foxy": 20,
+  "toyfreddy": 0,
+  "toybonnie": 0,
+  "toychica": 0,
+  "mangle": 0,
+  "bb": 0,
+  "golden": 0
+ }
+}

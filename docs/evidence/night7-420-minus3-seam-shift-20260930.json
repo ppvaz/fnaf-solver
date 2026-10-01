@@ -1,0 +1,58 @@
+{
+  "schema": "model-seal-v1",
+  "id": "night7-420-minus3-seam-shift-20260930",
+  "date": "2026-09-30",
+  "step": "S1 (plans/ROADMAP.md): commit the 4/20 Minus 3 winner the phone won with, so its run can be packed and promoted",
+  "claimLevel": "MODEL_ONLY",
+  "question": "Can the Night 7 4/20 Minus 3 winner clear test-seam-slack.mjs without losing a seed in the model?",
+  "authorization": "Pedro, 2026-09-30: \"where is the minus 3 minimalized input schedule for night 7 20/20/20/20 mode, that should be canonical too\"; then \"agreed with the best use, broadcast your hold of the device and do\".",
+  "subject": {
+    "asRun": {
+      "file": "artifacts/night7-420-minus3/winner.json",
+      "note": "gitignored; never committed because test-seam-slack.mjs refuses it",
+      "sha256": "5fc42711b5f245b7b4af3e9146485306ab033e7402edd874e0da1ee1d16ace46",
+      "winnerHash": "fnv1a-15124c58",
+      "deviceWin": "night7-n7-420-minimal-m3-20260914T020543Z"
+    },
+    "shifted": {
+      "file": "packages/propose/bindings/fnaf2/campaign-night7-420-minus3-winner.json",
+      "winnerHash": "fnv1a-c839fc9f",
+      "planSha256": "55d57dd9d14a9beb97865d48ddb1f91e703a6d931f391cd61cb568bdbb1154e6",
+      "replayHash": "fnv1a-f1b23729",
+      "knobDelta": { "openWindAtMs": [2050, 2083], "openWindMs": [1800, 1767] }
+    },
+    "dials": { "withfreddy": 20, "withbonnie": 20, "withchica": 20, "foxy": 20, "toyfreddy": 0, "toybonnie": 0, "toychica": 0, "mangle": 0, "bb": 0, "golden": 0 },
+    "puppet": 15
+  },
+  "method": {
+    "seams": "compileArtifactPlans(emit(winner, 7), parsePlan, packages/play/profiles/fnaf2/moto-g56/hid-mediaprojection.json), as test-seam-slack.mjs compiles it; SEAM_JITTER_ALLOWANCE_MS = 33",
+    "replay": "STRATEGY_REGISTRY.minus3.emit(validateWinner(winner), 7).replay(seed) at the winner's own dials; a night counts as won when sim.won",
+    "designBlock": { "seeds": "1..3000", "n": 3000 },
+    "heldOutBlock": { "seeds": "heldOutSeeds(3000) from packages/propose/bin/census/winner-phase-census.mjs: the first 3000 seeds no tuning cohort reaches", "n": 3000 },
+    "dialControl": "the shifted plan with every dial set to 20 (10/20), seeds 1..30"
+  },
+  "results": {
+    "asRun": {
+      "worstSeam": { "relation": "after-monitor-raise-wind", "atMs": 2050, "gapMs": 434, "floorMs": 434, "slackMs": 0 },
+      "seamsUnderAllowance": 1,
+      "design": { "won": 3000, "n": 3000, "deaths": {} },
+      "heldOut": { "won": 3000, "n": 3000, "deaths": {} }
+    },
+    "shifted": {
+      "worstSeam": { "relation": "after-monitor-raise-wind", "atMs": 2083, "slackMs": 33 },
+      "seamsUnderAllowance": 0,
+      "nextSeams": [
+        { "cycle": "clear", "relation": "after-monitor-raise-wind", "atMs": 5800, "gapMs": 500, "floorMs": 434, "slackMs": 66 },
+        { "cycle": "opening", "relation": "after-monitor-raise-camera", "atMs": 300, "gapMs": 300, "floorMs": 233, "slackMs": 67 }
+      ],
+      "design": { "won": 3000, "n": 3000, "deaths": {} },
+      "heldOut": { "won": 3000, "n": 3000, "deaths": {} }
+    },
+    "dialControl": { "won": 0, "n": 30, "deaths": { "inside-office": 29, "foxy": 1 }, "reads": "the replay honours the winner's dials: the same plan at 10/20 dies" }
+  },
+  "verdict": "The opening wind hold moves 33 ms later and 33 ms shorter (the room taken out of a wind hold, never the mask), every seam clears the allowance, and the model scores the shifted plan exactly as the as-run plan: 3000/3000 design and 3000/3000 held out. MODEL_ONLY; the phone record of the as-run plan is one 6 AM in five packed attempts (m1 DEATH, m2 RESULT_LOST, m3 WIN, p1 RESULT_LOST, p1b ERROR), which is no reliability claim either way.",
+  "open": [
+    "No phone run names fnv1a-c839fc9f yet; until one is packed the binding stands MODEL_ONLY and S1's closing condition is unmet.",
+    "The opening seam now sits exactly on the allowance (33 ms), as the gate permits; the per-cycle seams keep 66 ms."
+  ]
+}
