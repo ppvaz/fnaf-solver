@@ -269,6 +269,33 @@
    "status": "standing",
    "supersededBy": null,
    "supersedes": null
+  },
+  {
+   "id": "full06-press-landing-reorders-the-stream",
+   "date": "2026-10-01",
+   "game": "fnaf2",
+   "kind": "fact",
+   "title": "Where a press lands, to the update, reorders the office's random stream",
+   "body": "Replaying full-06 on its own measured clock, the model was given each press either on the frame where it landed or on the update it was sent, about four updates apart. Every clock-timed roll (the camera static's, each animatronic's movement rolls, the five-second rolls) spent the same draws on the same updates either way. What moved were the draws tied to presses: the camera-view and monitor-down image draws, the footstep draws, and Golden Freddy's hall roll, whose one-second timer, by the event sheet's own condition order, only runs while the hall light is off, so every flash shifts its phase. One shifted draw reorders all the draws after it: from the same seed, the night died 378 seconds in with landed presses and survived with sent ones. Inside a winding window this is enough to change the camera static's predicted flicker, so reading the random stream off the static needs that night's presses measured too.",
+   "measured": "landed vs sent presses: clock rolls identical; g781 first moves at update 370 vs 376; in-window agreement 0.18-0.82 (sent), 0.62-1.00 (60 Hz clock)",
+   "label": "MODEL_ONLY",
+   "rung": null,
+   "plan": 25,
+   "night": 7,
+   "route": "Minus Toys",
+   "tags": [
+    "model",
+    "seed",
+    "fidelity",
+    "s2"
+   ],
+   "sources": [
+    "docs/evidence/full06-draw-sensitivity-20261001.json",
+    "packages/propose/bin/recompile/phone-draw-sensitivity.ts"
+   ],
+   "status": "standing",
+   "supersededBy": null,
+   "supersedes": null
   }
  ]
 }

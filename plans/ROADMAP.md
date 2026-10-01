@@ -211,6 +211,24 @@ Details:
     ([realignment](../docs/evidence/full06-audio-realignment-20261001.json),
     `s2-audio-realignment-f61f47d56098beb2`). DEVICE_MEASURED audio against
     MODEL_ONLY replays.
+  - **Press landing reorders the office stream (2026-10-01, MODEL_ONLY,
+    exploratory).** On full-06's measured clock, moving each press from its
+    landing frame to its send update (about four updates) leaves every
+    clock-timed roll on the same draws, but moves the camera-view and
+    monitor-down image draws, the footstep draws and Golden Freddy's hall
+    roll (Office g781: its Every 1000 ms is reached only while the hall light
+    is off, so each flash's length shifts its phase), and through them every
+    later draw: the same seed dies at update 22,698 with landed contacts and
+    lives with sent ones. Inside the static readout's winding windows the
+    predicted static agrees with the landed prediction on 0.18-0.82 of
+    periods under sent contacts and 0.62-1.00 under a constant 60 Hz clock,
+    so a readout scan needs that night's camera, monitor and hall landings
+    measured, or carried as a nuisance
+    ([draw sensitivity](../docs/evidence/full06-draw-sensitivity-20261001.json),
+    `s2-draw-sensitivity-ffde3e5ae1319d23`). On Companion 0.1.14 a frame
+    trace starves the region copier (0 of 553 frames), so the next
+    measurement night needs the Companion built from this tree (a venue
+    re-bind) or landing regions beside the static view.
   - **No office start state explains full-06 (pre-registered, MODEL_ONLY,
     INCONCLUSIVE).** All 65,536 start states were replayed on the night's
     measured clock and landed contacts. The measured seed agrees through

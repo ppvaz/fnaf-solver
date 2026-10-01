@@ -1,0 +1,666 @@
+{
+ "schema": "evidence-record-v1",
+ "date": "2026-10-01",
+ "step": "ROADMAP S2",
+ "claimLevel": "MODEL_ONLY (the production model on full-06's measured clock and contacts)",
+ "question": "Which of the office stream's draws depend on when a press lands, to the update, and does the static readout's prediction inside a winding window survive the clock a night without a frame trace would have?",
+ "exploratory": "A characterization, made after the same sweeps were first run by hand on 2026-10-01; it tests no predeclared rule. Its implications are hypotheses for the next measurement night, which is to be pre-registered.",
+ "tool": {
+  "path": "packages/propose/bin/recompile/phone-draw-sensitivity.ts",
+  "sha256": "e088d01c9326142ee5742abe1bb550f5b65df3a6e306050893f670c91fdcf275"
+ },
+ "result": {
+  "schema": "phone-draw-sensitivity-v1",
+  "claimLevel": "MODEL_ONLY",
+  "night": "full-06",
+  "exploratory": true,
+  "model": {
+   "packages/source/src/games/fnaf2/plant-model.ts": "b3ac9830946a8dd5843d1e42f0b18b20577eb757b59c9d74f2b7bd0bb9ee1af9",
+   "packages/source/src/games/fnaf2/config.ts": "9cca624ec427246601e181e7af887bb545a0325dac0fc4fd0268cf967591b15e",
+   "packages/source/src/games/fnaf2/rng.ts": "03a7da1c57cf6eb3e345df6290e30c8e7ad3f7fefd1964472806c31cb47e4a37",
+   "packages/source/src/games/fnaf2/attack-animation.ts": "24395e91ca3591dfe6411e0f3ae7175d7129c17229b3f5f7ab2f91dd40d217e1",
+   "packages/source/src/games/fnaf2/blackout-clock.ts": "cc0afa0ebe8720a7e8295ded2c0aa28746a38e431c90771eb6d6b8ff94414c43",
+   "packages/source/src/games/fnaf2/contact-input.ts": "81c854835a1b1a4b30e0193fde37e7b135b29bdc8b9ad07853251c964305b4cc",
+   "packages/source/src/games/fnaf2/movement-clock.ts": "1fe53bd164464e7f9776a460b917c588a306f8afb3d20b75a92c53835c3cdaf0",
+   "packages/source/src/games/fnaf2/plant-constants.ts": "9d4b593b6b55665c1311950e12b52357724b8206744df1e9ccb7d3d393423160",
+   "packages/source/src/games/fnaf2/plant-hall.ts": "442006d88dbdac004a49049f581bfab603977650b98b035f88cfae5fc5c1a297",
+   "packages/source/src/games/fnaf2/plant-office.ts": "207abd8744d93974a18e9433992aa94713d1bb986c823218ea5a714ab2e707b9",
+   "packages/source/src/games/fnaf2/plant-options.ts": "1287bde94d4f8fac2dede0bcd5e3689b7870afe554c30c9c2feb3b7f61c82db7",
+   "packages/source/src/games/fnaf2/plant-puppet.ts": "b115cf2c70462624bcad66a0de51797fed405f7bb12283397bb43fe76a8be692",
+   "packages/source/src/games/fnaf2/plant-sheet.ts": "d6dd683002c28fa98270a0c28cc92ae1c6f40c74cc3ca53e14a9ad1e4fd552d6",
+   "packages/source/src/games/fnaf2/plant-units.ts": "d8146200b0db0dca887d6abe68d91205b16234f38a91ad8bd5534ec7179649c3"
+  },
+  "inputs": {
+   "config": "26b89b453e2b483610c118c264d1eb0dbb5d06758ab53db283807ffc25d666d0",
+   "modelOptions": "d1ba74693da29dac953058c1ea5d41b553ac6d7494ce911f6e8c742ef487db4a",
+   "contacts": "c4ca5d3320b8a65c3522d3a3a072a79c7a10251447f5112a61a903d45da6c67f",
+   "frameTimes": "383d25c80bb3648e9199589ebce7b6782a510eacee4409df3c90e940869541cf"
+  },
+  "variants": [
+   {
+    "name": "landed",
+    "what": "the primary variant: measured clock, each press on its landing frame",
+    "contactsSha256": "c4ca5d3320b8a65c3522d3a3a072a79c7a10251447f5112a61a903d45da6c67f",
+    "deltas": 25435
+   },
+   {
+    "name": "sched",
+    "what": "the same clock, each press on the update of its send",
+    "contactsSha256": "62578d5b4247d371c2e2ca68411118b0877a356079e980381360d943fad4a848",
+    "deltas": 25435
+   },
+   {
+    "name": "const60",
+    "what": "a constant 60 Hz clock, presses mid-update (a night without a frame trace)",
+    "contactsSha256": "45896ebb9ae973f8d8280baaa52cdbacf3d43c90d66a017a8e0a634de3912a19",
+    "deltas": 0
+   },
+   {
+    "name": "thinned50",
+    "what": "the frame trace thinned to half its frames, catch-up rule",
+    "contactsSha256": "eb1be4d9be9752c4829b76bfffc84c9760d7a162529d68a444084b1d31e9066f",
+    "deltas": 22010
+   }
+  ],
+  "drawSites": {
+   "frames": 25200,
+   "horizon": 22698,
+   "replays": {
+    "landed": {
+     "last": 22698,
+     "outcome": "death:inside-office"
+    },
+    "sched": {
+     "last": 25200,
+     "outcome": "alive"
+    }
+   },
+   "rows": [
+    {
+     "site": "advance@plant-units.ts:511",
+     "draws": [
+      12,
+      12
+     ],
+     "moved": true,
+     "firstMoved": [
+      1506,
+      1206
+     ]
+    },
+    {
+     "site": "bbEnterOpening@plant-units.ts:144",
+     "draws": [
+      10,
+      10
+     ],
+     "moved": true,
+     "firstMoved": [
+      1826,
+      2419
+     ]
+    },
+    {
+     "site": "bbHop@plant-units.ts:129",
+     "draws": [
+      31,
+      33
+     ],
+     "moved": true,
+     "firstMoved": [
+      906,
+      1206
+     ]
+    },
+    {
+     "site": "bbHop@plant-units.ts:130",
+     "draws": [
+      10,
+      11
+     ],
+     "moved": true,
+     "firstMoved": [
+      1506,
+      1806
+     ]
+    },
+    {
+     "site": "blackoutFlicker@blackout-clock.ts:28",
+     "draws": [
+      3972,
+      4329
+     ],
+     "moved": true,
+     "firstMoved": [
+      2050,
+      2048
+     ]
+    },
+    {
+     "site": "drawUnconditional@plant-sheet.ts:272",
+     "draws": [
+      8327,
+      8327
+     ],
+     "moved": false,
+     "firstMoved": null
+    },
+    {
+     "site": "drawViewed@plant-sheet.ts:40",
+     "draws": [
+      2,
+      3
+     ],
+     "moved": true,
+     "firstMoved": [
+      183,
+      171
+     ]
+    },
+    {
+     "site": "footstepDraws@plant-sheet.ts:251",
+     "draws": [
+      145,
+      145
+     ],
+     "moved": true,
+     "firstMoved": [
+      946,
+      906
+     ]
+    },
+    {
+     "site": "monitorDownLate@plant-sheet.ts:56",
+     "draws": [
+      39,
+      39
+     ],
+     "moved": true,
+     "firstMoved": [
+      208,
+      204
+     ]
+    },
+    {
+     "site": "one@plant-sheet.ts:80",
+     "draws": [
+      62,
+      66
+     ],
+     "moved": true,
+     "firstMoved": [
+      2132,
+      2732
+     ]
+    },
+    {
+     "site": "randomImageDraw@plant-sheet.ts:228",
+     "draws": [
+      40,
+      40
+     ],
+     "moved": true,
+     "firstMoved": [
+      208,
+      204
+     ]
+    },
+    {
+     "site": "repelCooldown@plant-office.ts:183",
+     "draws": [
+      21,
+      23
+     ],
+     "moved": true,
+     "firstMoved": [
+      2330,
+      2327
+     ]
+    },
+    {
+     "site": "rollAllFiveSecond@plant-units.ts:185",
+     "draws": [
+      75,
+      75
+     ],
+     "moved": false,
+     "firstMoved": null
+    },
+    {
+     "site": "rollAllFiveSecond@plant-units.ts:193",
+     "draws": [
+      75,
+      75
+     ],
+     "moved": false,
+     "firstMoved": null
+    },
+    {
+     "site": "rollAllFiveSecond@plant-units.ts:210",
+     "draws": [
+      75,
+      75
+     ],
+     "moved": false,
+     "firstMoved": null
+    },
+    {
+     "site": "rollAllFiveSecond@plant-units.ts:228",
+     "draws": [
+      75,
+      75
+     ],
+     "moved": false,
+     "firstMoved": null
+    },
+    {
+     "site": "rollDecidePath@plant-units.ts:290",
+     "draws": [
+      377,
+      377
+     ],
+     "moved": false,
+     "firstMoved": null
+    },
+    {
+     "site": "rollUnit@plant-units.ts:165",
+     "draws": [
+      525,
+      525
+     ],
+     "moved": false,
+     "firstMoved": null
+    },
+    {
+     "site": "secondPassEarly@plant-sheet.ts:109",
+     "draws": [
+      3,
+      2
+     ],
+     "moved": true,
+     "firstMoved": [
+      10014,
+      14231
+     ]
+    },
+    {
+     "site": "secondPassEarly@plant-sheet.ts:110",
+     "draws": [
+      4,
+      5
+     ],
+     "moved": true,
+     "firstMoved": [
+      3570,
+      3569
+     ]
+    },
+    {
+     "site": "secondPassEarly@plant-sheet.ts:138",
+     "draws": [
+      377,
+      377
+     ],
+     "moved": false,
+     "firstMoved": null
+    },
+    {
+     "site": "secondPassEarly@plant-sheet.ts:141",
+     "draws": [
+      377,
+      377
+     ],
+     "moved": false,
+     "firstMoved": null
+    },
+    {
+     "site": "secondPassFront@plant-sheet.ts:98",
+     "draws": [
+      5,
+      3
+     ],
+     "moved": true,
+     "firstMoved": [
+      2252,
+      2852
+     ]
+    },
+    {
+     "site": "secondPassFront@plant-sheet.ts:99",
+     "draws": [
+      5,
+      7
+     ],
+     "moved": true,
+     "firstMoved": [
+      4765,
+      4762
+     ]
+    },
+    {
+     "site": "secondPassLate@plant-sheet.ts:158",
+     "draws": [
+      3,
+      8
+     ],
+     "moved": true,
+     "firstMoved": [
+      906,
+      1806
+     ]
+    },
+    {
+     "site": "secondPassLate@plant-sheet.ts:197",
+     "draws": [
+      353,
+      348
+     ],
+     "moved": true,
+     "firstMoved": [
+      370,
+      376
+     ]
+    },
+    {
+     "site": "tick@plant-model.ts:583",
+     "draws": [
+      1,
+      1
+     ],
+     "moved": false,
+     "firstMoved": null
+    },
+    {
+     "site": "tick@plant-model.ts:696",
+     "draws": [
+      1,
+      0
+     ],
+     "moved": true,
+     "firstMoved": [
+      22547,
+      null
+     ]
+    },
+    {
+     "site": "tickFoxyChain@plant-hall.ts:253",
+     "draws": [
+      1,
+      2
+     ],
+     "moved": true,
+     "firstMoved": [
+      10574,
+      9076
+     ]
+    },
+    {
+     "site": "ventCamDraws@plant-sheet.ts:220",
+     "draws": [
+      30,
+      30
+     ],
+     "moved": true,
+     "firstMoved": [
+      3009,
+      3308
+     ]
+    }
+   ]
+  },
+  "readoutWindows": {
+   "injectedState": 12345,
+   "shiftRange": 30,
+   "rows": [
+    {
+     "window": "wind-1",
+     "fromMs": 10400,
+     "toMs": 13700,
+     "periods": 34,
+     "scores": [
+      {
+       "variant": "sched",
+       "k": -1,
+       "agreement": 0.4411764705882353
+      },
+      {
+       "variant": "const60",
+       "k": 3,
+       "agreement": 0.7575757575757576
+      },
+      {
+       "variant": "thinned50",
+       "k": 0,
+       "agreement": 0.42424242424242425
+      }
+     ]
+    },
+    {
+     "window": "wind-2",
+     "fromMs": 20400,
+     "toMs": 23700,
+     "periods": 34,
+     "scores": [
+      {
+       "variant": "sched",
+       "k": -1,
+       "agreement": 0.35294117647058826
+      },
+      {
+       "variant": "const60",
+       "k": 2,
+       "agreement": 0.9705882352941176
+      },
+      {
+       "variant": "thinned50",
+       "k": 0,
+       "agreement": 0.7878787878787878
+      }
+     ]
+    },
+    {
+     "window": "wind-3",
+     "fromMs": 30400,
+     "toMs": 33700,
+     "periods": 34,
+     "scores": [
+      {
+       "variant": "sched",
+       "k": 1,
+       "agreement": 0.4411764705882353
+      },
+      {
+       "variant": "const60",
+       "k": 2,
+       "agreement": 0.9705882352941176
+      },
+      {
+       "variant": "thinned50",
+       "k": 2,
+       "agreement": 0.6666666666666666
+      }
+     ]
+    },
+    {
+     "window": "wind-4",
+     "fromMs": 40400,
+     "toMs": 43700,
+     "periods": 34,
+     "scores": [
+      {
+       "variant": "sched",
+       "k": -1,
+       "agreement": 0.4117647058823529
+      },
+      {
+       "variant": "const60",
+       "k": 2,
+       "agreement": 1
+      },
+      {
+       "variant": "thinned50",
+       "k": -30,
+       "agreement": 0
+      }
+     ]
+    },
+    {
+     "window": "wind-5",
+     "fromMs": 50400,
+     "toMs": 53700,
+     "periods": 34,
+     "scores": [
+      {
+       "variant": "sched",
+       "k": 0,
+       "agreement": 0.8235294117647058
+      },
+      {
+       "variant": "const60",
+       "k": 3,
+       "agreement": 0.8181818181818182
+      },
+      {
+       "variant": "thinned50",
+       "k": -30,
+       "agreement": 0
+      }
+     ]
+    },
+    {
+     "window": "wind-6",
+     "fromMs": 60400,
+     "toMs": 63700,
+     "periods": 34,
+     "scores": [
+      {
+       "variant": "sched",
+       "k": -1,
+       "agreement": 0.7647058823529411
+      },
+      {
+       "variant": "const60",
+       "k": 2,
+       "agreement": 0.696969696969697
+      },
+      {
+       "variant": "thinned50",
+       "k": -30,
+       "agreement": 0
+      }
+     ]
+    },
+    {
+     "window": "wind-7",
+     "fromMs": 70400,
+     "toMs": 73700,
+     "periods": 34,
+     "scores": [
+      {
+       "variant": "sched",
+       "k": 0,
+       "agreement": 0.7352941176470589
+      },
+      {
+       "variant": "const60",
+       "k": 2,
+       "agreement": 0.8787878787878788
+      },
+      {
+       "variant": "thinned50",
+       "k": -30,
+       "agreement": 0
+      }
+     ]
+    },
+    {
+     "window": "wind-8",
+     "fromMs": 80400,
+     "toMs": 83700,
+     "periods": 34,
+     "scores": [
+      {
+       "variant": "sched",
+       "k": 0,
+       "agreement": 0.6176470588235294
+      },
+      {
+       "variant": "const60",
+       "k": 2,
+       "agreement": 0.6176470588235294
+      },
+      {
+       "variant": "thinned50",
+       "k": -30,
+       "agreement": 0
+      }
+     ]
+    },
+    {
+     "window": "wind-9",
+     "fromMs": 90400,
+     "toMs": 93700,
+     "periods": 34,
+     "scores": [
+      {
+       "variant": "sched",
+       "k": -1,
+       "agreement": 0.4117647058823529
+      },
+      {
+       "variant": "const60",
+       "k": 3,
+       "agreement": 0.6176470588235294
+      },
+      {
+       "variant": "thinned50",
+       "k": -30,
+       "agreement": 0
+      }
+     ]
+    },
+    {
+     "window": "wind-10",
+     "fromMs": 100400,
+     "toMs": 103700,
+     "periods": 34,
+     "scores": [
+      {
+       "variant": "sched",
+       "k": 1,
+       "agreement": 0.17647058823529413
+      },
+      {
+       "variant": "const60",
+       "k": 2,
+       "agreement": 0.7352941176470589
+      },
+      {
+       "variant": "thinned50",
+       "k": -30,
+       "agreement": 0
+      }
+     ]
+    }
+   ]
+  },
+  "elapsedMs": 19241
+ },
+ "reading": {
+  "drawSites": "Inside the replays' common horizon (update 22698; the landed replay dies inside the office there, the sched replay is alive at 25,200), the clock-timed rolls spend identical draws on identical updates under both press rules: drawUnconditional@plant-sheet.ts:272, rollAllFiveSecond@plant-units.ts:185, rollAllFiveSecond@plant-units.ts:193, rollAllFiveSecond@plant-units.ts:210, rollAllFiveSecond@plant-units.ts:228, rollDecidePath@plant-units.ts:290, rollUnit@plant-units.ts:165, secondPassEarly@plant-sheet.ts:138, secondPassEarly@plant-sheet.ts:141, tick@plant-model.ts:583. These move with press landing: advance@plant-units.ts:511, bbEnterOpening@plant-units.ts:144, bbHop@plant-units.ts:129, bbHop@plant-units.ts:130, blackoutFlicker@blackout-clock.ts:28, drawViewed@plant-sheet.ts:40, footstepDraws@plant-sheet.ts:251, monitorDownLate@plant-sheet.ts:56, one@plant-sheet.ts:80, randomImageDraw@plant-sheet.ts:228, repelCooldown@plant-office.ts:183, secondPassEarly@plant-sheet.ts:109, secondPassEarly@plant-sheet.ts:110, secondPassFront@plant-sheet.ts:98, secondPassFront@plant-sheet.ts:99, secondPassLate@plant-sheet.ts:158, secondPassLate@plant-sheet.ts:197, tick@plant-model.ts:696, tickFoxyChain@plant-hall.ts:253, ventCamDraws@plant-sheet.ts:220. The landed and sched contacts differ by the night's landing latency, about four updates per press.",
+  "g781": "secondPassLate@plant-sheet.ts:197 is Office g781, Golden Freddy's hall roll. Its conditions in the dump run AI > 0, hall light off, then Every 1000 ms, so the timer is reached, and advances, only while the hall light is off, and the model does the same: each flash's length shifts the roll's phase and with it the order of every later draw (first moved at update 370 vs 376).",
+  "readoutWindows": "For one injected state, the predicted static per g58 period inside the ten full-06 winding windows, at each variant's best shift along the generator cycle (0..30 steps): sched, the same clock with presses on their send updates, agrees with the reference on 0.18-0.82 of periods; const60, a constant 60 Hz clock, on 0.62-1.00 (best shift 2-3 draws); thinned50, half the frames under the catch-up rule, on 0.00-0.79, failing from wind-4 on because the rule caps a gap at 3 updates."
+ },
+ "implications": [
+  "A static-readout scan whose windows follow camera, monitor or hall presses needs those presses' landing updates measured on the same night, or must carry their uncertainty, at least g781's phase (about ten positions against the 100 ms static grid), as a nuisance. The held-out full-06 readout tests (raw 1 of 4, detrended 0 of 4) used one landing estimate for every press, so their NOT_SUPPORTED does not separate a too-coarse grid from a landing estimate that moved the in-window draws.",
+  "A night recorded without a frame trace must not rebuild its clock from a thinned recording with the catch-up cap; a constant 60 Hz clock keeps most of the in-window interleaving.",
+  "Every encounter-level replay of a phone night inherits g781's phase from that night's hall flashes, which on full-06 end 3-5 updates before the replay's (docs/evidence/full06-input-registration-20260928.json)."
+ ],
+ "open": [
+  "One measurement night that records the native static readout and the landing of every camera, monitor and hall press together. On Companion 0.1.14 a frame trace starves the region copier (0 of 553 frames, 2026-10-01), so either the Companion built from this tree, which copies regions inside the trace loop, is installed (the venue binding pins 0.1.14+15: re-qualify and re-bind first), or the landings are read from region rectangles beside the static view (monitor and mask buttons have measured placements in the Companion's PixelWatch; the hall has none yet).",
+  "A pre-registered readout scan that carries g781's phase as a nuisance."
+ ],
+ "reproducer": "node packages/propose/bin/recompile/phone-draw-sensitivity.ts --night full-06 --frames 25200 --out <result>",
+ "gate": "node packages/propose/bin/recompile/test-phone-draw-sensitivity.ts",
+ "id": "s2-draw-sensitivity-ffde3e5ae1319d23"
+}

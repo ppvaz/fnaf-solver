@@ -2310,6 +2310,21 @@
       ]
     },
     {
+      "file": "packages/propose/bin/recompile/phone-draw-sensitivity.ts",
+      "imports": [
+        "../../../source/recompile/model-draw-trace.ts",
+        "../../../source/src/games/fnaf2/rng.ts",
+        "./phone-encounter-replay.ts",
+        "./phone-static-readout.ts",
+        "./phone-stream-census.ts",
+        "./schedule-to-input.ts",
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "packages/propose/bin/recompile/phone-early-perturbation.ts",
       "imports": [
         "../../../source/recompile/model-draw-trace.ts",
@@ -2539,6 +2554,17 @@
         "node:assert/strict",
         "node:crypto",
         "node:fs"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/recompile/test-phone-draw-sensitivity.ts",
+      "imports": [
+        "./phone-draw-sensitivity.ts",
+        "node:assert/strict",
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
       ]
     },
     {
