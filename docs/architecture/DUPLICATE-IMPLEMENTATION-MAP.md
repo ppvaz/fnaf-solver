@@ -325,7 +325,7 @@ Instruments: `grade-night.py` (278), `grade-minus7.py` (159),
 verb in `apps/desktop/src/device-cli.ts` (was `apps/device/src/cli.js:193`).
 
 **The best existing inventory in the repository is this family's gate.**
-`packages/review/bin/grade/test-grade-run-coverage.mjs` enforces that every script in
+`packages/review/bin/grade/test-grade-run-coverage.ts` enforces that every script in
 `tools/device`, `packages/source/decompile` and the directories the device and
 cue scripts moved to (its `SIBLINGS`) is either invoked by
 `grade-run.sh`, a gate the suite runs, or **excluded with a written reason** —
@@ -380,7 +380,7 @@ control works.
 
 Nine readers of overlapping run telemetry: `clocktrace.mjs` (129),
 `drifttrace.mjs` (211), `windtrace.mjs` (85), `camtrace.py` (140),
-`inputtrace.py` (484), `run-timeline.py` (478), `packages/review/bin/report/bench-trace.mjs` (36)
+`inputtrace.py` (484), `run-timeline.py` (478), `packages/review/bin/report/bench-trace.ts` (36)
 over `packages/review/src/measure/bench-trace.ts`, `apps/trainer/test/tracereport.mjs` (115),
 `atrace-input.sh`. `run-timeline.py` and `drifttrace.mjs` both join plan
 against phone on one clock.
@@ -430,7 +430,7 @@ green.
 
 | Twin | Lines | Verdict |
 |---|---|---|
-| `packages/review/src/stat.ts` / `packages/review/src/stat.py` | 129 / 113 | **`GATE`, keep.** Same five functions; `packages/review/test/stat.test.mjs:49` spawns `python3` and compares. The model pair. |
+| `packages/review/src/stat.ts` / `packages/review/src/stat.py` | 129 / 113 | **`GATE`, keep.** Same five functions; `packages/review/test/stat.test.ts:49` spawns `python3` and compares. The model pair. |
 | `packages/propose/bin/policy/closed-families.mjs` / `tools/invent/closed-families.mjs` | 70 / 134 | Two registers of closed policy families — device-plan surface vs privileged genome surface. Same register, two classifiers. |
 | `tools/invent/search.mjs` / `packages/propose/parked/minus7/search.mjs` | 248 / 189 | Two constrained searches; see §12. |
 | `packages/propose/parked/minus7/cycle.mjs` / `packages/propose/bin/minus-toys/cycle.mjs` | 244 / 263 | Same shape, different route. `tools/minustoys/` holds **exactly one file**. **Decided 2026-09-08: keep.** One directory per route is the convention; a move would touch importers, the `TOOLS.md` row and the generated catalogs for no behaviour change, and Minus Toys is the live Night 5/6 route. |
@@ -471,7 +471,7 @@ A cleanup should reuse one of these five rather than invent a sixth:
    got a correction, and the stale copy still carried the docstring claiming it
    was frame-for-frame identical. The fix expresses boxes as **fractions** so a
    2400x1080 screencap caller and a 1280x576 video caller evaluate one rule.
-2. **Cross-language spawn comparison.** `packages/review/test/stat.test.mjs` imports the JS
+2. **Cross-language spawn comparison.** `packages/review/test/stat.test.ts` imports the JS
    module and spawns `python3` against `stat.py` in the same test.
 3. **Shared JSONL vectors read from both languages.**
    `packages/kernel/test/contract-vectors.py` over `packages/source/test/fixtures/*.jsonl`.
@@ -480,7 +480,7 @@ A cleanup should reuse one of these five rather than invent a sixth:
    `packages/propose/bin/policy/policy-equivalence.mjs` (two compilers of one plan format),
    `packages/propose/test/legacy-equivalence.test.js`.
 5. **Enforced census with written exclusions** — the pattern that keeps an
-   inventory from rotting into prose. `packages/review/bin/grade/test-grade-run-coverage.mjs`
+   inventory from rotting into prose. `packages/review/bin/grade/test-grade-run-coverage.ts`
    (every script is wired, gated, or excluded *with a reason*) and
    `tools/test-docs.mjs` (every page indexed, every tool script carries a
    `TOOLS.md` row, no stale row survives a deletion). This is the pattern this
@@ -511,7 +511,7 @@ Not surveyed: `apps/trainer` beyond §16, the `tools/cue` detection chain beyond
 §15, the 39-file Java overlay/capture family beyond §3, the 147 test-shaped
 files as a family of their own, and `packages/source/decompile` / `tools/recompile`. For
 `tools/device` specifically, the `EXCLUDED` map in
-`packages/review/bin/grade/test-grade-run-coverage.mjs` is a more complete per-script census
+`packages/review/bin/grade/test-grade-run-coverage.ts` is a more complete per-script census
 than anything here, and it is gate-enforced; read it alongside §13.
 
 Ownership rules that decide most of these questions live in
@@ -522,7 +522,7 @@ the command surface is [`../../tools/README.md`](../../tools/README.md).
 ## 22. Open gaps
 
 The 2026-09-08 pass left these named rather than fixed. The first three are
-cited by name in `packages/review/bin/grade/test-grade-run-coverage.mjs`'s exclusion rows,
+cited by name in `packages/review/bin/grade/test-grade-run-coverage.ts`'s exclusion rows,
 which point here — so this list is load-bearing, not a wish list.
 
 - **`packages/play/bin/calibrate/screen-calibrate.py` has no gate.** The only one of the five

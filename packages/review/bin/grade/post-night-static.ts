@@ -25,9 +25,9 @@
 //                       end in 6 AM.
 // The record is content-free: run ids, lifecycle state names and milliseconds.
 //
-//   node packages/review/bin/grade/post-night-static.mjs           # print the record
-//   node packages/review/bin/grade/post-night-static.mjs --write   # write RECORD_PATH
-//   node packages/review/bin/grade/post-night-static.mjs --check   # the committed record
+//   node packages/review/bin/grade/post-night-static.ts           # print the record
+//   node packages/review/bin/grade/post-night-static.ts --write   # write RECORD_PATH
+//   node packages/review/bin/grade/post-night-static.ts --check   # the committed record
 //       reproduces from the runs it lists, and no pack committed since reads a
 //       night that goes on after a post-night static
 import { createHash } from 'node:crypto';
@@ -65,10 +65,8 @@ const isPositive = label => typeof label === 'string' && label.startsWith('state
 
 /**
  * The lifecycle reads of one pack, from the richest source it kept.
- * @param {string} dir
- * @returns {{ source: 'reads' | 'label-changes', reads: { at: number, label: string }[] }}
  */
-export function packReads(dir) {
+export function packReads(dir: string): { source: 'reads' | 'label-changes', reads: { at: number, label: string }[] } {
   const observations = join(dir, 'observations.jsonl');
   if (existsSync(observations)) {
     const reads = readJsonl(observations).filter(row => row.script === LIFECYCLE_SCRIPT && isLifecycle(row.label))
@@ -87,11 +85,8 @@ export function packReads(dir) {
  * intro read (or the end of the reads). Inside it, a night read is recorded
  * rather than ending it: p1b read `state=night` once from inside its death
  * minigame, and whether the night went on is what is being asked.
- * @param {string} run
- * @param {'reads' | 'label-changes'} source
- * @param {{ at: number, label: string }[]} reads
  */
-export function postNightStaticEpisodes(run, source, reads) {
+export function postNightStaticEpisodes(run: string, source: 'reads' | 'label-changes', reads: { at: number, label: string }[]) {
   const episodes = [];
   let night = false;
   let episode = null;
@@ -139,16 +134,14 @@ export function postNightStaticEpisodes(run, source, reads) {
 /**
  * Did the night go on after this episode's static? Either the office was read
  * twice in a row after it, or the episode ended at 6 AM.
- * @param {ReturnType<typeof postNightStaticEpisodes>[number]} episode
  */
-export const nightWentOn = episode => episode.consecutiveNightReadsAfter >= 2 || episode.end?.state === 'sixam';
+export const nightWentOn = (episode: ReturnType<typeof postNightStaticEpisodes>[number]) => episode.consecutiveNightReadsAfter >= 2 || episode.end?.state === 'sixam';
 
 /**
  * Positive non-night reads inside a live night, in packs that keep every read:
  * a read after a night whose next two positive reads both name the office.
- * @param {{ at: number, label: string }[]} reads
  */
-export function liveNightMisreads(reads) {
+export function liveNightMisreads(reads: { at: number, label: string }[]) {
   const counts = {};
   let night = false;
   for (const [index, read] of reads.entries()) {
@@ -166,9 +159,8 @@ export function liveNightMisreads(reads) {
 /**
  * Read-to-read gaps while a night runs (after a night read, up to the first
  * static, terminal, title or intro read).
- * @param {{ at: number, label: string }[]} reads
  */
-export function nightGaps(reads) {
+export function nightGaps(reads: { at: number, label: string }[]) {
   const gaps = [];
   let night = false;
   let previousAt = null;
@@ -189,11 +181,8 @@ const summary = values => values.length === 0 ? { n: 0, minMs: null, maxMs: null
  * For an episode that ended at 6 AM: when the old executor stopped the
  * schedule, and which gate releases (new presses) fell between the static and
  * that stop -- what halting at the static would have withheld.
- * @param {string} dir
- * @param {number} firstAt
- * @param {number} endMs
  */
-function sixamActuation(dir, firstAt, endMs) {
+function sixamActuation(dir: string, firstAt: number, endMs: number) {
   const rows = readJsonl(join(dir, 'events.jsonl'));
   const stop = rows.find(row => row.type === 'campaign.abort.restart' && stamp(row.at) >= firstAt);
   const stopMs = stop ? stamp(stop.at) - firstAt : null;
@@ -206,10 +195,7 @@ function sixamActuation(dir, firstAt, endMs) {
     pressingBeforeOldStopMs: pressingMs };
 }
 
-/**
- * @param {{ root?: string, runs?: string[] }} [options]
- */
-export function measurePostNightStatic({ root = ROOT, runs } = {}) {
+export function measurePostNightStatic({ root = ROOT, runs }: { root?: string, runs?: string[] } = {}) {
   const runsDir = join(root, RUNS_DIR);
   const scanned = (runs ?? readdirSync(runsDir).filter(name => existsSync(join(runsDir, name, 'events.jsonl'))))
     .slice().sort();
@@ -230,8 +216,8 @@ export function measurePostNightStatic({ root = ROOT, runs } = {}) {
     }
     for (const [label, count] of Object.entries(liveNightMisreads(reads))) {
       full.misreads[label] ??= { reads: 0, liveNight: 0 };
-      full.misreads[label].reads += count.reads;
-      full.misreads[label].liveNight += count.liveNight;
+      full.misreads[label].reads += (count as any).reads;
+      full.misreads[label].liveNight += (count as any).liveNight;
     }
     full.nightGaps.push(...nightGaps(reads));
   }

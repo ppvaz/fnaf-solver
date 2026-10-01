@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Content-free measurement reader. Raw debugger/disassembly/source stays external.
-// node packages/review/bin/recompile/diagnose-child-events.mjs --external DIR
+// node packages/review/bin/recompile/diagnose-child-events.ts --external DIR
 //   --after-default FILE --after-sourced FILE --out FILE
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
@@ -45,7 +45,7 @@ export function parseChildCensus(text) {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const args = {};
+  const args: any = {};
   for (let i = 2; i < process.argv.length; i += 2) {
     if (!['--external', '--after-default', '--after-sourced', '--out'].includes(process.argv[i]) || !process.argv[i + 1]) throw new Error('see usage');
     args[process.argv[i].slice(2)] = process.argv[i + 1];
@@ -67,7 +67,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     'runs/child-timer-office-64.trace', 'runs/child-timer-office-64.log',
     'runs/child-timer-viewing-gdb.log', 'runs/child-timer-viewing.trace', 'runs/child-contract-test.log'];
   const afterViewingPath = external('runs/child-timer-viewing-gdb.log');
-  const result = {
+  const result: any = {
     schema: 'recompile-child-diagnosis-v1', claimLevel: 'MODEL_ONLY', fidelity: 'rebuilt-runtime',
     status: 'SOURCE_SUPPORTED_CORRECTION',
     question: 'What source event path causes the first measured RNG disagreement?',

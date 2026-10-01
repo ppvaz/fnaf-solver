@@ -5,7 +5,7 @@
 // eaten; write a new dated record and re-derive STATIC_TERMINAL_WAIT_MS).
 // Each check first runs against a planted violation and must catch it.
 //
-//   node packages/review/bin/grade/test-static-terminal-window.mjs
+//   node packages/review/bin/grade/test-static-terminal-window.ts
 import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url';
 import {
   RECORD_PATH, RUNS_DIR, STATIC_EXIT_REASON, measureStaticTerminalWindow, newerPacksBeyondMaximum, serialize,
   staticEpisodes, staticReadGaps,
-} from './static-terminal-window.mjs';
+} from './static-terminal-window.ts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
 const iso = ms => new Date(Date.UTC(2026, 8, 27) + ms).toISOString();

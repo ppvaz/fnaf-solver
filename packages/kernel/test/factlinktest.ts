@@ -17,7 +17,7 @@ const observedLine = encodeFactMessage({
   source: 'pixel-watch', calibrationProfile: 'g56-native-v1',
   t_observed: 1200, t_received: 1260, latencyMin: 40, latencyMax: 90,
 });
-const observed = decodeFactMessage(observedLine);
+const observed: any = decodeFactMessage(observedLine);
 check(observed.schema === FACT_MESSAGE_SCHEMA && observed.state === 'OBSERVED' &&
       observed.value === true && observedLine.endsWith('\n'),
   'observed fact did not round-trip as a newline-delimited message');
@@ -31,7 +31,7 @@ const unknownLine = encodeFactMessage({
   confidence: 0, source: 'pixel-watch', calibrationProfile: null,
   t_received: 1400, latencyMin: 0, latencyMax: 0,
 });
-const unknown = decodeFactMessage(unknownLine);
+const unknown: any = decodeFactMessage(unknownLine);
 check(unknown.state === 'UNKNOWN' && unknown.reason === 'read-dropped' &&
       !Object.hasOwn(unknown, 'value'), 'UNKNOWN fact carried a false value');
 

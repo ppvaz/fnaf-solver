@@ -178,7 +178,7 @@
       "clone:packages/propose/parked/minus7/hid-device-pilot.mjs <> packages/propose/parked/minus7/stock-device-pilot.mjs": 6,
       "clone:packages/propose/parked/minus7/model.js <> packages/propose/src/strategies/minus-toys/model.ts": 26,
       "clone:packages/propose/parked/minus7/periodicsweep.mjs <> packages/propose/parked/minus7/phasesweep.mjs": 9,
-      "clone:packages/review/bin/grade/post-night-static.mjs <> packages/review/bin/grade/static-terminal-window.mjs": 7
+      "clone:packages/review/bin/grade/post-night-static.ts <> packages/review/bin/grade/static-terminal-window.ts": 7
     }
   }
 }

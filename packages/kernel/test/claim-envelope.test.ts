@@ -37,9 +37,9 @@ assert.ok(!isRefusal(golden));
 
 // Labels: a ClaimLevel, a named SourceLabel, or UNKNOWN(reason) -- never a default, never bare.
 for (const label of ['MODEL_ONLY', 'FIXTURE', 'DEVICE_MEASURED', 'SOURCED', 'CALIBRATED', 'MEASURED', 'INFERRED', 'MODEL'])
-  assert.equal(validateClaimEnvelope({ ...golden, label }).label, label);
+  assert.equal((validateClaimEnvelope({ ...golden, label }) as any).label, label);
 const why = unknown('a coverage map joins several labels');
-assert.equal(validateClaimEnvelope({ ...golden, label: why }).label, why);
+assert.equal((validateClaimEnvelope({ ...golden, label: why }) as any).label, why);
 assert.ok(isEnvelopeLabel(why) && !isEnvelopeLabel('UNKNOWN') && !isEnvelopeLabel('WIN'));
 refuses(() => validateEnvelopeLabel(undefined), /needs a label/, 'a missing label');
 refuses(() => validateClaimEnvelope({ ...golden, label: 'UNKNOWN' }), /needs its reason/, 'a bare UNKNOWN label');
@@ -53,20 +53,20 @@ const partial = { ...golden, claim: { night: 6, deathAt: unknown('the executor n
 refuses(() => validateClaimEnvelope(partial), /claim\.deathAt/, 'a kernel UNKNOWN nobody owns up to');
 refuses(() => validateClaimEnvelope({ ...partial, claim: { anchor: 'UNKNOWN(not-traced)' } }), /claim\.anchor/,
   "a catalog-style UNKNOWN(reason) nobody owns up to");
-assert.equal(validateClaimEnvelope({ ...partial, notMeasured: ['the death time'] }).notMeasured.length, 1);
+assert.equal((validateClaimEnvelope({ ...partial, notMeasured: ['the death time'] }) as any).notMeasured.length, 1);
 assert.deepEqual(unknownsIn({ a: [1, 'UNKNOWN'], b: { c: why } }), [{ path: 'a[1]', reason: null }, { path: 'b.c', reason: why.reason }]);
 assert.deepEqual(unknownsIn('UNKNOWN(no-effect-reader)'), [{ path: '', reason: 'no-effect-reader' }]);
 assert.deepEqual(unknownsIn({ note: 'the word UNKNOWN inside text is not a value' }), []);
 
 // Target, citations, status, reproducer.
 for (const target of ['com.scottgames.fnaf2', 'com.scottgames.fivenightsatfreddys', 'repository', why])
-  assert.equal(validateClaimEnvelope({ ...golden, target }).target, target);
+  assert.equal((validateClaimEnvelope({ ...golden, target }) as any).target, target);
 refuses(() => validateClaimEnvelope({ ...golden, target: 'FNaF 2' }), /target/, 'a target that is not a package');
 refuses(() => validateClaimEnvelope({ ...golden, cite: [] }), /cite/, 'an answer that cites nothing');
 refuses(() => validateClaimEnvelope({ ...golden, cite: ['a path with spaces'] }), /cite/, 'a citation with whitespace');
-assert.equal(validateClaimEnvelope({ ...golden, status: 'superseded', supersededBy: 'native-fps-regrade' }).status, 'superseded');
-assert.equal(validateClaimEnvelope({ ...golden, status: 'retracted' }).status, 'retracted');
-assert.equal(validateClaimEnvelope({ ...golden, status: 'retracted', supersededBy: 'input-cancel-correction' }).status, 'retracted');
+assert.equal((validateClaimEnvelope({ ...golden, status: 'superseded', supersededBy: 'native-fps-regrade' }) as any).status, 'superseded');
+assert.equal((validateClaimEnvelope({ ...golden, status: 'retracted' }) as any).status, 'retracted');
+assert.equal((validateClaimEnvelope({ ...golden, status: 'retracted', supersededBy: 'input-cancel-correction' }) as any).status, 'retracted');
 refuses(() => validateClaimEnvelope({ ...golden, status: 'superseded' }), /superseded it/, 'superseded by nothing');
 refuses(() => validateClaimEnvelope({ ...golden, supersededBy: 'x' }), /standing claim/, 'a standing claim with a successor');
 refuses(() => validateClaimEnvelope({ ...golden, status: 'open' }), /status/, 'a status outside the three');

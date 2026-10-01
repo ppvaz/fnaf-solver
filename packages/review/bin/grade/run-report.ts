@@ -14,7 +14,7 @@
 // `phase-reconstruct.mjs` remains the authority on delivered phase against the
 // model band; this is the run-shaped summary around it.
 //
-//   node packages/review/bin/grade/run-report.mjs --run artifacts/campaign-... [--json]
+//   node packages/review/bin/grade/run-report.ts --run artifacts/campaign-... [--json]
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';

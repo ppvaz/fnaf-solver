@@ -45,7 +45,7 @@ const ENGINE = [
   ['seed recovery', ['../packages/source/test/seed-recoverytest.mjs']],
   // Plan 18 package 3: JavaScript/Python statistical primitives agree on
   // Wilson intervals, planning-N, two-proportion tests and fail-closed bars.
-  ['stat helper', ['../packages/review/test/stat.test.mjs']],
+  ['stat helper', ['../packages/review/test/stat.test.ts']],
   // Plan 02's reopened Android route: the sourced split-camera state must arm,
   // the published 10 s Minus Toys loop must clear both normal and pinned
   // worst-luck seeds, and the same loop without the split must fail.
@@ -73,7 +73,7 @@ const ENGINE = [
   // Plan 20 package 6 foundation: bounded fact messages, ordered receipt and
   // gap/stale reporting, plus a local drain that can finish an already-
   // approved cycle without inventing actions after the host link drops.
-  ['fact link', ['../packages/kernel/test/factlinktest.mjs']],
+  ['fact link', ['../packages/kernel/test/factlinktest.ts']],
   // Plan 20 package 1: unknown-safe, calibration-bound facts and explicit
   // action verification in a deterministic replayable belief contract.
   ['belief state', ['../packages/play/test/belief.test.js']],
@@ -376,7 +376,7 @@ const ENGINE = [
   // frame's 111. The four reference frames were removed on 2026-09-29 (no
   // game media beyond the two README clips); the synthetic checks remain.
   ['sweepcheck discriminator', ['../packages/review/bin/grade/test-sweepcheck.py']],
-  ['grade-run coverage', ['../packages/review/bin/grade/test-grade-run-coverage.mjs']],
+  ['grade-run coverage', ['../packages/review/bin/grade/test-grade-run-coverage.ts']],
   ['cuetest', ['../packages/propose/parked/minus7/cue/test-cue.py']],
   ['BB cue state', ['../packages/propose/parked/minus7/test-bb-cue-state.mjs']],
   ['latency experiment', ['../packages/propose/parked/minus7/cue/test-latency-experiment.py']],

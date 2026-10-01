@@ -104,7 +104,7 @@ assert.equal(fnaf1.night.at(-1).type, 'night-ended');
 assert.deepEqual(reportedFromTerminal({ night: 6, outcome: 'invalid', sixAm: false, why: 'phase-invalid: arm release lag' }),
   { kind: 'Invalid', why: 'phase-invalid: arm release lag' });
 assert.equal(reportedFromTerminal({ night: 6, outcome: 'invalid', sixAm: false }).kind, 'UNKNOWN');
-assert.match(reportedFromTerminal({ night: 6, outcome: 'invalid', sixAm: false }).reason, /names no reason/);
+assert.match((reportedFromTerminal({ night: 6, outcome: 'invalid', sixAm: false }) as any).reason, /names no reason/);
 
 const count = key => [...lifted.values()].flat().reduce((sum, run) => ({ ...sum, [key(run)]: (sum[key(run)] ?? 0) + 1 }), {});
 const outcomes = count(run => run.reportedOutcome.kind);

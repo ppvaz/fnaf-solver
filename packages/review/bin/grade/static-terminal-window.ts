@@ -23,9 +23,9 @@
 // The record is content-free: run ids and milliseconds, no frames or labels
 // beyond the lifecycle state names.
 //
-//   node packages/review/bin/grade/static-terminal-window.mjs           # print the record
-//   node packages/review/bin/grade/static-terminal-window.mjs --write   # write RECORD_PATH
-//   node packages/review/bin/grade/static-terminal-window.mjs --check   # the committed record
+//   node packages/review/bin/grade/static-terminal-window.ts           # print the record
+//   node packages/review/bin/grade/static-terminal-window.ts --write   # write RECORD_PATH
+//   node packages/review/bin/grade/static-terminal-window.ts --check   # the committed record
 //       reproduces from the runs it lists, and no pack committed since reads a
 //       terminal later than its measured maximum (which would eat the margin)
 import { createHash } from 'node:crypto';
@@ -55,10 +55,8 @@ const readJsonl = path => readFileSync(path, 'utf8').split('\n').filter(line => 
  * Walk one pack's event rows and name every static episode that follows a
  * night. An episode starts at the first `state=static` row after a
  * `state=night` row; an UNKNOWN read inside it does not end it.
- * @param {string} run
- * @param {any[]} rows
  */
-export function staticEpisodes(run, rows) {
+export function staticEpisodes(run: string, rows: any[]) {
   const episodes = [];
   let night = false;
   let first = null;
@@ -111,10 +109,8 @@ export function staticEpisodes(run, rows) {
  * the gap that ends at the first static read through the terminal read or the
  * last read before the abort row. Reads after an abort belong to the restart's
  * own waiter, not to the night's observer, and are left out.
- * @param {any[]} observations
- * @param {number | null} abortAt
  */
-export function staticReadGaps(observations, abortAt = null) {
+export function staticReadGaps(observations: any[], abortAt: number | null = null) {
   const reads = observations.filter(item => item.script === 'lifecycle-observe.py' &&
     Number.isFinite(item.at) && (abortAt === null || item.at <= abortAt));
   const gaps = [];
@@ -132,10 +128,7 @@ export function staticReadGaps(observations, abortAt = null) {
 const summary = values => values.length === 0 ? { n: 0, minMs: null, maxMs: null }
   : { n: values.length, minMs: Math.min(...values), maxMs: Math.max(...values) };
 
-/**
- * @param {{ root?: string, runs?: string[] }} [options]
- */
-export function measureStaticTerminalWindow({ root = ROOT, runs } = {}) {
+export function measureStaticTerminalWindow({ root = ROOT, runs }: { root?: string, runs?: string[] } = {}) {
   const runsDir = join(root, RUNS_DIR);
   const scanned = (runs ?? readdirSync(runsDir).filter(name => existsSync(join(runsDir, name, 'events.jsonl'))))
     .slice().sort();

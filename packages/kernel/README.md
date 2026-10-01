@@ -64,4 +64,4 @@ moved them here, with the description their tool index gave them.
 | Script | Kind | What it does |
 |---|---|---|
 | `packages/kernel/test/contract-vectors.py` | check | Dependency-free cross-language reader for the shared valid/invalid semantic-control and measurement JSONL vectors. |
-| `packages/kernel/test/factlinktest.mjs` | check | Phone-free Plan 20 package 6 foundation: bounded newline-delimited fact messages preserve event/transport timestamps, ordered receipt surfaces sequence loss and staleness, and `SafeCycleHandoff` drains only an already-approved bounded cycle after link loss or stops at expiry. It does not claim USB-CDC timing, MCU firmware, or external-HID acceptance. |
+| `packages/kernel/test/factlinktest.ts` | check | Phone-free Plan 20 package 6 foundation: bounded newline-delimited fact messages preserve event/transport timestamps, ordered receipt surfaces sequence loss and staleness, and `SafeCycleHandoff` drains only an already-approved bounded cycle after link loss or stops at expiry. It does not claim USB-CDC timing, MCU firmware, or external-HID acceptance. |

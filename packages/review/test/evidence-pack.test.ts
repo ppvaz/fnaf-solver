@@ -258,7 +258,7 @@ try {
   writePack(errorPack, errorBuilt);
   const errorLoaded = readPack(errorPack);
   assert.deepEqual(errorLoaded.wrapper, errorWrapper);
-  assert.equal(packEntry(errorCampaign, errorLoaded).error, errorWrapper.error);
+  assert.equal((packEntry(errorCampaign, errorLoaded) as any).error, errorWrapper.error);
   assert.equal(packPromotionChecks(errorLoaded, winners).terminalPass, false);
 
   // A signalled campaign still has its native text and frames, but never

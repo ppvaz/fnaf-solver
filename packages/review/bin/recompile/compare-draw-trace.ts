@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Content-free summary of an external harness trace versus the no-input model.
-// node packages/review/bin/recompile/compare-draw-trace.mjs --trace FILE --night 1 --seed 24850
+// node packages/review/bin/recompile/compare-draw-trace.ts --trace FILE --night 1 --seed 24850
 //   --frame 3 --frames 18000 --out FILE [--binary FILE] [--input FILE] [--save FILE] [--model-options FILE] [--repeat-trace FILE]
 //   [--custom-night FILE]   a JSON map of the ten Custom Night dials (AI_DIALS) the rebuild's customize frame set; night 7 only
 // Raw game values, names, source and assets never enter the output.
@@ -112,20 +112,20 @@ export function compareTrace(text, { night, seed, frame, frames, modelOptions = 
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const args = {};
+  const args: any = {};
   for (let i = 2; i < process.argv.length; i += 2) {
     if (!['--trace', '--night', '--seed', '--frame', '--frames', '--out', '--binary', '--input', '--save', '--model-options', '--repeat-trace', '--custom-night'].includes(process.argv[i]) || !process.argv[i + 1]) throw new Error('see usage at top of file');
     args[process.argv[i].slice(2)] = process.argv[i + 1];
   }
   if (!args.trace || !args.out) throw new Error('--trace and --out are required');
-  const settings = { night: Number(args.night ?? 1), seed: Number(args.seed ?? 24850), frame: Number(args.frame ?? 3), frames: Number(args.frames ?? 18000) };
+  const settings: any = { night: Number(args.night ?? 1), seed: Number(args.seed ?? 24850), frame: Number(args.frame ?? 3), frames: Number(args.frames ?? 18000) };
   if (Object.values(settings).some((v) => !Number.isInteger(v) || v < 0) || settings.frames === 0) throw new Error('invalid numeric argument');
   settings.modelOptions = args['model-options'] ? JSON.parse(readFileSync(args['model-options'], 'utf8')) : {};
   if (args['custom-night']) settings.customNight = JSON.parse(readFileSync(args['custom-night'], 'utf8'));
   if (args.input && readFileSync(args.input, 'utf8').split('\n').some((line) => line.trim() && !line.trim().startsWith('#') && Number(line.trim().split(/\s+/)[0]) === settings.frame)) {
     throw new Error('this comparison accepts navigation-only input; gameplay input needs a corresponding model replay');
   }
-  const result = compareTrace(readFileSync(args.trace, 'utf8'), settings);
+  const result: any = compareTrace(readFileSync(args.trace, 'utf8'), settings);
   if (args['repeat-trace']) {
     const repeat = compareTrace(readFileSync(args['repeat-trace'], 'utf8'), settings);
     result.repeatability = {

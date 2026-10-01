@@ -88,7 +88,7 @@ try {
   const outputPath = join(work, 'summary.json');
   writeFileSync(inputPath, JSON.stringify(trace) + '\n');
   const report = spawnSync(process.execPath, [
-    fileURLToPath(new URL('../bin/report/bench-trace.mjs', import.meta.url)),
+    fileURLToPath(new URL('../bin/report/bench-trace.ts', import.meta.url)),
     '--input', inputPath, '--out', outputPath,
   ], { encoding: 'utf8' });
   assert.equal(report.status, 0, `bench trace report failed: ${report.stderr}`);

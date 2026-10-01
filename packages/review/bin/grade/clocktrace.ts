@@ -87,7 +87,7 @@ for await (const chunk of decoder.stdout) {
 
 // A decoder that dies mid-file must not read as a short recording. This tool
 // reports where the clock turned over; a truncated read would move that.
-const status = await new Promise(resolve => decoder.on('close', resolve));
+const status = await new Promise<any>(resolve => decoder.on('close', resolve));
 if (status !== 0) {
   process.stderr.write(decoderError);
   process.exit(status || 2);

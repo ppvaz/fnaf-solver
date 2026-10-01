@@ -289,7 +289,7 @@ fi
 #     what produced the withdrawn spacing figure.
 echo
 echo "--- clock transitions (HUD first frame, 1 AM) ---"
-limited node "$HERE/clocktrace.mjs" "$VIDEO" --fps="$GRADE_FPS" || {
+limited node "$HERE/clocktrace.ts" "$VIDEO" --fps="$GRADE_FPS" || {
   status=$?
   [ "$status" -eq 3 ] || { echo "  ^ FAILED"; fail=1; }
 }
@@ -355,7 +355,7 @@ step_shared "video instruments over one shared decode (survival, cameras, light,
 # not run.
 if [ -n "$CAMPAIGN_DIR" ] && [ -d "$CAMPAIGN_DIR" ]; then
   step "campaign bundle (executor-owned facts)" \
-    node "$HERE/run-report.mjs" --run "$CAMPAIGN_DIR"
+    node "$HERE/run-report.ts" --run "$CAMPAIGN_DIR"
   RUN_NIGHT_ARG=()
   [ -n "${GRADE_NIGHT:-}" ] && RUN_NIGHT_ARG=(--night "$GRADE_NIGHT")
   # With a frame trace the origin is measured to a frame instead of bracketed

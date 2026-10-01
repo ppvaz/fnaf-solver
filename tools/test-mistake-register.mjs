@@ -38,7 +38,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, posix, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { report } from '../packages/review/bin/grade/run-report.mjs';
+import { report } from '../packages/review/bin/grade/run-report.ts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SELF = 'tools/test-mistake-register.mjs';
@@ -90,7 +90,7 @@ const REGISTER_GATES = [
   [9, 'packages/propose/test/test-seam-slack.mjs'],
   [12, SELF],
   [13, SELF],
-  [13, 'packages/review/bin/grade/test-grade-run-coverage.mjs'],
+  [13, 'packages/review/bin/grade/test-grade-run-coverage.ts'],
   [14, 'tools/test-sibling-paths.js'],
   [15, 'apps/desktop/test/test-fnaf1-winner.mjs'],
 ];

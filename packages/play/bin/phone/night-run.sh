@@ -486,9 +486,9 @@ analyze() {
       [ "$attempt" -gt 1 ] && suffix="-attempt$attempt"
       say "modern campaign bundle (attempt $attempt of ${#ATTEMPT_DIRS[@]}: $dir)"
       printf -- '--- attempt %s of %s: %s ---\n' "$attempt" "${#ATTEMPT_DIRS[@]}" "$dir" | tee -a "$OUTDIR/verdict.txt"
-      node packages/review/bin/grade/run-report.mjs --run "$dir" 2>&1 \
+      node packages/review/bin/grade/run-report.ts --run "$dir" 2>&1 \
         | tee -a "$OUTDIR/verdict.txt" || true
-      node packages/review/bin/grade/run-report.mjs --run "$dir" --json \
+      node packages/review/bin/grade/run-report.ts --run "$dir" --json \
         > "$OUTDIR/run-report$suffix.json" 2>/dev/null || true
 
       say "delivered phase against the model band (attempt $attempt)"

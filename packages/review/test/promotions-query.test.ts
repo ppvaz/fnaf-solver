@@ -20,7 +20,7 @@ import { compareEdges, promotionsRecord, queryPromotions } from '../src/promotio
 const ROOT = resolve(fileURLToPath(new URL('../../..', import.meta.url)));
 
 // The CLI runs beside the in-process query: each compiles every committed winner (~8 s).
-const cliRun = new Promise((done, fail) => {
+const cliRun = new Promise<any>((done, fail) => {
   const child = spawn(process.execPath, [join(ROOT, 'packages/review/src/cli.ts'), 'query', 'promotions'], { cwd: ROOT });
   let stdout = '';
   let stderr = '';

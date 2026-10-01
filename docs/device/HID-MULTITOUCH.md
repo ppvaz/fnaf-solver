@@ -134,7 +134,7 @@ The confirmed detector produced last-clear → first-HUD brackets of **252, 312,
 through about 340 ms but almost no early T0, so the conservative first-positive
 edge is correct; midpoint interpolation is not. A 94-second recorded trial put
 1 AM **69,950 ms** after the first office HUD, within the analyzer's 50 ms
-resolution of the sourced 70,000 ms hour edge. `packages/review/bin/grade/clocktrace.mjs`
+resolution of the sourced 70,000 ms hour edge. `packages/review/bin/grade/clocktrace.ts`
 turns that relationship into an assertion.
 
 MediaProjection can tighten this observation and replace the screencap loop,

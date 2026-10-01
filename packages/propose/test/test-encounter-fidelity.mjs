@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { score, windowCode } from '../../review/venue-grid/encounter-replay.mjs';
+import { score, windowCode } from '../../review/venue-grid/encounter-replay.ts';
 import { Sim } from '@sixam/source/fnaf2';
 import { applySimOpts } from '../bin/census/winner-census.mjs';
 import { STRATEGY_REGISTRY, validateWinner } from '../bin/plans/bundle.mjs';

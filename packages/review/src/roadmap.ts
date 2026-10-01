@@ -121,7 +121,7 @@ export function mistakeGates(root: string) {
   const gates = {};
   for (const [, n, self, file] of block.matchAll(/\[(\d+),\s*(?:(SELF)|'([^']+)')\]/g))
     (gates[n] ??= []).push(self ? MISTAKE_GATES_FILE : file);
-  for (const n of Object.keys(MISTAKE_ENTRIES)) (gates[n] ??= []).push('packages/review/test/refusals.test.mjs');
+  for (const n of Object.keys(MISTAKE_ENTRIES)) (gates[n] ??= []).push('packages/review/test/refusals.test.ts');
   return gates;
 }
 

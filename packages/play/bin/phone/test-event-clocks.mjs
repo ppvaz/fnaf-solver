@@ -75,7 +75,7 @@ if (problems.length) {
 // project the committed night on any checkout.
 const win = 'night6-n6h2-01-20260920T024030Z';
 if (existsSync(join(PACKS, win))) {
-  const report = JSON.parse(execFileSync(process.execPath, [join(ROOT, 'packages/review/bin/grade/run-report.mjs'),
+  const report = JSON.parse(execFileSync(process.execPath, [join(ROOT, 'packages/review/bin/grade/run-report.ts'),
     '--run', join(PACKS, win), '--json'], { encoding: 'utf8' }));
   assert.equal(report.night.reached, true, 'run-report read the packed night');
   assert.equal(report.cycles.gates, 42, 'run-report counted the packed cycle gates');

@@ -702,7 +702,7 @@
       }
     },
     {
-      "id": "packages/kernel/test/claim-envelope.test.js",
+      "id": "packages/kernel/test/claim-envelope.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/kernel",
       "timeoutMs": 180000,
@@ -720,7 +720,7 @@
       }
     },
     {
-      "id": "packages/kernel/test/experiment-v2.test.js",
+      "id": "packages/kernel/test/experiment-v2.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/kernel",
       "timeoutMs": 180000,
@@ -738,7 +738,7 @@
       }
     },
     {
-      "id": "packages/kernel/test/factlinktest.mjs",
+      "id": "packages/kernel/test/factlinktest.ts",
       "lane": "test:unit",
       "owner": "@sixam/kernel",
       "timeoutMs": 180000,
@@ -756,7 +756,7 @@
       }
     },
     {
-      "id": "packages/kernel/test/kernel.test.js",
+      "id": "packages/kernel/test/kernel.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/kernel",
       "timeoutMs": 180000,
@@ -774,7 +774,7 @@
       }
     },
     {
-      "id": "packages/kernel/test/venue-identity.test.js",
+      "id": "packages/kernel/test/venue-identity.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/kernel",
       "timeoutMs": 180000,
@@ -3686,7 +3686,7 @@
       }
     },
     {
-      "id": "packages/review/bin/grade/test-grade-run-coverage.mjs",
+      "id": "packages/review/bin/grade/test-grade-run-coverage.ts",
       "lane": "test:unit",
       "owner": "package boundary",
       "timeoutMs": 180000,
@@ -3743,7 +3743,7 @@
       }
     },
     {
-      "id": "packages/review/bin/grade/test-post-night-static.mjs",
+      "id": "packages/review/bin/grade/test-post-night-static.ts",
       "lane": "test:unit",
       "owner": "package boundary",
       "timeoutMs": 180000,
@@ -3763,7 +3763,7 @@
       }
     },
     {
-      "id": "packages/review/bin/grade/test-static-terminal-window.mjs",
+      "id": "packages/review/bin/grade/test-static-terminal-window.ts",
       "lane": "test:unit",
       "owner": "package boundary",
       "timeoutMs": 180000,
@@ -3859,7 +3859,7 @@
       }
     },
     {
-      "id": "packages/review/bin/recompile/test-child-diagnosis.mjs",
+      "id": "packages/review/bin/recompile/test-child-diagnosis.ts",
       "lane": "test:unit",
       "owner": "package boundary",
       "timeoutMs": 180000,
@@ -3877,7 +3877,7 @@
       }
     },
     {
-      "id": "packages/review/bin/recompile/test-compare-draw-trace.mjs",
+      "id": "packages/review/bin/recompile/test-compare-draw-trace.ts",
       "lane": "test:unit",
       "owner": "package boundary",
       "timeoutMs": 180000,
@@ -3913,7 +3913,7 @@
       }
     },
     {
-      "id": "packages/review/test/bench-trace.test.mjs",
+      "id": "packages/review/test/bench-trace.test.ts",
       "lane": "test:unit",
       "owner": "package boundary",
       "timeoutMs": 180000,
@@ -3933,7 +3933,7 @@
       }
     },
     {
-      "id": "packages/review/test/evidence-campaign.test.mjs",
+      "id": "packages/review/test/evidence-campaign.test.ts",
       "lane": "test:unit",
       "owner": "package boundary",
       "timeoutMs": 180000,
@@ -3953,7 +3953,7 @@
       }
     },
     {
-      "id": "packages/review/test/evidence-cohort.test.mjs",
+      "id": "packages/review/test/evidence-cohort.test.ts",
       "lane": "test:unit",
       "owner": "package boundary",
       "timeoutMs": 180000,
@@ -3973,7 +3973,7 @@
       }
     },
     {
-      "id": "packages/review/test/evidence-pack.test.mjs",
+      "id": "packages/review/test/evidence-pack.test.ts",
       "lane": "test:unit",
       "owner": "package boundary",
       "timeoutMs": 180000,
@@ -3994,7 +3994,7 @@
       }
     },
     {
-      "id": "packages/review/test/evidence-promotion.test.mjs",
+      "id": "packages/review/test/evidence-promotion.test.ts",
       "lane": "test:unit",
       "owner": "package boundary",
       "timeoutMs": 180000,
@@ -4014,7 +4014,7 @@
       }
     },
     {
-      "id": "packages/review/test/lab-queries.test.mjs",
+      "id": "packages/review/test/lab-queries.test.ts",
       "lane": "test:unit",
       "owner": "package boundary",
       "timeoutMs": 180000,
@@ -4032,7 +4032,7 @@
       }
     },
     {
-      "id": "packages/review/test/pack-lift.test.js",
+      "id": "packages/review/test/pack-lift.test.ts",
       "lane": "test:unit",
       "owner": "package boundary",
       "timeoutMs": 180000,
@@ -4050,7 +4050,7 @@
       }
     },
     {
-      "id": "packages/review/test/promotions-query.test.js",
+      "id": "packages/review/test/promotions-query.test.ts",
       "lane": "test:unit",
       "owner": "package boundary",
       "timeoutMs": 180000,
@@ -4068,7 +4068,7 @@
       }
     },
     {
-      "id": "packages/review/test/refusals.test.mjs",
+      "id": "packages/review/test/refusals.test.ts",
       "lane": "test:unit",
       "owner": "package boundary",
       "timeoutMs": 180000,
@@ -4086,7 +4086,7 @@
       }
     },
     {
-      "id": "packages/review/test/run-audit.test.mjs",
+      "id": "packages/review/test/run-audit.test.ts",
       "lane": "test:unit",
       "owner": "package boundary",
       "timeoutMs": 180000,
@@ -4106,7 +4106,7 @@
       }
     },
     {
-      "id": "packages/review/test/solver.test.mjs",
+      "id": "packages/review/test/solver.test.ts",
       "lane": "test:unit",
       "owner": "package boundary",
       "timeoutMs": 180000,
@@ -4124,7 +4124,7 @@
       }
     },
     {
-      "id": "packages/review/test/stat.test.mjs",
+      "id": "packages/review/test/stat.test.ts",
       "lane": "test:unit",
       "owner": "package boundary",
       "timeoutMs": 180000,
@@ -4144,7 +4144,7 @@
       }
     },
     {
-      "id": "packages/review/test/vault.test.mjs",
+      "id": "packages/review/test/vault.test.ts",
       "lane": "test:unit",
       "owner": "package boundary",
       "timeoutMs": 180000,

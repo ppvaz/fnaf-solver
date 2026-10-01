@@ -106,7 +106,7 @@
       "runtimeValidation": "validateQualification",
       "conformanceFixtures": [
         "packages/source/test/contracts.test.js",
-        "packages/kernel/test/venue-identity.test.js"
+        "packages/kernel/test/venue-identity.test.ts"
       ]
     },
     {
@@ -187,7 +187,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateTelemetry",
       "conformanceFixtures": [
-        "packages/kernel/test/factlinktest.mjs"
+        "packages/kernel/test/factlinktest.ts"
       ]
     },
     {
@@ -267,7 +267,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateExperimentSpecV2",
       "conformanceFixtures": [
-        "packages/kernel/test/experiment-v2.test.js",
+        "packages/kernel/test/experiment-v2.test.ts",
         "packages/propose/test/census.test.js"
       ]
     },
@@ -288,7 +288,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateExperimentResultV2",
       "conformanceFixtures": [
-        "packages/kernel/test/experiment-v2.test.js",
+        "packages/kernel/test/experiment-v2.test.ts",
         "packages/propose/test/census.test.js"
       ]
     },
@@ -757,7 +757,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateBenchTrace",
       "conformanceFixtures": [
-        "packages/review/test/bench-trace.test.mjs"
+        "packages/review/test/bench-trace.test.ts"
       ]
     },
     {
@@ -1017,7 +1017,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateVenueIdentity",
       "conformanceFixtures": [
-        "packages/kernel/test/venue-identity.test.js",
+        "packages/kernel/test/venue-identity.test.ts",
         "packages/play/test/android-venue.test.js"
       ]
     },
@@ -1038,7 +1038,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateVenueCheck",
       "conformanceFixtures": [
-        "packages/kernel/test/venue-identity.test.js",
+        "packages/kernel/test/venue-identity.test.ts",
         "packages/play/test/venue-preflight.test.js"
       ]
     },
@@ -1059,7 +1059,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateVenueBinding",
       "conformanceFixtures": [
-        "packages/kernel/test/venue-identity.test.js",
+        "packages/kernel/test/venue-identity.test.ts",
         "packages/play/test/venue-preflight.test.js"
       ]
     },
@@ -1080,7 +1080,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "validateQualification",
       "conformanceFixtures": [
-        "packages/kernel/test/venue-identity.test.js",
+        "packages/kernel/test/venue-identity.test.ts",
         "packages/play/test/venue-preflight.test.js"
       ]
     },
@@ -1101,7 +1101,7 @@
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
       "runtimeValidation": "packages/kernel/src/claim-envelope.ts validateClaimEnvelope",
       "conformanceFixtures": [
-        "packages/kernel/test/claim-envelope.test.js",
+        "packages/kernel/test/claim-envelope.test.ts",
         "apps/desktop/test/companion-mcp.test.mjs"
       ]
     }

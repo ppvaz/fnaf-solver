@@ -52,7 +52,7 @@
     {
       "id": "contract.bench-transport-trace-v1",
       "kind": "CONTRACT",
-      "path": "packages/review/test/bench-trace.test.mjs",
+      "path": "packages/review/test/bench-trace.test.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -123,13 +123,13 @@
     {
       "id": "contract.claim-envelope-v1",
       "kind": "CONTRACT",
-      "path": "packages/kernel/test/claim-envelope.test.js",
+      "path": "packages/kernel/test/claim-envelope.test.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
       "id": "contract.claim-envelope-v1",
       "kind": "CONTRACT",
-      "path": "packages/kernel/test/claim-envelope.test.js",
+      "path": "packages/kernel/test/claim-envelope.test.ts",
       "line": 4,
       "relation": "REFERENCES"
     },
@@ -512,7 +512,7 @@
     {
       "id": "contract.experiment-result-v2",
       "kind": "CONTRACT",
-      "path": "packages/kernel/test/experiment-v2.test.js",
+      "path": "packages/kernel/test/experiment-v2.test.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -537,7 +537,7 @@
     {
       "id": "contract.experiment-spec-v2",
       "kind": "CONTRACT",
-      "path": "packages/kernel/test/experiment-v2.test.js",
+      "path": "packages/kernel/test/experiment-v2.test.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -692,7 +692,7 @@
     {
       "id": "contract.qualification-v1",
       "kind": "CONTRACT",
-      "path": "packages/kernel/test/venue-identity.test.js",
+      "path": "packages/kernel/test/venue-identity.test.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -711,7 +711,7 @@
     {
       "id": "contract.qualification-v2",
       "kind": "CONTRACT",
-      "path": "packages/kernel/test/venue-identity.test.js",
+      "path": "packages/kernel/test/venue-identity.test.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -864,7 +864,7 @@
     {
       "id": "contract.telemetry-event-v1",
       "kind": "CONTRACT",
-      "path": "packages/kernel/test/factlinktest.mjs",
+      "path": "packages/kernel/test/factlinktest.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -883,7 +883,7 @@
     {
       "id": "contract.venue-binding-v1",
       "kind": "CONTRACT",
-      "path": "packages/kernel/test/venue-identity.test.js",
+      "path": "packages/kernel/test/venue-identity.test.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -909,7 +909,7 @@
     {
       "id": "contract.venue-check-v1",
       "kind": "CONTRACT",
-      "path": "packages/kernel/test/venue-identity.test.js",
+      "path": "packages/kernel/test/venue-identity.test.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {
@@ -935,7 +935,7 @@
     {
       "id": "contract.venue-identity-v1",
       "kind": "CONTRACT",
-      "path": "packages/kernel/test/venue-identity.test.js",
+      "path": "packages/kernel/test/venue-identity.test.ts",
       "relation": "CONFORMANCE_FIXTURE"
     },
     {

@@ -288,8 +288,8 @@ Comparison and fixture commands:
 
 ```sh
 PYTHONPATH=<patched-anaconda> <python2.7> packages/source/recompile/test-mobile-parser.py
-node packages/review/bin/recompile/test-compare-draw-trace.mjs
-node packages/review/bin/recompile/compare-draw-trace.mjs --trace <external-trace> \
+node packages/review/bin/recompile/test-compare-draw-trace.ts
+node packages/review/bin/recompile/compare-draw-trace.ts --trace <external-trace> \
   --night 1 --seed 24850 --frame 3 --frames 18000 --input <external-input> \
   --binary <external-binary> --save <external-pre-run-save> --out <result.json>
 # Add --repeat-trace <external-repeat> to check RNG-projection repeatability.
@@ -349,7 +349,7 @@ Run the new fixtures with the patched external toolchain:
 
 ```sh
 PYTHONPATH=<anaconda>:<anaconda>/Chowdren <python2.7> packages/source/recompile/test-child-events.py
-node packages/review/bin/recompile/test-child-diagnosis.mjs
+node packages/review/bin/recompile/test-child-diagnosis.ts
 ```
 
 For the short replay, copy `fixtures/night1-before.ini` to `freddy2` in an

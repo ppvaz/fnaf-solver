@@ -1,6 +1,6 @@
 // Encounter harness: win-score.mjs's run() (artifacts/forensics/twin-nights-night6-cohort2/win-score.mjs),
 // unchanged in its press/frame-clock/constructor handling, plus per-unit movement and encounter ledgers.
-//   node packages/review/venue-grid/encounter-replay.mjs CFG.json OUT.json
+//   node packages/review/venue-grid/encounter-replay.ts CFG.json OUT.json
 // Inputs are private frame traces and derived press schedules; outputs contain derived facts only.
 // CFG: { nights: [{ name, presses, trace?, first?, seeds, phone? }], opts?, catchUp?, windowMs?, summaryOnly? }
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -123,7 +123,7 @@ function main(argv) {
     const deltas = deltasFor(traceNs, night.first, cfg.catchUp ?? true);
     const presses = JSON.parse(readFileSync(night.presses, 'utf8')).actions
       .map(([t, k, a]) => [t, k, a === 'light' ? MODEL_CONTEXT_LIGHT : a]);
-    const rows = night.seeds.map(seed => { const r = run(night, seed, deltas, presses); r.score = score(night.phone, r.w); return r; });
+    const rows = night.seeds.map(seed => { const r: any = run(night, seed, deltas, presses); r.score = score(night.phone, r.w); return r; });
     out.push({ name: night.name, phone: night.phone ?? null, rows });
   }
   const id = `encounter-replay-${createHash('sha256').update(JSON.stringify({ night: cfg.night ?? 6, opts: OPTS, out })).digest('hex').slice(0, 16)}`;

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { parseRngProbe, parseViewingProbe, parseChildCensus } from './diagnose-child-events.mjs';
+import { parseRngProbe, parseViewingProbe, parseChildCensus } from './diagnose-child-events.ts';
 const end = '\n[Inferior 1 (process 100) exited normally]\n';
 assert.deepEqual(parseViewingProbe(`INITIAL viewing=0\nVIEWING_WRITE loop=0 value=9${end}`), { initial: 0, writes: [{ loop: 0, value: 9 }] });
 assert.deepEqual(parseViewingProbe(`INITIAL viewing=0${end}`), { initial: 0, writes: [] });

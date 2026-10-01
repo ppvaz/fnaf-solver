@@ -25,41 +25,41 @@ function pack(id, { outcome = 'DEATH', events = [], report = verified, phase = {
 }
 
 try {
-  const noOnset = auditRun(pack('no-onset', { phase: null }));
+  const noOnset: any = auditRun(pack('no-onset', { phase: null }));
   assert.equal(noOnset.class, 'UNKNOWN');
-  assert.deepEqual(noOnset.value.undecided, ['death-onset-unknown'], 'with no onset nothing can be ordered');
+  assert.deepEqual((noOnset.value as any).undecided, ['death-onset-unknown'], 'with no onset nothing can be ordered');
 
-  const nightObserved = auditRun(pack('night-observed', { phase: null,
+  const nightObserved: any = auditRun(pack('night-observed', { phase: null,
     events: [{ type: 'observation', label: 'state=night', at: at(-500) }, { type: 'control.gate.abort', at: at(-2500), reason: 'mask unreadable' }] }));
-  assert.equal(nightObserved.value.onset.from, 'last observation labelled state=night');
+  assert.equal((nightObserved.value as any).onset.from, 'last observation labelled state=night');
   assert.equal(nightObserved.class, 'OBSERVATION', 'a gate abort before the last night observation is the first divergence');
-  assert.equal(nightObserved.value.firstDivergence.beforeOnsetMs, 2000);
+  assert.equal((nightObserved.value as any).firstDivergence.beforeOnsetMs, 2000);
 
-  const abortAfter = auditRun(pack('abort-after', { phase: { terminal: { lastNightAt: ONSET }, deliveredBand: band('IN A LOSS BAND') },
+  const abortAfter: any = auditRun(pack('abort-after', { phase: { terminal: { lastNightAt: ONSET }, deliveredBand: band('IN A LOSS BAND') },
     events: [{ type: 'control.gate.abort', at: at(1800), reason: 'mask unreadable' }] }));
   assert.equal(abortAfter.class, 'STRATEGY', 'an abort after the onset is a symptom, and a verified run in a loss band blames the strategy');
-  assert.deepEqual(abortAfter.value.execution.faultsAfterOnset, [{ kind: 'gate-abort', detail: 'mask unreadable', afterOnsetMs: 1800 }]);
+  assert.deepEqual((abortAfter.value as any).execution.faultsAfterOnset, [{ kind: 'gate-abort', detail: 'mask unreadable', afterOnsetMs: 1800 }]);
 
   const miss = { type: 'control.effect.result', status: 'MISSING', actionId: 'a7', signal: 'monitorUp', target: 'true', contactAt: ONSET - 900 };
-  const systematic = auditRun(pack('systematic', { events: [miss], report: { ...verified,
+  const systematic: any = auditRun(pack('systematic', { events: [miss], report: { ...verified,
     effects: { tally: { PASS: 11, MISSING: 1 }, systematicMisses: [{ key: 'a7 monitorUp->true', verdict: 'ACTUATOR-GAP' }] } } }));
   assert.equal(systematic.class, 'ACTUATION', 'a miss run-report.mjs graded systematic is an actuation fault');
 
-  const blind = auditRun(pack('blind', { events: [miss], report: { ...verified, effects: { tally: { PASS: 11, MISSING: 1 }, systematicMisses: [] } },
+  const blind: any = auditRun(pack('blind', { events: [miss], report: { ...verified, effects: { tally: { PASS: 11, MISSING: 1 }, systematicMisses: [] } },
     phase: { terminal: { lastNightAt: ONSET }, deliveredBand: band('IN A LOSS BAND') } }));
   assert.equal(blind.class, 'UNKNOWN', 'a miss below the systematic threshold decides nothing (mistake register #12)');
-  assert.ok(blind.value.undecided.includes('misses-below-the-systematic-threshold'));
+  assert.ok((blind.value as any).undecided.includes('misses-below-the-systematic-threshold'));
 
-  const model = auditRun(pack('model', { phase: { terminal: { lastNightAt: ONSET }, deliveredBand: band('OUTSIDE EVERY LOSS BAND') } }));
+  const model: any = auditRun(pack('model', { phase: { terminal: { lastNightAt: ONSET }, deliveredBand: band('OUTSIDE EVERY LOSS BAND') } }));
   assert.equal(model.class, 'MODEL', 'a verified run outside every loss band is a model disagreement');
 
-  const unmeasured = auditRun(pack('unmeasured', { report: { arm: { status: 'UNRESOLVED NON-FATAL' }, effects: { tally: { PASS: 9, UNREAD: 3 } } } }));
+  const unmeasured: any = auditRun(pack('unmeasured', { report: { arm: { status: 'UNRESOLVED NON-FATAL' }, effects: { tally: { PASS: 9, UNREAD: 3 } } } }));
   assert.equal(unmeasured.class, 'UNKNOWN');
-  assert.deepEqual(unmeasured.value.undecided,
+  assert.deepEqual((unmeasured.value as any).undecided,
     ['arm-unresolved-non-fatal', 'effects-not-all-pass (3 UNREAD)', 'delivered-phase-unmeasured']);
 
   const edge = auditRun(pack('edge', { phase: { terminal: { lastNightAt: ONSET }, deliveredBand: { ...band('IN A LOSS BAND'), conclusive: false } } }));
-  assert.deepEqual(edge.value.undecided, ['delivered-phase-within-its-uncertainty-of-a-band-edge']);
+  assert.deepEqual((edge.value as any).undecided, ['delivered-phase-within-its-uncertainty-of-a-band-edge']);
 
   pack('won', { outcome: 'WIN' });
   const all = auditRuns(root);

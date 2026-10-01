@@ -29,8 +29,8 @@ const EXCLUDED = new Map([
   ['office-seed-bracket.py', 'the office frame seed bracket from a live MMFRuntime logcat; consumed by the seed-lock scorer, not by a run grade yet -- it joins grade-run.sh once runs retain mmfruntime.logcat'],
   ['grade-run.sh', 'the pipeline itself'],
   ['cycle-ledger.py', 'reads the retained video (and audio census) after a run; run by hand while its flash classes and colour rule are calibrated on Night 6 recordings (2026-09-13); its cycle timings come from the winner of the bundle the run names (test-cycle-ledger.py, 2026-09-14); joins grade-run.sh with tickphase.py'],
-  ['static-terminal-window.mjs', 'cross-pack census over committed run packs that derives the executor\'s static-to-terminal window, not a per-run instrument; test-static-terminal-window.mjs (npm run test:unit) reproduces its record'],
-  ['post-night-static.mjs', 'cross-pack census over committed run packs that decides the executor\'s post-night static halt (whether a night ever went on after a post-night static), not a per-run instrument; test-post-night-static.mjs (npm run test:unit) reproduces its record'],
+  ['static-terminal-window.ts', 'cross-pack census over committed run packs that derives the executor\'s static-to-terminal window, not a per-run instrument; test-static-terminal-window.ts (npm run test:unit) reproduces its record'],
+  ['post-night-static.ts', 'cross-pack census over committed run packs that decides the executor\'s post-night static halt (whether a night ever went on after a post-night static), not a per-run instrument; test-post-night-static.ts (npm run test:unit) reproduces its record'],
   ['death-cause.py', 'shadow-only labelled visual-cause model builder used by run-timeline.py when explicitly supplied; it builds a model rather than grading a run, gated by test-death-cause.py'],
   ['framesource.py', 'the one frame source every video instrument decodes through (ffmpeg privately, or the shared single decode when the pipeline offers a pipe); a library, gated by test-framesource.py'],
 
@@ -57,6 +57,9 @@ const TEST_DIRS = ['../../../../packages/propose/test', '../../../../packages/pr
   '../../../../packages/propose/bindings',
   '../../../../apps/desktop/test'];
 const SIBLING_EXCLUDED = new Map([
+  ['chronicle.ts', 'the chronicle generator: writes docs/portal from the curated entries (npm run chronicle); it reads no run, and apps/wiki/test/chronicle.test.ts gates it'],
+  ['chronicle-story.ts', 'the chronicle story builder the generator imports; it reads curated entries, not a run'],
+  ['chronicle-harvest.ts', 'proposes chronicle candidates from commit history (npm run chronicle:harvest); it reads git, not a run'],
   ['aimap.py', 'AI-table extractor from the event-sheet dump, gated by test-aimap.py'],
   ['nightmap.py', 'per-game night reader over any of the four event-sheet dumps -- clock, difficulty table, rolls, movement edges and draw census, gated by test-nightmap.py; it reads source, not a run'],
   ['readdump.py', 'event-sheet dump reader library, gated by test-instances.py'],
@@ -188,7 +191,7 @@ const SIBLING_EXCLUDED = new Map([
   // tools/device
   ['overnight-window.py', 'a forwarder to apps/lab/overnight-window.py, kept while a host\'s installed systemd units name this path (legacy-paths.json lab.overnight-window-path); the window itself is gated in apps/lab'],
   // packages/review/bin/report
-  ['bench-trace.mjs', 'a read-only report over a retained Plan 20 bench trace, not a run: it summarizes a trace the bench wrote and upgrades no claim level'],
+  ['bench-trace.ts', 'a read-only report over a retained Plan 20 bench trace, not a run: it summarizes a trace the bench wrote and upgrades no claim level'],
   ['tickphase.py', 'reads the retained Bluetooth audio (night-run.sh --bt-audio) after a run: roll-witness onsets and WinD folds. Run by hand while its thresholds and the clock-rate correction are being calibrated (2026-09-13); it joins grade-run.sh once a fold-based phase read survives a second run'],
   ['death-census.py', 'cross-run census -- answers "what keeps happening", not "what happened in this run"'],
   ['find-events.py', 'mask-camp trial scrubber, not a night-run grader'],
@@ -231,7 +234,7 @@ if (!/GRADE_MAX_VMEM_KB="\$\{GRADE_MAX_VMEM_KB:-2097152\}"/.test(sh) ||
 const invocations = sh.split('\n').filter((line) => !/^\s*#/.test(line));
 const referenced = new Set();
 for (const line of invocations)
-  for (const m of line.matchAll(/\$HERE\/((?:\.\.\/)?[\w./-]+\.(?:py|mjs|sh))/g))
+  for (const m of line.matchAll(/\$HERE\/((?:\.\.\/)?[\w./-]+\.(?:py|mjs|ts|sh))/g))
     referenced.add(key(m[1]));
 
 for (const ref of referenced)
@@ -252,7 +255,7 @@ const scriptNames = (text) => {
   const found = new Set();
   for (const line of text.split('\n')) {
     if (/^\s*(#|\/\/)/.test(line)) continue;
-    for (const m of line.matchAll(/['"`]([\w./-]+\.(?:py|mjs|sh))['"`]/g)) {
+    for (const m of line.matchAll(/['"`]([\w./-]+\.(?:py|mjs|ts|sh))['"`]/g)) {
       found.add(m[1]);
       found.add(m[1].split('/').pop());
     }
@@ -267,7 +270,7 @@ const ci = existsSync(ciPath) ? readFileSync(ciPath, 'utf8') : '';
 const ciNames = new Set();
 for (const line of ci.split('\n')) {
   if (/^\s*#/.test(line)) continue;
-  for (const m of line.matchAll(/([\w./-]+\.(?:py|mjs|sh))/g))
+  for (const m of line.matchAll(/([\w./-]+\.(?:py|mjs|ts|sh))/g))
     ciNames.add(m[1].split('/').pop());
 }
 // The third registry. CI's lanes are `npm run test:contracts` and
@@ -279,7 +282,7 @@ for (const line of ci.split('\n')) {
 const pkgPath = join(ROOT, 'package.json');
 const scriptNamesRun = new Set();
 for (const command of Object.values(JSON.parse(readFileSync(pkgPath, 'utf8')).scripts ?? {}))
-  for (const m of String(command).matchAll(/([\w./-]+\.(?:py|mjs|sh))/g))
+  for (const m of String(command).matchAll(/([\w./-]+\.(?:py|mjs|ts|sh))/g))
     scriptNamesRun.add(m[1].split('/').pop());
 
 const runs = (gate) => {
@@ -288,7 +291,7 @@ const runs = (gate) => {
 };
 
 for (const name of readdirSync(HERE).sort()) {
-  if (!/\.(py|mjs|sh)$/.test(name)) continue;
+  if (!/\.(py|mjs|ts|sh)$/.test(name)) continue;
   if (name.startsWith('test-')) {
     // This used to be `continue`, under the comment "suite gates, run by
     // tools/test.mjs". That comment was an assumption, and it was false for
@@ -322,7 +325,7 @@ const tracked = new Set(execFileSync('git', ['ls-files', '--cached', '--others',
   { cwd: ROOT, maxBuffer: 1 << 28 }).toString().split('\n')
   .filter(file => existsSync(join(ROOT, file))).map(file => file.split('/').pop()));
 for (const [name, reason] of [...EXCLUDED, ...SIBLING_EXCLUDED]) {
-  for (const m of reason.matchAll(/\btest-[\w.-]+\.(?:py|mjs|sh)\b/g)) {
+  for (const m of reason.matchAll(/\btest-[\w.-]+\.(?:py|mjs|ts|sh)\b/g)) {
     const gate = m[0];
     if (!tracked.has(gate))
       complain(`${name} is excused because of ${gate}, which does not exist`);
@@ -356,7 +359,7 @@ for (const dir of SIBLINGS) {
   const path = join(HERE, dir);
   if (!existsSync(path)) { complain(`${dir} is gone: the sibling scan has nothing to read`); continue; }
   for (const name of readdirSync(path).sort()) {
-    if (!/\.(py|mjs|sh)$/.test(name)) continue;
+    if (!/\.(py|mjs|ts|sh)$/.test(name)) continue;
     const rel = `${dir}/${name}`;
     if (name.startsWith('test-')) {
       if (!runs(name))

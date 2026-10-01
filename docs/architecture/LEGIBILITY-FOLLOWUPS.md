@@ -232,7 +232,7 @@ is unchanged, so every figure keyed by it stands. The experiment-spec-v2 seed se
 (`describeSeedSet`, `expandSeedSet`, validated by the kernel's `validateSeedSet`)
 carries derivation, provenance, count and sha256, and a census under 3000 seeds is
 refused by review's `seed-floor` rule (`resolveCensusCohort`). Focused tests:
-`packages/propose/test/census.test.js` and `packages/kernel/test/experiment-v2.test.js`
+`packages/propose/test/census.test.js` and `packages/kernel/test/experiment-v2.test.ts`
 (`test:contracts`). `packages/propose/bin/plans/minus-3-plan.mjs` still passes the golden salt
 beside an explicit list; its bytes are hashed into every Minus 3 bundle, so it is
 not edited, and the descriptor now records such a list by what it is.

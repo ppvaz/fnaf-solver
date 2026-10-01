@@ -11,7 +11,7 @@ function argument(name) {
 }
 
 function help() {
-  console.log('Usage: node packages/review/bin/report/bench-trace.mjs --input TRACE.json [--out SUMMARY.json]');
+  console.log('Usage: node packages/review/bin/report/bench-trace.ts --input TRACE.json [--out SUMMARY.json]');
 }
 
 const inputPath = argument('--input');

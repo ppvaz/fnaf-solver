@@ -6,7 +6,7 @@
 // (re-derive POST_NIGHT_STATIC_HALT). Each check first runs against a planted
 // violation and must catch it.
 //
-//   node packages/review/bin/grade/test-post-night-static.mjs
+//   node packages/review/bin/grade/test-post-night-static.ts
 import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -15,7 +15,7 @@ import { fileURLToPath } from 'node:url';
 import {
   OBSERVER_INTERVAL_BOUND_MS, RECORD_PATH, RUNS_DIR, STATIC_TERMINAL_WAIT_MS, liveNightMisreads,
   measurePostNightStatic, newerPacksContradicting, nightWentOn, postNightStaticEpisodes, serialize,
-} from './post-night-static.mjs';
+} from './post-night-static.ts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
 const reads = rows => rows.map(([at, label]) => ({ at, label }));

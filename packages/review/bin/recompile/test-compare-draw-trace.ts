@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { compareTrace } from './compare-draw-trace.mjs';
+import { compareTrace } from './compare-draw-trace.ts';
 import { drawTrace } from '../../../source/recompile/model-draw-trace.mjs';
 import { AI_DIALS, Rng } from '@sixam/source/fnaf2';
 

@@ -6,7 +6,7 @@
 // Custom Night from the title, in night7-n7-420-minimal-m3-p1b-20260927T195732Z
 // they opened the in-app store. This file holds the halting rule to the record
 // that justifies it (docs/evidence/post-night-static-halt-20260927.json,
-// packages/review/bin/grade/post-night-static.mjs) and runs it on fake observers and HIDs:
+// packages/review/bin/grade/post-night-static.ts) and runs it on fake observers and HIDs:
 // presses stop at the halt, the observer still reads the Game Over that
 // follows, a window with no terminal still ends as a static exit, the halt is
 // latched against a later night read, and a night with no death is untouched.

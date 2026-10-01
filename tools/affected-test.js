@@ -37,7 +37,7 @@ if (playModelChanged)
   for (const test of ['belieftest', 'estimatortest', 'phaseclocktest', 'reactivetest'])
     add(`test:tools/${test}.mjs`, 'node', [`tools/${test}.mjs`]);
 if (changed.some(path => path.startsWith('packages/review/src/measure/')))
-  add('bench-trace', 'node', ['packages/review/test/bench-trace.test.mjs']);
+  add('bench-trace', 'node', ['packages/review/test/bench-trace.test.ts']);
 if (changed.some(path => path.startsWith('apps/trainer/src/training/')))
   for (const test of ['exercise', 'activity-gate'])
     add(`test:apps/trainer/test/${test}.test.mjs`, 'node', [`apps/trainer/test/${test}.test.mjs`]);
@@ -113,8 +113,8 @@ for (const path of changed.filter(p => /^packages\/[^/]+\/test\/.*\.test\.m?[jt]
   add(`test:${path}`, 'node', [path]);
 if (changed.some(path => path.startsWith('docs/') || path.startsWith('plans/')))
   add('documentation', 'node', ['tools/test-docs.mjs']);
-if (changed.some(path => path === 'packages/review/src/vault.ts' || path === 'packages/review/test/vault.test.mjs'))
-  add('vault', 'node', ['packages/review/test/vault.test.mjs']);
+if (changed.some(path => path === 'packages/review/src/vault.ts' || path === 'packages/review/test/vault.test.ts'))
+  add('vault', 'node', ['packages/review/test/vault.test.ts']);
 if (changed.some(path => path.startsWith('packages/propose/parked/')))
   add('model-syntax', 'node', ['--check', ...changed.filter(path => /\.(?:js|mjs|ts|mts)$/.test(path) && path.startsWith('packages/propose/parked/'))]);
 

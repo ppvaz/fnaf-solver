@@ -38,7 +38,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { compareTrace } from '../../../review/bin/recompile/compare-draw-trace.mjs';
+import { compareTrace } from '../../../review/bin/recompile/compare-draw-trace.ts';
 import { MODEL_SOURCES, simOptionsFrom } from '../../../source/recompile/model-draw-trace.mjs';
 import { DEFAULT_PROFILE, controlPoints, harnessInput, winnerSchedule, modelContacts } from './schedule-to-input.mjs';
 import { withModelOptions } from './rebuild-options-census.mjs';
@@ -359,7 +359,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     ...(args['model-options'] ? { modelOptions: rel(args['model-options']), modelOptionsSha256: fileHash(args['model-options']) } : {}),
     ...(args['custom-night'] ? { customNight: rel(args['custom-night']), customNightSha256: fileHash(args['custom-night']) } : {}),
     toolSha256: fileHash(new URL(import.meta.url)),
-    compareToolSha256: fileHash(new URL('../../../review/bin/recompile/compare-draw-trace.mjs', import.meta.url)),
+    compareToolSha256: fileHash(new URL('../../../review/bin/recompile/compare-draw-trace.ts', import.meta.url)),
     scheduleToolSha256: fileHash(new URL('./schedule-to-input.mjs', import.meta.url)),
     modelTraceToolSha256: fileHash(new URL('../../../source/recompile/model-draw-trace.mjs', import.meta.url)),
     modelSourceSha256: Object.fromEntries(MODEL_SOURCES.map((path) => [rel(path), fileHash(path)])),

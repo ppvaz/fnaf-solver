@@ -65,7 +65,7 @@ try {
   run('night7-k9-cohort-r04b', { outcome: 'sixam', video: 'clear -- sixam at 455.0 s' });
   run('night7-other-r01', { outcome: 'sixam', video: 'clear' });
 
-  const result = computeCohort(predeclaration, packs, { source: 'fixture' });
+  const result: any = computeCohort(predeclaration, packs, { source: 'fixture' });
   assert.equal(result.schema, COHORT_RESULT_SCHEMA);
   assert.deepEqual(result.slots.map(slot => slot.status), ['WIN', 'DEATH', 'UNGRADED', 'WIN']);
   assert.equal(result.winRate, '2/4');
@@ -79,7 +79,7 @@ try {
   assert.deepEqual(result.wrongBinding, []);
 
   run('night7-k9-cohort-r03b', { outcome: 'sixam', video: 'clear -- sixam at 454.0 s', winnerHash: 'fnv1a-other' });
-  const rerun = computeCohort(predeclaration, packs);
+  const rerun: any = computeCohort(predeclaration, packs);
   assert.equal(rerun.slots[2].status, 'WIN');
   assert.deepEqual(rerun.slots[2].runs.map(entry => entry.role), ['superseded', 'counted']);
   assert.equal(rerun.wrongBinding.length, 1, 'a run on another binding is named, not silently counted');
@@ -90,7 +90,7 @@ try {
   run('night7-k9-cohort-r05', { outcome: 'sixam', timeline: { outcome: 'clear', evidence: 'sixam', at_s: 453.5 } });
   run('night7-k9-cohort-r06', { outcome: 'death', lostResult: true,
     timeline: { outcome: 'unknown', evidence: null, at_s: null, note: 'nothing terminal was captured' } });
-  const six = computeCohort(wider, packs);
+  const six: any = computeCohort(wider, packs);
   assert.equal(six.slots[4].status, 'WIN', 'a timeline.json grade is read from terminal.outcome');
   assert.equal(six.slots[4].runs[0].videoDetail, 'sixam at 453.5 s');
   const lostSlot = six.slots[5].runs[0];
@@ -108,7 +108,7 @@ try {
   run('corner-bbfoxy-r01', { outcome: 'death', video: 'death -- terminal-static at 44.0 s', dials: corners.corners[0].dials });
   run('corner-bbfoxy-r02', { outcome: 'sixam', timeline: { outcome: 'clear', evidence: 'sixam', at_s: 455 }, dials: corners.corners[0].dials });
   run('corner-bbgolden-r01', { outcome: 'sixam' });
-  const partial = computeCohort(corners, packs, { source: 'corners.json' });
+  const partial: any = computeCohort(corners, packs, { source: 'corners.json' });
   assert.equal(partial.schema, CORNER_COHORT_RESULT_SCHEMA);
   assert.equal(partial.winRate, '1/3');
   assert.equal(partial.missing, 1);
@@ -117,11 +117,11 @@ try {
   assert.deepEqual(partial.corners.map(c => c.result.slots.map(s => s.status)), [['DEATH', 'WIN'], ['UNGRADED', 'MISSING']]);
   assert.deepEqual(partial.corners[0].result.slots[0].runs.map(r => r.role), ['excluded', 'counted']);
   assert.deepEqual(partial.corners[0].dials, { bb: 20, foxy: 20 });
-  assert.equal(partial.evidenceId, computeCohort(corners, packs, { source: 'corners.json' }).evidenceId);
+  assert.equal(partial.evidenceId, (computeCohort(corners, packs, { source: 'corners.json' }) as any).evidenceId);
   assert.equal(partial.unverifiedDials.length, 1, 'a label alone does not verify the dial vector');
   run('corner-bbgolden-r01b', { outcome: 'sixam', video: 'clear -- sixam at 456 s', dials: corners.corners[1].dials });
   run('corner-bbgolden-r02', { outcome: 'sixam', video: 'clear -- sixam at 455 s', dials: corners.corners[1].dials });
-  const complete = computeCohort(corners, packs, { source: 'corners.json' });
+  const complete: any = computeCohort(corners, packs, { source: 'corners.json' });
   assert.equal(complete.status, 'COMPLETE');
   assert.equal(complete.winRate, '3/4');
   assert.deepEqual(complete.unverifiedDials, []);
@@ -131,11 +131,11 @@ try {
   assert.throws(() => computeCohort(corners, packs, { prefix: 'corner-bbfoxy' }), /prefix override/);
   assert.throws(() => computeCohort({ ...corners, corners: [{ ...corners.corners[0], labels: 'corner-bbfoxy-r01 .. r02' }] }, packs), /add up/);
   run('corner-bbgolden-r02b', { outcome: 'sixam', video: 'clear', dials: corners.corners[1].dials, observedDials: corners.corners[0].dials });
-  const mismatch = computeCohort(corners, packs);
+  const mismatch: any = computeCohort(corners, packs);
   assert.equal(mismatch.status, 'INCOMPLETE', 'a wrong dial readback cannot complete a corner cohort');
   assert.equal(mismatch.unverifiedDials.length, 1);
   run('corner-bbgolden-r02c', { outcome: 'sixam', video: 'clear', dials: corners.corners[1].dials, winnerHash: 'fnv1a-other' });
-  const wrongWinner = computeCohort(corners, packs);
+  const wrongWinner: any = computeCohort(corners, packs);
   assert.deepEqual(wrongWinner.unverifiedDials, []);
   assert.equal(wrongWinner.wrongBinding.length, 1);
   assert.equal(wrongWinner.status, 'INCOMPLETE', 'matching dials do not excuse a different winner binding');
