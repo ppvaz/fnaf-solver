@@ -2355,6 +2355,14 @@
       ]
     },
     {
+      "file": "packages/propose/bin/recompile/phone-occupancy-rates.mjs",
+      "imports": [
+        "./phone-stream-census.mjs",
+        "node:fs",
+        "node:url"
+      ]
+    },
+    {
       "file": "packages/propose/bin/recompile/phone-static-readout.mjs",
       "imports": [
         "../../../source/recompile/model-draw-trace.mjs",
@@ -2581,6 +2589,7 @@
     {
       "file": "packages/propose/bin/recompile/test-phone-stream-census.mjs",
       "imports": [
+        "./phone-occupancy-rates.mjs",
         "./phone-stream-census.mjs",
         "node:assert/strict",
         "node:crypto",

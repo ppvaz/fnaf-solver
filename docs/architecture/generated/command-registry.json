@@ -2369,6 +2369,18 @@
       "lifecycle": "supported"
     },
     {
+      "id": "packages/propose/bin/recompile/sweep-common.mjs",
+      "invocation": "packages/propose/bin/recompile/sweep-common.mjs",
+      "kind": "Module shared by the predeclared phone-night sweeps (`phone-early-perturbation.mjs`, `phone-static-readout.mjs`): `sweepArgs` (`--predeclaration FILE [--workers N] [--out FILE]`, refusing anything else), `predeclared` (the predeclaration hashed as read, refused when the night's measured seed or an input hash moved) and `fanOut` (a worker pool whose workers run only for the tool that started them).",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/recompile/phone-occupancy-rates.mjs",
+      "invocation": "packages/propose/bin/recompile/phone-occupancy-rates.mjs --night NAME [--states N] [--windows N] [--out FILE]",
+      "kind": "Report: how often the model puts each occupant in a phone night's mask windows over a fixed stride of office start states (`(i * 21841 + 7) mod 65536`), against the phone's eyehole reads, with Pearson's chi-square; `missExpectation` gives, per window, the misses a set of code strings shows against the misses independence at those rates predicts. MODEL_ONLY rates against DEVICE_MEASURED reads.",
+      "lifecycle": "supported"
+    },
+    {
       "id": "packages/propose/bin/recompile/phone-clock-sweep.mjs",
       "invocation": "packages/propose/bin/recompile/phone-clock-sweep.mjs",
       "kind": "The press-phase x office-timer-rate sweep over the phone-encounter nights (S2b). `deltaMs` shifts the schedule through the `sched` press rule, `timerRate` scales each office update, and `dropMs` starts a rebuilt frame clock at the first captured image at or after the supplied phase; dropped traces rebase scheduled times to that new clock zero. Controls must reproduce retained model windows byte for byte. `check RESULT.json` re-derives scores, rankings, verdict and control from retained rows alone. MODEL_ONLY.",

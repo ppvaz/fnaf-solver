@@ -216,8 +216,13 @@ Details:
     measured clock and landed contacts. The measured seed agrees through
     window 6, no better than 26,557 others; no state agrees past window 23 of
     42, and start states up to 12 draws from the seed never reach window 10.
-    The strong states share their misses: Withered Freddy's two windows (22
-    and 26) and a one-window slip of the B/C rhythm at 31-32. Keeping the
+    The model's per-window occupant rates are the phone's (empty 0.39,
+    Withered Chica 0.31, Bonnie 0.27, Freddy 0.03 over 1,000 start states,
+    against 14, 11, 11 and 2 of the phone's 38 windows; chi-square 0.49 on
+    3 df), so the strong states' misses at Freddy's windows 22 and 26 are
+    his rarity, not a mechanics gap; their misses at 31-32 exceed it
+    ([rates](../docs/evidence/full06-occupancy-rates-20261001.json),
+    `s2-occupancy-rates-58d23e496849b27b`). Keeping the
     measured seed, no single change before the first roll (an early contact
     shifted -3..+3 updates or removed, one or two draws more or fewer) fits
     both the audio and the windows, and none of the 14 seeds of the logcat
@@ -240,7 +245,7 @@ Details:
     `s2-static-readout-confirm-6ccf7cf7ccd77fec`). The physical separator is
     a traced Night 7 whose camera-view region is read natively through the
     winding windows, so single draws resolve and the seed is checked state
-    by state; Withered Freddy's two windows are the other target
+    by state
     ([census](../docs/evidence/full06-stream-census-20261001.json),
     `s2-stream-census-45ad1201c90a4531`;
     [pre-registration](../docs/evidence/full06-stream-census-predeclaration-20261001.json)).

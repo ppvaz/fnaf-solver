@@ -7,6 +7,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { decide } from './phone-stream-census.mjs';
+import { chiSquare, missExpectation, tally } from './phone-occupancy-rates.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
 const read = (path) => readFileSync(join(ROOT, path));
@@ -63,4 +64,22 @@ const { id, ...body } = rec;
 const canon = (v) => Array.isArray(v) ? `[${v.map(canon).join(',')}]`
   : v && typeof v === 'object' ? `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${canon(v[k])}`).join(',')}}` : JSON.stringify(v);
 assert.equal(id, `s2-stream-census-${sha256(canon(body)).slice(0, 16)}`, 'record id: sha256 of the body, keys sorted, compact');
-console.log(`phone-stream-census: decision rule fixtures, and ${id} (${decision.verdict}) re-derived from its rows`);
+
+// --- the occupancy-rate correction of this record's exploratory reading
+const occ = json('docs/evidence/full06-occupancy-rates-20261001.json');
+assert.equal(occ.corrects.id, rec.id);
+const t = tally(occ.codes.split(' '), occ.phoneWindows, occ.windows);
+assert.equal(occ.codes.split(' ').length, occ.states);
+assert.deepEqual([t.model, t.played, t.phone, t.phoneRead], [occ.model, occ.played, occ.phone, occ.phoneRead]);
+const chi = chiSquare(t);
+assert.equal(chi.chi, occ.chiSquare.chi);
+// chi-square survival on 3 df: erfc(sqrt(x / 2)) + sqrt(2x / pi) e^(-x / 2); erfc by Abramowitz-Stegun 7.1.26 (|error| < 1.5e-7)
+const erfc = (z) => { const t1 = 1 / (1 + 0.3275911 * z); return t1 * (0.254829592 + t1 * (-0.284496736 + t1 * (1.421413741 + t1 * (-1.453152027 + t1 * 1.061405429)))) * Math.exp(-z * z); };
+const p3 = (x) => erfc(Math.sqrt(x / 2)) + Math.sqrt((2 * x) / Math.PI) * Math.exp(-x / 2);
+assert.equal(chi.df, 3);
+assert.ok(Math.abs(p3(chi.chi) - occ.chiSquare.p) < 0.005, `p ${p3(chi.chi)} is the recorded ${occ.chiSquare.p}`);
+const best40 = [...rows].sort((a, b) => b.agree - a.agree || a.state - b.state).slice(0, 40).map((r) => rec.stage2.codes[String(r.state)]);
+assert.deepEqual(missExpectation(best40, rec.phoneWindows, occ.model, occ.played).filter((m) => m && [22, 26, 31, 32].includes(m.window)), occ.censusBest40.windows);
+const { id: occId, ...occBody } = occ;
+assert.equal(occId, `s2-occupancy-rates-${sha256(canon(occBody)).slice(0, 16)}`, 'occupancy record id');
+console.log(`phone-stream-census: decision rule fixtures, and ${id} (${decision.verdict}) re-derived from its rows, and its occupancy-rate correction rechecked`);

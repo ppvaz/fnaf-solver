@@ -5,10 +5,11 @@
  "outlook": {
   "next": [
    {
-    "title": "S2: Balloon Boy's first roll and Withered Freddy's two windows on full-06",
-    "body": "As of s2-stream-census-45ad1201c90a4531 and s2-early-perturbation-1c931f96a31dcb24, neither another office start state nor one change before Balloon Boy's first roll at the measured seed reproduces full-06; the strong fits all miss the two windows the phone reads as Withered Freddy (22 and 26), and as of s2-audio-realignment-f61f47d56098beb2 the phone's draw stream parts from the host's by 15 s. The records leave S2 open; as of s2-static-readout-confirm-6ccf7cf7ccd77fec the camera static reads the stream out but the retained grid cannot identify a state, so the separator is a traced Night 7 whose camera view is read natively through the winding windows.",
+    "title": "S2: where full-06's random stream parts from the host's",
+    "body": "As of s2-stream-census-45ad1201c90a4531, s2-occupancy-rates-58d23e496849b27b and s2-early-perturbation-1c931f96a31dcb24, the model's encounter rates on full-06 are the phone's, but neither another office start state nor one change before Balloon Boy's first roll reproduces which encounter comes when; as of s2-audio-realignment-f61f47d56098beb2 the phone's stream parts from the host's by 15 s, and as of s2-static-readout-confirm-6ccf7cf7ccd77fec the camera static reads the stream out but the retained grid cannot identify a state. The records leave S2 open; the separator is a traced Night 7 whose camera view is read natively through the winding windows.",
     "sources": [
      "docs/evidence/full06-stream-census-20261001.json",
+     "docs/evidence/full06-occupancy-rates-20261001.json",
      "docs/evidence/full06-early-perturbation-20261001.json",
      "docs/evidence/full06-audio-realignment-20261001.json",
      "docs/evidence/full06-static-readout-confirm-20261001.json",
@@ -119,8 +120,8 @@
     "docs/evidence/full06-stream-census-20261001.json",
     "docs/evidence/full06-stream-census-predeclaration-20261001.json"
    ],
-   "status": "standing",
-   "supersededBy": null,
+   "status": "superseded",
+   "supersededBy": "full06-start-states-and-occupancy-rates",
    "supersedes": null
   },
   {
@@ -180,6 +181,35 @@
    "status": "standing",
    "supersededBy": null,
    "supersedes": null
+  },
+  {
+   "id": "full06-start-states-and-occupancy-rates",
+   "date": "2026-10-01",
+   "game": "fnaf2",
+   "kind": "negative",
+   "title": "No office start state reproduces full-06, and the model's encounter rates are the phone's",
+   "body": "Pre-registered before any state but the measured seed was replayed: every one of the 65,536 office start states through the production model on full-06's own measured clock and landed contacts, scored against the phone's 42 eyehole-read mask windows. The measured seed agrees through window 6, no better than 26,557 others; no state agrees past window 23, and start states up to 12 draws from the seed never reach window 10: INCONCLUSIVE by the predeclared rule, not an identified seed. The model's per-window occupant rates over 1,000 start states are the phone's (chi-square 0.49 on 3 df), so the strong states' shared misses at the two Withered Freddy windows are his rarity; the entry this corrects read them as a mechanics gap. Their misses at windows 31-32 exceed what the rates predict.",
+   "measured": "best prefix 23 of 42; occupant rates chi-square 0.49 on 3 df",
+   "label": "MODEL_ONLY",
+   "rung": null,
+   "plan": 25,
+   "night": 7,
+   "route": "Minus Toys",
+   "tags": [
+    "model",
+    "census",
+    "encounter",
+    "fidelity",
+    "s2"
+   ],
+   "sources": [
+    "docs/evidence/full06-stream-census-20261001.json",
+    "docs/evidence/full06-occupancy-rates-20261001.json",
+    "docs/evidence/full06-stream-census-predeclaration-20261001.json"
+   ],
+   "status": "standing",
+   "supersededBy": null,
+   "supersedes": "full06-no-start-state-explains-the-night"
   }
  ]
 }
