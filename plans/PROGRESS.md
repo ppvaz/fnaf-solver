@@ -3101,3 +3101,39 @@ Open:
   not cracked): winnable or not is unknown;
 - everything here reads the rebuilt runtime's objects; nothing is a device
   claim, and the touches are not a player's route.
+
+## 2026-10-01 — The capture thread, AOT and native code, measured (S4)
+
+A performance audit of what runs on the phone and of the host Sim (Pedro: "full
+performance audit"). On the phone, simpleperf on the Companion's capture thread
+at the FNaF 2 menu, no game input (`companion-capture-cpu-d9ecf3eadaba659a`):
+
+- The phone carried Companion 15 for six days after the tree moved to 16. Its
+  capture thread sat at 0.93 of a core in every window, two thirds of it
+  per-byte `DirectByteBuffer.get`; the week's capture numbers (23 region frames
+  a second in FNaF 1 nights, a screenrecord halving the frames, 47.5% of the
+  rebuild's updates) were that helper's. Companion 16 processes 60.0 fps on
+  0.27-0.41 of a core, and 60.0 under a 1200x540 screenrecord.
+- Installing 16 exposed that `companion-setup.py` never named its target, so the
+  FNaF 2 readers never ran; fixed and verified on the phone (8bd7b913).
+- Row copies instead of per-byte JNI reads take the thread to 0.21-0.31 of a
+  core (3.5-5.2 ms a frame, 60 fps either way; 7081e137).
+- AOT is not available: a debuggable app compiles to `verify` whatever
+  `compile -m speed` asks, and debuggable is load-bearing (run-as). Input timing
+  never runs Companion code: NightRunner hands the whole stream to
+  `/system/bin/hid`, AOT-compiled system code within about 2 ms.
+- Native code has nothing left to win on capture: frames are at the display rate,
+  and the remaining thread time is the GPU driver's cache maintenance on each
+  frame lock (22%) and the readers' own logic.
+
+On the host (diagnostic sweeps, not records): one core replays about 112 Night 7
+nights a second; this Mac saturates at about 3.3x one core; `winner-census`
+already reaches 2.9x at `--jobs 8` with an identical loss hash. The policy census
+caps at two workers (`MAX_JOBS`), which the 2026-09-30 census paid as 36
+minutes, and FNaF 1, 3 and 4 censuses run on one core.
+
+Open: a night's screens (office and cameras) and FNaF 1/3/4's region-only load,
+not measured; REGION reads under a recording; the policy census's worker cap
+(Pedro: kept low so the machine stays usable); per-tick cost in `tick` and
+`tickUnits` (60% of Sim time), where no cut has yet shown a measured gain.
+Evidence ID: `companion-capture-cpu-d9ecf3eadaba659a`.
