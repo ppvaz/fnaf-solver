@@ -177,6 +177,13 @@ runtimeArmRequest.blocks = [runtimeArmRequest.blocks[0],
     { durationMs: 33 })])];
 const runtimeObserveOnceRequest = structuredClone(runtimeArmRequest);
 (runtimeObserveOnceRequest.artifact.plans[0] as any).armVerification.mode = 'observe-once';
+// The same night with a second planned camera window: the monitor down at 600 and up again at 800.
+const twoWindowObserveOnceRequest = structuredClone(runtimeObserveOnceRequest);
+Object.assign(twoWindowObserveOnceRequest.artifact.plans[0].timing, { stopAtMs: 1200, observeUntilMs: 1400 });
+twoWindowObserveOnceRequest.blocks = [...twoWindowObserveOnceRequest.blocks,
+  block('runtime-second-window', 600, [
+    action('runtime-monitor-down-later', 'ensure', 'monitor', 600, { targetMonitorUp: false, durationMs: 33 }),
+    action('runtime-monitor-up-again', 'ensure', 'monitor', 800, { targetMonitorUp: true, durationMs: 33 })])];
 const lateRuntimeArmRequest = structuredClone(runtimeArmRequest);
 (lateRuntimeArmRequest.artifact.plans[0] as any).armVerification.untilMs = 100;
 const fastGateRequest = structuredClone(runtimeArmRequest);
@@ -731,6 +738,29 @@ try {
     'an unavailable one-shot frame must leave the run alone and remain unverified');
   assert.ok(observeOnceUnknownLog.some(event => event.type === 'arm.unresolved'),
     'an unavailable one-shot frame must be recorded as unresolved');
+
+  // A read that is not definitive tries the plan's next camera window
+  // (arm-observation.ts): on 2026-10-01 52 of 53 Night 7 arms went unresolved
+  // because their one read fell after the opening camdrop, on the office.
+  assert.ok(observeOnceUnknownLog.filter(event => event.type === 'arm.sample').every(event => Number.isFinite(event.planAtMs)),
+    'every one-shot read names the planned camera window it was taken in');
+  const laterWindowLog = [];
+  let laterWindowReads = 0;
+  const laterWindowLifecycle = finishAfter(laterWindowLog, event => event.type === 'arm.verified' || event.type === 'arm.unresolved');
+  const laterWindow = new AdbDeviceLocalArtifactExecutor({ serial: 'fixture-device', adb: fakeAdb,
+    readyDelayMs: 1, pollMs: 250,
+    timing: { pollMs: 1, armSettleMs: 0, armObservationWindowMs: 0, gateRetryGapMs: 0, maskSettleMs: 0 },
+    observe: laterWindowLifecycle.observe,
+    onEvent: laterWindowLifecycle.onEvent,
+    observeArm: async () => (++laterWindowReads === 1
+      ? { sequence: 1, highlights: null, reason: 'ambiguous-threshold' }
+      : { sequence: 2, highlights: ['cam:8', 'cam:11'], viewing: null }) });
+  const laterWindowResult = await laterWindow.execute(twoWindowObserveOnceRequest);
+  const laterSamples = laterWindowLog.filter(event => event.type === 'arm.sample');
+  assert.equal(laterWindowResult.armVerification.status, 'PASS',
+    'an indeterminate first read must be resolved by the next planned camera window');
+  assert.equal(laterSamples.length, 2, 'one read per window, stopping at the first definitive one');
+  assert.ok(laterSamples[1].planAtMs > laterSamples[0].planAtMs, 'the second read is in a later window');
 
   // A fresh helper sequence can still be indeterminate for the whole first
   // camera window while the panel settles. That window must spend a bounded

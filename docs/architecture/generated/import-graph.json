@@ -1216,6 +1216,7 @@
     {
       "file": "packages/play/src/campaign/adb-device-local-executor.ts",
       "imports": [
+        "./arm-observation.ts",
         "./artifact-executor.ts",
         "./control-effect.ts",
         "./device-shell.ts",
@@ -2533,6 +2534,22 @@
       ]
     },
     {
+      "file": "packages/propose/bin/recompile/phone-region-readout.ts",
+      "imports": [
+        "../../../source/recompile/model-draw-trace.ts",
+        "./phone-encounter-replay.ts",
+        "./phone-static-readout.ts",
+        "./schedule-to-input.ts",
+        "./sweep-common.ts",
+        "@sixam/review/renamed-path",
+        "@sixam/source/fnaf2",
+        "node:fs",
+        "node:path",
+        "node:url",
+        "node:worker_threads"
+      ]
+    },
+    {
       "file": "packages/propose/bin/recompile/phone-static-readout.ts",
       "imports": [
         "../../../source/recompile/model-draw-trace.ts",
@@ -2754,6 +2771,18 @@
         "node:assert/strict",
         "node:crypto",
         "node:fs"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/recompile/test-phone-region-readout.ts",
+      "imports": [
+        "./phone-region-readout.ts",
+        "node:assert/strict",
+        "node:crypto",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url"
       ]
     },
     {
@@ -3566,6 +3595,20 @@
         "../parked/minus7/closed-loop-reclaim.ts",
         "../parked/minus7/stock-device-pilot.ts",
         "@sixam/source/fnaf2",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/propose/test/test-arm-observation.ts",
+      "imports": [
+        "../../play/src/campaign/arm-observation.ts",
+        "../../play/src/campaign/hid-schedule.ts",
+        "../bin/plans/bundle.ts",
+        "../bin/plans/device-lane.ts",
+        "node:assert/strict",
+        "node:fs",
+        "node:os",
+        "node:path",
         "node:url"
       ]
     },

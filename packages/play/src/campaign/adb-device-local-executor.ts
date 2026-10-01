@@ -26,6 +26,7 @@ import type { MaskTransition, MonitorTransition } from './control-effect.ts';
 import { boundedRemotePath, renderDeviceLocalScript } from './device-shell.ts';
 import type { ArmControl } from './device-shell.ts';
 import { isList } from '@sixam/kernel';
+import { armObservationTimes } from './arm-observation.ts';
 
 type GatedSchedule = NonNullable<HidSchedule['gated']>;
 /** One evented fact of a run; the campaign retains every one. */
@@ -1139,22 +1140,41 @@ export class AdbDeviceLocalArtifactExecutor {
           await new Promise<void>(resolve => setTimeout(resolve, this.pollMs));
         if (!controlStillRunning() || nightAnchoredAt === null)
           return;
-        const checkAt = (nightReleasedAt ?? nightAnchoredAt) + armReadyAtMs + this.armSettleMs;
-        if (!await waitUntil(checkAt)) return;
+        // Read only where the plan shows the camera map (arm-observation.ts): the
+        // old single read at armReadyAtMs + settle fell after k2/k3's opening
+        // camdrop and read the office on 52 of 53 Night 7 nights. A read that
+        // is not definitive tries the next window; the pair holds all night.
+        const readTimes = armObservationTimes(schedule.monitorTransitions,
+          { notBeforeMs: armReadyAtMs, settleMs: this.armSettleMs });
+        if (!readTimes.length) {
+          armObservationStatus = 'UNRESOLVED';
+          this.onEvent({ type: 'arm.unresolved', mode: 'observe-once', reason: 'no-planned-camera-window' });
+          return;
+        }
+        const origin = nightReleasedAt ?? nightAnchoredAt;
         let sample: ArmSample | null = null;
-        try { sample = await this.#observeArm(); }
-        catch { /* an unavailable frame remains unresolved */ }
-        // A halt while the camera was being read: the arm stays unresolved and
-        // a mismatch may no longer stop a run the observer now owns.
-        if (actuationHalt) return;
-        const elapsedMs = Date.now() - startedAt;
-        this.onEvent({ type: 'arm.sample', mode: 'observe-once', elapsedMs, attempt: 1, sample });
-        lastArmObservation = sample;
-        const highlights = sample?.highlights ?? sample?.cameraHighlights;
+        let elapsedMs = 0;
+        let highlights: unknown = null;
+        let attempt = 0;
+        for (const [index, readAtMs] of readTimes.entries()) {
+          attempt = index + 1;
+          if (!await waitUntil(origin + readAtMs)) return;
+          sample = null;
+          try { sample = await this.#observeArm(); }
+          catch { /* an unavailable frame remains unresolved */ }
+          // A halt while the camera was being read: the arm stays unresolved and
+          // a mismatch may no longer stop a run the observer now owns.
+          if (actuationHalt) return;
+          elapsedMs = Date.now() - startedAt;
+          this.onEvent({ type: 'arm.sample', mode: 'observe-once', elapsedMs, attempt, planAtMs: readAtMs, sample });
+          lastArmObservation = sample;
+          highlights = sample?.highlights;
+          if (sample?.sequence !== undefined && sample?.sequence !== null && isList(highlights)) break;
+        }
         const sequence = sample?.sequence;
         if (sequence === undefined || sequence === null || !isList(highlights)) {
           armObservationStatus = 'UNRESOLVED';
-          this.onEvent({ type: 'arm.unresolved', mode: 'observe-once', elapsedMs,
+          this.onEvent({ type: 'arm.unresolved', mode: 'observe-once', elapsedMs, attempts: readTimes.length,
             reason: sample?.reason ?? 'no-definitive-camera-frame' });
           return;
         }
@@ -1163,13 +1183,13 @@ export class AdbDeviceLocalArtifactExecutor {
         if (key === expected) {
           armObservation = sample;
           armObservationStatus = 'PASS';
-          this.onEvent({ type: 'arm.verified', mode: 'observe-once', attempt: 1, elapsedMs });
+          this.onEvent({ type: 'arm.verified', mode: 'observe-once', attempt, elapsedMs });
           return;
         }
         armObservationStatus = 'FAILED';
         armFailure = invalidRun(`camera arm verification identified a mismatch ` +
           `(expected=${expected} observed=${key})`, 'camera-pair-mismatch');
-        this.onEvent({ type: 'arm.failed', mode: 'observe-once', attempt: 1, elapsedMs,
+        this.onEvent({ type: 'arm.failed', mode: 'observe-once', attempt, elapsedMs,
           reason: 'camera-pair-mismatch', expected: JSON.parse(expected), observed: JSON.parse(key) });
         await stopRun();
       };
