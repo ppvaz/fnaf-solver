@@ -11,7 +11,7 @@
  */
 
 /** Fusion object types by number; 32 and above are extensions. */
-export const OBJECT_TYPES = Object.freeze({
+export const OBJECT_TYPES: Readonly<Record<number, string>> = Object.freeze({
   '-7': 'player', '-6': 'keyboard-mouse', '-5': 'create', '-4': 'timer', '-3': 'storyboard', '-2': 'sound', '-1': 'system',
   0: 'quick-backdrop', 1: 'backdrop', 2: 'active', 3: 'text', 4: 'question', 5: 'score', 6: 'lives', 7: 'counter',
   8: 'rich-text', 9: 'sub-application',
@@ -25,16 +25,20 @@ export const COMMON_TYPE = 2;
 /** An event handle with this bit set names a qualifier (a group of objects), not one object. */
 export const QUALIFIER_BIT = 0x8000;
 
-export const typeName = (type: number) => OBJECT_TYPES[type] ?? (type >= EXTENSION_TYPE ? 'extension' : null);
+export const typeName = (type: number | null) =>
+  type === null ? null : OBJECT_TYPES[type] ?? (type >= EXTENSION_TYPE ? 'extension' : null);
 
 /** Conditions and actions shared by every object with common properties (ot >= 2, extensions included). */
-const COMMON_CONDITIONS = Object.freeze({ '-24': 'flag-off', '-25': 'flag-on', '-27': 'compare-alterable-value',
+/** An engine table by number: a number it does not list names nothing. */
+type ByNumber = Readonly<Record<number, string>>;
+
+const COMMON_CONDITIONS: ByNumber = Object.freeze({ '-24': 'flag-off', '-25': 'flag-on', '-27': 'compare-alterable-value',
   '-42': 'compare-alterable-value', '-43': 'compare-alterable-value' });
-const COMMON_ACTIONS = Object.freeze({ 24: 'destroy', 26: 'hide', 27: 'show', 31: 'set-alterable-value',
+const COMMON_ACTIONS: ByNumber = Object.freeze({ 24: 'destroy', 26: 'hide', 27: 'show', 31: 'set-alterable-value',
   32: 'add-to-alterable-value', 33: 'subtract-from-alterable-value', 35: 'flag-on', 36: 'flag-off', 37: 'toggle-flag' });
-const COUNTER_CONDITIONS = Object.freeze({ '-81': 'compare-counter' });
-const COUNTER_ACTIONS = Object.freeze({ 80: 'set-counter', 81: 'add-to-counter', 82: 'subtract-from-counter' });
-const CREATE_ACTIONS = Object.freeze({ 0: 'create-object', 1: 'create-object-by-name' });
+const COUNTER_CONDITIONS: ByNumber = Object.freeze({ '-81': 'compare-counter' });
+const COUNTER_ACTIONS: ByNumber = Object.freeze({ 80: 'set-counter', 81: 'add-to-counter', 82: 'subtract-from-counter' });
+const CREATE_ACTIONS: ByNumber = Object.freeze({ 0: 'create-object', 1: 'create-object-by-name' });
 
 export const FLAG_CONDITIONS = Object.freeze([-24, -25]);
 export const FLAG_ACTIONS = Object.freeze([35, 36, 37]);
@@ -49,7 +53,8 @@ export const EXPRESSIONS = Object.freeze({ getFlag: 13, alterableValue: 16, alte
 /**
  * This reader's name for an ACE, or null where it names none.
  */
-export function aceName(kind: 'condition' | 'action', type: number, num: number) {
+export function aceName(kind: 'condition' | 'action', type: number | null, num: number | null) {
+  if (type === null || num === null) return null;
   if (type === CREATE_TYPE && kind === 'action') return CREATE_ACTIONS[num] ?? null;
   if (type === COUNTER_TYPE) {
     const own = (kind === 'condition' ? COUNTER_CONDITIONS : COUNTER_ACTIONS)[num];

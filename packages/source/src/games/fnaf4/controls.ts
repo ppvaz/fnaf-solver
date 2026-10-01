@@ -21,7 +21,7 @@ import { CONTROL_CATALOG_SCHEMA, defineControlCatalog } from '../../clockwork/co
 
 export const FNAF4_PACKAGE = 'com.scottgames.fnaf4';
 
-const role = (id, aliases, contact) => ({ id, aliases,
+const role = (id: string, aliases: readonly string[], contact: string) => ({ id, aliases,
   binding: { adapter: 'touch', contact, anchor: 'screen' },
   requires: 'UNKNOWN(not-modelled)', observes: 'UNKNOWN(no-effect-reader)' });
 

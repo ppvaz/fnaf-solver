@@ -10,7 +10,6 @@
   },
   "include": [
     "packages/*/src/**/*.js",
-    "packages/source/src/**/*.ts",
     "packages/play/src/**/*.ts",
     "packages/propose/src/**/*.ts",
     "packages/review/src/**/*.ts",

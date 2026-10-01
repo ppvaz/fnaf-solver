@@ -44,7 +44,7 @@ assert.throws(() => new Sim({ ...QUIET, sourcedMovementClock: true }), /requires
   assert.equal(s.unitStunLeft(u), 1500);
   const toy = s.units.find(x => x.id === 'toybonnie');
   toy.idx = toy.path.length - 2;
-  s.advance(toy);
+  s.advanceUnit(toy);
   assert.equal(s.unitStunLeft(toy), 300);
   setUnitStun(s, s.puppet, 0.75);
   drainUnitStuns(s, s.frame);

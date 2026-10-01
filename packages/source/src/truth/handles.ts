@@ -18,7 +18,7 @@ export const HANDLE_SCRAMBLE_METHOD = 'object-type agreement over every object-b
 export const HANDLE_SCRAMBLE_LIMIT = 'the estimate is by object-type agreement, not a read of COI.loadHeader: a K that permutes ' +
   'objects within one type class scores the same (Plan 26), so a name is as good as the dump\'s own type classes';
 
-const round = value => Math.round(value * 10000) / 10000;
+const round = (value: number) => Math.round(value * 10000) / 10000;
 
 export function estimateHandleScramble(dump: Dump): {method: string, rows: number, candidates: number, k: number | null, agreement: number | null, runnerUp: {k: number, agreement: number} | null, margin: number | null, ambiguous: boolean} {
   /** handle:type -> rows*/

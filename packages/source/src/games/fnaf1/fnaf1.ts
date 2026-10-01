@@ -11,6 +11,7 @@
 // this file departs from the public record it says so.
 // ---------------------------------------------------------------------------
 
+import type { DifficultyRow, NightClock, NightModel } from '../../clockwork/night-model.ts';
 export const GAME = 'fnaf1';
 
 // The clock [SOURCED: g397 ticks the minute counter +1 every 1000 ms with
@@ -32,7 +33,7 @@ export const CLOCK = {
   wrapAt: 13,               // g400
   winHour: 6,               // g435
   source: 'g397,g398,g399,g400,g435',
-};
+} satisfies NightClock;
 
 export const CHARACTERS = ['freddy', 'bonnie', 'chica', 'foxy'];
 
@@ -49,7 +50,7 @@ export const COUNTERS = {
 //
 // Night 4's Freddy is the one stochastic entry in the table: `1 + Random(2)`
 // is 1 or 2, drawn once at night start.
-export const ROWS = [
+export const ROWS: readonly DifficultyRow[] = [
   { group: 437, night: { op: '=', value: 1 }, set: { bonnie: 0, chica: 0, foxy: 0, freddy: 0 } },
   { group: 438, night: { op: '=', value: 2 }, set: { bonnie: 3, foxy: 1, chica: 1, freddy: 0 } },
   { group: 439, night: { op: '=', value: 3 }, set: { bonnie: 0, chica: 5, foxy: 2, freddy: 1 } },
@@ -162,7 +163,7 @@ export const POWER = {
   drainMs: 1000,                                  // g315
   usageBase: 1,                                   // g313
   usageSlots: ['camera', 'leftDoor', 'rightDoor', 'leftLight', 'rightLight'],
-  extraDrainMs: { 1: null, 2: 6000, 3: 5000, 4: 4000, 5: 3000, 6: 3000, 7: 3000 },
+  extraDrainMs: ({ 1: null, 2: 6000, 3: 5000, 4: 4000, 5: 3000, 6: 3000, 7: 3000 } as Readonly<Record<number, number | null>>),
   blackoutAt: 0,                                  // g418
   source: 'g282,g283,g305-g313,g314,g315,g418,g477-g480',
 };
@@ -174,4 +175,4 @@ export const MODEL = {
   cap: CAP,
   initialLevels: { freddy: 0, bonnie: 0, chica: 0, foxy: 0 },
   rolls: ROLLS,
-};
+} satisfies NightModel;

@@ -4,7 +4,7 @@
 import * as C from './config.ts';
 import { ROUTE_MOVE_ORDER, MON_UP } from './plant-constants.ts';
 import { unitStunReady, setUnitStun, drainUnitStuns } from './movement-clock.ts';
-import type { Sim } from './plant-model.ts';
+import type { Sim, Unit } from './plant-model.ts';
 
 /** g785/g786: the cams-up streak counts gated one-second fires while viewing > 0 (sourcedGatedEvery). */
 export function tickStreak(this: Sim) {
@@ -17,13 +17,13 @@ export function tickStreak(this: Sim) {
  * FlagOn (value 0 == 1, value 1 == 0), the your-view marker off its room, Mangle's g358 hall light, and
  * before Night 7 the CAM 08/09 conditions sourcedRouteStep holds or discards on.
  */
-export function footstepPromotable(this: Sim, u: any, f: number) {
+export function footstepPromotable(this: Sim, u: Unit, f: number) {
   if (!unitStunReady(this, u, f, true)) return false;   // g344-g360 read B before g361-g371
   if (this.opts.selectedCameraGate && C.SELECTED_CAMERA_GATED.has(u.id) && u.path[u.idx] === this.cam &&
       (C.WITHEREDS.has(u.id) || this.camsUp)) return false;
   if (u.id === 'mangle' && !this.camsUp && this.lightStallOn) return false;
   if (this.opts.sourcedRouteForks && this.opts.night !== 7) {
-    const onCam = (id, cam) =>
+    const onCam = (id: string, cam: C.RouteNode) =>
       this.units.some(o => o.id === id && !o.done && !o.atOpening && o.path[o.idx] === cam);
     if (u.id === 'withfreddy' && (onCam('withchica', 8) || onCam('withbonnie', 8))) return false;   // g344
     if (u.id === 'withchica' && onCam('withbonnie', 8)) return false;                               // g347
@@ -37,7 +37,7 @@ export function footstepPromotable(this: Sim, u: any, f: number) {
  * Value 2 = 10 when the unit's move is promoted (sourcedFootstepValue2). A passed roll puts value 0 back
  * to 1, so it promotes again (value 2 = 10) a move that was already waiting.
  */
-export function footstepPromote(this: Sim, u: any, roll: boolean) {
+export function footstepPromote(this: Sim, u: Unit, roll: boolean) {
   const value2 = this.opts.sourcedFootstepValue2, viewed = this.opts.sourcedPromotedViewDraws;
   if (!value2 && !viewed && !this.opts.sourcedPromotedMoves) return;
   if (roll) u.promoted = false;
@@ -81,7 +81,7 @@ export function bbLeave(this: Sim) {
   this.emit('vent-bang', { who: 'bb', leaving: true, sample: C.THUD_SAMPLE });
 }
 
-export function unitLeave(this: Sim, u, opts: { idx?: number, cooldown?: number } = {}) {
+export function unitLeave(this: Sim, u: Unit, opts: { idx?: number, cooldown?: number } = {}) {
   u.atOpening = false; u.inside = false; u.promoted = false; u.officeRoll = false;               // g538-g555: value 0 = 0
   u.idx = opts.idx ?? (this.opts.sourcedMangleReturn && u.id === 'mangle' ? u.path.findIndex(n => n === 7) : u.repelIdx) ?? 0;   // g400/g401: CAM 7
   // Repels write the unit's B: the movement pipeline requires B = 0, so the
@@ -160,7 +160,7 @@ export function bbEnterOpening(this: Sim) {
 export function rollAllFiveSecond(this: Sim) {
   // sourcedRollsBeforeMoves: g333-g343 roll everyone first; the promotions (g344-g358) and the moves (g380 on)
   // come after the last roll, so a move's own draws (e324) cannot shift a later character's roll.
-  const deferred: any[] | null = this.opts.sourcedRollsBeforeMoves ? [] : null;
+  const deferred: string[] | null = this.opts.sourcedRollsBeforeMoves ? [] : null;
   const rollUnit = (id: string) => {                                                   // g333-g335, g338-g341
     const hit = this.rng.chance(C.MO_CHANCE(this.ai[id]), true);
     const u = this.units.find(x => x.id === id);
@@ -171,7 +171,7 @@ export function rollAllFiveSecond(this: Sim) {
     if (!hit || !this.opts.stalledEnabled || !u || u.done || u.atOpening) return;
     if (deferred) deferred.push(id); else settleRoll(u, id);
   };
-  const settleRoll = (u: any, id: string) => {
+  const settleRoll = (u: Unit, id: string) => {
     this.footstepPromote(u, true);                                           // g344-g358: value 2 = 10
     const step = this.sourcedRouteStep(u, this.frame);
     if (step === 'discard' || step === 'returned') { u.promoted = false; return; }
@@ -241,7 +241,7 @@ export function rollAllFiveSecond(this: Sim) {
 export function routePass(this: Sim, f: number) {
   const stalled = this.opts.stalledEnabled;
   if (stalled && this.opts.sourcedOfficeRolls) for (const u of this.units) this.officePromote(u);   // g344-g360 at 122
-  const waiting = (u) => stalled && u.pending && !u.done && !u.atOpening && !u.inside && u.committedAt < 0;
+  const waiting = (u: Unit) => stalled && u.pending && !u.done && !u.atOpening && !u.inside && u.committedAt < 0;
   for (const u of this.units) {
     if (!waiting(u)) continue;
     this.footstepPromote(u, false);
@@ -263,7 +263,7 @@ export function routePass(this: Sim, f: number) {
       }
       continue;
     }
-    const u = (this.units.find(x => x.id === id) as any);
+    const u = this.units.find(x => x.id === id);
     if (!u || !waiting(u)) continue;
     const step = this.sourcedRouteStep(u, f, 'move');
     if (step === 'returned') { u.pending = false; u.promoted = false; }
@@ -272,7 +272,7 @@ export function routePass(this: Sim, f: number) {
 }
 
 /** A passed roll at 122: value 0 = 1, promoted now or, under sourcedOfficeRolls, on a later loop. */
-export function officeRoll(this: Sim, u: any) {
+export function officeRoll(this: Sim, u: Unit) {
   if (!this.opts.sourcedOfficeRolls) { this.footstepPromote(u, true); return; }
   u.promoted = false;
   u.officeRoll = true;
@@ -280,7 +280,7 @@ export function officeRoll(this: Sim, u: any) {
 }
 
 /** g344-g360 at 122: promote a waiting roll where the unit stands (sourcedOfficeRolls). */
-export function officePromote(this: Sim, u: any) {
+export function officePromote(this: Sim, u: Unit) {
   if (!u.officeRoll || !u.atOpening || u.inside || u.done) return;
   this.footstepPromote(u, false);
   if (u.promoted) u.officeRoll = false;
@@ -296,9 +296,9 @@ export function rollDecidePath(this: Sim) {
  * pending), 'discard' (A = 0, roll spent), 'returned' (g378 moved it), or
  * null (fall through to canAdvance). Null whenever sourcedRouteForks is off.
  */
-export function sourcedRouteStep(this: Sim, u: any, f: number, phase = null) {
+export function sourcedRouteStep(this: Sim, u: Unit, f: number, phase: 'promote' | 'move' | null = null) {
   if (!this.opts.sourcedRouteForks) return null;
-  const onCam = (id, cam) => this.units.some(o => o.id === id && !o.done && !o.atOpening && o.path[o.idx] === cam);
+  const onCam = (id: string, cam: C.RouteNode) => this.units.some(o => o.id === id && !o.done && !o.atOpening && o.path[o.idx] === cam);
   if (this.opts.night !== 7 && phase !== 'move') {                                                   // promotion rules
     if (u.id === 'withfreddy' && (onCam('withchica', 8) || onCam('withbonnie', 8))) return 'hold';   // g344
     if (u.id === 'withchica' && onCam('withbonnie', 8)) return 'hold';                               // g347
@@ -321,7 +321,7 @@ export function sourcedRouteStep(this: Sim, u: any, f: number, phase = null) {
   return null;
 }
 
-export function canAdvance(this: Sim, u, f) {
+export function canAdvance(this: Sim, u: Unit, f: number) {
   // sourcedPromotedMoves: the move groups test value 0 == 2; the stun and the marker were the promotion's.
   if (this.opts.sourcedPromotedMoves) { if (!u.promoted) return false; }
   else if (!unitStunReady(this, u, f, true)) return false;
@@ -358,7 +358,7 @@ export function canAdvance(this: Sim, u, f) {
   return true;
 }
 
-export function tickUnits(this: Sim, f) {
+export function tickUnits(this: Sim, f: number) {
   if (!this.opts.stalledEnabled) return;
   for (const u of this.units) {
     if (u.done) continue;
@@ -485,7 +485,7 @@ export function tickUnits(this: Sim, f) {
   }
 }
 
-export function advance(this: Sim, u) {
+export function advance(this: Sim, u: Unit) {
   if (this.opts.sourcedRouteForks) {
     const here = u.path[u.idx];
     if (u.id === 'withfreddy' && here === 3 && this.decidePath === 2) {                              // g377

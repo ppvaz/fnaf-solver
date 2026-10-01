@@ -44,7 +44,7 @@ import {
   MODEL, CLOCK, ROLLS, FREDDY, FOLLOW, WALK_MS, BLACK_FLASH, BEDROOM,
   FOXY_CLOSET, FREDBEAR, IDLE,
 } from './fnaf4.ts';
-import { applyRows } from '../../clockwork/night-model.ts';
+import { applyRows, settledLevels } from '../../clockwork/night-model.ts';
 import { Every } from '../../clockwork/every.ts';
 
 export const FPS = 60;
@@ -64,6 +64,8 @@ const FOXY_CHAIN = ['away', 'centre', 'living', 'hall', 'closet'];
 // (g589 forces it from anywhere). UNKNOWN(bed-turn-anim): the sheet does not
 // state its length; `fromBed` (667 ms) is the closest measured leg.
 const TURN_MS = WALK_MS.fromBed;
+/** A station, as the walk table names its legs (`toLeftDoor`, `fromBed`). */
+type Station = 'LeftDoor' | 'RightDoor' | 'Closet' | 'Bed';
 
 
 export class Fnaf4Sim {
@@ -78,15 +80,15 @@ export class Fnaf4Sim {
   declare shadow: number;
   declare rng: Rng;
   declare fastNights: boolean;
-  declare levels: any;
-  declare forceBonnie: any;
-  declare forceChica: any;
+  declare levels: Record<string, number>;
+  declare forceBonnie: number;
+  declare forceChica: number;
   declare bonnieForced: boolean;
   declare chicaForced: boolean;
   declare frame: number;
   declare hour: number;
   declare appliedHour: number;
-  declare over: any;
+  declare over: string | null;
   declare bonnie: string;
   declare chica: string;
   declare bonniePulse: number;
@@ -99,7 +101,7 @@ export class Fnaf4Sim {
   declare bonnieAV7: number;
   declare chicaAV7: number;
   declare freddyCounter: number;
-  declare blackFlash: any;
+  declare blackFlash: number | null;
   declare counterWas80: boolean;
   declare idleSec: number;
   declare idleFredSec: number;
@@ -128,14 +130,14 @@ export class Fnaf4Sim {
   declare turning: number;
   declare forceTurn: number;
   declare timers: { hour: Every; av0: Every; foxyRoll: Every; bonnieRoll: Every; chicaRoll: Every; fredbearRoll: Every; freddyFill: Every; freddyAccel: Every; freddyDrain: Every; freddyBedCheck: Every; idle: Every; idleFred: Every; bedWatch: Every; bonnieAV6: Every; chicaAV6: Every; fbAv6: Every; fbAv19: Every; foxyDecay: Every; bonnieRetreat: Every; chicaRetreat: Every; doorRepelL: Every; doorRepelR: Every; forceTurn: Every; dismissL: Every; dismissR: Every; fbEject: Every; fbTeleport: Every; };
-  declare pendingAfterTurn: any;
+  declare pendingAfterTurn: number | null;
   constructor({ night = 1, seed = 0, plushtrapReward = false, fastNights = false }: { night?: number; seed?: number; plushtrapReward?: boolean; fastNights?: boolean; } = {}) {
     this.night = night;
     this.shadow = night >= 7 ? night - 6 : 0;
     this.rng = new Rng(seed);
     this.fastNights = fastNights;
 
-    this.levels = applyRows(MODEL.rows, night, 0, { ...MODEL.initialLevels });
+    this.levels = settledLevels(applyRows(MODEL.rows, night, 0, { ...MODEL.initialLevels }), 'FNaF 4');
     // Forced-appearance hours are drawn at night start, before any frame
     // business [g626-g628 -- the draws are the first two of the night].
     if (night >= 2 && night <= 4) {
@@ -243,27 +245,27 @@ export class Fnaf4Sim {
   /** Belief channel: breathing is audible at a door while someone is in its
    *  hall [the audio rule the published line runs on; the sheet's rendering
    *  of it is the different peek animations g64-g66/g120-g122]. */
-  breathAt(side) {
+  breathAt(side: number) {
     if (side === 1) {
       return this.bonnie === 'farL' || this.bonnie === 'nearL' || this.fredbear === 'hallL';
     }
     return this.chica === 'farR' || this.chica === 'nearR' || this.fredbear === 'hallR';
   }
 
-  die(cause) { if (!this.over) this.over = cause; }
+  die(cause: string) { if (!this.over) this.over = cause; }
 
   /** Begin a walk to `station`, paying the animation cost from the bank. A
    *  walk is a `carpet run`, which is the only thing that resets the idle
    *  counters (g567). Leaving the bed runs the turn animation first, and the
    *  walk out only starts if the turn resolves cleanly. */
-  goTo(station) {
+  goTo(station: number) {
     if (this.walking || this.follow === station) return false;
     if (this.follow === FOLLOW.stations.bed) {
       this.pendingAfterTurn = station;
       this.beginBedTurn();
       return true;
     }
-    const names = { [FOLLOW.stations.leftDoor]: 'LeftDoor', [FOLLOW.stations.rightDoor]: 'RightDoor',
+    const names: Readonly<Record<number, Station>> = { [FOLLOW.stations.leftDoor]: 'LeftDoor', [FOLLOW.stations.rightDoor]: 'RightDoor',
                     [FOLLOW.stations.closet]: 'Closet', [FOLLOW.stations.bed]: 'Bed' };
     const here = names[this.follow];
     const there = names[station];
@@ -318,7 +320,7 @@ export class Fnaf4Sim {
     // Difficulty rows fire as an hour begins, exactly once per hour.
     if (this.hour !== this.appliedHour) {
       this.appliedHour = this.hour;
-      this.levels = applyRows(MODEL.rows, this.night, this.hour, this.levels);
+      this.levels = settledLevels(applyRows(MODEL.rows, this.night, this.hour, this.levels), 'FNaF 4');
     }
 
     // --- g629/g630: the forced appearances -- once the drawn hour passes,
@@ -647,7 +649,7 @@ export class Fnaf4Sim {
     return this.over;
   }
 
-  armFlash(fixed) {
+  armFlash(fixed: number) {
     // g516-g521/g561-g564/g646-g648 arm with a constant, no draw, and do not
     // re-arm while a fuse is already burning.
     if (this.blackFlash === null) this.blackFlash = fixed;
@@ -661,7 +663,7 @@ export class Fnaf4Sim {
     return this.foxyAv2 >= FOXY_CLOSET.av2AttackPose ? 3 : 1;
   }
 
-  run(policy) {
+  run(policy: (sim: this) => void) {
     const limit = 60 * 60 * 20;
     while (!this.over && this.frame < limit) {
       policy(this);

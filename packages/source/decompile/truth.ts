@@ -278,11 +278,11 @@ export function createTruth({ root, env = process.env }: {root: string, env?: Re
       if (!(handle & 0x8000) && dump.objects.get(handle ^ k) === undefined) return badArgument(`no item-table row answers event handle ${handle} under K=${k}`, 'name the object, or check the handle');
       handles = [handle];
     }
-    const target = global !== undefined ? { kind: 'global', slot: global }
-      : group !== undefined ? { kind: 'group' }
-        : value !== undefined ? { kind: 'value', handles: new Set<number>(handles), slot: value }
-          : flag !== undefined ? { kind: 'flag', handles: new Set<number>(handles), index: flag }
-            : { kind: 'object', handles: new Set<number>(handles) };
+    const target = global !== undefined ? { kind: 'global' as const, slot: global }
+      : group !== undefined ? { kind: 'group' as const }
+        : value !== undefined ? { kind: 'value' as const, handles: new Set<number>(handles), slot: value }
+          : flag !== undefined ? { kind: 'flag' as const, handles: new Set<number>(handles), index: flag }
+            : { kind: 'object' as const, handles: new Set<number>(handles) };
     const matches = findEvents(dump, k, target, { access, frame: frame ?? null, group: group ?? null, alias: game.alias });
     if (target.kind === 'group' && !matches.length)
       return badArgument(`the ${game.alias} dump has no group g${group} in frame ${frame}`, 'truth events over an object lists the groups that exist');

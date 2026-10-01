@@ -10,6 +10,7 @@
 // absent -- which is how the table below was nearly reported as missing.
 // ---------------------------------------------------------------------------
 
+import type { DifficultyRow, NightClock, NightModel } from '../../clockwork/night-model.ts';
 export const GAME = 'fnaf4';
 
 // The clock [SOURCED: g568 advances the hour every 60000 ms, g569 every
@@ -29,7 +30,7 @@ export const CLOCK = {
   wrapAt: 12,           // g570
   winHour: 6,           // g573
   source: 'g568,g569,g570,g573',
-};
+} satisfies NightClock;
 
 export const CHARACTERS = ['freddy', 'bonnie', 'chica', 'foxy', 'fredbear'];
 
@@ -53,7 +54,7 @@ export const REWARDS = {
 // Night 5 has no row for Bonnie, Chica, Foxy or Freddy at all. Only g228
 // fires, setting Fredbear to 12 -- so Night 5 is a Fredbear-only night, and
 // the four regular rolls can never pass on it.
-export const ROWS = [
+export const ROWS: readonly DifficultyRow[] = [
   { group: 581, night: { op: '=', value: 1 }, hour: 2, set: { bonnie: 1, chica: 1, freddy: 1 } },
   { group: 582, night: { op: '=', value: 1 }, hour: 3, add: { bonnie: 2, chica: 1, freddy: 1 } },
 
@@ -336,7 +337,7 @@ export const MODEL = {
   cap: CAP,
   initialLevels: { freddy: 0, bonnie: 0, chica: 0, foxy: 0, fredbear: 0 },
   rolls: ROLLS,
-};
+} satisfies NightModel;
 
 // ---------------------------------------------------------------------------
 // The `follow` state machine.

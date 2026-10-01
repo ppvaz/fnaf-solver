@@ -14,12 +14,12 @@ assert.throws(() => new Sim({ night: 7, sourcedFootstepDraws: true }), /requires
   const s = new Sim({ ...BASE, sourcedFootstepDraws: true }); s.frame = 1000;
   const u = s.units.find(x => x.id === 'withbonnie'); u.idx = u.path.indexOf(7);
   const log = script(s);
-  s.advance(u); s.tick();
+  s.advanceUnit(u); s.tick();
   assert.equal(u.path[u.idx], 'blindA');
   assert.deepEqual(log.filter(([, k]) => k === '0,4').map(([f]) => f), [1001], 'one Random(5) on the hop frame');
   s.tick(); s.tick();
   assert.equal(log.filter(([, k]) => k === '0,4').length, 1, 'no draw while standing there');
-  s.advance(u); s.tick();
+  s.advanceUnit(u); s.tick();
   assert.equal(u.path[u.idx], 1);
   assert.equal(log.filter(([, k]) => k === '0,4').length, 1, 'cam 01 is not a footstep trigger');
 }
@@ -29,11 +29,11 @@ assert.throws(() => new Sim({ night: 7, sourcedFootstepDraws: true }), /requires
   const s = new Sim({ ...BASE, sourcedFootstepDraws: true }); s.frame = 1000;
   const u = s.units.find(x => x.id === 'withfreddy');
   const log = script(s);
-  s.advance(u); s.tick(); assert.equal(u.path[u.idx], 7);
+  s.advanceUnit(u); s.tick(); assert.equal(u.path[u.idx], 7);
   assert.equal(log.filter(([, k]) => k === '0,4').length, 0, 'cam 7 is not a footstep marker');
-  s.advance(u); s.tick(); assert.equal(u.path[u.idx], 3);
+  s.advanceUnit(u); s.tick(); assert.equal(u.path[u.idx], 3);
   assert.equal(log.filter(([, k]) => k === '0,4').length, 0, 'cam 3 neither');
-  s.advance(u); s.tick(); assert.equal(u.path[u.idx], 'blindB');
+  s.advanceUnit(u); s.tick(); assert.equal(u.path[u.idx], 'blindB');
   assert.equal(log.filter(([, k]) => k === '0,4').length, 1, 'hall stage 2 draws');
 }
 
@@ -42,7 +42,7 @@ assert.throws(() => new Sim({ night: 7, sourcedFootstepDraws: true }), /requires
   const s = new Sim({ ...BASE, sourcedFootstepDraws: true }); s.frame = 1000;
   const u = s.units.find(x => x.id === 'mangle'); u.idx = u.path.indexOf(7);
   const log = script(s);
-  s.advance(u); s.tick(); assert.equal(u.path[u.idx], 'blindA');
+  s.advanceUnit(u); s.tick(); assert.equal(u.path[u.idx], 'blindA');
   assert.deepEqual(log.map(([, k]) => k).filter(k => k === '0,2' || k === '0,4'), ['0,2']);
 }
 

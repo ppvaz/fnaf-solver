@@ -628,7 +628,8 @@
         "./labels.ts",
         "./outcome.ts",
         "./seed.ts",
-        "./time/interval.ts"
+        "./time/interval.ts",
+        "./types.ts"
       ]
     },
     {
@@ -4029,9 +4030,17 @@
       ]
     },
     {
+      "file": "packages/source/src/clockwork/control-catalog.ts",
+      "imports": [
+        "@sixam/kernel",
+        "@sixam/kernel/contracts"
+      ]
+    },
+    {
       "file": "packages/source/src/clockwork/control-contracts.ts",
       "imports": [
         "./control-registry.ts",
+        "@sixam/kernel",
         "@sixam/kernel/contracts"
       ]
     },
@@ -4042,7 +4051,8 @@
         "../games/fnaf2/controls.ts",
         "../games/fnaf3/controls.ts",
         "../games/fnaf4/controls.ts",
-        "./control-catalog.ts"
+        "./control-catalog.ts",
+        "@sixam/kernel/contracts"
       ]
     },
     {
@@ -4075,13 +4085,21 @@
     {
       "file": "packages/source/src/clockwork/vocabulary.ts",
       "imports": [
-        "./control-registry.ts"
+        "./control-registry.ts",
+        "@sixam/kernel",
+        "@sixam/kernel/contracts"
       ]
     },
     {
       "file": "packages/source/src/games/fnaf1/controls.ts",
       "imports": [
         "../../clockwork/control-catalog.ts"
+      ]
+    },
+    {
+      "file": "packages/source/src/games/fnaf1/fnaf1.ts",
+      "imports": [
+        "../../clockwork/night-model.ts"
       ]
     },
     {
@@ -4115,6 +4133,12 @@
       ]
     },
     {
+      "file": "packages/source/src/games/fnaf2/config.ts",
+      "imports": [
+        "../../clockwork/night-model.ts"
+      ]
+    },
+    {
       "file": "packages/source/src/games/fnaf2/contact-input.ts",
       "imports": [
         "./config.ts",
@@ -4130,6 +4154,7 @@
     {
       "file": "packages/source/src/games/fnaf2/fnaf2.ts",
       "imports": [
+        "../../clockwork/night-model.ts",
         "./config.ts"
       ]
     },
@@ -4231,20 +4256,29 @@
     {
       "file": "packages/source/src/games/fnaf2/reduced-model.ts",
       "imports": [
-        "./config.ts"
+        "./config.ts",
+        "@sixam/kernel"
       ]
     },
     {
       "file": "packages/source/src/games/fnaf2/seed-recovery.ts",
       "imports": [
         "./plant-model.ts",
-        "./rng.ts"
+        "./plant-options.ts",
+        "./rng.ts",
+        "@sixam/kernel"
       ]
     },
     {
       "file": "packages/source/src/games/fnaf3/controls.ts",
       "imports": [
         "../../clockwork/control-catalog.ts"
+      ]
+    },
+    {
+      "file": "packages/source/src/games/fnaf3/fnaf3.ts",
+      "imports": [
+        "../../clockwork/night-model.ts"
       ]
     },
     {
@@ -4268,6 +4302,12 @@
       "file": "packages/source/src/games/fnaf4/controls.ts",
       "imports": [
         "../../clockwork/control-catalog.ts"
+      ]
+    },
+    {
+      "file": "packages/source/src/games/fnaf4/fnaf4.ts",
+      "imports": [
+        "../../clockwork/night-model.ts"
       ]
     },
     {

@@ -18,6 +18,7 @@
  * under any K but 0, so it is never read.
  */
 import { unknown } from '@sixam/kernel';
+import type { Unknown } from '@sixam/kernel';
 
 export const DUMP_FORMAT = 'ctfak-event-text-v1';
 export const DUMPER = 'packages/source/decompile/EventTextDumper.cs';
@@ -32,23 +33,74 @@ const pairs = (fields: string[]) => {
   for (let index = 0; index + 1 < fields.length; index += 2) out[fields[index]] = fields[index + 1];
   return out;
 };
-const int = text => (/^-?\d+$/.test(String(text ?? '').trim()) ? Number(String(text).trim()) : null);
-const scalar = text => (text === 'True' ? true : text === 'False' ? false : int(text) ?? text ?? null);
+const int = (text: unknown) => (/^-?\d+$/.test(String(text ?? '').trim()) ? Number(String(text).trim()) : null);
+const scalar = (text: string | undefined) => (text === 'True' ? true : text === 'False' ? false : int(text) ?? text ?? null);
 
 /** Does this text open the way the tabular dump does? */
 export const isTabularDump = (text: string) => /^GAME\t[^\n]*\tBUILD\t/.test(text.replace(/^﻿/, ''));
 
 // --- parameters ------------------------------------------------------------------------------
 
+/** One expression token as fields; a token the dumper printed in no form this reader knows is `{ parsed: false }`. */
+export type ExpressionItem = { readonly parsed: false } | ParsedItem;
+interface ParsedItem {
+  readonly parsed?: undefined;
+  readonly index: number;
+  readonly objectType: number;
+  readonly num: number;
+  readonly handle: number;
+  readonly oil: number;
+  readonly loader: string | null;
+  readonly value: number | string | null;
+}
+
+/** An instance position, as the Position and Create loaders render it. */
+interface Position {
+  readonly parent: number;
+  readonly flags: number;
+  readonly x: number;
+  readonly y: number;
+  readonly slope: number;
+  readonly angle: number;
+  readonly direction: number;
+  readonly typeParent: number;
+  readonly oil: number;
+  readonly layer: number;
+}
+
+/** One parameter as fields: its code and loader, and the fields that loader's rendering carries. */
+export interface DumpParameter extends Partial<Position> {
+  readonly code: number | null;
+  readonly loader: string | null;
+  readonly parsed: boolean;
+  readonly comparison?: string | null;
+  readonly items?: readonly ExpressionItem[];
+  readonly slot?: number | Unknown;
+  readonly value?: number;
+  readonly ms?: number;
+  readonly loops?: number;
+  readonly sample?: number;
+  readonly handle?: number;
+  readonly objectType?: number;
+  readonly instance?: number;
+  readonly position?: Position | null;
+  readonly name?: string;
+  readonly key?: number;
+  readonly button?: number;
+  readonly double?: boolean;
+  readonly seconds?: number;
+  readonly values?: readonly number[];
+}
+
 const ITEM = /^\[(\d+)\]ot=(-?\d+),num=(-?\d+),oi=(-?\d+),oil=(-?\d+),loader=([^,]*),value=(.*)$/s;
 const NUMERIC_LOADERS = new Set(['LongExp', 'DoubleExp', 'ExtensionExp', 'GlobalCommon']);
 
 /** One expression token. */
-function expressionItem(text: string) {
+function expressionItem(text: string): ExpressionItem {
   const match = ITEM.exec(text);
   if (!match) return { parsed: false };
   const [, index, objectType, num, handle, oil, loader, raw] = match;
-  let value = null;
+  let value: number | string | null = null;
   if (raw !== 'null') {
     if (NUMERIC_LOADERS.has(loader)) value = Number.isFinite(Number(raw)) && raw.trim() !== '' ? Number(raw) : null;
     else if (loader === 'StringExp') value = raw;
@@ -72,7 +124,7 @@ function globalSlot(rest: string) {
 }
 
 const POSITION = /^Object Info: (-?\d+), Flags: (-?\d+), X:(-?\d+), Y:(-?\d+), Slope: (-?\d+), Angle:(-?\d+), Direction:(-?\d+), TypeParent: (-?\d+), Parent: (-?\d+), Layer: (-?\d+)$/;
-function position(text: string) {
+function position(text: string): Position | null {
   const match = POSITION.exec(text);
   if (!match) return null;
   const [parent, flags, x, y, slope, angle, direction, typeParent, oil, layer] = match.slice(1).map(Number);
@@ -83,7 +135,7 @@ function position(text: string) {
  * One parameter as fields: its code, its loader, and what the loader's rendering says. A loader
  * the dumper printed only as its class name has nothing to read and comes back `parsed: false`.
  */
-export function parseParameter(text: string) {
+export function parseParameter(text: string): DumpParameter {
   const head = /^(\d+):([^:]*):(.*)$/s.exec(text);
   if (!head) return { code: null, loader: null, parsed: false };
   const [, codeText, loader, rest] = head;
@@ -134,7 +186,7 @@ export const parseParameters = (text: string) => (text ? text.split(PARAM_SEPARA
  * turns tabs inside a parameter into spaces, so a tab never splits one.
  */
 export function parseRow(line: string, index: number) {
-  const kind = line.startsWith(' C') ? 'condition' : 'action';
+  const kind: 'condition' | 'action' = line.startsWith(' C') ? 'condition' : 'action';
   const at = line.indexOf(`${TAB}PARAMS${TAB}`);
   const head = pairs((at >= 0 ? line.slice(0, at) : line).split(TAB).slice(1));
   const cother = int(head.COTHER);
@@ -148,9 +200,12 @@ export function parseRow(line: string, index: number) {
 
 // --- the whole dump --------------------------------------------------------------------------
 
-export type DumpObject = {stored: number, type: number, name: string, values: number[]};
-export type DumpGroup = {index: number, flags: any, restricted: any, declared: {conditions: number | null, actions: number | null}, conditions: any[], actions: any[]};
-export type DumpFrame = {index: number, name: string, groups: DumpGroup[], instances: number};
+export type DumpObject = {stored: number, type: number | null, name: string, values: number[]};
+/** A condition or action row, as `parseRow` reads it. */
+export type DumpRow = ReturnType<typeof parseRow>;
+export type DumpGroup = {index: number | null, flags: boolean | number | string | null, restricted: boolean | number | string | null,
+  declared: {conditions: number | null, actions: number | null}, conditions: DumpRow[], actions: DumpRow[]};
+export type DumpFrame = {index: number | null, name: string, groups: DumpGroup[], instances: number};
 export type Dump = {format: string, game: {name: string, build: number | null, frames: number | null}, objects: Map<number, DumpObject>, frames: DumpFrame[], audit: {unclassified: number[], countMismatches: string[]}};
 
 /**

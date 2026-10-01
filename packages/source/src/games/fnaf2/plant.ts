@@ -8,15 +8,15 @@ import { validateControlCommand } from '../../clockwork/control-contracts.ts';
 import { FNAF2_PACKAGE } from './controls.ts';
 
 const ACTIONS = new Set(['mask', 'monitor', 'light', 'wind', 'ventL', 'ventR']);
-const semanticToLegacy = control => control.startsWith('cam:') ? `cam:${control.slice(4)}` : control;
+const semanticToLegacy = (control: string) => control.startsWith('cam:') ? `cam:${control.slice(4)}` : control;
 
 export class PlantModel extends Sim {
-  apply(command) {
+  apply(input: unknown) {
     // The Sim is FNaF 2's plant, so its commands are checked against FNaF 2's
     // catalog alone: no other game's control or camera reaches it.
-    validateControlCommand(command, { game: FNAF2_PACKAGE });
-    const control = command?.action?.control;
-    const kind = command?.action?.kind;
+    const command = validateControlCommand(input, { game: FNAF2_PACKAGE });
+    const control = command.action.control;
+    const kind = command.action.kind;
     if (typeof control !== 'string' || !kind) throw new TypeError('plant apply requires a semantic command');
     const legacy = semanticToLegacy(control);
     if (!ACTIONS.has(legacy) && !legacy.startsWith('cam:')) throw new TypeError(`unsupported plant control: ${control}`);
@@ -27,7 +27,7 @@ export class PlantModel extends Sim {
     return { commandId: command.id, accepted: this.alive, frame: this.frame };
   }
 
-  advance(targetFrame) {
+  advance(targetFrame: number) {
     if (!Number.isInteger(targetFrame) || targetFrame < this.frame) throw new RangeError('target frame must not move backwards');
     while (this.frame < targetFrame && this.alive) this.tick();
     return this.frame;

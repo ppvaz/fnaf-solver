@@ -18,12 +18,15 @@ import {
   CONTROL_CATALOGS, FNAF1_CONTROL_CATALOG, FNAF2_CONTROL_CATALOG, FNAF3_CONTROL_CATALOG,
   FNAF4_CONTROL_CATALOG, controlCatalogFor, controlIds,
 } from './control-registry.ts';
+import { isList } from '@sixam/kernel';
+import type { ControlCatalog, GameControl, GamePackage } from '@sixam/kernel/contracts';
 
 /** `{ id: id }` for one catalog, in catalog order. */
-const vocabularyOf = catalog => Object.freeze(Object.fromEntries(controlIds(catalog).map(id => [id, id])));
+const vocabularyOf = <G extends GamePackage>(catalog: ControlCatalog<G>) =>
+  Object.freeze(Object.fromEntries(controlIds(catalog).map(id => [id, id]))) as { readonly [K in GameControl<G>]: K };
 
 /** A game's control vocabulary, `{ id: id }`, generated from its catalog. */
-export const controlVocabularyFor = game => vocabularyOf(controlCatalogFor(game));
+export const controlVocabularyFor = (game: unknown) => vocabularyOf(controlCatalogFor(game));
 
 export const FNAF2_CONTROL_VOCABULARY = vocabularyOf(FNAF2_CONTROL_CATALOG);
 export const FNAF3_CONTROL_VOCABULARY = vocabularyOf(FNAF3_CONTROL_CATALOG);
@@ -72,5 +75,4 @@ export const MAX_GAME_CAMERA_INDEX = Math.max(
     // A stated range only. FNaF 4 registers `null` (no cameras exist) and
     // FNaF 1 an `UNKNOWN(...)` string (cameras exist, ids unmapped); a truthy
     // test would have indexed that string and produced NaN for every game.
-    .filter(game => Array.isArray(game.cameraRange))
-    .map(game => game.cameraRange[1]));
+    .flatMap(game => isList(game.cameraRange) ? [game.cameraRange[1]] : []));

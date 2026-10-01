@@ -10,11 +10,11 @@
 // against the 360 s the clock groups state and the 240 s the handset measured
 // on Night 1.
 export class Every {
-  declare period: any;
+  declare period: number;
   declare acc: number;
   declare loaded: boolean;
-  constructor(periodMs) { this.period = periodMs; this.acc = 0; this.loaded = false; }
-  tick(ms) {
+  constructor(periodMs: number) { this.period = periodMs; this.acc = 0; this.loaded = false; }
+  tick(ms: number) {
     if (!this.loaded) { this.loaded = true; this.acc = 0; return false; }
     this.acc += ms;
     if (this.acc >= this.period) { this.acc -= this.period; return true; }

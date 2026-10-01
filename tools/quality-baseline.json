@@ -205,7 +205,6 @@
       "debt:packages/review/venue-grid": 1,
       "debt:packages/source/decompile": 2,
       "debt:packages/source/recompile": 2,
-      "debt:packages/source/src": 72,
       "debt:packages/source/test": 12,
       "debt:tools": 17
     }

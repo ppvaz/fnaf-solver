@@ -16,7 +16,7 @@ assert.throws(() => new Sim({ night: 7, sourcedVentCamDraws: true }), /requires 
   const u = s.units.find(x => x.id === 'withbonnie'); u.idx = u.path.indexOf(1);
   const log = script(s);
   s.tick(); assert.equal(draws(log).length, 0, 'CAM 01 is not a vent camera');
-  s.advance(u); s.tick(); assert.equal(u.path[u.idx], 5);
+  s.advanceUnit(u); s.tick(); assert.equal(u.path[u.idx], 5);
   assert.deepEqual(draws(log).map(([f]) => f), [1002], 'one Random(4) on the arrival loop');
   s.tick(); s.tick(); assert.equal(draws(log).length, 1, 'no redraw while standing there');
 }
@@ -26,9 +26,9 @@ assert.throws(() => new Sim({ night: 7, sourcedVentCamDraws: true }), /requires 
   const s = new Sim({ ...BASE, sourcedVentCamDraws: true, sourcedEventDraws: false }); s.frame = 1000;
   const u = s.units.find(x => x.id === 'withchica'); u.idx = u.path.indexOf(2);
   const log = script(s);
-  s.advance(u); s.tick(); assert.equal(u.path[u.idx], 6); assert.equal(draws(log).length, 1);
+  s.advanceUnit(u); s.tick(); assert.equal(u.path[u.idx], 6); assert.equal(draws(log).length, 1);
   u.idx = u.path.indexOf(4); s.tick(); assert.equal(draws(log).length, 1);
-  u.idx = u.path.indexOf(2); s.advance(u); s.tick(); assert.equal(u.path[u.idx], 6);
+  u.idx = u.path.indexOf(2); s.advanceUnit(u); s.tick(); assert.equal(u.path[u.idx], 6);
   assert.equal(draws(log).length, 2, 'a second stay draws again');
 }
 
@@ -40,7 +40,7 @@ assert.throws(() => new Sim({ night: 7, sourcedVentCamDraws: true }), /requires 
   const s = new Sim({ ...BASE, sourcedVentCamDraws: true, sourcedFootstepDraws: true }); s.frame = 1000;
   const u = s.units.find(x => x.id === 'toychica'); u.idx = u.path.indexOf(1);
   const log = script(s);
-  s.advance(u); s.tick(); assert.equal(u.path[u.idx], 5);
+  s.advanceUnit(u); s.tick(); assert.equal(u.path[u.idx], 5);
   assert.deepEqual(log.filter(([, k]) => k === '0,3' || k === '0,4').map(([, k]) => k), ['0,3']);
 }
 

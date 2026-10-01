@@ -24,7 +24,7 @@ import { CONTROL_CATALOG_SCHEMA, defineControlCatalog } from '../../clockwork/co
 export const FNAF3_PACKAGE = 'com.scottgames.fnaf3';
 
 const NO_READER = 'UNKNOWN(no-effect-reader)';
-const touch = anchor => ({ adapter: 'touch', contact: 'UNKNOWN(not-stated)', anchor });
+const touch = (anchor: string) => ({ adapter: 'touch', contact: 'UNKNOWN(not-stated)', anchor });
 const MAINTENANCE = 'UNKNOWN(maintenance-menu-state-not-in-vocabulary)';
 
 export const FNAF3_CONTROL_CATALOG = defineControlCatalog({

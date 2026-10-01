@@ -23,6 +23,76 @@
 // ---------------------------------------------------------------------------
 
 /**
+ * A level a row sets: a number, or a draw the game makes when the row fires
+ * (FNaF 1's `{ min, max }`, FNaF 2's `{ oneIn }`).
+ */
+type Level = number | Readonly<Record<string, number>>;
+export type Levels = Readonly<Record<string, Level>>;
+
+/** A row's night comparison, verbatim from the sheet: `=`, `<>`, `<`, `<=`, `>` or `>=`. */
+interface NightComparison {
+  readonly op: string;
+  readonly value: number;
+}
+
+/** One difficulty row: the nights it admits, the hour it fires at (0 when absent), and what it sets or adds. */
+export interface DifficultyRow {
+  readonly night: NightComparison;
+  readonly hour?: number;
+  readonly set?: Levels;
+  readonly add?: Readonly<Record<string, number>>;
+  readonly [field: string]: unknown;
+}
+
+/** An hour's length: fixed, or read off the night (FNaF 3's first night is shorter). */
+type HourMs = number | ((night: number | undefined) => number);
+
+/** A counter that rolls over at `threshold` ticks, from `initialTick` in hour 0 and `resetTick` after. */
+interface AccumulatorClock {
+  readonly kind: 'accumulator';
+  readonly tickMs: number;
+  readonly fastTickMs?: number;
+  readonly threshold: number;
+  readonly initialTick: number;
+  readonly resetTick: number;
+  readonly winHour: number;
+  readonly [field: string]: unknown;
+}
+
+/** Hours of a fixed wall-clock length. */
+interface WallClock {
+  readonly kind: 'wallclock';
+  readonly hourMs: HourMs;
+  readonly fastHourMs?: HourMs;
+  readonly winHour: number;
+  readonly [field: string]: unknown;
+}
+
+/** A night's clock; one resolved for a night carries it, for an hour length that reads it. */
+export type NightClock = (AccumulatorClock | WallClock) & { readonly night?: number };
+
+/** A periodic `Random(bound) + 1 <= level` roll, every `everyMs`. */
+interface PeriodicRoll {
+  readonly everyMs: number;
+  readonly bound: number;
+  readonly [field: string]: unknown;
+}
+
+/** One game's night-level model: its clock, its difficulty rows, its cap and its rolls. */
+export interface NightModel {
+  readonly game: string;
+  readonly clock: NightClock;
+  readonly rows: readonly DifficultyRow[];
+  readonly cap?: ((id: string) => number) | null;
+  readonly initialLevels?: Levels;
+  readonly rolls: Readonly<Record<string, PeriodicRoll>>;
+}
+
+interface HourOptions {
+  readonly fastNights?: boolean;
+}
+
+/**
  * The probability that one `Random(bound) + 1 <= level` roll passes.
  *
  * Clickteam's `Random(N)` yields 0..N-1, so `Random(N) + 1` yields 1..N and
@@ -30,11 +100,11 @@
  * of 0 never passes, which is what makes "this character is not armed
  * tonight" a statement the difficulty table can make.
  */
-export const rollChance = (bound, level) =>
+export const rollChance = (bound: number, level: number) =>
   level <= 0 ? 0 : Math.min(level, bound) / bound;
 
 /** Hour 0 reads 12 AM on every clock face in the series. */
-export const clockLabel = (hour) => (hour === 0 ? 12 : hour);
+export const clockLabel = (hour: number) => (hour === 0 ? 12 : hour);
 
 /**
  * How long one hour lasts, in ms, for a resolved clock.
@@ -44,7 +114,7 @@ export const clockLabel = (hour) => (hour === 0 ? 12 : hour);
  * rather than 0, which makes hour 0 ninety ticks and every later hour
  * eighty-nine. `wallclock` clocks have no such seam.
  */
-export function hourDurationMs(clock, hour, { fastNights = false } = {}) {
+export function hourDurationMs(clock: NightClock, hour: number, { fastNights = false }: HourOptions = {}) {
   if (clock.kind === 'wallclock') {
     const base = typeof clock.hourMs === 'function' ? clock.hourMs(clock.night) : clock.hourMs;
     return fastNights && clock.fastHourMs !== undefined
@@ -59,14 +129,14 @@ export function hourDurationMs(clock, hour, { fastNights = false } = {}) {
 /**
  * The wall-clock offset at which an hour begins, measured from night start.
  */
-export function hourStartMs(clock, hour, options = {}) {
+export function hourStartMs(clock: NightClock, hour: number, options: HourOptions = {}) {
   let total = 0;
   for (let h = 0; h < hour; h += 1) total += hourDurationMs(clock, h, options);
   return total;
 }
 
 /** The whole night, night start to the hour that leaves the frame. */
-export const nightLengthMs = (clock, options = {}) =>
+export const nightLengthMs = (clock: NightClock, options: HourOptions = {}) =>
   hourStartMs(clock, clock.winHour, options);
 
 /**
@@ -76,7 +146,7 @@ export const nightLengthMs = (clock, options = {}) =>
  * night list, because two rows can admit the same night and the sheet's own
  * order decides which wins -- an expansion loses that.
  */
-export function nightMatches(comparison, night) {
+export function nightMatches(comparison: NightComparison, night: number) {
   const { op, value } = comparison;
   switch (op) {
     case '=': return night === value;
@@ -102,24 +172,41 @@ export function nightMatches(comparison, night) {
  * one; the query that finds its six cap groups finds nothing in the other
  * three, and it was run against FNaF 2 first to prove it can see a positive.
  */
-export function applyRows(rows, night, hour, levels, { cap = null } = {}) {
-  const next = { ...levels };
+export function applyRows(rows: readonly DifficultyRow[], night: number, hour: number, levels: Levels,
+  { cap = null }: { cap?: ((id: string) => number) | null } = {}): Record<string, Level> {
+  const next: Record<string, Level> = { ...levels };
   for (const row of rows) {
     if (!nightMatches(row.night, night)) continue;
     if ((row.hour ?? 0) !== hour) continue;
     for (const [id, amount] of Object.entries(row.set ?? {})) {
       next[id] = typeof amount === 'object' ? amount : amount;
     }
-    for (const [id, amount] of Object.entries((row.add ?? {}) as Record<string, number>)) {
-      next[id] = (typeof next[id] === 'number' ? next[id] : 0) + amount;
+    for (const [id, amount] of Object.entries(row.add ?? {})) {
+      const level = next[id];
+      next[id] = (typeof level === 'number' ? level : 0) + amount;
     }
     if (cap) {
       for (const id of Object.keys(next)) {
-        if (typeof next[id] === 'number') next[id] = Math.min(next[id], cap(id));
+        const level = next[id];
+        if (typeof level === 'number') next[id] = Math.min(level, cap(id));
       }
     }
   }
   return next;
+}
+
+/**
+ * Levels once every draw is taken. A Sim reads its levels as numbers; FNaF 1
+ * draws its one drawn level (Night 4's Freddy) at night start and every other
+ * row in the three tables sets a number, so a draw left here is refused.
+ */
+export function settledLevels(levels: Levels, game: string): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const [id, value] of Object.entries(levels)) {
+    if (typeof value !== 'number') throw new Error(`${game} level ${id} is a draw no row resolves`);
+    out[id] = value;
+  }
+  return out;
 }
 
 /**
@@ -129,10 +216,10 @@ export function applyRows(rows, night, hour, levels, { cap = null } = {}) {
  * This is the night-level model -- what a route's schedule is written
  * against. It says when a character switches on, not where it walks.
  */
-export function nightSchedule(model, night, options = {}) {
-  const clock = { ...model.clock, night };
-  let levels = { ...(model.initialLevels ?? {}) };
-  const hours = [];
+export function nightSchedule(model: NightModel, night: number, options: HourOptions = {}) {
+  const clock: NightClock = { ...model.clock, night };
+  let levels: Levels = { ...(model.initialLevels ?? {}) };
+  const hours: { hour: number, label: number, startMs: number, durationMs: number, levels: Levels }[] = [];
   for (let hour = 0; hour <= clock.winHour; hour += 1) {
     levels = applyRows(model.rows, night, hour, levels, { cap: model.cap ?? null });
     hours.push({
@@ -159,7 +246,7 @@ export function nightSchedule(model, night, options = {}) {
  * A `{ oneIn: N }` level is 1 on its top draw, so its peak is 1: rare is not
  * impossible and must not read as zero.
  */
-export function peakLevel(model, night, id, options = {}) {
+export function peakLevel(model: NightModel, night: number, id: string, options: HourOptions = {}) {
   let peak = 0;
   for (const hour of nightSchedule(model, night, options).hours) {
     const level = hour.levels[id];
@@ -170,7 +257,7 @@ export function peakLevel(model, night, id, options = {}) {
 }
 
 /** Whether the sourced table lets this character act at all on this night. */
-export const canAct = (model, night, id, options = {}) =>
+export const canAct = (model: NightModel, night: number, id: string, options: HourOptions = {}) =>
   peakLevel(model, night, id, options) > 0;
 
 /**
@@ -182,7 +269,7 @@ export const canAct = (model, night, id, options = {}) =>
  * makes "how many movement opportunities does this hour hold" answerable
  * from the table alone -- the quantity a schedule is actually budgeting.
  */
-export function rollsInHour(roll, hourMs, level) {
+export function rollsInHour(roll: PeriodicRoll, hourMs: number, level: number) {
   const opportunities = Math.floor(hourMs / roll.everyMs);
   return {
     opportunities,

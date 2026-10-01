@@ -4,6 +4,8 @@ import * as C from './config.ts';
  * The Sim's options at their defaults, a new object on every call (the default seed is drawn per Sim).
  * The comment above each option says what it models and where it was read.
  */
+export type SimOptions = ReturnType<typeof defaultSimOptions>;
+
 export function defaultSimOptions() {
   return {
     seed: (Math.random() * 4294967295) >>> 0,
@@ -12,7 +14,7 @@ export function defaultSimOptions() {
     // A Custom Night AI vector (an `AI_DIALS` map). Replaces the night-7 AI
     // table with the player's ten dials; requires `night: 7`, since Custom
     // Night is night 7 in the menus and every `night >= 7` rule must apply.
-    customNight: null,
+    customNight: (null as null | Readonly<Record<string, number>>),
     android: true,        // canonical target; flag retained only for old test modes
     speed: 1.0,
     // Off by default: the per-frame report channels cost about half of a

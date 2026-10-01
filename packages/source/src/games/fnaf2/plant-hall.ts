@@ -7,7 +7,7 @@ import { unitStunLeft, setUnitStun } from './movement-clock.ts';
 import type { Sim } from './plant-model.ts';
 
 /** g75/g84 -> g94 -> (g262, g445-447 later) -> g488 -> g489, from frame-start state. */
-export function updateHallLatch(this: Sim, f, lit = this.hallLitNow()) {
+export function updateHallLatch(this: Sim, f: number, lit = this.hallLitNow()) {
   if (this.hooked ? this.secTick : f % C.FPS === 0) this.hallLatch = false;   // g488
   if (lit) this.hallLatch = true;                // g489
 }
@@ -117,7 +117,7 @@ export function hallLightPin(this: Sim) {
   }
 }
 
-export function stunCam(this: Sim, n, frames = C.STUN_FRAMES, viewing = n) {
+export function stunCam(this: Sim, n: number, frames = C.STUN_FRAMES, viewing = n) {
   for (const u of this.units) {
     if (u.path[u.idx] !== n || u.done) continue;
     if ((C.WITHEREDS.has(u.id) && viewing === 8) ||
@@ -127,7 +127,7 @@ export function stunCam(this: Sim, n, frames = C.STUN_FRAMES, viewing = n) {
   }
 }
 
-export function tickHallMovement(this: Sim, f) {
+export function tickHallMovement(this: Sim, f: number) {
   const foxyHere = this.foxy.loc === 'hall';
   let occupied = foxyHere, entered = null;
   for (const u of this.units) {
@@ -159,7 +159,7 @@ export function tickHallMovement(this: Sim, f) {
 
 // Hallway Golden Freddy: he can only take the hall when it is genuinely
 // empty, which in Minus 7 means the windows where Foxy has been evicted.
-export function tickGoldenHall(this: Sim, f) {
+export function tickGoldenHall(this: Sim, f: number) {
   if (!this.opts.gfEnabled) return;
   // g780 only moves the hallway figure to marker 123. g570 waits for a
   // one-second event there before writing attack code 12; g587-g595 end its attack.
@@ -228,7 +228,7 @@ export function foxyChainTransitions(this: Sim) {
 }
 
 /** g488/g489, g573, g745, g824, g825, g846, g855, g864, g872-874 in sheet order. */
-export function tickFoxyChain(this: Sim, f) {
+export function tickFoxyChain(this: Sim, f: number) {
   const fx = this.foxy;
   const second = this.hooked ? this.secTick : f % C.FPS === 0;
   const danger = this.blackout.active;
@@ -258,7 +258,7 @@ export function tickFoxyChain(this: Sim, f) {
   if (this.foxyDormant) fx.D = 0;                                          // g872-874
 }
 
-export function tickFoxy(this: Sim, f) {
+export function tickFoxy(this: Sim, f: number) {
   if (!this.opts.foxyEnabled) return;
   if (this.opts.sourcedFoxyChain) { this.tickFoxyChain(f); return; }
   const fx = this.foxy;

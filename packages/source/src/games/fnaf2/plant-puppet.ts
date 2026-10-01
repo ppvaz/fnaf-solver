@@ -19,14 +19,14 @@ export function drainBoxCountdown(this: Sim) {
 
 /** your-view overlaps the Puppet: his route camera when out, CAM 11 in the box. */
 export function puppetUnderYourView(this: Sim) {
-  const p = (this.puppet as any);
+  const p = this.puppet;
   const at = !p.out ? C.BOX_CAM : (typeof p.loc === 'number' ? p.loc : null);
   return at !== null && at === this.cam;
 }
 
 /** the Puppet sits on the CAM 11 marker (in his box or just escaped) */
 export function puppetAtBoxCam(this: Sim) {
-  const p = (this.puppet as any);
+  const p = this.puppet;
   return !p.out || p.loc === C.BOX_CAM;
 }
 
@@ -80,7 +80,7 @@ export function tickBox(this: Sim) {
 // groups g494-497, the office roll g623, and finally the camera B=10 write
 // g774. A successful roll therefore becomes a move on the next frame.
 export function tickPuppet(this: Sim) {
-  const p = (this.puppet as any);
+  const p = this.puppet;
   const f = this.frame;
 
   if (p.attackAt >= 0) {
@@ -138,7 +138,7 @@ export function tickPuppet(this: Sim) {
 }
 
 export function advancePuppet(this: Sim) {
-  const p = (this.puppet as any);
+  const p = this.puppet;
   if (p.loc === 11) p.loc = 10;
   else if (p.loc === 10) p.loc = 7;
   else if (p.loc === 7) {

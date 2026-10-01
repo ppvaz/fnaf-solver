@@ -20,8 +20,10 @@
 // comment. See docs/android/ANDROID-CAMERA-STALL.md.
 // ---------------------------------------------------------------------------
 
+import type { Levels } from '../../clockwork/night-model.ts';
+
 export const FPS = 60;
-export const s = (sec) => Math.round(sec * FPS); // seconds -> frames
+export const s = (sec: number) => Math.round(sec * FPS); // seconds -> frames
 
 export const NIGHT_FRAMES = s(420);   // 7:00 [SOURCED]
 export const HOUR_FRAMES = s(70);     // 1:10 per in-game hour [SOURCED]
@@ -63,8 +65,8 @@ export const RESOLVE_ORDER_FAILED =
 // burns defuses the attack, expiry arms it and the mask stops repelling. The
 // old flat 45 was only ever the night-7 value; night 1 gives more than
 // double.]
-export const MASK_GRACE_BY_NIGHT = { 1: 100, 2: 80, 3: 60, 4: 55, 5: 50, 6: 50, 7: 45 };
-export const maskGraceFrames = (night) => MASK_GRACE_BY_NIGHT[night] ?? MASK_GRACE_BY_NIGHT[7];
+export const MASK_GRACE_BY_NIGHT: Readonly<Record<number, number>> = { 1: 100, 2: 80, 3: 60, 4: 55, 5: 50, 6: 50, 7: 45 };
+export const maskGraceFrames = (night: number) => MASK_GRACE_BY_NIGHT[night] ?? MASK_GRACE_BY_NIGHT[7];
 export const BLACKOUT_MASK_GRACE = MASK_GRACE_BY_NIGHT[7]; // night-7 value; UI copy uses this
 
 // Foxy [SOURCED: post-XOR decode 2026-08-20, groups 337/389-390/745/824-825/
@@ -79,7 +81,7 @@ export const BLACKOUT_MASK_GRACE = MASK_GRACE_BY_NIGHT[7]; // night-7 value; UI 
 // that holds both his eviction and his rolls until 50 frames after the
 // light comes off.
 export const FOXY_AI = 17;
-export const foxyExposureFrames = night => 100 * night;
+export const foxyExposureFrames = (night: number) => 100 * night;
 export const FOXY_HALL_PIN_FRAMES = 50;
 export const FOXY_RETURN_MIN = 500;
 export const FOXY_RETURN_MAX = 999;
@@ -103,7 +105,7 @@ export const VENT_EARLY_LEAVE_CHANCE = 0.1; // per cumulative second
 // model. [SOURCED: decompile — the `value25` cams-up-session second counter
 // against the 20 - 2*night threshold. Identity re-bound 2026-08-20 after the
 // XOR fix: pre-fix notes attributed this to "the Toys and W. Freddy".]
-export const entryStreakFrames = (night) => s(20 - 2 * night);
+export const entryStreakFrames = (night: number) => s(20 - 2 * night);
 // The shared value25 streak applies to the four mutex holders, not every
 // occupant of marker 122. Toy Bonnie instead gets a per-unit cooldown of
 // 1000-100*night frames and Toy Chica arms after six scheduler ticks.
@@ -114,7 +116,7 @@ export const entryStreakFrames = (night) => s(20 - 2 * night);
 // Chica counter increments on the global one-second event (g904) and g905
 // advances her only above five: exactly six phase-aligned scheduler ticks.
 // (Pre-XOR these were labeled Withered Bonnie / Withered Chica.)
-export const toyBonnieOpeningFrames = night => 1000 - 100 * night;
+export const toyBonnieOpeningFrames = (night: number) => 1000 - 100 * night;
 export const TOY_CHICA_OPENING_TICKS = 6;
 // Endpoint resolution (groups 538-555) repels a defended marker-122 occupant
 // to a sourced mid-route room — W. Bonnie to CAM 07, W. Chica to CAM 04,
@@ -167,9 +169,9 @@ export const INSIDE_ATTACK_FRAMES = 40;
 // anything the game calls night >= 7, and Custom Night is night 7 in the menus,
 // but that variable has not been read on a Custom Night run here. Do not price
 // a 10/20 route against 0.75 s until it has been.
-export const TIME_ALLOWED_BY_NIGHT = { 1: 100, 2: 80, 3: 60, 4: 55, 5: 50, 6: 50 };
+export const TIME_ALLOWED_BY_NIGHT: Readonly<Record<number, number>> = { 1: 100, 2: 80, 3: 60, 4: 55, 5: 50, 6: 50 };
 export const TIME_ALLOWED_NIGHT7 = 45;
-export const timeAllowedFrames = (night) =>
+export const timeAllowedFrames = (night: number) =>
   night >= 7 ? TIME_ALLOWED_NIGHT7
              : (TIME_ALLOWED_BY_NIGHT[Math.max(1, night)] ?? TIME_ALLOWED_BY_NIGHT[1]);
 export const INSIDE_MASK_ATTACK_CHANCE = 0.5;
@@ -274,12 +276,12 @@ export const STALLED_AI = 15;
 // random(1..20) <= AI. At the 15 cap this is 75%, which matches BB's documented
 // 3/4 rate. (One written guide states (AI+1)/20; TheBones5 and jerakaigamez both
 // state 75% at 15 AI, so this is the formula used here.)
-export const MO_CHANCE = (ai) => ai / 20;
+export const MO_CHANCE = (ai: number) => ai / 20;
 // The Puppet is the exception [SOURCED: g494-497]. The shared rolls use
 // Random(20)+1 <= AI or Random(20) < AI, both AI/20. `Sockpuppet AI` uses
 // bare Random(20) <= AI, which succeeds for 0..AI: (AI+1)/20. At AI 15 his
 // roll is therefore 16/20, not 15/20.
-export const PUPPET_MO_CHANCE = (ai) => (ai + 1) / 20;
+export const PUPPET_MO_CHANCE = (ai: number) => (ai + 1) / 20;
 
 // AI levels, by night and hour [SOURCED: g673 zeroes every counter at the
 // start of any night but Custom; g674-684 are the per-night table, each row
@@ -294,9 +296,9 @@ export const PUPPET_MO_CHANCE = (ai) => (ai + 1) / 20;
 // at 10 (which is what makes his 10/20 office roll exactly one in two), and
 // g856-863 hold everyone else at 15.
 export const AI_10_20 = 20;                 // every dial at 20
-export const AI_CAPS = { foxy: FOXY_AI, golden: 10 };
+export const AI_CAPS: Readonly<Record<string, number>> = { foxy: FOXY_AI, golden: 10 };
 export const AI_CAP_DEFAULT = STALLED_AI;
-export const aiCap = (id) =>
+export const aiCap = (id: string) =>
   id === 'puppet' ? Infinity : (AI_CAPS[id] ?? AI_CAP_DEFAULT);
 
 // Every counter g673 zeroes at night start. The Puppet is not among the ten
@@ -313,7 +315,13 @@ const TEN_TWENTY = Object.fromEntries(AI_DIALS.map(id => [id, AI_10_20]));
 // that instant: nights 3, 4 and 5 write him at 12 AM and lose it, while night
 // 2 writes him at 1 AM and keeps it. Night 2 is therefore the one night below
 // 6 where he can appear at all, at one in a thousand.
-export const AI_BY_NIGHT = {
+/** A row of the per-night AI table: the hour it fires at, and the levels it sets. */
+export interface AiRow {
+  readonly hour: number;
+  readonly set: Levels;
+}
+
+export const AI_BY_NIGHT: Readonly<Record<number, readonly AiRow[]>> = {
   1: [{ hour: 0, set: { puppet: 1 } },                                    // g815
       { hour: 2, set: { toybonnie: 2, toychica: 2 } },                    // g674
       { hour: 3, set: { toybonnie: 3, toyfreddy: 2 } }],                  // g675
@@ -353,14 +361,14 @@ export const AI_BY_NIGHT = {
 // 45-frame office fuse, the CAM 10 parked marker). A dial the caller omits
 // stays 0; the per-frame caps (g829/g830/g856-863) still clamp on apply, so a
 // search that dials Foxy to 20 gets 17, Golden Freddy 10, the rest 15.
-export const customNightRow = (dials) => ({
+export const customNightRow = (dials: Readonly<Record<string, number>>): AiRow => ({
   hour: 0,
   set: { ...dials, puppet: dials.puppet ?? PUPPET_AI },
 });
 
 // The rows that fire as this hour begins. `customNight` (an `AI_DIALS` vector)
 // replaces the whole night table with one 12 AM row.
-export const aiUpdates = (night, hour, customNight = null) =>
+export const aiUpdates = (night: number, hour: number, customNight: Readonly<Record<string, number>> | null = null) =>
   customNight
     ? (hour === 0 ? [customNightRow(customNight)] : [])
     : (AI_BY_NIGHT[night] ?? AI_BY_NIGHT[7]).filter(row => row.hour === hour);
@@ -374,7 +382,7 @@ export const aiUpdates = (night, hour, customNight = null) =>
 // show it. g673 zeroes every counter at night start, so a character no row
 // ever names stays at 0 for the whole night: Balloon Boy on Night 1 cannot
 // act, while Night 3 sets him to 1 and then 2 and merely makes him rare.
-export const peakAi = (night, id, customNight = null) => {
+export const peakAi = (night: number, id: string, customNight: Readonly<Record<string, number>> | null = null) => {
   const rows = customNight ? [customNightRow(customNight)] : (AI_BY_NIGHT[night] ?? AI_BY_NIGHT[7]);
   let peak = 0;
   for (const row of rows) {
@@ -387,7 +395,7 @@ export const peakAi = (night, id, customNight = null) => {
 
 // Whether the sourced table lets this character act at all on this night (or,
 // with `customNight`, whether that vector arms it).
-export const canAct = (night, id, customNight = null) => peakAi(night, id, customNight) > 0;
+export const canAct = (night: number, id: string, customNight: Readonly<Record<string, number>> | null = null) => peakAi(night, id, customNight) > 0;
 
 // Power [SOURCED]
 // [SOURCED: decompile — the battery counter (true name `battery life`; the
@@ -396,8 +404,8 @@ export const canAct = (night, id, customNight = null) => peakAi(night, id, custo
 // = 50s of light, which both Markiplier's on-camera measurement and this
 // file's old calibrated value already had exactly right; earlier nights get
 // more.]
-export const POWER_BY_NIGHT = { 1: 7000, 2: 6000, 3: 5000, 4: 4000, 5: 3000, 6: 3000, 7: 3000 };
-export const powerFrames = (night) => POWER_BY_NIGHT[night] ?? POWER_BY_NIGHT[7];
+export const POWER_BY_NIGHT: Readonly<Record<number, number>> = { 1: 7000, 2: 6000, 3: 5000, 4: 4000, 5: 3000, 6: 3000, 7: 3000 };
+export const powerFrames = (night: number) => POWER_BY_NIGHT[night] ?? POWER_BY_NIGHT[7];
 export const POWER_FRAMES = POWER_BY_NIGHT[7]; // night-7 value; tools report against this
 export const POWER_PER_BAR = POWER_FRAMES / 5;
 export const POWER_BLINK = 500;   // indicator starts blinking [SOURCED]
@@ -478,17 +486,17 @@ export const POWER_BLINK = 500;   // indicator starts blinking [SOURCED]
 // Read as an ADD rather than a subtract, the box could never empty and g662's
 // `AlterableValue0 == 0` branch would be unreachable.
 export const BOX_UNITS = 2000;                      // g652
-export const BOX_DRAIN_PER_TICK = { 1: 2, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 6 };
+export const BOX_DRAIN_PER_TICK: Readonly<Record<number, number>> = { 1: 2, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 6 };
 export const BOX_DRAIN_TICK_MS = 50;                // g653-660 `Time: 50`
 
 // Full -> empty for one night, in frames.
-export const boxDrainFrames = (night) =>
+export const boxDrainFrames = (night: number) =>
   s(BOX_UNITS / ((BOX_DRAIN_PER_TICK[night] ?? BOX_DRAIN_PER_TICK[7])
                  * (1000 / BOX_DRAIN_TICK_MS)));
 
 // Whether the box drains at all in this hour. Only g653 (night 1) is gated,
 // and it excludes 12 AM (hour 0) and 1 AM (hour 1).
-export const boxDrainsAtHour = (night, hour) => night !== 1 || hour >= 2;
+export const boxDrainsAtHour = (night: number, hour: number) => night !== 1 || hour >= 2;
 
 // Retained: the night 6/7 rate this file applied to every night. Callers that
 // still want one number get the hardest one, which is the safe direction.
@@ -520,7 +528,10 @@ export const PUPPET_OFFICE_ROLL = 10;
 // picks a side: 1 sends him 03 -> 01, 2 sends him 04 -> 02. Both arrive at
 // marker 122. Five hops use the one-second roll in g496; g623 then controls
 // the separate 122 -> 123 edge.
-export const PUPPET_ROUTE = {
+/** A route node: a camera number, or a named place (`blindA`, `office`, `ventL`). */
+export type RouteNode = number | string;
+
+export const PUPPET_ROUTE: Readonly<Record<string, readonly RouteNode[]>> = {
   left:  [10, 7, 3, 1, 'office'],
   right: [10, 7, 4, 2, 'office'],
 };
@@ -535,7 +546,7 @@ export const MASK_ANIM_ON = 12;       // 0.200s
 export const MASK_ANIM_OFF = 15;      // 0.244s
 
 // --- Cameras ---------------------------------------------------------------
-export const CAMS = {
+export const CAMS: Readonly<Record<number, { readonly name: string }>> = {
   1:  { name: 'Party Room 1' },
   2:  { name: 'Party Room 2' },
   3:  { name: 'Party Room 3' },
@@ -556,8 +567,8 @@ export const BOX_CAM = 11;
 // marker is parked on CAM 09 in story nights and CAM 10 in Custom Night. A
 // completed raise restores `last viewed`; with none yet, nights 1-6 open
 // CAM 09 and night 7 opens CAM 07.
-export const parkedCamera = night => night === 7 ? 10 : 9;
-export const initialCamera = night => night === 7 ? 7 : 9;
+export const parkedCamera = (night: number) => night === 7 ? 10 : 9;
+export const initialCamera = (night: number) => night === 7 ? 7 : 9;
 
 // Map button geometry, normalised 0..1 inside the map panel.
 // Traced from a screenshot of the real FNaF 2 map, so the thumb path between
@@ -642,7 +653,22 @@ export const DEFAULT_WIDGETS = {
 // attacker-engaged latch to be clear. The Puppet roams on mobile
 // (rare-event tier) and Paper Pals has its own single office hop; neither is
 // in this table.
-export const STALLED = [
+/** One of the seven route animatronics, as the sourced route groups move it. */
+export interface StalledUnit {
+  readonly id: string;
+  readonly name: string;
+  readonly short: string;
+  readonly path: readonly RouteNode[];
+  readonly choke: number;
+  /** The monitor state the final hop into the office waits for; Toy Chica's carries none. */
+  readonly entryGate: 'camsUp' | 'camsDown' | null;
+  readonly openingRule: string;
+  readonly lightStallAt: readonly number[];
+  readonly mutex: boolean;
+  readonly repelIdx: number;
+}
+
+export const STALLED: readonly StalledUnit[] = [
   { id: 'withfreddy', name: 'Withered Freddy', short: 'WF',  path: [8, 7, 3, 'blindB', 'office'],   choke: 1, entryGate: 'camsUp',   openingRule: 'streak', lightStallAt: [2, 3], mutex: true,  repelIdx: 0 },
   { id: 'withbonnie', name: 'Withered Bonnie', short: 'WB',  path: [8, 7, 'blindA', 1, 5, 'ventL'], choke: 1, entryGate: 'camsUp',   openingRule: 'streak', lightStallAt: [1, 2], mutex: true,  repelIdx: 1 },
   { id: 'withchica',  name: 'Withered Chica',  short: 'WC',  path: [8, 4, 2, 6, 'ventR'],           choke: 1, entryGate: 'camsUp',   openingRule: 'streak', lightStallAt: [],     mutex: true,  repelIdx: 1 },
@@ -679,7 +705,25 @@ export const SELECTED_CAMERA_GATED = new Set(['withfreddy', 'withbonnie', 'withc
 
 // --- The routine the trainer teaches ---------------------------------------
 // Offsets in seconds from the cycle anchor (:X2 / :X7).
-export const CYCLE_SCRIPT = [
+/** How far one step can move on its own before the night is lost, in seconds either side. */
+export interface StepWindow {
+  readonly early: number;
+  readonly late: number;
+}
+
+/** One step of the trainer's cycle: when it falls, what it presses, and the window measured for it. */
+export interface CycleStep {
+  readonly id: string;
+  readonly at: number;
+  readonly label: string;
+  readonly action: string;
+  readonly want?: string;
+  readonly cam?: number;
+  readonly hold?: number;
+  win?: StepWindow;
+}
+
+export const CYCLE_SCRIPT: CycleStep[] = [
   { id: 'monitor-down', at: 0.00, label: 'Cams down',       action: 'monitor', want: 'down' },
   { id: 'mask-on',      at: 0.20, label: 'Mask on',         action: 'mask',    want: 'on'   },
   { id: 'mask-off',     at: 0.35, label: 'Mask off',        action: 'mask',    want: 'off'  },
@@ -713,7 +757,7 @@ export const TOL_OK   = 0.35;
 // A window is what the game tolerates on ONE input while everything else is
 // perfect. Real play is wrong on every step at once, so grading takes a
 // fraction of it rather than the edge.
-export const STEP_WINDOWS = {
+export const STEP_WINDOWS: Readonly<Record<string, StepWindow>> = {
   'monitor-down': { early: 0.450, late: 0.300 },
   'mask-on':      { early: 0.300, late: 0.200 },
   'mask-off':     { early: 0.450, late: 0.050 },
@@ -737,11 +781,12 @@ export const TOL_OK_FRAC   = 0.8;
 // id, because a window belongs to a *geometry*, not to a name: Phase A reuses
 // `flash-hall` with no mask before it, so the cliff that caps it here does not
 // exist there. A step with no window is graded on the lesson's tolerance.
-for (const st of CYCLE_SCRIPT as any[]) {
-  if (STEP_WINDOWS[st.id]) st.win = STEP_WINDOWS[st.id];
+for (const st of CYCLE_SCRIPT) {
+  const win = STEP_WINDOWS[st.id];
+  if (win) st.win = win;
 }
 
-export function stepTol(step, tolGood = TOL_GOOD, tolOk = TOL_OK) {
+export function stepTol(step: { readonly win?: StepWindow } | null | undefined, tolGood = TOL_GOOD, tolOk = TOL_OK) {
   const w = step?.win;
   if (!w) return { goodEarly: tolGood, goodLate: tolGood, okEarly: tolOk, okLate: tolOk };
   return {

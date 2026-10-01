@@ -19,6 +19,7 @@ import * as fnaf2 from '../games/fnaf2/fnaf2.ts';
 import * as fnaf3 from '../games/fnaf3/fnaf3.ts';
 import * as fnaf4 from '../games/fnaf4/fnaf4.ts';
 import { nightSchedule, peakLevel, canAct, rollChance, rollsInHour } from './night-model.ts';
+import type { NightModel } from './night-model.ts';
 
 export * from './night-model.ts';
 export { fnaf1, fnaf2, fnaf3, fnaf4 };
@@ -41,8 +42,10 @@ export const PACKAGES = {
   fnaf4: 'com.scottgames.fnaf4',
 };
 
-export function modelFor(game) {
-  const model = GAMES[game];
+const BY_ID: Readonly<Record<string, NightModel>> = GAMES;
+
+export function modelFor(game: string) {
+  const model = Object.hasOwn(BY_ID, game) ? BY_ID[game] : undefined;
   if (!model) {
     throw new Error(`unknown game ${JSON.stringify(game)}; known: ${GAME_IDS.join(', ')}`);
   }
@@ -50,16 +53,16 @@ export function modelFor(game) {
 }
 
 /** The last night each game's difficulty table names. */
-export const nightsOf = (game) =>
+export const nightsOf = (game: string) =>
   modelFor(game).rows.reduce((last, row) => Math.max(last, row.night.value), 0);
 
-export const scheduleFor = (game, night, options = {}) =>
+export const scheduleFor = (game: string, night: number, options: { fastNights?: boolean } = {}) =>
   nightSchedule(modelFor(game), night, options);
 
-export const peakFor = (game, night, id, options = {}) =>
+export const peakFor = (game: string, night: number, id: string, options: { fastNights?: boolean } = {}) =>
   peakLevel(modelFor(game), night, id, options);
 
-export const canActIn = (game, night, id, options = {}) =>
+export const canActIn = (game: string, night: number, id: string, options: { fastNights?: boolean } = {}) =>
   canAct(modelFor(game), night, id, options);
 
 /**
@@ -68,16 +71,18 @@ export const canActIn = (game, night, id, options = {}) =>
  * This is what a schedule is budgeting against, and it is the one number that
  * is genuinely comparable across the four: a night is a count of chances.
  */
-export function opportunities(game, night, options = {}) {
+export function opportunities(game: string, night: number, options: { fastNights?: boolean } = {}) {
   const model = modelFor(game);
   const schedule = nightSchedule(model, night, options);
   return schedule.hours.slice(0, -1).map((hour) => ({
     hour: hour.hour,
     label: hour.label,
     startMs: hour.startMs,
-    rolls: Object.fromEntries(Object.entries(model.rolls).map(([id, roll]) => [
-      id, rollsInHour(roll, hour.durationMs, hour.levels[id] ?? hour.levels.ai ?? 0),
-    ])),
+    rolls: Object.fromEntries(Object.entries(model.rolls).map(([id, roll]) => {
+      const level = hour.levels[id] ?? hour.levels.ai ?? 0;
+      // A drawn level ({ min, max }) has no single chance: its counts are NaN.
+      return [id, rollsInHour(roll, hour.durationMs, typeof level === 'number' ? level : NaN)];
+    })),
   }));
 }
 

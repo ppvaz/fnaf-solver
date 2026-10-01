@@ -22,7 +22,7 @@
 
 import { Rng } from '../../clockwork/rng.ts';
 import { MODEL, CLOCK, SPRINGTRAP, VENTILATION, SYSTEMS, VENTS, PHANTOMS } from './fnaf3.ts';
-import { applyRows } from '../../clockwork/night-model.ts';
+import { applyRows, settledLevels } from '../../clockwork/night-model.ts';
 import { Every } from '../../clockwork/every.ts';
 
 export const FPS = 60;
@@ -37,7 +37,7 @@ export const MS_PER_FRAME = 1000 / FPS;
 // `> 1 AND < 4` edge (g227) as action 1 -- which action 1 never reaches,
 // being the stay (g225). So cam 10 had no exit but vent 14: under aggression
 // one seal on 14 held him in a 10 <-> 14 bounce all night.
-const GRAPH = {
+const GRAPH: Readonly<Record<string, Readonly<Record<number, string>>>> = {
   cam10: { 2: 'cam09', 3: 'cam09', 4: 'vent14' },                     // g227, g228
   cam09: { 2: 'cam10', 3: 'cam08', 4: 'vent11' },                     // g229-g231
   cam08: { 2: 'cam09', 3: 'cam07', 4: 'cam05' },                      // g232-g234
@@ -52,20 +52,20 @@ const GRAPH = {
 // The vents [SOURCED: g604-g613]. Each is entered on action 4 from one camera
 // and resolved on `action selected > 1`: a sealed vent sends him back to the
 // camera he came from, an unsealed one advances him.
-const VENT_EXIT = {
+const VENT_EXIT: Readonly<Record<string, { readonly sealedTo: string, readonly openTo: string }>> = {
   vent11: { sealedTo: 'cam09', openTo: 'attack3' },
   vent12: { sealedTo: 'cam07', openTo: 'attack3' },
   vent13: { sealedTo: 'cam05', openTo: 'attack1' },
   vent14: { sealedTo: 'cam10', openTo: 'GOT_YOU_2' },
   vent15: { sealedTo: 'cam02', openTo: 'GOT_YOU_2' },
 };
-const VENT_NUMBER = { vent11: 11, vent12: 12, vent13: 13, vent14: 14, vent15: 15 };
+const VENT_NUMBER: Readonly<Record<string, number>> = { vent11: 11, vent12: 12, vent13: 13, vent14: 14, vent15: 15 };
 
 
 // The lure table [SOURCED: g319-g341]: played on camera X, a lure pulls him
 // onto X from any of these places. Only cam 02's reaches attack stage 1 and
 // only cam 01's reaches stage 4.
-export const LURE_FROM = {
+export const LURE_FROM: Readonly<Record<string, readonly string[]>> = {
   cam01: ['attack4'], cam02: ['attack1', 'cam03', 'cam04', 'cam05'], cam03: ['cam02', 'cam04'],
   cam04: ['cam02', 'cam03'], cam05: ['cam02', 'cam06', 'cam07', 'cam08'], cam06: ['cam05', 'cam07'],
   cam07: ['cam06', 'cam08'], cam08: ['cam07', 'cam05', 'cam09'], cam09: ['cam08', 'cam10'], cam10: ['cam09'],
@@ -93,19 +93,19 @@ export class Fnaf3Sim {
   declare night: number;
   declare rng: Rng;
   declare fastNights: boolean;
-  declare ai: any;
-  declare timeLimit: any;
-  declare armed: { bb: any; mangle: any; golden: any; chica: any; puppet: any; };
+  declare ai: number;
+  declare timeLimit: number | undefined;
+  declare armed: Record<'bb' | 'mangle' | 'golden' | 'chica' | 'puppet', number | undefined>;
   declare frame: number;
   declare hour: number;
-  declare over: any;
-  declare spawnRoll: any;
+  declare over: string | null;
+  declare spawnRoll: number;
   declare where: string;
   declare moveCounter: number;
   declare totalTurns: number;
   declare aggressive: number;
   declare hyper: boolean;
-  declare picRandom: any;
+  declare picRandom: number;
   declare vent: number;
   declare ventDwell: number;
   declare hallucination: number;
@@ -120,7 +120,7 @@ export class Fnaf3Sim {
   declare cameraAv5: number;
   declare audio: number;
   declare playCounter: number;
-  declare lurePending: { to: string; frames: any; };
+  declare lurePending: { to: string; frames: number; } | null;
   declare cameraDrain: boolean;
   declare stage1Advance: boolean;
   declare stage1Flag: number;
@@ -128,14 +128,14 @@ export class Fnaf3Sim {
   declare panelUp: boolean;
   declare ventMap: boolean;
   declare cameraId: number;
-  declare timers: { hour: Every; move: Every; aggression: Every; ventByAi: any; ventIdle: Every; picRandom: Every; reboot: Every; rebootAll: Every; camera: Every; play: Every; };
+  declare timers: { hour: Every; move: Every; aggression: Every; ventByAi: Every | null; ventIdle: Every; picRandom: Every; reboot: Every; rebootAll: Every; camera: Every; play: Every; };
   constructor({ night = 1, seed = 0, fastNights = false, hyper = false, cameraDrain = true,
     stage1Advance = true }: { night?: number; seed?: number; fastNights?: boolean; hyper?: boolean; cameraDrain?: boolean; stage1Advance?: boolean; } = {}) {
     this.night = night;
     this.rng = new Rng(seed);
     this.fastNights = fastNights;
 
-    const levels = applyRows(MODEL.rows, night, 0, { ...MODEL.initialLevels });
+    const levels = settledLevels(applyRows(MODEL.rows, night, 0, { ...MODEL.initialLevels }), 'FNaF 3');
     // g649 writes `AI = night number - 1`, which the table carries as a counter
     // expression rather than a literal.
     this.ai = night < 2 ? night - 1 : levels.ai;
@@ -228,7 +228,7 @@ export class Fnaf3Sim {
     return this.viewingScreen && this.cameraId === n;
   }
 
-  die(cause) { if (!this.over) this.over = cause; }
+  die(cause: string) { if (!this.over) this.over = cause; }
 
   /**
    * Arm a seal on `vent` [SOURCED: g572 sets the charge to `50 + Random(50)`].
@@ -237,7 +237,7 @@ export class Fnaf3Sim {
    * night's RNG consumptions and a policy that rolled it itself would put the
    * stream out of step with the phone for every draw after it.
    */
-  armSeal(vent) {
+  armSeal(vent: number) {
     if (this.sealCharge > 0) return false;
     this.sealTarget = vent;
     this.sealCharge = SYSTEMS.seal.chargeMin + this.rng.int(0, SYSTEMS.seal.chargeBound - 1);
@@ -252,7 +252,7 @@ export class Fnaf3Sim {
    * pulled there after Random(100) frames and his move counter resets.
    * Returns whether the audio played.
    */
-  lure(cam) {
+  lure(cam: number) {
     if (!this.viewingScreen || this.ventMap || this.audio <= -10 || this.playCounter !== 7) return false;
     this.playCounter = 0;
     this.audio = Math.max(-10, this.audio - this.ai);
@@ -370,7 +370,7 @@ export class Fnaf3Sim {
     return this.over;
   }
 
-  act(action) {
+  act(action: number) {
     if (action === SPRINGTRAP.stayAction) { this.totalTurns += 1; return; }   // g225
 
     // A vent resolves on `action selected > 1` [g604-g613].
@@ -436,7 +436,7 @@ export class Fnaf3Sim {
     else if (this.where === 'attack4') this.die('springtrap-blackout');
   }
 
-  run(policy) {
+  run(policy: (sim: this) => void) {
     const limit = 60 * 60 * 20;
     while (!this.over && this.frame < limit) {
       policy(this);

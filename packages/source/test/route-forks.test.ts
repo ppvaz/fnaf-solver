@@ -16,10 +16,10 @@ const unit = (s, id) => s.units.find(u => u.id === id);
 {
   const s = sim(7); const u = unit(s, 'withfreddy'); u.idx = u.path.indexOf(3);
   u.promoted = true; u.value2 = 7;
-  s.decidePath = 2; s.advance(u); assert.equal(u.path[u.idx], 7, 'decide path 2 -> CAM 07');
+  s.decidePath = 2; s.advanceUnit(u); assert.equal(u.path[u.idx], 7, 'decide path 2 -> CAM 07');
   assert.equal(u.promoted, false, 'g377 consumes the promoted movement marker');
   assert.equal(u.value2, 7, 'the promotion already wrote the footstep value');
-  u.idx = u.path.indexOf(3); s.decidePath = 1; s.advance(u); assert.equal(u.path[u.idx], 'blindB', 'decide path 1 -> hall stage 2');
+  u.idx = u.path.indexOf(3); s.decidePath = 1; s.advanceUnit(u); assert.equal(u.path[u.idx], 'blindB', 'decide path 1 -> hall stage 2');
   u.idx = u.path.indexOf(3); s.decidePath = 0; assert.equal(s.sourcedRouteStep(u, 100), 'hold', 'no hop before decide path is rolled');
 }
 // g378: return from hall stage 2 under a fully-on mask, B = 5000 - night*500.
@@ -38,12 +38,12 @@ for (const night of [7, 3]) {
 // g396/g397/g399: Mangle's CAM 01 detour restores her base route.
 {
   const s = sim(7); const m = unit(s, 'mangle'); const base = m.path; const shared = [...base];
-  m.idx = base.indexOf(2); s.decidePath = 2; s.advance(m); assert.equal(m.path[m.idx], 1, 'decide path 2 -> CAM 01');
+  m.idx = base.indexOf(2); s.decidePath = 2; s.advanceUnit(m); assert.equal(m.path[m.idx], 1, 'decide path 2 -> CAM 01');
   s.monitor = 'down'; s.frame = 10; s.lightLogicalUntil = 50; m.stunUntil = 0;
   assert.equal(s.canAdvance(m, 10), false, 'g399 waits for the hall light latch');
   s.lightLogicalUntil = 0; assert.equal(s.canAdvance(m, 10), true);
-  s.advance(m); assert.equal(m.path[m.idx], 2); assert.equal(m.path, base, 'base route restored');
-  s.decidePath = 1; s.advance(m); assert.equal(m.path[m.idx], 6, 'decide path 1 -> CAM 06');
+  s.advanceUnit(m); assert.equal(m.path[m.idx], 2); assert.equal(m.path, base, 'base route restored');
+  s.decidePath = 1; s.advanceUnit(m); assert.equal(m.path[m.idx], 6, 'decide path 1 -> CAM 06');
   assert.deepEqual(base, shared, 'the shared route table was not mutated');
 }
 // g384/g388: W. Bonnie / W. Chica final hops wait on the running encounter.
@@ -67,7 +67,7 @@ for (const night of [7, 3]) {
 // Off: no rule fires and a full night is trace-identical to the default.
 {
   const off = new Sim({ night: 7, seed: 7, lethal: false, sourcedRouteForks: false }); const u = unit(off, 'withfreddy'); u.idx = u.path.indexOf(3);
-  off.decidePath = 2; assert.equal(off.sourcedRouteStep(u, 1), null); off.advance(u); assert.equal(u.path[u.idx], 'blindB');
+  off.decidePath = 2; assert.equal(off.sourcedRouteStep(u, 1), null); off.advanceUnit(u); assert.equal(u.path[u.idx], 'blindB');
   const run = opts => { const s = new Sim({ night: 7, seed: 11, lethal: false, durationFrames: 3600, ...opts }); for (let i = 0; i < 3600; i++) s.tick(); return JSON.stringify(s.events); };
   assert.notEqual(run({ sourcedRouteForks: false }), run({ sourcedRouteForks: true }), 'on changes the night (at least the per-second draw)');
   // Until the default flips (bundles must be re-emitted first), the default is off and equals explicit off.

@@ -65,7 +65,7 @@ const pair = (extra = {}) => [new Sim({ ...QUIET, ...extra }), new Sim({ ...QUIE
 {
   const [off, on] = pair({ stalledEnabled: true });
   const s0 = on.rng.state;
-  for (const s of [off, on]) { const u = s.units.find(x => x.id === 'withchica'); u.idx = u.path.indexOf(2); s.advance(u); }
+  for (const s of [off, on]) { const u = s.units.find(x => x.id === 'withchica'); u.idx = u.path.indexOf(2); s.advanceUnit(u); }
   assert.equal(off.rng.state, s0); assert.equal(on.rng.state, lcg(s0), 'e324');
   assert.equal(on.units.find(x => x.id === 'withchica').path[on.units.find(x => x.id === 'withchica').idx], 6);
 }

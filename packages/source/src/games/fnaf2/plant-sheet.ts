@@ -7,7 +7,7 @@ import { FOOTSTEP_NODES, FOOTSTEP_CAM_NODES, OFFICE_FOOTSTEP_IDS } from './plant
 import * as blackoutClock from './blackout-clock.ts';
 import { unitStunReady } from './movement-clock.ts';
 import { attackAnimationLate } from './attack-animation.ts';
-import type { Sim } from './plant-model.ts';
+import type { Sim, Unit } from './plant-model.ts';
 
 /**
  * Camera-view draws in sheet order (sourcedViewDraws); `this.cam` is the
@@ -35,7 +35,7 @@ export function drawViewed(this: Sim, f: number, part = 'all') {
   if (!(this.opts.sourcedEveryOrigin && this.frame === 1)) this.puppetStaticTimer -= this.frameUnits;   // g498
   if (this.puppetStaticTimer <= 0) {
     this.puppetStaticTimer += 600;
-    const p = (this.puppet as any);
+    const p = this.puppet;
     const at = !p.out ? C.BOX_CAM : (typeof p.loc === 'number' ? p.loc : null);
     if (at === this.cam) this.rng.int(0, 99, 0);
   }
@@ -78,10 +78,10 @@ export function passTools(this: Sim, f: number) {
   const every = (key: string, ms: number) => this.passEvery(this.passTimers[key] ??= { v: 0, init: false }, ms);
   /** Random(n) == 1 */
   const one = (n: number) => this.rng.int(0, n - 1, 1) === 1;
-  const unit = (id: string) => (this.units.find(x => x.id === id) as any);
-  const at122 = (u: any) => !!u && u.atOpening && !u.inside;
+  const unit = (id: string) => this.units.find(x => x.id === id);
+  const at122 = (u: Unit | undefined): u is Unit => !!u && u.atOpening && !u.inside;
   const mask2 = this.maskFullyOn;
-  const p = (this.puppet as any);
+  const p = this.puppet;
   const danger2 = () => this.units.some(x => x.committedAt >= 0) || p.attackAt >= 0;
   return { every, one, unit, at122, mask2, p, danger2 };
 }
@@ -100,7 +100,7 @@ export function secondPassFront(this: Sim, f: number) {
 }
 
 /** g366-g518; the front groups run before the movement pass under sourcedSheetOrder. */
-export function secondPassEarly(this: Sim, f) {
+export function secondPassEarly(this: Sim, f: number) {
   const { every, one, unit, at122, mask2, p } = this.passTools(f);
   const sheet = this.opts.sourcedSheetOrder, views = sheet && this.opts.sourcedViewDraws;
   if (!sheet) this.secondPassFront(f);
@@ -146,7 +146,7 @@ export function secondPassEarly(this: Sim, f) {
 }
 
 /** g556-g781; under sourcedSheetOrder also the hour table (g673-g684) and g774 in sheet order. */
-export function secondPassLate(this: Sim, f) {
+export function secondPassLate(this: Sim, f: number) {
   const { every, one, unit, mask2, p, danger2 } = this.passTools(f);
   const sheet = this.opts.sourcedSheetOrder;
   for (const id of ['withfreddy', 'withbonnie', 'withchica', 'toyfreddy']) {           // g556-g559

@@ -76,7 +76,7 @@ import { Sim } from '@sixam/source/fnaf2';
   const arrivingTc = maskedArrival.units.find(u => u.id === 'toychica');
   arrivingTc.idx = arrivingTc.path.length - 2;
   maskedArrival.press('mask');
-  maskedArrival.advance(arrivingTc);
+  maskedArrival.advanceUnit(arrivingTc);
   if (!arrivingTc.atOpening)
     throw new Error('mask already on incorrectly erased a newly arrived threshold attacker');
 
@@ -339,7 +339,7 @@ import { Sim } from '@sixam/source/fnaf2';
   const mutexTf = mutex.units.find(u => u.id === 'toyfreddy');
   mutex.monitor = 'up';
   mutexWb.idx = mutexWb.path.length - 2;
-  mutex.advance(mutexWb);
+  mutex.advanceUnit(mutexWb);
   mutexTf.idx = mutexTf.path.length - 2;
   if (mutex.canAdvance(mutexTf, mutex.frame))
     throw new Error('`office occupied` mutex admitted two shared attackers to marker 122');

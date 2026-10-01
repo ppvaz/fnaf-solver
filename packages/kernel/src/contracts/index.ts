@@ -103,6 +103,7 @@ export {
   bindQualificationVenue, qualificationStanding,
 } from './qualification.ts';
 export * from './venue-identity.ts';
+export type * from './types.ts';
 // Experiments and censuses, v2: competing explanations, a named held-out block,
 // seed sets that say how they were derived, and rates with their intervals
 // (experiment.js). The v1 validators above are still read.

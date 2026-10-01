@@ -23,7 +23,7 @@ assert.throws(() => new Sim({ night: 1, sourcedPuppetMoveOrder: true }), /requir
     const u = s.units.find(x => x.id === 'withfreddy');
     const log = script(s);
     const at = [];
-    for (let i = 0; i < 3; i += 1) { s.advance(u); s.tick(); at.push([u.path[u.idx], log.filter(([, k]) => k === '0,4').length]); }
+    for (let i = 0; i < 3; i += 1) { s.advanceUnit(u); s.tick(); at.push([u.path[u.idx], log.filter(([, k]) => k === '0,4').length]); }
     return at;
   };
   assert.deepEqual(hops(false), [[7, 0], [3, 0], ['blindB', 1]], 'off: the hall stages only');
@@ -194,7 +194,7 @@ assert.throws(() => new Sim({ night: 7, sourcedCustomDialOrder: true }), /requir
     const s = new Sim({ night: 3, seed: 1, lethal: false, sourcedRouteForks: true, sourcedCam8Cancel: knob });
     const u = id => (s.units.find(x => x.id === id) as any);
     u('withchica').pending = true;
-    s.advance(u('withbonnie'));
+    s.advanceUnit(u('withbonnie'));
     return u('withchica').pending;
   };
   assert.equal(held(false), true, 'off: the held roll survives and hops later');

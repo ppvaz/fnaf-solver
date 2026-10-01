@@ -11,16 +11,17 @@ import {
   CONTROL_CATALOGS, GAME_PACKAGES, catalogAcceptsControl, controlCatalogFor, gameOfTargetBuild,
   unknownProfilePoints,
 } from './control-registry.ts';
+import { isOneOf, isRecord } from '@sixam/kernel';
 import { CONTROL_KINDS, validateClockRef, validateProfile } from '@sixam/kernel/contracts';
+import type { ControlCatalog, ControlCommand, DeviceProfileGame, ResolvedDeviceProfile } from '@sixam/kernel/contracts';
 
-const isRecord = value => value !== null && typeof value === 'object' && !Array.isArray(value);
-const finite = value => typeof value === 'number' && Number.isFinite(value);
-const requiredString = (value, label) => {
+const finite = (value: unknown) => typeof value === 'number' && Number.isFinite(value);
+const requiredString = (value: unknown, label: string) => {
   if (typeof value !== 'string' || value.length === 0 || value.length > 256)
     throw new TypeError(`${label} must be a non-empty bounded string`);
   return value;
 };
-const fail = message => { throw new TypeError(`contract: ${message}`); };
+function fail(message: string): never { throw new TypeError(`contract: ${message}`); }
 
 // `semantic-control-v1` is parametric by game (D5). The accepted set is
 // generated from the control catalogs (control-registry.js), never written out
@@ -40,14 +41,14 @@ const fail = message => { throw new TypeError(`contract: ${message}`); };
 const CONTROL_REFUSAL =
   'action.control must be semantic and must not contain coordinates or transport text';
 
-function validateControl(control, game) {
+function validateControl(control: unknown, game: string | undefined) {
   if (typeof control !== 'string') fail(CONTROL_REFUSAL);
   if (game === undefined) {
-    if (GAME_PACKAGES.some(id => catalogAcceptsControl(CONTROL_CATALOGS[id], control))) return control;
+    if (GAME_PACKAGES.some(id => catalogAcceptsControl(controlCatalogFor(id), control))) return control;
     fail(CONTROL_REFUSAL);
   }
-  let catalog;
-  try { catalog = controlCatalogFor(game); } catch (error) { fail(error.message); }
+  let catalog: ControlCatalog;
+  try { catalog = controlCatalogFor(game); } catch (error) { fail((error as Error).message); }
   if (catalogAcceptsControl(catalog, control)) return control;
   fail(`action.control ${JSON.stringify(control)} is not a ${catalog.title} control; ${CONTROL_REFUSAL}`);
 }
@@ -57,10 +58,10 @@ function validateControl(control, game) {
  * control check strict for that game's catalog; without it the check is the
  * union over every registered game.
  */
-export function validateControlCommand(input: any, { game }: {game?: string} = {}) {
+export function validateControlCommand(input: unknown, { game }: {game?: string} = {}): ControlCommand {
   if (!isRecord(input) || input.schema !== 'control-command-v1') fail('control command schema mismatch');
   requiredString(input.id, 'command id');
-  if (!isRecord(input.action) || !CONTROL_KINDS.includes(input.action.kind)) fail('control action kind is invalid');
+  if (!isRecord(input.action) || !isOneOf(CONTROL_KINDS, input.action.kind)) fail('control action kind is invalid');
   validateControl(input.action.control, game);
   validateClockRef(input.requestedAt, 'requestedAt');
   if (input.deadline !== undefined) validateClockRef(input.deadline, 'deadline');
@@ -68,19 +69,20 @@ export function validateControlCommand(input: any, { game }: {game?: string} = {
   requiredString(input.source.controller, 'command source controller');
   if (input.source.policyHash !== undefined) requiredString(input.source.policyHash, 'policy hash');
   const forbidden = ['x', 'y', 'coordinates', 'shell', 'adb', 'hid', 'bytes'];
-  if (forbidden.some(key => Object.hasOwn(input, key) || Object.hasOwn(input.action, key)))
+  const action = input.action;
+  if (forbidden.some(key => Object.hasOwn(input, key) || Object.hasOwn(action, key)))
     fail('physical encoding is not allowed in core commands');
-  return input;
+  return input as unknown as ControlCommand;
 }
 
 /**
  * The game dimension of a device profile: the package half of `targetBuild`
  * (`com.scottgames.fnaf2:2.0.7+26`), which must be a registered game.
  */
-export function deviceProfileGame(profile: any) {
+export function deviceProfileGame(profile: unknown): DeviceProfileGame {
   if (!isRecord(profile)) fail('profile is required');
   let identity;
-  try { identity = gameOfTargetBuild(profile.targetBuild); } catch (error) { fail(`profile ${error.message}`); }
+  try { identity = gameOfTargetBuild(profile.targetBuild); } catch (error) { fail(`profile ${(error as Error).message}`); }
   return Object.freeze({ ...identity, title: controlCatalogFor(identity.game).title });
 }
 
@@ -97,24 +99,26 @@ export function deviceProfileGame(profile: any) {
  * read it with `deviceProfileGame`. The schema id therefore stays
  * `device-profile-v1`.
  */
-export function resolveDeviceProfile(input: any) {
-  validateProfile(input);
-  const { game, title } = deviceProfileGame(input);
-  if (input.controlMap !== undefined) {
-    if (!isRecord(input.controlMap)) fail('profile controlMap must be an object');
-    const unknown = unknownProfilePoints(controlCatalogFor(game), input.controlMap);
+export function resolveDeviceProfile(input: unknown): ResolvedDeviceProfile {
+  const profile = validateProfile(input);
+  const { game, title } = deviceProfileGame(profile);
+  if (profile.controlMap !== undefined) {
+    if (!isRecord(profile.controlMap)) fail('profile controlMap must be an object');
+    const unknown = unknownProfilePoints(controlCatalogFor(game), profile.controlMap);
     if (unknown.length > 0)
       fail(`profile controlMap names ${unknown.join(', ')}, which ${title} has no control, camera or point for`);
   }
-  if (input.limits !== undefined) {
-    const limits = input.limits;
+  if (profile.limits !== undefined) {
+    const limits: unknown = profile.limits;
     if (!isRecord(limits)) fail('profile limits must be an object');
-    if (limits.maxActions !== undefined && (!Number.isInteger(limits.maxActions) || limits.maxActions < 1))
+    if (limits.maxActions !== undefined && (typeof limits.maxActions !== 'number' || !Number.isInteger(limits.maxActions) ||
+        limits.maxActions < 1))
       fail('profile limits.maxActions must be a positive integer');
-    if (limits.maxDurationMs !== undefined && (!finite(limits.maxDurationMs) || limits.maxDurationMs <= 0))
+    if (limits.maxDurationMs !== undefined && (typeof limits.maxDurationMs !== 'number' || !finite(limits.maxDurationMs) ||
+        limits.maxDurationMs <= 0))
       fail('profile limits.maxDurationMs must be a positive number of ms');
     if (limits.dryRunOnly !== undefined && typeof limits.dryRunOnly !== 'boolean')
       fail('profile limits.dryRunOnly must be boolean');
   }
-  return input;
+  return profile as ResolvedDeviceProfile;
 }

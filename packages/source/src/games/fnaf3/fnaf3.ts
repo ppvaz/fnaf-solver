@@ -12,6 +12,7 @@
 // the game.
 // ---------------------------------------------------------------------------
 
+import type { DifficultyRow, NightClock, NightModel } from '../../clockwork/night-model.ts';
 export const GAME = 'fnaf3';
 
 // The clock [SOURCED: g642 advances the hour every 40000 ms on Night 1 and
@@ -29,13 +30,13 @@ export const GAME = 'fnaf3';
 // office ~240 s and banked the night.
 export const CLOCK = {
   kind: 'wallclock',
-  hourMs: (night) => (night <= 1 ? 40000 : 60000),      // g642, g644
-  fastHourMs: (night) => (night <= 1 ? 20000 : 30000),  // g643, g645
+  hourMs: (night) => (night !== undefined && night <= 1 ? 40000 : 60000),      // g642, g644
+  fastHourMs: (night) => (night !== undefined && night <= 1 ? 20000 : 30000),  // g643, g645
   wrapAt: null,                                          // no wrap group exists
   winHour: 6,                                            // g648, on `time of night`
   displayCounter: 'time of night',                       // g646, g647
   source: 'g642,g643,g644,g645,g646,g647,g648',
-};
+} satisfies NightClock;
 
 // The whole difficulty table [SOURCED: g649-g654]. One counter.
 //
@@ -52,7 +53,7 @@ export const CLOCK = {
 // The handset cleared Night 1 with zero input on 2026-09-20, and that is
 // consistent with a model rate well short of certainty: one run is one
 // sample. It corroborates the 240 s clock, not Springtrap's inactivity.
-export const ROWS = [
+export const ROWS: readonly DifficultyRow[] = [
   { group: 649, night: { op: '<', value: 2 }, set: { ai: 0 }, note: 'AI = night - 1' },
   { group: 650, night: { op: '=', value: 2 }, set: { ai: 2 } },
   { group: 651, night: { op: '=', value: 3 }, set: { ai: 3 } },
@@ -158,8 +159,8 @@ export const VENTS = {
 // monitor drops]. `what vent is closed` is a single counter, so **only one
 // vent is sealed at a time** and a second seal replaces the first.
 export const SYSTEMS = {
-  ventilationErrorAbove: (ai) => 1000 - ai * 100,
-  audioDrainPerUse: (ai) => ai,
+  ventilationErrorAbove: (ai: number) => 1000 - ai * 100,
+  audioDrainPerUse: (ai: number) => ai,
   errorThreshold: -10,
   seal: { group: 572, chargeMin: 50, chargeBound: 50, cancelsOn: ['vent map closed', 'monitor down'], concurrent: 1 },
   reboot: { single: { everyMs: 1000, step: { min: 1, bound: 2 }, completeAt: 10 },
@@ -174,7 +175,7 @@ export const MODEL = {
   cap: CAP,
   initialLevels: { ai: 0, bb: 0, mangle: 0, golden: 0, chica: 0, puppet: 0, timeLimit: 0 },
   rolls: ROLLS,
-};
+} satisfies NightModel;
 
 // ---------------------------------------------------------------------------
 // The ventilation economy, and the path from it to the attack chain.
@@ -210,7 +211,7 @@ export const VENTILATION = {
     inactivity: { group: 908, everyMs: 1000, amount: 1,
                   requires: 'ventilation text AV6 > 10, night <> 1' },
     byAi: { groups: [448, 449, 450, 451, 452],
-            everyMsByAi: { 2: 12000, 3: 10000, 4: 9000, 5: 8000, 6: 6000 },
+            everyMsByAi: ({ 2: 12000, 3: 10000, 4: 9000, 5: 8000, 6: 6000 } as Readonly<Record<number, number>>),
             missingAbove: 6 },
   },
   // The error threshold all three systems share, and AV0's floor [g382].
@@ -220,12 +221,12 @@ export const VENTILATION = {
   // held at 0 [g461]. So AV1 is "how long this system has been broken".
   dwell: { group: 462, perFrame: 1, clearedBy: 461 },
   // First escalation: the hallucination band [g463], drained per frame [g464].
-  hallucinationAt: (ai) => 1000 - ai * 100,
-  hallucinationFrames: (ai) => ({ min: ai * 200, bound: 200 }),
+  hallucinationAt: (ai: number) => 1000 - ai * 100,
+  hallucinationFrames: (ai: number) => ({ min: ai * 200, bound: 200 }),
   // Second escalation, and the one that reaches the attack chain [g473]. Note
   // it needs **twice** the dwell the first one does, so a route that clears an
   // error late still avoids the chain entirely.
-  blackoutRampAt: (ai) => 2000 - ai * 200,
+  blackoutRampAt: (ai: number) => 2000 - ai * 200,
   blackoutRamp: { group: 473, perFrame: 1, acceleratedGroup: 474, acceleratedPerFrame: 5 },
   chainAdvancesAbove: 250,
   chainGroups: { s1s2: 486, s2s3: 487, s3s4: 256, s4kill: 262 },

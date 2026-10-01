@@ -4,16 +4,55 @@
 // controller can predict or verify at a cycle boundary: input locks,
 // monitor/mask animation, box/power resource motion, and coarse hazard/risk
 // labels. Hidden RNG state and character positions stay UNKNOWN/risk buckets.
+import { isOneOf, isRecord } from '@sixam/kernel';
 import * as C from './config.ts';
 
 export const REDUCED_SCHEMA = 'reduced-v1';
-export const ROUTE_RISK = Object.freeze(['unknown', 'absent', 'possible', 'opening', 'inside']);
+export const ROUTE_RISK = Object.freeze(['unknown', 'absent', 'possible', 'opening', 'inside'] as const);
 
-const clone = value => structuredClone(value);
-const MONITOR = Object.freeze({ DOWN: 'down', LOWERING: 'lowering', UP: 'up', RAISING: 'raising' });
+const MONITOR = Object.freeze({ DOWN: 'down', LOWERING: 'lowering', UP: 'up', RAISING: 'raising' } as const);
+type MonitorState = typeof MONITOR[keyof typeof MONITOR];
+
+/** What a controller can predict or verify at a cycle boundary; the hidden rest is UNKNOWN or a risk bucket. */
+export interface ReducedState {
+  schema: typeof REDUCED_SCHEMA;
+  night: number;
+  frame: number;
+  monitor: MonitorState;
+  monitorAnim: number;
+  maskOn: boolean;
+  maskAnim: number;
+  viewedCamera: number | null;
+  lastViewedCamera: number | null;
+  hasViewedCamera: boolean;
+  winding: boolean;
+  lightHeld: boolean;
+  ventLightL: boolean;
+  ventLightR: boolean;
+  box: number;
+  power: number;
+  foxyD: number;
+  lastHallLightFrame: number;
+  lastCameraFlashFrame: number;
+  lastMaskOnFrame: number;
+  lastMonitorUpFrame: number;
+  maskSinceFrame: number;
+  lastMaskRunFrames: number;
+  lastMaskOffFrame: number;
+  /** Per fact: true while its last read was UNKNOWN (`monitor` and `mask` for the two controls). */
+  controlUnknown: Record<string, boolean>;
+  hazards: {
+    blackout: { state: 'unknown' | 'active' | 'clear', deadlineFrame: number },
+    opening: { state: unknown, observedAtFrame: number },
+  };
+  routeRisk: { bb: typeof ROUTE_RISK[number], mangle: typeof ROUTE_RISK[number] };
+  incidents: ({ type: string, frame: number } & Record<string, unknown>)[];
+}
+
+const clone = (value: ReducedState): ReducedState => structuredClone(value);
 
 export function initialReducedState({ night = 7, frame = 0, box = 1,
-                                      power = C.powerFrames(night) } = {}) {
+                                      power = C.powerFrames(night) } = {}): ReducedState {
   return {
     schema: REDUCED_SCHEMA, night, frame,
     monitor: MONITOR.DOWN, monitorAnim: 0,
@@ -67,15 +106,15 @@ export function initialReducedState({ night = 7, frame = 0, box = 1,
   };
 }
 
-export const isMonitorUp = state => state.monitor === MONITOR.UP;
-export const isMaskFullyOn = state => state.maskOn && state.maskAnim === 0;
-export const isMaskFullyOff = state => !state.maskOn && state.maskAnim === 0;
+export const isMonitorUp = (state: ReducedState) => state.monitor === MONITOR.UP;
+export const isMaskFullyOn = (state: ReducedState) => state.maskOn && state.maskAnim === 0;
+export const isMaskFullyOff = (state: ReducedState) => !state.maskOn && state.maskAnim === 0;
 
-function record(state, type, data = {}) {
+function record(state: ReducedState, type: string, data: Record<string, unknown> = {}) {
   state.incidents.push({ type, frame: state.frame, ...data });
 }
 
-function stepAnimation(state) {
+function stepAnimation(state: ReducedState) {
   if (state.monitorAnim > 0 && --state.monitorAnim === 0) {
     if (state.monitor === MONITOR.RAISING) {
       state.monitor = MONITOR.UP;
@@ -97,7 +136,7 @@ function stepAnimation(state) {
     state.lastViewedCamera = state.viewedCamera;
 }
 
-function stepSelfState(state) {
+function stepSelfState(state: ReducedState) {
   if (isMonitorUp(state)) state.lastMonitorUpFrame = state.frame;
   if (state.maskOn) {
     state.lastMaskOnFrame = state.frame;
@@ -111,7 +150,7 @@ function stepSelfState(state) {
   }
 }
 
-function stepResources(state) {
+function stepResources(state: ReducedState) {
   const winding = state.winding && isMonitorUp(state) && state.viewedCamera === C.BOX_CAM;
   if (winding) {
     state.box = Math.min(1, Math.max(state.box, C.BOX_SNAP) + 1 / C.BOX_WIND_FRAMES);
@@ -150,7 +189,7 @@ function stepResources(state) {
 
 // Predict one or more frames. `state.frame` is the frame before the next
 // engine tick, matching Sim.tick()'s ++frame convention.
-export function advanceReduced(input, targetFrame) {
+export function advanceReduced(input: ReducedState, targetFrame: number) {
   const state = clone(input);
   if (!Number.isInteger(targetFrame) || targetFrame < state.frame)
     throw new RangeError('reduced model time must move forward in whole frames');
@@ -163,7 +202,7 @@ export function advanceReduced(input, targetFrame) {
   return state;
 }
 
-export function actionAllowed(state, action) {
+export function actionAllowed(state: ReducedState, action: unknown) {
   if (typeof action !== 'string') return false;
   if (action === 'release') return true;
   // The off press clears maskOn immediately but the mask surface remains in
@@ -188,7 +227,7 @@ export function actionAllowed(state, action) {
   return true;
 }
 
-function setMonitor(state, up) {
+function setMonitor(state: ReducedState, up: boolean) {
   if (up && (state.monitor === MONITOR.UP || state.monitor === MONITOR.RAISING)) return false;
   if (!up && (state.monitor === MONITOR.DOWN || state.monitor === MONITOR.LOWERING)) return false;
   if (up) {
@@ -206,7 +245,7 @@ function setMonitor(state, up) {
 // Apply an engine-semantic action at the state's current frame. Returns a
 // structured acceptance result so callers can log rejected inputs instead of
 // assuming that a press executed.
-export function applyReduced(input, action, kind = 'press') {
+export function applyReduced(input: ReducedState, action: string, kind = 'press') {
   const state = clone(input);
   if (kind === 'release') {
     if (action === 'light') state.lightHeld = false;
@@ -244,8 +283,8 @@ export function applyReduced(input, action, kind = 'press') {
   return { state, accepted: true, reason: null };
 }
 
-function updateFact(state, name, fact) {
-  if (!fact || (fact.state !== 'OBSERVED' && fact.state !== 'UNKNOWN'))
+function updateFact(state: ReducedState, name: string, fact: unknown) {
+  if (!isRecord(fact) || (fact.state !== 'OBSERVED' && fact.state !== 'UNKNOWN'))
     throw new TypeError(`invalid reduced fact: ${name}`);
   if (fact.state === 'UNKNOWN') {
     state.controlUnknown[name === 'monitorUp' ? 'monitor' : name === 'maskOn' ? 'mask' : name] = true;
@@ -313,31 +352,37 @@ function updateFact(state, name, fact) {
   // The box gauge is directly legible on the CAM 11 feed, so an observed pie
   // CORRECTS the dead-reckoned level instead of running beside it. Everywhere
   // else it stays UNKNOWN and the prediction carries on undisturbed.
-  if (name === 'boxPie' && Number.isFinite(fact.value))
-    state.box = Math.max(0, Math.min(1, fact.value));
-  if (name === 'bbVent' && ROUTE_RISK.includes(fact.value)) state.routeRisk.bb = fact.value;
-  if (name === 'mangleOpening' && ROUTE_RISK.includes(fact.value)) state.routeRisk.mangle = fact.value;
+  const value = fact.value;
+  if (name === 'boxPie' && typeof value === 'number' && Number.isFinite(value))
+    state.box = Math.max(0, Math.min(1, value));
+  if (name === 'bbVent' && isOneOf(ROUTE_RISK, value)) state.routeRisk.bb = value;
+  if (name === 'mangleOpening' && isOneOf(ROUTE_RISK, value)) state.routeRisk.mangle = value;
 }
 
 // Apply sensor facts without turning UNKNOWN into a negative claim. The
 // current value is deliberately represented by controlUnknown; callers may
 // still use the last verified physical state held elsewhere in their belief.
-export function observeReduced(input, facts, { frame = input.frame } = {}) {
+export function observeReduced(input: ReducedState, facts: Readonly<Record<string, unknown>> | null | undefined,
+  { frame = input.frame } = {}) {
   const state = advanceReduced(input, frame);
   for (const [name, fact] of Object.entries(facts ?? {})) updateFact(state, name, fact);
   return state;
 }
 
-export function reduceCycle(input, { actions = [], observations = [] } = {}) {
+export function reduceCycle(input: ReducedState, { actions = [], observations = [] }: {
+  actions?: readonly { frame: number, action: string, kind?: string }[],
+  observations?: readonly { frame: number, facts: Readonly<Record<string, unknown>> }[],
+} = {}) {
   let state = clone(input);
-  const events = [...actions.map(event => ({ ...event, kind: event.kind ?? 'press' })),
-                  ...observations.map(event => ({ ...event, kind: 'observation' }))]
-    .sort((a, b) => a.frame - b.frame || (a.kind === 'observation' ? 1 : -1));
-  for (const event of events) {
-    state = advanceReduced(state, event.frame);
-    state = event.kind === 'observation'
-      ? observeReduced(state, event.facts)
-      : applyReduced(state, event.action, event.kind).state;
-  }
+  // At one frame an action goes before an observation.
+  const events: { frame: number, kind: string, apply: (state: ReducedState) => ReducedState }[] = [
+    ...actions.map(event => {
+      const kind = event.kind ?? 'press';
+      return { frame: event.frame, kind, apply: (at: ReducedState) => applyReduced(at, event.action, kind).state };
+    }),
+    ...observations.map(event => ({ frame: event.frame, kind: 'observation',
+      apply: (at: ReducedState) => observeReduced(at, event.facts) })),
+  ].sort((a, b) => a.frame - b.frame || (a.kind === 'observation' ? 1 : -1));
+  for (const event of events) state = event.apply(advanceReduced(state, event.frame));
   return state;
 }

@@ -13,6 +13,7 @@
 //   packages/source/decompile/nightmap.py --game fnaf2 --clock
 // ---------------------------------------------------------------------------
 
+import type { DifficultyRow, NightClock, NightModel } from '../../clockwork/night-model.ts';
 import {
   AI_BY_NIGHT, AI_DIALS, AI_IDS, aiCap, customNightRow, HOUR_FRAMES, FPS,
 } from './config.ts';
@@ -41,11 +42,11 @@ export const CLOCK = {
   winHour: 6,          // g672
   startsAt: 12,        // g631 -- the counter reads 12 AM, index 0
   source: 'g627,g628,g629,g630,g631,g672',
-};
+} satisfies NightClock;
 
 // The published per-hour table, translated into the shared row shape. The
 // values are `AI_BY_NIGHT`'s; nothing is restated.
-export const ROWS = Object.entries(AI_BY_NIGHT).flatMap(([night, rows]) =>
+export const ROWS: readonly DifficultyRow[] = Object.entries(AI_BY_NIGHT).flatMap(([night, rows]) =>
   rows.map((row) => ({
     night: { op: '=', value: Number(night) },
     hour: row.hour,
@@ -64,6 +65,6 @@ export const MODEL = {
   cap: CAP,
   initialLevels: Object.fromEntries(AI_IDS.map((id) => [id, 0])),
   rolls: {},   // FNaF 2's per-character rules live in plant-model.js
-};
+} satisfies NightModel;
 
 export { AI_DIALS, AI_IDS, customNightRow, HOUR_FRAMES, FPS };

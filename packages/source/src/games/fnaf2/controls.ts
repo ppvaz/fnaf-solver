@@ -27,7 +27,7 @@ import { ARTIFACT_ACTION_TABLE_SCHEMA, CONTROL_CATALOG_SCHEMA, defineControlCata
 
 export const FNAF2_PACKAGE = 'com.scottgames.fnaf2';
 
-const touch = (contact, anchor) => ({ adapter: 'touch', contact, anchor });
+const touch = (contact: string, anchor: string) => ({ adapter: 'touch', contact, anchor });
 const NO_READER = 'UNKNOWN(no-effect-reader)';
 
 /**

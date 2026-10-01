@@ -34,11 +34,11 @@ export class Rng {
   }
   // chance(p): does this roll succeed? In worst-luck mode the animatronic
   // always gets what it wants.
-  chance(p, worstIs = true) {
+  chance(p: number, worstIs = true) {
     const r = this.next() < p;
     return this.worst ? worstIs : r;
   }
-  int(min, max, worstIs = null) {
+  int(min: number, max: number, worstIs: number | null = null) {
     const v = min + Math.floor(this.next() * (max - min + 1));
     return this.worst && worstIs !== null ? worstIs : v;
   }

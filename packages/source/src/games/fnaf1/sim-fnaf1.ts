@@ -21,7 +21,7 @@
 
 import { Rng } from '../../clockwork/rng.ts';
 import { MODEL, ROLLS, POWER, FOXY, CLOCK } from './fnaf1.ts';
-import { applyRows } from '../../clockwork/night-model.ts';
+import { applyRows, settledLevels } from '../../clockwork/night-model.ts';
 import { Every } from '../../clockwork/every.ts';
 
 export const FPS = 60;
@@ -56,7 +56,9 @@ export const INPUT = {
 
 // Bonnie's graph [SOURCED: g331-g344], keyed by where he is and his branch
 // alterable 0, which g329 redraws as `Random(2) + 1` every 1000 ms.
-const BONNIE = {
+type Graph = Readonly<Record<string, Readonly<Record<number, string>>>>;
+
+const BONNIE: Graph = {
   cam1A: { 1: 'cam5', 2: 'cam1B' },
   cam5: { 1: 'cam1B', 2: 'cam2A' },
   cam1B: { 1: 'cam5', 2: 'cam2A' },
@@ -67,7 +69,7 @@ const BONNIE = {
 
 // Chica's graph [SOURCED: g364-g376]. g364 carries no branch condition, so
 // her first step off the stage is forced rather than chosen.
-const CHICA = {
+const CHICA: Graph = {
   cam1A: { 1: 'cam1B', 2: 'cam1B' },
   cam1B: { 1: 'cam7', 2: 'cam6' },
   cam6: { 1: 'cam7', 2: 'cam4A' },
@@ -78,6 +80,8 @@ const CHICA = {
 
 // Freddy's path is a fixed sequence, not a branch [SOURCED: g551-g557].
 const FREDDY_PATH = ['cam1A', 'cam1B', 'cam7', 'cam6', 'cam4A', 'cam4B'];
+
+type Fnaf1Control = 'leftLight' | 'rightLight' | 'leftDoor' | 'rightDoor' | 'monitor';
 
 
 export class Fnaf1Sim {
@@ -91,14 +95,14 @@ export class Fnaf1Sim {
   declare night: number;
   declare rng: Rng;
   declare fastNights: boolean;
-  declare levels: any;
+  declare levels: Record<string, number>;
   declare frame: number;
   declare minute: number;
   declare hour: number;
   declare power: number;
   declare blackout: boolean;
   declare blackoutFrames: number;
-  declare over: any;
+  declare over: string | null;
   declare bonnie: string;
   declare chica: string;
   declare freddyIndex: number;
@@ -118,15 +122,15 @@ export class Fnaf1Sim {
   declare clickCooldown: number;
   declare leftDoorAnim: number;
   declare rightDoorAnim: number;
-  declare flip: { dir: string; frames: number; } | { dir: string; frames: number; };
+  declare flip: { dir: 'up' | 'down'; frames: number; } | null;
   declare lastClicked: number;
   declare lightsResetPending: boolean;
   declare pendingView: number;
-  declare inputLog: any;
+  declare inputLog: { frame: number, control: Fnaf1Control, accepted: boolean }[] | null;
   declare timers: { bonnie: Every; chica: Every; freddy: Every; foxy: Every; branch: Every; minute: Every; power: Every; attention: Every; blackoutMusic: Every; blackoutRoll: Every; blackoutForce: Every; extra?: Every | null; };
   declare moveWho: number;
-  declare deaths: any[];
-  constructor({ night = 1, seed = 0, custom = null, fastNights = false }: { night?: number; seed?: number; custom?: any; fastNights?: boolean; } = {}) {
+  declare deaths: string[];
+  constructor({ night = 1, seed = 0, custom = null, fastNights = false }: { night?: number; seed?: number; custom?: Readonly<Record<string, number>> | null; fastNights?: boolean; } = {}) {
     this.night = night;
     this.rng = new Rng(seed);
     this.fastNights = fastNights;
@@ -134,12 +138,9 @@ export class Fnaf1Sim {
     // Difficulty at night start [SOURCED: g437-g443]. Night 4's Freddy is the
     // table's one draw: `1 + Random(2)`, taken here because the row is
     // evaluated at frame 0 before anything else can consume the stream.
-    this.levels = applyRows(MODEL.rows, night, 0, { ...MODEL.initialLevels });
-    for (const [id, value] of Object.entries(this.levels as Record<string, any>)) {
-      if (value && typeof value === 'object' && 'min' in value) {
-        this.levels[id] = value.min + this.rng.int(0, value.bound ? value.bound - 1 : 1);
-      }
-    }
+    const start = applyRows(MODEL.rows, night, 0, { ...MODEL.initialLevels });
+    this.levels = settledLevels(Object.fromEntries(Object.entries(start).map(([id, value]) =>
+      [id, typeof value === 'number' ? value : value.min + this.rng.int(0, value.bound ? value.bound - 1 : 1)])), 'FNaF 1');
     if (custom) Object.assign(this.levels, custom);
 
     this.frame = 0;
@@ -213,7 +214,7 @@ export class Fnaf1Sim {
     // g313: 1 + camera + both doors + both lights. A door's slot is set on
     // reaching 2 and cleared on reaching 0 (g305-g308, NotAlways), so it
     // costs while shut and while opening, and not while closing.
-    const doorCost = (door) => (door === DOOR_SHUT || door === DOOR_OPENING ? 1 : 0);
+    const doorCost = (door: number) => (door === DOOR_SHUT || door === DOOR_OPENING ? 1 : 0);
     return POWER.usageBase
       + (this.viewing > 0 ? 1 : 0)
       + doorCost(this.leftDoor)
@@ -226,13 +227,13 @@ export class Fnaf1Sim {
    * sheet's own acceptance rules. Returns whether the game took it; a refused
    * press does nothing at all, which is what the phone shows too.
    */
-  press(control: 'leftLight'|'rightLight'|'leftDoor'|'rightDoor'|'monitor') {
+  press(control: Fnaf1Control) {
     const accepted = this.acceptPress(control);
     this.inputLog?.push({ frame: this.frame, control, accepted });
     return accepted;
   }
 
-  acceptPress(control) {
+  acceptPress(control: Fnaf1Control) {
     if (this.over || this.blackout) return false;          // `power down = 0` on every rule
     if (control === 'monitor') {
       if (this.flip) return false;                          // g270/g271: `flip it = 0`
@@ -270,7 +271,7 @@ export class Fnaf1Sim {
   }
 
   /** A camera-map tap: only a raised monitor has a map [g290/g291, g299/g300]. */
-  selectCamera(view) {
+  selectCamera(view: number) {
     if (this.over || this.blackout || this.viewing === 0) return false;
     this.lastClicked = view;
     this.pendingView = view;                                // `set viewing to`, read by g33 next frame
@@ -300,7 +301,7 @@ export class Fnaf1Sim {
         this.flip.frames += 1;                                                        // g846/g848
       }
     }
-    for (const [door, anim] of [['leftDoor', 'leftDoorAnim'], ['rightDoor', 'rightDoorAnim']]) {
+    for (const [door, anim] of [['leftDoor', 'leftDoorAnim'], ['rightDoor', 'rightDoorAnim']] as const) {
       if (this[door] !== DOOR_CLOSING && this[door] !== DOOR_OPENING) continue;
       this[anim] += 1;
       if (this[anim] >= INPUT.doorAnimFrames) {                                       // g160/g161
@@ -318,7 +319,7 @@ export class Fnaf1Sim {
   // g419 forces both doors open at blackout, so whoever walks in afterwards
   // is the symptom. Reporting the animatronic would blame the wrong mechanic
   // and send tuning at the wrong knob.
-  die(cause) {
+  die(cause: string) {
     if (this.over) return;
     this.over = this.blackout && cause !== 'blackout' ? `blackout-${cause}` : cause;
     this.deaths.push(this.over);
@@ -398,7 +399,7 @@ export class Fnaf1Sim {
         this.minute = CLOCK.resetTick;
         this.hour += 1;
         // g470-g472: the hourly escalation, on every night.
-        this.levels = applyRows(MODEL.rows, this.night, this.hour, this.levels);
+        this.levels = settledLevels(applyRows(MODEL.rows, this.night, this.hour, this.levels), 'FNaF 1');
         if (this.hour === CLOCK.winHour) { this.over = '6AM'; return this.over; }
       }
     }
@@ -457,7 +458,7 @@ export class Fnaf1Sim {
   }
 
   /** `Random(bound) + 1 <= level`, drawn whether or not the state gates pass. */
-  roll(bound, level) {
+  roll(bound: number, level: number | undefined) {
     const value = this.rng.int(0, bound - 1) + 1;
     return value <= (level ?? 0);
   }
@@ -490,7 +491,7 @@ export class Fnaf1Sim {
     this.freddyState = 0;
   }
 
-  stepBlackout(ms) {
+  stepBlackout(ms: number) {
     this.blackoutFrames += 1;
     // The AV6 ladder: music for 20 s, then a 1-in-5 roll every 5 s, with a
     // hard 20 s backstop, then the jumpscare [SOURCED: g423, g424].
@@ -500,7 +501,7 @@ export class Fnaf1Sim {
   }
 
   /** Run to the end of the night under `policy`, which is called each frame. */
-  run(policy) {
+  run(policy: (sim: this) => void) {
     const limit = 60 * 60 * 20;   // 20 minutes of frames; the night is 8:55
     while (!this.over && this.frame < limit) {
       policy(this);

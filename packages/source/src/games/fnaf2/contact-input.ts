@@ -6,24 +6,22 @@ import type { Sim } from './plant-model.ts';
 export type ContactInput = { monitor: boolean; mask: boolean; flipLock: boolean; cameraNew: string | null;
   cameraLatch: string | null; cameraReleased: string | null };
 
-export function enableContacts(sim: Sim) {
+export function enableContacts(sim: Sim): ContactInput {
   if (!(sim.opts.sourcedDropFlagOrder && sim.opts.sourcedSheetOrder))
     throw new Error('contact input requires sourcedDropFlagOrder and sourcedSheetOrder');
-  sim.contactInput ??= { monitor: false, mask: false, flipLock: false,
+  return sim.contactInput ??= { monitor: false, mask: false, flipLock: false,
     cameraNew: null, cameraLatch: null, cameraReleased: null };
 }
 
 export function contactDown(sim: Sim, action: string) {
-  enableContacts(sim);
-  const c = sim.contactInput;
+  const c = enableContacts(sim);
   if (action === 'monitor' || action === 'mask') c[action] = true;
   else if (action.startsWith('cam:') && C.CAMS[+action.slice(4)]) c.cameraNew = action;
   else sim.press(action);
 }
 
 export function contactUp(sim: Sim, action: string) {
-  enableContacts(sim);
-  const c = sim.contactInput;
+  const c = enableContacts(sim);
   if (action === 'monitor' || action === 'mask') c[action] = false;
   else if (action.startsWith('cam:')) c.cameraReleased = action;
   else sim.release(action);

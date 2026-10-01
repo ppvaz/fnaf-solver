@@ -4,8 +4,9 @@
  * package may import it (tools/architecture-test.ts). Compile-time shapes are
  * in types.ts.
  */
-export { CLAIM_LEVELS, SOURCE_LABELS, isClaimLevel, isSourceLabel, isUnknown, unknown, validateClaimLevel,
-  validateSourceLabel } from './labels.ts';
+export type * from './types.ts';
+export { CLAIM_LEVELS, SOURCE_LABELS, isClaimLevel, isList, isOneOf, isRecord, isSourceLabel, isUnknown, unknown,
+  validateClaimLevel, validateSourceLabel } from './labels.ts';
 export { interval, validateInterval } from './time/interval.ts';
 export { BINDINGS_DIR, WINNER_FILE, winnerTag } from './bindings.ts';
 export { SEED_BELIEFS, SEED_PROVENANCES, validateSeed, validateSeedProvenance } from './seed.ts';

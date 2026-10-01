@@ -153,7 +153,8 @@ longer rebuilds.
 - No explicit `any`, anywhere. Strict mode refuses an implicit `any` but not a
   written one, so `tools/test-type-debt.ts` counts written `any` and `x!` per
   area: an area without a `typeDebt` entry in `tools/quality-baseline.json`
-  carries none (`packages/kernel/src` first), and the others only shrink.
+  carries none (`packages/kernel/src` and `packages/source/src` so far), and the
+  others only shrink.
   The pass that wrote `any` to get there (`tools/ts-strict.ts`, 7a8393f0) is retired.
 - A validator takes `unknown`, narrows it with the kernel's guards (`isRecord`,
   `isList`, `isOneOf`, `isText`, `fail(): never`, `@sixam/kernel` labels) and

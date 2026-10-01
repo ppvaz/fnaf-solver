@@ -22,7 +22,7 @@ import { CONTROL_CATALOG_SCHEMA, defineControlCatalog } from '../../clockwork/co
 
 export const FNAF1_PACKAGE = 'com.scottgames.fivenightsatfreddys';
 
-const button = (id, anchor) => ({ id, aliases: [], binding: { adapter: 'touch', contact: 'tap', anchor },
+const button = (id: string, anchor: string) => ({ id, aliases: [], binding: { adapter: 'touch', contact: 'tap', anchor },
   requires: 'UNKNOWN(not-modelled)', observes: 'UNKNOWN(no-effect-reader)' });
 
 export const FNAF1_CONTROL_CATALOG = defineControlCatalog({

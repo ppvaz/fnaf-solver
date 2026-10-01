@@ -4,14 +4,14 @@
 import * as C from './config.ts';
 import { MON_DOWN, MON_RAISING, MON_UP, MON_LOWERING } from './plant-constants.ts';
 import * as contacts from './contact-input.ts';
-import type { Sim } from './plant-model.ts';
+import type { Sim, Unit } from './plant-model.ts';
 
 
 export function enableContactInput(this: Sim) { contacts.enableContacts(this); }
-export function contactDown(this: Sim, action) { contacts.contactDown(this, action); }
-export function contactUp(this: Sim, action) { contacts.contactUp(this, action); }
+export function contactDown(this: Sim, action: string) { contacts.contactDown(this, action); }
+export function contactUp(this: Sim, action: string) { contacts.contactUp(this, action); }
 
-export function press(this: Sim, action) {
+export function press(this: Sim, action: string) {
   if (!this.alive) return;
   // Legacy semantic taps enforce surface reachability; contactDown/contactUp preserve physical duration.
   // `maskOn` is the steady endpoint, while `maskAnim` also covers the
@@ -85,14 +85,14 @@ export function press(this: Sim, action) {
   }
 }
 
-export function release(this: Sim, action) {
+export function release(this: Sim, action: string) {
   if (action === 'light') this.lightHeld = false;
   else if (action === 'wind') this.winding = false;
   else if (action === 'ventL') this.ventLightL = false;
   else if (action === 'ventR') this.ventLightR = false;
 }
 
-export function setMask(this: Sim, on) {
+export function setMask(this: Sim, on: boolean) {
   if (this.maskOn === on) return;
   if (this.contactInput) this.contactInput.flipLock = true; // g270/g274
   this.maskOn = on;
@@ -108,7 +108,7 @@ export function setMask(this: Sim, on) {
   }
 }
 
-export function setMonitor(this: Sim, up) {
+export function setMonitor(this: Sim, up: boolean) {
   if (up && (this.monitor === MON_UP || this.monitor === MON_RAISING)) return;
   if (!up && (this.monitor === MON_DOWN || this.monitor === MON_LOWERING)) return;
   this.animationClocks.monAnim = 0;
@@ -144,7 +144,7 @@ export function setMonitor(this: Sim, up) {
   }
 }
 
-export function startBlackout(this: Sim, by, unitId = null) {
+export function startBlackout(this: Sim, by: string, unitId: string | null = null) {
   this.blackoutStartFrame = this.frame;
   // g514 counts the entry loop too, even when the model starts the encounter after its flicker pass.
   // A later loop's delta cannot stand in for that first delta on a measured clock.
@@ -158,14 +158,14 @@ export function startBlackout(this: Sim, by, unitId = null) {
   this.emit('blackout', by);
 }
 
-export function startOfficeEncounter(this: Sim, u) {
+export function startOfficeEncounter(this: Sim, u: Unit) {
   if (this.blackout.active || !u.atOpening) return;
   u.officeCue = true;
   this.startBlackout(u.name, u.id);
   this.emit('office-cue', u.id);
 }
 
-export function unitEnterInside(this: Sim, u, why) {
+export function unitEnterInside(this: Sim, u: Unit, why: string) {
   u.atOpening = false; u.officeRoll = false;
   u.inside = true;
   u.officeCue = false;
@@ -186,7 +186,7 @@ export function repelCooldown(this: Sim) {
 
 // g532 / g556-559 -> `being attacked by` = N. Past this point the mask is
 // refused (g267) and everything is forced down (g624); nothing cancels it.
-export function commitAttack(this: Sim, u, why) {
+export function commitAttack(this: Sim, u: Unit, why: string) {
   if (u.committedAt >= 0) return;
   u.insideDangerAt = -1;
   u.committedAt = this.frame + C.INSIDE_ATTACK_FRAMES;
@@ -194,7 +194,7 @@ export function commitAttack(this: Sim, u, why) {
   this.emit('inside-committed', { who: u.id, why });
 }
 
-export function armInsideAttack(this: Sim, u, why) {
+export function armInsideAttack(this: Sim, u: Unit, why: string) {
   if (u.insideDangerAt >= 0) return;
   // `got you stage` = 1 and `time left` = `time allowed`, per night (g530).
   u.insideDangerAt = this.frame + C.timeAllowedFrames(this.opts.night);

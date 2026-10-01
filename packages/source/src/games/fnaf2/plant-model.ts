@@ -2,6 +2,7 @@ import * as C from './config.ts';
 import { Rng } from './rng.ts';
 import { MON_DOWN, MON_RAISING, MON_UP, MON_LOWERING, SOURCED_HOUR0_GOLDEN, VALUE5_DIVISOR } from './plant-constants.ts';
 import { defaultSimOptions } from './plant-options.ts';
+import type { SimOptions } from './plant-options.ts';
 import * as hall from './plant-hall.ts';
 import * as office from './plant-office.ts';
 import * as puppet from './plant-puppet.ts';
@@ -13,6 +14,70 @@ import type { ContactInput } from './contact-input.ts';
 import { attackAnimationEarly } from './attack-animation.ts';
 import type { AttackAnimation } from './attack-animation.ts';
 import { blackoutResolveReady, blackoutLate } from './blackout-clock.ts';
+
+/** A unit's move, with what moved it. */
+type Why = { readonly who: string, readonly why: string };
+
+/** What each event the Sim emits carries; an event with no entry here carries nothing. */
+interface EventData {
+  'hall-movement': { readonly who: string };
+  'wind-tick': { readonly sample: number };
+  'puppet-stage': number;
+  'puppet-attack': { readonly at: number };
+  'puppet-move': { readonly at: C.RouteNode };
+  'mangle-static': { readonly context: 'office' | 'cam11', readonly present: boolean, readonly sample: number };
+  death: Death;
+  /** Who started it. */
+  blackout: string;
+  /** The unit whose office cue it is. */
+  'office-cue': string;
+  'office-entry': Why;
+  'inside-committed': Why;
+  'inside-armed': Why;
+  'inside-cancelled': Why;
+  'route-return': { readonly who: string, readonly to: number, readonly from?: string, readonly group?: number };
+  'route-fork': { readonly who: string, readonly at: number, readonly to: number };
+  footstep: { readonly who: string, readonly value: number, readonly sample: number };
+  /** A vent hop's thud; `cam` when it is heard on the vent camera, `arrival` the sample a reaching hop adds. */
+  'vent-bang': { readonly who: string, readonly leaving: boolean, readonly sample: number, readonly cam?: boolean, readonly arrival?: number };
+  laugh: { readonly samples: readonly number[], readonly vocal?: number };
+}
+type Plain = 'gf-hall-attack' | 'gf-hall' | 'gf-hall-inside' | 'foxy-arrive' | 'foxy-lock' | 'foxy-leave' | 'puppet-out' |
+  'gf-cleared' | 'win' | 'forcedown' | 'bb-inside' | 'gf-appear';
+
+/** One thing the night did, on the frame it did it: what reports and tests read back. */
+export type SimEvent =
+  | { [T in keyof EventData]: { readonly f: number, readonly type: T, readonly data: EventData[T] } }[keyof EventData]
+  | { readonly f: number, readonly type: Plain };
+
+/** How the night ended, when it ended in a death. */
+export interface Death {
+  readonly reason: string;
+  readonly detail: string;
+  readonly frame: number;
+  readonly t: number;
+}
+
+/** Something the player did that the game refused or would have punished (a death on a non-lethal run). */
+interface Mistake {
+  readonly f: number;
+  readonly t: number;
+  readonly code: string;
+  readonly detail: string;
+}
+
+/** A route animatronic: its sourced row, and where it stands tonight. */
+export type Unit = Omit<C.StalledUnit, 'path'> & {
+  /** The route; Mangle's g397 fork replaces it, never mutating the shared table, and g399 restores `basePath`. */
+  path: readonly C.RouteNode[]; basePath?: readonly C.RouteNode[];
+  idx: number; stunUntil: number; stunRemaining: number; pending: boolean; atOpening: boolean; openingSince: number;
+  openingReadyAt: number; officeCue: boolean; openingTicks: number; maskExposureTicks: number; raiseSeen: boolean;
+  inside: boolean; insideArmed: boolean; insideDangerAt: number; committedAt: number; done: boolean; hallColumn: boolean;
+  footstep: boolean; value2: number; promoted: boolean; footstepOn: boolean; officeRoll: boolean;
+};
+
+/** A copy of every mutable field but the options and the recording, as JSON carries it (`snapshot`). */
+type SimSnapshot = Record<string, unknown> & { rng: { seed: number, state: number, worst: boolean } };
 
 export class Sim {
   declare press: typeof office.press;
@@ -83,13 +148,13 @@ export class Sim {
   declare tickBox: typeof puppet.tickBox;
   declare tickPuppet: typeof puppet.tickPuppet;
   declare advancePuppet: typeof puppet.advancePuppet;
-  declare opts: { seed: number; worst: boolean; night: number; customNight: any; android: boolean; speed: number; record: boolean; bbEnabled: boolean; foxyEnabled: boolean; gfEnabled: boolean; boxEnabled: boolean; powerEnabled: boolean; stalledEnabled: boolean; lethal: boolean; durationFrames: number; cameraLightStunFrames: number; passiveWitheredLookStunFrames: number; selectedCameraGate: boolean; sourcedRouteForks: boolean; sourcedHallEntry: boolean; sourcedDropLightOrder: boolean; sourcedDropFlagOrder: boolean; sourcedAnimationCount: boolean; sourcedFoxyChain: boolean; sourcedUnconditionalDraws: boolean; sourcedEventDraws: boolean; sourcedBlackoutDraws: boolean; sourcedBlackoutClockEnd: boolean; sourcedViewDraws: boolean; sourcedRollDraws: boolean; sourcedMonitorDownDraw: boolean; sourcedSecondPass: boolean; sourcedPuppetGlitchDraws: boolean; sourcedFootstepDraws: boolean; footstepFoxy: boolean; sourcedFoxyMoveValue2: boolean; footstepCamMarkers: boolean; sourcedFootstepValue2: boolean; sourcedOfficeFootsteps: boolean; sourcedOfficeRolls: boolean; sourcedPromotedViewDraws: boolean; sourcedHallLatchOrder: boolean; sourcedBDrainOrder: boolean; sourcedMovementClock: boolean; sourcedAttackAnimation: boolean; sourcedRollsBeforeMoves: boolean; sourcedPromotedMoves: boolean; sourcedRoutePass: boolean; sourcedBBMoves: boolean; sourcedRouteViewDraws: boolean; sourcedMangleReturn: boolean; sourcedBoxCountdown: boolean; sourcedPuppetMoveOrder: boolean; sourcedHourTable: boolean; sourcedParkedMarker: boolean; sourcedCustomDialOrder: boolean; sourcedCam8Cancel: boolean; sourcedVentCamDraws: boolean; sourcedRandomImageDraw: boolean; sourcedMonitorRaiseGate: boolean; sourcedSheetOrder: boolean; sourcedLastViewPause: boolean; sourcedGatedEvery: boolean; sourcedEveryOrigin: boolean; sourcedValue5: boolean; sourcedExposureValue5: boolean; frameMs: (frame: number) => number; frameValue5: (frame: number) => number; };
+  declare opts: SimOptions;
   declare rng: Rng;
   declare frame: number;
-  declare events: any[];
+  declare events: SimEvent[];
   declare alive: boolean;
   declare won: boolean;
-  declare death: { reason: any; detail: any; frame: number; t: number; };
+  declare death: Death | null;
   declare monitor: string;
   declare monAnim: number;
   declare animationClocks: { monAnim: number; maskAnim: number };
@@ -99,7 +164,7 @@ export class Sim {
   declare cam: number;
   declare viewing: number;
   declare lastViewed: number;
-  declare ventCamDrawn: {};
+  declare ventCamDrawn: Record<string, boolean>;
   declare cam8CancelAt: Record<string, number>;
   declare randomImageArmed: boolean;
   declare hasViewedCamera: boolean;
@@ -113,18 +178,18 @@ export class Sim {
   declare winding: boolean;
   declare ventLightL: boolean;
   declare ventLightR: boolean;
-  declare power: any;
+  declare power: number;
   declare box: number;
   declare boxHold: number;
   declare ai: { [k: string]: number; };
-  declare foxy: { loc: string; hallColumn: boolean; footstep: boolean; acceptedAt: number; D: number; exposure: number; gotYou: boolean; pinUntil: number; A: number; B: number; readyAt: any; arrivalPending?: boolean; lockPending?: boolean; };
+  declare foxy: { loc: string; hallColumn: boolean; footstep: boolean; acceptedAt: number; D: number; exposure: number; gotYou: boolean; pinUntil: number; A: number; B: number; readyAt: number; arrivalPending?: boolean; lockPending?: boolean; };
   declare maskDAccum: number;
   declare gf: { present: boolean; inHall: boolean; hallExposure: number; hallInside: boolean; attackAt: number; };
   declare hallMovementUntil: number;
   declare hallColumnOccupied: boolean;
   declare bb: { stage: number; footstep: boolean; pending: boolean; inOpening: boolean; openingAtCamsUp: number; maskTicks: number; inside: boolean; promotedAt: number; armed: boolean; hopDue: boolean; cueRedraw: boolean; };
   declare mangleStatic: { office: boolean; cam11: boolean; };
-  declare blackout: { active: boolean; until: number; by: any; unitId: any; masked: boolean; deadline: number; };
+  declare blackout: { active: boolean; until: number; by: string | null; unitId: string | null; masked: boolean; deadline: number; };
   declare blackoutCount: number;
   declare blackoutStartFrame: number;
   declare puppetStaticTimer: number;
@@ -150,17 +215,17 @@ export class Sim {
   declare blackoutPhase: { fade: number; danger: boolean; threshold: boolean; viewing: boolean };
   declare dropEverything: boolean;
   declare dropTouch: number;
-  declare units: { idx: number; stunUntil: number; stunRemaining: number; pending: boolean; atOpening: boolean; openingSince: number; openingReadyAt: number; officeCue: boolean; openingTicks: number; maskExposureTicks: number; raiseSeen: boolean; inside: boolean; insideArmed: boolean; insideDangerAt: number; committedAt: number; done: boolean; hallColumn: boolean; footstep: boolean; value2: number; promoted: boolean; footstepOn: boolean; officeRoll: boolean; id: string; name: string; short: string; path: (string | number)[]; choke: number; entryGate: string; openingRule: string; lightStallAt: number[]; mutex: boolean; repelIdx: number; }[];
-  declare engagedToy: any;
+  declare units: Unit[];
+  declare engagedToy: string | null;
   declare decidePath: number;
   declare hallLatch: boolean;
   declare hallLit: boolean;
   declare unconditionalTimers: { group: number; delayUnits: number; counter: number; }[];
   declare unconditionalDraws: number;
-  declare puppet: { stage: number; out: boolean; route: any; idx: number; loc: number; pending: boolean; pathChoice: string; stunUntil: number; stunRemaining: number; atOpening: boolean; inside: boolean; attackAt: number; };
+  declare puppet: { stage: number; out: boolean; route: readonly C.RouteNode[] | null; idx: number; loc: C.RouteNode; pending: boolean; pathChoice: string; stunUntil: number; stunRemaining: number; atOpening: boolean; inside: boolean; attackAt: number; };
   declare rec: { n: number; stun: Uint16Array<ArrayBuffer>[]; occ: Uint8Array<ArrayBuffer>; d: Uint8Array<ArrayBuffer>; power: Uint16Array<ArrayBuffer>; box: Uint8Array<ArrayBuffer>; flags: Uint8Array<ArrayBuffer>; };
-  declare mistakes: any[];
-  constructor(opts = {}) {
+  declare mistakes: Mistake[];
+  constructor(opts: Partial<SimOptions> = {}) {
     // Every option, its default and what it models: plant-options.js.
     this.opts = Object.assign(defaultSimOptions(), opts);
 
@@ -397,11 +462,11 @@ export class Sim {
   }
 
   // ---------------------------------------------------------------- helpers
-  unitStunLeft(unit) { return unitStunLeft(this, unit); }
+  unitStunLeft(unit: Unit) { return unitStunLeft(this, unit); }
   // The rows that fire as `hour` begins, capped as g829/g830/g856-863 cap them.
-  applyAiHour(hour) {
+  applyAiHour(hour: number) {
     for (const row of C.aiUpdates(this.opts.night, hour, this.opts.customNight)) {
-      for (const [id, level] of Object.entries(row.set as Record<string, any>)) {
+      for (const [id, level] of Object.entries(row.set)) {
         const value = typeof level === 'number' ? level : this.rollAi(level.oneIn);
         this.ai[id] = Math.min(value, C.aiCap(id));
       }
@@ -421,7 +486,7 @@ export class Sim {
   }
 
   // `(Random(N) + 1) / N` under integer division: one only on the top draw.
-  rollAi(oneIn) {
+  rollAi(oneIn: number) {
     return this.rng.int(0, oneIn - 1, oneIn - 1) === oneIn - 1 ? 1 : 0;
   }
 
@@ -431,19 +496,19 @@ export class Sim {
   // state), so a JSON round-trip is exact -- verified bit-identical over a
   // 1500-tick continuation. `opts` is shared by reference: it is never
   // mutated after construction.
-  snapshot() {
-    const snap = JSON.parse(JSON.stringify(this, (k, v) => (k === 'opts' || k === 'rec') ? undefined : v));
+  snapshot(): SimSnapshot {
+    const snap: SimSnapshot = JSON.parse(JSON.stringify(this, (k, v) => (k === 'opts' || k === 'rec') ? undefined : v));
     snap.rng = { seed: this.rng.seed, state: this.rng.state, worst: this.rng.worst };
     return snap;
   }
-  restore(snap) {
+  restore(snap: SimSnapshot) {
     const rngProto = Object.getPrototypeOf(this.rng);
-    for (const k of Object.keys(this)) if (k !== 'opts' && k !== 'rec' && k !== 'rng') delete this[k];
+    for (const k of Object.keys(this)) if (k !== 'opts' && k !== 'rec' && k !== 'rng') Reflect.deleteProperty(this, k);
     Object.assign(this, JSON.parse(JSON.stringify(snap)));
     this.rng = Object.assign(Object.create(rngProto), snap.rng);
     return this;
   }
-  static fromSnapshot(opts, snap) { return new Sim(opts).restore(snap); }
+  static fromSnapshot(opts: Partial<SimOptions>, snap: SimSnapshot) { return new Sim(opts).restore(snap); }
 
   get t() { return this.frame / C.FPS; }
   get camsUp() { return this.monitor === MON_UP; }
@@ -517,12 +582,11 @@ export class Sim {
   // JSON round-trip, which drops an own property whose value is undefined.
   // Omitting an absent payload at emission time preserves event identity on a
   // branch restore while callers can still read event.data as undefined.
-  emit(type, data?) {
-    const event: { f: number, type: any, data?: any } = { f: this.frame, type };
-    if (data !== undefined) event.data = data;
-    this.events.push(event);
+  emit<T extends keyof EventData | Plain>(type: T, ...data: T extends keyof EventData ? [EventData[T]] : []) {
+    // The signature pairs each type with its data; TypeScript cannot carry that pairing into the literal.
+    this.events.push((data.length ? { f: this.frame, type, data: data[0] } : { f: this.frame, type }) as SimEvent);
   }
-  flag(code, detail) { this.mistakes.push({ f: this.frame, t: this.t, code, detail }); }
+  flag(code: string, detail: string) { this.mistakes.push({ f: this.frame, t: this.t, code, detail }); }
 
   syncMangleStatic() {
     const mangle = this.units.find(u => u.id === 'mangle' && !u.done);
@@ -530,7 +594,7 @@ export class Sim {
       office: !!mangle?.atOpening,
       cam11: !!mangle && !mangle.atOpening && mangle.path[mangle.idx] === C.BOX_CAM,
     };
-    for (const context of ['office', 'cam11']) {
+    for (const context of ['office', 'cam11'] as const) {
       if (next[context] === this.mangleStatic[context]) continue;
       this.mangleStatic[context] = next[context];
       this.emit('mangle-static', {
@@ -541,7 +605,7 @@ export class Sim {
     }
   }
 
-  kill(reason, detail) {
+  kill(reason: string, detail: string) {
     if (!this.alive || !this.opts.lethal) { if (!this.opts.lethal) this.flag('would-die', reason); return; }
     this.alive = false;
     this.death = { reason, detail, frame: this.frame, t: this.t };
@@ -792,10 +856,10 @@ export class Sim {
   }
 
   // A unit's move. It was named `advance`, which PlantModel's port clock (plant.js) shadowed, so every
-  // PlantModel night threw at its first move (packages/source/test/plant-facade.test.ts).
-  advanceUnit(u) { return units.advance.call(this, u); }
-  // The old name, for callers outside the Sim (simtest.ts moves a unit by hand); a PlantModel shadows it.
-  advance(u) { return units.advance.call(this, u); }
+  // PlantModel night threw at its first move (packages/source/test/plant-facade.test.ts). The old name
+  // stayed as an alias for the tests that move a unit by hand until 2026-10-01, when typing showed a
+  // PlantModel could not stand for a Sim while the two meant different things.
+  advanceUnit(u: Unit) { return units.advance.call(this, u); }
 }
 
 // The mechanisms live beside this file, one module per mechanism, as functions that take the Sim as `this`.

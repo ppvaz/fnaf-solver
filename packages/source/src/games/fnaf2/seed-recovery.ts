@@ -4,7 +4,10 @@
 // They return the surviving hypotheses and the evidence used to obtain them.
 // Exact seed/state telemetry requires instrumentation inside the game, which
 // is intentionally outside this module's authority boundary.
+import { isList, isRecord } from '@sixam/kernel';
 import { Sim } from './plant-model.ts';
+import type { SimEvent } from './plant-model.ts';
+import type { SimOptions } from './plant-options.ts';
 import {
   RNG_INCREMENT, RNG_MASK, RNG_MODULUS, RNG_MULTIPLIER,
 } from './rng.ts';
@@ -12,46 +15,54 @@ import {
 export const SEED_RECOVERY_SCHEMA = 'rng-seed-recovery-v1';
 export const SEED_SPACE = RNG_MODULUS;
 
-const isObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
+/** An observation a caller describes: every field is read, and checked where it is read. */
+type Observation = Readonly<Record<string, unknown>>;
 
-function integer(value, label, { min = null, max = null } = {}) {
-  if (!Number.isSafeInteger(value) || (min !== null && value < min) ||
+function integer(value: unknown, label: string, { min = null, max = null }: { min?: number | null, max?: number | null } = {}) {
+  if (typeof value !== 'number' || !Number.isSafeInteger(value) || (min !== null && value < min) ||
       (max !== null && value > max))
     throw new TypeError(`${label} must be an integer${min === null ? '' : ` >= ${min}`}` +
       `${max === null ? '' : ` <= ${max}`}`);
   return value;
 }
 
-function seed(value, label = 'seed') {
+function seed(value: unknown, label = 'seed') {
   return integer(value, label, { min: 0, max: RNG_MASK });
 }
 
-function timeMs(value, label) {
+function timeMs(value: unknown, label: string) {
   return integer(value, label, { min: 0 });
 }
 
 /** Return the stock runtime's 16-bit seed for a device epoch millisecond. */
-export function seedFromDeviceTimeMs(value) {
+export function seedFromDeviceTimeMs(value: unknown) {
   const ms = timeMs(value, 'device time');
   return ms % SEED_SPACE;
 }
 
-function timeWindow(options: any = {}) {
-  let { startMs, endMs, centerMs, halfWidthMs } = options;
+interface TimeWindowOptions {
+  readonly startMs?: unknown;
+  readonly endMs?: unknown;
+  readonly centerMs?: unknown;
+  readonly halfWidthMs?: unknown;
+}
+
+function timeWindow(options: TimeWindowOptions = {}) {
+  const { startMs, endMs, centerMs, halfWidthMs } = options;
   if (startMs !== undefined || endMs !== undefined) {
     if (startMs === undefined || endMs === undefined)
       throw new TypeError('a time window needs both startMs and endMs');
-    startMs = timeMs(startMs, 'startMs');
-    endMs = timeMs(endMs, 'endMs');
-    if (endMs < startMs) throw new RangeError('endMs must be >= startMs');
-    return { startMs, endMs };
+    const start = timeMs(startMs, 'startMs');
+    const end = timeMs(endMs, 'endMs');
+    if (end < start) throw new RangeError('endMs must be >= startMs');
+    return { startMs: start, endMs: end };
   }
   if (centerMs === undefined) throw new TypeError('time window needs startMs/endMs or centerMs');
-  centerMs = timeMs(centerMs, 'centerMs');
-  halfWidthMs = halfWidthMs === undefined ? 0 : integer(halfWidthMs, 'halfWidthMs', { min: 0 });
-  if (centerMs - halfWidthMs < 0)
+  const center = timeMs(centerMs, 'centerMs');
+  const halfWidth = halfWidthMs === undefined ? 0 : integer(halfWidthMs, 'halfWidthMs', { min: 0 });
+  if (center - halfWidth < 0)
     throw new RangeError('centerMs - halfWidthMs must not be negative');
-  return { startMs: centerMs - halfWidthMs, endMs: centerMs + halfWidthMs };
+  return { startMs: center - halfWidth, endMs: center + halfWidth };
 }
 
 /**
@@ -59,12 +70,12 @@ function timeWindow(options: any = {}) {
  * A window wider than one RNG period returns the complete seed space without
  * doing unbounded work.
  */
-export function seedCandidatesFromTimeWindow(options: any = {}) {
+export function seedCandidatesFromTimeWindow(options: TimeWindowOptions = {}) {
   const { startMs, endMs } = timeWindow(options);
   const span = endMs - startMs + 1;
   const count = Math.min(span, SEED_SPACE);
   const seen = new Uint8Array(SEED_SPACE);
-  const candidates = [];
+  const candidates: { seed: number, timestampMs: number }[] = [];
   for (let offset = 0; offset < count; offset++) {
     const timestampMs = startMs + offset;
     const value = seedFromDeviceTimeMs(timestampMs);
@@ -88,31 +99,32 @@ export function seedCandidatesFromTimeWindow(options: any = {}) {
  * sample returned by AdbDeviceBridge.clockSample(). `markerUncertaintyMs`
  * covers the uncertainty in identifying the game's actual seed-init moment.
  */
-export function seedCandidatesFromHostMarker(options: any = {}) {
-  let { hostMarkerMs, clockSample, markerUncertaintyMs = 0 } = options;
-  timeMs(hostMarkerMs, 'hostMarkerMs');
-  if (!isObject(clockSample) || clockSample.status !== 'READY')
+export function seedCandidatesFromHostMarker(options: { hostMarkerMs?: unknown, clockSample?: unknown, markerUncertaintyMs?: unknown } = {}) {
+  const { hostMarkerMs, clockSample, markerUncertaintyMs = 0 } = options;
+  const marker = timeMs(hostMarkerMs, 'hostMarkerMs');
+  if (!isRecord(clockSample) || clockSample.status !== 'READY')
     throw new TypeError('clockSample must be a READY device clock sample');
-  if (!Number.isFinite(clockSample.offsetMs))
+  const offsetMs = clockSample.offsetMs;
+  if (typeof offsetMs !== 'number' || !Number.isFinite(offsetMs))
     throw new TypeError('clockSample.offsetMs must be finite');
   const clockUncertaintyMs = integer(clockSample.uncertaintyMs, 'clockSample.uncertaintyMs', { min: 0 });
-  markerUncertaintyMs = integer(markerUncertaintyMs, 'markerUncertaintyMs', { min: 0 });
-  const estimatedDeviceMs = Math.round(hostMarkerMs + clockSample.offsetMs);
-  const halfWidthMs = clockUncertaintyMs + markerUncertaintyMs + 1;
+  const markerUncertainty = integer(markerUncertaintyMs, 'markerUncertaintyMs', { min: 0 });
+  const estimatedDeviceMs = Math.round(marker + offsetMs);
+  const halfWidthMs = clockUncertaintyMs + markerUncertainty + 1;
   return Object.freeze({
     ...seedCandidatesFromTimeWindow({ centerMs: estimatedDeviceMs, halfWidthMs }),
-    method: 'host-marker-window', hostMarkerMs, estimatedDeviceMs,
+    method: 'host-marker-window', hostMarkerMs: marker, estimatedDeviceMs,
     uncertaintyMs: halfWidthMs,
   });
 }
 
 /** Normalize a seed list while preserving first-seen order. */
-export function normalizeSeedCandidates(values, label = 'candidates') {
-  if (!Array.isArray(values)) throw new TypeError(`${label} must be an array`);
+export function normalizeSeedCandidates(values: unknown, label = 'candidates') {
+  if (!isList(values)) throw new TypeError(`${label} must be an array`);
   const seen = new Uint8Array(SEED_SPACE);
-  const result = [];
+  const result: number[] = [];
   for (const [index, value] of values.entries()) {
-    const current = seed(isObject(value) ? value.seed : value, `${label}[${index}]`);
+    const current = seed(isRecord(value) ? value.seed : value, `${label}[${index}]`);
     if (seen[current]) continue;
     seen[current] = 1;
     result.push(current);
@@ -121,22 +133,22 @@ export function normalizeSeedCandidates(values, label = 'candidates') {
 }
 
 /** Advance one state, matching CRun.random's 16-bit LCG. */
-export function nextRngState(state) {
+export function nextRngState(state: unknown) {
   return (seed(state) * RNG_MULTIPLIER + RNG_INCREMENT) & RNG_MASK;
 }
 
 /** Return the source Random(bound) result and the post-draw state. */
-export function randomDraw(state, bound) {
+export function randomDraw(state: unknown, bound: unknown) {
   seed(state, 'state');
-  integer(bound, 'bound', { min: 1 });
+  const range = integer(bound, 'bound', { min: 1 });
   const next = nextRngState(state);
-  return { state: next, result: Math.floor(next * bound / RNG_MODULUS) };
+  return { state: next, result: Math.floor(next * range / RNG_MODULUS) };
 }
 
-function relationMatches(result, observation) {
+function relationMatches(result: number, observation: Observation) {
   const relation = observation.relation ?? '<';
   const value = observation.value ?? observation.threshold;
-  if (!Number.isSafeInteger(value) || value < 0)
+  if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 0)
     throw new TypeError('roll observation needs a non-negative integer value/threshold');
   if (relation === '<') return result < value;
   if (relation === '<=') return result <= value;
@@ -147,7 +159,7 @@ function relationMatches(result, observation) {
   throw new TypeError(`unsupported roll relation: ${relation}`);
 }
 
-function matchesDraw(draw, observation) {
+function matchesDraw(draw: { state: number, result: number }, observation: Observation) {
   let asserted = false;
   if (observation.result !== undefined) {
     asserted = true;
@@ -176,20 +188,20 @@ function matchesDraw(draw, observation) {
  * assert the raw result, the post-draw state, or a boolean relation such as
  * `Random(20) < 10` via `{ relation: '<', threshold: 10, outcome: true }`.
  */
-export function filterSeedCandidatesByRolls(options: any = {}) {
+export function filterSeedCandidatesByRolls(options: { candidates?: unknown, observations?: unknown } = {}) {
   const { candidates, observations } = options;
   let survivors = normalizeSeedCandidates(candidates);
-  if (!Array.isArray(observations)) throw new TypeError('roll observations must be an array');
+  if (!isList(observations)) throw new TypeError('roll observations must be an array');
   let nextIndex = 0;
-  const applied = [];
+  const applied: { index: number, drawIndex: number, bound: number, survivors: number }[] = [];
   for (const [index, observation] of observations.entries()) {
-    if (!isObject(observation)) throw new TypeError(`roll observation ${index} must be an object`);
+    if (!isRecord(observation)) throw new TypeError(`roll observation ${index} must be an object`);
     const bound = integer(observation.bound, `roll observation ${index}.bound`, { min: 1 });
     const drawIndex = observation.drawIndex === undefined
       ? nextIndex : integer(observation.drawIndex, `roll observation ${index}.drawIndex`, { min: 0 });
     if (drawIndex < nextIndex)
       throw new RangeError(`roll observation ${index} goes backwards from draw ${nextIndex}`);
-    const keep = [];
+    const keep: number[] = [];
     for (const currentSeed of survivors) {
       // `drawIndex` is zero-based. Bounds do not affect the LCG state, so
       // hidden draws can be skipped without knowing their Random(N) bound.
@@ -213,19 +225,19 @@ export function filterSeedCandidatesByRolls(options: any = {}) {
   });
 }
 
-function deepPartialMatch(actual, expected) {
-  if (isObject(expected)) {
-    if (!isObject(actual)) return false;
+function deepPartialMatch(actual: unknown, expected: unknown): boolean {
+  if (isRecord(expected)) {
+    if (!isRecord(actual)) return false;
     return Object.entries(expected).every(([key, value]) => deepPartialMatch(actual[key], value));
   }
-  if (Array.isArray(expected)) {
-    return Array.isArray(actual) && expected.length === actual.length &&
+  if (isList(expected)) {
+    return isList(actual) && expected.length === actual.length &&
       expected.every((value, index) => deepPartialMatch(actual[index], value));
   }
   return actual === expected;
 }
 
-function eventFrameRange(observation) {
+function eventFrameRange(observation: Observation) {
   const exact = observation.frame;
   if (exact !== undefined) {
     const frame = integer(exact, 'event observation frame', { min: 0 });
@@ -243,23 +255,30 @@ function eventFrameRange(observation) {
   return { minFrame, maxFrame };
 }
 
-function eventMatches(event, observation) {
+function eventMatches(event: SimEvent, observation: Observation) {
   const eventType = observation.event ?? observation.eventType;
   if (typeof eventType !== 'string' || eventType.length === 0)
     throw new TypeError('event observation needs event or eventType');
   if (event.type !== eventType) return false;
   const range = eventFrameRange(observation);
   if (event.f < range.minFrame || event.f > range.maxFrame) return false;
-  return observation.data === undefined || deepPartialMatch(event.data, observation.data);
+  return observation.data === undefined || deepPartialMatch('data' in event ? event.data : undefined, observation.data);
 }
 
-function normalizeActionTrace(actions) {
-  if (!Array.isArray(actions)) throw new TypeError('actions must be an array');
-  const scheduled = [];
+/** One input of a replayed trace, at the frame before whose tick it lands. */
+interface ScheduledAction {
+  readonly frame: number;
+  readonly kind: 'press' | 'release' | 'tap';
+  readonly action: string;
+  readonly index: number;
+}
+
+function normalizeActionTrace(actions: unknown) {
+  if (!isList(actions)) throw new TypeError('actions must be an array');
+  const scheduled: ScheduledAction[] = [];
   for (const [index, action] of actions.entries()) {
-    if (!isObject(action)) throw new TypeError(`action ${index} must be an object`);
-    const atFrame = action.atFrame ?? action.frame;
-    integer(atFrame, `action ${index}.atFrame`, { min: 0 });
+    if (!isRecord(action)) throw new TypeError(`action ${index} must be an object`);
+    const atFrame = integer(action.atFrame ?? action.frame, `action ${index}.atFrame`, { min: 0 });
     if (typeof action.action !== 'string' || action.action.length === 0)
       throw new TypeError(`action ${index}.action must be a non-empty string`);
     const kind = action.kind ?? 'tap';
@@ -279,7 +298,7 @@ function normalizeActionTrace(actions) {
     (a.kind === 'release' ? 1 : -1));
 }
 
-function runActionTrace(sim, scheduled, untilFrame) {
+function runActionTrace(sim: Sim, scheduled: readonly ScheduledAction[], untilFrame: number) {
   let cursor = 0;
   while (sim.frame < untilFrame) {
     // Match the simulator tools: an action stamped for frame F is applied
@@ -295,7 +314,7 @@ function runActionTrace(sim, scheduled, untilFrame) {
   }
 }
 
-function observationEndFrame(observations) {
+function observationEndFrame(observations: readonly Observation[]) {
   return observations.reduce((end, observation) => {
     const range = eventFrameRange(observation);
     return Math.max(end, range.maxFrame);
@@ -308,21 +327,22 @@ function observationEndFrame(observations) {
  * for the small candidate sets produced by the time-window method; callers
  * should explicitly opt into a full 65,536-seed scan.
  */
-export function filterSeedCandidatesByEvents(options: any = {}) {
+export function filterSeedCandidatesByEvents(options: { candidates?: unknown, simOptions?: Partial<SimOptions>,
+  actions?: unknown, observations?: readonly Observation[], untilFrame?: unknown, maxCandidates?: unknown } = {}) {
   const { candidates, simOptions = {}, actions = [], observations,
     untilFrame, maxCandidates = 4096 } = options;
-  if (!isObject(simOptions)) throw new TypeError('simOptions must be an object');
-  let survivors = normalizeSeedCandidates(candidates);
-  if (!Array.isArray(observations)) throw new TypeError('event observations must be an array');
-  integer(maxCandidates, 'maxCandidates', { min: 1 });
-  if (survivors.length > maxCandidates)
-    throw new RangeError(`event replay has ${survivors.length} candidates; maxCandidates is ${maxCandidates}`);
+  if (!isRecord(simOptions)) throw new TypeError('simOptions must be an object');
+  const survivors = normalizeSeedCandidates(candidates);
+  if (!isList(observations)) throw new TypeError('event observations must be an array');
+  const limit = integer(maxCandidates, 'maxCandidates', { min: 1 });
+  if (survivors.length > limit)
+    throw new RangeError(`event replay has ${survivors.length} candidates; maxCandidates is ${limit}`);
   const scheduled = normalizeActionTrace(actions);
   const lastActionFrame = scheduled.reduce((last, item) => Math.max(last, item.frame), 0);
   const endFrame = untilFrame === undefined
     ? Math.max(observationEndFrame(observations), lastActionFrame)
     : integer(untilFrame, 'untilFrame', { min: 0 });
-  const reports = [];
+  const reports: { seed: number, eventCount: number, endFrame: number }[] = [];
 
   for (const currentSeed of survivors) {
     const options = { ...simOptions, seed: currentSeed,
@@ -351,9 +371,9 @@ export function filterSeedCandidatesByEvents(options: any = {}) {
 }
 
 /** Return the state after exactly `drawCount` draws from a seed. */
-export function rngStateAfterDraws(initialSeed, drawCount) {
+export function rngStateAfterDraws(initialSeed: unknown, drawCount: unknown) {
   let state = seed(initialSeed, 'initialSeed');
-  integer(drawCount, 'drawCount', { min: 0 });
-  for (let i = 0; i < drawCount; i++) state = nextRngState(state);
+  const draws = integer(drawCount, 'drawCount', { min: 0 });
+  for (let i = 0; i < draws; i++) state = nextRngState(state);
   return state;
 }

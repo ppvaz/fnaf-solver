@@ -20,7 +20,7 @@ assert.throws(() => new Sim({ night: 7, sourcedSecondPass: true, sourcedSheetOrd
   const s = new Sim(BASE); s.frame = 1000;
   const u = s.units.find(x => x.id === 'withbonnie'); u.idx = u.path.indexOf(7);
   const log = script(s);
-  s.footstepPromote(u, true); s.advance(u); s.tick();
+  s.footstepPromote(u, true); s.advanceUnit(u); s.tick();
   assert.equal(u.path[u.idx], 'blindA');
   assert.deepEqual(draws(log), [1001], 'one Random(5) on the promotion loop');
   ticks(s, 30);
@@ -34,7 +34,7 @@ for (const [late, want] of [[8, [1009]], [9, []]]) {
   const u = s.units.find(x => x.id === 'withbonnie'); u.idx = u.path.indexOf(7);
   const log = script(s);
   s.footstepPromote(u, true); ticks(s, late);          // promotion loop 1001, CAM 07 is no marker
-  s.advance(u); s.tick();                             // the hop lands on loop 1001 + late
+  s.advanceUnit(u); s.tick();                             // the hop lands on loop 1001 + late
   assert.equal(u.path[u.idx], 'blindA');
   assert.deepEqual(draws(log), want, `hop ${late} loops after its promotion`);
 }
@@ -44,7 +44,7 @@ for (const [late, want] of [[8, [1009]], [9, []]]) {
   const s = new Sim({ ...BASE, frameMs: () => 4 * 50 / 3, frameValue5: () => 4 }); s.frame = 1000;
   const u = s.units.find(x => x.id === 'withbonnie'); u.idx = u.path.indexOf(7);
   const log = script(s);
-  s.footstepPromote(u, true); ticks(s, 2); s.advance(u); s.tick();
+  s.footstepPromote(u, true); ticks(s, 2); s.advanceUnit(u); s.tick();
   assert.deepEqual(draws(log), [], '10 - 4 - 4 - 4 < 0: silent two loops after');
 }
 
