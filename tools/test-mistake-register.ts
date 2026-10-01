@@ -30,6 +30,12 @@
 //            night it cannot read (never assumed), and after an abort or a killed
 //            runner the game is driven back to an observed title. It runs in
 //            test:unit:slow, which CI's slow lane runs.
+//   item 8   "Ask the phone what it offers before proposing an instrument."
+//            night-run.sh asks capabilities.ts traceDecision whether a run
+//            carries the Perfetto input trace; it kept the trace on when the
+//            data sources could not be read until 2026-10-01. The check below
+//            holds traceDecision to Review's checkCapabilitiesFirst on an
+//            advertised, an absent and an unreadable source.
 //   item 11  "Read a tool's own computed output before deriving the same
 //            quantity by hand." The incident was minus-toys-margin.ts's edge(),
 //            which stopped at its first failure and so printed a banded phase
@@ -56,6 +62,8 @@ import { dirname, join, posix, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { report } from '../packages/review/bin/grade/run-report.ts';
 import { formatEdge, scanEdge } from '../packages/propose/bin/plans/basin-edge.ts';
+import { report as capabilityReport, traceDecision } from '../packages/play/bin/phone/capabilities.ts';
+import { checkCapabilitiesFirst } from '../packages/review/src/refusals.ts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SELF = 'tools/test-mistake-register.ts';
@@ -107,6 +115,7 @@ const REGISTER_GATES = [
   [5, SELF],
   [7, 'packages/propose/test/test-seam-slack.ts'],
   [9, 'packages/propose/test/test-seam-slack.ts'],
+  [8, SELF],
   [11, SELF],
   [12, SELF],
   [13, SELF],
@@ -483,6 +492,30 @@ for (const [item, gate] of REGISTER_GATES) {
   }
 }
 
+// --- item 8 on the tree: the trace runs only on a capability read as present -
+{
+  // The handset as recorded on 2026-09-27 advertises android.inputmethod and no
+  // android.input.inputevent; the planted case is the one night-run.sh got
+  // wrong until 2026-10-01, a phone whose data sources could not be read.
+  const base = { serial: 'UNKNOWN', hidBinary: true, screenrecord: true, cueHelper: 'versionName=0.1.14', targetInstalled: true };
+  const devices = [
+    ['advertised', { ...base, perfettoDataSources: ['android.input.inputevent', 'android.inputmethod'] }, true],
+    ['absent', { ...base, perfettoDataSources: ['android.inputmethod'] }, false],
+    ['unreadable', { ...base, perfettoDataSources: null }, false],
+  ];
+  for (const [name, device, want] of devices) {
+    const decided = traceDecision(device).trace;
+    const allowed = !checkCapabilitiesFirst({ instrument: 'packages/play/bin/probe/inputtrace.py', capabilities: capabilityReport(device) }).refused;
+    if (decided !== want) fail(`capabilities.ts traceDecision runs the input trace on a phone whose input source is ${name}: ${decided}; item 8 says ${want}`);
+    if (decided !== allowed) fail(`traceDecision (${decided}) and Review's checkCapabilitiesFirst (${allowed}) disagree on a phone whose input source is ${name}`);
+  }
+  // night-run.sh asks traceDecision; a shell that re-derives the answer is how
+  // the unreadable case went the other way.
+  const nightRun = readFileSync(join(ROOT, 'packages/play/bin/phone/night-run.sh'), 'utf8');
+  if (!nightRun.includes('m.traceDecision(m.probe(') || /perfettoDataSources/.test(nightRun))
+    fail('night-run.sh decides the input trace itself instead of asking capabilities.ts traceDecision (item 8)');
+}
+
 // --- item 11 on the tree: a margin scan does not hide a banded response -----
 {
   // The 2026-09-11 response: clears to 99 ms, loses 132-198, clears again from
@@ -513,7 +546,8 @@ if (failed) {
 }
 console.log(`mistake register: item 13 -- ${verdicts.size} test files, ${counts.runs} run by a CI step, ` +
   `${counts.exempt} exempt here and ${counts.backlog} by tools/test.ts BACKLOG, each with a reason; ` +
-  `item 5 -- every script path and npm script named exists; item 11 -- a margin scan reads a banded ` +
+  'item 5 -- every script path and npm script named exists; item 8 -- the input trace runs only on a ' +
+  `capability read as present; item 11 -- a margin scan reads a banded ` +
   'response as banded; item 12 -- the five-read threshold holds ' +
   `on both sides; items ${[...new Set(REGISTER_GATES.map(([item]) => item))].join(', ')} rely only on ` +
   'gates a CI step runs');

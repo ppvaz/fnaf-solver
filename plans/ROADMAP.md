@@ -60,7 +60,7 @@ fifteen days because it was written down instead of read.
     ([promotions](../docs/evidence/plan12-promotions-20260927.json)).
   - 180 run packs under `docs/evidence/runs/`, 48 of them executor wins. The
     refused win is `night7-n7-420-minimal-m3`: the Night 7 4/20 Minus 3 winner
-    is held back by `test-seam-slack.mjs`, and its pack holds no dial readback.
+    is held back by `test-seam-slack.ts`, and its pack holds no dial readback.
     The video-only 6 AMs `night5-anchor4` and `night5-perfetto1` fail
     `terminalPass` and are not promoted.
   - The recovery is byte-identical where it can be checked
@@ -522,14 +522,16 @@ and after it, and each night's pack is written in the morning.
     that gate runs in a CI lane.
 - **Artifact:** a morning report that refutes a mechanism nobody had queued,
   with the run bundles that did it.
-- **Stands (2026-10-01):** entries 1, 3, 6 and 11 now name gates a CI lane
-  runs (title-observe.py refuses a path it would not read; the night job
+- **Stands (2026-10-01):** entries 1, 3, 6, 8 and 11 now name gates a CI
+  lane runs (title-observe.py refuses a path it would not read; the night job
   refuses on an observed title mismatch and recovers an observed title after an
-  abort; the margin scans go through `basin-edge.ts`, which prints a response
+  abort; night-run.sh asks `capabilities.ts traceDecision` whether to carry the
+  input trace, and no longer keeps it on when the phone's data sources cannot
+  be read; the margin scans go through `basin-edge.ts`, which prints a response
   that clears again past its first failure as banded, and on its first run it
   showed Minus Toys' whole-schedule phase margin, 33/99 ms since 2026-08-28, is
-  such a band edge). Entries 2, 4, 8 and 10 still name none (an earlier count
-  of this list missed 8 and 10). No morning report has run yet: the overnight
+  such a band edge). Entries 2, 4 and 10 still name none (an earlier count of
+  this list missed 8 and 10). No morning report has run yet: the overnight
   window was installed on 2026-10-01, its first job refused
   `qualification-binding`, and its second start found no phone on adb.
 - **Absorbs** Plan 25 horizon 3 and Plans 07, 18 and 22.

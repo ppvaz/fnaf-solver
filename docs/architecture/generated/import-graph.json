@@ -4871,8 +4871,10 @@
     {
       "file": "tools/test-mistake-register.ts",
       "imports": [
+        "../packages/play/bin/phone/capabilities.ts",
         "../packages/propose/bin/plans/basin-edge.ts",
         "../packages/review/bin/grade/run-report.ts",
+        "../packages/review/src/refusals.ts",
         "\\.\\/basin-edge\\.ts",
         "node:child_process",
         "node:fs",
@@ -4883,8 +4885,10 @@
     {
       "file": "tools/test-mistake-register.ts",
       "imports": [
+        "../packages/play/bin/phone/capabilities.ts",
         "../packages/propose/bin/plans/basin-edge.ts",
         "../packages/review/bin/grade/run-report.ts",
+        "../packages/review/src/refusals.ts",
         "\\.\\/basin-edge\\.ts",
         "node:child_process",
         "node:fs",
@@ -4895,8 +4899,10 @@
     {
       "file": "tools/test-mistake-register.ts",
       "imports": [
+        "../packages/play/bin/phone/capabilities.ts",
         "../packages/propose/bin/plans/basin-edge.ts",
         "../packages/review/bin/grade/run-report.ts",
+        "../packages/review/src/refusals.ts",
         "\\.\\/basin-edge\\.ts",
         "node:child_process",
         "node:fs",

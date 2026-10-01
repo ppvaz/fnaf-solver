@@ -99,6 +99,18 @@ const INSTRUMENTS = [
       'device fault and is not one.' },
 ];
 
+/**
+ * Whether a run carries the Perfetto input trace (night-run.sh asks this rather than re-deriving it).
+ * Only a phone that advertises the app dispatch source runs it; one that does not, or whose data
+ * sources could not be read, does not: an unread capability is not a yes (mistake register item 8,
+ * and Review's checkCapabilitiesFirst refuses it the same way). `--force-trace` is the caller's override.
+ */
+export function traceDecision(device) {
+  const available = INSTRUMENTS[0].available(device);
+  if (available === true) return { trace: true, reason: 'android.input.inputevent is advertised' };
+  return { trace: false, reason: available === false ? 'no android.input.inputevent' : 'the Perfetto data sources could not be read' };
+}
+
 export function report(device) {
   return {
     schema: SCHEMA,

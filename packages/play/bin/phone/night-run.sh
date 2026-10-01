@@ -165,25 +165,23 @@ fi
 # question this phone cannot answer. `plans/PROGRESS.md` recorded that negative
 # on 2026-08-30 and a full night was spent rediscovering it on 2026-09-11.
 #
-# capabilities.ts is the one place that knows, so this asks it rather than
-# re-deriving the answer here. `--force-trace` keeps the trace anyway (a
-# different handset, or a deliberate SurfaceFlinger-only capture).
+# capabilities.ts's traceDecision is the one place that decides, so this asks
+# it rather than re-deriving the answer here. A capability it could not read is
+# not a yes: the trace is skipped then too (it was kept on until 2026-10-01).
+# `--force-trace` keeps the trace anyway (a different handset, or a deliberate
+# SurfaceFlinger-only capture).
 if [ "$DRY" = 0 ] && [ "$TRACE" = 1 ] && [ "$FORCE_TRACE" = 0 ]; then
-  if FNAF_SERIAL="$SERIAL" node -e '
+  TRACE_WHY="$(FNAF_SERIAL="$SERIAL" node -e '
       import("./packages/play/bin/phone/capabilities.ts").then(m => {
-        const d = m.probe(process.env.FNAF_SERIAL);
-        if (d.perfettoDataSources === null) process.exit(2);
-        process.exit(d.perfettoDataSources.includes("android.input.inputevent") ? 0 : 1);
-      }).catch(() => process.exit(2));' 2>/dev/null; then
-    :
-  else
-    case $? in
-      1) TRACE=0
-         printf 'trace    SKIPPED -- no android.input.inputevent on %s; the Perfetto\n' "$SERIAL"
-         printf '         input trace cannot produce app dispatch rows here (see\n'
-         printf '         npm run device:capabilities). --force-trace overrides.\n' ;;
-      *) printf 'trace    capability UNREADABLE; keeping the trace on\n' >&2 ;;
-    esac
+        const d = m.traceDecision(m.probe(process.env.FNAF_SERIAL));
+        console.log(d.trace ? "" : d.reason);
+      }).catch(() => console.log("capabilities.ts could not be run"));' 2>/dev/null)" ||
+    TRACE_WHY="capabilities.ts could not be run"
+  if [ -n "$TRACE_WHY" ]; then
+    TRACE=0
+    printf 'trace    SKIPPED -- %s on %s; the Perfetto input trace\n' "$TRACE_WHY" "$SERIAL"
+    printf '         cannot be shown to produce app dispatch rows here (see\n'
+    printf '         npm run device:capabilities). --force-trace overrides.\n'
   fi
 fi
 
