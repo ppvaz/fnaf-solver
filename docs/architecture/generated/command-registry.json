@@ -2010,7 +2010,7 @@
     },
     {
       "id": "packages/propose/bin/census/policy-census.ts",
-      "invocation": "packages/propose/bin/census/policy-census.ts --spec FILE [--jobs 1\\|2] [--out FILE] [--date YYYY-MM-DD] [--unregistered]",
+      "invocation": "packages/propose/bin/census/policy-census.ts --spec FILE [--jobs 1..6] [--out FILE] [--date YYYY-MM-DD] [--unregistered]",
       "kind": "report",
       "lifecycle": "supported"
     },

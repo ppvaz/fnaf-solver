@@ -50,7 +50,12 @@ import { forkBlocks, gitState } from './winner-census.ts';
 
 const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '../../../..');
 export const CENSUS_KIND = 'policy-family-census-v1';
-export const MAX_JOBS = 2;
+// One worker by default, so a census leaves the machine usable for other work (Pedro, 2026-10-01: the old cap of
+// two was "to avoid consuming the system resources too much and allow multitasking"); --jobs up to the cap when the
+// census is the only work. Six is the knee measured on the lab Mac (M1, 4 performance + 4 efficiency cores): six
+// concurrent replays gave 376 nights/s, four 334 and eight 358 (plans/PROGRESS.md, 2026-10-01). Workers merge by
+// seed, so the record's outcome does not depend on the count.
+export const MAX_JOBS = 6;
 // Losses listed per (subject, block); a subject that loses more is described by its count and hash.
 const MAX_LISTED = 200;
 const sha256 = (text) => createHash('sha256').update(text).digest('hex');
@@ -220,7 +225,7 @@ export function pMaxRate(selected) {
     worst.heldOut.wins, worst.heldOut.n, { method: 'wilson-bonferroni', confidence: 0.95, comparisons: selected.classes.length });
 }
 
-export function buildRecord({ spec, reg, bindings, classes, exactRows, deviceRows, git, date, command, wallSeconds }) {
+export function buildRecord({ spec, reg, bindings, classes, exactRows, deviceRows, git, date, command, jobs, wallSeconds }) {
   const byBlock = (rows, block, subject) => counts(rows[block].find((row) => row.subject === subject));
   const out = bindings.map((binding) => {
     const own = classes.filter((cls) => cls.binding === binding.name).map((cls) => ({
@@ -275,7 +280,7 @@ export function buildRecord({ spec, reg, bindings, classes, exactRows, deviceRow
       perturbation: 'exact lane: the delivered epoch, every integer ms of each binding\'s band; device lane: per-press lateness drawn from the latency band',
       constants: Object.fromEntries(bindings.map((b) => [b.name, { winnerSha256: b.winnerSha256, planSha256: b.planSha256 }])),
     },
-    method: { tool: 'packages/propose/bin/census/policy-census.ts', command, git, jobs: MAX_JOBS, wallSeconds,
+    method: { tool: 'packages/propose/bin/census/policy-census.ts', command, git, jobs, wallSeconds,
       win: 'sim.won AND splitAt >= 0 (a 6 AM with the split armed), as winner-phase-census.ts scores it',
       exactLane: 'minus-toys-plan.ts replay({night, seed, knobs, epochMs}) at each class\'s representative epoch',
       deviceLane: 'the same queue at aim + onsetBias, each press through actuator.ts DeviceActuator (perPress, lateness U[latency.min, latency.max] ms)' },
@@ -336,7 +341,7 @@ async function main(argv) {
   const deviceRows = { development: await run('development', 'device'), heldOut: await run('heldOut', 'device') };
   const command = `node packages/propose/bin/census/policy-census.ts --spec ${reg.path} --jobs ${args.jobs}`;
   const record: any = buildRecord({ spec, reg, bindings, classes, exactRows, deviceRows, git: gitState(), date: args.date,
-    command, wallSeconds: Math.round((Date.now() - started) / 1000) });
+    command, jobs: args.jobs, wallSeconds: Math.round((Date.now() - started) / 1000) });
   const text = `${JSON.stringify(record, null, 2)}\n`;
   if (args.out) writeFileSync(args.out, text); else process.stdout.write(text);
   console.error(`policy census ${record.evidenceId}: ${record.answer}`);

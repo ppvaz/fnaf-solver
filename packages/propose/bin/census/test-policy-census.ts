@@ -36,6 +36,9 @@ const records = readdirSync(EVIDENCE).filter((name) => /-census-\d{8}\.json$/.te
 assert.ok(records.length, `no ${CENSUS_KIND} record under docs/evidence`);
 const { name, record } = records.at(-1);
 assert.equal(record.claimLevel, 'MODEL_ONLY', `${name}: a census is MODEL_ONLY`);
+// The worker count a record states is the one its command ran with (until 2026-10-01 it stated the cap).
+for (const { name: each, record: r } of records)
+  assert.equal(r.method.jobs, Number(/--jobs (\d+)/.exec(r.method.command)?.[1] ?? 1), `${each}: method.jobs is not its command's --jobs`);
 
 // The pre-registration, byte for byte, committed alone and never edited, and before the record.
 const git = (...args) => execFileSync('git', ['-C', ROOT, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
