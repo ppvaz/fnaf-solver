@@ -623,9 +623,28 @@ function tidy(comment) {
   if (!result.replace(/[\s*]/g, '')) return null;
   return `/**${result}*/`;
 }
+/**
+ * Where each real JSDoc comment starts, read from the parser: the same `/** ... *\/` text inside a
+ * string, a template literal or a line comment is not a comment, and a text-wide pattern once
+ * stripped a test's fixture and this file's own examples (2026-10-01).
+ */
+function docCommentStarts(path: string, text: string) {
+  const file = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true,
+    /\.m?ts$/.test(path) ? ts.ScriptKind.TS : ts.ScriptKind.JS);
+  const starts = new Set<number>();
+  const visit = (node: ts.Node) => {
+    for (const range of ts.getLeadingCommentRanges(text, node.getFullStart()) ?? [])
+      if (range.kind === ts.SyntaxKind.MultiLineCommentTrivia && text.startsWith('/**', range.pos)) starts.add(range.pos);
+    for (const child of node.getChildren(file)) visit(child);
+  };
+  visit(file);
+  return starts;
+}
 for (const path of targets) {
   const text = read(path);
-  let next = text.replace(/\/\*\*[\s\S]*?\*\//g, comment => {
+  const real = docCommentStarts(path, text);
+  let next = text.replace(/\/\*\*[\s\S]*?\*\//g, (comment, offset) => {
+    if (!real.has(offset)) return comment;
     if (!new RegExp(`@(${MOVED_TAGS})\\b`).test(comment)) return comment;
     return tidy(comment) ?? '\u0000';
   });

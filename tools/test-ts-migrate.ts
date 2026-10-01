@@ -58,6 +58,8 @@ Object.defineProperty(Model.prototype, 'twice', { value: twice, writable: true, 
 
 export function arity(a, b) { return b === undefined ? a : a + b; }
 export const one = arity(1);
+export const sample = '/** @param {string} kept */ a fixture line';
+// keep the example /** @type {T} */ (e) in this line comment
 export const bare = over => ({ base: 1, ...over });
 export const made = bare();
 export function open(options = {}) { return options.flag ?? null; }
@@ -85,6 +87,8 @@ export const total = norm({ x: 1, y: 2 });
   assert.match(out, /^  declare twice: typeof twice;$/m, 'an installed member is declared');
   assert.match(out, /function twice\(this: Model\)/, '@this is a this parameter');
   assert.match(out, /export function arity\(a, b\?\)/, 'a parameter a call leaves out is optional');
+  assert.ok(out.includes("'/** @param {string} kept */ a fixture line'"), 'JSDoc-shaped text inside a string is not a comment');
+  assert.ok(out.includes('// keep the example /** @type {T} */ (e) in this line comment'), 'JSDoc-shaped text inside a line comment is not a comment');
   assert.match(out, /export const bare = \(over\?\) => /, 'a bare arrow parameter a call leaves out takes parentheses with its ?');
   assert.match(out, /export function open\(options: any = \{\}\)/, 'an open literal read types its parameter any');
   assert.match(out, /new Promise<void>\(/, 'a promise resolved with nothing is Promise<void>');
