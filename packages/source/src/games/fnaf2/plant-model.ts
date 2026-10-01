@@ -589,19 +589,17 @@ export class Sim {
   flag(code: string, detail: string) { this.mistakes.push({ f: this.frame, t: this.t, code, detail }); }
 
   syncMangleStatic() {
-    const mangle = this.units.find(u => u.id === 'mangle' && !u.done);
-    const next = {
-      office: !!mangle?.atOpening,
-      cam11: !!mangle && !mangle.atOpening && mangle.path[mangle.idx] === C.BOX_CAM,
-    };
-    for (const context of ['office', 'cam11'] as const) {
-      if (next[context] === this.mangleStatic[context]) continue;
-      this.mangleStatic[context] = next[context];
-      this.emit('mangle-static', {
-        context,
-        present: next[context],
-        sample: C.MANGLE_STATIC_SAMPLE,
-      });
+    let mangle: Unit | undefined;
+    for (const u of this.units) if (u.id === 'mangle' && !u.done) { mangle = u; break; }
+    const office = !!mangle?.atOpening;
+    const cam11 = !!mangle && !mangle.atOpening && mangle.path[mangle.idx] === C.BOX_CAM;
+    if (office !== this.mangleStatic.office) {
+      this.mangleStatic.office = office;
+      this.emit('mangle-static', { context: 'office', present: office, sample: C.MANGLE_STATIC_SAMPLE });
+    }
+    if (cam11 !== this.mangleStatic.cam11) {
+      this.mangleStatic.cam11 = cam11;
+      this.emit('mangle-static', { context: 'cam11', present: cam11, sample: C.MANGLE_STATIC_SAMPLE });
     }
   }
 
@@ -666,7 +664,10 @@ export class Sim {
     this.tickForcedown();
     if (this.opts.sourcedMonitorDownDraw) this.monitorDownEarly();   // e7 hide, then e211 show
 
-    if (this.finishAnimation('monAnim', this.monitor === MON_RAISING ? C.MONITOR_ANIM_UP : C.MONITOR_ANIM_DOWN)) {
+    // finishAnimation returns false at once while its counter is <= 0, which is most frames: test that here
+    // and skip the call (the same test, negated, so a NaN counter still reaches it).
+    if (!(this.monAnim <= 0) &&
+        this.finishAnimation('monAnim', this.monitor === MON_RAISING ? C.MONITOR_ANIM_UP : C.MONITOR_ANIM_DOWN)) {
       if (this.monitor === MON_RAISING) {
         this.monitor = MON_UP;
         if (!this.hasViewedCamera) {
@@ -687,7 +688,8 @@ export class Sim {
       else if (this.monitor === MON_LOWERING && !(this.opts.sourcedAnimationCount &&
         (this.attackExecuting || this.puppetAttackExecuting || this.goldenHallAttackExecuting))) this.monitor = MON_DOWN;
     }
-    if (this.finishAnimation('maskAnim', this.maskOn ? C.MASK_ANIM_ON : C.MASK_ANIM_OFF - 1) && this.maskOn) {
+    if (!(this.maskAnim <= 0) &&
+        this.finishAnimation('maskAnim', this.maskOn ? C.MASK_ANIM_ON : C.MASK_ANIM_OFF - 1) && this.maskOn) {
       // g911 mirrors monitor-down's counter clear without moving the marker.
       this.viewing = 0;
       // g776/g1040: a fully-on mask dismisses yellowbear (alt0 = 1, fade, destroy).

@@ -1,0 +1,169 @@
+{
+ "schema": "sim-equivalence-v1",
+ "claimLevel": "MODEL_ONLY",
+ "date": "2026-10-01",
+ "step": "ROADMAP S3",
+ "evidenceId": "sim-tick-cuts-3dbd77e91e511078",
+ "question": "Do four per-tick cuts in the FNaF 2 Sim leave every night identical, and how much faster is a census?",
+ "change": {
+  "files": [
+   "packages/source/src/games/fnaf2/plant-model.ts (syncMangleStatic; tick skips finishAnimation at a counter <= 0)",
+   "packages/source/src/games/fnaf2/plant-hall.ts (tickHallMovement tests the node type first)",
+   "packages/source/src/games/fnaf2/plant-units.ts (tickUnits continues past a unit not at the opening)"
+  ],
+  "base": "master 7c0f8b81 Sim sources (unchanged through 10853438)"
+ },
+ "method": {
+  "equivalence": "per seed: outcome, death cause and frame, the replay figures, a fold of the whole Sim state (every own field but opts and rec, floats by their bits) after every tick, and the sha256 of the final snapshot with its events and mistakes; base and changed rows must be byte-identical",
+  "cohorts": "nine at seeds 0..2999: k3 (Night 7), n5contact, n6h, minus3 (Night 7 4/20), n1toys, three that lose (shooter25, the minus7 policy, k3 with maskOffMs 6500), and k3 under the rebuild's sourced options",
+  "planted": "the hall-movement event naming its last entrant: the harness must report DIFFERENT where that field is live",
+  "timing": "k3 Night 7, 1000 seeds per side, one process at a time, A (base) and B (changed) interleaved over 8 rounds; another session loaded the machine (load average 6-24), so the claim is the paired ratio",
+  "harness": "a diagnostic script in the audit worktree (tmp-sim-audit/digest.ts), not a committed tool",
+  "host": "lab Mac, Apple M1 (4 performance + 4 efficiency cores), Node 22.23.2"
+ },
+ "result": {
+  "cohorts": {
+   "k3": {
+    "seeds": 3000,
+    "wins": 3000,
+    "losses": 0,
+    "identical": true,
+    "rowsSha256": "effc55345c96a78868e16bc954d0daea8b393ac0f3a8c640945170466b3b51b1"
+   },
+   "k3maskoff": {
+    "seeds": 3000,
+    "wins": 0,
+    "losses": 3000,
+    "identical": true,
+    "rowsSha256": "b9d0828857857572360e1a083ffc2a47aa5d7c724e15b06dcd9940c5163d7ed9"
+   },
+   "k3rebuild": {
+    "seeds": 3000,
+    "wins": 3000,
+    "losses": 0,
+    "identical": true,
+    "rowsSha256": "687cda0721c56b158da47a40cc32af392b6055dde7417f7fc1e3ee000fe8d2e5"
+   },
+   "minus3": {
+    "seeds": 3000,
+    "wins": 3000,
+    "losses": 0,
+    "identical": true,
+    "rowsSha256": "399051a900cf80f7a0e15dcc0d5bf90a1d06484ca2515be664f66ce7824dcb94"
+   },
+   "minus7": {
+    "seeds": 3000,
+    "wins": 11,
+    "losses": 2989,
+    "identical": true,
+    "rowsSha256": "49357cc9595aab91f1f901a54d92ae46f1064cd5c86e685488fdba515ef6432e"
+   },
+   "n1toys": {
+    "seeds": 3000,
+    "wins": 3000,
+    "losses": 0,
+    "identical": true,
+    "rowsSha256": "cbf22709e51a4c22665f519d66ca9acbeef7f8974b999fea3b85d96d20b7dafc"
+   },
+   "n5contact": {
+    "seeds": 3000,
+    "wins": 3000,
+    "losses": 0,
+    "identical": true,
+    "rowsSha256": "9e1da7798722813b1ac1714354963f7ca344bcd22bf83e0b426f84a827cb3d6b"
+   },
+   "n6h": {
+    "seeds": 3000,
+    "wins": 3000,
+    "losses": 0,
+    "identical": true,
+    "rowsSha256": "2cdef325e88171e431ea0c3a79d680a43581a3804064b8dc40610624ea670282"
+   },
+   "shooter25": {
+    "seeds": 3000,
+    "wins": 1,
+    "losses": 2999,
+    "identical": true,
+    "rowsSha256": "52b53d2ce6148747fbd8fb9bdb19bc497f1b6de37a86b8115815ae665a46010f"
+   }
+  },
+  "plantedChange": {
+   "k3": "same",
+   "k3maskoff": "same",
+   "k3rebuild": "DIFFERENT",
+   "minus3": "same",
+   "minus7": "same",
+   "n1toys": "same",
+   "n5contact": "same",
+   "n6h": "same",
+   "shooter25": "same"
+  },
+  "nightsPerSecond": {
+   "base": {
+    "median": 114.2,
+    "min": 103.6,
+    "max": 117.9
+   },
+   "changed": {
+    "median": 163.1,
+    "min": 149.4,
+    "max": 173.0
+   },
+   "pairedRatio": {
+    "median": 1.462,
+    "min": 1.267,
+    "max": 1.515,
+    "changedFasterRounds": "8/8"
+   }
+  }
+ },
+ "rejected": {
+  "E7+E4 (canAdvance type test, tickMask loop)": "identical, no gain on top of the four (paired 0.992)",
+  "E8 (tick reads opts once)": "identical, +2.5% inside the spread",
+  "branch on opts once per night": "DISPROVEN as safe: opts change mid-night (apps/trainer/test/lesson.test.ts, packages/source/test/blackout-clock-end.test.ts, winner-census.ts)",
+  "skip-ahead over idle ticks": "INCONCLUSIVE, not attempted: the Puppet and the hall roll draw every 60 frames, the box drains by a float subtraction every tick, and the replay loops press every frame"
+ },
+ "inputsSha256": {
+  "abtime-final.log": "2c2c6c0035cfab247f46021fd5514abe2293443358ac59a5bd745a3eefe4747a",
+  "verify/base-full-3000/k3.txt": "effc55345c96a78868e16bc954d0daea8b393ac0f3a8c640945170466b3b51b1",
+  "verify/base-full-3000/k3maskoff.txt": "b9d0828857857572360e1a083ffc2a47aa5d7c724e15b06dcd9940c5163d7ed9",
+  "verify/base-full-3000/k3rebuild.txt": "687cda0721c56b158da47a40cc32af392b6055dde7417f7fc1e3ee000fe8d2e5",
+  "verify/base-full-3000/minus3.txt": "399051a900cf80f7a0e15dcc0d5bf90a1d06484ca2515be664f66ce7824dcb94",
+  "verify/base-full-3000/minus7.txt": "49357cc9595aab91f1f901a54d92ae46f1064cd5c86e685488fdba515ef6432e",
+  "verify/base-full-3000/n1toys.txt": "cbf22709e51a4c22665f519d66ca9acbeef7f8974b999fea3b85d96d20b7dafc",
+  "verify/base-full-3000/n5contact.txt": "9e1da7798722813b1ac1714354963f7ca344bcd22bf83e0b426f84a827cb3d6b",
+  "verify/base-full-3000/n6h.txt": "2cdef325e88171e431ea0c3a79d680a43581a3804064b8dc40610624ea670282",
+  "verify/base-full-3000/shooter25.txt": "52b53d2ce6148747fbd8fb9bdb19bc497f1b6de37a86b8115815ae665a46010f",
+  "verify/base-rng-3000/k3.txt": "5c6516263bddea61c234ccf07a5f8308acd82d2f6583355f716acb345b5cb193",
+  "verify/base-rng-3000/k3maskoff.txt": "1328b4134a7be2e7225aa40fe9e568e73bd785dfaa9be8aa5c8be20ec785eec9",
+  "verify/base-rng-3000/k3rebuild.txt": "b53323edcc765ac0c42648653205da906e5587dd9c16286395689de2846d10f2",
+  "verify/base-rng-3000/minus3.txt": "f95442c6c981d79d03ca32b5a3b6f357590e8b5d2356f997735c1053a4786677",
+  "verify/base-rng-3000/minus7.txt": "98accce8f3f821c7aa435bec8f374893075dc175176845f855c210e71b3020e8",
+  "verify/base-rng-3000/n1toys.txt": "9f649cf2ac326e1154b5494c71ad29048a2fe031f99c1617b5477006eff6003a",
+  "verify/base-rng-3000/n5contact.txt": "404db0ef199686983c2d69565b4577e3941201931b92219972c9e852e423de3f",
+  "verify/base-rng-3000/n6h.txt": "a7f52840cf3824ba7a8ff29b667bc10b91df561e542c30b6310089d1262c6218",
+  "verify/base-rng-3000/shooter25.txt": "2469cf8ab92b4c379e039ff6510ba58544f3b117b0c4824e6ec4819a3c6df12d",
+  "verify/final-full-3000/k3.txt": "effc55345c96a78868e16bc954d0daea8b393ac0f3a8c640945170466b3b51b1",
+  "verify/final-full-3000/k3maskoff.txt": "b9d0828857857572360e1a083ffc2a47aa5d7c724e15b06dcd9940c5163d7ed9",
+  "verify/final-full-3000/k3rebuild.txt": "687cda0721c56b158da47a40cc32af392b6055dde7417f7fc1e3ee000fe8d2e5",
+  "verify/final-full-3000/minus3.txt": "399051a900cf80f7a0e15dcc0d5bf90a1d06484ca2515be664f66ce7824dcb94",
+  "verify/final-full-3000/minus7.txt": "49357cc9595aab91f1f901a54d92ae46f1064cd5c86e685488fdba515ef6432e",
+  "verify/final-full-3000/n1toys.txt": "cbf22709e51a4c22665f519d66ca9acbeef7f8974b999fea3b85d96d20b7dafc",
+  "verify/final-full-3000/n5contact.txt": "9e1da7798722813b1ac1714354963f7ca344bcd22bf83e0b426f84a827cb3d6b",
+  "verify/final-full-3000/n6h.txt": "2cdef325e88171e431ea0c3a79d680a43581a3804064b8dc40610624ea670282",
+  "verify/final-full-3000/shooter25.txt": "52b53d2ce6148747fbd8fb9bdb19bc497f1b6de37a86b8115815ae665a46010f",
+  "verify/planted-rng-3000/k3.txt": "5c6516263bddea61c234ccf07a5f8308acd82d2f6583355f716acb345b5cb193",
+  "verify/planted-rng-3000/k3maskoff.txt": "1328b4134a7be2e7225aa40fe9e568e73bd785dfaa9be8aa5c8be20ec785eec9",
+  "verify/planted-rng-3000/k3rebuild.txt": "b32ecbd3dfd4e66e2a45a5a6f4f676c9c34c9bf2ec5a216602476e26fd2be8ae",
+  "verify/planted-rng-3000/minus3.txt": "f95442c6c981d79d03ca32b5a3b6f357590e8b5d2356f997735c1053a4786677",
+  "verify/planted-rng-3000/minus7.txt": "98accce8f3f821c7aa435bec8f374893075dc175176845f855c210e71b3020e8",
+  "verify/planted-rng-3000/n1toys.txt": "9f649cf2ac326e1154b5494c71ad29048a2fe031f99c1617b5477006eff6003a",
+  "verify/planted-rng-3000/n5contact.txt": "404db0ef199686983c2d69565b4577e3941201931b92219972c9e852e423de3f",
+  "verify/planted-rng-3000/n6h.txt": "a7f52840cf3824ba7a8ff29b667bc10b91df561e542c30b6310089d1262c6218",
+  "verify/planted-rng-3000/shooter25.txt": "2469cf8ab92b4c379e039ff6510ba58544f3b117b0c4824e6ec4819a3c6df12d"
+ },
+ "notClaimed": [
+  "A device result.",
+  "Cohorts beyond these nine; the change is argued identical in general by the invariants named in the code comments, and shown identical here."
+ ]
+}

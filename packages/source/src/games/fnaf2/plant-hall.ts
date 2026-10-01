@@ -131,7 +131,9 @@ export function tickHallMovement(this: Sim, f: number) {
   const foxyHere = this.foxy.loc === 'hall';
   let occupied = foxyHere, entered = null;
   for (const u of this.units) {
-    const here = !u.done && (u.path[u.idx] === 'blindA' || u.path[u.idx] === 'blindB');
+    // A route mixes camera numbers and marker names; testing the type first keeps both comparisons string-only.
+    const node = u.path[u.idx];
+    const here = !u.done && typeof node === 'string' && (node === 'blindA' || node === 'blindB');
     if (here && !u.hallColumn) entered = entered || u.id;
     u.hallColumn = here;
     occupied = occupied || here;

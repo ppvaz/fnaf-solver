@@ -426,6 +426,8 @@ export function tickUnits(this: Sim, f: number) {
       if (step === 'discard' || step === 'returned') { u.pending = false; u.promoted = false; }
       else if (step !== 'hold' && this.canAdvance(u, f)) { u.pending = false; this.advanceUnit(u); }
     }
+    // Every rule below is about a unit at marker 122 and tests u.atOpening before anything that writes.
+    if (!u.atOpening) continue;
     // The three Withereds and Toy Freddy -- the four `streak` openers --
     // start the shared office sequence as soon as marker 122 is evaluated
     // with the cameras down (groups 445-447 and 490). "Toys and W. Freddy"
