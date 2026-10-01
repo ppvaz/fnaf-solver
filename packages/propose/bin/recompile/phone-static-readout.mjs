@@ -130,6 +130,43 @@ export function identify(rule, scores) {
   return { verdict: ok ? 'IDENTIFIED' : 'UNIDENTIFIED', top: top ?? null, second: second ?? null };
 }
 
+/**
+ * The confirmation (predeclaration kind `confirm`): per held-out window, the best r among the measured seed's cycle
+ * states within `radius` steps of the model's own draw count, and its p-value against the window's full scan: the
+ * chance that the best of 2 * radius + 1 random states does as well. A window is a hit below `alpha`.
+ */
+export function neighbourhoodP(scanRs, bestR, size) {
+  const below = scanRs.filter((r) => r < bestR).length / scanRs.length;
+  return 1 - below ** size;
+}
+
+async function confirm(pre, preBytes, args, inp, fr, workers, all, t0) {
+  const { radius, alpha, minHits } = pre.decisionRule;
+  const windows = [];
+  for (const win of pre.windows) {
+    const control = predict(inp, { injectAt: win.injectAt, frames: win.endFrame });
+    const scores = await pool(pre.night, win, all, workers);
+    const rs = scores.map((s) => s.r).filter((r) => r !== null).sort((a, b) => a - b);
+    const byState = new Map(scores.map((s) => [s.state, s.r]));
+    let s = pre.seed;
+    for (let i = 0; i < control.atInject.draws - radius; i += 1) s = (s * RNG_MULTIPLIER + RNG_INCREMENT) & RNG_MASK;
+    const offsets = [];
+    for (let d = -radius; d <= radius; d += 1) { offsets.push({ d, state: s, r: byState.get(s) }); s = (s * RNG_MULTIPLIER + RNG_INCREMENT) & RNG_MASK; }
+    const best = offsets.reduce((a, b) => (b.r > a.r ? b : a));
+    const p = neighbourhoodP(rs, best.r, offsets.length);
+    windows.push({ ...win, modelAtInject: control.atInject, rQuantiles: { p50: rs[rs.length >> 1], p95: rs[Math.floor(rs.length * 0.95)], p999: rs[Math.floor(rs.length * 0.999)], max: rs.at(-1) },
+      scanRsSha256: sha256(JSON.stringify(rs)), below: rs.filter((r) => r < best.r).length, scanned: rs.length,
+      top10: [...scores].filter((x) => x.r !== null).sort((a, b) => b.r - a.r).slice(0, 10), best, p, hit: p < alpha, offsets });
+    console.log(`${win.name}: best d=${best.d} state ${best.state} r ${best.r.toFixed(3)} (global max ${rs.at(-1).toFixed(3)}), p ${p.toExponential(2)} -> ${p < alpha ? 'hit' : 'miss'}`);
+  }
+  const hits = windows.filter((w) => w.hit).length;
+  const verdict = hits >= minHits ? 'SUPPORTED' : 'NOT_SUPPORTED';
+  console.log(`${hits} of ${windows.length} held-out windows hit: ${verdict}`);
+  const result = { schema: SCHEMA, kind: 'confirm', claimLevel: 'DEVICE_MEASURED frames against MODEL_ONLY predictions', night: pre.night, seed: pre.seed,
+    predeclaration: { path: args.predeclaration, sha256: sha256(preBytes), id: pre.id }, inputs: inp.hashes, windows, hits, verdict, elapsedMs: Date.now() - t0 };
+  if (args.out) writeFileSync(args.out, `${JSON.stringify(result, null, 1)}\n`);
+}
+
 function pool(night, win, states, workers) {
   const chunks = Array.from({ length: workers }, (_, w) => states.filter((_, k) => k % workers === w));
   return Promise.all(chunks.filter((c) => c.length).map((chunk) => new Promise((done, fail) => {
@@ -155,6 +192,7 @@ async function main(argv) {
   const all = Array.from({ length: 0x10000 }, (_, s) => s);
   const cycle = cycleIndex(pre.seed);
   const t0 = Date.now();
+  if (pre.kind === 'confirm') return confirm(pre, preBytes, args, inp, fr, workers, all, t0);
   const windows = [];
   for (const win of pre.windows) {
     const control = predict(inp, { injectAt: win.injectAt, frames: win.endFrame });

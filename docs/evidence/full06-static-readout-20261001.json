@@ -1,0 +1,1047 @@
+{
+ "schema": "evidence-record-v1",
+ "date": "2026-10-01",
+ "step": "ROADMAP S2",
+ "claimLevel": "DEVICE_MEASURED frames against MODEL_ONLY predictions",
+ "question": "Does the camera static's flicker in full-06's retained frames read out the game's random stream: is there one generator state that reproduces each winding window's flicker, and how far along the measured seed's cycle is it?",
+ "predeclaration": {
+  "path": "docs/evidence/full06-static-readout-predeclaration-20261001.json",
+  "sha256": "46b348e99ee02794e2c2c3ad9195bc506317f89d76b84fa75056f6f9db0307a5",
+  "id": "full06-static-readout"
+ },
+ "tool": {
+  "path": "packages/propose/bin/recompile/phone-static-readout.mjs",
+  "sha256": "e0ff2212c1e6c829f3e293012980331567e754a349c9c5ab6b6235452fd93113"
+ },
+ "inputs": {
+  "config": "26b89b453e2b483610c118c264d1eb0dbb5d06758ab53db283807ffc25d666d0",
+  "modelOptions": "d1ba74693da29dac953058c1ea5d41b553ac6d7494ce911f6e8c742ef487db4a",
+  "contacts": "c4ca5d3320b8a65c3522d3a3a072a79c7a10251447f5112a61a903d45da6c67f",
+  "frameTimes": "383d25c80bb3648e9199589ebce7b6782a510eacee4409df3c90e940869541cf"
+ },
+ "night": "full-06",
+ "seed": 47593,
+ "elapsedMs": 152103,
+ "windows": [
+  {
+   "name": "wind-1",
+   "fromMs": 10400,
+   "toMs": 13700,
+   "cam": 9,
+   "viewing": 11,
+   "injectAt": 619,
+   "endFrame": 855,
+   "modelAtInject": {
+    "state": 47856,
+    "draws": 297
+   },
+   "controlR": 0.3314184423417625,
+   "rQuantiles": {
+    "p50": 0.00023547763938571375,
+    "p95": 0.35070817150869177,
+    "p999": 0.5914778294457808,
+    "max": 0.6876736944589207
+   },
+   "top10": [
+    {
+     "state": 14164,
+     "blocks": 31,
+     "r": 0.6876736944589207
+    },
+    {
+     "state": 12424,
+     "blocks": 31,
+     "r": 0.6784634781191792
+    },
+    {
+     "state": 27442,
+     "blocks": 31,
+     "r": 0.6732480344251793
+    },
+    {
+     "state": 30230,
+     "blocks": 31,
+     "r": 0.6707882340251874
+    },
+    {
+     "state": 58842,
+     "blocks": 31,
+     "r": 0.663291990874195
+    },
+    {
+     "state": 17522,
+     "blocks": 31,
+     "r": 0.6630413829103278
+    },
+    {
+     "state": 59299,
+     "blocks": 31,
+     "r": 0.6584131090319146
+    },
+    {
+     "state": 59785,
+     "blocks": 31,
+     "r": 0.6511513523030555
+    },
+    {
+     "state": 35834,
+     "blocks": 31,
+     "r": 0.6475389655448326
+    },
+    {
+     "state": 48402,
+     "blocks": 31,
+     "r": 0.6425428168359418
+    }
+   ],
+   "decision": {
+    "verdict": "UNIDENTIFIED",
+    "top": {
+     "state": 14164,
+     "blocks": 31,
+     "r": 0.6876736944589207
+    },
+    "second": {
+     "state": 12424,
+     "blocks": 31,
+     "r": 0.6784634781191792
+    }
+   },
+   "topInSeedCycle": false,
+   "stepsFromSeed": null,
+   "stepsFromSeedLessModelDraws": null
+  },
+  {
+   "name": "wind-2",
+   "fromMs": 20400,
+   "toMs": 23700,
+   "cam": 9,
+   "viewing": 11,
+   "injectAt": 1222,
+   "endFrame": 1455,
+   "modelAtInject": {
+    "state": 1888,
+    "draws": 589
+   },
+   "controlR": 0.19268027315994485,
+   "rQuantiles": {
+    "p50": -0.007379402738224424,
+    "p95": 0.36475267116976107,
+    "p999": 0.607495933165423,
+    "max": 0.7335236690185455
+   },
+   "top10": [
+    {
+     "state": 11072,
+     "blocks": 31,
+     "r": 0.7335236690185455
+    },
+    {
+     "state": 64651,
+     "blocks": 31,
+     "r": 0.73276194357039
+    },
+    {
+     "state": 51579,
+     "blocks": 31,
+     "r": 0.7199719366377113
+    },
+    {
+     "state": 58529,
+     "blocks": 31,
+     "r": 0.7129997942650379
+    },
+    {
+     "state": 41515,
+     "blocks": 31,
+     "r": 0.7093124487574105
+    },
+    {
+     "state": 43529,
+     "blocks": 31,
+     "r": 0.699565785882792
+    },
+    {
+     "state": 4684,
+     "blocks": 31,
+     "r": 0.6938519161235152
+    },
+    {
+     "state": 20480,
+     "blocks": 31,
+     "r": 0.6887735117709148
+    },
+    {
+     "state": 55824,
+     "blocks": 31,
+     "r": 0.6880670470314041
+    },
+    {
+     "state": 16956,
+     "blocks": 31,
+     "r": 0.6848670393391089
+    }
+   ],
+   "decision": {
+    "verdict": "UNIDENTIFIED",
+    "top": {
+     "state": 11072,
+     "blocks": 31,
+     "r": 0.7335236690185455
+    },
+    "second": {
+     "state": 64651,
+     "blocks": 31,
+     "r": 0.73276194357039
+    }
+   },
+   "topInSeedCycle": true,
+   "stepsFromSeed": 597,
+   "stepsFromSeedLessModelDraws": 8
+  }
+ ],
+ "verdict": {
+  "wind-1": "UNIDENTIFIED",
+  "wind-2": "UNIDENTIFIED",
+  "seed": "not decided (wind-1 UNIDENTIFIED)",
+  "between": "not decided"
+ },
+ "reading": {
+  "explanations": "E-no-readout predicted UNIDENTIFIED windows and holds at the predeclared thresholds; neither window has a state far past the chance maximum.",
+  "exploratory": "Post hoc, outside the rule: wind-2's top-ranked state of all 65,536 (11072, r 0.734) lies on the measured seed's own cycle 597 steps from it, 8 past the model's 589 draws by update 1222; a top-ranked state within 16 steps of that point has a chance of 33 in 65,536. Along the cycle within 40 of the model's count, wind-1's best is 6 past it (19608, r 0.497, between the 95th and 99.9th percentile of all states). Read together: the seed may be right with the phone spending a few more draws than the model (about 6 by 10.3 s, 8 by 20.3 s). That is a hypothesis for held-out windows, not a finding."
+ },
+ "neighbourhood": [
+  {
+   "window": "wind-1",
+   "modelDraws": 297,
+   "offsets": [
+    {
+     "d": -40,
+     "state": 27536,
+     "r": -0.2157
+    },
+    {
+     "d": -39,
+     "state": 33777,
+     "r": -0.2109
+    },
+    {
+     "d": -38,
+     "state": 11080,
+     "r": 0.3444
+    },
+    {
+     "d": -37,
+     "state": 16505,
+     "r": 0.3024
+    },
+    {
+     "d": -36,
+     "state": 49280,
+     "r": 0.4401
+    },
+    {
+     "d": -35,
+     "state": 39809,
+     "r": -0.3149
+    },
+    {
+     "d": -34,
+     "state": 41784,
+     "r": 0.1874
+    },
+    {
+     "d": -33,
+     "state": 23817,
+     "r": 0.2119
+    },
+    {
+     "d": -32,
+     "state": 52080,
+     "r": 0.1694
+    },
+    {
+     "d": -31,
+     "state": 52497,
+     "r": 0.1533
+    },
+    {
+     "d": -30,
+     "state": 45352,
+     "r": -0.1333
+    },
+    {
+     "d": -29,
+     "state": 45977,
+     "r": 0.3474
+    },
+    {
+     "d": -28,
+     "state": 19552,
+     "r": -0.2907
+    },
+    {
+     "d": -27,
+     "state": 22689,
+     "r": 0.0041
+    },
+    {
+     "d": -26,
+     "state": 5400,
+     "r": -0.3913
+    },
+    {
+     "d": -25,
+     "state": 33833,
+     "r": 0.1724
+    },
+    {
+     "d": -24,
+     "state": 848,
+     "r": 0.3177
+    },
+    {
+     "d": -23,
+     "state": 32305,
+     "r": -0.1734
+    },
+    {
+     "d": -22,
+     "state": 36616,
+     "r": 0.3977
+    },
+    {
+     "d": -21,
+     "state": 3769,
+     "r": -0.3585
+    },
+    {
+     "d": -20,
+     "state": 45120,
+     "r": 0.2175
+    },
+    {
+     "d": -19,
+     "state": 32193,
+     "r": 0.3604
+    },
+    {
+     "d": -18,
+     "state": 57080,
+     "r": 0.2085
+    },
+    {
+     "d": -17,
+     "state": 37705,
+     "r": 0.0348
+    },
+    {
+     "d": -16,
+     "state": 4912,
+     "r": 0.182
+    },
+    {
+     "d": -15,
+     "state": 38737,
+     "r": -0.0129
+    },
+    {
+     "d": -14,
+     "state": 50408,
+     "r": 0.3429
+    },
+    {
+     "d": -13,
+     "state": 20953,
+     "r": -0.1842
+    },
+    {
+     "d": -12,
+     "state": 60448,
+     "r": -0.1334
+    },
+    {
+     "d": -11,
+     "state": 2785,
+     "r": 0.0882
+    },
+    {
+     "d": -10,
+     "state": 216,
+     "r": 0.291
+    },
+    {
+     "d": -9,
+     "state": 35433,
+     "r": -0.071
+    },
+    {
+     "d": -8,
+     "state": 64272,
+     "r": -0.3676
+    },
+    {
+     "d": -7,
+     "state": 6257,
+     "r": 0.3028
+    },
+    {
+     "d": -6,
+     "state": 21192,
+     "r": -0.2001
+    },
+    {
+     "d": -5,
+     "state": 31993,
+     "r": 0.3693
+    },
+    {
+     "d": -4,
+     "state": 0,
+     "r": -0.2737
+    },
+    {
+     "d": -3,
+     "state": 1,
+     "r": 0.0347
+    },
+    {
+     "d": -2,
+     "state": 31416,
+     "r": 0.0477
+    },
+    {
+     "d": -1,
+     "state": 27017,
+     "r": -0.5309
+    },
+    {
+     "d": 0,
+     "state": 47856,
+     "r": 0.3314
+    },
+    {
+     "d": 1,
+     "state": 401,
+     "r": 0.0307
+    },
+    {
+     "d": 2,
+     "state": 14504,
+     "r": 0.0619
+    },
+    {
+     "d": 3,
+     "state": 36889,
+     "r": -0.379
+    },
+    {
+     "d": 4,
+     "state": 60384,
+     "r": -0.3731
+    },
+    {
+     "d": 5,
+     "state": 23841,
+     "r": 0.3527
+    },
+    {
+     "d": 6,
+     "state": 19608,
+     "r": 0.4972
+    },
+    {
+     "d": 7,
+     "state": 12457,
+     "r": 0.1004
+    },
+    {
+     "d": 8,
+     "state": 21200,
+     "r": 0.334
+    },
+    {
+     "d": 9,
+     "state": 21169,
+     "r": -0.0523
+    },
+    {
+     "d": 10,
+     "state": 30344,
+     "r": 0.2358
+    },
+    {
+     "d": 11,
+     "state": 35641,
+     "r": -0.0117
+    },
+    {
+     "d": 12,
+     "state": 44992,
+     "r": -0.2024
+    },
+    {
+     "d": 13,
+     "state": 8769,
+     "r": 0.187
+    },
+    {
+     "d": 14,
+     "state": 30328,
+     "r": -0.3284
+    },
+    {
+     "d": 15,
+     "state": 57289,
+     "r": 0.0344
+    },
+    {
+     "d": 16,
+     "state": 49840,
+     "r": -0.1127
+    },
+    {
+     "d": 17,
+     "state": 3025,
+     "r": -0.1197
+    },
+    {
+     "d": 18,
+     "state": 3176,
+     "r": -0.0721
+    },
+    {
+     "d": 19,
+     "state": 28249,
+     "r": 0.1332
+    },
+    {
+     "d": 20,
+     "state": 19360,
+     "r": -0.0752
+    },
+    {
+     "d": 21,
+     "state": 20321,
+     "r": 0.1154
+    },
+    {
+     "d": 22,
+     "state": 63576,
+     "r": -0.0756
+    },
+    {
+     "d": 23,
+     "state": 30441,
+     "r": 0.0912
+    },
+    {
+     "d": 24,
+     "state": 2704,
+     "r": 0.1974
+    },
+    {
+     "d": 25,
+     "state": 11505,
+     "r": -0.144
+    },
+    {
+     "d": 26,
+     "state": 64072,
+     "r": 0.4479
+    },
+    {
+     "d": 27,
+     "state": 14713,
+     "r": -0.0943
+    },
+    {
+     "d": 28,
+     "state": 49024,
+     "r": 0.0627
+    },
+    {
+     "d": 29,
+     "state": 58497,
+     "r": 0.0079
+    },
+    {
+     "d": 30,
+     "state": 53816,
+     "r": -0.3112
+    },
+    {
+     "d": 31,
+     "state": 62985,
+     "r": -0.0349
+    },
+    {
+     "d": 32,
+     "state": 10864,
+     "r": 0.4103
+    },
+    {
+     "d": 33,
+     "state": 46609,
+     "r": 0.1341
+    },
+    {
+     "d": 34,
+     "state": 16424,
+     "r": 0.0643
+    },
+    {
+     "d": 35,
+     "state": 60569,
+     "r": 0.0041
+    },
+    {
+     "d": 36,
+     "state": 2912,
+     "r": 0.0892
+    },
+    {
+     "d": 37,
+     "state": 57761,
+     "r": 0.2359
+    },
+    {
+     "d": 38,
+     "state": 1048,
+     "r": 0.0027
+    },
+    {
+     "d": 39,
+     "state": 23849,
+     "r": -0.0166
+    },
+    {
+     "d": 40,
+     "state": 8784,
+     "r": 0.2489
+    }
+   ]
+  },
+  {
+   "window": "wind-2",
+   "modelDraws": 589,
+   "offsets": [
+    {
+     "d": -40,
+     "state": 64512,
+     "r": -0.2824
+    },
+    {
+     "d": -39,
+     "state": 9217,
+     "r": -0.0558
+    },
+    {
+     "d": -38,
+     "state": 14008,
+     "r": -0.0729
+    },
+    {
+     "d": -37,
+     "state": 52617,
+     "r": -0.2308
+    },
+    {
+     "d": -36,
+     "state": 14064,
+     "r": -0.1381
+    },
+    {
+     "d": -35,
+     "state": 42385,
+     "r": -0.356
+    },
+    {
+     "d": -34,
+     "state": 29864,
+     "r": -0.188
+    },
+    {
+     "d": -33,
+     "state": 29721,
+     "r": -0.0775
+    },
+    {
+     "d": -32,
+     "state": 59360,
+     "r": -0.1335
+    },
+    {
+     "d": -31,
+     "state": 33057,
+     "r": -0.2403
+    },
+    {
+     "d": -30,
+     "state": 2200,
+     "r": -0.4112
+    },
+    {
+     "d": -29,
+     "state": 38057,
+     "r": 0.19
+    },
+    {
+     "d": -28,
+     "state": 52944,
+     "r": -0.2481
+    },
+    {
+     "d": -27,
+     "state": 63153,
+     "r": -0.0032
+    },
+    {
+     "d": -26,
+     "state": 45704,
+     "r": 0.0839
+    },
+    {
+     "d": -25,
+     "state": 28473,
+     "r": -0.0165
+    },
+    {
+     "d": -24,
+     "state": 43968,
+     "r": 0.0988
+    },
+    {
+     "d": -23,
+     "state": 17985,
+     "r": -0.1406
+    },
+    {
+     "d": -22,
+     "state": 12920,
+     "r": -0.2337
+    },
+    {
+     "d": -21,
+     "state": 17353,
+     "r": -0.1212
+    },
+    {
+     "d": -20,
+     "state": 16048,
+     "r": -0.0104
+    },
+    {
+     "d": -19,
+     "state": 45009,
+     "r": -0.3002
+    },
+    {
+     "d": -18,
+     "state": 18536,
+     "r": 0.1239
+    },
+    {
+     "d": -17,
+     "state": 21081,
+     "r": 0.3897
+    },
+    {
+     "d": -16,
+     "state": 18336,
+     "r": 0.2495
+    },
+    {
+     "d": -15,
+     "state": 29537,
+     "r": 0.1104
+    },
+    {
+     "d": -14,
+     "state": 46168,
+     "r": -0.0363
+    },
+    {
+     "d": -13,
+     "state": 56041,
+     "r": -0.009
+    },
+    {
+     "d": -12,
+     "state": 34448,
+     "r": 0.1098
+    },
+    {
+     "d": -11,
+     "state": 53489,
+     "r": -0.0934
+    },
+    {
+     "d": -10,
+     "state": 13896,
+     "r": -0.0895
+    },
+    {
+     "d": -9,
+     "state": 7545,
+     "r": -0.1943
+    },
+    {
+     "d": -8,
+     "state": 48000,
+     "r": -0.1789
+    },
+    {
+     "d": -7,
+     "state": 2177,
+     "r": 0.0264
+    },
+    {
+     "d": -6,
+     "state": 36408,
+     "r": 0.0597
+    },
+    {
+     "d": -5,
+     "state": 23049,
+     "r": 0.0025
+    },
+    {
+     "d": -4,
+     "state": 42608,
+     "r": 0.1154
+    },
+    {
+     "d": -3,
+     "state": 23057,
+     "r": -0.0023
+    },
+    {
+     "d": -2,
+     "state": 31784,
+     "r": 0.169
+    },
+    {
+     "d": -1,
+     "state": 53401,
+     "r": -0.0949
+    },
+    {
+     "d": 0,
+     "state": 1888,
+     "r": 0.1927
+    },
+    {
+     "d": 1,
+     "state": 1441,
+     "r": -0.1262
+    },
+    {
+     "d": 2,
+     "state": 49176,
+     "r": -0.4666
+    },
+    {
+     "d": 3,
+     "state": 49449,
+     "r": 0.0901
+    },
+    {
+     "d": 4,
+     "state": 40528,
+     "r": -0.0077
+    },
+    {
+     "d": 5,
+     "state": 19249,
+     "r": -0.0458
+    },
+    {
+     "d": 6,
+     "state": 6664,
+     "r": 0.0219
+    },
+    {
+     "d": 7,
+     "state": 27577,
+     "r": -0.1077
+    },
+    {
+     "d": 8,
+     "state": 11072,
+     "r": 0.7335
+    },
+    {
+     "d": 9,
+     "state": 27329,
+     "r": -0.052
+    },
+    {
+     "d": 10,
+     "state": 18936,
+     "r": 0.296
+    },
+    {
+     "d": 11,
+     "state": 4169,
+     "r": 0.3533
+    },
+    {
+     "d": 12,
+     "state": 28208,
+     "r": -0.302
+    },
+    {
+     "d": 13,
+     "state": 42065,
+     "r": 0.2647
+    },
+    {
+     "d": 14,
+     "state": 4072,
+     "r": 0.1628
+    },
+    {
+     "d": 15,
+     "state": 61145,
+     "r": -0.1346
+    },
+    {
+     "d": 16,
+     "state": 10016,
+     "r": 0.1551
+    },
+    {
+     "d": 17,
+     "state": 14305,
+     "r": -0.0919
+    },
+    {
+     "d": 18,
+     "state": 11224,
+     "r": 0.2915
+    },
+    {
+     "d": 19,
+     "state": 18281,
+     "r": 0.1572
+    },
+    {
+     "d": 20,
+     "state": 5648,
+     "r": 0.1674
+    },
+    {
+     "d": 21,
+     "state": 25969,
+     "r": 0.2707
+    },
+    {
+     "d": 22,
+     "state": 24008,
+     "r": 0.1447
+    },
+    {
+     "d": 23,
+     "state": 23033,
+     "r": 0.2788
+    },
+    {
+     "d": 24,
+     "state": 64256,
+     "r": 0.0231
+    },
+    {
+     "d": 25,
+     "state": 27905,
+     "r": 0.0123
+    },
+    {
+     "d": 26,
+     "state": 26040,
+     "r": -0.257
+    },
+    {
+     "d": 27,
+     "state": 26249,
+     "r": -0.0654
+    },
+    {
+     "d": 28,
+     "state": 38384,
+     "r": 0.0896
+    },
+    {
+     "d": 29,
+     "state": 36497,
+     "r": -0.0226
+    },
+    {
+     "d": 30,
+     "state": 936,
+     "r": 0.2233
+    },
+    {
+     "d": 31,
+     "state": 44313,
+     "r": 0.0703
+    },
+    {
+     "d": 32,
+     "state": 42720,
+     "r": 0.1727
+    },
+    {
+     "d": 33,
+     "state": 2593,
+     "r": 0.3719
+    },
+    {
+     "d": 34,
+     "state": 63384,
+     "r": 0.2595
+    },
+    {
+     "d": 35,
+     "state": 28073,
+     "r": 0.1732
+    },
+    {
+     "d": 36,
+     "state": 60880,
+     "r": 0.3163
+    },
+    {
+     "d": 37,
+     "state": 8113,
+     "r": 0.0791
+    },
+    {
+     "d": 38,
+     "state": 392,
+     "r": 0.1369
+    },
+    {
+     "d": 39,
+     "state": 59449,
+     "r": 0.1547
+    },
+    {
+     "d": 40,
+     "state": 10944,
+     "r": 0.1125
+    }
+   ]
+  }
+ ],
+ "open": [
+  "A predeclared confirmation on held-out winding windows: docs/evidence/full06-static-readout-confirm-predeclaration-20261001.json.",
+  "Native region pixel reads of the camera view during winding on new nights would resolve single draws far better than the 20x9 point grid."
+ ],
+ "reproducer": {
+  "scan": "node packages/propose/bin/recompile/phone-static-readout.mjs --predeclaration docs/evidence/full06-static-readout-predeclaration-20261001.json --workers 6 --out <result>",
+  "neighbourhood": "node artifacts/s2-bb-audio-20261001/readout-neighbourhood.mjs (diagnostic)",
+  "gate": "node packages/propose/bin/recompile/test-phone-static-readout.mjs"
+ },
+ "id": "s2-static-readout-f9d8879e0d3f3e49"
+}

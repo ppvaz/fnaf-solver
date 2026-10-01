@@ -1,0 +1,40 @@
+{
+ "schema": "experiment-spec-v2",
+ "id": "full06-static-readout-confirm",
+ "kind": "confirm",
+ "purpose": "confirmatory sweep on held-out windows",
+ "claimLevel": "DEVICE_MEASURED frames against MODEL_ONLY predictions",
+ "date": "2026-10-01",
+ "step": "S2 (plans/ROADMAP.md): establish a valid seed measurement (S2a) on a traced night, full-06",
+ "night": "full-06",
+ "seed": 47593,
+ "question": "Is full-06's phone stream the measured seed's, a few draws ahead of the model: in held-out winding windows, does a state on the seed's own generator cycle near the model's draw count reproduce the camera static's flicker better than chance?",
+ "hypothesis": {
+  "source": "docs/evidence/full06-static-readout-20261001.json, post hoc and outside its rule: wind-2's top-ranked state of all 65,536 lies 8 steps past the model's draw count on the measured seed's cycle (chance 33 in 65,536 for within 16), and wind-1's best cycle state within 40 is 6 past it.",
+  "statement": "E-seed-ahead: the measured seed is right and the phone spends somewhat more (or fewer) draws than the model, so its state at each window is the seed's cycle state at the model's draw count plus a drift."
+ },
+ "heldOut": "wind-3..wind-6, the next four winding windows of the same night; no state was scored on them before this file. Only their frames, period counts (31-32) and the model's draw counts at injection (879, 1353, 1824, 2121) were computed.",
+ "family": "As docs/evidence/full06-static-readout-predeclaration-20261001.json: every generator state written into the model after each window's injection update, its predicted static opacity correlated with the retained frames' period-mean luma.",
+ "inputs": {
+  "config": "26b89b453e2b483610c118c264d1eb0dbb5d06758ab53db283807ffc25d666d0",
+  "modelOptions": "d1ba74693da29dac953058c1ea5d41b553ac6d7494ce911f6e8c742ef487db4a",
+  "contacts": "c4ca5d3320b8a65c3522d3a3a072a79c7a10251447f5112a61a903d45da6c67f",
+  "frameTimes": "383d25c80bb3648e9199589ebce7b6782a510eacee4409df3c90e940869541cf"
+ },
+ "windows": [
+  {"name": "wind-3", "fromMs": 30400, "toMs": 33700, "cam": 9, "viewing": 11, "injectAt": 1822, "endFrame": 2055},
+  {"name": "wind-4", "fromMs": 40400, "toMs": 43700, "cam": 9, "viewing": 11, "injectAt": 2419, "endFrame": 2656},
+  {"name": "wind-5", "fromMs": 50400, "toMs": 53700, "cam": 9, "viewing": 11, "injectAt": 3024, "endFrame": 3258},
+  {"name": "wind-6", "fromMs": 60400, "toMs": 63700, "cam": 9, "viewing": 11, "injectAt": 3627, "endFrame": 3861}
+ ],
+ "decisionRule": {
+  "radius": 100,
+  "alpha": 0.01,
+  "minHits": 2,
+  "text": "Per window: every state is scanned; among the measured seed's cycle states at the model's own draw count by the injection plus d, d in -100..100 (201 states), take the best r. Its p-value is 1 - F(r)^201, F the window's empirical distribution of r over all 65,536 states: the chance that the best of 201 random states does as well. A window hits at p < 0.01. SUPPORTED when at least 2 of the 4 windows hit (chance about 0.06%), else NOT_SUPPORTED. The radius allows the drift to grow with the night's state-dependent draws; the best d per window is reported, not tested."
+ },
+ "stoppingRule": {"kind": "fixed-sample", "text": "Four windows, every state, once. No window, radius or threshold changes after the run."},
+ "tool": "node packages/propose/bin/recompile/phone-static-readout.mjs --predeclaration docs/evidence/full06-static-readout-confirm-predeclaration-20261001.json --workers 6 --out <result>",
+ "resultRecord": "docs/evidence/full06-static-readout-confirm-20261001.json",
+ "rung": "None. SUPPORTED would make the static readout an instrument for S2a and S4 and the measured seed supported at its traced night; it is not an outcome claim."
+}
