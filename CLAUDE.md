@@ -160,6 +160,11 @@ longer rebuilds.
   `isList`, `isOneOf`, `isText`, `fail(): never`, `@sixam/kernel` labels) and
   ends with `return value as unknown as T`: the one assertion where a checked
   record becomes its type. `Array.isArray` narrows to `any[]`; use `isList`.
+- Python follows the same rule, alongside TypeScript: `mypy --strict
+  --disallow-any-explicit` per script directory (`tools/python_types.py`),
+  counted per area by `tools/test-python-types.ts` against `pythonTypes`. Host
+  shell scripts are ported to TypeScript one at a time (their dry runs
+  characterized and compared); seedpin moves into the Companion.
 - A module both lanes check (the lenient `tsconfig.js.json` reaches it through
   an importer) must also type-check without `strictNullChecks`, where
   `x === null` narrows nothing: return the literal (`return null`).

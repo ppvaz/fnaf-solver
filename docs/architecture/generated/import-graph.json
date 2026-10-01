@@ -5011,6 +5011,17 @@
       ]
     },
     {
+      "file": "tools/test-python-types.ts",
+      "imports": [
+        "./gate-kit.ts",
+        "node:assert/strict",
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path"
+      ]
+    },
+    {
       "file": "tools/test-sibling-paths.ts",
       "imports": [
         "node:child_process",

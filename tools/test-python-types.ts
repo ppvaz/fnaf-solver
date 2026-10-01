@@ -1,0 +1,54 @@
+#!/usr/bin/env node
+// The repository's Python under mypy --strict with explicit Any refused, counted per area so the count only
+// shrinks, to none: Pedro's 2026-10-01 rule for TypeScript ("real types everywhere"), applied to Python
+// alongside it. tools/python_types.py runs the checker one script directory at a time (the scripts import
+// their siblings through sys.path, which mypy cannot follow); this holds each area to its entry in
+// tools/quality-baseline.json (`pythonTypes`, through tools/gate-kit.ts). A new error fails unless one is
+// paid elsewhere in the area, a paid one lowers the entry, and an area with no entry carries none. mypy is
+// pinned in CI's Python beside Pillow, NumPy and SciPy.
+//
+//   node tools/test-python-types.ts          exit 0 when no area's count grew, 1 naming each area that did
+//   node tools/test-python-types.ts --list   print each area's count
+import assert from 'node:assert/strict';
+import { execFileSync, spawnSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { ROOT, loadBaseline, ratchet, report } from './gate-kit.ts';
+
+const DRIVER = join(ROOT, 'tools', 'python_types.py');
+
+/** Run the driver over a repository. */
+function check(root: string): { areas: Record<string, number>, errors: string[] } {
+  const run = spawnSync('python3', [DRIVER], { cwd: root, encoding: 'utf8', env: { ...process.env, PYTHON_TYPES_ROOT: root },
+    maxBuffer: 64 * 1024 * 1024 });
+  if (run.status !== 0)
+    throw new Error(`python_types.py failed${/No module named 'mypy'/.test(run.stderr) ? ' (install CI\'s pin: python3 -m pip install mypy==2.3.1)' : ''}:\n${run.stderr}`);
+  return JSON.parse(run.stdout);
+}
+
+// Planted cases run first: two script directories whose files share a name, one typed, one not.
+{
+  const repo = realpathSync(mkdtempSync(join(tmpdir(), 'python-types-')));
+  try {
+    const git = (...args: string[]) => execFileSync('git', args, { cwd: repo, encoding: 'utf8' });
+    git('init', '-q');
+    for (const dir of ['packages/demo/bin/typed', 'packages/demo/bin/loose']) mkdirSync(join(repo, dir), { recursive: true });
+    writeFileSync(join(repo, 'packages/demo/bin/typed/tool.py'), 'def double(value: int) -> int:\n    return value * 2\n');
+    writeFileSync(join(repo, 'packages/demo/bin/loose/tool.py'),
+      'from typing import Any\n\ndef double(value):\n    return value * 2\n\ndef widen(value: Any) -> Any:\n    return value\n');
+    git('add', '.');
+    const { areas, errors } = check(repo);
+    assert.deepEqual(areas, { 'packages/demo/bin': 2 }, `an untyped def and a signature with explicit Any are counted:\n${errors.join('\n')}`);
+    assert.ok(errors.every(line => line.startsWith('packages/demo/bin/loose/tool.py:')), 'the typed file is clean');
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+}
+
+const { areas } = check(ROOT);
+const found = new Map(Object.entries(areas).map(([area, count]) => [`py:${area}`, { count, detail: `${count} mypy --strict errors` }]));
+if (process.argv.includes('--list')) for (const [key, { count }] of [...found].sort()) console.log(`${count}\t${key}`);
+const total = [...found.values()].reduce((sum, { count }) => sum + count, 0);
+report('python-types', ratchet(found, loadBaseline('pythonTypes')),
+  `${found.size} areas carry ${total} mypy --strict errors, none growing`);

@@ -37,9 +37,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      # mypy checks the repository's Python in test:unit (tools/test-python-types.ts): Pedro, 2026-10-01,
+      # real types everywhere, Python alongside TypeScript.
       - name: Fixture rendering and video dependencies
         run: |
-          python3 -m pip install --disable-pip-version-check 'pillow==12.3.0' 'numpy==2.2.4' 'scipy==1.15.3'
+          python3 -m pip install --disable-pip-version-check 'pillow==12.3.0' 'numpy==2.2.4' 'scipy==1.15.3' 'mypy==2.3.1'
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends ffmpeg
       - name: Install the pinned workspace toolchain

@@ -178,6 +178,26 @@
       "clone:packages/review/bin/grade/post-night-static.ts <> packages/review/bin/grade/static-terminal-window.ts": 7
     }
   },
+  "pythonTypes": {
+    "recorded": "2026-10-01",
+    "why": "mypy --strict errors (explicit Any refused) per area when tools/test-python-types.ts landed. Pedro, 2026-10-01: real types everywhere, Python alongside TypeScript, so an entry only shrinks, and an area that reaches none loses its entry and must stay at none.",
+    "entries": {
+      "py:android/companion": 1,
+      "py:apps/lab": 111,
+      "py:apps/lab/test": 58,
+      "py:apps/trainer/test": 132,
+      "py:apps/wiki": 12,
+      "py:packages/play/bin": 378,
+      "py:packages/play/games": 127,
+      "py:packages/play/src": 225,
+      "py:packages/play/test": 56,
+      "py:packages/propose/parked": 381,
+      "py:packages/review/bin": 878,
+      "py:packages/review/src": 21,
+      "py:packages/source/decompile": 349,
+      "py:packages/source/recompile": 1
+    }
+  },
   "typeDebt": {
     "recorded": "2026-10-01",
     "why": "Explicit any and non-null assertions per area when tools/test-type-debt.ts landed: the types JavaScript left implicit, written down. Pedro, 2026-10-01: real types everywhere, no explicit any, so an entry only shrinks (it rose once, when the six bundle-hashed .mjs joined as TypeScript), and an area that reaches none loses its entry and must stay at none.",
