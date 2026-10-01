@@ -138,6 +138,12 @@ export function sweepPattern(canvas, script, isLive) {
 }
 
 export class Lane {
+  declare canvas: any;
+  declare ctx: any;
+  declare pops: any[];
+  declare flash: number;
+  declare pps: number;
+  declare comboFlash: any;
   constructor(canvas) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');

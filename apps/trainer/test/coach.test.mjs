@@ -6,7 +6,7 @@
 import assert from 'node:assert/strict';
 import * as C from '@sixam/source/fnaf2';
 import { Sim } from '@sixam/source/fnaf2';
-import { Coach, playPress, pressLanded, pressState } from '../src/coach.js';
+import { Coach, playPress, pressLanded, pressState } from '../src/coach.ts';
 
 const QUIET = { bbEnabled: false, foxyEnabled: false, gfEnabled: false, boxEnabled: false,
   stalledEnabled: false, powerEnabled: false, lethal: false, record: false, seed: 1 };

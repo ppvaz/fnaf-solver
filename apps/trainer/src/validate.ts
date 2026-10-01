@@ -35,10 +35,8 @@ export function freeze(value) {
 /**
  * The prefix-bound half of the kit. Every message a caller raises is prefixed
  * with `subject`, so a thrown TypeError still names the module it came from.
- * @param {string} subject
- * @param {{ textMax?: number }} [options]
  */
-export function validatorsFor(subject, { textMax = 128 } = {}) {
+export function validatorsFor(subject: string, { textMax = 128 }: { textMax?: number } = {}) {
   const fail = message => { throw new TypeError(`${subject}: ${message}`); };
 
   function object(name, value) {

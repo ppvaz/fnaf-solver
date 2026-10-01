@@ -16,9 +16,9 @@ import {
   validateExerciseAttempt,
   validateResolution,
   validateCommitment,
-} from './training/index.js';
+} from './training/index.ts';
 import { stableHash } from '@sixam/kernel/contracts';
-import { finite, freeze, isRecord, validatorsFor } from './validate.js';
+import { finite, freeze, isRecord, validatorsFor } from './validate.ts';
 const { fail, object, text } = validatorsFor('microtrainer', { textMax: 160 });
 
 export const MICROTRAINER_SESSION_SCHEMA = 'microtrainer-session-v1';
@@ -33,6 +33,8 @@ export const MICROTRAINER_SURFACES = Object.freeze(['campaign', 'rhythm-highway'
 
 const clone = value => structuredClone(value);
 export class MicrotrainerIneligibleError extends Error {
+  declare name: string;
+  declare reason: any;
   constructor(reason) {
     super(`microtrainer exercise is ineligible: ${reason}`);
     this.name = 'MicrotrainerIneligibleError';
@@ -160,7 +162,7 @@ function baseExercise({ id, kind, snapshot, target, choices, questionHorizonMs,
     eligibility: validateEligibilitySource(snapshot, scheduler, extraEligibility),
     question: { target: text('question.target', target, 128), choices: questionChoices, horizonMs: questionHorizonMs },
   });
-  const events = [{
+  const events: any[] = [{
     schema: EXERCISE_EVENT_SCHEMA, exerciseId: initial.id, seq: 0,
     type: 'PROMPTED', atMs: promptAtMs, clock: snapshot.clock,
   }];
@@ -202,9 +204,8 @@ function independentEvidence(value, snapshot) {
 }
 
 /** Build a prediction exercise from a retained future fact, never from the prediction itself. */
-/** @param {any} options */
 export function makePredictionExercise({ id, snapshot: snapshotInput, target, choices, horizonMs,
-  commitWindowMs = horizonMs, scheduler, futureFact = null, commitment = null } = {}) {
+  commitWindowMs = horizonMs, scheduler, futureFact = null, commitment = null }: any = {}) {
   const snapshot = validateReplaySnapshot(snapshotInput);
   const resolution = futureFact ? clone(futureFact) : null;
   if (resolution) independentEvidence(resolution, snapshot);
@@ -239,9 +240,8 @@ function validateCrop(input, snapshot) {
 }
 
 /** Build recognition only from retained, profile-bound labels and always expose abstention. */
-/** @param {any} options */
 export function makeRecognitionExercise({ id, snapshot: snapshotInput, crop: cropInput, choices,
-  horizonMs = 1000, commitWindowMs = horizonMs, scheduler, commitment = null } = {}) {
+  horizonMs = 1000, commitWindowMs = horizonMs, scheduler, commitment = null }: any = {}) {
   const snapshot = validateReplaySnapshot(snapshotInput);
   const crop = validateCrop(cropInput, snapshot);
   const questionChoices = [...new Set([...(choices || []), crop.label, UNKNOWN_CHOICE])];
@@ -301,10 +301,9 @@ function timingBucketFor(value, buckets) {
 }
 
 /** Build a coarse timing exercise and refuse deadlines already inside the measured response budget. */
-/** @param {any} options */
 export function makeTimingExercise({ id, snapshot: snapshotInput, target, deadlineAtMs,
   responseLatencyBudgetMs, timingBuckets, observedActionAtMs = null, evidenceFactIds = null,
-  scheduler, commitment = null } = {}) {
+  scheduler, commitment = null }: any = {}) {
   const snapshot = validateReplaySnapshot(snapshotInput);
   number('deadlineAtMs', deadlineAtMs, { min: snapshot.atMs });
   number('responseLatencyBudgetMs', responseLatencyBudgetMs);
@@ -357,9 +356,8 @@ function validateSimulatorCase(input, snapshot) {
 }
 
 /** Build strategy only from an exact-simulator result with visible MODEL_ONLY provenance. */
-/** @param {any} options */
 export function makeStrategyExercise({ id, snapshot: snapshotInput, target, choices, horizonMs,
-  simulatorCase, result, scheduler, commitment = null } = {}) {
+  simulatorCase, result, scheduler, commitment = null }: any = {}) {
   const snapshot = validateReplaySnapshot(snapshotInput);
   const exactCase = validateSimulatorCase(simulatorCase, snapshot);
   object('simulatorCase.result', result);
@@ -386,9 +384,8 @@ export function makeStrategyExercise({ id, snapshot: snapshotInput, target, choi
 }
 
 /** Create a presentation/response attempt, keeping it separate from exercise truth. */
-/** @param {any} options */
 export function makeMicrotrainerAttempt({ exercise, rendererId, rendererVersion,
-  sessionId, shownAtMs, commitment = null, motor = null } = {}) {
+  sessionId, shownAtMs, commitment = null, motor = null }: any = {}) {
   const value = validateExercise(exercise);
   text('rendererId', rendererId, 96);
   text('rendererVersion', rendererVersion, 64);
@@ -491,8 +488,7 @@ function validateRecord(input) {
 }
 
 /** Make one Plan 09-compatible replay record with prompt, response, outcome, timing, and scheduler joins. */
-/** @param {any} options */
-export function makeMicrotrainerRecord({ exercise, events, attempt, scheduler = null } = {}) {
+export function makeMicrotrainerRecord({ exercise, events, attempt, scheduler = null }: any = {}) {
   const value = validateExercise(exercise);
   const final = replayExercise(value, events);
   const response = validateExerciseAttempt(attempt);
@@ -622,8 +618,7 @@ function sessionEvents(records) {
 }
 
 /** Build an immutable Plan 09-compatible session record; no raw media is embedded. */
-/** @param {any} options */
-export function makeMicrotrainerSession({ session, records = [], artifacts = [] } = {}) {
+export function makeMicrotrainerSession({ session, records = [], artifacts = [] }: any = {}) {
   const header = validateSessionHeader(session);
   if (!Array.isArray(records)) fail('records must be an array');
   const validatedRecords = records.map(record => validateRecord(record));

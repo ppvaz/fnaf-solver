@@ -1,16 +1,17 @@
 import * as C from '@sixam/source/fnaf2';
 import { Sim } from '@sixam/source/fnaf2';
-import { Coach, DuelTimer, playPress } from './coach.js';
-import { Audio } from './audio.js';
-import { UI } from './ui.js';
-import { bindInputs, keepAwake, goFullscreen, isFullscreen, buzz } from './input.js';
-import { drawTimeline, buildSummary, fmtTime } from './report.js';
-import { sweepPattern } from './lane.js';
-import * as Assets from './assets.js';
+import { Coach, DuelTimer, playPress } from './coach.ts';
+import { Audio } from './audio.ts';
+import { UI } from './ui.ts';
+import { bindInputs, keepAwake, goFullscreen, isFullscreen, buzz } from './input.ts';
+import { drawTimeline, buildSummary, fmtTime } from './report.ts';
+import { sweepPattern } from './lane.ts';
+import * as Assets from './assets.ts';
+import type { Step } from './curriculum.ts';
 import { LESSONS, LESSON_FRAMES, MINUS7_CYCLE, byId, lessonSim, loadProgress, saveProgress, markPassed,
-  recordCombo, unlockedIndex } from './curriculum.js';
-import { ArcadeLab } from './arcade-ui.js';
-import { REPOSITORY, factById, factText } from './route-facts.js';
+  recordCombo, unlockedIndex } from './curriculum.ts';
+import { ArcadeLab } from './arcade-ui.ts';
+import { REPOSITORY, factById, factText } from './route-facts.ts';
 
 // The brief's "ON SCREEN" row: what a lesson's `controls` list looks like to
 // the player, colour-coded the same way the rhythm lane codes those inputs.
@@ -33,6 +34,31 @@ const DEV_SERVER = new Set((document.querySelector('meta[name="trainer-dev-serve
   ?.getAttribute('content') || '').split(/\s+/).filter(Boolean));
 
 class App {
+  declare audio: Audio;
+  declare stage: HTMLElement;
+  declare ui: UI;
+  declare arcade: ArcadeLab;
+  declare duel: DuelTimer;
+  declare running: boolean;
+  declare acc: number;
+  declare last: number;
+  declare settings: { sound: boolean; coach: boolean; speed: number; haptics: boolean; metronome: boolean; };
+  declare syncFullscreen: () => boolean;
+  declare modeKey: any;
+  declare mode: { id: string; when: string; title: string; goal: string; teach: string; controls: string[]; script: Step[]; sim: { bbEnabled: boolean; foxyEnabled: boolean; gfEnabled: boolean; boxEnabled: boolean; stalledEnabled: boolean; powerEnabled: boolean; lethal: boolean; worst?: undefined; }; tol: { tolGood: number; tolOk: number; }; target: number; start?: undefined; facts?: undefined; drill?: undefined; duelTarget?: undefined; fullNight?: undefined; } | { id: string; when: string; title: string; goal: string; teach: string; controls: string[]; script: Step[]; sim: { stalledEnabled: boolean; bbEnabled: boolean; foxyEnabled: boolean; gfEnabled: boolean; boxEnabled: boolean; powerEnabled: boolean; lethal: boolean; worst?: undefined; }; start: { monitor: string; cam: number; }; tol: { tolGood: number; tolOk: number; }; target: number; facts?: undefined; drill?: undefined; duelTarget?: undefined; fullNight?: undefined; } | { id: string; when: string; title: string; goal: string; teach: string; controls: string[]; script: Readonly<Step>[]; facts: string[]; sim: { foxyEnabled: boolean; gfEnabled: boolean; bbEnabled: boolean; boxEnabled: boolean; stalledEnabled: boolean; powerEnabled: boolean; lethal: boolean; worst?: undefined; }; start: { monitor: string; cam?: undefined; }; tol: { tolGood: number; tolOk: number; }; target: number; drill?: undefined; duelTarget?: undefined; fullNight?: undefined; } | { id: string; when: string; title: string; goal: string; teach: string; controls: string[]; script: readonly Readonly<Step>[]; sim: { bbEnabled: boolean; lethal: boolean; worst?: undefined; }; start: { monitor: string; cam: number; }; tol: { tolGood: number; tolOk: number; }; target: number; facts?: undefined; drill?: undefined; duelTarget?: undefined; fullNight?: undefined; } | { id: string; when: string; title: string; goal: string; teach: string; controls: string[]; script: readonly Readonly<Step>[]; sim: { bbEnabled: boolean; lethal?: undefined; worst?: undefined; }; start: { monitor: string; cam: number; }; tol: { tolGood: number; tolOk: number; }; target: number; facts?: undefined; drill?: undefined; duelTarget?: undefined; fullNight?: undefined; } | { id: string; when: string; title: string; goal: string; teach: string; controls: string[]; script: Step[]; sim: { lethal: boolean; bbEnabled?: undefined; worst?: undefined; }; drill: string; start: { monitor: string; cam: number; }; tol: { tolGood: number; tolOk: number; }; target: number; facts?: undefined; duelTarget?: undefined; fullNight?: undefined; } | { id: string; when: string; title: string; goal: string; teach: string; controls: string[]; script: any; sim: { lethal: boolean; bbEnabled?: undefined; worst?: undefined; }; drill: string; start: { monitor: string; cam: number; }; target: number; duelTarget: number; tol?: undefined; facts?: undefined; fullNight?: undefined; } | { id: string; when: string; title: string; goal: string; teach: string; controls: string[]; script: readonly Readonly<Step>[]; facts: string[]; sim: { bbEnabled?: undefined; lethal?: undefined; worst?: undefined; }; start: { monitor: string; cam: number; }; target: number; fullNight: boolean; tol?: undefined; drill?: undefined; duelTarget?: undefined; } | { id: string; when: string; title: string; goal: string; teach: string; controls: string[]; script: readonly Readonly<Step>[]; facts: string[]; sim: { worst: boolean; bbEnabled?: undefined; lethal?: undefined; }; start: { monitor: string; cam: number; }; target: number; fullNight: boolean; tol?: undefined; drill?: undefined; duelTarget?: undefined; } | { name: string; sim: {}; coach: boolean; };
+  declare sim: Sim;
+  declare coach: Coach;
+  declare pendingLesson: any;
+  declare duelWins: any;
+  declare passed: boolean;
+  declare traceEvents: any[];
+  declare tracePosted: boolean;
+  declare startedAt: string;
+  declare lastBoxTick: any;
+  declare ambOn: any;
+  declare wake: WakeLockSentinel;
+  declare _rearm: any;
+  declare _popped: any;
   constructor() {
     this.audio = new Audio();
     this.stage = document.getElementById('stage');
@@ -52,7 +78,7 @@ class App {
 
   bindUI() {
     document.getElementById('menu').addEventListener('click', async (e) => {
-      const target = /** @type {any} */ (e.target);
+      const target = (e.target as any);
       const b = target?.closest('[data-mode]');
       if (b) { this.brief(b.dataset.mode); return; }
       const s = target?.closest('[data-ui]');
@@ -69,7 +95,7 @@ class App {
     document.getElementById('btn-brief-go').addEventListener('click', () => this.start(this.pendingLesson));
     document.getElementById('btn-brief-back').addEventListener('click', () => { buildMenu(); showPanel('menu'); });
     document.getElementById('btn-next-lesson').addEventListener('click', (e) =>
-      this.brief(/** @type {any} */ (e.currentTarget).dataset.next));
+      this.brief((e.currentTarget as any).dataset.next));
     document.getElementById('btn-retry-lesson').addEventListener('click', () => this.start(this.modeKey));
     document.getElementById('btn-passed-menu').addEventListener('click', () => { buildMenu(); showPanel('menu'); });
     document.getElementById('btn-resetprogress').addEventListener('click', () => {
@@ -82,16 +108,16 @@ class App {
       note('Layout reset to the shipped defaults.');
     });
     document.getElementById('btn-savemap').addEventListener('click', () => this.saveLayout());
-    const snd = /** @type {any} */ (document.getElementById('opt-sound'));
+    const snd = (document.getElementById('opt-sound') as any);
     snd.checked = this.settings.sound;
     snd.addEventListener('change', () => { this.settings.sound = snd.checked; this.audio.enabled = snd.checked; saveSettings(this.settings); });
-    const hp = /** @type {any} */ (document.getElementById('opt-haptics'));
+    const hp = (document.getElementById('opt-haptics') as any);
     hp.checked = this.settings.haptics;
     hp.addEventListener('change', () => { this.settings.haptics = hp.checked; saveSettings(this.settings); if (hp.checked) buzz(20); });
-    const mt = /** @type {any} */ (document.getElementById('opt-metronome'));
+    const mt = (document.getElementById('opt-metronome') as any);
     mt.checked = this.settings.metronome;
     mt.addEventListener('change', () => { this.settings.metronome = mt.checked; saveSettings(this.settings); });
-    const co = /** @type {any} */ (document.getElementById('opt-coach'));
+    const co = (document.getElementById('opt-coach') as any);
     co.checked = this.settings.coach;
     co.addEventListener('change', () => { this.settings.coach = co.checked; saveSettings(this.settings); });
 
@@ -130,7 +156,7 @@ class App {
   // Only the dev server can do that; anywhere else we fall back to showing the
   // JSON so it can be copied across by hand.
   async saveLayout() {
-    const ta = /** @type {any} */ (document.getElementById('map-json'));
+    const ta = (document.getElementById('map-json') as any);
     try {
       const res = await fetch('/save-layout', {
         method: 'POST',
@@ -151,7 +177,7 @@ class App {
   }
 
   async buildSoundSlots() {
-    const wrap = /** @type {any} */ (document.getElementById('sound-slots'));
+    const wrap = (document.getElementById('sound-slots') as any);
     const have = await Assets.listSlots().catch(() => ({}));
     wrap.innerHTML = Assets.SLOTS.map(s => `
       <label class="slot">
@@ -283,7 +309,7 @@ class App {
   }
 
   onCycle(ok, streak) {
-    const l = this.mode;
+    const l: any = this.mode;
     if (!l || l.fullNight || this.passed) return;
     this.ui.setStreak(`${streak} / ${l.target}`);
     if (ok) { this.audio.good(); this.ui.cleanPass(this.sim.t); this.buzz([10, 30, 14]); }
@@ -301,12 +327,12 @@ class App {
     this.audio.ambience(false);
     this.audio.win();
     this.buzz([20, 60, 20, 60, 45]);
-    markPassed(this.mode.id, this.coach?.bestCombo || 0);
-    const i = LESSONS.indexOf(/** @type {any} */ (this.mode));
+    markPassed((this.mode as any).id, this.coach?.bestCombo || 0);
+    const i = LESSONS.indexOf((this.mode as any));
     const nxt = LESSONS[i + 1];
     pendingUnlock = nxt?.id || null;
     buildMenu();
-    document.getElementById('passed-title').textContent = `${this.mode.title} — passed`;
+    document.getElementById('passed-title').textContent = `${(this.mode as any).title} — passed`;
     document.getElementById('passed-body').textContent =
       `${detail}${nxt ? ` Next up: ${nxt.title} — ${nxt.goal}` : ' That is the whole ladder.'}`;
     const b = document.getElementById('btn-next-lesson');
@@ -317,7 +343,7 @@ class App {
   }
 
   stop() {
-    if (this.mode?.id && this.coach) recordCombo(this.mode.id, this.coach.bestCombo);
+    if ((this.mode as any)?.id && this.coach) recordCombo((this.mode as any).id, this.coach.bestCombo);
     this.running = false;
     this.postTrace();
     this.syncFullscreen();
@@ -336,7 +362,7 @@ class App {
     const beforeCombo = this.coach?.combo ?? 0;
     const beforeLast = this.coach?.last;
     // The duel reads the mask as it was before this press.
-    if (this.mode.drill === 'phaseB') this.duelInput(act);
+    if ((this.mode as any).drill === 'phaseB') this.duelInput(act);
     playPress(this.sim, this.coach, act);
     if (this.coach && this.coach.last !== beforeLast) {
       const g = this.coach.last.grade;
@@ -374,7 +400,7 @@ class App {
     if (this.tracePosted || !this.coach?.enabled || !this.coach.trace.length) return;
     this.tracePosted = true;
     const sim = this.sim, coach = this.coach;
-    const body = {
+    const body: any = {
       v: 1,
       lesson: this.modeKey,
       startedAt: this.startedAt,
@@ -446,11 +472,11 @@ class App {
       this.duel.mark(this.sim.t, act);
       const r = this.duel.lastResult;
       if (r != null && r !== before) {
-        const ok = r <= (this.mode.duelTarget ?? 0.7);
+        const ok = r <= ((this.mode as any).duelTarget ?? 0.7);
         this.duelWins = ok ? this.duelWins + 1 : 0;
-        this.ui.setStreak(`${this.duelWins} / ${this.mode.target}  (${Math.round(r * 1000)}ms)`);
+        this.ui.setStreak(`${this.duelWins} / ${(this.mode as any).target}  (${Math.round(r * 1000)}ms)`);
         if (ok) this.audio.good(); else { this.audio.bad(); buzz(18); }
-        if (this.duelWins >= this.mode.target) this.pass(`${this.mode.target} attacks inside the window.`);
+        if (this.duelWins >= (this.mode as any).target) this.pass(`${(this.mode as any).target} attacks inside the window.`);
       }
     }
   }
@@ -459,7 +485,7 @@ class App {
   // same 3 seconds over and over instead of waiting a whole night for it.
   drive() {
     const s = this.sim;
-    if (this.mode.drill === 'phaseA') {
+    if ((this.mode as any).drill === 'phaseA') {
       // The measurable skill: were the cams DOWN when the 5s interval landed?
       // Reaching the vent opening is not a failure -- he gets there the moment
       // you raise the cams, by design. Phase A decides *when* he arrives.
@@ -467,7 +493,7 @@ class App {
         const up = s.monitor === 'up' || s.monitor === 'raising';
         if (up) {
           if (this.coach) { this.coach.cycleOk = false; this.coach.streak = 0; this.coach.combo = 0; }
-          this.ui.setStreak(`0 / ${this.mode.target}`);
+          this.ui.setStreak(`0 / ${(this.mode as any).target}`);
           this.ui.lane.pop('CAMS WERE UP', 'late', s.t);
           this.audio.bad(); this.buzz(30);
         } else {
@@ -478,7 +504,7 @@ class App {
       if (!s.bb.inOpening && s.bb.stage !== vent) s.bb.stage = vent;
       if (s.bb.inOpening) { s.bbLeave(); s.bb.stage = vent; }   // re-arm, no penalty
     }
-    if (this.mode.drill === 'phaseB') {
+    if ((this.mode as any).drill === 'phaseB') {
       if (!s.bb.inOpening) {
         this._rearm = (this._rearm ?? 0) + 1;
         if (this._rearm > 90 && s.monitor === 'up') { s.bbEnterOpening(); this._rearm = 0; }
@@ -548,7 +574,7 @@ class App {
     this.syncFullscreen();
     this.wake?.release?.().catch(() => {});
     this.audio.ambience(false);
-    if (this.sim.won && this.mode?.fullNight) { this.pass('Cleared 6 AM.'); return; }
+    if (this.sim.won && (this.mode as any)?.fullNight) { this.pass('Cleared 6 AM.'); return; }
     const sum = buildSummary(this.sim, this.coach);
     // Hold the final frame for a beat before the report covers it. The run is
     // already over -- `running` is false and frame() early-returns -- so this
@@ -606,7 +632,7 @@ function factItem(id) {
 }
 function renderFacts() {
   for (const list of document.querySelectorAll('[data-facts]'))
-    list.innerHTML = /** @type {any} */ (list).dataset.facts.split(' ').map(factItem).join('');
+    list.innerHTML = (list as any).dataset.facts.split(' ').map(factItem).join('');
 }
 
 // The strategy board's pass, drawn from the cycle the lessons teach so the two
@@ -681,5 +707,5 @@ function buildMenu() {
 buildMenu();
 renderFacts();
 renderPassBoard();
-window.app = new App();
+(window as any).app = new App();
 showPanel('menu');

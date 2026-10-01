@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { CLAIM_LEVELS } from '@sixam/kernel';
-import { ROUTE_FACTS, factText, pick } from '../src/route-facts.js';
+import { ROUTE_FACTS, factText, pick } from '../src/route-facts.ts';
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const NAMED = /10\/20|6 AM|±60 ms|\d{4}-\d{2}-\d{2}/g;

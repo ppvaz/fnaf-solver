@@ -91,7 +91,7 @@ function validateEligibility(eligibility) {
   return eligibility;
 }
 
-function checkCommitment(input, choices, { label = 'commitment' } = {}) {
+function checkCommitment(input, choices?, { label = 'commitment' } = {}) {
   object(label, input);
   if (input.schema !== COMMITMENT_SCHEMA)
     throw new TypeError(`exercise: ${label} schema mismatch`);

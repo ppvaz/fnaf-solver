@@ -9,7 +9,7 @@ import base64, json, re, pathlib, subprocess, sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[3]
 SRC = ROOT / 'apps' / 'trainer' / 'src'
-ENTRY = 'apps/trainer/src/main.js'
+ENTRY = 'apps/trainer/src/main.ts'
 
 IMPORT_NS = re.compile(r"^import \* as (\w+) from ['\"]([^'\"]+)['\"];\s*$", re.M)
 IMPORT_NAMED = re.compile(r"^import \{([^}]*)\} from ['\"]([^'\"]+)['\"];\s*$", re.M)
@@ -209,7 +209,7 @@ def main():
 
     html = html.replace('<link rel="stylesheet" href="apps/trainer/src/fonts.css">\n', '')
     html = html.replace('<link rel="stylesheet" href="apps/trainer/src/style.css">', f'<style>\n{css}\n</style>')
-    html = html.replace('<script type="module" src="apps/trainer/src/main.js"></script>', f'<script>\n{bundle}\n</script>')
+    html = html.replace('<script type="module" src="apps/trainer/src/main.ts"></script>', f'<script>\n{bundle}\n</script>')
 
     out = ROOT / 'dist'
     out.mkdir(exist_ok=True)

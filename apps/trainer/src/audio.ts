@@ -1,6 +1,12 @@
 // Synthesised cues. No sample files: everything is WebAudio, so the whole
 // trainer stays a single self-contained page.
 export class Audio {
+  declare ctx: any;
+  declare ready: boolean;
+  declare enabled: boolean;
+  declare ambNodes: { o: any; o2: any; g: any; } | { o: any; o2: any; g: any; };
+  declare samples: {};
+  declare master: any;
   constructor() {
     this.ctx = null; this.ready = false; this.enabled = true; this.ambNodes = null;
     // Filled by assets.js when the player has loaded their own sounds; any slot
@@ -21,7 +27,7 @@ export class Audio {
 
   unlock() {
     if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume(); return; }
-    const AC = window.AudioContext || window.webkitAudioContext;
+    const AC = window.AudioContext || (window as any).webkitAudioContext;
     if (!AC) return;
     this.ctx = new AC();
     this.master = this.ctx.createGain();
@@ -41,8 +47,7 @@ export class Audio {
     return g;
   }
 
-  /** @param {any} type */
-  tone(freq, at, dur, v = 0.25, type = 'square') {
+  tone(freq, at, dur, v = 0.25, type: any = 'square') {
     if (!this.ready || !this.enabled) return;
     const o = this.ctx.createOscillator();
     o.type = type; o.frequency.setValueAtTime(freq, at);
@@ -82,7 +87,7 @@ export class Audio {
 
   // Each control gets its own pitch, so a correct cycle has a recognisable
   // tune. Hearing the routine go wrong is faster than reading that it did.
-  tap(kind, cam) {
+  tap(kind, cam?) {
     const f = kind === 'cam' ? ({ 10: 660, 4: 740, 7: 830, 11: 560 }[cam] || 700)
       : kind === 'light' ? 990
       : kind === 'mask' ? 440
@@ -130,9 +135,9 @@ export class Audio {
   // Foxy's hall presence hum: the cue that tells you he is actually there.
   ambience(on) {
     if (!this.ready || !this.enabled) { return; }
-    if (on && this.samples.ambience && !this.ambNodes) {
+    if (on && (this.samples as any).ambience && !this.ambNodes) {
       const src = this.ctx.createBufferSource();
-      src.buffer = this.samples.ambience; src.loop = true;
+      src.buffer = (this.samples as any).ambience; src.loop = true;
       const g = this.ctx.createGain(); g.gain.value = 0.0001;
       src.connect(g); g.connect(this.master);
       src.start(); g.gain.exponentialRampToValueAtTime(0.5, this.t + 0.4);

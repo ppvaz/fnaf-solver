@@ -9,8 +9,8 @@ import {
   gradeMicrotrainerAttempt,
   makePredictionExercise,
   makeReplaySnapshot,
-} from './microtrainer.js';
-import { makeRendererAttempt } from './renderers.js';
+} from './microtrainer.ts';
+import { makeRendererAttempt } from './renderers.ts';
 import {
   applyArcadeGrade,
   exportArcadeProgress,
@@ -18,7 +18,7 @@ import {
   makeArcadeSet,
   resetArcadeProgress,
   validateArcadeProgress,
-} from './arcade-lab.js';
+} from './arcade-lab.ts';
 
 const STORAGE_KEY = 'm7.arcade.progress';
 const PROFILE_ID = 'arcade-fixture-profile-v1';
@@ -64,8 +64,14 @@ function writeProgress(progress) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(progress)); } catch { /* local-only storage may be unavailable */ }
 }
 
-/** @param {any} root */
 export class ArcadeLab {
+  declare root: any;
+  declare progress: any;
+  declare index: number;
+  declare answered: boolean;
+  declare sessionId: string;
+  declare specs: any[];
+  declare set: any;
   constructor(root) {
     this.root = root;
     this.progress = readProgress();
@@ -81,7 +87,7 @@ export class ArcadeLab {
 
   bind() {
     this.root.addEventListener('click', event => {
-      const target = /** @type {any} */ (event.target);
+      const target = (event.target as any);
       const answer = target.closest?.('[data-arcade-answer]')?.dataset.arcadeAnswer;
       if (answer) { this.answer(answer); return; }
       if (target.closest?.('#btn-arcade-next')) this.next();

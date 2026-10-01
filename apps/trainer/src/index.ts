@@ -6,7 +6,7 @@ export const trainerInfo = Object.freeze({
   canonicalModel: '@sixam/source',
 });
 
-export { Coach } from './coach.js';
+export { Coach } from './coach.ts';
 export {
   MICROTRAINER_SESSION_SCHEMA,
   MICROTRAINER_EVENT_SCHEMA,
@@ -30,7 +30,7 @@ export {
   validateMicrotrainerSession,
   makeMicrotrainerSession,
   replayMicrotrainerSession,
-} from './microtrainer.js';
+} from './microtrainer.ts';
 export {
   RENDERER_SCHEMA,
   RENDERER_VIEW_SCHEMA,
@@ -41,7 +41,7 @@ export {
   makeRendererView,
   makeRendererAttempt,
   compareRendererAttempts,
-} from './renderers.js';
+} from './renderers.ts';
 export {
   ARCADE_PROGRESS_SCHEMA,
   ARCADE_SET_SCHEMA,
@@ -51,4 +51,4 @@ export {
   applyArcadeGrade,
   exportArcadeProgress,
   resetArcadeProgress,
-} from './arcade-lab.js';
+} from './arcade-lab.ts';

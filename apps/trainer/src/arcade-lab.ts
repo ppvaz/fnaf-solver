@@ -4,8 +4,8 @@
 // correctness score.
 
 import { stableHash } from '@sixam/kernel/contracts';
-import { validateExercise } from './training/index.js';
-import { freeze, validatorsFor } from './validate.js';
+import { validateExercise } from './training/index.ts';
+import { freeze, validatorsFor } from './validate.ts';
 const { fail, object, text } = validatorsFor('arcade lab');
 
 export const ARCADE_PROGRESS_SCHEMA = 'arcade-lab-progress-v1';
@@ -30,9 +30,8 @@ function orderKey(seed, id) {
 
 /**
  * Deterministically order frozen exercises without changing their semantic data.
- * @param {any} options
  */
-export function makeArcadeSet({ id, seed, exercises, surface = 'campaign' } = {}) {
+export function makeArcadeSet({ id, seed, exercises, surface = 'campaign' }: any = {}) {
   text('set.id', id);
   text('set.seed', seed, 128);
   if (!['campaign', 'rhythm-highway', 'threat-constellation', 'replay'].includes(surface))
@@ -50,9 +49,8 @@ export function makeArcadeSet({ id, seed, exercises, surface = 'campaign' } = {}
 
 /**
  * Create per-player local progression; it has no cross-player merge path.
- * @param {any} options
  */
-export function makeArcadeProgress({ playerId, setId, createdAtMs = 0 } = {}) {
+export function makeArcadeProgress({ playerId, setId, createdAtMs = 0 }: any = {}) {
   text('progress.playerId', playerId, 128);
   text('progress.setId', setId, 128);
   number('progress.createdAtMs', createdAtMs);
@@ -101,8 +99,7 @@ export function exportArcadeProgress(progressInput) {
   return JSON.stringify(validateProgress(progressInput)) + '\n';
 }
 
-/** @param {any} progressInput */
-export function resetArcadeProgress(progressInput, createdAtMs = null) {
+export function resetArcadeProgress(progressInput: any, createdAtMs = null) {
   const progress = validateProgress(progressInput);
   return makeArcadeProgress({ playerId: progress.playerId, setId: progress.setId,
     createdAtMs: createdAtMs ?? progress.updatedAtMs });

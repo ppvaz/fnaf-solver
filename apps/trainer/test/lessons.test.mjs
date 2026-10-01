@@ -9,8 +9,8 @@
 // test:contracts.
 import assert from 'node:assert/strict';
 import * as C from '@sixam/source/fnaf2';
-import { Coach, playPress } from '../src/coach.js';
-import { LESSONS, MINUS7_CYCLE, lessonSim } from '../src/curriculum.js';
+import { Coach, playPress } from '../src/coach.ts';
+import { LESSONS, MINUS7_CYCLE, lessonSim } from '../src/curriculum.ts';
 
 const TAP_FRAMES = 6;   // a light held 100 ms, as lesson.test.mjs's player holds it
 

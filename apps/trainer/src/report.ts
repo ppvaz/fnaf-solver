@@ -34,7 +34,7 @@ export function drawTimeline(canvas, sim) {
   const rowH = Math.floor((H - 26) / rows.length);
 
   ctx.font = `500 8.5px ${MONO}`;
-  rows.forEach((row, r) => {
+  rows.forEach((row: any, r) => {
     const y0 = r * rowH + 4, h = rowH - 8;
     ctx.fillStyle = '#8A9483';
     ctx.textAlign = 'right'; ctx.textBaseline = 'middle';

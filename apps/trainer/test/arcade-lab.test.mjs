@@ -6,11 +6,11 @@ import {
   makeArcadeSet,
   resetArcadeProgress,
   validateArcadeProgress,
-} from '../src/arcade-lab.js';
+} from '../src/arcade-lab.ts';
 import {
   makePredictionExercise,
   makeReplaySnapshot,
-} from '../src/microtrainer.js';
+} from '../src/microtrainer.ts';
 
 const expectThrow = (fn, pattern) => assert.throws(fn, error => !pattern || pattern.test(error.message));
 const scheduler = { policyId: 'arcade-test', policyVersion: '1', selectionProbability: 1 };

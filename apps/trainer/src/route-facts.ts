@@ -9,18 +9,14 @@
 // whose value differs from the record's field, so a record that moves takes
 // the page with it instead of leaving it quoting a stale number.
 
-/** @typedef {'MODEL_ONLY' | 'FIXTURE' | 'DEVICE_MEASURED'} ClaimLevel */
-/** @typedef {string | number | {id: string}} PathStep */
-/**
- * @typedef {{id: string, label: ClaimLevel, text: string, record?: string,
- *   values?: Record<string, number>, from?: Record<string, PathStep[]>, unknown?: string}} RouteFact
- */
+type ClaimLevel = 'MODEL_ONLY' | 'FIXTURE' | 'DEVICE_MEASURED';
+type PathStep = string | number | {id: string};
+type RouteFact = {id: string, label: ClaimLevel, text: string, record?: string, values?: Record<string, number>, from?: Record<string, PathStep[]>, unknown?: string};
 
 const EVIDENCE = 'docs/evidence/';
 export const REPOSITORY = 'https://github.com/ppvaz/fnaf-solver/blob/master/';
 
-/** @type {readonly RouteFact[]} */
-export const ROUTE_FACTS = Object.freeze([
+export const ROUTE_FACTS: readonly RouteFact[] = Object.freeze([
   {
     id: 'bot-cohort',
     label: 'DEVICE_MEASURED',
@@ -74,8 +70,8 @@ export const ROUTE_FACTS = Object.freeze([
   },
 ]);
 
-/** What a fact says, with its values in place. @param {RouteFact} fact */
-export function factText(fact) {
+/** What a fact says, with its values in place. */
+export function factText(fact: RouteFact) {
   return fact.text.replace(/\{(\w+)\}/g, (_, key) => {
     if (key === 'unknown' && fact.unknown) return fact.unknown;
     if (!fact.values || !(key in fact.values)) throw new Error(`route fact ${fact.id} names {${key}} and holds no value for it`);
@@ -95,5 +91,4 @@ export function pick(record, path) {
   return here;
 }
 
-/** @param {string} id */
-export const factById = id => ROUTE_FACTS.find(fact => fact.id === id);
+export const factById = (id: string) => ROUTE_FACTS.find(fact => fact.id === id);

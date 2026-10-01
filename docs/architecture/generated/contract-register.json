@@ -282,19 +282,19 @@
       "id": "microtrainer-session-v1",
       "owner": "apps/trainer",
       "kind": "artifact",
-      "validator": "apps/trainer/src/microtrainer.js validateMicrotrainerSession"
+      "validator": "apps/trainer/src/microtrainer.ts validateMicrotrainerSession"
     },
     {
       "id": "exercise-renderer-v1",
       "owner": "apps/trainer",
       "kind": "data",
-      "validator": "apps/trainer/src/renderers.js validateRenderer"
+      "validator": "apps/trainer/src/renderers.ts validateRenderer"
     },
     {
       "id": "arcade-lab-progress-v1",
       "owner": "apps/trainer",
       "kind": "data",
-      "validator": "apps/trainer/src/arcade-lab.js validateArcadeProgress"
+      "validator": "apps/trainer/src/arcade-lab.ts validateArcadeProgress"
     },
     {
       "id": "venue-identity-v1",

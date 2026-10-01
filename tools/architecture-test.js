@@ -561,7 +561,7 @@ const operational = [
 ].filter(path => !testNamed(path) && !reportNamed(path));
 for (const path of operational) {
   const file = await tree(path);
-  // `apps/trainer/src/report.js` is presentation code, not a report harness;
+  // `apps/trainer/src/report.ts` is presentation code, not a report harness;
   // only test-named modules are forbidden across operational boundaries.
   const tests = moduleReferences(file).filter(ref => ref.specifier !== null && /(?:^|\/|[-_.])test/i.test(ref.specifier));
   assert.equal(tests.length, 0, `${path} imports a test module: ${tests.map(ref => ref.specifier).join(', ')}`);

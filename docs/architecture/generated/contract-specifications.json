@@ -946,7 +946,7 @@
       "version": 1,
       "owner": "apps/trainer",
       "kind": "artifact",
-      "purpose": "Stable microtrainer-session-v1 boundary for apps/trainer; its validator is apps/trainer/src/microtrainer.js validateMicrotrainerSession.",
+      "purpose": "Stable microtrainer-session-v1 boundary for apps/trainer; its validator is apps/trainer/src/microtrainer.ts validateMicrotrainerSession.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -955,7 +955,7 @@
       "unknownBehavior": "Invalid or unavailable data is rejected or represented as an explicit UNKNOWN state; it is never silently promoted.",
       "errorBehavior": "Reject malformed, incompatible, uncalibrated, or out-of-budget values at the boundary.",
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
-      "runtimeValidation": "apps/trainer/src/microtrainer.js validateMicrotrainerSession",
+      "runtimeValidation": "apps/trainer/src/microtrainer.ts validateMicrotrainerSession",
       "conformanceFixtures": [
         "apps/trainer/test/microtrainer.test.mjs"
       ]
@@ -966,7 +966,7 @@
       "version": 1,
       "owner": "apps/trainer",
       "kind": "data",
-      "purpose": "Stable exercise-renderer-v1 boundary for apps/trainer; its validator is apps/trainer/src/renderers.js validateRenderer.",
+      "purpose": "Stable exercise-renderer-v1 boundary for apps/trainer; its validator is apps/trainer/src/renderers.ts validateRenderer.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -975,7 +975,7 @@
       "unknownBehavior": "Invalid or unavailable data is rejected or represented as an explicit UNKNOWN state; it is never silently promoted.",
       "errorBehavior": "Reject malformed, incompatible, uncalibrated, or out-of-budget values at the boundary.",
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
-      "runtimeValidation": "apps/trainer/src/renderers.js validateRenderer",
+      "runtimeValidation": "apps/trainer/src/renderers.ts validateRenderer",
       "conformanceFixtures": [
         "apps/trainer/test/renderer.test.mjs"
       ]
@@ -986,7 +986,7 @@
       "version": 1,
       "owner": "apps/trainer",
       "kind": "data",
-      "purpose": "Stable arcade-lab-progress-v1 boundary for apps/trainer; its validator is apps/trainer/src/arcade-lab.js validateArcadeProgress.",
+      "purpose": "Stable arcade-lab-progress-v1 boundary for apps/trainer; its validator is apps/trainer/src/arcade-lab.ts validateArcadeProgress.",
       "nonPurpose": "Does not grant capabilities beyond the fields and actions explicitly validated by the contract.",
       "clockDomains": [
         "declared-by-payload-or-profile"
@@ -995,7 +995,7 @@
       "unknownBehavior": "Invalid or unavailable data is rejected or represented as an explicit UNKNOWN state; it is never silently promoted.",
       "errorBehavior": "Reject malformed, incompatible, uncalibrated, or out-of-budget values at the boundary.",
       "compatibility": "Versioned IDs are additive by default; incompatible changes require a new version and retained fixtures.",
-      "runtimeValidation": "apps/trainer/src/arcade-lab.js validateArcadeProgress",
+      "runtimeValidation": "apps/trainer/src/arcade-lab.ts validateArcadeProgress",
       "conformanceFixtures": [
         "apps/trainer/test/arcade-lab.test.mjs"
       ]

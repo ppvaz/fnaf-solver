@@ -5,9 +5,9 @@
 // motor/timing telemetry is stored in ExerciseAttempt; it cannot rewrite the
 // question or independently choose the outcome.
 
-import { validateExercise, validateExerciseAttempt } from './training/index.js';
-import { makeMicrotrainerAttempt, gradeMicrotrainerAttempt } from './microtrainer.js';
-import { freeze, validatorsFor } from './validate.js';
+import { validateExercise, validateExerciseAttempt } from './training/index.ts';
+import { makeMicrotrainerAttempt, gradeMicrotrainerAttempt } from './microtrainer.ts';
+import { freeze, validatorsFor } from './validate.ts';
 const { fail, object, text } = validatorsFor('renderer');
 
 export const RENDERER_SCHEMA = 'exercise-renderer-v1';
@@ -97,10 +97,9 @@ export function makeRendererView(exerciseInput, rendererInput) {
 
 /**
  * Create an attempt through the shared renderer contract, without scoring motor behavior as correctness.
- * @param {any} options
  */
 export function makeRendererAttempt({ exercise, renderer, sessionId, shownAtMs,
-  commitment = null, motor = null } = {}) {
+  commitment = null, motor = null }: any = {}) {
   const value = validateExercise(exercise);
   const descriptor = rendererFor(renderer);
   const view = makeRendererView(value, descriptor);

@@ -9,12 +9,9 @@ import * as C from '@sixam/source/fnaf2';
 
 /**
  * One step of a lesson's pattern, `at` seconds after its anchor.
- * @typedef {{id: string, at: number, label: string, action: string, want?: string, cam?: number,
- *   hold?: number, win?: {early: number, late: number}}} Step
  */
-/** @param {string} id @param {number} at @param {string} label @param {string} action
- *  @param {Partial<Step>} [extra] @returns {Step} */
-const S = (id, at, label, action, extra = {}) => ({ id, at, label, action, ...extra });
+export type Step = {id: string, at: number, label: string, action: string, want?: string, cam?: number, hold?: number, win?: {early: number, late: number}};
+const S = (id: string, at: number, label: string, action: string, extra: Partial<Step> = {}): Step => ({ id, at, label, action, ...extra });
 
 // the three-camera sweep, offset from wherever it starts
 const sweep = (t0) => [
@@ -54,8 +51,7 @@ const HOME = SWEEP + 0.60;                                    // three cameras, 
 const WIND = HOME + 0.10;
 const ms3 = x => Math.round(x * 1000) / 1000;
 
-/** @param {Parameters<typeof S>} args */
-const F = (...args) => Object.freeze(S(...args));
+const F = (...args: Parameters<typeof S>) => Object.freeze(S(...args));
 export const MINUS7_CYCLE = Object.freeze([
   F('monitor-down', 0, 'Cams down', 'monitor', { want: 'down' }),
   F('mask-on', ms3(MASK_ON), 'Mask on', 'mask', { want: 'on' }),
@@ -261,9 +257,9 @@ export const byId = (id) => LESSONS.find(l => l.id === id);
 /**
  * The Sim a lesson starts on: its options, and its opening state. The app and
  * the lesson tests both start lessons here.
- * @param {typeof LESSONS[number]} lesson @param {object} [options] extra Sim options
+ * @param options extra Sim options
  */
-export function lessonSim(lesson, options = {}) {
+export function lessonSim(lesson: typeof LESSONS[number], options: any = {}) {
   const sim = new C.Sim({ android: true, record: true, ...lesson.sim,
     ...(lesson.fullNight ? {} : { durationFrames: LESSON_FRAMES }), ...options });
   if (lesson.start) {

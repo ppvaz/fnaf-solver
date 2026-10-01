@@ -15,7 +15,7 @@ export const SLOTS = [
 const DB = 'm7-assets', STORE = 'sounds';
 
 function open() {
-  return new Promise((res, rej) => {
+  return new Promise<any>((res, rej) => {
     const r = indexedDB.open(DB, 1);
     r.onupgradeneeded = () => r.result.createObjectStore(STORE);
     r.onsuccess = () => res(r.result);
@@ -25,7 +25,7 @@ function open() {
 
 async function tx(mode, fn) {
   const db = await open();
-  return new Promise((res, rej) => {
+  return new Promise<any>((res, rej) => {
     const t = db.transaction(STORE, mode);
     const s = t.objectStore(STORE);
     const out = fn(s);

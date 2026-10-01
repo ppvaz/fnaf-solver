@@ -1,6 +1,6 @@
 import * as C from '@sixam/source/fnaf2';
-import { fmtTime } from './report.js';
-import { Lane } from './lane.js';
+import { fmtTime } from './report.ts';
+import { Lane } from './lane.ts';
 
 const pad2 = (n) => String(n).padStart(2, '0');
 
@@ -10,6 +10,28 @@ const GRADE_FX = {
 };
 
 export class UI {
+  declare root: any;
+  declare map: any;
+  declare widgets: any;
+  declare calibrating: boolean;
+  declare duelMode: boolean;
+  declare duel: any;
+  declare showCues: boolean;
+  declare reduce: MediaQueryList;
+  declare el: { tMain: any; tDec: any; boxFill: any; bars: any[]; budget: any; stuns: any[]; stunRows: any[]; foxy: any; bb: any; gf: any; office: any; monitor: any; hallGlow: any; hallWho: any; maskOv: any; blackoutOv: any; feedCam: any; feedName: any; feedBody: any; feedStun: any; wind: any; map: any; coachNext: any; coachFb: any; coachStreak: any; coachBar: any; coachBarFill: any; lane: any; monArrow: any; fx: { vignette: any; wipe: any; scan: any; }; timer: any; };
+  declare lane: Lane;
+  declare _mapW: any;
+  declare _mapH: any;
+  declare lastMaskOn: any;
+  declare _maskWas: any;
+  declare _whoWas: any;
+  declare _lastShown: any;
+  declare useLight: boolean;
+  declare useCamLight: boolean;
+  declare lockMonitor: boolean;
+  declare lastCamsUp: any;
+  declare _cueEl: any;
+  declare _cueSel: any;
   constructor(root) {
     this.root = root;
     const saved = loadLayout();
@@ -157,8 +179,8 @@ export class UI {
       b.dataset.cam = id;
       if (C.TARGET_CAMS.includes(+id)) b.classList.add('is-target');
       if (+id === C.BOX_CAM) b.classList.add('is-box');
-      b.style.left = `${r.x * 100}%`; b.style.top = `${r.y * 100}%`;
-      b.style.width = `${r.w * 100}%`; b.style.height = `${r.h * 100}%`;
+      b.style.left = `${(r as any).x * 100}%`; b.style.top = `${(r as any).y * 100}%`;
+      b.style.width = `${(r as any).w * 100}%`; b.style.height = `${(r as any).h * 100}%`;
       b.innerHTML = `<b>${pad2(id)}</b><em>${C.CAMS[id].name}</em>`;
       m.appendChild(b);
     }

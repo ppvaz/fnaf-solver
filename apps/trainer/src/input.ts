@@ -51,7 +51,7 @@ export async function keepAwake() {
 }
 
 export function isFullscreen() {
-  return !!(document.fullscreenElement || document.webkitFullscreenElement);
+  return !!(document.fullscreenElement || (document as any).webkitFullscreenElement);
 }
 
 // Browser chrome is not cosmetic here: an address bar showing or hiding resizes
@@ -61,14 +61,14 @@ export function isFullscreen() {
 // Must NOT be awaited-into: requestFullscreen only succeeds while the browser
 // still considers itself inside a user gesture, and awaiting anything first
 // spends that. Call it synchronously from the handler and let it settle later.
-export function goFullscreen(el = document.documentElement) {
+export function goFullscreen(el: any = document.documentElement) {
   if (isFullscreen()) return Promise.resolve(true);
   const req = el.requestFullscreen || el.webkitRequestFullscreen;
   if (!req) return Promise.resolve(false);
   let p;
   try { p = req.call(el, { navigationUI: 'hide' }); } catch { return Promise.resolve(false); }
   return Promise.resolve(p)
-    .then(() => { screen.orientation?.lock?.('landscape')?.catch(() => {}); return true; })
+    .then(() => { (screen.orientation as any)?.lock?.('landscape')?.catch(() => {}); return true; })
     .catch(() => false);
 }
 

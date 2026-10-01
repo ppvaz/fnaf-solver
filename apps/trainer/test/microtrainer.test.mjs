@@ -13,7 +13,7 @@ import {
   makeStrategyExercise,
   makeTimingExercise,
   replayMicrotrainerSession,
-} from '../src/microtrainer.js';
+} from '../src/microtrainer.ts';
 
 const expectThrow = (fn, pattern) => {
   assert.throws(fn, error => {

@@ -22,7 +22,7 @@ and gains its outcome in place, per the retraction convention in
 | 1 | Frame ingest | **Resolved.** `camera-` and `watch-calibrate.py` now import the loaders instead of copying them; their dead PIL guards went with them |
 | 4 | Calibration CLI | **Resolved for four of five.** `add_common_arguments()` in `monitor-calibrate.py`; `screen-calibrate.py` left alone because it has no gate |
 | 13 | Grading census | **Resolved.** The coverage gate reads all three registries and is green; 22 exclusion rows added, one gate registered |
-| 16 | Trainer validators | **Resolved.** `apps/trainer/src/validate.js`; 34 duplicate definitions removed from six modules |
+| 16 | Trainer validators | **Resolved.** `apps/trainer/src/validate.ts`; 34 duplicate definitions removed from six modules |
 | 17 | `packages/propose/bin/minus-toys/` (was `tools/minustoys/`) | **Decided: keep.** Route-per-directory is deliberate; see the row |
 | 19 | Dead citations | **Resolved.** Four files repointed at `plant-model.js` |
 
@@ -411,7 +411,7 @@ all of `apps/trainer/src` found the kit in **six** modules — `adaptive-coach`,
 `threat-constellation` — 34 definitions of nine functions. A window-overlap
 count is a lower bound on duplication, not a measure of it.
 
-**RESOLVED 2026-09-08.** `apps/trainer/src/validate.js` holds `isRecord`,
+**RESOLVED 2026-09-08.** `apps/trainer/src/validate.ts` holds `isRecord`,
 `finite`, `freeze` and a `validatorsFor(subject, { textMax })` factory for the
 prefix-bound `fail`, `object`, `text` and `strings`. `fail` differed only in its
 message prefix and `text` only in its cap (160 in two modules, 128 in four), so

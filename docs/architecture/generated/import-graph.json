@@ -259,99 +259,99 @@
       ]
     },
     {
-      "file": "apps/trainer/src/arcade-lab.js",
+      "file": "apps/trainer/src/arcade-lab.ts",
       "imports": [
-        "./training/index.js",
-        "./validate.js",
+        "./training/index.ts",
+        "./validate.ts",
         "@sixam/kernel/contracts"
       ]
     },
     {
-      "file": "apps/trainer/src/arcade-ui.js",
+      "file": "apps/trainer/src/arcade-ui.ts",
       "imports": [
-        "./arcade-lab.js",
-        "./microtrainer.js",
-        "./renderers.js"
+        "./arcade-lab.ts",
+        "./microtrainer.ts",
+        "./renderers.ts"
       ]
     },
     {
-      "file": "apps/trainer/src/coach.js",
+      "file": "apps/trainer/src/coach.ts",
       "imports": [
-        "./curriculum.js",
+        "./curriculum.ts",
         "@sixam/source/fnaf2"
       ]
     },
     {
-      "file": "apps/trainer/src/curriculum.js",
-      "imports": [
-        "@sixam/source/fnaf2"
-      ]
-    },
-    {
-      "file": "apps/trainer/src/index.js",
-      "imports": [
-        "./arcade-lab.js",
-        "./coach.js",
-        "./microtrainer.js",
-        "./renderers.js"
-      ]
-    },
-    {
-      "file": "apps/trainer/src/lane.js",
+      "file": "apps/trainer/src/curriculum.ts",
       "imports": [
         "@sixam/source/fnaf2"
       ]
     },
     {
-      "file": "apps/trainer/src/main.js",
+      "file": "apps/trainer/src/index.ts",
       "imports": [
-        "./arcade-ui.js",
-        "./assets.js",
-        "./audio.js",
-        "./coach.js",
-        "./curriculum.js",
-        "./input.js",
-        "./lane.js",
-        "./report.js",
-        "./route-facts.js",
-        "./ui.js",
+        "./arcade-lab.ts",
+        "./coach.ts",
+        "./microtrainer.ts",
+        "./renderers.ts"
+      ]
+    },
+    {
+      "file": "apps/trainer/src/lane.ts",
+      "imports": [
         "@sixam/source/fnaf2"
       ]
     },
     {
-      "file": "apps/trainer/src/microtrainer.js",
+      "file": "apps/trainer/src/main.ts",
       "imports": [
-        "./training/index.js",
-        "./validate.js",
+        "./arcade-ui.ts",
+        "./assets.ts",
+        "./audio.ts",
+        "./coach.ts",
+        "./curriculum.ts",
+        "./input.ts",
+        "./lane.ts",
+        "./report.ts",
+        "./route-facts.ts",
+        "./ui.ts",
+        "@sixam/source/fnaf2"
+      ]
+    },
+    {
+      "file": "apps/trainer/src/microtrainer.ts",
+      "imports": [
+        "./training/index.ts",
+        "./validate.ts",
         "@sixam/kernel/contracts"
       ]
     },
     {
-      "file": "apps/trainer/src/renderers.js",
+      "file": "apps/trainer/src/renderers.ts",
       "imports": [
-        "./microtrainer.js",
-        "./training/index.js",
-        "./validate.js"
+        "./microtrainer.ts",
+        "./training/index.ts",
+        "./validate.ts"
       ]
     },
     {
-      "file": "apps/trainer/src/report.js",
+      "file": "apps/trainer/src/report.ts",
       "imports": [
         "@sixam/source/fnaf2"
       ]
     },
     {
-      "file": "apps/trainer/src/training/index.js",
+      "file": "apps/trainer/src/training/index.ts",
       "imports": [
-        "./activity-gate.js",
-        "./exercise.js"
+        "./activity-gate.ts",
+        "./exercise.ts"
       ]
     },
     {
-      "file": "apps/trainer/src/ui.js",
+      "file": "apps/trainer/src/ui.ts",
       "imports": [
-        "./lane.js",
-        "./report.js",
+        "./lane.ts",
+        "./report.ts",
         "@sixam/source/fnaf2"
       ]
     },
@@ -365,8 +365,8 @@
     {
       "file": "apps/trainer/test/arcade-lab.test.mjs",
       "imports": [
-        "../src/arcade-lab.js",
-        "../src/microtrainer.js",
+        "../src/arcade-lab.ts",
+        "../src/microtrainer.ts",
         "node:assert/strict"
       ]
     },
@@ -393,7 +393,7 @@
     {
       "file": "apps/trainer/test/coach.test.mjs",
       "imports": [
-        "../src/coach.js",
+        "../src/coach.ts",
         "@sixam/source/fnaf2",
         "node:assert/strict"
       ]
@@ -418,8 +418,8 @@
     {
       "file": "apps/trainer/test/lessons.test.mjs",
       "imports": [
-        "../src/coach.js",
-        "../src/curriculum.js",
+        "../src/coach.ts",
+        "../src/curriculum.ts",
         "@sixam/source/fnaf2",
         "node:assert/strict"
       ]
@@ -437,7 +437,7 @@
     {
       "file": "apps/trainer/test/microtrainer.test.mjs",
       "imports": [
-        "../src/microtrainer.js",
+        "../src/microtrainer.ts",
         "node:assert/strict"
       ]
     },
@@ -467,15 +467,15 @@
     {
       "file": "apps/trainer/test/renderer.test.mjs",
       "imports": [
-        "../src/microtrainer.js",
-        "../src/renderers.js",
+        "../src/microtrainer.ts",
+        "../src/renderers.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "apps/trainer/test/route-facts.test.mjs",
       "imports": [
-        "../src/route-facts.js",
+        "../src/route-facts.ts",
         "@sixam/kernel",
         "node:assert/strict",
         "node:fs",

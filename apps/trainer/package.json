@@ -4,5 +4,5 @@
   "private": true,
   "type": "module",
   "dependencies": {"@sixam/kernel": "file:../../packages/kernel", "@sixam/source": "file:../../packages/source"},
-  "exports": {".": "./src/index.js", "./training": "./src/training/index.js"}
+  "exports": {".": "./src/index.ts", "./training": "./src/training/index.ts"}
 }

@@ -1,5 +1,5 @@
 import * as C from '@sixam/source/fnaf2';
-import { MINUS7_CYCLE } from './curriculum.js';
+import { MINUS7_CYCLE } from './curriculum.ts';
 
 // Whether the game took a press. A send is not game acceptance (CLAUDE.md):
 // the Sim refuses a press without a word -- the mask while it is still
@@ -9,8 +9,8 @@ import { MINUS7_CYCLE } from './curriculum.js';
 // alone, and a player who hit the taught mask-off on time scored PERFECT on a
 // press the game had refused.
 
-/** The Sim state a press can change. @param {any} sim */
-export function pressState(sim) {
+/** The Sim state a press can change. */
+export function pressState(sim: any) {
   return {
     maskOn: sim.maskOn, maskAnim: sim.maskAnim, monitor: sim.monitor,
     dropEverything: !!sim.dropEverything, dropTouch: sim.dropTouch ?? null,
@@ -21,11 +21,8 @@ export function pressState(sim) {
 
 /**
  * Did the press of `act` land, judged from the Sim state before and after it?
- * @param {ReturnType<typeof pressState>} before
- * @param {ReturnType<typeof pressState>} after
- * @param {string} act
  */
-export function pressLanded(before, after, act) {
+export function pressLanded(before: ReturnType<typeof pressState>, after: ReturnType<typeof pressState>, act: string) {
   switch (act) {
     case 'mask': return before.maskOn !== after.maskOn || before.maskAnim !== after.maskAnim ||
       before.dropTouch !== after.dropTouch;
@@ -45,9 +42,8 @@ export function pressLanded(before, after, act) {
 /**
  * The one press path, shared by the app and the tests: the Sim takes the press
  * first, then the coach grades it knowing whether it landed.
- * @param {any} sim @param {Coach | null | undefined} coach @param {string} act
  */
-export function playPress(sim, coach, act) {
+export function playPress(sim: any, coach: Coach | null | undefined, act: string) {
   const before = pressState(sim);
   sim.press(act);
   const landed = pressLanded(before, pressState(sim), act);
@@ -58,7 +54,31 @@ export function playPress(sim, coach, act) {
 // Watches the routine rather than the game: which input was due, when it
 // actually landed, and by how much it was off.
 export class Coach {
-  constructor(sim, opts = {}) {
+  declare sim: any;
+  declare script: any;
+  declare enabled: boolean;
+  declare anchorDigits: any;
+  declare tolGood: any;
+  declare tolOk: any;
+  declare cycleStart: number;
+  declare idx: number;
+  declare results: any[];
+  declare trace: any[];
+  declare holds: any[];
+  declare pendingFlash: { step: any; t: any; delta: number; };
+  declare suspended: boolean;
+  declare onCycle: any;
+  declare cycleOk: boolean;
+  declare windFrames: number;
+  declare combo: number;
+  declare bestCombo: number;
+  declare streak: number;
+  declare bestStreak: number;
+  declare cycles: number;
+  declare settleAt: number;
+  declare last: any;
+  declare lastHeld: number;
+  constructor(sim, opts: any = {}) {
     this.sim = sim;
     this.script = opts.script || MINUS7_CYCLE;
     this.enabled = opts.enabled !== false;
@@ -287,6 +307,10 @@ export class Coach {
 
 // The Phase B duel: measures un-mask -> CAM 10 -> CAM 04 as one motion.
 export class DuelTimer {
+  declare best: number;
+  declare startT: any;
+  declare marks: any[];
+  declare lastResult: number;
   constructor() { this.reset(); this.best = +localStorage.getItem('m7.bestDuel') || null; }
   reset() { this.startT = null; this.marks = []; this.lastResult = null; }
   begin(t) { this.startT = t; this.marks = []; }
