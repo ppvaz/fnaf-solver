@@ -1,0 +1,15 @@
+{
+ "schema": "qualification-v1",
+ "verdict": "PASS",
+ "claimLevel": "DEVICE_MEASURED",
+ "policyHash": "fnv1a-5c8dcb5f",
+ "modelHash": "minus-toys-engine-current-v1",
+ "sampleCount": 3000,
+ "evidenceId": "night7-anchored-k3-qualification-20260915",
+ "qualifiedBy": "Pedro (operator) on 2026-09-15: 'run k3 with the wall clock stamp im itching to see'",
+ "scope": "Night 7 (Custom Night, all ten dials 20) only, anchored release only (strict). hid-mediaprojection transport; binding k2 with the hall flash at 7400 ms; anchorEpochMs 2433; exploratory single run, not a cohort",
+ "previousTransportQualification": "docs/evidence/qualification-hid-mediaprojection-night5-20260912-contact-final.json",
+ "night5PhysicalEvidence": "artifacts/runs/night6-anchoredh1-20260913T180208Z (the Night 6 6 AM with this loop unshifted)",
+ "modelGate": "k2 knobs at the 3000-seed standard: 3000/3000 at 2374/2416.66/2433/2449.99 (hall pinned 7460, maskOff 7000). k1's 7200 end is device-refuted (Foxy at ~20 s, 60 ms hall gap).",
+ "limits": "The claimLevel is the transport's (DEVICE_MEASURED). The Night 7 policy is MODEL_ONLY: the 7000 end has never run on the phone; the j12 BB death it answers is one sample. A late authorization must abort rather than release."
+}

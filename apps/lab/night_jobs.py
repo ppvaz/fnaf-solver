@@ -228,7 +228,8 @@ def emit_bundle(winner_path: str, out_dir: Path, timeout_s: float = EMIT_TIMEOUT
         plans[int(entry["night"])] = {"file": entry["file"], "sha256": entry["sha256"],
                                       "observeUntilMs": plan_observe_until_ms(data.decode("utf-8"))}
     return {"dir": str(out_dir), "manifestSha256": sha256_bytes(manifest_bytes),
-            "winnerHash": manifest.get("winnerHash"), "profile": (manifest.get("profile") or {}).get("id"),
+            "winnerHash": manifest.get("winnerHash"), "engineHash": manifest.get("engineHash"),
+            "profile": (manifest.get("profile") or {}).get("id"),
             "anchorEpochMs": manifest.get("anchorEpochMs"), "plans": plans,
             "emitOutput": result.stdout.strip()[-500:]}
 
@@ -296,6 +297,31 @@ def title_expectation(game: str, night: int) -> dict:
 
 
 VENUE_BINDINGS = ROOT / "docs" / "evidence"
+QUALIFICATIONS = ROOT / "docs" / "evidence"
+
+class Unbound(ValueError):
+    """A FNaF 2 night whose committed custody lacks what a live campaign requires; `code` names the refusal."""
+    def __init__(self, code: str, message: str):
+        super().__init__(message)
+        self.code = code
+
+def qualification_for(winner_hash: str | None, engine_hash: str | None, root: Path = QUALIFICATIONS) -> Path | None:
+    """The committed qualification a live campaign accepts for this bundle: qualification-v1/v2, PASS,
+    DEVICE_MEASURED, its policyHash the bundle's winner and its modelHash the bundle's engine (campaign-preflight's
+    qualification-binding gate). The newest by name when several bind it; None when none does."""
+    if not winner_hash or not engine_hash:
+        return None
+    found = []
+    for path in sorted(root.glob("qualification-*.json")):
+        try:
+            record = json.loads(path.read_text())
+        except (OSError, ValueError):
+            continue
+        if (record.get("schema") in ("qualification-v1", "qualification-v2") and record.get("verdict") == "PASS"
+                and record.get("claimLevel") == "DEVICE_MEASURED" and record.get("policyHash") == winner_hash
+                and record.get("modelHash") == engine_hash):
+            found.append(path)
+    return found[-1] if found else None
 
 def venue_bindings(profile: str, root: Path = VENUE_BINDINGS) -> list[Path]:
     """The committed venue-binding-v1 files whose subject is this profile. Since 2026-09-30 a live FNaF 2 campaign
@@ -318,12 +344,17 @@ def runner_command(game: str, binding: dict, winner: dict, night: int, label: st
     if game == "fnaf2":
         venues = venue_bindings(binding["profile"])
         if not venues:
-            raise ValueError(f"no committed venue binding names profile {binding['profile']}: a live night would refuse venue-identity-unbound")
+            raise Unbound("VENUE_UNBOUND", f"no committed venue binding names profile {binding['profile']}: a live night would refuse venue-identity-unbound")
+        qualification = qualification_for(binding["bundle"].get("winnerHash"), binding["bundle"].get("engineHash"))
+        if qualification is None:
+            raise Unbound("QUALIFICATION_UNBOUND", f"no committed qualification binds winner {binding['bundle'].get('winnerHash')} on engine "
+                          f"{binding['bundle'].get('engineHash')}: a live night would fail qualification-binding")
         argv = [str(HERE / "../../packages/play/bin/phone/night-run.sh"), "--live", "--confirm-live", "--label", label,
                 "--bundle", binding["bundle"]["dir"], "--night", str(night), "--serial", serial,
                 "--profile", binding["profile"], "--no-grade"]
         for venue in venues:
             argv += ["--venue-binding", str(venue)]
+        argv += ["--qualification", str(qualification)]
         if audio:
             argv.append("--bt-audio")
         return argv, {"FNAF_LEASE_HELD": "1", "FNAF_SERIAL": serial}

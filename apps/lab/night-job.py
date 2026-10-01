@@ -314,11 +314,14 @@ class NightJob:
 
         try:
             argv, marker = night_jobs.runner_command(game, binding, winner, night, args.label, self.serial, args.audio)
-        except ValueError as error:   # a FNaF 2 night with no committed venue binding for its profile
-            return self.refuse("VENUE_UNBOUND", str(error))
-        venues = [argv[i + 1] for i, item in enumerate(argv) if item == "--venue-binding"]
-        if venues:
-            self.record["venueBindings"] = [{"path": os.path.relpath(v, ROOT), "sha256": hashlib.sha256(Path(v).read_bytes()).hexdigest()} for v in venues]
+        except night_jobs.Unbound as error:   # VENUE_UNBOUND or QUALIFICATION_UNBOUND: refused before the runner
+            return self.refuse(error.code, str(error))
+        custody = lambda flag: [{"path": os.path.relpath(argv[i + 1], ROOT), "sha256": hashlib.sha256(Path(argv[i + 1]).read_bytes()).hexdigest()}
+                                for i, item in enumerate(argv) if item == flag]
+        if custody("--venue-binding"):
+            self.record["venueBindings"] = custody("--venue-binding")
+        if custody("--qualification"):
+            self.record["qualification"] = custody("--qualification")[0]
         if RUNNER_PREFIX:
             argv = [*RUNNER_PREFIX, *argv]
         self.record["runner"] = {"argv": argv, "marker": marker, "timeoutS": night_jobs.runner_timeout_s(binding["nightMs"])}

@@ -286,6 +286,21 @@ def enqueue_checks(base: Path) -> None:
         check("venue: a profile gets only the bindings that name it", [p.name for p in night_jobs.venue_bindings("p1", Path(tmp))] == ["venue-binding-a.json"])
         check("venue: an unbound profile gets none, and its night is refused before the runner",
               night_jobs.venue_bindings("p3", Path(tmp)) == [])
+        q = {"schema": "qualification-v1", "verdict": "PASS", "claimLevel": "DEVICE_MEASURED", "policyHash": "fnv1a-1", "modelHash": "engine-1"}
+        (Path(tmp) / "qualification-a.json").write_text(json.dumps(q))
+        (Path(tmp) / "qualification-b.json").write_text(json.dumps({**q, "verdict": "FAIL"}))
+        (Path(tmp) / "qualification-c.json").write_text(json.dumps({**q, "modelHash": "engine-2"}))
+        check("qualification: only a PASS, DEVICE_MEASURED one binding both the winner and the engine",
+              night_jobs.qualification_for("fnv1a-1", "engine-1", Path(tmp)).name == "qualification-a.json"
+              and night_jobs.qualification_for("fnv1a-1", "engine-3", Path(tmp)) is None
+              and night_jobs.qualification_for(None, "engine-1", Path(tmp)) is None)
+    try:
+        night_jobs.runner_command("fnaf2", {"profile": "hid-mediaprojection", "bundle": {"dir": "x", "winnerHash": "fnv1a-none", "engineHash": "e"}},
+                                  {}, 7, "label", "SERIAL", False)
+        unbound = None
+    except night_jobs.Unbound as error:
+        unbound = error.code
+    check("qualification: a bundle no committed qualification binds is refused QUALIFICATION_UNBOUND", unbound == "QUALIFICATION_UNBOUND", unbound)
     check("title: FNaF 4 has no title model, so its night cannot be observed",
           night_jobs.title_expectation("fnaf4", 3)["readable"] is False)
     check("title: 7 is Custom Night, 6 is 6th Night, 1-5 the digit under Continue",
@@ -398,6 +413,10 @@ def main() -> int:
         check("success: night-run.sh got the committed venue binding that names its profile",
               venue_at > 0 and argv[venue_at + 1].endswith("venue-binding-hid-mediaprojection-20260930.json")
               and record.get("venueBindings", [{}])[0].get("path") == "docs/evidence/venue-binding-hid-mediaprojection-20260930.json", argv)
+        qual_at = argv.index("--qualification") if argv and "--qualification" in argv else -1
+        check("success: night-run.sh got the committed qualification bound to the k3 winner and engine",
+              qual_at > 0 and argv[qual_at + 1].endswith("qualification-hid-mediaprojection-night7-k3-20260915.json")
+              and record.get("qualification", {}).get("path") == "docs/evidence/qualification-hid-mediaprojection-night7-k3-20260915.json", argv)
         check("success: night-run.sh got the bundle, the night and --no-grade",
               bool(argv) and argv[0].endswith("night-run.sh") and argv[argv.index("--night") + 1] == "7"
               and "--no-grade" in argv and calls[0]["bundleManifest"] is True, calls)
