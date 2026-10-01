@@ -1,0 +1,48 @@
+{
+ "schema": "experiment-spec-v2",
+ "id": "full06-static-readout",
+ "purpose": "diagnostic sweep",
+ "claimLevel": "DEVICE_MEASURED frames against MODEL_ONLY predictions",
+ "date": "2026-10-01",
+ "step": "S2 (plans/ROADMAP.md): establish a valid seed measurement (S2a) on a traced night, full-06",
+ "night": "full-06",
+ "seed": 47593,
+ "question": "Does the camera static's flicker in full-06's retained frames read out the game's random stream: is there one generator state that reproduces each winding window's flicker, and how far along the measured seed's cycle is it?",
+ "premise": {
+  "mechanism": "Office g58 sets the static's blend coefficient every 100 ms from Random(50) + 125 plus g59's Random(5) * 10 (every 490 ms) less g192's 50 on Random(31) == 30, less g498's 100 + Random(100) while the view overlaps the Puppet; g827/g828 with g478 make it opaque on Custom Night's CAM 08/09. During k3's winding the counter `viewing` is 11 while the selected view is CAM 09 (the camera glitch), so the static is shown, not forced opaque, and no g498 term applies.",
+  "signal": "In full-06's first two winding windows the retained frames' grid_mean_luma, averaged over the frames of each g58 period (edge periods dropped), varies 8.6 and 16.3 times more between periods than within-period noise allows: a step every g58 period.",
+  "measuredSeed": "Injected with its own state, the measured seed's predicted opacity correlates r 0.331 and 0.193 with those period means, inside the spread of other start states."
+ },
+ "explanations": [
+  {"id": "E-readout-seed", "statement": "The flicker is the coefficient of the phone's own stream, the model places the draws between the injection and the window right, and the phone's stream is the measured seed's.", "predicts": "Each window IDENTIFIED; window 1's state in the seed's cycle at a step count within 16 of the model's draws by the injection; window 2's state that many steps further, within 3 of the model's count between the injections."},
+  {"id": "E-readout-other-stream", "statement": "The flicker reads out the phone's stream, but that stream is not the measured seed's.", "predicts": "Window 1 IDENTIFIED with a state outside the seed's cycle (SEED_REFUTED), or inside it far from the model's count."},
+  {"id": "E-no-readout", "statement": "The flicker does not resolve single draws in the retained 20x9 grid (noise, the static's own animation, or draw placement).", "predicts": "UNIDENTIFIED windows."}
+ ],
+ "family": {
+  "states": "every generator state 0..65535, written into the model after the injection update of a window (the model's own game state up to there, measured seed, measured clock, landed contacts)",
+  "model": "phone-stream-census.mjs inputs() for full-06; the coefficient from the draws the production model spends at g58/g59/g192/g498",
+  "frames": "the retained frame trace named in phone-encounter-nights.json (sha256 checked), image j showing model frame passStart[j + 1] of the trace-catchup clock"
+ },
+ "inputs": {
+  "config": "26b89b453e2b483610c118c264d1eb0dbb5d06758ab53db283807ffc25d666d0",
+  "modelOptions": "d1ba74693da29dac953058c1ea5d41b553ac6d7494ce911f6e8c742ef487db4a",
+  "contacts": "c4ca5d3320b8a65c3522d3a3a072a79c7a10251447f5112a61a903d45da6c67f",
+  "frameTimes": "383d25c80bb3648e9199589ebce7b6782a510eacee4409df3c90e940869541cf"
+ },
+ "windows": [
+  {"name": "wind-1", "fromMs": 10400, "toMs": 13700, "cam": 9, "viewing": 11, "injectAt": 619, "endFrame": 855},
+  {"name": "wind-2", "fromMs": 20400, "toMs": 23700, "cam": 9, "viewing": 11, "injectAt": 1222, "endFrame": 1455}
+ ],
+ "decisionRule": {
+  "minR": 0.85,
+  "minMargin": 0.1,
+  "seedSteps": 16,
+  "betweenSteps": 3,
+  "text": "Per window: Pearson r between each state's predicted opacity (1 - coefficient / 255) and the measured period means; IDENTIFIED when the top state's r is at least 0.85 and leads the second by at least 0.1, else UNIDENTIFIED. If wind-1 is IDENTIFIED: SEED_REFUTED when its state is outside the measured seed's cycle; SEED_SUPPORTED when inside and its step count from the seed is within 16 of the model's draws by update 619; SEED_UNDECIDED otherwise. If both windows are IDENTIFIED: CONSISTENT when the steps from wind-1's state to wind-2's are within 3 of the model's draws between the injections, else INCONSISTENT. With 31 periods a random state's r has a spread of about 0.18, so the chance maximum over 65,536 states is near 0.75-0.8; the explainable share of the period variance caps a true state near 0.94 (wind-1) and 0.97 (wind-2)."
+ },
+ "stoppingRule": {"kind": "fixed-sample", "text": "Both windows, every state, once. No window, threshold or statistic changes after the run."},
+ "costProbe": "Before this file: the measured seed's own windows (r 0.331, 0.193), 300 other start states in the start-state family on the same windows at frame and period level (period-level r: median -0.01, p95 0.33, max 0.63), and 50 injected states for timing (4-5 ms each). No injected state's r was looked at.",
+ "tool": "node packages/propose/bin/recompile/phone-static-readout.mjs --predeclaration docs/evidence/full06-static-readout-predeclaration-20261001.json --workers 6 --out <result>",
+ "resultRecord": "docs/evidence/full06-static-readout-20261001.json",
+ "rung": "None. A readout that identifies states is an instrument for S2a and S4, not a device claim about a night outcome."
+}
