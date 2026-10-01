@@ -56,6 +56,8 @@ BT_AUDIO_BASE=""
 TRACE=1
 TRACE_SECONDS="${FNAF_TRACE_SECONDS:-900}"
 FRAME_TRACE=0
+STATIC_READOUT=0      # --static-readout: native camera-view pixels through the night (needs --frame-trace)
+STATIC_MODEL="packages/play/profiles/fnaf2/moto-g56/static-view-moto-g56-v207.json"
 INPUT_TRACE=1
 FORCE_TRACE=0
 LIVE=0               # --live: actuate the phone (with --confirm-live)
@@ -84,6 +86,7 @@ while [ $# -gt 0 ]; do
     --no-trace) TRACE=0; shift ;;
     --force-trace) FORCE_TRACE=1; shift ;;
     --frame-trace) FRAME_TRACE=1; shift ;;
+    --static-readout) STATIC_READOUT=1; shift ;;
     --no-input-trace) INPUT_TRACE=0; shift ;;
     --trace-seconds) TRACE_SECONDS="$2"; shift 2 ;;
     --no-video) VIDEO=0; shift ;;
@@ -192,6 +195,9 @@ RUNID="night${NIGHT}-${LABEL}-${STAMP}"
 # a blind attempt: night7-night7-anchoredj9-aim2315-tf-20260913T233252Z (52
 # characters, the label already carried the night prefix) did exactly that on
 # 2026-09-13. Refuse before touching the phone.
+if [ "$STATIC_READOUT" = 1 ] && [ "$FRAME_TRACE" != 1 ]; then
+  die "--static-readout reads the camera static against the frame trace's own image clock: add --frame-trace"
+fi
 if [ "$FRAME_TRACE" = 1 ] && [ "${#RUNID}" -gt 48 ]; then
   die "--frame-trace needs a run id of at most 48 characters; '$RUNID' has ${#RUNID} (the label gets 'night${NIGHT}-' and a 16-character stamp)"
 fi
@@ -340,6 +346,43 @@ stop_frame_trace() {
   pull_frame_trace "the campaign process exited"
   printf 'frame trace  %s%s\n' "$(cat "$OUTDIR/frame-trace.state" 2>/dev/null || echo UNKNOWN)" \
     "$([ -s "$OUTDIR/frame-trace.file" ] && printf ' (%s)' "$(cat "$OUTDIR/frame-trace.file")")"
+}
+
+# The camera static re-rolls its blend coefficient from the game's Random(50) every 100 ms (Office g58), so the
+# static's opacity over the camera picture reads the random stream out (docs/evidence/full06-static-readout-*).
+# OPT-IN with --frame-trace: a measurement run. native-regions.ts records the model's static_view rectangle on every
+# copied frame, starting where the frame trace starts (evidence.started), into captures/static-readouts/, which is
+# never packed: the rows carry raw native pixels (publishing boundary). It never touches the executor's reads (the
+# FNaF 2 executor reads no REGION).
+STATIC_READOUT_PID=""
+start_static_readout() {
+  [ "$STATIC_READOUT" = 1 ] || return 0
+  mkdir -p captures/static-readouts
+  printf 'PENDING\n' > "$OUTDIR/static-readout.state"
+  ( waited_ms=0
+    while [ "$waited_ms" -lt 240000 ]; do
+      if grep -q '"type":"evidence.started"' "$OUTDIR/campaign.log" 2>/dev/null; then
+        printf 'RECORDING\n' > "$OUTDIR/static-readout.state"
+        if FNAF_LEASE_HELD=1 FNAF_SERIAL="$SERIAL" node packages/play/bin/phone/native-regions.ts record --model "$STATIC_MODEL" --set static \
+             --seconds 520 --out "captures/static-readouts/$RUNID.jsonl" >/dev/null 2>"$OUTDIR/static-readout.err"; then
+          printf 'RECORDED\n' > "$OUTDIR/static-readout.state"
+        else
+          printf 'FAILED\n' > "$OUTDIR/static-readout.state"
+        fi
+        return 0
+      fi
+      sleep 0.25; waited_ms=$((waited_ms + 250))
+    done
+    printf 'NO-NIGHT\n' > "$OUTDIR/static-readout.state" ) &
+  STATIC_READOUT_PID=$!
+}
+
+stop_static_readout() {
+  [ -n "$STATIC_READOUT_PID" ] || return 0
+  pkill -INT -P "$STATIC_READOUT_PID" 2>/dev/null || true
+  kill "$STATIC_READOUT_PID" 2>/dev/null || true
+  STATIC_READOUT_PID=""
+  printf 'static readout  %s (captures/static-readouts/%s.jsonl)\n' "$(cat "$OUTDIR/static-readout.state" 2>/dev/null || echo UNKNOWN)" "$RUNID"
 }
 
 # Kernel input events for the whole attempt: the injection side of actuation
@@ -576,6 +619,7 @@ on_exit() {
   trap '' INT TERM HUP
   set +e
   stop_frame_trace
+  stop_static_readout
   stop_input_trace
   stop_recording
   # The phone is released BEFORE the analysis, not after it. Nothing in
@@ -720,6 +764,7 @@ fi
 [ "$TEACH" = 1 ] && CAMPAIGN+=(--teach-overlay)
 if [ "$DRY" = 1 ]; then
   printf 'DRY RUN, the phone is not actuated (add --live --confirm-live for a live night):\n  %s\n' "${CAMPAIGN[*]} ${EXTRA[*]:-}"
+  [ "$STATIC_READOUT" = 1 ] && printf 'static readout (from evidence.started): FNAF_LEASE_HELD=1 node packages/play/bin/phone/native-regions.ts record --model %s --set static --seconds 520 --out captures/static-readouts/%s.jsonl\n' "$STATIC_MODEL" "$RUNID"
   # Nothing was started on the phone, so nothing is stopped or reset either.
   # The EXIT trap force-stops the game, relaunches it and screencaps its title;
   # until 2026-09-27 a dry run still ran it and put FNaF 2 in front of an app
@@ -791,6 +836,7 @@ if [ "$TRACE" = 1 ]; then
   CAMPAIGN_CMD=("$TRACE_TOOL" "$RUNID" "$TRACE_SECONDS" -- "${CAMPAIGN[@]}")
 fi
 start_frame_trace
+start_static_readout
 start_input_trace
 set +e
 "${CAMPAIGN_CMD[@]}" 2>&1 | tee "$OUTDIR/campaign.log"

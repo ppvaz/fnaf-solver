@@ -1,0 +1,13 @@
+{
+ "schema": "native-regions-v1",
+ "id": "static-view-fnaf2-moto-g56-v207",
+ "claimLevel": "PLACEMENT from retained native frames; no detector threshold is claimed here",
+ "target": {"package": "com.scottgames.fnaf2", "build": "2.0.7", "device": "moto g56 5G", "geometry": "2400x1080 helper native frames"},
+ "why": "The camera static's blend coefficient is re-rolled from Random(50) every 100 ms (Office g58), so the static's opacity over the camera picture is a readout of the game's random stream (docs/evidence/full06-static-readout-20261001.json). The retained 20x9 grid sees its period steps but cannot resolve single draws; this rectangle gives the readout native pixels. Placement was read off three retained Night 7 camera-view frames (artifacts/campaign-2026-09-27T19-30-35.284Z lifecycle frames 00011, 00015, 00035; sha256 262aaa9f..., 50e8f0fe..., 7c2ba2d3...): the upper wall of the camera picture, clear of every UI element the view draws (flashlight meter and clock above it, the camera label and map to its right, the wind meter below it). The cameras pan on their own, so the picture under the rectangle drifts slowly; a reader detrends it (phone-static-readout.mjs detrend). Confirm on a live SNAP of the winding view before a measurement night.",
+ "sets": {
+  "static": {
+   "static_view": {"x": 150, "y": 130, "width": 1000, "height": 290, "step": 14,
+    "reads": "mean luma of 72 x 21 native pixels of the camera picture under the static, one row per copied frame with its image time"}
+  }
+ }
+}

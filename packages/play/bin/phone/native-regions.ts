@@ -16,7 +16,8 @@
  * clock minus image time), which is the measured replacement for the
  * `renderLagMs`/`readMs` bands in fnaf1-device-timing. `record` keeps every
  * distinct frame's pixels with its image time on the host clock. `png` writes
- * one PNG per region, upscaled by its step, for a person to look at.
+ * one PNG per region, upscaled by its step, for a person to look at. A `record` row carries the frame's own
+ * `imageNs` (the helper's image clock, the frame trace's `image_ns`) beside its host time.
  */
 import { writeFileSync, mkdirSync, readFileSync, appendFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -137,7 +138,7 @@ async function main(argv) {
         last = r.seq;
         const regions = Object.fromEntries(Object.entries(r.regions).map(([k, v]) =>
           [k, { cols: (v as any).cols, rows: (v as any).rows, step: (v as any).step, hex: Buffer.from(new Uint8Array((v as any).pixels.buffer)).toString('base64') }]));
-        appendFileSync(opt.out, `${JSON.stringify({ seq: r.seq, imageHostMs: r.imageHostMs, rttMs: r.rttMs, regions })}\n`);
+        appendFileSync(opt.out, `${JSON.stringify({ seq: r.seq, imageNs: r.imageNs === null ? null : String(r.imageNs), imageHostMs: r.imageHostMs, rttMs: r.rttMs, regions })}\n`);
         rows += 1;
       }
       console.log(`recorded ${rows} frames to ${opt.out}`);

@@ -1265,6 +1265,12 @@
       "lifecycle": "supported"
     },
     {
+      "id": "packages/play/profiles/fnaf2/moto-g56/static-view-moto-g56-v207.json",
+      "invocation": "packages/play/profiles/fnaf2/moto-g56/static-view-moto-g56-v207.json",
+      "kind": "model",
+      "lifecycle": "supported"
+    },
+    {
       "id": "packages/play/profiles/fnaf1/moto-g56/title-stars-fnaf1-moto-g56-v207.json",
       "invocation": "packages/play/profiles/fnaf1/moto-g56/title-stars-fnaf1-moto-g56-v207.json",
       "kind": "model",

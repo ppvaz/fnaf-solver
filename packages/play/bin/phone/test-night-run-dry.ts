@@ -118,6 +118,18 @@ try {
   }
   console.log('night-run: no flag is a dry run -- no adb call, no lease, no serial needed');
 
+  // --static-readout: native camera-view pixels into captures/ (never the packed run directory), only beside the
+  // frame trace whose image clock reads them, and nothing on the phone in a dry run.
+  const lone = run(nightRun('--static-readout'), bare());
+  ok(lone.status !== 0 && /add --frame-trace/.test(lone.stderr) && adbCalls().length === 0,
+    `--static-readout without --frame-trace must refuse before adb:\n${lone.stdout}\n${lone.stderr}`);
+  const readout = run(nightRun('--frame-trace', '--static-readout'), bare());
+  const recorder = readout.stdout.split('\n').find((line) => line.startsWith('static readout (from evidence.started):')) ?? '';
+  ok(readout.status === 0 && /native-regions\.ts record --model packages\/play\/profiles\/fnaf2\/moto-g56\/static-view-moto-g56-v207\.json --set static /.test(recorder)
+    && /--out captures\/static-readouts\//.test(recorder) && adbCalls().length === 0,
+    `a dry --frame-trace --static-readout run names its recorder, writing under captures/:\n${readout.stdout}\n${readout.stderr}`);
+  console.log('night-run: --static-readout needs --frame-trace and records native camera pixels under captures/');
+
   const half = run(nightRun('--live'), bare({ FNAF_SERIAL: FAKE }));
   ok(half.status === 2 && /both --live and --confirm-live/.test(half.stderr) && adbCalls().length === 0,
     `--live without --confirm-live must refuse before adb:\n${half.stderr}`);
