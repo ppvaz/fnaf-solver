@@ -5,7 +5,7 @@
 
 import * as C from '@sixam/source/fnaf2';
 import { FNAF2_CONTROL_VOCABULARY as V } from '@sixam/source';
-import { FUSION_POLL_MS, MASK_ANIM_ON_MS, MIN_CONTACT_MS, MONITOR_READY_WIND_MS, RAISE_MARGIN_MS, SEAM_MARGIN_MS } from './recipe.mjs';
+import { FUSION_POLL_MS, MASK_ANIM_ON_MS, MIN_CONTACT_MS, MONITOR_READY_WIND_MS, RAISE_MARGIN_MS, SEAM_MARGIN_MS } from './recipe.ts';
 
 // [SOURCED] The engine animates the monitor and the mask, and drops input that
 // lands inside those windows: a camera select or wind press during the raise
@@ -55,7 +55,7 @@ const MONITOR_MASK_READY_MS = Math.ceil(MASK_BUTTON_VISIBLE_AFTER_MONITOR_DOWN_M
 //
 //   camera select  raise+300 ms works -- it is the arm that landed every one of
 //                  the four story-night wins, so the bound is the animation
-//                  plus recipe.mjs's RAISE_MARGIN_MS.
+//                  plus recipe.ts's RAISE_MARGIN_MS.
 //   wind hold      raise+100 ms and raise+200 ms both MISSED on the phone; the
 //                  taps did not land and the box went unwound. Observed to
 //                  work: +434 ms (the minus-toys opening, which armed all four
@@ -340,7 +340,7 @@ export function compileCycle(cycle, rows, initial = initialState(cycle), seams =
       if (state.monitorUp) throw new TypeError(`${cycle}: maskraise starts with monitor up`);
       // The compound's internal gap is deliberately NOT checked against
       // MASK_ANIM_OFF_MS. That was tried on 2026-09-19 and was wrong: the
-      // device measured this exact transition (actuator.mjs: a monitor press
+      // device measured this exact transition (actuator.ts: a monitor press
       // after a mask-off press, 0 of 17 lost at or above 180 ms), and the
       // compound's gap is MASK_RAISE_GAP_MS (300 ms; bundle.mjs refuses less).
       // Refusing it would contradict a measurement with a model constant --
@@ -372,7 +372,7 @@ export function compileCycle(cycle, rows, initial = initialState(cycle), seams =
     } else if (row.kind === 'read') {
       if (state.monitorUp) throw new TypeError(`${cycle}: vent read requires monitor down`);
       state.maskOn = true;
-      // "The read owns the prophylactic mask-on press" (recipe.mjs): it lands
+      // "The read owns the prophylactic mask-on press" (recipe.ts): it lands
       // after the held vent window plus the released-input gap, not at row.at.
       maskOnAt = row.at + row.duration + row.gap;
       actions.push(action(cycle, row, id, { kind: 'observe-left', control: V.leftVentLight,

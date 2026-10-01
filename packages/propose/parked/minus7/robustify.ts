@@ -11,11 +11,11 @@
 //
 // --descend runs coordinate descent: apply each round's single best per-row
 // shift, re-measure, repeat until nothing helps. The output is a shift vector
-// over the plan's rows; translating it back into `packages/propose/parked/minus7/hid-device-pilot.mjs`
+// over the plan's rows; translating it back into `packages/propose/parked/minus7/hid-device-pilot.ts`
 // timings (and re-gating at 1200 seeds) is a manual follow-up -- a hand-edited
-// plan is not shippable (CLAUDE.md: "port the table to recipe.mjs").
+// plan is not shippable (CLAUDE.md: "port the table to recipe.ts").
 import { execFileSync } from 'node:child_process';
-import { replay } from '../../bin/plans/recipe.mjs';
+import { replay } from '../../bin/plans/recipe.ts';
 import { jitterPlan, parsePlanText } from '../../bin/plans/human-gate.ts';
 import { Rng } from '@sixam/source/fnaf2';
 
@@ -62,7 +62,7 @@ function main() {
   const seeds = +arg('seeds', '600');
   const rangeFr = +arg('range', '3');
   const text = execFileSync('node',
-    ['packages/propose/bin/plans/recipe.mjs', '--device-plan', `--night=${night}`]).toString();
+    ['packages/propose/bin/plans/recipe.ts', '--device-plan', `--night=${night}`]).toString();
   const { plan, idleUntilMs } = parsePlanText(text);
   const rows = rowList(plan);
 

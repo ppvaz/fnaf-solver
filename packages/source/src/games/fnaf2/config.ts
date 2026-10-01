@@ -409,7 +409,7 @@ export const POWER_BLINK = 500;   // indicator starts blinking [SOURCED]
 // snaps anything below 300 up to 300.
 //
 // The drain is not, and 2026-08-26 device measurement contradicts this
-// constant. 16.67 s is 2000 units at 120 units/s, and `recipe.mjs` states that
+// constant. 16.67 s is 2000 units at 120 units/s, and `recipe.ts` states that
 // 120/s figure as **"Nights 6-7"** -- yet it is applied here to every night.
 //
 // Measured on the phone, Night 1, never winding, sampling the CAM 11 pie every
@@ -470,7 +470,7 @@ export const POWER_BLINK = 500;   // indicator starts blinking [SOURCED]
 // Three controls, because a favourable number is not a result until something
 // that should not produce it has been checked:
 //   1. The night 6 row independently reproduces the 16.67 s already in this
-//      file, which came from recipe.mjs's "120 units/s, Nights 6-7".
+//      file, which came from recipe.ts's "120 units/s, Nights 6-7".
 //   2. The values rise monotonically with difficulty (2,2,3,4,4,5,6,6) --
 //      meaningful as a drain and meaningless as an increment.
 //   3. The device measured Night 1 at ~36 units/s against a sourced 40, inside

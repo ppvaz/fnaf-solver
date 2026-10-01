@@ -26,7 +26,7 @@ import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { FPS } from '@sixam/source/fnaf2';
 import { STRATEGY_REGISTRY, compileBundle, validateWinner } from '../plans/bundle.ts';
-import { replay as replayToys } from '../plans/minus-toys-plan.mjs';
+import { replay as replayToys } from '../plans/minus-toys-plan.ts';
 import { committedWinners, designBlock, forkBlocks, gitState } from './winner-census.ts';
 import { winnerTag } from '@sixam/kernel';
 
@@ -168,7 +168,7 @@ export function buildPhaseRecord({ rows, night, frames, count, bindings, winnerH
       phases: { frames: width, stepMs: STEP_MS, windowMs: frames * STEP_MS,
         relativeTo: 'each binding\'s anchorEpochMs + phaseOffsetMs; map index i is frame i - window' },
       family: 'the night\'s committed phase-aware winner-v1 bindings; the oracle picks among them per seed',
-      win: 'sim.won AND splitAt >= 0, as night7-presets.ts and minus-toys-plan.mjs --gate score it',
+      win: 'sim.won AND splitAt >= 0, as night7-presets.ts and minus-toys-plan.ts --gate score it',
     },
     bindings: out,
     oracle: { wins: oracle.wins, bestFixed, voi, maxVoi: Math.max(...voi), phasesWithVoi: voi.filter((v) => v > 0).length },

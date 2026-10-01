@@ -185,7 +185,7 @@ try {
   expectFailure(() => compileBundle(branchyMinus7, join(root, 'minus7-branchy')),
     'minus7 compiled a night whose attack branch the device executor cannot honor');
 
-  // Night 1 is the attack-free night: recipe.mjs's idleUntilMs() records that
+  // Night 1 is the attack-free night: recipe.ts's idleUntilMs() records that
   // Foxy, BB, Mangle, the Withereds and Golden Freddy never act on it, and the
   // emitted plan's own replay reports detections=0 over seeds 1..3000
   // (2026-09-19), so `clear` is the whole steady schedule.

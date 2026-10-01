@@ -7,7 +7,7 @@
 // lateness, and a seeded actuator replays identically. No device.
 import { pathToFileURL } from 'node:url';
 import * as C from '@sixam/source/fnaf2';
-import { DeviceActuator, SEAM_SAFE_MS, MONITOR_ANIM_DOWN_MS } from '../../play/bin/phone/actuator.mjs';
+import { DeviceActuator, SEAM_SAFE_MS, MONITOR_ANIM_DOWN_MS } from '../../play/bin/phone/actuator.ts';
 import { run as pilotRun } from '../parked/minus7/stock-device-pilot.ts';
 import { cohort } from '../parked/minus7/closed-loop-reclaim.ts';
 

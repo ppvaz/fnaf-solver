@@ -1,6 +1,6 @@
 // Gate for the Minus Toys device plan. No phone required.
 //
-// minus-toys-plan.mjs is the device half of plan 02 package 2a: it ports the
+// minus-toys-plan.ts is the device half of plan 02 package 2a: it ports the
 // engine-verified glitch-based Minus Toys loop (packages/propose/bin/minustoystest.ts) into
 // the modern semantic artifact plan, whose bundle compiler and device
 // executor own the physical handoff. This checks three things that can each
@@ -18,8 +18,8 @@ import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { OPENING, LOOP, KNOBS0, build, replay, emitPlan, schedule, maskWindows, phaseScan } from './minus-toys-plan.mjs';
-import { DOUBLE_GLITCH_CAMERA_PAIRS } from '../../../play/bin/probe/arm-verification.mjs';
+import { OPENING, LOOP, KNOBS0, build, replay, emitPlan, schedule, maskWindows, phaseScan } from './minus-toys-plan.ts';
+import { DOUBLE_GLITCH_CAMERA_PAIRS } from '../../../play/bin/probe/arm-verification.ts';
 import { parsePlan } from './bundle.ts';
 import { compileArtifactPlans } from './artifact-commands.ts';
 import * as C from '@sixam/source/fnaf2';
@@ -30,7 +30,7 @@ const seed = i => (i * 2654435761) >>> 0;
 
 // --- 0. the parametrized build reproduces the shipped schedule ---------------
 //
-// minus-toys-plan.mjs self-asserts this on import (build(KNOBS0) === the frozen
+// minus-toys-plan.ts self-asserts this on import (build(KNOBS0) === the frozen
 // arrays); re-state it here so a change to that assertion also trips a suite
 // check, and pin the two facts a search depends on: a knob perturbs the plan,
 // and the shipped default does not.
@@ -121,7 +121,7 @@ check(controlArmed === 0,
 
 // The CLI entry point uses the same gate before emitting a bundle plan.
 for (const night of ['2', '7']) {
-  execFileSync('node', [join(here, 'minus-toys-plan.mjs'), `--night=${night}`, '--gate'],
+  execFileSync('node', [join(here, 'minus-toys-plan.ts'), `--night=${night}`, '--gate'],
     { stdio: 'ignore' });
 }
 
@@ -181,11 +181,11 @@ for (const night of ['2', '7']) {
     'the double-glitch camera pair registry drifted from Minus 3/Minus Toys');
 
   // --gate exits 0; and it refuses any night but 1.
-  execFileSync('node', [join(here, 'minus-toys-plan.mjs'), '--night=1', '--minimal', '--gate'],
+  execFileSync('node', [join(here, 'minus-toys-plan.ts'), '--night=1', '--minimal', '--gate'],
     { stdio: 'ignore' });
   let refused = false;
   try {
-    execFileSync('node', [join(here, 'minus-toys-plan.mjs'), '--night=3', '--minimal'],
+    execFileSync('node', [join(here, 'minus-toys-plan.ts'), '--night=3', '--minimal'],
       { stdio: 'ignore' });
   } catch { refused = true; }
   check(refused, '--minimal did not refuse night 3 (it is Night 1 only)');

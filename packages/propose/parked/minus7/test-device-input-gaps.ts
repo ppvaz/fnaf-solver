@@ -17,7 +17,7 @@
 // captured at a moment the schedule believed was the office.
 import { pathToFileURL } from 'node:url';
 import * as C from '@sixam/source/fnaf2';
-import { build, devicePlan, MONITOR_ANIM_UP_MS, RAISE_MARGIN_MS, DEVICE_SPACING_MS, MODEL_SLOT_MS, MIN_CONTACT_MS } from '../../bin/plans/recipe.mjs';
+import { build, devicePlan, MONITOR_ANIM_UP_MS, RAISE_MARGIN_MS, DEVICE_SPACING_MS, MODEL_SLOT_MS, MIN_CONTACT_MS } from '../../bin/plans/recipe.ts';
 
 // The sourced constant, not the swipe-era one.
 //
@@ -42,7 +42,7 @@ import { build, devicePlan, MONITOR_ANIM_UP_MS, RAISE_MARGIN_MS, DEVICE_SPACING_
 // hold their own copy of the animation length: a 204 here against a 200 there
 // is how the emitter relaxed a raise to exactly the gap this file then called a
 // violation, which is precisely the two-files-one-number failure that produced
-// the 90-vs-100 contact floor. MONITOR_ANIM_UP_MS comes from recipe.mjs, which
+// the 90-vs-100 contact floor. MONITOR_ANIM_UP_MS comes from recipe.ts, which
 // converts src/config.ts's sourced frame count with the same 60 fps the rest of
 // the codebase uses. The 33 ms margin absorbs the rounding (config's comment
 // calls 12 frames 0.204 s).

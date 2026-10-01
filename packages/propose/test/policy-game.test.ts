@@ -19,14 +19,16 @@ const withAction = (program, action) => {
 // -- an existing policy names no game, validates as FNaF 2's, and keeps its
 //    bytes: these are the canonical policy and compiled plan hashes from
 //    before the IR took a game, and the compiled plan carries the first.
+//    The policy names its source file, so they were re-pinned on 2026-10-01
+//    when minus-toys-plan.mjs became minus-toys-plan.ts and nothing else moved.
 const minimal = minimalPolicy();
 assert.equal(Object.hasOwn(minimal.metadata, 'game'), false);
 assert.equal(policyGame(minimal), 'fnaf2');
-assert.equal(sha256(canonicalPolicy(minimal)), '08fb6bd4efac232b889a84443c98f91b3614ab7d38b653274ddaccdd3a4d0eee');
+assert.equal(sha256(canonicalPolicy(minimal)), 'a6f80e104d249c8327c4a5b71bba7fd28bf98f666bd57e952ea77de73f934aaf');
 assert.equal(canonicalPolicy(roundTripPolicy(minimal)), canonicalPolicy(minimal));
 const artifact = compilePolicyArtifact(minimal);
-assert.equal(artifact.policySha256, '08fb6bd4efac232b889a84443c98f91b3614ab7d38b653274ddaccdd3a4d0eee');
-assert.equal(artifact.planSha256, '7784187d9dbeca2b9b9c7da06d2d76dfcd0614c6c885d59428f92b8bdde727be');
+assert.equal(artifact.policySha256, 'a6f80e104d249c8327c4a5b71bba7fd28bf98f666bd57e952ea77de73f934aaf');
+assert.equal(artifact.planSha256, 'c70038ba59acfec6fb5e3e756ecdbfae944effe6c79d641f344c8a4d72b0d311');
 // Naming the game it already had changes nothing it validates.
 validatePolicy({ ...minimal, metadata: { ...minimal.metadata, game: 'fnaf2' } });
 

@@ -9,7 +9,7 @@
 //
 //   exact  -- every press lands on its scheduled frame. This is the model's
 //             own answer about the ROUTE, and it is not a device result.
-//   device -- the same presses through `actuator.mjs`: a launch-lateness draw
+//   device -- the same presses through `actuator.ts`: a launch-lateness draw
 //             per press, the queue serializing behind it, and the mask seam.
 //             The band is named on every line, because a device number with
 //             no band behind it is a wish.
@@ -34,8 +34,8 @@ import * as C from '@sixam/source/fnaf2';
 import { Sim } from '@sixam/source/fnaf2';
 import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort, seedCohortDescriptor }
   from '@sixam/propose/seeds';
-import { KNOBS0, build, schedule } from './minus-toys-plan.mjs';
-import { DeviceActuator } from '../../../play/bin/phone/actuator.mjs';
+import { KNOBS0, build, schedule } from './minus-toys-plan.ts';
+import { DeviceActuator } from '../../../play/bin/phone/actuator.ts';
 import { designBlock, forkBlocks, gitState } from '../census/winner-census.ts';
 import { heldOutSeeds } from '../../../../packages/propose/bin/census/winner-phase-census.ts';
 import { STRATEGY_REGISTRY, validateWinner } from './bundle.ts';
@@ -128,7 +128,7 @@ export const BANDS = {
   shipped: [49, 106, 'wait_until re-probed: landing error over 20 targets 200 ms apart (device probe 2026-08-26)'],
   documented: [49, 93, 'wait_until as documented (HID-MULTITOUCH.md)'],
   anchor: [110, 180, 'anchor press, older traces (ON-DEVICE-VALIDATION.md)'],
-  wide: [110, 300, "actuator.mjs default band (older traces + night 6-40's inferred ~300 ms)"],
+  wide: [110, 300, "actuator.ts default band (older traces + night 6-40's inferred ~300 ms)"],
 };
 
 // One night. `band === null` is the exact lane: the queue is delivered on its
@@ -407,7 +407,7 @@ function gate(presets, runs, bandName) {
     }
     // `worst` in the device lane is not the same pin as in the exact lane: the
     // actuator's own stream still DRAWS its lateness (a pinned mean would
-    // delete the spread that does the damage -- actuator.mjs's header), but it
+    // delete the spread that does the damage -- actuator.ts's header), but it
     // pins the mask-seam coin flip, so every monitor press inside the seam is
     // lost instead of some of them.
     for (const worst of [false, true]) {

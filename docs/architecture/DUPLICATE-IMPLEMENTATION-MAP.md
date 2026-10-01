@@ -224,7 +224,7 @@ Host-side schedulers and their simulator twins:
   `campaign-runner.js`, `service.js` (443) — all under `apps/device/src`, all
   carrying `device-executor-v1`, which is the binding that makes this
   family legible.
-- **Simulator pilots:** `packages/propose/parked/minus7/hid-device-pilot.mjs` (962),
+- **Simulator pilots:** `packages/propose/parked/minus7/hid-device-pilot.ts` (962),
   `stock-device-pilot.ts` (412), `reactive-pilot.ts` (344),
   `closed-loop-reclaim.ts` (155). `stock-device-pilot.ts:3` states its
   relationship — it replays `tools/device/trial.sh`'s millisecond table — and
@@ -264,7 +264,7 @@ name is what makes a newcomer read the wrong file.
 
 ## 10. Route plan emitters — binding: `NONE` on the shape, `GATE` per route
 
-`packages/propose/bin/plans/minus-toys-plan.mjs` (554) and `minus-3-plan.mjs` (239) implement
+`packages/propose/bin/plans/minus-toys-plan.ts` (554) and `minus-3-plan.mjs` (239) implement
 the *same undeclared interface*: `KNOBS0`, `build()`, `schedule()`,
 `replay()`, `emitPlan()`, plus a census entry point (`phaseScan` / `gate`).
 `minus3-frame-light.ts` (145) is a third shape for the same job

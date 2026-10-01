@@ -1,6 +1,6 @@
 // Per-instruction timing margin map for the Minus Toys device loop.
 //
-// The deterministic gate (minus-toys-plan.mjs --gate) says 200/200 for a
+// The deterministic gate (minus-toys-plan.ts --gate) says 200/200 for a
 // schedule that has almost no slack: the published strategy's own write-up
 // (docs/strategy/MINUS-3-STRATEGY.md sec.3) states its error budget is only
 // ~0.66 s per cycle, and the first device run (n2-minustoys-0117, 2026-08-28)
@@ -19,7 +19,7 @@
 // Minus Toys counterpart. It is a measurement of the MODEL (no randomness), and
 // it inherits the engine's Golden-Freddy-interval and Toy-cam-stall gaps
 // (plans/02 sec.5) -- read it as "the model has at most this much slack here".
-import { OPENING, LOOP, replay } from './minus-toys-plan.mjs';
+import { OPENING, LOOP, replay } from './minus-toys-plan.ts';
 import { formatEdge, scanEdge } from './basin-edge.ts';
 import { FNAF2_CONTROL_VOCABULARY as V } from '@sixam/source';
 

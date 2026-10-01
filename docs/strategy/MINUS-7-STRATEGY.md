@@ -148,7 +148,7 @@ seconds after the interval, three before the next — lands D = 3. That is why
 the table above says `:X2 / :X7` and not "as soon as the interval passes":
 **at the 10/20 cap there is no margin at all, D = 3 is the last safe value.**
 
-The emitted device route (`packages/propose/bin/plans/recipe.mjs`) flashes at cycle **+3100
+The emitted device route (`packages/propose/bin/plans/recipe.ts`) flashes at cycle **+3100
 ms**, which is 0.28 s *after* its 5 s check, not 2 s after — so 4.7 s of D
 accrues before the next check and the designed cadence is **D = 5**. D = 5 is
 safe on every night up to Foxy AI 15, and fatal at 17. On Night 7 the route

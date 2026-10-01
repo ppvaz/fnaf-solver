@@ -163,6 +163,23 @@ export class DeviceActuator {
   // clear the floor by the seam-slack margin, so it only bites when presses
   // move against each other. Null (the default) keeps every figure published
   // before it existed.
+  declare lateWhen: any;
+  declare maskFloorFrames: number;
+  declare monitorDownAt: number;
+  declare maskFloorDrops: number;
+  declare sim: any;
+  declare rng: Rng;
+  declare lateMin: number;
+  declare lateMax: number;
+  declare perPress: boolean;
+  declare beatLateMs: any;
+  declare pending: any[];
+  declare lastLand: number;
+  declare holdLateMs: Map<any, any>;
+  declare maskOffAt: number;
+  declare sent: number;
+  declare seamDrops: number;
+  declare loop: MonitorSupervisor;
   constructor(sim, { seed = 1, worst = false, lateMinMs = LAUNCH_LATE_MIN_MS,
                      lateMaxMs = LAUNCH_LATE_MAX_MS, perPress = true,
                      closedLoop = null, lateWhen = null, maskFloorMs = null } = {}) {
@@ -319,6 +336,41 @@ export class DeviceActuator {
 //     its blindness. The reclaim below is therefore an upper bound on this
 //     loop, not a floor.
 export class MonitorSupervisor {
+  declare act: any;
+  declare sim: any;
+  declare gateWaitMs: number;
+  declare cueReadMs: number;
+  declare cueMatchMs: number;
+  declare classifyMs: number;
+  declare cueAnimUpMs: number;
+  declare animAnchor: string;
+  declare errorRate: number;
+  declare gateOn: boolean;
+  declare checkpointOn: boolean;
+  declare correct: boolean;
+  declare confirmRead: boolean;
+  declare idealResync: boolean;
+  declare believedUp: boolean;
+  declare maxDesyncs: number;
+  declare lastMonitorSent: number;
+  declare lastMonitorLand: number;
+  declare lastPressSent: number;
+  declare steps: any[];
+  declare buffer: any[];
+  declare deferred: any[];
+  declare holdShift: Map<any, any>;
+  declare blocking: boolean;
+  declare correcting: boolean;
+  declare swallowNextMask: boolean;
+  declare gateReads: number;
+  declare gateReadFrames: any[];
+  declare gateCorrections: number;
+  declare gateFalse: number;
+  declare checkpointFalse: number;
+  declare checkpointDesyncs: number;
+  declare recoveryPresses: number;
+  declare blockedFrames: number;
+  declare aborted: boolean;
   constructor(act, { gateWaitMs = MONITOR_ANIM_DOWN_MS, cueReadMs = CUE_READ_MS,
                      cueMatchMs = CUE_MATCH_MS, classifyMs = CLASSIFY_MS,
                      cueAnimUpMs = CUE_ANIM_UP_MS, animAnchor = 'sent',

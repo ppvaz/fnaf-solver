@@ -15,9 +15,9 @@
 //
 // `attackWindowMs = 10000` is the regression fixture: it must reproduce the
 // 803feb3 numbers within noise on every config.
-import { build, devicePlan, idleUntilMs } from '../../bin/plans/recipe.mjs';
+import { build, devicePlan, idleUntilMs } from '../../bin/plans/recipe.ts';
 import { modelGate } from '../../bin/plans/human-gate.ts';
-import { run } from './hid-device-pilot.mjs';
+import { run } from './hid-device-pilot.ts';
 import * as C from '@sixam/source/fnaf2';
 
 const arg = (k, d) => {

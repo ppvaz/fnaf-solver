@@ -29,7 +29,7 @@
 //   node packages/propose/parked/minus7/n7probe.ts [--runs=800]
 import { Sim } from '@sixam/source/fnaf2';
 import * as C from '@sixam/source/fnaf2';
-import { build, devicePlan, idleUntilMs } from '../../bin/plans/recipe.mjs';
+import { build, devicePlan, idleUntilMs } from '../../bin/plans/recipe.ts';
 import { modelGate } from '../../bin/plans/human-gate.ts';
 
 const arg = (k, d) => {

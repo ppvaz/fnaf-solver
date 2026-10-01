@@ -152,7 +152,7 @@ export function helperClockOffset(events) {
 /**
  * The epoch this run actually delivered, in the model's own sign convention.
  *
- * `minus-toys-plan.mjs` computes `when = base + at + epochMs` in game-relative
+ * `minus-toys-plan.ts` computes `when = base + at + epochMs` in game-relative
  * time, so a POSITIVE `epochMs` fires the schedule later against the game's
  * frame grid. On the phone the plan is anchored to T0 while the game's night
  * starts `errorMs` later, which places every action `errorMs` EARLY in
@@ -318,7 +318,7 @@ export function reconstruct(events, observations, frameTrace = null) {
 
 /** The minus-toys model's response to phase, at frame resolution over one second. */
 async function phaseResponse(night, seeds) {
-  const plan = await import('../plans/minus-toys-plan.mjs');
+  const plan = await import('../plans/minus-toys-plan.ts');
   const C = await import('@sixam/source/fnaf2');
   const stepMs = 1000 / C.FPS;
   const ticksIn = window => {
@@ -356,7 +356,7 @@ async function phaseResponse(night, seeds) {
  * and the rate is the number that has to carry the golden 3000 seeds.
  */
 async function uncontrolledPhase(night, runs) {
-  const plan = await import('../plans/minus-toys-plan.mjs');
+  const plan = await import('../plans/minus-toys-plan.ts');
   const C = await import('@sixam/source/fnaf2');
   const frames = Math.round(C.FPS);
   let wins = 0, armed = 0;

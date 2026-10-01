@@ -11,7 +11,7 @@
 // exist at contact time, and only the compiler can see the difference.
 import * as C from '@sixam/source/fnaf2';
 import { compileCycle, SEAM_FLOORS } from '../bin/plans/artifact-commands.ts';
-import { MIN_CONTACT_MS } from '../bin/plans/recipe.mjs';
+import { MIN_CONTACT_MS } from '../bin/plans/recipe.ts';
 
 const check = (ok, message) => { if (!ok) throw new Error(message); };
 const MONITOR_ANIM_UP_MS = Math.round(C.MONITOR_ANIM_UP * 1000 / C.FPS);

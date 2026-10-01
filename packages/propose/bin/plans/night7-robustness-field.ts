@@ -21,7 +21,7 @@
 //
 // Both lanes, and the field, carry the phone's mask floor: a mask-ON press that
 // lands less than MASK_FLOOR_MS after a lowering monitor press is lost, as the
-// phone loses it (actuator.mjs maskFloorMs). The simulator alone accepts it, so
+// phone loses it (actuator.ts maskFloorMs). The simulator alone accepts it, so
 // without the floor the camdrop -> mask seam reads wider than the phone's.
 //
 //   node packages/propose/bin/plans/night7-robustness-field.ts --count 100 --lane-count 500 --jobs 11 --out FILE
@@ -36,9 +36,9 @@ import { writeFileSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { FPS, Sim } from '@sixam/source/fnaf2';
 import { FNAF2_CONTROL_VOCABULARY as V, MODEL_CONTEXT_LIGHT } from '@sixam/source';
-import { DeviceActuator } from '../../../play/bin/phone/actuator.mjs';
+import { DeviceActuator } from '../../../play/bin/phone/actuator.ts';
 import { SEAM_FLOORS } from './artifact-commands.ts';
-import { build } from './minus-toys-plan.mjs';
+import { build } from './minus-toys-plan.ts';
 import { loadPresets, PRESET_KNOBS } from './night7-presets.ts';
 import { forkBlocks, gitState } from '../census/winner-census.ts';
 import { heldOutSeeds, nightBindings } from '../../../../packages/propose/bin/census/winner-phase-census.ts';
@@ -299,7 +299,7 @@ export function buildFieldRecord({ rows, fieldCount, laneCount, only, git, date,
       'held-out seed loses, with the phone\'s mask floor applied -- and which event, and which seam, bounds the route?',
     answer,
     whyItIsModelOnly: 'No device run. The mask floor is a phone measurement applied to the simulator; the field ' +
-      'moves one event class at a time, and the jitter and lateness lanes are actuator.mjs\'s independent draws.',
+      'moves one event class at a time, and the jitter and lateness lanes are actuator.ts\'s independent draws.',
     method: {
       tool: 'packages/propose/bin/plans/night7-robustness-field.ts', command, git,
       seeds: {
@@ -314,7 +314,7 @@ export function buildFieldRecord({ rows, fieldCount, laneCount, only, git, date,
       maskFloorSource: 'artifact-commands.ts SEAM_FLOORS.maskButtonFullyVisibleAfterMonitorDownMs (native frame trace: ' +
         'absent through 322 ms, faint ~337 ms, fully visible ~382.5 ms). The conservative end: the first frame a touch ' +
         'registers lies in (322, 382.5] and is not measured.',
-      jitter: `each press +-J: epoch - J and lateness [0, 2J] (actuator.mjs, per press, queue serialized, mask floor on) for J in ${JITTER_MS.join(', ')}`,
+      jitter: `each press +-J: epoch - J and lateness [0, 2J] (actuator.ts, per press, queue serialized, mask floor on) for J in ${JITTER_MS.join(', ')}`,
       lateness: `each press late by [0, L] for L in ${LATENESS_MS.join(', ')}`,
       retime: { epochMs: RETIME_EPOCH_MS, loopKnobs: RETIME_LOOP_KNOBS, openWindMs: 'PRESET_KNOBS.openWindMs - epoch' },
       win: 'sim.won AND splitAt >= 0',

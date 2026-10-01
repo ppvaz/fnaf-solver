@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { schedule } from '../plans/minus-toys-plan.mjs';
+import { schedule } from '../plans/minus-toys-plan.ts';
 import { ATTACKERS, LEDGERS, compareScheduleReplay, counterSeries, mismatchRuns, rebuiltAttacker, transitions, watchSeries } from './compare-schedule-replay.ts';
 import { drawTrace } from '../../../source/recompile/model-draw-trace.ts';
 import { controlPoints, expandRows, frameOf, harnessInput, harnessRows, winnerSchedule, modelContacts } from './schedule-to-input.ts';

@@ -11,7 +11,7 @@
 // 2026-09-25; docs/ARCHIVED-ROUTES.md.)
 import { parsePlanText, jitterPlan, modelGate, HUMAN_SLACK_MS, GATE_MIN_SURVIVAL }
   from './human-gate.ts';
-import { build, devicePlan } from './recipe.mjs';
+import { build, devicePlan } from './recipe.ts';
 
 let failed = 0;
 const check = (name, cond, detail = '') => {

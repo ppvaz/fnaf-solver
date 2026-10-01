@@ -8,7 +8,7 @@
 // the device target.
 //
 // Every number this file prints is a SIMULATOR number. It prices the
-// `hidpilot n6 target` pilot through `packages/play/bin/phone/actuator.mjs`, which models
+// `hidpilot n6 target` pilot through `packages/play/bin/phone/actuator.ts`, which models
 // launch lateness and the mask seam and nothing else -- not the runner's
 // blocking shell, not the classifier's tail, not `screenrecord` contention.
 // The actuator's own header says survival under it is still survival in a
@@ -27,7 +27,7 @@
 // The mean and the spread are swept SEPARATELY because they are different
 // device quantities with different fixes: the mean is what a phase offset
 // could in principle absorb, the spread is what `wait_until` re-rolls at every
-// wall-timed boundary. `actuator.mjs`'s header claims the mean is nearly free
+// wall-timed boundary. `actuator.ts`'s header claims the mean is nearly free
 // and the spread does the damage; plans/12 already found that false on this
 // route, and the mean sweep below says why.
 //
@@ -36,7 +36,7 @@
 //   node packages/propose/parked/minus7/latenesssweep.ts --runs=200 --assert
 import { pathToFileURL } from 'node:url';
 import * as C from '@sixam/source/fnaf2';
-import { run as hidRun } from './hid-device-pilot.mjs';
+import { run as hidRun } from './hid-device-pilot.ts';
 import { N6_TARGET, NIGHTS } from './closed-loop-reclaim.ts';
 
 const seedOf = (i) => (i * 2246822519) >>> 0;
@@ -81,7 +81,7 @@ export const BANDS = [
    'landing error over 20 targets 200 ms apart, game running (device probe 2026-08-26)'],
   [110, 180, 'anchor press, older traces',
    'ON-DEVICE-VALIDATION.md; the LOGGED press offset into the cycle, not the landing'],
-  [110, 300, 'actuator.mjs default band',
+  [110, 300, 'actuator.ts default band',
    'the older traces plus night 6-40\'s inferred ~300 ms'],
 ];
 
@@ -165,7 +165,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const known = ['--ablate', '--assert', '--bands'];
   const bad = args.filter(a => !known.includes(a) && !a.startsWith('--runs='));
   if (bad.length) throw new Error(`unknown argument: ${bad.join(', ')}`);
-  console.log(`hidpilot n6 target through packages/play/bin/phone/actuator.mjs, ${runs} seeds per cell.`);
+  console.log(`hidpilot n6 target through packages/play/bin/phone/actuator.ts, ${runs} seeds per cell.`);
   console.log('Every figure here is a simulator figure.');
   // `--assert` alone prints no table: it is the suite's entry point and the
   // sweep costs three minutes at 200 seeds, while the pins cost sixteen cells.

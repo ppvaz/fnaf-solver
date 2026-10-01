@@ -12,13 +12,13 @@
 //   1. compile the bundle's plan into the executor's own HID schedule;
 //   2. decode each report back into contact transitions (slot, down/up,
 //      screen point) and each point back into its profile control;
-//   3. deliver them to the simulator through actuator.mjs with the device
+//   3. deliver them to the simulator through actuator.ts with the device
 //      constraints this repository has measured, each switchable:
 //        maskFloor  a mask-ON press inside the mask button's absence after a
 //                   lowering press is lost (native trace: fully visible at
 //                   ~382.5 ms; SEAM_FLOORS);
 //        seams      a monitor press under 180 ms after a mask-off is dropped
-//                   at the measured rate (actuator.mjs SEAM_BANDS);
+//                   at the measured rate (actuator.ts SEAM_BANDS);
 //        merge      HYPOTHESIS, not a measurement: a new contact on a slot
 //                   that was released less than one Fusion poll (33 ms)
 //                   earlier can reach the game as a drag of the old touch,
@@ -47,7 +47,7 @@ import { stableHash } from '@sixam/kernel/contracts';
 import { MODEL_CONTEXT_LIGHT } from '@sixam/source';
 import { validateExecutorRequest } from '../../../play/src/campaign/artifact-executor.ts';
 import { compileDeviceLocalHidSchedule } from '../../../play/src/campaign/hid-schedule.ts';
-import { DeviceActuator } from '../../../play/bin/phone/actuator.mjs';
+import { DeviceActuator } from '../../../play/bin/phone/actuator.ts';
 import { SEAM_FLOORS } from './artifact-commands.ts';
 
 export const FUSION_POLL_MS = 33;

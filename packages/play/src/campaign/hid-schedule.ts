@@ -183,7 +183,7 @@ function actionsOf(block) {
 // One Fusion event-loop poll. A contact that starts on the slot another
 // contact left less than this long ago can reach the game as a drag of the
 // first touch rather than a new one; the arm's CAM 09 tap and the monitor
-// drop 17 ms after its release did exactly that (minus-toys-plan.mjs
+// drop 17 ms after its release did exactly that (minus-toys-plan.ts
 // armingGapMs: "collapse to 0 (drag, not two taps)"), and Night 1 minimal
 // missed its double-camera arm on every attempt on 2026-09-27
 // (night1-ladder-n1c/n1d). The monitor toggle is read through Multiple Touch

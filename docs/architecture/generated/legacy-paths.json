@@ -84,7 +84,7 @@
     },
     {
       "id": "device.simulated-actuator",
-      "path": "packages/play/bin/phone/actuator.mjs",
+      "path": "packages/play/bin/phone/actuator.ts",
       "category": "simulation",
       "lifecycle": "transitional",
       "owner": "@sixam/play",
@@ -94,7 +94,7 @@
     },
     {
       "id": "device.recipe-emitter",
-      "path": "packages/propose/bin/plans/recipe.mjs",
+      "path": "packages/propose/bin/plans/recipe.ts",
       "category": "device-artifact",
       "lifecycle": "transitional",
       "owner": "@sixam/play",

@@ -6,7 +6,7 @@
 //        [--profile packages/play/profiles/fnaf2/moto-g56/hid-mediaprojection.json] [--frame 3]
 //
 // The schedule is the one the binding's gate replays (bundle.ts STRATEGY_REGISTRY[s].emit(winner,
-// night).replay(seed)): minus-toys-plan.mjs build(knobs) rows at the winner's epoch (anchorEpochMs +
+// night).replay(seed)): minus-toys-plan.ts build(knobs) rows at the winner's epoch (anchorEpochMs +
 // phaseOffsetMs), expanded with schedule()'s arithmetic and quantized to the 60 Hz model frame
 // (Math.round(ms * 60 / 1000)). The same expansion yields the Sim queue, and it must equal
 // schedule()'s queue row for row, or the tool refuses: the harness and the model get one schedule.
@@ -30,7 +30,7 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { MODEL_CONTEXT_LIGHT } from '@sixam/source';
 import { STRATEGY_REGISTRY, validateWinner } from '../plans/bundle.ts';
-import { KNOBS0, build, schedule } from '../plans/minus-toys-plan.mjs';
+import { KNOBS0, build, schedule } from '../plans/minus-toys-plan.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
 export const FPS = 60;
@@ -57,7 +57,7 @@ export function controlPoints(profile) {
   return points;
 }
 
-// A plan control's profile key (cam9 -> cam:9) and its Sim action (as minus-toys-plan.mjs actionFor).
+// A plan control's profile key (cam9 -> cam:9) and its Sim action (as minus-toys-plan.ts actionFor).
 const profileKey = (control) => (/^cam\d+$/.test(control) ? `cam:${control.slice(3)}` : control);
 export const simAction = (control) => (/^cam\d+$/.test(control) ? `cam:${control.slice(3)}`
   : control === 'cameraFeedLight' || control === 'hallLight' ? MODEL_CONTEXT_LIGHT : control);

@@ -1,6 +1,6 @@
 // Jitter / clock-error robustness evaluator for the Minus Toys device loop.
 //
-// The deterministic gate (`minus-toys-plan.mjs --gate`) scores the loop with
+// The deterministic gate (`minus-toys-plan.ts --gate`) scores the loop with
 // every press landing on its exact game frame: it says 200/200 on nights 2-7.
 // The first device run (`n2-minustoys-0117`, 2026-08-28) died anyway -- a BB
 // walk-in -> Foxy chain -- because the phone does not deliver the schedule on
@@ -34,7 +34,7 @@
 // Golden-Freddy-interval and Toy-cam-stall model gaps (plans/02 sec.5). Read
 // each figure as "in the model, under the calibrated ensemble".
 import { pathToFileURL } from 'node:url';
-import { replay, KNOBS0 } from './minus-toys-plan.mjs';
+import { replay, KNOBS0 } from './minus-toys-plan.ts';
 import { scanEdge } from './basin-edge.ts';
 
 const HOUR_MS = 70000;
@@ -60,7 +60,7 @@ export const DEFAULTS = {
 };
 
 // Build the per-instruction shift function for one run. `shift(cycle, index,
-// whenMs)` -> ms offset; feeds minus-toys-plan.mjs's schedule()/replay().
+// whenMs)` -> ms offset; feeds minus-toys-plan.ts's schedule()/replay().
 export function makeShift(opts, rng) {
   const o = { ...DEFAULTS, ...opts };
   const uni = e => (rng() * 2 - 1) * e;

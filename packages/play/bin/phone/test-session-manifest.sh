@@ -80,7 +80,7 @@ build_session() {                               # RUN LIFECYCLE
     fnaf_session_probe_target 6 "6th-hid-multi-c6" "screencap-raw+screenrecord"
     fnaf_session_record controller \
       "policy_version=trial/6th/hid-multi" \
-      "plan_id=recipe.mjs --device-plan" "plan_file=$WORK/fake-plan.txt" \
+      "plan_id=recipe.ts --device-plan" "plan_file=$WORK/fake-plan.txt" \
       actuator=hid-multi emitted_action_trace=null
     fnaf_session_record model model_id=bb-left kind=scm1-left-opening \
       "file=$WORK/fake.scm" built_from_commit=unknown authorized_for=fail-safe \

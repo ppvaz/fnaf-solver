@@ -138,9 +138,9 @@ export function checkSeedFloor(quote: {seeds: any, wins?: any, heldOut?: any}) {
  * written. `marker` is text the source file holds, so a test can tell the citation still stands.
  */
 export const DIRECTIONAL_CONSTANTS = Object.freeze({
-  SEAM_BANDS: Object.freeze({ first: 'mask', then: 'monitor', source: 'packages/play/bin/phone/actuator.mjs',
+  SEAM_BANDS: Object.freeze({ first: 'mask', then: 'monitor', source: 'packages/play/bin/phone/actuator.ts',
     marker: 'under 140 ms after the mask press 5 of 7 monitor', measures: 'monitor presses lost after a mask press, by gap' }),
-  SEAM_SAFE_MS: Object.freeze({ first: 'mask', then: 'monitor', source: 'packages/play/bin/phone/actuator.mjs',
+  SEAM_SAFE_MS: Object.freeze({ first: 'mask', then: 'monitor', source: 'packages/play/bin/phone/actuator.ts',
     marker: 'export const SEAM_SAFE_MS = 180', measures: 'the mask-to-monitor gap past which no monitor press was lost (0 of 17)' }),
   maskButtonFullyVisibleAfterMonitorDownMs: Object.freeze({ first: 'monitor-down', then: 'mask', source: 'packages/propose/bin/plans/artifact-commands.ts',
     marker: 'maskButtonFullyVisibleAfterMonitorDownMs', measures: 'the mask button fully drawn after monitor-down, native frame trace' }),

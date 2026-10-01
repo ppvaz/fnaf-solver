@@ -353,7 +353,7 @@ The important implementation findings are:
 - `policy-v1`, `belief-v1`, `estimator-v1`, `reduced-v1`, and `cycle-v1`
   already contain the beginnings of the target contracts. Validation and
   supported action semantics are split across core and device files.
-- `packages/propose/bin/plans/recipe.mjs` compiles a simulation-derived schedule to an
+- `packages/propose/bin/plans/recipe.ts` compiles a simulation-derived schedule to an
   undocumented line language consumed by shell. `trial/01-arguments.sh`
   accepts roughly fifty positional values, and `trial.sh` assembles twelve
   remote shell fragments. This is the largest untyped interface in the

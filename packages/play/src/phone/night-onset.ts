@@ -15,7 +15,7 @@
 // spans NIGHT_ONSET_HOLD_MS of image time; any other identity before the hold
 // is met restarts the run, so a one-frame flicker is never an onset.
 //
-// Sign convention (packages/propose/bin/plans/minus-toys-plan.mjs): when = base + at + epochMs,
+// Sign convention (packages/propose/bin/plans/minus-toys-plan.ts): when = base + at + epochMs,
 // so a POSITIVE epoch fires the schedule LATER against the game's grid, and a
 // release at onset + epoch delivers that epoch. Quoting the aim as 1000 - epoch
 // names the opposite band.

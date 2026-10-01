@@ -8,11 +8,11 @@
 // `grade-minus7.py` found zero visible beams, because 83 ms is under the
 // contact length Fusion's per-frame touch poll reliably sees.
 //
-// Usage: node packages/propose/bin/plans/recipe.mjs [--night=6] [--slot-ms=120] ... [--json]
+// Usage: node packages/propose/bin/plans/recipe.ts [--night=6] [--slot-ms=120] ... [--json]
 import { pathToFileURL } from 'node:url';
 import * as C from '@sixam/source/fnaf2';
 import { Sim } from '@sixam/source/fnaf2';
-import { run, DEFAULT_SEARCH_KNOBS, makeSearchKnobs, MASK_OFF_INPUT_FRAMES } from '../../parked/minus7/hid-device-pilot.mjs';
+import { run, DEFAULT_SEARCH_KNOBS, makeSearchKnobs, MASK_OFF_INPUT_FRAMES } from '../../parked/minus7/hid-device-pilot.ts';
 
 // The phone's measured contact floor. The Moto g56 accepted 33 ms contacts
 // on camera-select, monitor, mask and hall controls; 100 ms was margin from
@@ -38,7 +38,7 @@ export const NIGHT_MS = 420_000;
 export const CYCLE_MS = 5_000;
 
 // Frame<->ms conversion reads the engine's rate, never a literal. This file
-// imports C and still hardcoded 60 in five places while actuator.mjs used
+// imports C and still hardcoded 60 in five places while actuator.ts used
 // C.FPS -- the exact shape of "defined once, re-derived per context" that
 // the tick rate is already ambiguous about (30 Hz Fusion poll vs 60 FPS
 // render). Only one of those two is C.FPS, and now only one is spelled here.
@@ -88,7 +88,7 @@ function events(log, from, to) {
   for (const e of log) {
     if (e.f < from || e.f >= to) continue;
     if (e.kind === 'press') {
-      const rec = { at: ms(e.f - from), act: controlFor(e.act, e.camsUp),
+      const rec: any = { at: ms(e.f - from), act: controlFor(e.act, e.camsUp),
                     dur: MIN_CONTACT_MS, tap: true };
       // MON_RAISING/MON_LOWERING are the animation; the intent is the endpoint.
       rec.camsUp = e.camsUp;
@@ -268,12 +268,12 @@ export function build(opts = {}) {
   // ON-DEVICE-VALIDATION.md, "Which press desyncs, and why".
   // `captureFn` is a test seam, not a recipe option: it must not land in
   // `recipe.options`, which is what the pinning checks compare.
-  const { captureFn = capture, ...rest } = opts;
-  const o = { bbMode: 'left', deviceSweep: true, pulseLight: true,
+  const { captureFn = capture, ...rest } = (opts as any);
+  const o: any = { bbMode: 'left', deviceSweep: true, pulseLight: true,
               sweepSlotMs: MODEL_SLOT_MS, maskMarginMs: 900, readLatencyMs: 550,
               hallPulseMs: 130, pilotOffset: 10, prophylacticMask: true,
               attackWindowMs: 10000, ...rest,
-              knobs: makeSearchKnobs(rest.knobs) };
+              knobs: makeSearchKnobs((rest as any).knobs) };
   const night = o.night ?? 6;
   const log = captureFn(o);
   const epoch = o.pilotOffset;
@@ -301,12 +301,12 @@ export function build(opts = {}) {
     clear: { lengthMs: 5000, events: clear },
     attack: { lengthMs: o.attackWindowMs, events: attack },
   };
-  for (const [, c] of Object.entries(cycles)) c.budget = budget(c.events, c.lengthMs);
+  for (const [, c] of Object.entries(cycles)) (c as any).budget = budget(c.events, c.lengthMs);
 
   // A night is mostly clear cycles; price the flashlight against the sourced
   // per-night budget rather than against a single cycle.
   const clearCycles = Math.floor((NIGHT_MS - 7000) / CYCLE_MS);
-  const nightLitMs = cycles.opening.budget.litMs + clearCycles * cycles.clear.budget.litMs;
+  const nightLitMs = (cycles.opening as any).budget.litMs + clearCycles * (cycles.clear as any).budget.litMs;
   const available = C.powerFrames(night);
   const spent = Math.round(nightLitMs * C.FPS / 1000);
   return {
@@ -890,7 +890,7 @@ export function devicePlan(recipe, {
   const out = {};
   for (const [name, cycle] of Object.entries(recipe.cycles)) {
     const lines = [];
-    const ev = cycle.events;
+    const ev = (cycle as any).events;
     const skip = new Set();
     for (let i = 0; i < ev.length; i++) {
       const e = ev[i];
@@ -999,7 +999,7 @@ export function replay(plan, { night, seed = 1, worst = false,
                                // phone). `bbOnlyBang` = ignore non-BB vent
                                // departures (a phone's mic cannot tell them
                                // apart -- all use THUD_SAMPLE).
-                               bangLatencyMs = 0, bbOnlyBang = false } = {}) {
+                               bangLatencyMs = 0, bbOnlyBang = false }: any = {}) {
   if (night === undefined) throw new Error('replay() needs the night the plan was built for');
   const sim = new Sim({ seed, night, worst });
   const f = msv => Math.round(msv * C.FPS / 1000);
@@ -1243,7 +1243,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   } else {
     console.log(`power ${recipe.powerFramesSpentIfAllClear}/${recipe.powerFramesAvailable} frames if every cycle is a clear`);
     for (const [name, c] of Object.entries(recipe.cycles)) {
-      const b = c.budget;
+      const b = (c as any).budget;
       console.log(`\n${name}  ${b.lengthMs} ms` +
         `  lit ${b.litMs} ms  wind ${b.windMs}/${b.windBreakEvenMs} ms (${b.windMarginMs >= 0 ? '+' : ''}${b.windMarginMs})` +
         `  sweep span ${b.sweepSpanMs} ms  spacing ${b.maxSpacingMs} ms  shortest contact ${b.minContactMs} ms`);

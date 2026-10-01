@@ -35,9 +35,9 @@
 // nothing. This is "what would the schedule do if the phone were faster".
 //
 //   node packages/propose/parked/minus7/devicetimesearch.ts [--runs=600] [--nights=2,3,4,5,6,7]
-import { build, devicePlan, replay } from '../../bin/plans/recipe.mjs';
+import { build, devicePlan, replay } from '../../bin/plans/recipe.ts';
 import { jitterPlan } from '../../bin/plans/human-gate.ts';
-import { makeSearchKnobs } from './hid-device-pilot.mjs';
+import { makeSearchKnobs } from './hid-device-pilot.ts';
 
 const arg = (k, d) => {
   const m = process.argv.find(a => a.startsWith(`--${k}=`));

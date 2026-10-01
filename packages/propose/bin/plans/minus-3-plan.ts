@@ -10,7 +10,7 @@ import {
   reactiveReplay, reactiveGate, countReactive, emitReactivePlan,
 } from '@sixam/propose/strategies/minus-3';
 import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort, seedCohortDescriptor } from '@sixam/propose/seeds';
-import { DOUBLE_GLITCH_CAMERA_PAIRS, cameraPairHeader } from '../../../play/bin/probe/arm-verification.mjs';
+import { DOUBLE_GLITCH_CAMERA_PAIRS, cameraPairHeader } from '../../../play/bin/probe/arm-verification.ts';
 
 export {
   KNOBS0, MINUS3_STORY_NIGHTS, build, schedule, replay,
@@ -52,7 +52,7 @@ export function emitPlan(night, overrides = {}) {
 }
 
 function legacyCount(night, { worst = false, splitCamera = true,
-                              runs = 3000, seeds } = {}) {
+                              runs = 3000, seeds }: any = {}) {
   const population = seeds ?? randomSeedCohort({ count: runs });
   let wins = 0, split = 0;
   const losses = new Map();

@@ -558,7 +558,7 @@ already assumed.
 
 `src/engine.js` emits `vent-bang` with a `who`, and two controllers consume it:
 `packages/propose/bin/minus6test.ts` counts threats with `e.data?.who !== 'bb'`, and
-`packages/propose/parked/minus7/hid-device-pilot.mjs --vocal-cam5` resets its vocal count on
+`packages/propose/parked/minus7/hid-device-pilot.ts --vocal-cam5` resets its vocal count on
 `who === 'bb' && leaving`. The source says every one of those events is sample
 17. No audio detector can recover `who`, so both controllers are using a sensor
 that does not exist.
@@ -1027,7 +1027,7 @@ parameter).
   `lastViewed` separately; the raise restore can create the sourced split, and
   the camera-light rule applies its target from the marker while retaining the
   `viewing` immunity gate. `packages/propose/bin/minustoystest.ts` and
-  `packages/propose/bin/plans/minus-toys-plan.mjs` exercise it with split and no-split
+  `packages/propose/bin/plans/minus-toys-plan.ts` exercise it with split and no-split
   controls. The remaining question is transfer of a full policy under device
   timing, not whether Android has the state.
 - The consecutive-tick mask-clear semantics that broke Minus Two

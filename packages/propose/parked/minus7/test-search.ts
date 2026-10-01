@@ -6,8 +6,8 @@ import { Sim } from '@sixam/source/fnaf2';
 import { cloneSim, view, ACTIONS, run } from './sim.ts';
 import { searchParams, baselineLadder, evalParams, SHIPPED_GEOM } from './paramsearch.ts';
 import { enumeratePackage4 } from './constrainedsearch.ts';
-import { makeSearchKnobs } from './hid-device-pilot.mjs';
-import { build, devicePlan, idleUntilMs, replay } from '../../bin/plans/recipe.mjs';
+import { makeSearchKnobs } from './hid-device-pilot.ts';
+import { build, devicePlan, idleUntilMs, replay } from '../../bin/plans/recipe.ts';
 import { modelGate } from '../../bin/plans/human-gate.ts';
 
 let fails = 0;

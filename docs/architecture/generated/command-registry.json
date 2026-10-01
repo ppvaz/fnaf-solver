@@ -869,14 +869,14 @@
       "lifecycle": "supported"
     },
     {
-      "id": "packages/play/bin/phone/actuator.mjs",
-      "invocation": "packages/play/bin/phone/actuator.mjs",
+      "id": "packages/play/bin/phone/actuator.ts",
+      "invocation": "packages/play/bin/phone/actuator.ts",
       "kind": "internal module",
       "lifecycle": "supported"
     },
     {
-      "id": "packages/play/bin/probe/arm-verification.mjs",
-      "invocation": "packages/play/bin/probe/arm-verification.mjs",
+      "id": "packages/play/bin/probe/arm-verification.ts",
+      "invocation": "packages/play/bin/probe/arm-verification.ts",
       "kind": "module",
       "lifecycle": "supported"
     },
@@ -1619,8 +1619,8 @@
       "lifecycle": "supported"
     },
     {
-      "id": "packages/propose/parked/minus7/hid-device-pilot.mjs",
-      "invocation": "packages/propose/parked/minus7/hid-device-pilot.mjs [runs] [--night=6]",
+      "id": "packages/propose/parked/minus7/hid-device-pilot.ts",
+      "invocation": "packages/propose/parked/minus7/hid-device-pilot.ts [runs] [--night=6]",
       "kind": "report/check",
       "lifecycle": "supported"
     },
@@ -1643,26 +1643,26 @@
       "lifecycle": "supported"
     },
     {
-      "id": "packages/propose/bin/plans/recipe.mjs",
-      "invocation": "packages/propose/bin/plans/recipe.mjs",
+      "id": "packages/propose/bin/plans/recipe.ts",
+      "invocation": "packages/propose/bin/plans/recipe.ts",
       "kind": "generator/report",
       "lifecycle": "supported"
     },
     {
-      "id": "packages/propose/bin/plans/minus-toys-plan.mjs",
-      "invocation": "packages/propose/bin/plans/minus-toys-plan.mjs --night=N [--gate] [--knobs=k=v,...]",
+      "id": "packages/propose/bin/plans/minus-toys-plan.ts",
+      "invocation": "packages/propose/bin/plans/minus-toys-plan.ts --night=N [--gate] [--knobs=k=v,...]",
       "kind": "generator/check",
       "lifecycle": "supported"
     },
     {
-      "id": "packages/propose/bin/plans/minus-3-plan.mjs",
-      "invocation": "packages/propose/bin/plans/minus-3-plan.mjs --night=N [--gate] [--runs=N]",
+      "id": "packages/propose/bin/plans/minus-3-plan.ts",
+      "invocation": "packages/propose/bin/plans/minus-3-plan.ts --night=N [--gate] [--runs=N]",
       "kind": "generator/check",
       "lifecycle": "supported"
     },
     {
-      "id": "packages/propose/bin/plans/minus-toys-plan.mjs",
-      "invocation": "packages/propose/bin/plans/minus-toys-plan.mjs --phasegate",
+      "id": "packages/propose/bin/plans/minus-toys-plan.ts",
+      "invocation": "packages/propose/bin/plans/minus-toys-plan.ts --phasegate",
       "kind": "report",
       "lifecycle": "supported"
     },
@@ -2401,7 +2401,7 @@
     {
       "id": "packages/propose/bin/recompile/schedule-to-input.ts",
       "invocation": "packages/propose/bin/recompile/schedule-to-input.ts",
-      "kind": "A committed winner binding's own tap schedule as harness input: the rows its gate replays, expanded once into harness contacts and the Sim queue (refused unless the queue equals `minus-toys-plan.mjs` `schedule()`), quantized to 60 Hz frames, on the office frame at tick = queue frame. Points are the device profile's control points through the FULL stretch. Lists same-tick edges. minus-toys only.",
+      "kind": "A committed winner binding's own tap schedule as harness input: the rows its gate replays, expanded once into harness contacts and the Sim queue (refused unless the queue equals `minus-toys-plan.ts` `schedule()`), quantized to 60 Hz frames, on the office frame at tick = queue frame. Points are the device profile's control points through the FULL stretch. Lists same-tick edges. minus-toys only.",
       "lifecycle": "supported"
     },
     {

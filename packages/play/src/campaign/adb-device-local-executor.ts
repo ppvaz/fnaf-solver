@@ -864,7 +864,7 @@ export class AdbDeviceLocalArtifactExecutor {
             // direct read of both facts: both drawn is the office, a missing
             // mask button is the monitor up, and a missing MONITOR button is
             // the mask on -- the mirror the operator named on 2026-09-12, whose
-            // game fact actuator.mjs already records ("while the mask is up or
+            // game fact actuator.ts already records ("while the mask is up or
             // coming off, the monitor bar is not drawn").
             //
             // The grid rule stays as a SECOND opinion and only where the

@@ -180,7 +180,7 @@ exact replay remains 100/100 and the all-clear flashlight budget is
 It is not a claimed clear. Its gate is `hidpilot n6 target` in
 `tools/test.ts --engine` (3000/3000 ordinary, 3000/3000 pinned-worst, no
 missed BB state), and its recipe, budgets and input-shape invariants are
-gated by `packages/propose/test/test-recipe.ts`. `node packages/propose/bin/plans/recipe.mjs --track`
+gated by `packages/propose/test/test-recipe.ts`. `node packages/propose/bin/plans/recipe.ts --track`
 renders it in the trainer's `CYCLE_SCRIPT` shape so the differences above can
 be read side by side rather than inferred from two unrelated files.
 

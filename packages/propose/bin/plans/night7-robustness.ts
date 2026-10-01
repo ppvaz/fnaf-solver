@@ -15,7 +15,7 @@
 //             interval (the anchor register's effective interval, or the
 //             declared epoch for a schedule with no anchor);
 //   lateness  each press delivered late by a draw from [0, L] through
-//             actuator.mjs (queue serialized, mask seam modelled), for L in
+//             actuator.ts (queue serialized, mask seam modelled), for L in
 //             LATENESS_MS; the largest L up to which every seed still wins;
 //   human     the human gate's +-60 ms per press: the epoch 60 ms early and
 //             lateness drawn from [0, 120], the same spread;
@@ -185,7 +185,7 @@ export function buildRobustnessRecord({ rows, count, winnerHashes, git, date, co
     question: 'Among the preset schedule and the committed Night 7 bindings, which keeps the widest timing margin at ' +
       '10/20 -- against the phase the schedule is delivered at, and against per-press lateness?',
     answer,
-    whyItIsModelOnly: 'No device run. The lateness axis is actuator.mjs\'s independent per-press draw, not the phone\'s ' +
+    whyItIsModelOnly: 'No device run. The lateness axis is actuator.ts\'s independent per-press draw, not the phone\'s ' +
       'measured displacement shape; the phase axis moves the whole schedule by whole frames. A comparison between routes.',
     method: {
       tool: 'packages/propose/bin/plans/night7-robustness.ts', command, git,

@@ -54,7 +54,7 @@ import { MODEL_SOURCES } from '../../../source/recompile/model-draw-trace.ts';
 import { LEDGERS, compareLedger, counterSeries, mismatchRuns, outcomes, watchSeries } from './compare-schedule-replay.ts';
 import { controlPoints, expandRows, frameOf, formatRows, harnessRows, modelContacts } from './schedule-to-input.ts';
 import { STRATEGY_REGISTRY, validateWinner } from '../plans/bundle.ts';
-import { KNOBS0, build } from '../plans/minus-toys-plan.mjs';
+import { KNOBS0, build } from '../plans/minus-toys-plan.ts';
 import { windowCode } from '../../../review/venue-grid/encounter-replay.ts';
 import { MODEL_CONTEXT_LIGHT } from '@sixam/source';
 import { buttonStrokeState, BUTTON_STROKE_THRESHOLDS } from '../../../play/src/sensors/fnaf2/button-strokes.ts';

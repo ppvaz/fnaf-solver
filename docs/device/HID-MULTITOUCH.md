@@ -79,7 +79,7 @@ must lower across the opportunity, raise and read again, and repeat when he is
 still on CAM 05; otherwise the nominal one-raise response silently fails one
 time in four.
 
-`packages/propose/parked/minus7/hid-device-pilot.mjs --night=7 --sparse-cam5` preserves those constraints.
+`packages/propose/parked/minus7/hid-device-pilot.ts --night=7 --sparse-cam5` preserves those constraints.
 With the current 520 ms lit-read model it survived **0/5000** ordinary and
 **0/1000** pinned-worst nights: the battery reached zero and the resulting
 failures were overwhelmingly Foxy. The same schedule with hypothetical unlit,
@@ -108,7 +108,7 @@ the battery-free vent light, provided it controls the scheduler phase tightly:
    retain that mask through the aligned five ticks and recover before the prior
    camera stuns expire.
 
-`packages/propose/parked/minus7/hid-device-pilot.mjs --night=7 --sparse-left` makes the dependency explicit.
+`packages/propose/parked/minus7/hid-device-pilot.ts --night=7 --sparse-left` makes the dependency explicit.
 At zero pilot offset it survived **10000/10000 ordinary and 3000/3000 pinned-
 worst** nights with no missed BB state, a minimum 57% box, and **1257/3000**
 flashlight frames remaining. A 340 ms offset survived another **1000/1000**;
@@ -151,7 +151,7 @@ shortest repeatedly proven primitive remains wall-timed: 70 ms light settle,
 100 ms contacts starting 240 ms apart, and **790 ms total**. A corrected staging
 recording showed **2/2 complete 10 → 04 → 07 → 11 traces**.
 
-`packages/propose/parked/minus7/hid-device-pilot.mjs --night=7 --sparse-left --device-sweep` models that
+`packages/propose/parked/minus7/hid-device-pilot.ts --night=7 --sparse-left --device-sweep` models that
 exact 70/240/240/240 ms device profile, shifts the late sweeps earlier, prevents
 wind/contact overlap, and prices the later BB recovery. It survived **0/3,000
 ordinary and 0/1,000 pinned-worst** nights; Golden Freddy, inside-office, and
@@ -452,7 +452,7 @@ the shell's clock is not *a* contributor to the actuator cliff — on this route
 it is the whole of it, and the budget it has to fit into is a **frame count,
 not a millisecond figure**.
 
-`packages/propose/parked/minus7/latenesssweep.ts` sweeps `packages/play/bin/phone/actuator.mjs`'s lateness band
+`packages/propose/parked/minus7/latenesssweep.ts` sweeps `packages/play/bin/phone/actuator.ts`'s lateness band
 across Nights 1–7 at the `hidpilot n6 target` settings, 200 seeds a cell.
 **Every number here is a simulator number** — the actuator models launch
 lateness and the mask seam and nothing else. Two controls make the table

@@ -25,7 +25,7 @@
 // two event-loop ticks is invisible and a longer hold flips exactly once.
 //
 // The root is a floor equal to its own poll: `MIN_CONTACT_MS` and
-// `FUSION_POLL_MS` are both 33 in recipe.mjs, which is mistake-register #7
+// `FUSION_POLL_MS` are both 33 in recipe.ts, which is mistake-register #7
 // one level down -- a contact of exactly one poll period has zero slack.
 //
 // WHAT IT IS NOT

@@ -16,7 +16,7 @@ const check = (ok, msg) => { if (!ok) throw new Error(msg); };
   });
   check(survived === n,
     `zero-error ensemble lost ${n - survived}/${n} on night 2 -- it must match ` +
-    'the deterministic gate (minus-toys-plan.mjs --gate is 200/200)');
+    'the deterministic gate (minus-toys-plan.ts --gate is 200/200)');
 }
 
 // 2. A large one-time phase error collapses it -- the schedule has no slack.

@@ -13,7 +13,7 @@
 import { pathToFileURL } from 'node:url';
 import * as C from '@sixam/source/fnaf2';
 import { Sim } from '@sixam/source/fnaf2';
-import { DeviceActuator } from '../../../play/bin/phone/actuator.mjs';
+import { DeviceActuator } from '../../../play/bin/phone/actuator.ts';
 import { formatRate } from '../../../review/src/stat.ts';
 
 const s = C.s;
@@ -59,6 +59,53 @@ export function makeSearchKnobs(overrides = {}) {
 }
 
 class HidPilot {
+  declare sim: any;
+  declare knobs: Readonly<{ attackHallDeltaMs: 0; attackSweepDeltaMs: 0; attackRstDeltaMs: 0; clearHall2DeltaMs: 0; phaseMarginDeltaMs: 0; hallPulseDeltaMs: 0; openGfFlick: 0; preReadHallMs: 0; bangAgeFrames: 0; attackBangGateMs: 0; }>;
+  declare attackWindow: number;
+  declare act: any;
+  declare prophylacticMask: boolean;
+  declare bbMode: string;
+  declare cam5: boolean;
+  declare cam5Light: boolean;
+  declare sparseCam5: boolean;
+  declare sparseLeft: boolean;
+  declare vocalCam5: boolean;
+  declare bangCam5: boolean;
+  declare deviceSweep: boolean;
+  declare sweepSlotMs: number;
+  declare pulseLight: boolean;
+  declare maskMargin: number;
+  declare readLatency: number;
+  declare hallPulse: number;
+  declare secondBeat: boolean;
+  declare sweepTail: number;
+  declare sweepFrames: number;
+  declare sweepOffsets: number[];
+  declare cam5Hold: number;
+  declare epoch: number;
+  declare phaseSafeMask: boolean;
+  declare alwaysThreat: boolean;
+  declare queue: any[];
+  declare mode: string;
+  declare nextAnchor: number;
+  declare cam5SafeAt: number;
+  declare leftSafeAt: number;
+  declare checks: number;
+  declare detections: number;
+  declare attacks: number;
+  declare missed: number;
+  declare eventCursor: number;
+  declare traceActions: boolean;
+  declare trace: any[];
+  declare trueVocals: number;
+  declare vocalsSeen: number;
+  declare dropVocal: number;
+  declare audioMisses: number;
+  declare dropBang: number;
+  declare trueBangs: number;
+  declare bangs: number;
+  declare falseBangs: number;
+  declare minBox: number;
   constructor(sim, { bbMode = 'left', cam5Light = true, phaseSafeMask = true,
                      alwaysThreat = false, sparseCam5 = false,
                      sparseLeft = false, cam5Hold = s(0.52),
@@ -772,7 +819,7 @@ class HidPilot {
   }
 }
 
-export function run(opts = {}) {
+export function run(opts: any = {}) {
   const knobs = makeSearchKnobs(opts.knobs);
   const sim = new Sim(Object.assign({ seed: 1, night: 6 }, opts.sim));
   const actuator = opts.deviceActuator

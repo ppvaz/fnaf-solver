@@ -9,7 +9,7 @@
 // The semantic action set is the compressed vocabulary a Minus 7 player
 // actually uses -- lower/raise, mask on/off, select+flash a camera, hold the
 // hall light, hold a vent light, wind. Physical touch coordinates never enter
-// the search; they belong to the controller layer (packages/propose/bin/plans/recipe.mjs).
+// the search; they belong to the controller layer (packages/propose/bin/plans/recipe.ts).
 import * as C from '@sixam/source/fnaf2';
 import { Sim } from '@sixam/source/fnaf2';
 

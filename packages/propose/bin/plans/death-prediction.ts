@@ -21,7 +21,7 @@
 // nights that release on Withered Foxy's roll grid (see ANCHOR_AIMS).
 import { readFileSync, writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
-import { replay, KNOBS0 } from './minus-toys-plan.mjs';
+import { replay, KNOBS0 } from './minus-toys-plan.ts';
 import { DEATH_PREDICTION_SCHEMA, DEATH_TARGETED_STATUS, STRATEGY_REGISTRY } from './bundle.ts';
 
 const argValue = (name, fallback?) => {

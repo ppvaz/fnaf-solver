@@ -714,7 +714,7 @@ around it.
 
 #### Perfect-vocal upper bound (2026-08-24)
 
-`packages/propose/parked/minus7/hid-device-pilot.mjs --night=7 --vocal-cam5` now counts the three sourced
+`packages/propose/parked/minus7/hid-device-pilot.ts --night=7 --vocal-cam5` now counts the three sourced
 vocal events and arms the existing lit CAM-05 confirmation only after the third.
 It is an upper bound with zero capture latency and perfect cue delivery, not a
 detector claim:
@@ -756,7 +756,7 @@ regression anchors.
 
 With the cue map corrected, the policy worth testing is not the counted vocal.
 It is the **bang**: loud, and Balloon Boy's alone while the stalls hold.
-`packages/propose/parked/minus7/hid-device-pilot.mjs --night=7 --bang-cam5` reads only that a bang happened —
+`packages/propose/parked/minus7/hid-device-pilot.ts --night=7 --bang-cam5` reads only that a bang happened —
 never `who`, `cam` or `leaving`, none of which audio can recover — and the run
 is a three-bang cycle (reaches CAM 05, enters the opening, leaves) because his
 first three hops are silent.

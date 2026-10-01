@@ -18,7 +18,7 @@
 // Reports, per seed, the fraction of wind frames that were credited and the
 // minimum box level reached. A seed whose winds are sent but not credited is
 // the failure above, and it is invisible to every other instrument here.
-import { replay } from '../plans/recipe.mjs';
+import { replay } from '../plans/recipe.ts';
 import { jitterPlan, parsePlanText } from '../plans/human-gate.ts';
 import { execSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
@@ -33,7 +33,7 @@ const night = +arg('night', 1);
 const png = arg('png', null);
 const [lo, hi] = String(arg('seeds', '1..200')).split('..').map(Number);
 
-const text = execSync(`node ${new URL('../plans/recipe.mjs', import.meta.url).pathname} --device-plan --night=${night}`).toString();
+const text = execSync(`node ${new URL('../plans/recipe.ts', import.meta.url).pathname} --device-plan --night=${night}`).toString();
 const { plan, idleUntilMs } = parsePlanText(text);
 
 // Wrap tick from outside rather than teaching the engine to record: the engine

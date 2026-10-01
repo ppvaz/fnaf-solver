@@ -17,7 +17,7 @@ import { CONTROL_VOCABULARY as V, MODEL_CONTEXT_LIGHT } from '@sixam/source';
 import { VentThreatReactive, guardIntents, GUARD_FRAMES } from '@sixam/propose/fnaf2';
 import { Rng } from '@sixam/source/fnaf2';
 import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort, seedCohortDescriptor } from '@sixam/propose/seeds';
-import { DOUBLE_GLITCH_CAMERA_PAIRS, cameraPairHeader } from '../../../play/bin/probe/arm-verification.mjs';
+import { DOUBLE_GLITCH_CAMERA_PAIRS, cameraPairHeader } from '../../../play/bin/probe/arm-verification.ts';
 
 // Every tunable number in the schedule. build(KNOBS0) reproduces the shipped
 // opening/loop byte-for-byte (asserted below). Each knob names one decision the
@@ -168,7 +168,7 @@ export const KNOBS0 = {
 const clone = k => ({ ...KNOBS0, ...(k || {}) });
 
 // Derive { opening, loop } from knobs. build() === the shipped schedule.
-export function build(knobs) {
+export function build(knobs?) {
   const k = clone(knobs);
   const c = k.contactMs;
 
@@ -382,7 +382,7 @@ export const ENGINE_PHASE_ORACLE = Object.freeze({
 
 export function replay({ night = 7, seed = 1, worst = false, splitCamera = true,
                          shift, knobs, epochMs = 0,
-                         phaseClock = ENGINE_PHASE_ORACLE } = {}) {
+                         phaseClock = ENGINE_PHASE_ORACLE }: any = {}) {
   const sim = new Sim({ night, seed, worst });
   const { opening, loop, finish } = knobs ? build(knobs) : _default;
   const kk = knobs ? clone(knobs) : KNOBS0;
@@ -489,7 +489,7 @@ export function replay({ night = 7, seed = 1, worst = false, splitCamera = true,
 // Puppet death, so `wins` separates the two only via `armed`. This is the
 // pricing instrument for any arm change -- it is the model finally seeing the
 // miss branch the 200/200 deterministic gate is blind to.
-export function phaseScan({ night = 1, seeds = 24, worst = false, knobs } = {}) {
+export function phaseScan({ night = 1, seeds = 24, worst = false, knobs }: any = {}) {
   const step = 1000 / C.FPS;               // one frame in ms
   const n = Math.round(C.LAST_VIEW_SAMPLE_FRAMES); // one sampler period in frames
   const population = randomSeedCohort({ count: seeds });
@@ -622,7 +622,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const night = +nightArg;
   if (!Number.isInteger(night) || night < 1 || night > 7)
     throw new Error('--night must be 1..7');
-  let knobs = parseKnobs();
+  let knobs: any = parseKnobs();
   if (process.argv.includes('--minimal')) {
     // The elegant story plan is NOT one shape for all nights: Night 1 alone
     // reduces to "arm + flash + wind" (MINUS-3-STRATEGY.md sec.9 -- monitor-down

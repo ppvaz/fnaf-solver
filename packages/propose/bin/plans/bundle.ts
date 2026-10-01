@@ -9,11 +9,11 @@ import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { emitPlan as emitToysPlan, KNOBS0 as TOYS_KNOBS,
-  replay as replayToys } from './minus-toys-plan.mjs';
+  replay as replayToys } from './minus-toys-plan.ts';
 import { emitPlan as emitMinus3Plan, KNOBS0 as MINUS3_KNOBS,
-  replay as replayMinus3 } from './minus-3-plan.mjs';
+  replay as replayMinus3 } from './minus-3-plan.ts';
 import { build as buildMinus7, devicePlan as emitMinus7Plan,
-  idleUntilMs, replay as replayMinus7, MASK_RAISE_GAP_MS } from './recipe.mjs';
+  idleUntilMs, replay as replayMinus7, MASK_RAISE_GAP_MS } from './recipe.ts';
 import { compileArtifactPlans, persistArtifactPlans } from './artifact-commands.ts';
 import { canonicalJson, stableHash } from '@sixam/kernel/contracts';
 import { resolveDeviceProfile } from '@sixam/source';
@@ -495,7 +495,7 @@ function minus7Emitter(winner, night) {
   // them did, which is why the catalog bundle existed and had never run: the
   // campaign refuses it outright (`nights[0].timing bounds are invalid`).
   //
-  // 1. The idle is a SHIFT, not a header.  recipe.mjs's replay starts the whole
+  // 1. The idle is a SHIFT, not a header.  recipe.ts's replay starts the whole
   //    schedule at `f(idleUntilMs)` (`const start = pilotOffset + f(idleUntilMs)`),
   //    but device-local-executor.js deliberately does NOT offset opening rows --
   //    "Opening rows are authored on the night timeline" -- because offsetting
@@ -567,11 +567,11 @@ function minus7Emitter(winner, night) {
 // mechanics the strategy's manifest declares it cannot win without.
 export const STRATEGY_REGISTRY = Object.freeze({
   'minus-toys': Object.freeze({ emit: minusToysEmitter, phaseAware: true, requires: MINUS_TOYS.requires,
-    sources: Object.freeze(['packages/propose/bin/plans/minus-toys-plan.mjs', 'packages/propose/bin/plans/recipe.mjs']) }),
+    sources: Object.freeze(['packages/propose/bin/plans/minus-toys-plan.ts', 'packages/propose/bin/plans/recipe.ts']) }),
   minus3: Object.freeze({ emit: minus3Emitter, requires: MINUS_3.requires,
-    sources: Object.freeze(['packages/propose/bin/plans/minus-3-plan.mjs', 'packages/play/bin/probe/arm-verification.mjs']) }),
+    sources: Object.freeze(['packages/propose/bin/plans/minus-3-plan.ts', 'packages/play/bin/probe/arm-verification.ts']) }),
   minus7: Object.freeze({ emit: minus7Emitter, requires: MINUS_7.requires,
-    sources: Object.freeze(['packages/propose/bin/plans/recipe.mjs', 'packages/propose/parked/minus7/hid-device-pilot.mjs']) }),
+    sources: Object.freeze(['packages/propose/bin/plans/recipe.ts', 'packages/propose/parked/minus7/hid-device-pilot.ts']) }),
 });
 
 // A run's constraints (ADR 0002's RunSpec `constraints`) may forbid FNaF 2

@@ -217,7 +217,7 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
 // reactive layer must lower it, mask, verify the opening, then raise it back --
 // the full BlackoutReactive path.
 import { Rng } from '@sixam/source/fnaf2';
-import { build, schedule } from '../bin/plans/minus-toys-plan.mjs';
+import { build, schedule } from '../bin/plans/minus-toys-plan.ts';
 
 const NIGHT = 1;
 const N_BLACKOUTS = 4;

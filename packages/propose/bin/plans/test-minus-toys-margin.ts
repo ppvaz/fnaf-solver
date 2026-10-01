@@ -6,7 +6,7 @@
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { OPENING, LOOP } from './minus-toys-plan.mjs';
+import { OPENING, LOOP } from './minus-toys-plan.ts';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const out = execFileSync('node',

@@ -34,7 +34,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { compileArtifactPlans, SEAM_FLOORS } from '../bin/plans/artifact-commands.ts';
 import { parsePlan, validateWinner, STRATEGY_REGISTRY } from '../bin/plans/bundle.ts';
-import { FUSION_POLL_MS } from '../bin/plans/recipe.mjs';
+import { FUSION_POLL_MS } from '../bin/plans/recipe.ts';
 import { checkDirectionalReuse, DIRECTIONAL_CONSTANTS } from '@sixam/review/refusals';
 
 const HERE = dirname(fileURLToPath(import.meta.url));

@@ -3,7 +3,7 @@
 // control/resource state; hidden RNG routes remain risk buckets.
 import * as C from '@sixam/source/fnaf2';
 import { Sim } from '@sixam/source/fnaf2';
-import { build, schedule } from '../bin/plans/minus-toys-plan.mjs';
+import { build, schedule } from '../bin/plans/minus-toys-plan.ts';
 import { advanceReduced, applyReduced, initialReducedState, observeReduced, isMaskFullyOn, isMaskFullyOff } from '@sixam/source/fnaf2';
 
 const check = (condition, message) => { if (!condition) throw new Error(message); };

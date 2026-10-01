@@ -233,12 +233,12 @@ is unchanged, so every figure keyed by it stands. The experiment-spec-v2 seed se
 carries derivation, provenance, count and sha256, and a census under 3000 seeds is
 refused by review's `seed-floor` rule (`resolveCensusCohort`). Focused tests:
 `packages/propose/test/census.test.ts` and `packages/kernel/test/experiment-v2.test.ts`
-(`test:contracts`). `packages/propose/bin/plans/minus-3-plan.mjs` still passes the golden salt
+(`test:contracts`). `packages/propose/bin/plans/minus-3-plan.ts` still passes the golden salt
 beside an explicit list; its bytes are hashed into every Minus 3 bundle, so it is
 not edited, and the descriptor now records such a list by what it is.
 **Owner:** `packages/propose` (was `packages/research`), device plan consumers
 **Evidence:** current-tree path `packages/propose/src/experiment/seeds.ts:64` (not yet
-versioned in this audit commit), [`minus-3-plan.mjs` (line 211)](../../packages/propose/bin/plans/minus-3-plan.mjs)
+versioned in this audit commit), [`minus-3-plan.mjs` (line 211)](../../packages/propose/bin/plans/minus-3-plan.ts)
 
 The current working tree fails JavaScript typecheck because the explicit
 `seeds` option is not typed. The escape hatch also does not enforce the same

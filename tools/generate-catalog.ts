@@ -221,8 +221,8 @@ for (const path of sourceFiles.filter(path => /(?:test|check|spec)[^/]*\.(?:mjs|
 const duplicateResponsibilities = [
   { responsibility: 'canonical mechanics', owner: '@sixam/source', legacy: [] },
   { responsibility: 'semantic policy IR', owner: '@sixam/propose', legacy: ['packages/propose/bin/policy/policy-ir.ts'] },
-  { responsibility: 'physical actuation', owner: '@sixam/play', legacy: ['packages/play/bin/phone/actuator.mjs'] },
-  { responsibility: 'device composition', owner: '@sixam/desktop', legacy: ['packages/propose/bin/plans/recipe.mjs'] },
+  { responsibility: 'physical actuation', owner: '@sixam/play', legacy: ['packages/play/bin/phone/actuator.ts'] },
+  { responsibility: 'device composition', owner: '@sixam/desktop', legacy: ['packages/propose/bin/plans/recipe.ts'] },
   { responsibility: 'research execution', owner: '@sixam/propose', legacy: ['tools/*search*', 'tools/*sweep*', 'tools/*probe*'] },
 ];
 
@@ -289,14 +289,14 @@ const legacyPaths = [
     notes: 'Human-safe selector retained because the current phone cursor is not machine-qualified.',
   },
   {
-    id: 'device.simulated-actuator', path: 'packages/play/bin/phone/actuator.mjs', category: 'simulation',
+    id: 'device.simulated-actuator', path: 'packages/play/bin/phone/actuator.ts', category: 'simulation',
     lifecycle: 'transitional', owner: '@sixam/play',
     replacement: 'adapter actuator/error model with conformance fixtures',
     removalGate: 'Pilot/model consumers migrate without changing measured error semantics',
     notes: 'Historical device-lateness model; not a physical transport.',
   },
   {
-    id: 'device.recipe-emitter', path: 'packages/propose/bin/plans/recipe.mjs', category: 'device-artifact',
+    id: 'device.recipe-emitter', path: 'packages/propose/bin/plans/recipe.ts', category: 'device-artifact',
     lifecycle: 'transitional', owner: '@sixam/play',
     replacement: 'package-owned winner/device-bundle emitter',
     removalGate: 'Bundle emitter no longer imports the tools tree and replay hashes match',

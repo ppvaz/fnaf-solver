@@ -29,7 +29,7 @@
 //                          one representative per class is replayed and its counts stand for every
 //                          member of the class. The device lane replays each binding at its aim
 //                          (aim + onsetBias) with every press late by an independent draw from the
-//                          same latency band (actuator.mjs DeviceActuator, per press).
+//                          same latency band (actuator.ts DeviceActuator, per press).
 //
 // A census is a MODEL result: it never stands in for a device claim.
 import { createHash } from 'node:crypto';
@@ -43,8 +43,8 @@ import { validateExperimentSpecV2 } from '@sixam/kernel/contracts';
 import { decideExperiment, rateOf, resolveCensusCohort } from '@sixam/propose/census';
 import { STRATEGY_REGISTRY, compileBundle, validateWinner } from '../plans/bundle.ts';
 import { ANCHOR_AIMS } from '../../bindings/fact-register.ts';
-import { build, replay as replayToys, schedule } from '../plans/minus-toys-plan.mjs';
-import { DeviceActuator } from '../../../play/bin/phone/actuator.mjs';
+import { build, replay as replayToys, schedule } from '../plans/minus-toys-plan.ts';
+import { DeviceActuator } from '../../../play/bin/phone/actuator.ts';
 import { currentPath } from '@sixam/review/renamed-path';
 import { forkBlocks, gitState } from './winner-census.ts';
 
@@ -277,8 +277,8 @@ export function buildRecord({ spec, reg, bindings, classes, exactRows, deviceRow
     },
     method: { tool: 'packages/propose/bin/census/policy-census.ts', command, git, jobs: MAX_JOBS, wallSeconds,
       win: 'sim.won AND splitAt >= 0 (a 6 AM with the split armed), as winner-phase-census.ts scores it',
-      exactLane: 'minus-toys-plan.mjs replay({night, seed, knobs, epochMs}) at each class\'s representative epoch',
-      deviceLane: 'the same queue at aim + onsetBias, each press through actuator.mjs DeviceActuator (perPress, lateness U[latency.min, latency.max] ms)' },
+      exactLane: 'minus-toys-plan.ts replay({night, seed, knobs, epochMs}) at each class\'s representative epoch',
+      deviceLane: 'the same queue at aim + onsetBias, each press through actuator.ts DeviceActuator (perPress, lateness U[latency.min, latency.max] ms)' },
     bindings: out,
     selection: { rule: 'the highest worst-class win rate on the development block; then the highest member-weighted mean; then the spec\'s tie order',
       selected: selectedName },

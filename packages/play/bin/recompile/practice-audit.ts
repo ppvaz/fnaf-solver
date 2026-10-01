@@ -65,7 +65,7 @@ export const toNative = ({ x, y }) => ({ x: x * NATIVE_SIZE[0] / GAME_SIZE[0], y
 
 // Hold durations straddle one and two 60 Hz updates; gaps test whether a
 // release followed by a press is seen as two contacts. 33 ms is the campaign's
-// MIN_CONTACT_MS (recipe.mjs), which equals its FUSION_POLL_MS.
+// MIN_CONTACT_MS (recipe.ts), which equals its FUSION_POLL_MS.
 export const DURATIONS_MS = Object.freeze([8, 17, 25, 33, 42, 50, 67, 100]);
 export const GAPS_MS = Object.freeze([17, 33, 50, 100, 250]);
 export const REPEATS = 3;

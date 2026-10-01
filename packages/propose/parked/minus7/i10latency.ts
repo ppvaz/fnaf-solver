@@ -37,8 +37,8 @@
 // Item 10 is closed, not merely blocked on plan 08.
 //
 //   node packages/propose/parked/minus7/i10latency.ts [--runs=800] [--latencies=0,17,33,50,67,83,100]
-import { makeSearchKnobs } from './hid-device-pilot.mjs';
-import { build, devicePlan, replay, idleUntilMs } from '../../bin/plans/recipe.mjs';
+import { makeSearchKnobs } from './hid-device-pilot.ts';
+import { build, devicePlan, replay, idleUntilMs } from '../../bin/plans/recipe.ts';
 import { jitterPlan } from '../../bin/plans/human-gate.ts';
 
 const arg = (k, d) => {
