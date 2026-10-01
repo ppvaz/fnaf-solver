@@ -78,6 +78,11 @@ public final class OverlayController {
                     f1View != null ? rect(Fnaf1Lesson.LEFT, Fnaf1Lesson.TOP, Fnaf1Lesson.RIGHT,
                             Fnaf1Lesson.BOTTOM) : "NONE"};
         }
+        if ("f1strip".equals(game)) {
+            return new String[] {"f1strip", f1StripView != null ? "ATTACHED" : "OFF",
+                    f1StripView != null ? rect(Fnaf1Strip.LEFT, Fnaf1Strip.TOP, Fnaf1Strip.RIGHT,
+                            Fnaf1Strip.BOTTOM) : "NONE"};
+        }
         if ("f3".equals(game)) {
             return new String[] {"f3", f3View != null ? "ATTACHED" : "OFF",
                     f3View != null ? rect(Fnaf3Lesson.LEFT, Fnaf3Lesson.TOP, Fnaf3Lesson.RIGHT,
@@ -101,6 +106,7 @@ public final class OverlayController {
         return "overlay=" + (permissionGranted() ? "READY" : "DISABLED(permission)")
                 + " teach=" + teachState
                 + " f1=" + (f1View != null ? "ATTACHED" : "NONE")
+                + " f1strip=" + (f1StripView != null ? "ATTACHED" : "NONE")
                 + " f3=" + (f3View != null ? "ATTACHED" : "NONE")
                 + " f4=" + (f4View != null ? "ATTACHED" : "NONE");
     }
@@ -197,6 +203,54 @@ public final class OverlayController {
     private void detachF1() {
         Fnaf1PanelView current = f1View;
         f1View = null;
+        removePanel(current);
+        emit();
+    }
+
+    // The FNaF 1 Night 1 and 2 teaching strip: the community loop's stage and
+    // why, over the top edge. `show` attaches it or redraws it with the named
+    // stage, `clear` detaches it. Debug builds only.
+    private final Fnaf1Strip f1Strip = new Fnaf1Strip();
+    private volatile Fnaf1StripView f1StripView;
+
+    /** {@code LESSON <token> f1strip <show NIGHT STAGE RUN|clear|status>}. */
+    public String f1StripCommand(String[] field, int from) {
+        if (!debuggable()) return "ERROR teach-release-build";
+        if (field.length <= from) return "ERROR f1strip-usage";
+        String verb = field[from];
+        lastLessonGame = "f1strip";
+        if ("clear".equals(verb) && field.length == from + 1) {
+            mainHandler.post(this::detachF1Strip);
+            return "OK f1strip=OFF";
+        }
+        if ("status".equals(verb) && field.length == from + 1) {
+            return "OK " + f1Strip.status(f1StripView != null, permissionGranted());
+        }
+        if (!permissionGranted()) return "ERROR teach-permission";
+        String refused = f1Strip.apply(field, from);
+        if (refused != null) return "ERROR " + refused;
+        mainHandler.post(this::attachF1Strip);
+        return "OK f1strip=show";
+    }
+
+    private void attachF1Strip() {
+        Fnaf1StripView current = f1StripView;
+        if (current != null) {
+            current.postInvalidateOnAnimation();
+            return;
+        }
+        if (windowManager == null) return;
+        Fnaf1StripView strip = new Fnaf1StripView(context, f1Strip);
+        if (addPanel(strip, Fnaf1Strip.LEFT, Fnaf1Strip.TOP, Fnaf1Strip.RIGHT, Fnaf1Strip.BOTTOM,
+                "FNaF 1 teaching strip")) {
+            f1StripView = strip;
+            emit();
+        }
+    }
+
+    private void detachF1Strip() {
+        Fnaf1StripView current = f1StripView;
+        f1StripView = null;
         removePanel(current);
         emit();
     }
@@ -522,6 +576,7 @@ public final class OverlayController {
         stopTeachNow("OFF");
         mainHandler.post(() -> {
             detachF1();
+            detachF1Strip();
             detachF3();
             detachF4();
         });

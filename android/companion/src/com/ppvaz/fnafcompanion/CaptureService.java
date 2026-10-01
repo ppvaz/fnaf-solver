@@ -1101,6 +1101,8 @@ public final class CaptureService extends Service {
                     return overlayController.teachStatus();
                 case "f1":
                     return overlayController.f1Command(field, 3);
+                case "f1strip":
+                    return overlayController.f1StripCommand(field, 3);
                 case "f3":
                     return overlayController.f3Command(field, 3);
                 case "f4":

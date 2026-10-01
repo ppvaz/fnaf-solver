@@ -51,6 +51,7 @@ JAVA="$JDK_ROOT/bin/java"
   "$HERE/src/com/ppvaz/fnafcompanion/TeachPanel.java" \
   "$HERE/src/com/ppvaz/fnafcompanion/NativeRegions.java" \
   "$HERE/src/com/ppvaz/fnafcompanion/Fnaf1Lesson.java" \
+  "$HERE/src/com/ppvaz/fnafcompanion/Fnaf1Strip.java" \
   "$HERE/src/com/ppvaz/fnafcompanion/Fnaf3Lesson.java" \
   "$HERE/src/com/ppvaz/fnafcompanion/Fnaf4Lesson.java" \
   "$HERE/src/com/ppvaz/fnafcompanion/HidControls.java" \
@@ -66,6 +67,7 @@ JAVA="$JDK_ROOT/bin/java"
   "$HERE/test/com/ppvaz/fnafcompanion/TargetsTest.java" \
   "$HERE/test/com/ppvaz/fnafcompanion/AudioProbeAnalysisTest.java" \
   "$HERE/test/com/ppvaz/fnafcompanion/Fnaf1LessonTest.java" \
+  "$HERE/test/com/ppvaz/fnafcompanion/Fnaf1StripTest.java" \
   "$HERE/test/com/ppvaz/fnafcompanion/Fnaf3LessonTest.java" \
   "$HERE/test/com/ppvaz/fnafcompanion/Fnaf4LessonTest.java" \
   "$HERE/test/com/ppvaz/fnafcompanion/HidControlsTest.java"
@@ -78,6 +80,7 @@ JAVA="$JDK_ROOT/bin/java"
   -cp "$TEST_TMP" com.ppvaz.fnafcompanion.TargetsTest
 "$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.AudioProbeAnalysisTest
 "$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.Fnaf1LessonTest
+"$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.Fnaf1StripTest
 "$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.Fnaf3LessonTest
 "$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.Fnaf4LessonTest
 "$JAVA" -Dhid.bundle="$HERE/assets/runners/generated/minus-toys" \
