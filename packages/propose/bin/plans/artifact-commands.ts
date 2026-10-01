@@ -69,13 +69,37 @@ const MONITOR_READY_CAMERA_MS = Math.round(C.MONITOR_ANIM_UP * 1000 / C.FPS) + R
 // Contact length is only the actuator floor.  It is deliberately checked
 // separately from the state/animation gates below: a 33 ms contact can still
 // miss a game sampler phase or land on a surface that is not present.
-const contactFloor = (cycle, label, value) => {
-  if (!Number.isFinite(value) || value < MIN_CONTACT_MS)
+/** One plan row as bundle.ts's parsePlan reads it. */
+export type ParsedRow =
+  | { at: number, kind: 'tap', control: string, duration: number }
+  | { at: number, kind: 'hold', control: string, duration: number }
+  | { at: number, kind: 'hall', duration: number }
+  | { at: number, kind: 'hallvent', duration: number }
+  | { at: number, kind: 'hallraise', duration: number }
+  | { at: number, kind: 'maskraise', gap: number, mode: string, duration: number }
+  | { at: number, kind: 'camdrop', lead: number, contact: number, tail: number }
+  | { at: number, kind: 'sweep', spacing: number, contact: number, cams: string[] }
+  | { at: number, kind: 'read', duration: number, gap: number, hallAt?: number, hallDuration?: number,
+      hallMode?: string, hallAge?: number };
+/** A parsed plan: its headers, its timing envelope, its cycles and its arm verification. */
+export interface ParsedPlan {
+  headers: Record<string, string>;
+  night: number; period: number; loopStart: number; stopAt: number; observeUntil: number;
+  cycles: Record<string, { lengthMs: number | null, rows: ParsedRow[] }>;
+  armVerification?: { cameras: string[], viewing: string, untilMs: number };
+}
+type SeamFloor = keyof typeof SEAM_FLOORS;
+/** The controls' state a cycle starts and ends in. */
+interface CycleState { monitorUp: boolean, maskOn: boolean, camera?: null }
+
+const finite = (value: unknown): value is number => Number.isFinite(value);
+const contactFloor = (cycle: string, label: string, value: number | undefined) => {
+  if (!finite(value) || value < MIN_CONTACT_MS)
     throw new TypeError(`${cycle}: ${label} contact ${value} ms is below the ` +
       `measured device floor of ${MIN_CONTACT_MS} ms`);
 };
 
-function validateRowContacts(cycle, row) {
+function validateRowContacts(cycle: string, row: ParsedRow) {
   if (row.kind === 'tap' || row.kind === 'hold' || row.kind === 'hall' ||
       row.kind === 'hallvent' || row.kind === 'hallraise' || row.kind === 'maskraise')
     contactFloor(cycle, row.kind, row.duration);
@@ -94,25 +118,27 @@ function validateRowContacts(cycle, row) {
         `released-input floor of ${FUSION_POLL_MS} ms`);
     if (row.hallAt !== undefined &&
         (row.hallAt <= 0 || row.hallAt >= row.duration ||
-         row.hallAt + row.hallDuration > row.duration))
+         row.hallAt + (row.hallDuration as number) > row.duration)) // parsePlan sets both or neither
       throw new TypeError(`${cycle}: read hall contact must fit inside the held vent-light window`);
   }
 }
 
-const camera = control => /^cam(?:[0-9]|1[0-2])$/.test(control);
-const semantic = control => camera(control) ? `cam:${Number(control.slice(3))}`
+// A row with no control reads undefined, which the pattern tests as the text 'undefined'.
+const camera = (control: string | undefined) => /^cam(?:[0-9]|1[0-2])$/.test(String(control));
+const controlOf = (row: ParsedRow) => ('control' in row ? row.control : undefined);
+const semantic = (control: string) => camera(control) ? `cam:${Number(control.slice(3))}`
   : control === 'ventl' ? V.leftVentLight : control === 'ventr' ? V.rightVentLight : control;
 
-function action(cycle, row, index, fields) {
+function action(cycle: string, row: { at: number }, index: number | string, fields: object) {
   return Object.freeze({ schema: 'artifact-action-v1', id: `${cycle}-${index}`,
     cycle, atMs: row.at, ...fields });
 }
 
-function initialState(cycle) {
+function initialState(cycle: string): CycleState {
   return { monitorUp: cycle === 'opening' ? false : true, maskOn: false };
 }
 
-function planTiming(parsed) {
+function planTiming(parsed: ParsedPlan) {
   const idleUntilMs = parsed.headers['idle-until'] === undefined
     ? 0 : Number(parsed.headers['idle-until']);
   if (!Number.isInteger(idleUntilMs) || idleUntilMs < 0)
@@ -129,7 +155,7 @@ function planTiming(parsed) {
   });
 }
 
-function armVerification(parsed) {
+function armVerification(parsed: ParsedPlan) {
   const headers = parsed.headers;
   const declared = headers['arm-verify'] !== undefined ||
     headers['arm-verify-cameras'] !== undefined || headers['arm-verify-until'] !== undefined ||
@@ -184,30 +210,35 @@ export const SEAM_FLOORS = Object.freeze({
   maskButtonFullyVisibleAfterMonitorDownMs: MASK_BUTTON_VISIBLE_AFTER_MONITOR_DOWN_MS,
 });
 
-export function compileCycle(cycle, rows, initial = initialState(cycle), seams = [], declaredViewing = null) {
-  const seam = (relation, row, gapMs, floor, first, then) => {
+/** One measured gap against a timing floor. */
+type Seam = Readonly<{ cycle: string, relation: string, atMs: number, kind: string, gapMs: number, floorMs: number,
+  slackMs: number, floor: SeamFloor, first: string | null, then: string }>;
+
+export function compileCycle(cycle: string, rows: readonly ParsedRow[], initial = initialState(cycle), seams: Seam[] = [],
+  declaredViewing: string | null = null) {
+  const seam = (relation: string, row: ParsedRow, gapMs: number, floor: SeamFloor, first: string | null, then: string) => {
     if (!Number.isFinite(gapMs)) return;   // no prior transition to measure against
     if (!Object.hasOwn(SEAM_FLOORS, floor)) throw new TypeError(`${cycle}: seam ${relation} names no SEAM_FLOORS key (${floor})`);
     const floorMs = SEAM_FLOORS[floor];
     seams.push(Object.freeze({ cycle, relation, atMs: row.at, kind: row.kind,
       gapMs, floorMs, slackMs: gapMs - floorMs, floor, first, then }));
   };
-  const pressOf = row => (row.kind === 'tap' || row.kind === 'hold' ? semantic(row.control) : row.kind);
+  const pressOf = (row: ParsedRow) => (row.kind === 'tap' || row.kind === 'hold' ? semantic(row.control) : row.kind);
   if (!Array.isArray(rows)) throw new TypeError('artifact cycle rows must be an array');
-  const state: any = { ...initial };
+  const state: CycleState = { ...initial };
   // When the monitor raise and the mask-off press began, so a press cannot be
   // scheduled inside an animation the engine drops it during.
   let monitorUpAt = -Infinity;
   let monitorDownAt = -Infinity;
   let monitorTransitionAt = -Infinity;
   let monitorTransitionMs = 0;
-  let monitorTransition = null;   // 'monitor-up' or 'monitor-down': the last transition's direction
+  let monitorTransition: string | null = null;   // 'monitor-up' or 'monitor-down': the last transition's direction
   let maskOffAt = -Infinity;
   let maskOnAt = -Infinity;
-  const blocks = [];
+  const blocks: Readonly<{ schema: string, id: string, cycle: string, atMs: number, actions: readonly object[] }>[] = [];
   for (const [rowIndex, row] of rows.entries()) {
     const id = rowIndex + 1;
-    const actions = [];
+    const actions: object[] = [];
     validateRowContacts(cycle, row);
     const isMaskRow = (row.kind === 'tap' || row.kind === 'hold') && semantic(row.control) === V.mask;
 
@@ -229,7 +260,7 @@ export function compileCycle(cycle, rows, initial = initialState(cycle), seams =
     const needsMonitorDown = rawControl === V.hallLight || rawControl === V.leftVentLight ||
       rawControl === V.rightVentLight || row.kind === 'hall' || row.kind === 'hallvent' ||
       row.kind === 'hallraise' || row.kind === 'read';
-    const needsMonitorUpNow = camera(row.control) || row.kind === 'sweep' || row.kind === 'camdrop' ||
+    const needsMonitorUpNow = camera(controlOf(row)) || row.kind === 'sweep' || row.kind === 'camdrop' ||
       rawControl === V.cameraFeedLight || rawControl === V.wind;
     if (needsMonitorDown && state.monitorUp)
       throw new TypeError(`${cycle}: ${row.kind} ${rawControl ?? ''} requires monitor down`);
@@ -361,7 +392,7 @@ export function compileCycle(cycle, rows, initial = initialState(cycle), seams =
         durationMs: row.duration }));
     } else if (row.kind === 'sweep') {
       if (!state.monitorUp) throw new TypeError(`${cycle}: sweep requires monitor up`);
-      const cams = row.cams.map(token => Number(token.split(':')[0]));
+      const cams = row.cams.map((token: string) => Number(token.split(':')[0]));
       for (const [camIndex, cam] of cams.entries()) {
         const lightMs = row.cams[camIndex].includes(':')
           ? Number(row.cams[camIndex].split(':')[1]) : row.contact;
@@ -398,19 +429,20 @@ export function compileCycle(cycle, rows, initial = initialState(cycle), seams =
     blocks: Object.freeze(blocks) });
 }
 
-export function compileArtifactPlans(plans, parsePlan, profile) {
+export function compileArtifactPlans<P>(plans: readonly { text: string, policy: string, night: number }[],
+  parsePlan: (text: string, options: { strategy: string, night: number, profile: P }) => ParsedPlan, profile: P) {
   if (!Array.isArray(plans) || typeof parsePlan !== 'function')
     throw new TypeError('validated plans and parser are required');
   return plans.map(plan => {
     const parsed = parsePlan(plan.text, { strategy: plan.policy, night: plan.night, profile });
-    const compiled: any = {};
-    const seams = [];
+    const compiled: Record<string, ReturnType<typeof compileCycle>> = {};
+    const seams: Seam[] = [];
     const declaredViewing = parsed.armVerification?.viewing ?? null;
     compiled.opening = compileCycle('opening', parsed.cycles.opening.rows, undefined, seams, declaredViewing);
     for (const [name, value] of Object.entries(parsed.cycles)) {
       if (name === 'opening') continue;
       const prior = name === 'finish' && compiled.toys ? compiled.toys.final : compiled.opening.final;
-      compiled[name] = compileCycle(name, (value as any).rows, prior, seams, declaredViewing);
+      compiled[name] = compileCycle(name, value.rows, prior, seams, declaredViewing);
     }
     return Object.freeze({ night: plan.night, policy: plan.policy,
       timing: planTiming(parsed), armVerification: armVerification(parsed),
@@ -423,7 +455,7 @@ export function compileArtifactPlans(plans, parsePlan, profile) {
  * the device lane.  The executor needs cycles and semantic blocks, never the
  * strategy name or plan interpreter inputs.
  */
-export function persistArtifactPlans(compiledPlans) {
+export function persistArtifactPlans(compiledPlans: ReturnType<typeof compileArtifactPlans>) {
   if (!Array.isArray(compiledPlans)) throw new TypeError('compiled plans are required');
   return compiledPlans.map(plan => Object.freeze({ night: plan.night, timing: plan.timing,
     ...(plan.armVerification ? { armVerification: plan.armVerification } : {}), cycles: plan.cycles }));

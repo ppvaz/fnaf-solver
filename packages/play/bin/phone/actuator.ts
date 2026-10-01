@@ -134,8 +134,22 @@ export const CUE_ANIM_UP_MS = 202;
 // that survived, so the model has to be able to end a night this way.
 export const MAX_DESYNCS = 12;
 
-const f = (msv) => Math.round(msv / 1000 * C.FPS);
-const toMs = (frames) => frames * 1000 / C.FPS;
+const f = (msv: number) => Math.round(msv / 1000 * C.FPS);
+const toMs = (frames: number) => frames * 1000 / C.FPS;
+
+/** What the actuator reads of the game and presses on it. */
+interface ActuatedSim {
+  readonly frame: number; readonly monitor: string; readonly maskOn: boolean; readonly camsUp: boolean;
+  press(act: string): void;
+  release(act: string): void;
+}
+type Kind = 'press' | 'release';
+/** The runner's monitor loop, as MonitorSupervisor models it; each field defaults to the shipped runner. */
+interface SupervisorOptions {
+  gateWaitMs?: number; cueReadMs?: number; cueMatchMs?: number; classifyMs?: number; cueAnimUpMs?: number;
+  animAnchor?: string; errorRate?: number; gate?: boolean; checkpoint?: boolean; correct?: boolean;
+  confirmRead?: boolean; idealResync?: boolean; maxDesyncs?: number;
+}
 
 export class DeviceActuator {
   // `perPress` picks the lateness granularity. The swipe runner launches one
@@ -163,26 +177,30 @@ export class DeviceActuator {
   // clear the floor by the seam-slack margin, so it only bites when presses
   // move against each other. Null (the default) keeps every figure published
   // before it existed.
-  declare lateWhen: any;
-  declare maskFloorFrames: number;
+  declare lateWhen: ((act: string) => boolean) | null;
+  declare maskFloorFrames: number | null;
   declare monitorDownAt: number;
   declare maskFloorDrops: number;
-  declare sim: any;
+  declare sim: ActuatedSim;
   declare rng: Rng;
   declare lateMin: number;
   declare lateMax: number;
   declare perPress: boolean;
-  declare beatLateMs: any;
-  declare pending: any[];
+  declare beatLateMs: number;
+  declare pending: [number, Kind, string][];
   declare lastLand: number;
-  declare holdLateMs: Map<any, any>;
+  declare holdLateMs: Map<string, number>;
   declare maskOffAt: number;
   declare sent: number;
   declare seamDrops: number;
-  declare loop: MonitorSupervisor;
-  constructor(sim, { seed = 1, worst = false, lateMinMs = LAUNCH_LATE_MIN_MS,
+  declare loop: MonitorSupervisor | null;
+  constructor(sim: ActuatedSim, { seed = 1, worst = false, lateMinMs = LAUNCH_LATE_MIN_MS,
                      lateMaxMs = LAUNCH_LATE_MAX_MS, perPress = true,
-                     closedLoop = null, lateWhen = null, maskFloorMs = null } = {}) {
+                     closedLoop = null, lateWhen = null, maskFloorMs = null }: {
+                       seed?: number, worst?: boolean, lateMinMs?: number, lateMaxMs?: number, perPress?: boolean,
+                       closedLoop?: SupervisorOptions | boolean | null, lateWhen?: ((act: string) => boolean) | null,
+                       maskFloorMs?: number | null,
+                     } = {}) {
     if (!(lateMinMs >= 0) || !(lateMaxMs >= lateMinMs))
       throw new Error('lateness band must satisfy 0 <= min <= max');
     if (lateWhen !== null && typeof lateWhen !== 'function')
@@ -228,15 +246,15 @@ export class DeviceActuator {
   // runner is a blocking shell in between: while it is waiting out a flip or a
   // recovery, nothing the schedule wanted goes out, and it goes out when the
   // shell gets back to `wait_until`.
-  submit(kind, act) {
+  submit(kind: Kind, act: string) {
     if (this.loop && this.loop.intercept(kind, act)) return;
     this.submitNow(kind, act);
   }
 
-  submitNow(kind, act) {
-    let lateMs;
+  submitNow(kind: Kind, act: string) {
+    let lateMs: number;
     if (kind === 'release' && this.holdLateMs.has(act)) {
-      lateMs = this.holdLateMs.get(act); // one draw per hold: plans/04
+      lateMs = this.holdLateMs.get(act) as number; // one draw per hold: plans/04 (has() just checked)
       this.holdLateMs.delete(act);
     } else {
       lateMs = this.perPress ? this.sampleLateMs() : this.beatLateMs;
@@ -256,15 +274,16 @@ export class DeviceActuator {
     if (this.loop && kind === 'press') this.loop.noteSent(act, this.sim.frame);
   }
 
-  press(act) { this.submit('press', act); }
-  release(act) { this.submit('release', act); }
+  press(act: string) { this.submit('press', act); }
+  release(act: string) { this.submit('release', act); }
 
   // Land everything due this frame. Call once per frame, before sim.tick().
   deliver() {
     if (this.loop) this.loop.tick();
     const now = this.sim.frame;
     while (this.pending.length && this.pending[0][0] <= now) {
-      const [, kind, act] = this.pending.shift();
+      // The length was just checked.
+      const [, kind, act] = this.pending.shift() as [number, Kind, string];
       if (kind === 'release') { this.sim.release(act); continue; }
       this.sent++;
       if (act === 'monitor' && this.seamDropped(now)) { this.seamDrops++; continue; }
@@ -280,7 +299,7 @@ export class DeviceActuator {
     }
   }
 
-  seamDropped(now) {
+  seamDropped(now: number) {
     const gapMs = toMs(now - this.maskOffAt);
     const band = SEAM_BANDS.find(b => gapMs < b.underMs);
     return band ? this.rng.chance(band.dropChance, true) : false;
@@ -336,8 +355,8 @@ export class DeviceActuator {
 //     its blindness. The reclaim below is therefore an upper bound on this
 //     loop, not a floor.
 export class MonitorSupervisor {
-  declare act: any;
-  declare sim: any;
+  declare act: DeviceActuator;
+  declare sim: ActuatedSim;
   declare gateWaitMs: number;
   declare cueReadMs: number;
   declare cueMatchMs: number;
@@ -355,15 +374,15 @@ export class MonitorSupervisor {
   declare lastMonitorSent: number;
   declare lastMonitorLand: number;
   declare lastPressSent: number;
-  declare steps: any[];
-  declare buffer: any[];
-  declare deferred: any[];
-  declare holdShift: Map<any, any>;
+  declare steps: [number, () => void][];
+  declare buffer: [Kind, string, number][];
+  declare deferred: [number, Kind, string][];
+  declare holdShift: Map<string, number>;
   declare blocking: boolean;
   declare correcting: boolean;
   declare swallowNextMask: boolean;
   declare gateReads: number;
-  declare gateReadFrames: any[];
+  declare gateReadFrames: number[];
   declare gateCorrections: number;
   declare gateFalse: number;
   declare checkpointFalse: number;
@@ -371,12 +390,12 @@ export class MonitorSupervisor {
   declare recoveryPresses: number;
   declare blockedFrames: number;
   declare aborted: boolean;
-  constructor(act, { gateWaitMs = MONITOR_ANIM_DOWN_MS, cueReadMs = CUE_READ_MS,
+  constructor(act: DeviceActuator, { gateWaitMs = MONITOR_ANIM_DOWN_MS, cueReadMs = CUE_READ_MS,
                      cueMatchMs = CUE_MATCH_MS, classifyMs = CLASSIFY_MS,
                      cueAnimUpMs = CUE_ANIM_UP_MS, animAnchor = 'sent',
                      errorRate = 0, gate = true, checkpoint = true,
                      correct = true, confirmRead = true,
-                     idealResync = false, maxDesyncs = MAX_DESYNCS } = {}) {
+                     idealResync = false, maxDesyncs = MAX_DESYNCS }: SupervisorOptions = {}) {
     if (animAnchor !== 'sent' && animAnchor !== 'land')
       throw new Error("animAnchor must be 'sent' or 'land'");
     this.act = act;
@@ -425,7 +444,7 @@ export class MonitorSupervisor {
     this.aborted = false;
   }
 
-  noteSent(action, frame) {
+  noteSent(action: string, frame: number) {
     this.lastPressSent = frame;
     if (action === 'monitor') this.lastMonitorSent = frame;
   }
@@ -433,7 +452,7 @@ export class MonitorSupervisor {
   // What the Companion answers. `camsUp` alone is not it: during the lowering
   // animation the camera feed is still on screen, which is the whole reason the
   // gate has to wait the flip out.
-  cueSaysUp(frame) {
+  cueSaysUp(frame: number) {
     const m = this.sim.monitor;
     const anchor = this.animAnchor === 'sent' ? this.lastMonitorSent : this.lastMonitorLand;
     let up = m === 'up' || m === 'raising' ||
@@ -445,7 +464,7 @@ export class MonitorSupervisor {
     return up;
   }
 
-  at(frame, fn) { this.steps.push([Math.max(frame, this.sim.frame), fn]); }
+  at(frame: number, fn: () => void) { this.steps.push([Math.max(frame, this.sim.frame), fn]); }
 
   block() { this.blocking = true; }
 
@@ -469,9 +488,9 @@ export class MonitorSupervisor {
   // the classifier's frame -- and the checkpoint asked of it -- moves with the
   // light that actually went down. Reading it at the offset the plan wanted
   // instead is the `READ_CAPTURE_DELAY_MS` bug the runner already paid for.
-  emit(kind, action) {
+  emit(kind: Kind, action: string) {
     if (kind === 'release' && this.holdShift.has(action)) {
-      const shift = this.holdShift.get(action);
+      const shift = this.holdShift.get(action) as number; // has() just checked
       this.holdShift.delete(action);
       if (shift > 0) { this.deferred.push([this.sim.frame + shift, kind, action]); return; }
     }
@@ -479,7 +498,7 @@ export class MonitorSupervisor {
     this.act.submitNow(kind, action);
   }
 
-  intercept(kind, action) {
+  intercept(kind: Kind, action: string) {
     // The pilot's model of the toggle: it presses blind, so its belief flips on
     // every monitor press it issues, whatever the game then does.
     if (kind === 'press' && action === 'monitor' && !this.correcting)

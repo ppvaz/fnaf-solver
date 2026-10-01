@@ -73,10 +73,10 @@ export function profilePaths({ env = process.env, root = ROOT } = {}) {
 }
 
 /** One profile file's serial. A file that exists but is malformed is an error, never skipped. */
-export function readProfile(path) {
+export function readProfile(path: string) {
   let profile;
   try { profile = JSON.parse(readFileSync(path, 'utf8')); } catch (error) {
-    throw new SerialUnset(`the local profile ${path} is unreadable (${error.message}); ${HOW_TO}`);
+    throw new SerialUnset(`the local profile ${path} is unreadable (${(error as Error).message}); ${HOW_TO}`);
   }
   if (profile?.schema !== PROFILE_SCHEMA) throw new SerialUnset(`the local profile ${path} is not ${PROFILE_SCHEMA}; ${HOW_TO}`);
   if (!SERIAL_TOKEN.test(String(profile.serial ?? ''))) throw new SerialUnset(`the local profile ${path} holds no valid serial; ${HOW_TO}`);
@@ -100,7 +100,7 @@ export function resolveSerial({ env = process.env, root = ROOT, names = ['FNAF_S
 }
 
 /** Write the profile where this host's checkouts read it. */
-export function writeProfile(serial, { env = process.env, root = ROOT } = {}) {
+export function writeProfile(serial: unknown, { env = process.env, root = ROOT } = {}) {
   if (!SERIAL_TOKEN.test(String(serial ?? ''))) throw new SerialUnset(`not a device serial token: ${JSON.stringify(serial)}`);
   const path = env.FNAF_LOCAL_PROFILE ? resolve(env.FNAF_LOCAL_PROFILE) : join(mainCheckout(root), PROFILE_PATH);
   mkdirSync(dirname(path), { recursive: true });
@@ -108,7 +108,7 @@ export function writeProfile(serial, { env = process.env, root = ROOT } = {}) {
   return path;
 }
 
-function main(argv) {
+function main(argv: readonly string[]) {
   const [verb, value] = argv;
   try {
     if (verb === 'serial' && argv.length === 1) { process.stdout.write(`${resolveSerial().serial}\n`); return 0; }

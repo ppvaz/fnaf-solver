@@ -42,24 +42,48 @@ export const CYCLE_MS = 5_000;
 // C.FPS -- the exact shape of "defined once, re-derived per context" that
 // the tick rate is already ambiguous about (30 Hz Fusion poll vs 60 FPS
 // render). Only one of those two is C.FPS, and now only one is spelled here.
-const ms = f => Math.round(f * 1000 / C.FPS);
+const ms = (f: number) => Math.round(f * 1000 / C.FPS);
+
+type SearchKnobs = ReturnType<typeof makeSearchKnobs>;
+/** One press or release the pilot sent the Sim, with the state it found. */
+interface LogEntry {
+  readonly f: number, readonly kind: 'press' | 'release', readonly act: string,
+  readonly camsUp: boolean, readonly monitor: string, readonly maskOn: boolean,
+}
+/** One contact in a cycle, in ms from the cycle's start. */
+interface RecipeEvent { at: number, act: string, dur: number, tap: boolean, camsUp?: boolean, want?: string }
+/** What the pilot is run with to capture a recipe. */
+type CaptureOptions = NonNullable<Parameters<typeof run>[0]> & { seed?: number, night?: number };
+/** A plan line split into its time, its instruction and the instruction's fields. */
+interface Ins { at: number, kind: string, rest: string[] }
+/** One step of a lesson track, as the trainer reads it. */
+interface TrackStep { id: string, at: number, label: string, action: string, want?: string, hold?: number, cam?: number }
+/** A deferred mask-off and raise, fired on the BB departure bang (attackBangGateMs). */
+interface BangRaise {
+  nominalT: number, gap: number, dur: number, hall: boolean, gateFrames: number, base: number, fired: boolean,
+  maxDelay: number, sweepRel: number, spacing: number, contact: number, cams: string, sweepCap: number,
+}
+type ReplayEntry =
+  | [number, number, 'press', string] | [number, number, 'release', string]
+  | [number, number, 'recent-hall', { age: number, duration: number }]
+  | [number, number, 'bangraise', BangRaise] | [number, number, 'snapshot', number];
 
 // Which physical control a press means depends on the monitor: `light` is the
 // camera light with the cams up and the hallway light with them down.
-function controlFor(act, camsUp) {
+function controlFor(act: string, camsUp: boolean) {
   if (act === 'light') return camsUp ? 'camlight' : 'hall';
   if (act === 'ventL') return 'ventl';
   if (act.startsWith('cam:')) return 'cam' + act.slice(4);
   return act;
 }
 
-export function capture(opts) {
-  const log = [];
-  const patched = [];
-  for (const m of ['press', 'release']) {
+export function capture(opts: CaptureOptions) {
+  const log: LogEntry[] = [];
+  const patched: ['press' | 'release', typeof Sim.prototype.press][] = [];
+  for (const m of ['press', 'release'] as const) {
     const orig = Sim.prototype[m];
     patched.push([m, orig]);
-    Sim.prototype[m] = function (act) {
+    Sim.prototype[m] = function (this: Sim, act: string) {
       const camsUp = this.camsUp;
       const result = orig.call(this, act);
       // Record the state the engine actually reached, never a toggle count.
@@ -82,13 +106,13 @@ export function capture(opts) {
 
 // Pair each press with its release; a bare press is a tap the device must
 // still hold for MIN_CONTACT_MS.
-function events(log, from, to) {
-  const open = new Map();
-  const out = [];
+function events(log: readonly LogEntry[], from: number, to: number) {
+  const open = new Map<string, RecipeEvent>();
+  const out: RecipeEvent[] = [];
   for (const e of log) {
     if (e.f < from || e.f >= to) continue;
     if (e.kind === 'press') {
-      const rec: any = { at: ms(e.f - from), act: controlFor(e.act, e.camsUp),
+      const rec: RecipeEvent = { at: ms(e.f - from), act: controlFor(e.act, e.camsUp),
                     dur: MIN_CONTACT_MS, tap: true };
       // MON_RAISING/MON_LOWERING are the animation; the intent is the endpoint.
       rec.camsUp = e.camsUp;
@@ -110,12 +134,12 @@ function events(log, from, to) {
 // A budget is what the cycle spends, not what it intends: light-on time is the
 // flashlight, wind time is the box, cams-down time is everything the schedule
 // cannot do while it is reading.
-export function budget(cycle, lengthMs) {
+export function budget(cycle: readonly RecipeEvent[], lengthMs: number) {
   const lit = cycle.filter(e => e.act === 'camlight' || e.act === 'hall')
     .reduce((sum, e) => sum + e.dur, 0);
   const wind = cycle.filter(e => e.act === 'wind').reduce((sum, e) => sum + e.dur, 0);
   const cams = cycle.filter(e => e.act.startsWith('cam') && e.act !== 'camlight');
-  const sweeps = [];
+  const sweeps: RecipeEvent[][] = [];
   for (const e of cams) {
     if (e.act === 'cam11') continue;
     const last = sweeps[sweeps.length - 1];
@@ -175,7 +199,7 @@ export const ATTACK_WINDOW_FRAMES = 600;
 // So a candidate is only an attack cycle if the sample kept running long enough
 // to contain one. Scan every candidate rather than taking the first: an early
 // end-of-night false positive must not hide a real attack later in the log.
-export function attackAnchor(log, windowFrames = ATTACK_WINDOW_FRAMES) {
+export function attackAnchor(log: readonly LogEntry[], windowFrames = ATTACK_WINDOW_FRAMES) {
   const masks = log.filter(e => e.kind === 'press' && e.act === 'mask').map(e => e.f);
   const monitors = log.filter(e => e.kind === 'press' && e.act === 'monitor').map(e => e.f);
   const end = log.length ? log[log.length - 1].f : -1;
@@ -204,7 +228,7 @@ export function attackAnchor(log, windowFrames = ATTACK_WINDOW_FRAMES) {
 // attack on a night whose sourced AI never arms Balloon Boy is an
 // observation/config mismatch, and building a plan against it would mean the
 // engine and the AI table disagree about the night being played.
-export function resolveAttack(o, log, capfn = capture) {
+export function resolveAttack(o: CaptureOptions & { attackWindowMs?: number }, log: LogEntry[], capfn: (opts: CaptureOptions) => LogEntry[] = capture) {
   const night = o.night ?? 6;
   const seed = o.seed ?? 7;
   const possible = C.canAct(night, 'bb');
@@ -239,7 +263,7 @@ export function resolveAttack(o, log, capfn = capture) {
            source: 'template', reachable: false };
 }
 
-export function build(opts = {}) {
+export function build(opts: CaptureOptions & { captureFn?: (opts: CaptureOptions) => LogEntry[] } = {}) {
   // Golden Freddy is cleared on every cycle by the canonical prophylactic
   // mask flick.
   //
@@ -268,16 +292,16 @@ export function build(opts = {}) {
   // ON-DEVICE-VALIDATION.md, "Which press desyncs, and why".
   // `captureFn` is a test seam, not a recipe option: it must not land in
   // `recipe.options`, which is what the pinning checks compare.
-  const { captureFn = capture, ...rest } = (opts as any);
-  const o: any = { bbMode: 'left', deviceSweep: true, pulseLight: true,
+  const { captureFn = capture, ...rest } = opts;
+  const o = { bbMode: 'left', deviceSweep: true, pulseLight: true,
               sweepSlotMs: MODEL_SLOT_MS, maskMarginMs: 900, readLatencyMs: 550,
               hallPulseMs: 130, pilotOffset: 10, prophylacticMask: true,
               attackWindowMs: 10000, ...rest,
-              knobs: makeSearchKnobs((rest as any).knobs) };
+              knobs: makeSearchKnobs(rest.knobs) };
   const night = o.night ?? 6;
   const log = captureFn(o);
   const epoch = o.pilotOffset;
-  const s = sec => epoch + Math.round(sec * C.FPS);
+  const s = (sec: number) => epoch + Math.round(sec * C.FPS);
 
   // The steady and opening cycles are cut from the night being evaluated; the
   // attack branch is cut from whichever sample can supply one. Those are
@@ -296,17 +320,18 @@ export function build(opts = {}) {
       `(${bb.source}) has no monitor press after the read: it is ${attack.length} events of ` +
       `a ${o.attackWindowMs / 1000} s cycle, which would leave the pilot masked and idle on every Balloon Boy read`);
 
+  // Each cycle with its budget, in the field order the budget was once added in.
+  const cycle = (lengthMs: number, events: RecipeEvent[]) => ({ lengthMs, events, budget: budget(events, lengthMs) });
   const cycles = {
-    opening: { lengthMs: 7000, events: opening },
-    clear: { lengthMs: 5000, events: clear },
-    attack: { lengthMs: o.attackWindowMs, events: attack },
+    opening: cycle(7000, opening),
+    clear: cycle(5000, clear),
+    attack: cycle(o.attackWindowMs, attack),
   };
-  for (const [, c] of Object.entries(cycles)) (c as any).budget = budget(c.events, c.lengthMs);
 
   // A night is mostly clear cycles; price the flashlight against the sourced
   // per-night budget rather than against a single cycle.
   const clearCycles = Math.floor((NIGHT_MS - 7000) / CYCLE_MS);
-  const nightLitMs = (cycles.opening as any).budget.litMs + clearCycles * (cycles.clear as any).budget.litMs;
+  const nightLitMs = cycles.opening.budget.litMs + clearCycles * cycles.clear.budget.litMs;
   const available = C.powerFrames(night);
   const spent = Math.round(nightLitMs * C.FPS / 1000);
   return {
@@ -339,8 +364,8 @@ export function build(opts = {}) {
 // `ventlight` is the one action canonical Minus 7 has no step for -- the BB
 // read is exactly what this variant adds -- so a trainer that wants to drill
 // this track has to grow that step type first.
-export function track(cycle) {
-  const steps = [];
+export function track(cycle: { readonly events: readonly RecipeEvent[] }) {
+  const steps: TrackStep[] = [];
   for (const e of cycle.events) {
     const at = +(e.at / 1000).toFixed(3);
     if (e.act === 'camlight') {
@@ -431,15 +456,15 @@ export const LA_SETTLE_MS = 17;
 // *every* slot, so a lengthened last slot (sweepLastContactMs, below) still
 // costs the select + settle even at 67 ms, where the bare threshold would
 // misprice it as the legacy same-report geometry.
-export const sweepCamMs = (contactMs, lightAfter = contactMs < 50) =>
+export const sweepCamMs = (contactMs: number, lightAfter = contactMs < 50) =>
   lightAfter ? LA_SELECT_MS + LA_SETTLE_MS + contactMs : contactMs;
 
 // A sweep's cams token is `10,4,7`, or `10,4,7:67` when the drift-exposed last
 // slot needs a longer light hold than the rest -- the `:N` suffix overrides
 // that one slot's light contact (ON-DEVICE-VALIDATION.md, the last-slot leak).
 // Returns the camera list and the parallel per-slot light-contact list.
-export function sweepCams(camsToken, baseContactMs) {
-  const cams = [], contacts = [];
+export function sweepCams(camsToken: string, baseContactMs: number) {
+  const cams: string[] = [], contacts: number[] = [];
   for (const tok of String(camsToken).split(',')) {
     const [n, c] = tok.split(':');
     cams.push(n);
@@ -451,7 +476,7 @@ export function sweepCams(camsToken, baseContactMs) {
 // The device-time span of a `sweep` instruction from its rest tokens
 // [spacing, contact, cams]. The geometry is set by the base contact; only the
 // last slot's own contact changes its per-slot cost.
-export function sweepSpanMs([spacing, contact, cams]) {
+export function sweepSpanMs([spacing, contact, cams]: readonly string[]) {
   const base = +contact;
   const { contacts } = sweepCams(cams, base);
   const last = contacts[contacts.length - 1];
@@ -517,26 +542,26 @@ export const RAISE_JITTER_MARGIN_MS = 120;
 // did, at raise+414 ms.
 export const MONITOR_READY_WIND_MS = 434;
 
-function clearTheRaise(name, lines) {
-  const ins = lines.map(line => {
+function clearTheRaise(name: string, lines: readonly string[]) {
+  const ins: Ins[] = lines.map(line => {
     const [at, kind, ...rest] = line.split(' ');
     return { at: +at, kind, rest };
   });
-  const spanOf = e =>
+  const spanOf = (e: Ins) =>
     e.kind === 'tap' || e.kind === 'hold' ? +e.rest[1] :
     e.kind === 'hall' ? +e.rest[0] :
     e.kind === 'hallraise' ? +e.rest[0] :
     e.kind === 'sweep' ? sweepSpanMs(e.rest) :
     e.kind === 'read' ? +e.rest[0] : MIN_CONTACT_MS;
-  const isCamera = e => e.kind === 'sweep' ||
+  const isCamera = (e: Ins) => e.kind === 'sweep' ||
     (e.kind === 'tap' && /^cam\d+$/.test(e.rest[0]));
-  const isRaise = (e, up) => !up &&
+  const isRaise = (e: Ins, up: boolean) => !up &&
     (e.kind === 'hallraise' || (e.kind === 'tap' && e.rest[0] === 'monitor'));
 
   // Which monitor presses are raises depends on where the cycle starts: a
   // steady cycle is entered with the cams up and its anchor lowers them.
   let up = name !== 'opening';
-  const raises = [];
+  const raises: Ins[] = [];
   for (const e of ins) {
     if (e.kind === 'hallraise' || (e.kind === 'tap' && e.rest[0] === 'monitor')) {
       if (isRaise(e, up)) raises.push(e);
@@ -629,12 +654,12 @@ function clearTheRaise(name, lines) {
 // fires. That is the same FUSION_POLL_MS rule test-recipe.mjs enforces; this
 // keeps it true after the emitter has retimed anything.
 
-function makeRoom(name, lines) {
-  const ins = lines.map(line => {
+function makeRoom(name: string, lines: readonly string[]) {
+  const ins: Ins[] = lines.map(line => {
     const [at, kind, ...rest] = line.split(' ');
     return { at: +at, kind, rest };
   });
-  const endOf = e =>
+  const endOf = (e: Ins) =>
     e.kind === 'tap' ? e.at + +e.rest[1] :
     e.kind === 'hold' ? e.at + +e.rest[1] :
     e.kind === 'hall' || e.kind === 'hallraise' ? e.at + +e.rest[0] :
@@ -661,8 +686,8 @@ function makeRoom(name, lines) {
 // is an actuator instruction, like `sweep`: the policy still contains the two
 // sourced game inputs, while the phone receives one report stream with the
 // measured-safe gap held inside it.
-function foldMaskRaise(name, lines, knobs = DEFAULT_SEARCH_KNOBS) {
-  const out = [];
+function foldMaskRaise(name: string, lines: readonly string[], knobs: SearchKnobs = DEFAULT_SEARCH_KNOBS) {
+  const out: string[] = [];
   for (let i = 0; i < lines.length; i++) {
     const cur = lines[i].split(' ');
     const next = lines[i + 1]?.split(' ');
@@ -743,12 +768,14 @@ function foldMaskRaise(name, lines, knobs = DEFAULT_SEARCH_KNOBS) {
 //
 // A night's prefix is therefore `[0, threatIdleUntilMs)`, where the box still
 // needs winding and nothing else needs answering.
-export function threatIdleUntilMs(night) {
+export function threatIdleUntilMs(night: number) {
   for (let hour = 0; hour < 6; hour++) {
-    const armed = new Set();
+    const armed = new Set<string>();
+    // A { oneIn: N } level is an object, which compares as NaN: it does not arm the hour
+    // here, although peakAi reads it as 1.
     for (let h = 0; h <= hour; h++)
       for (const row of C.aiUpdates(night, h))
-        for (const [id, value] of Object.entries(row.set)) if (value > 0) armed.add(id);
+        for (const [id, value] of Object.entries(row.set)) if (Number(value) > 0) armed.add(id);
     if ([...armed].some(id => id !== 'puppet'))
       return hour * (C.HOUR_FRAMES / C.FPS) * 1000;
   }
@@ -757,8 +784,8 @@ export function threatIdleUntilMs(night) {
 
 // How long a FULL box takes to empty, from the sourced drain table:
 // BOX_UNITS units at BOX_DRAIN_PER_TICK[night] per BOX_DRAIN_TICK_MS.
-export function boxEmptyFromFullMs(night) {
-  const perTick = C.BOX_DRAIN_PER_TICK[String(night)];
+export function boxEmptyFromFullMs(night: number) {
+  const perTick = C.BOX_DRAIN_PER_TICK[night];
   if (!perTick) throw new Error(`no box drain rate for night ${night}`);
   return (C.BOX_UNITS / perTick) * C.BOX_DRAIN_TICK_MS;
 }
@@ -775,14 +802,14 @@ export function boxEmptyFromFullMs(night) {
 // office before 6" -- and a measurement in a comment is not a gate
 // (mistake-register item 9). This turns the box half of that claim into
 // something a check can read.
-export function boxSafeStopMs(night) {
+export function boxSafeStopMs(night: number) {
   return NIGHT_MS - boxEmptyFromFullMs(night);
 }
 
-export function idleUntilMs(night) {
+export function idleUntilMs(night: number) {
   for (let hour = 0; hour < 6; hour++) {
     if (C.boxDrainsAtHour(night, hour)) return hour * (C.HOUR_FRAMES / C.FPS) * 1000;
-    const armed = new Set();
+    const armed = new Set<string>();
     for (let h = 0; h <= hour; h++)
       for (const row of C.aiUpdates(night, h))
         for (const id of Object.keys(row.set)) armed.add(id);
@@ -804,8 +831,8 @@ export function idleUntilMs(night) {
 // of the office: the first minus7 device run graded maskOn->false MISSING on 48
 // of 55 cycles and the raise on 54 of 55, then reached 6 AM anyway because
 // nothing on Night 1 can punish a blind pilot.
-function clearTheMaskOn(name, lines) {
-  const ins = lines.map(line => {
+function clearTheMaskOn(name: string, lines: readonly string[]) {
+  const ins: Ins[] = lines.map(line => {
     const [at, kind, ...rest] = line.split(' ');
     return { at: +at, kind, rest };
   });
@@ -850,12 +877,15 @@ function clearTheMaskOn(name, lines) {
   return ins.map(e => `${e.at} ${e.kind} ${e.rest.join(' ')}`);
 }
 
-export function devicePlan(recipe, {
+export function devicePlan(recipe: ReturnType<typeof build>, {
   deviceSpacingMs = DEVICE_SPACING_MS,
   sweepContactMs = SWEEP_SELECT_MS,
   sweepLastContactMs = null,
   tapContactMs = MIN_CONTACT_MS,
   knobs = recipe.options?.knobs,
+}: {
+  deviceSpacingMs?: number, sweepContactMs?: number, sweepLastContactMs?: number | null, tapContactMs?: number,
+  knobs?: Readonly<Record<string, unknown>>,
 } = {}) {
   const resolvedKnobs = makeSearchKnobs(knobs);
   // The actuator's inter-contact spacing. DEVICE_SPACING_MS (100) is the
@@ -887,18 +917,18 @@ export function devicePlan(recipe, {
     throw new Error(`sweep last-slot contact ${sweepLastContactMs} ms must be > 0 and ` +
       `>= the ${sweepContactMs} ms base contact`);
   const lastContact = sweepLastContactMs == null ? sweepContactMs : sweepLastContactMs;
-  const out = {};
+  const out: Record<string, string[]> = {};
   for (const [name, cycle] of Object.entries(recipe.cycles)) {
-    const lines = [];
-    const ev = (cycle as any).events;
-    const skip = new Set();
+    const lines: string[] = [];
+    const ev = cycle.events;
+    const skip = new Set<RecipeEvent>();
     for (let i = 0; i < ev.length; i++) {
       const e = ev[i];
       if (skip.has(e)) continue;
       if (e.act === 'camlight') continue;            // merged into its select
       if (/^cam(10|4|7)$/.test(e.act)) {
-        const cams = [];
-        const ats = [];
+        const cams: string[] = [];
+        const ats: number[] = [];
         let j = i;
         while (j < ev.length && /^cam(10|4|7)$/.test(ev[j].act)) {
           cams.push(ev[j].act.slice(3));
@@ -989,7 +1019,7 @@ export function devicePlan(recipe, {
 // device could run; a default here silently prices a Night 3 plan against
 // Night 6's AI table, which is the exact substitution plans/13's identity
 // contract forbids.
-export function replay(plan, { night, seed = 1, worst = false,
+export function replay(plan: Readonly<Record<string, readonly string[]>>, { night, seed = 1, worst = false,
                                pilotOffset = 10, readLatencyMs = 550,
                                classifyMs = 250, idleUntilMs = 0,
                                attackWindowMs = 10000,
@@ -999,14 +1029,25 @@ export function replay(plan, { night, seed = 1, worst = false,
                                // phone). `bbOnlyBang` = ignore non-BB vent
                                // departures (a phone's mic cannot tell them
                                // apart -- all use THUD_SAMPLE).
-                               bangLatencyMs = 0, bbOnlyBang = false }: any = {}) {
+                               bangLatencyMs = 0, bbOnlyBang = false }: {
+                                 night?: number, seed?: number, worst?: boolean, pilotOffset?: number,
+                                 readLatencyMs?: number, classifyMs?: number, idleUntilMs?: number,
+                                 attackWindowMs?: number, bangLatencyMs?: number, bbOnlyBang?: boolean,
+                               } = {}) {
   if (night === undefined) throw new Error('replay() needs the night the plan was built for');
   const sim = new Sim({ seed, night, worst });
-  const f = msv => Math.round(msv * C.FPS / 1000);
-  const queue = [];
-  const at = (frame, kind, act) => queue.push([frame, queue.length, kind, act]);
+  const f = (msv: number) => Math.round(msv * C.FPS / 1000);
+  const queue: ReplayEntry[] = [];
+  function at(frame: number, kind: 'press' | 'release', act: string): void;
+  function at(frame: number, kind: 'recent-hall', act: { age: number, duration: number }): void;
+  function at(frame: number, kind: 'bangraise', act: BangRaise): void;
+  function at(frame: number, kind: 'snapshot', act: number): void;
+  function at(frame: number, kind: ReplayEntry[2], act: ReplayEntry[3]) {
+    // The overloads pair each kind with what it carries.
+    queue.push([frame, queue.length, kind, act] as ReplayEntry);
+  }
 
-  const parse = (lines, base, floor = -Infinity) => {
+  const parse = (lines: readonly string[], base: number, floor = -Infinity) => {
     // A classifier-selected branch is emitted after the read has completed.
     // If its nominal first row is already due, the device runner floors the
     // whole macro to the result plus one released Fusion poll. Applying that
@@ -1042,7 +1083,7 @@ export function replay(plan, { night, seed = 1, worst = false,
           //         can be dragged with the raise). One 'bangraise' entry that
           //         re-pushes itself every 2 frames until it fires -- safe
           //         because the queue drain sorts before testing its head.
-          const d = { nominalT: t, gap: f(+gap),
+          const d: BangRaise = { nominalT: t, gap: f(+gap),
             dur: mode === 'hall' ? f(+duration) : 0, hall: mode === 'hall',
             gateFrames: f(+rest[4]), base, fired: false, maxDelay: f(400),
             sweepRel: f(+rest[5]) - f(+offs), spacing: +rest[6],
@@ -1104,7 +1145,7 @@ export function replay(plan, { night, seed = 1, worst = false,
   const start = pilotOffset + f(idleUntilMs);
   parse(plan.opening, start);
   let base = start + f(7000);
-  let pending = null;
+  let pending: { base: number, bb: boolean, inside: boolean, resolveAt: number } | null = null;
   parse(plan.clear.slice(0, 2), base);      // the shared prefix, up to the read
   let missed = 0, detections = 0;
   let eventCursor = 0, lastDepartureBang = -Infinity;
@@ -1125,10 +1166,12 @@ export function replay(plan, { night, seed = 1, worst = false,
     while (queue.length) {
       queue.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
       if (queue[0][0] > sim.frame) break;
-      const [, , kind, act] = queue.shift();
-      if (kind === 'press') sim.press(act);
-      else if (kind === 'release') sim.release(act);
-      else if (kind === 'recent-hall') {
+      // The length was just checked.
+      const entry = queue.shift() as ReplayEntry;
+      if (entry[2] === 'press') sim.press(entry[3]);
+      else if (entry[2] === 'release') sim.release(entry[3]);
+      else if (entry[2] === 'recent-hall') {
+        const act = entry[3];
         // This is the permitted policy state, not an optimizer-invented
         // history rule: only the age of an observed departure bang chooses
         // whether the pre-read reset fires.
@@ -1137,8 +1180,8 @@ export function replay(plan, { night, seed = 1, worst = false,
           at(sim.frame + f(act.duration), 'release', 'light');
         }
       }
-      else if (kind === 'bangraise') {
-        const d = act;
+      else if (entry[2] === 'bangraise') {
+        const d = entry[3];
         if (!d.fired) {
           const bangReady = lastDepartureBang > d.base &&
             sim.frame >= lastDepartureBang + d.gateFrames;
@@ -1171,8 +1214,8 @@ export function replay(plan, { night, seed = 1, worst = false,
           }
         }
       }
-      else if (kind === 'snapshot') {
-        pending = { base: act, bb: sim.bb.inOpening, inside: sim.bb.inside,
+      else if (entry[2] === 'snapshot') {
+        pending = { base: entry[3], bb: sim.bb.inOpening, inside: sim.bb.inside,
                     resolveAt: sim.frame + f(classifyMs) };
       }
     }
@@ -1192,11 +1235,11 @@ export function replay(plan, { night, seed = 1, worst = false,
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const arg = (name, def) => {
+  const arg = (name: string, def: number) => {
     const v = (process.argv.find(a => a.startsWith(`--${name}=`)) || '').split('=')[1];
     return v === undefined ? def : +v;
   };
-  const argOpt = (name) => {
+  const argOpt = (name: string) => {
     const v = (process.argv.find(a => a.startsWith(`--${name}=`)) || '').split('=')[1];
     return v === undefined ? null : +v;
   };
@@ -1229,8 +1272,9 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     // leaving the runner to infer one. A missing header would be
     // indistinguishable from a night nobody priced.
     console.log(`#idle-until ${idleUntilMs(recipe.night)}`);
+    const cycles: Readonly<Record<string, { lengthMs: number }>> = recipe.cycles;
     for (const [name, lines] of Object.entries(plan)) {
-      console.log(`#cycle ${name} ${recipe.cycles[name].lengthMs}`);
+      console.log(`#cycle ${name} ${cycles[name].lengthMs}`);
       for (const line of lines) console.log(line);
     }
   } else if (process.argv.includes('--track')) {
@@ -1243,7 +1287,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   } else {
     console.log(`power ${recipe.powerFramesSpentIfAllClear}/${recipe.powerFramesAvailable} frames if every cycle is a clear`);
     for (const [name, c] of Object.entries(recipe.cycles)) {
-      const b = (c as any).budget;
+      const b = c.budget;
       console.log(`\n${name}  ${b.lengthMs} ms` +
         `  lit ${b.litMs} ms  wind ${b.windMs}/${b.windBreakEvenMs} ms (${b.windMarginMs >= 0 ? '+' : ''}${b.windMarginMs})` +
         `  sweep span ${b.sweepSpanMs} ms  spacing ${b.maxSpacingMs} ms  shortest contact ${b.minContactMs} ms`);

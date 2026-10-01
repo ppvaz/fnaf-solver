@@ -17,7 +17,7 @@ import { DeviceActuator } from '../../../play/bin/phone/actuator.ts';
 import { formatRate } from '../../../review/src/stat.ts';
 
 const s = C.s;
-const mv = (x) => Math.round(x * C.FPS / 1000);   // ms -> frames
+const mv = (x: number) => Math.round(x * C.FPS / 1000);   // ms -> frames
 const TARGETS = [10, 4, 7];
 const TARGET_OFFSETS = [1 / 60, 6 / 60, 11 / 60];
 
@@ -45,8 +45,27 @@ export const DEFAULT_SEARCH_KNOBS = Object.freeze({
   attackBangGateMs: 0,     // item 10: gate leftAttack's mask-off/raise on the observed BB departure bang -- fire it `d` ms after the bang instead of the blind `off = b + 5.02 + phaseMargin(900)`, pulled EARLIER only, never delayed (0 = the blind wait)
 });
 
-export function makeSearchKnobs(overrides = {}) {
-  const knobs = { ...DEFAULT_SEARCH_KNOBS };
+/** The search knobs, each a finite integer. */
+type SearchKnobs = { readonly [K in keyof typeof DEFAULT_SEARCH_KNOBS]: number };
+/** One BB read, from its snapshot to its result. */
+interface Sample { readonly a: number, readonly bb: boolean, readonly inside: boolean }
+/** A queued step: a control contact, an anchor frame to read at, or a read's result. */
+type QueueEntry =
+  | [number, 'tap', string] | [number, 'down', string] | [number, 'up', string]
+  | [number, 'left-snapshot', number] | [number, 'cam5-before', number] | [number, 'cam5-after', number]
+  | [number, 'left-result', Sample];
+/** How the pilot plays; each field defaults to the shipped route. */
+interface PilotOptions {
+  bbMode?: string; cam5Light?: boolean; phaseSafeMask?: boolean; alwaysThreat?: boolean; sparseCam5?: boolean;
+  sparseLeft?: boolean; cam5Hold?: number; pilotOffset?: number; vocalCam5?: boolean; dropVocal?: number;
+  vocalFalseCount?: number; bangCam5?: boolean; dropBang?: number; bangFalseCount?: number; deviceSweep?: boolean;
+  sweepSlotMs?: number; pulseLight?: boolean; secondBeat?: boolean; maskMarginMs?: number | null;
+  readLatencyMs?: number; hallPulseMs?: number; prophylacticMask?: boolean; actuator?: DeviceActuator | null;
+  attackWindowMs?: number; traceActions?: boolean; knobs?: Readonly<Record<string, unknown>>;
+}
+
+export function makeSearchKnobs(overrides: Readonly<Record<string, unknown>> = {}): SearchKnobs {
+  const knobs: Record<string, unknown> = { ...DEFAULT_SEARCH_KNOBS };
   for (const [key, value] of Object.entries(overrides)) {
     if (!(key in knobs)) throw new Error(`unknown HID search knob: ${key}`);
     if (value !== undefined) knobs[key] = value;
@@ -55,14 +74,15 @@ export function makeSearchKnobs(overrides = {}) {
     if (!Number.isFinite(value) || !Number.isInteger(value))
       throw new Error(`HID search knob ${key} must be a finite integer`);
   }
-  return Object.freeze(knobs);
+  // Every knob was just checked to be a finite integer.
+  return Object.freeze(knobs) as unknown as SearchKnobs;
 }
 
 class HidPilot {
-  declare sim: any;
-  declare knobs: Readonly<{ attackHallDeltaMs: 0; attackSweepDeltaMs: 0; attackRstDeltaMs: 0; clearHall2DeltaMs: 0; phaseMarginDeltaMs: 0; hallPulseDeltaMs: 0; openGfFlick: 0; preReadHallMs: 0; bangAgeFrames: 0; attackBangGateMs: 0; }>;
+  declare sim: C.Sim;
+  declare knobs: SearchKnobs;
   declare attackWindow: number;
-  declare act: any;
+  declare act: DeviceActuator | null;
   declare prophylacticMask: boolean;
   declare bbMode: string;
   declare cam5: boolean;
@@ -74,7 +94,7 @@ class HidPilot {
   declare deviceSweep: boolean;
   declare sweepSlotMs: number;
   declare pulseLight: boolean;
-  declare maskMargin: number;
+  declare maskMargin: number | null;
   declare readLatency: number;
   declare hallPulse: number;
   declare secondBeat: boolean;
@@ -85,7 +105,7 @@ class HidPilot {
   declare epoch: number;
   declare phaseSafeMask: boolean;
   declare alwaysThreat: boolean;
-  declare queue: any[];
+  declare queue: QueueEntry[];
   declare mode: string;
   declare nextAnchor: number;
   declare cam5SafeAt: number;
@@ -96,7 +116,7 @@ class HidPilot {
   declare missed: number;
   declare eventCursor: number;
   declare traceActions: boolean;
-  declare trace: any[];
+  declare trace: object[];
   declare trueVocals: number;
   declare vocalsSeen: number;
   declare dropVocal: number;
@@ -106,7 +126,7 @@ class HidPilot {
   declare bangs: number;
   declare falseBangs: number;
   declare minBox: number;
-  constructor(sim, { bbMode = 'left', cam5Light = true, phaseSafeMask = true,
+  constructor(sim: C.Sim, { bbMode = 'left', cam5Light = true, phaseSafeMask = true,
                      alwaysThreat = false, sparseCam5 = false,
                      sparseLeft = false, cam5Hold = s(0.52),
                      pilotOffset = 0, vocalCam5 = false, dropVocal = 0,
@@ -117,7 +137,7 @@ class HidPilot {
                      readLatencyMs = 360, hallPulseMs = 83,
                      prophylacticMask = true, actuator = null,
                      attackWindowMs = 10000, traceActions = false,
-                     knobs = DEFAULT_SEARCH_KNOBS } = {}) {
+                     knobs = DEFAULT_SEARCH_KNOBS }: PilotOptions = {}) {
     this.sim = sim;
     this.knobs = makeSearchKnobs(knobs);
     // Plan 16 structural experiment: the BB-response cycle length. 10 s is the
@@ -225,13 +245,17 @@ class HidPilot {
     this.opening();
   }
 
-  at(f, kind, act = null) {
-    this.queue.push([f, kind, act]);
+  at(f: number, kind: 'tap' | 'down' | 'up', act: string): void;
+  at(f: number, kind: 'left-snapshot' | 'cam5-before' | 'cam5-after', act: number): void;
+  at(f: number, kind: 'left-result', act: Sample): void;
+  at(f: number, kind: QueueEntry[1], act: QueueEntry[2] | null = null) {
+    // The overloads pair each kind with what it carries.
+    this.queue.push([f, kind, act] as QueueEntry);
     this.queue.sort((a, b) => a[0] - b[0]);
   }
 
-  tap(f, act) { this.at(f, 'tap', act); }
-  hold(f, frames, act) {
+  tap(f: number, act: string) { this.at(f, 'tap', act); }
+  hold(f: number, frames: number, act: string) {
     this.at(f, 'down', act);
     this.at(f + frames, 'up', act);
   }
@@ -273,7 +297,7 @@ class HidPilot {
     this.hold(end + (this.deviceSweep ? s(0.19) : s(0.13)), s(0.12), 'wind');
   }
 
-  flashTargets(f, targets = TARGETS) {
+  flashTargets(f: number, targets = TARGETS) {
     const start = f;
     if (this.pulseLight) {
       // `stunCam` refreshes on every frame the camera light is on while that
@@ -302,7 +326,7 @@ class HidPilot {
   // Drop, clear a possible office Golden Freddy, reset Foxy, then raise.
   // These gaps retain the sourced Android flip/mask animation durations while
   // letting the HID contacts themselves stay short.
-  normalFront(a) {
+  normalFront(a: number) {
     this.tap(a, 'monitor');
     this.tap(a + s(0.40), 'mask');
     this.tap(a + s(0.70), 'mask');
@@ -311,7 +335,7 @@ class HidPilot {
     this.flashTargets(a + s(1.60));
   }
 
-  normal(a) {
+  normal(a: number) {
     if (this.bbMode === 'left') {
       if (this.sparseLeft) {
         if (a < this.leftSafeAt) this.leftIdle(a);
@@ -336,7 +360,7 @@ class HidPilot {
   // Night 7's cheap steady cycle while BB provably cannot be in the opening.
   // The sweep finishes on the next anchor, retaining the same five-second
   // refresh cadence as the ordinary left route while maximizing box time.
-  leftIdle(a) {
+  leftIdle(a: number) {
     const sweepStart = a + s(5) - this.sweepFrames - this.sweepTail;
     this.tap(a, 'monitor');
     this.tap(a + s(0.40), 'mask');
@@ -353,7 +377,7 @@ class HidPilot {
   // 28-frame vent hold exceeds the three observed immutable-buffer latches
   // (360/434/431 ms from light-down) but remains a device promotion gate, not
   // a claim that this exact table has run on the phone.
-  sparseLeftNormal(a) {
+  sparseLeftNormal(a: number) {
     this.tap(a, 'monitor');
     this.tap(a + 23, 'mask');
     this.tap(a + 36, 'mask');
@@ -369,7 +393,7 @@ class HidPilot {
   // ~206 ms capture/analysis tail finishes. That makes the mask fully on
   // before the +1 s scheduler event if the result is BB, while an empty result
   // simply turns the ordinary Golden-Freddy flick back off.
-  leftNormal(a) {
+  leftNormal(a: number) {
       const lightDown = a + s(0.36);
     const latch = lightDown + this.readLatency;
     this.tap(a, 'monitor');
@@ -392,7 +416,7 @@ class HidPilot {
     if (this.prophylacticMask) this.tap(latch + s(0.06), 'mask');
   }
 
-  onLeftSnapshot(a) {
+  onLeftSnapshot(a: number) {
     this.checks++;
     const sample = { a, bb: this.alwaysThreat || this.sim.bb.inOpening,
                      inside: this.sim.bb.inside };
@@ -413,11 +437,11 @@ class HidPilot {
   // shifts with it -- scheduling it at plan time would compress the branch's
   // own gaps against the result, a geometry the runner does not have. Zero
   // whenever the read landed on plan, so the exact routes are untouched.
-  branchShift(a, resultAt) {
+  branchShift(a: number, resultAt: number) {
     return Math.max(0, resultAt - (a + s(0.36) + this.readLatency + s(0.26)));
   }
 
-  leftClear(a, resultAt) {
+  leftClear(a: number, resultAt: number) {
     const b = a + this.branchShift(a, resultAt);
     // With no prophylactic mask there is nothing to take off; the press would
     // put one ON and blind every later read.
@@ -494,7 +518,7 @@ class HidPilot {
   // A negative sparse read rules out the opening at this instant. The monitor
   // may stay up across the next movement opportunity: BB can at most move onto
   // CAM 05 there, and the following sparse read catches a final hop.
-  sparseLeftClear(a, resultAt) {
+  sparseLeftClear(a: number, resultAt: number) {
     // The sparse read's plan-time result lands at a+86 plus the classify tail;
     // the branch floors off the result that happened, like leftClear's.
     const b = a + Math.max(0, resultAt - (a + 86 + s(0.26)));
@@ -513,7 +537,7 @@ class HidPilot {
   // Keep that same mask down through ticks +1..+5. The late hall beat in the
   // previous cycle makes Foxy's +3 s roll safe; the previous late camera
   // sweep remains live until this response refreshes it after tick five.
-  leftAttack(a, resultAt) {
+  leftAttack(a: number, resultAt?: number) {
     this.attacks++;
     const b = resultAt === undefined ? a : a + this.branchShift(a, resultAt);
     const phaseMargin = this.maskMargin !== null ? this.maskMargin
@@ -570,7 +594,7 @@ class HidPilot {
   // Night 7. This is deliberately phase-windowed: extending the mask by the
   // one-second phase-independent margin lets the previous camera stuns expire.
   // `--pilot-offset-ms` prices that dependency against the game's scheduler.
-  sparseLeftAttack(a, resultAt) {
+  sparseLeftAttack(a: number, resultAt?: number) {
     this.attacks++;
     const b = resultAt === undefined ? a
       : a + Math.max(0, resultAt - (a + 86 + s(0.26)));
@@ -591,7 +615,7 @@ class HidPilot {
     this.nextAnchor = a + s(10);
   }
 
-  onLeftResult(sample) {
+  onLeftResult(sample: Sample) {
     this.beat(); // the branch macro is its own floored launch (rm_floor)
     if (!sample.bb) {
       if (sample.inside) this.missed++;
@@ -608,7 +632,7 @@ class HidPilot {
   // before the next five-second movement boundary, then raise just after it.
   // A pending final hop is thereby spent at a chosen time with the cameras
   // already up, which leaves time for a pre-mask stun sweep.
-  tracking(a) {
+  tracking(a: number) {
     this.normalFront(a);
     this.tap(a + s(2.12), 'cam:11');
     this.hold(a + s(2.20), s(0.47), 'wind');
@@ -624,7 +648,7 @@ class HidPilot {
   // the hall flash. The final mask becomes fully on just before the next
   // one-second tick; five ticks later, HID has enough stun margin to unmask,
   // reset Foxy and refresh all three cameras again.
-  attack(a) {
+  attack(a: number) {
     const start = a + s(0.10);
     this.attacks++;
     this.flashTargets(start);
@@ -655,7 +679,7 @@ class HidPilot {
     this.nextAnchor = a + s(10);
   }
 
-  onCam5Before(a) {
+  onCam5Before(a: number) {
     this.beat();
     this.checks++;
     if (this.sim.bb.stage !== C.BB_STAGES - 1) {
@@ -680,7 +704,7 @@ class HidPilot {
     this.at(a + s(3.97), 'cam5-after', a);
   }
 
-  onCam5After(a) {
+  onCam5After(a: number) {
     this.beat();
     this.checks++;
     if (this.sim.bb.inOpening) {
@@ -697,7 +721,7 @@ class HidPilot {
     this.hold(this.sim.frame + 6, a + s(5) - (this.sim.frame + 8), 'wind');
   }
 
-  scheduleAnchor(a) {
+  scheduleAnchor(a: number) {
     this.beat();
     if (this.mode === 'attack-pending') {
       this.attack(a);
@@ -781,7 +805,9 @@ class HidPilot {
     this.processAudioEvents();
     if (f === this.nextAnchor) this.scheduleAnchor(f);
     while (this.queue.length && this.queue[0][0] <= f) {
-      const [, kind, act] = this.queue.shift();
+      // The length was just checked.
+      const entry = this.queue.shift() as QueueEntry;
+      const [, kind, act] = entry;
       const before = this.traceActions ? {
         frame: this.sim.frame, monitor: this.sim.monitor, monAnim: this.sim.monAnim,
         maskOn: this.sim.maskOn, maskAnim: this.sim.maskAnim, cam: this.sim.cam,
@@ -795,12 +821,12 @@ class HidPilot {
           atOpening: u.atOpening, done: u.done, pending: u.pending,
           stunUntil: u.stunUntil, stunRemaining: this.sim.unitStunLeft(u) })),
       } : null;
-      if (kind === 'left-snapshot') this.onLeftSnapshot(act);
-      else if (kind === 'left-result') this.onLeftResult(act);
-      else if (kind === 'cam5-before') this.onCam5Before(act);
-      else if (kind === 'cam5-after') this.onCam5After(act);
-      else if (kind === 'up') this.act ? this.act.release(act) : this.sim.release(act);
-      else this.act ? this.act.press(act) : this.sim.press(act);
+      if (entry[1] === 'left-snapshot') this.onLeftSnapshot(entry[2]);
+      else if (entry[1] === 'left-result') this.onLeftResult(entry[2]);
+      else if (entry[1] === 'cam5-before') this.onCam5Before(entry[2]);
+      else if (entry[1] === 'cam5-after') this.onCam5After(entry[2]);
+      else if (entry[1] === 'up') this.act ? this.act.release(entry[2]) : this.sim.release(entry[2]);
+      else this.act ? this.act.press(entry[2]) : this.sim.press(entry[2]);
       if (before) this.trace.push({ ...before, kind, act,
         after: { monitor: this.sim.monitor, monAnim: this.sim.monAnim,
           maskOn: this.sim.maskOn, maskAnim: this.sim.maskAnim, cam: this.sim.cam,
@@ -819,7 +845,9 @@ class HidPilot {
   }
 }
 
-export function run(opts: any = {}) {
+export function run(opts: PilotOptions & {
+  sim?: ConstructorParameters<typeof Sim>[0], deviceActuator?: boolean | ConstructorParameters<typeof DeviceActuator>[1],
+} = {}) {
   const knobs = makeSearchKnobs(opts.knobs);
   const sim = new Sim(Object.assign({ seed: 1, night: 6 }, opts.sim));
   const actuator = opts.deviceActuator
@@ -838,7 +866,7 @@ export function run(opts: any = {}) {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const cliArgs = process.argv.slice(2);
-  const n = cliArgs[0] && !cliArgs[0].startsWith('--') ? +cliArgs.shift() : 500;
+  const n = cliArgs[0] && !cliArgs[0].startsWith('--') ? Number(cliArgs.shift()) : 500;
   const exactArgs = new Set(['--worst', '--sparse-cam5', '--sparse-left',
     '--vocal-cam5', '--bang-cam5', '--device-sweep', '--cam5', '--no-bb', '--no-cam5',
     '--hypothetical-unlit', '--tick-aligned-mask', '--always-threat',
@@ -891,7 +919,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const assertRejected = cliArgs.includes('--assert-rejected');
   const traceActions = cliArgs.includes('--trace-actions');
   const knobsArg = (cliArgs.find(v => v.startsWith('--knobs-json=')) || '').slice('--knobs-json='.length);
-  let knobs = DEFAULT_SEARCH_KNOBS;
+  let knobs: SearchKnobs = DEFAULT_SEARCH_KNOBS;
   if (knobsArg) {
     try {
       const parsed = JSON.parse(knobsArg);
@@ -899,13 +927,13 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
         throw new Error('must be a JSON object');
       knobs = makeSearchKnobs(parsed);
     } catch (e) {
-      throw new Error(`--knobs-json= must be a valid HID knob object: ${e.message}`);
+      throw new Error(`--knobs-json= must be a valid HID knob object: ${(e as Error).message}`);
     }
   }
   const nightArg = (cliArgs.find(v => v.startsWith('--night=')) || '').split('=')[1];
   const night = nightArg ? +nightArg : 6;
   const lateArg = (cliArgs.find(v => v.startsWith('--press-late-ms=')) || '').split('=')[1];
-  let deviceActuator = cliArgs.includes('--device-actuator');
+  let deviceActuator: boolean | { lateMinMs: number, lateMaxMs: number } = cliArgs.includes('--device-actuator');
   if (lateArg !== undefined) {
     if (!deviceActuator) throw new Error('--press-late-ms= does nothing without --device-actuator');
     const [lo, hi] = lateArg.split(',').map(Number);
@@ -948,8 +976,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   let wins = 0, minBox = 1, minPower = Infinity, checks = 0, detections = 0;
   let attacks = 0, missed = 0, audioMisses = 0;
   let actSent = 0, actDrops = 0, actDropNights = 0;
-  let trace = [];
-  const fails = {};
+  let trace: object[] = [];
+  const fails: Record<string, number> = {};
   for (let i = 0; i < n; i++) {
     const { sim, bot, actuator } = run({ bbMode, cam5Light, sparseCam5, sparseLeft,
       vocalCam5, dropVocal, vocalFalseCount, bangCam5, dropBang,
@@ -974,7 +1002,9 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     audioMisses += bot.audioMisses;
     if (sim.won) wins++;
     else {
-      const key = `${sim.death.reason}: ${sim.death.detail}`;
+      // A night that is not won ended in a death.
+      const death = sim.death as NonNullable<typeof sim.death>;
+      const key = `${death.reason}: ${death.detail}`;
       fails[key] = (fails[key] || 0) + 1;
     }
   }

@@ -17,19 +17,22 @@ export {
   reactiveReplay, reactiveGate, countReactive, emitReactivePlan,
 };
 
-const clone = overrides => ({ ...KNOBS0, ...(overrides ?? {}) });
+type Knobs = typeof KNOBS0;
+type Row = ReturnType<typeof build>['opening'][number];
+
+const clone = (overrides: Partial<Knobs> | null | undefined) => ({ ...KNOBS0, ...(overrides ?? {}) });
 
 /** Emit the established unconditional phone-plan vocabulary. */
-export function emitPlan(night, overrides = {}) {
+export function emitPlan(night: number, overrides: Partial<Knobs> = {}) {
   if (!Number.isInteger(night) || night < 3 || night > 7)
     throw new Error('Minus 3 plan requires night 3..7 (night 7 is Custom Night with a dial vector)');
   const k = clone(overrides);
   const { opening, clear } = build(k);
-  const keep = row => {
+  const keep = (row: Row) => {
     if (k.maskless && row[1] === 'tap' && row[2] === 'mask') return false;
     return true;
   };
-  const narrowVent = row =>
+  const narrowVent = (row: Row) =>
     (k.ventless && row[1] === 'hallvent') ? [row[0], 'hall', ...row.slice(2)] : row;
   const firstWind = k.openWindAtMs;
   const lines = [
@@ -51,11 +54,11 @@ export function emitPlan(night, overrides = {}) {
   return lines.join('\n') + '\n';
 }
 
-function legacyCount(night, { worst = false, splitCamera = true,
-                              runs = 3000, seeds }: any = {}) {
+function legacyCount(night: number, { worst = false, splitCamera = true,
+                              runs = 3000, seeds }: { worst?: boolean, splitCamera?: boolean, runs?: number, seeds?: number[] } = {}) {
   const population = seeds ?? randomSeedCohort({ count: runs });
   let wins = 0, split = 0;
-  const losses = new Map();
+  const losses = new Map<string, number>();
   for (const seed of population) {
     const result = replay({ night, seed, worst, splitCamera });
     if (result.sim.won && (splitCamera ? result.splitAt >= 0 : true)) wins++;
@@ -94,7 +97,7 @@ export function gate(nights = [3, 4, 5, 6], runs = 3000) {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const arg = (name, fallback) => {
+  const arg = (name: string, fallback: number) => {
     const value = process.argv.find(item => item.startsWith(`--${name}=`));
     return value === undefined ? fallback : Number(value.slice(name.length + 3));
   };

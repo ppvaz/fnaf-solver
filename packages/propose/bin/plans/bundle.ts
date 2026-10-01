@@ -15,6 +15,7 @@ import { emitPlan as emitMinus3Plan, KNOBS0 as MINUS3_KNOBS,
 import { build as buildMinus7, devicePlan as emitMinus7Plan,
   idleUntilMs, replay as replayMinus7, MASK_RAISE_GAP_MS } from './recipe.ts';
 import { compileArtifactPlans, persistArtifactPlans } from './artifact-commands.ts';
+import type { ParsedPlan, ParsedRow } from './artifact-commands.ts';
 import { canonicalJson, stableHash } from '@sixam/kernel/contracts';
 import { resolveDeviceProfile } from '@sixam/source';
 import { HID_CONTROLS_FILE, HID_CONTROLS_SCHEMA, hidControlsText } from '@sixam/play/venues/phone/hid';
@@ -40,29 +41,80 @@ const CONTROL_NAMES = new Set([
 ]);
 const ROW_KINDS = new Set(['tap', 'hold', 'hall', 'hallvent', 'hallraise', 'maskraise', 'sweep', 'read', 'camdrop']);
 
-const isRecord = value => value !== null && typeof value === 'object' && !Array.isArray(value);
-const fail = message => { throw new TypeError(`device bundle: ${message}`); };
-const nonNegativeInt = (value, label) => {
-  if (!Number.isInteger(value) || value < 0) fail(`${label} must be a non-negative integer`);
+type Fields = Readonly<Record<string, unknown>>;
+type Strategy = 'minus-toys' | 'minus3' | 'minus7';
+/** A gate a winner carries: PASS, or a death it was built to test. */
+interface Gate {
+  readonly status: string;
+  readonly prediction?: unknown;
+  readonly engineHash?: string;
+  readonly nights?: number[];
+  readonly seeds?: number[];
+  readonly claimLevel?: string;
+  readonly replayHash?: string;
+  readonly planSha256?: Readonly<Record<string, unknown>>;
+  readonly [field: string]: unknown;
+}
+/** A winner-v1 as validateWinner returns it: its strategy normalized, its nights, seeds and knobs filled. */
+interface Winner {
+  readonly schema: typeof WINNER_SCHEMA;
+  readonly strategy: Strategy;
+  readonly nights: number[];
+  readonly seeds: number[];
+  readonly knobs: Readonly<Record<string, unknown>>;
+  readonly engineHash: string;
+  readonly gate: Gate;
+  readonly replaySeeds?: number[];
+  readonly phaseOffsetMs?: number;
+  readonly anchorEpochMs?: number;
+  readonly profile?: unknown;
+  readonly [field: string]: unknown;
+}
+/** What a strategy's replay of one seed reports. */
+interface ReplayResult {
+  readonly sim: { readonly won: boolean, readonly alive: boolean, readonly death: { readonly reason: string } | null,
+    readonly frame: number, readonly events: readonly unknown[] };
+  readonly minBox?: number; readonly splitAt?: number; readonly missed?: number; readonly detections?: number;
+}
+/** One night's emitted plan and the replay that gates it. */
+interface Emitted { readonly text: string, readonly knobs: unknown, readonly replay: (seed: number) => ReplayResult }
+/** A device bundle's manifest, as validateManifestShape reads its outline. */
+interface Manifest {
+  readonly plans: readonly unknown[];
+  readonly profile: { readonly file: 'profile.json', readonly id: string, readonly [field: string]: unknown };
+  readonly replay: { readonly schema: typeof REPLAY_SCHEMA, readonly seeds: readonly unknown[], readonly hash: string,
+    readonly [field: string]: unknown };
+  readonly [field: string]: unknown;
+}
+
+const isRecord = (value: unknown): value is Fields => value !== null && typeof value === 'object' && !Array.isArray(value);
+const isList = (value: unknown): value is readonly unknown[] => Array.isArray(value);
+const isInteger = (value: unknown): value is number => Number.isInteger(value);
+function fail(message: string): never { throw new TypeError(`device bundle: ${message}`); }
+const nonNegativeInt = (value: unknown, label: string) => {
+  if (!isInteger(value) || value < 0) fail(`${label} must be a non-negative integer`);
   return value;
 };
-const sha256 = text => createHash('sha256').update(text).digest('hex');
-const jsonRead = path => JSON.parse(readFileSync(path, 'utf8'));
-const jsonWrite = (path, value) => writeFileSync(path, canonicalJson(value));
-const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+const sha256 = (text: string) => createHash('sha256').update(text).digest('hex');
+const jsonRead = (path: string): unknown => JSON.parse(readFileSync(path, 'utf8'));
+const jsonWrite = (path: string, value: unknown) => writeFileSync(path, canonicalJson(value));
+const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+const STRATEGIES: readonly unknown[] = ['minus-toys', 'minus3', 'minus7'];
+const isStrategy = (value: unknown): value is Strategy => STRATEGIES.includes(value);
 
-function normalizeStrategy(strategy) {
-  const aliases = { 'minus-3': 'minus3', 'minus_3': 'minus3',
+function normalizeStrategy(strategy: unknown) {
+  const aliases: Readonly<Record<string, string>> = { 'minus-3': 'minus3', 'minus_3': 'minus3',
     'minus-7': 'minus7', 'minus-07': 'minus7', 'minus_toys': 'minus-toys' };
-  const normalized = aliases[strategy] ?? strategy;
-  if (!['minus-toys', 'minus3', 'minus7'].includes(normalized))
+  // A property key is a string, as indexing would make it.
+  const normalized = aliases[String(strategy)] ?? strategy;
+  if (!isStrategy(normalized))
     fail(`no device emitter is registered for strategy ${JSON.stringify(strategy)}`);
   return normalized;
 }
 
-function nightsOf(winner) {
+function nightsOf(winner: Fields) {
   const nights = winner.nights ?? (winner.night === undefined ? undefined : [winner.night]);
-  if (!Array.isArray(nights) || nights.length === 0) fail('nights must be a non-empty array');
+  if (!isList(nights) || nights.length === 0) fail('nights must be a non-empty array');
   const unique = [...new Set(nights.map((night, index) => nonNegativeInt(night, `nights[${index}]`)))];
   if (unique.some(night => night < 1 || night > 7)) fail('nights must be in the range 1..7');
   if (unique.length !== nights.length) fail('nights must not contain duplicates');
@@ -79,11 +131,15 @@ export const DEATH_PREDICTION_SCHEMA = 'death-prediction-v1';
 export const DEATH_TARGETED_STATUS = 'DEATH_TARGETED';
 const MIN_PREDICTION_REPLAYS = 3000;
 
-export function validateDeathPrediction(prediction, nights) {
+const QUANTILES = ['min', 'p10', 'p50', 'p90', 'max'] as const;
+const isQuantiles = (t: unknown): t is Record<(typeof QUANTILES)[number], number> =>
+  isRecord(t) && QUANTILES.every(k => typeof t[k] === 'number' && Number.isFinite(t[k]));
+
+export function validateDeathPrediction(prediction: unknown, nights: readonly unknown[]) {
   if (!isRecord(prediction) || prediction.schema !== DEATH_PREDICTION_SCHEMA)
     fail(`a ${DEATH_TARGETED_STATUS} gate requires a ${DEATH_PREDICTION_SCHEMA} prediction`);
   if (!nights.includes(prediction.night)) fail('death prediction night is not a winner night');
-  if (!Number.isInteger(prediction.replays) || prediction.replays < MIN_PREDICTION_REPLAYS)
+  if (!isInteger(prediction.replays) || prediction.replays < MIN_PREDICTION_REPLAYS)
     fail(`death prediction needs at least ${MIN_PREDICTION_REPLAYS} replays`);
   // A phase-blind strategy (minus3, minus7: replay accepts no epoch) cannot
   // span phases, and twenty identical replays reported as a span would be a
@@ -96,25 +152,27 @@ export function validateDeathPrediction(prediction, nights) {
   // roll grid, which is nights 6 and 7 -- every one of their ANCHOR_AIMS
   // entries carries periodMs 5000.
   const predictionPeriodMs = prediction.periodMs ?? 1000;
-  if (!Number.isInteger(predictionPeriodMs) || predictionPeriodMs < 1)
+  if (!isInteger(predictionPeriodMs) || predictionPeriodMs < 1)
     fail('death prediction periodMs must be a positive integer');
-  if (!Array.isArray(prediction.phasesMs) ||
-      prediction.phasesMs.some(ms => !Number.isInteger(ms) || ms < 0 || ms >= predictionPeriodMs))
+  const phasesMs = prediction.phasesMs;
+  if (!isList(phasesMs) ||
+      phasesMs.some(ms => !isInteger(ms) || ms < 0 || ms >= predictionPeriodMs))
     fail(`death prediction phases must be integers in [0, ${predictionPeriodMs})`);
   if (prediction.phaseBlind === true) {
-    if (prediction.phasesMs.length !== 1)
+    if (phasesMs.length !== 1)
       fail('a phaseBlind death prediction must carry exactly the one phase it scored');
-  } else if (prediction.phasesMs.length < 2)
+  } else if (phasesMs.length < 2)
     fail('death prediction must span several epoch phases in [0, 1000), or declare phaseBlind');
-  if (!Number.isInteger(prediction.wins) || prediction.wins < 0 || prediction.wins > prediction.replays)
+  if (!isInteger(prediction.wins) || prediction.wins < 0 || prediction.wins > prediction.replays)
     fail('death prediction wins is invalid');
-  if (!Array.isArray(prediction.killers) || prediction.killers.length === 0) fail('death prediction names no killer');
+  const killers = prediction.killers;
+  if (!isList(killers) || killers.length === 0) fail('death prediction names no killer');
   let counted = 0;
-  for (const entry of prediction.killers) {
-    if (!isRecord(entry) || typeof entry.killer !== 'string' || !Number.isInteger(entry.count) || entry.count < 1)
+  for (const entry of killers) {
+    if (!isRecord(entry) || typeof entry.killer !== 'string' || !isInteger(entry.count) || entry.count < 1)
       fail('death prediction killer entry is malformed');
     const t = entry.tSeconds;
-    if (!isRecord(t) || ['min', 'p10', 'p50', 'p90', 'max'].some(k => typeof t[k] !== 'number' || !Number.isFinite(t[k])) ||
+    if (!isQuantiles(t) ||
         !(t.min <= t.p10 && t.p10 <= t.p50 && t.p50 <= t.p90 && t.p90 <= t.max))
       fail(`death prediction quantiles for ${entry.killer} are malformed`);
     counted += entry.count;
@@ -125,7 +183,7 @@ export function validateDeathPrediction(prediction, nights) {
   return prediction;
 }
 
-function validateGate(gate, engineHash, nights, seeds) {
+function validateGate(gate: unknown, engineHash: string, nights: readonly number[], seeds: readonly number[]) {
   if (!isRecord(gate)) fail('gate is required');
   if (gate.status === DEATH_TARGETED_STATUS) validateDeathPrediction(gate.prediction, nights);
   else if (gate.status !== 'PASS') fail(`gate status must be PASS or ${DEATH_TARGETED_STATUS}, got ${JSON.stringify(gate.status)}`);
@@ -133,60 +191,62 @@ function validateGate(gate, engineHash, nights, seeds) {
     fail('gate.engineHash does not match winner.engineHash');
   if (gate.nights !== undefined && !same(gate.nights, nights)) fail('gate.nights does not match winner.nights');
   if (gate.seeds !== undefined && !same(gate.seeds, seeds)) fail('gate.seeds does not match winner.seeds');
-  if (gate.claimLevel !== undefined && !['MODEL_ONLY', 'FIXTURE', 'DEVICE_MEASURED'].includes(gate.claimLevel))
+  if (gate.claimLevel !== undefined && !(['MODEL_ONLY', 'FIXTURE', 'DEVICE_MEASURED'] as readonly unknown[]).includes(gate.claimLevel))
     fail('gate.claimLevel is invalid');
   return gate;
 }
 
-export function validateWinner(input) {
+export function validateWinner(input: unknown): Winner {
   if (!isRecord(input) || input.schema !== WINNER_SCHEMA) fail('winner schema mismatch');
   const strategy = normalizeStrategy(input.strategy);
   if (!isRecord(input.knobs) && typeof input.knobs !== 'string') fail('knobs must be an object or named preset');
   if (strategy === 'minus7' && !isRecord(input.knobs)) fail('minus7 knobs must be an object');
   if (typeof input.engineHash !== 'string' || input.engineHash.length === 0) fail('engineHash is required');
   const nights = nightsOf(input);
-  if (!Array.isArray(input.seeds) || input.seeds.length === 0) fail('seeds must be a non-empty array');
-  const seeds = input.seeds.map((seed, index) => nonNegativeInt(seed, `seeds[${index}]`));
-  if (input.replaySeeds !== undefined) {
-    if (!Array.isArray(input.replaySeeds) || input.replaySeeds.length === 0)
+  const seedsIn = input.seeds;
+  if (!isList(seedsIn) || seedsIn.length === 0) fail('seeds must be a non-empty array');
+  const seeds = seedsIn.map((seed, index) => nonNegativeInt(seed, `seeds[${index}]`));
+  const replaySeedsIn = input.replaySeeds;
+  if (replaySeedsIn !== undefined) {
+    if (!isList(replaySeedsIn) || replaySeedsIn.length === 0)
       fail('replaySeeds must be a non-empty array when present');
-    input.replaySeeds.forEach((seed, index) => nonNegativeInt(seed, `replaySeeds[${index}]`));
+    replaySeedsIn.forEach((seed, index) => nonNegativeInt(seed, `replaySeeds[${index}]`));
   }
   if (input.phaseOffsetMs !== undefined &&
-      (!Number.isInteger(input.phaseOffsetMs) || input.phaseOffsetMs < 0 || input.phaseOffsetMs > 2000))
+      (!isInteger(input.phaseOffsetMs) || input.phaseOffsetMs < 0 || input.phaseOffsetMs > 2000))
     fail('phaseOffsetMs must be an integer in 0..2000 ms');
   // The epoch the anchored release is registered to deliver (fact-register
   // ANCHOR_AIMS: aim + actuation latency), so the gate replays the phase the
   // phone will actually run. Night 6 wins only in a band of the five-second
   // Foxy roll grid; a gate scored at epoch 0 says nothing about that band.
   if (input.anchorEpochMs !== undefined &&
-      (!Number.isInteger(input.anchorEpochMs) || input.anchorEpochMs < 0 || input.anchorEpochMs > 10000))
+      (!isInteger(input.anchorEpochMs) || input.anchorEpochMs < 0 || input.anchorEpochMs > 10000))
     fail('anchorEpochMs must be an integer in 0..10000 ms');
   validateGate(input.gate, input.engineHash, nights, seeds);
   if (input.profile !== undefined && typeof input.profile !== 'string' && !isRecord(input.profile))
     fail('profile must be a profile id, path, or object');
   const knobs = strategy === 'minus-toys' ? toysKnobs(input.knobs)
-    : strategy === 'minus3' ? minus3Knobs(input.knobs) : { ...input.knobs };
-  return { ...input, schema: WINNER_SCHEMA, strategy, nights, seeds, knobs };
+    // minus7 knobs were checked to be an object above.
+    : strategy === 'minus3' ? minus3Knobs(input.knobs) : { ...(input.knobs as Fields) };
+  // Every field was checked above.
+  return { ...input, schema: WINNER_SCHEMA, strategy, nights, seeds, knobs } as unknown as Winner;
 }
 
-function resolveProfile(spec) {
-  if (isRecord(spec)) {
-    resolveDeviceProfile(spec);
-    return spec;
-  }
+function resolveProfile(spec: unknown) {
+  // resolveDeviceProfile returns the stored object it checked.
+  if (isRecord(spec)) return resolveDeviceProfile(spec);
   const id = spec ?? 'fixture-hid-screencap';
   if (typeof id !== 'string' || id.length === 0) fail('profile id is invalid');
   const path = id.endsWith('.json') ? resolve(ROOT, id) : join(PROFILE_DIR, `${id}.json`);
-  let profile;
+  let profile: unknown;
   try { profile = jsonRead(path); } catch (error) {
-    fail(`cannot read profile ${JSON.stringify(id)}: ${error.message}`);
+    fail(`cannot read profile ${JSON.stringify(id)}: ${(error as Error).message}`);
   }
-  resolveDeviceProfile(profile);
-  return profile;
+  return resolveDeviceProfile(profile);
 }
+type Profile = ReturnType<typeof resolveProfile>;
 
-function numberToken(value, label, { integer = false, positive = false } = {}) {
+function numberToken(value: string | undefined, label: string, { integer = false, positive = false } = {}) {
   if (!/^\d+(?:\.\d+)?$/.test(value ?? '')) fail(`${label} is not a non-negative number`);
   const result = Number(value);
   if (integer && !Number.isInteger(result)) fail(`${label} must be an integer`);
@@ -194,11 +254,11 @@ function numberToken(value, label, { integer = false, positive = false } = {}) {
   return result;
 }
 
-function parseRow(line, cycle) {
+function parseRow(line: string, cycle: string): ParsedRow {
   const fields = line.trim().split(/\s+/);
   const at = numberToken(fields.shift(), `${cycle} row time`, { integer: true });
   const kind = fields.shift();
-  if (!ROW_KINDS.has(kind)) fail(`${cycle} contains unsupported instruction ${JSON.stringify(kind)}`);
+  if (kind === undefined || !ROW_KINDS.has(kind)) fail(`${cycle} contains unsupported instruction ${JSON.stringify(kind)}`);
   if (kind === 'tap' || kind === 'hold') {
     if (fields.length !== 2 || !CONTROL_NAMES.has(fields[0])) fail(`${cycle} ${kind} row has an unsupported control`);
     const duration = numberToken(fields[1], `${cycle} ${kind} contact`, { positive: true });
@@ -248,23 +308,24 @@ function parseRow(line, cycle) {
   if (fields.length < 2 || fields.length > 6) fail(`${cycle} read row shape is invalid`);
   const duration = numberToken(fields[0], `${cycle} read duration`, { positive: true });
   const gap = numberToken(fields[1], `${cycle} read gap`);
-  if (fields.length === 2) return { at, kind, duration, gap };
+  // ROW_KINDS admitted the kind and every other kind returned above, so this row is a read.
+  if (fields.length === 2) return { at, kind: 'read', duration, gap };
   if (fields.length < 4) fail(`${cycle} read hall fields are incomplete`);
   const hallAt = numberToken(fields[2], `${cycle} read hall offset`);
   const hallDuration = numberToken(fields[3], `${cycle} read hall contact`, { positive: true });
-  if (fields.length === 4) return { at, kind, duration, gap, hallAt, hallDuration };
+  if (fields.length === 4) return { at, kind: 'read', duration, gap, hallAt, hallDuration };
   if (fields[4] !== 'bangage' || fields.length !== 6)
     fail(`${cycle} read conditional hall fields are invalid`);
-  return { at, kind, duration, gap, hallAt, hallDuration,
+  return { at, kind: 'read', duration, gap, hallAt, hallDuration,
     hallMode: 'bangage', hallAge: numberToken(fields[5], `${cycle} read bang age`, { positive: true }) };
 }
 
-function profileControlKey(control) {
+function profileControlKey(control: string) {
   if (/^cam\d+$/.test(control)) return `cam:${control.slice(3)}`;
   return control;
 }
 
-function assertProfileControls(row, profile, cycle) {
+function assertProfileControls(row: ParsedRow, profile: Profile, cycle: string) {
   if (!profile?.controlMap) fail('profile has no controlMap');
   const controls = row.kind === 'tap' || row.kind === 'hold' ? [row.control]
     : row.kind === 'camdrop' ? [V.cameraFeedLight, V.monitor]
@@ -275,16 +336,16 @@ function assertProfileControls(row, profile, cycle) {
               : row.kind === 'maskraise' ? [V.mask, row.mode === 'hall' ? V.hallLight : V.monitor] : [];
   for (const control of controls) {
     const key = profileControlKey(control);
-    if (!Object.hasOwn(profile.controlMap, key)) fail(`${cycle} control ${control} is absent from profile.controlMap`);
+    if (!Object.hasOwn(profile.controlMap as object, key)) fail(`${cycle} control ${control} is absent from profile.controlMap`);
   }
 }
 
 /** Parse and validate exactly the finite instruction vocabulary of the phone interpreter. */
-export function parsePlan(text, { strategy, night, profile }: any = {}) {
+export function parsePlan(text: unknown, { strategy, night, profile }: { strategy?: string, night?: number, profile?: Profile } = {}): ParsedPlan {
   if (typeof text !== 'string' || text.length === 0) fail('plan text is required');
-  const headers: any = {};
-  const cycles: any = {};
-  let current = null;
+  const headers: Record<string, string> = {};
+  const cycles: ParsedPlan['cycles'] = {};
+  let current: string | null = null;
   for (const raw of text.split(/\r?\n/)) {
     const line = raw.trim();
     if (!line) continue;
@@ -323,24 +384,26 @@ export function parsePlan(text, { strategy, night, profile }: any = {}) {
   const maxActions = profile?.limits?.maxActions ?? Infinity;
   const maxDuration = profile?.limits?.maxDurationMs ?? Infinity;
   for (const [name, cycle] of Object.entries(cycles)) {
-    if ((cycle as any).rows.length > maxActions) fail(`${name} has ${(cycle as any).rows.length} rows; profile allows ${maxActions}`);
+    if (cycle.rows.length > maxActions) fail(`${name} has ${cycle.rows.length} rows; profile allows ${maxActions}`);
     let previous = -1;
-    for (const row of (cycle as any).rows) {
+    for (const row of cycle.rows) {
       if (row.at < previous) fail(`${name} rows are not in non-decreasing time order`);
       previous = row.at;
       const durations = row.kind === 'tap' || row.kind === 'hold' || row.kind === 'hall' || row.kind === 'hallvent' || row.kind === 'hallraise'
         ? [row.duration] : row.kind === 'camdrop' ? [row.lead, row.contact, row.tail]
           : row.kind === 'maskraise' ? [row.gap, row.duration] : row.kind === 'sweep'
             ? [row.spacing, row.contact, ...row.cams.map(cam => cam.includes(':') ? Number(cam.split(':')[1]) : row.contact)]
-            : [row.duration, row.gap, ...(row.hallAt === undefined ? [] : [row.hallAt, row.hallDuration])];
+            // parseRow sets hallDuration with hallAt.
+            : [row.duration, row.gap, ...(row.hallAt === undefined ? [] : [row.hallAt, row.hallDuration as number])];
       if (durations.some(value => value > maxDuration)) fail(`${name} has a timing above profile maxDurationMs=${maxDuration}`);
-      assertProfileControls(row, profile, name);
+      // assertProfileControls refuses a profile that is absent or has no controlMap.
+      assertProfileControls(row, profile as Profile, name);
     }
   }
   const armDeclared = headers['arm-verify'] !== undefined ||
     headers['arm-verify-cameras'] !== undefined || headers['arm-verify-until'] !== undefined ||
     headers['arm-verify-viewing'] !== undefined;
-  let armVerification;
+  let armVerification: ParsedPlan['armVerification'];
   if (armDeclared) {
     if (headers['arm-verify'] !== '1') fail('plan #arm-verify must be 1 when arm verification is declared');
     const cameras = (headers['arm-verify-cameras'] ?? '').split(',').filter(Boolean);
@@ -357,14 +420,17 @@ export function parsePlan(text, { strategy, night, profile }: any = {}) {
   return { headers, night: actualNight, period, loopStart, stopAt, observeUntil, cycles, armVerification };
 }
 
-function addCommonHeaders(raw, { strategy, night, period, loopStart, stopAt, observeUntil, idleUntil,
-  phaseOffsetMs, lengths }) {
+function addCommonHeaders(raw: string, { strategy, night, period, loopStart, stopAt, observeUntil, idleUntil,
+  phaseOffsetMs, lengths }: {
+    strategy: string, night: number, period: number, loopStart: number, stopAt: number, observeUntil: number,
+    idleUntil: number, phaseOffsetMs?: number, lengths: Readonly<Record<string, number | undefined>>,
+  }) {
   const lines = raw.trimEnd().split(/\r?\n/).filter(Boolean);
   const insert = [`#policy ${strategy}`, `#night ${night}`, `#period ${period}`,
     `#loop-start ${loopStart}`, `#stop-at ${stopAt}`, `#observe-until ${observeUntil}`];
   if (idleUntil > 0) insert.push(`#idle-until ${idleUntil}`);
   if (phaseOffsetMs !== undefined) insert.push(`#phase-offset ${phaseOffsetMs}`);
-  const out = [];
+  const out: string[] = [];
   for (const line of lines) {
     if (line === `#policy ${strategy}`) {
       out.push(...insert);
@@ -381,11 +447,11 @@ function addCommonHeaders(raw, { strategy, night, period, loopStart, stopAt, obs
   return out.join('\n') + '\n';
 }
 
-function toysKnobs(input) {
+function toysKnobs(input: unknown) {
   if (input === undefined || input === 'KNOBS0') return { ...TOYS_KNOBS };
   if (!isRecord(input)) fail('minus-toys knobs must be an object or KNOBS0');
   for (const key of Object.keys(input)) if (!Object.hasOwn(TOYS_KNOBS, key)) fail(`unknown minus-toys knob ${key}`);
-  const defaults = { ...TOYS_KNOBS };
+  const defaults: Omit<typeof TOYS_KNOBS, 'loopContactMs'> & { loopContactMs?: number } = { ...TOYS_KNOBS };
   // A newly introduced default must not silently change the policy identity of
   // an older winner. Its emitted behavior still receives the default through
   // this function, while an explicit field remains an opt-in policy change.
@@ -393,7 +459,7 @@ function toysKnobs(input) {
   return { ...defaults, ...input };
 }
 
-function minus3Knobs(input) {
+function minus3Knobs(input: unknown) {
   if (input === undefined || input === 'KNOBS0') return { ...MINUS3_KNOBS };
   if (!isRecord(input)) fail('minus3 knobs must be an object or KNOBS0');
   for (const key of Object.keys(input)) if (!Object.hasOwn(MINUS3_KNOBS, key)) fail(`unknown minus3 knob ${key}`);
@@ -417,7 +483,7 @@ const ROSTER = Object.freeze(['withfreddy', 'withbonnie', 'withchica', 'foxy', '
 // three Withereds plus foxy and bb), and a maskless cadence answers none of them.
 // Until now `minimal` was a boolean any winner could set on any night with
 // nothing checking it against the roster.
-function assertMinimalFitsNight(night) {
+function assertMinimalFitsNight(night: number) {
   const armed = ROSTER.filter(id => C.peakAi(night, id) > 0);
   const loose = armed.filter(id => !TOY_STALL_FREEZES.includes(id));
   if (loose.length)
@@ -426,7 +492,7 @@ function assertMinimalFitsNight(night) {
       'armed roster the stall covers entirely');
 }
 
-function minusToysEmitter(winner, night) {
+function minusToysEmitter(winner: Winner, night: number): Emitted {
   const knobs = toysKnobs(winner.knobs);
   if (knobs.minimal) assertMinimalFitsNight(night);
   const period = knobs.minimal ? knobs.minPeriodMs : knobs.loopPeriodMs;
@@ -456,7 +522,7 @@ function minusToysEmitter(winner, night) {
       epochMs: (winner.anchorEpochMs ?? 0) + (winner.phaseOffsetMs ?? 0) }) };
 }
 
-function minus3Emitter(winner, night) {
+function minus3Emitter(winner: Winner, night: number): Emitted {
   const knobs = minus3Knobs(winner.knobs);
   const customNight = night === 7 ? minus3CustomNight(winner) : undefined;
   const raw = emitMinus3Plan(night, knobs);
@@ -471,24 +537,28 @@ function minus3Emitter(winner, night) {
 // on; the replay plays that vector and the campaign is fed the same expectation.
 const MINUS3_DIALS = ['withfreddy', 'withbonnie', 'withchica', 'foxy', 'toyfreddy',
   'toybonnie', 'toychica', 'mangle', 'bb', 'golden'];
-function minus3CustomNight(winner) {
-  if (!isRecord(winner.dials)) fail('minus3 night 7 requires winner.dials (the Custom Night vector)');
+function minus3CustomNight(winner: Winner) {
+  const dials = winner.dials;
+  if (!isRecord(dials)) fail('minus3 night 7 requires winner.dials (the Custom Night vector)');
   for (const dial of MINUS3_DIALS) {
-    const value = winner.dials[dial];
-    if (!Number.isInteger(value) || value < 0 || value > 20)
+    const value = dials[dial];
+    if (!isInteger(value) || value < 0 || value > 20)
       fail(`winner.dials.${dial} must be an integer in 0..20`);
   }
-  for (const key of Object.keys(winner.dials)) if (!MINUS3_DIALS.includes(key))
+  for (const key of Object.keys(dials)) if (!MINUS3_DIALS.includes(key))
     fail(`winner.dials has unknown dial ${key}`);
-  return { ...winner.dials };
+  // Each dial was just checked to be an integer in 0..20.
+  return { ...dials } as Record<string, number>;
 }
 
-function minus7Emitter(winner, night) {
-  const knobs = isRecord(winner.knobs) ? winner.knobs : {};
-  const device = isRecord(winner.planOptions) ? winner.planOptions : {};
+function minus7Emitter(winner: Winner, night: number): Emitted & { knobs: Fields, recipe: unknown, plan: Record<string, string[]> } {
+  const knobs: Fields = isRecord(winner.knobs) ? winner.knobs : {};
+  const device: Fields = isRecord(winner.planOptions) ? winner.planOptions : {};
   const { search, searchKnobs, ...recipeKnobs } = knobs;
-  const recipe = buildMinus7({ night, ...recipeKnobs, knobs: searchKnobs ?? search ?? {} });
-  const plan = emitMinus7Plan(recipe, { ...device, knobs: searchKnobs ?? search ?? {} });
+  // The search knobs as the winner file records them; makeSearchKnobs refuses an unknown or non-integer knob.
+  const searchFields = (searchKnobs ?? search ?? {}) as Fields;
+  const recipe = buildMinus7({ night, ...recipeKnobs, knobs: searchFields });
+  const plan = emitMinus7Plan(recipe, { ...device, knobs: searchFields });
   const lengths = Object.fromEntries(Object.entries(recipe.cycles).map(([name, cycle]) => [name, cycle.lengthMs]));
   // Three facts have to agree before a minus7 plan means the same thing to the
   // phone that it meant to the census that gated it.  Until 2026-09-19 none of
@@ -513,7 +583,7 @@ function minus7Emitter(winner, night) {
   const idle = idleUntilMs(night);
   const openingMs = lengths.opening;
   if (!Number.isInteger(openingMs) || openingMs <= 0) fail('minus7 recipe has no opening length');
-  const shift = row => {
+  const shift = (row: string) => {
     const space = row.indexOf(' ');
     if (space < 0) fail(`minus7 plan row is malformed: ${JSON.stringify(row)}`);
     return `${Number(row.slice(0, space)) + idle}${row.slice(space)}`;
@@ -534,7 +604,7 @@ function minus7Emitter(winner, night) {
     `#stop-at 420000`, `#observe-until 420000`, `#idle-until ${idle}`];
   for (const [name, rows] of Object.entries(emitted)) {
     lines.push(`#cycle ${name} ${lengths[name]}`);
-    lines.push(...(name === 'opening' ? (rows as any).map(shift) : rows));
+    lines.push(...(name === 'opening' ? rows.map(shift) : rows));
   }
   const text = lines.join('\n') + '\n';
   // The gate replays the reduced plan, not the authored one: what the census
@@ -549,7 +619,7 @@ function minus7Emitter(winner, night) {
     replay: seed => {
       try { return replayMinus7(emitted, { night, seed }); }
       catch (error) {
-        if (dropped.length && /Cannot read propert/.test(error.message))
+        if (dropped.length && /Cannot read propert/.test((error as Error).message))
           fail(`minus7 night ${night} seed ${seed} reached the ${dropped.join('/')} branch that ` +
             'winner.attackFreeEvidence says is unreachable; that evidence is wrong for this night');
         throw error;
@@ -565,7 +635,16 @@ function minus7Emitter(winner, night) {
 // would be emitted into the plan and never scored; the validator refuses it
 // rather than certifying a phase no census has seen. `requires` is the FNaF 2
 // mechanics the strategy's manifest declares it cannot win without.
-export const STRATEGY_REGISTRY = Object.freeze({
+/** A strategy the bundle can emit: its emitter, whether its replay takes an epoch, what it needs and its sources. */
+interface StrategyEntry {
+  readonly emit: (winner: Winner, night: number) => Emitted;
+  readonly phaseAware?: boolean;
+  readonly requires: readonly string[];
+  readonly sources: readonly string[];
+}
+const MECHANICS: Readonly<Record<string, { readonly name: string }>> = FNAF2_MECHANICS;
+
+export const STRATEGY_REGISTRY: Readonly<Record<Strategy, StrategyEntry>> = Object.freeze({
   'minus-toys': Object.freeze({ emit: minusToysEmitter, phaseAware: true, requires: MINUS_TOYS.requires,
     sources: Object.freeze(['packages/propose/bin/plans/minus-toys-plan.ts', 'packages/propose/bin/plans/recipe.ts']) }),
   minus3: Object.freeze({ emit: minus3Emitter, requires: MINUS_3.requires,
@@ -578,24 +657,24 @@ export const STRATEGY_REGISTRY = Object.freeze({
 // mechanics by id. The default forbids none, so every committed winner builds
 // exactly as before; a strategy that requires a forbidden mechanic is refused.
 // A constraint checks the build and never changes what is emitted.
-function checkConstraints(strategy: string, constraints: any) {
+function checkConstraints(strategy: Strategy, constraints: unknown) {
   if (!isRecord(constraints)) fail('constraints must be an object');
   for (const key of Object.keys(constraints))
     if (key !== 'forbidMechanics') fail(`constraints has unknown field ${key}`);
   const forbidden = constraints.forbidMechanics ?? [];
-  if (!Array.isArray(forbidden)) fail('constraints.forbidMechanics must be an array of mechanic ids');
+  if (!isList(forbidden)) fail('constraints.forbidMechanics must be an array of mechanic ids');
   checkMechanics(strategy, STRATEGY_REGISTRY[strategy].requires, forbidden);
   return { requires: [...STRATEGY_REGISTRY[strategy].requires], forbidden: [...new Set(forbidden)].sort() };
 }
 
-function checkMechanics(strategy: string, requires: readonly string[], forbidden: readonly string[]) {
+function checkMechanics(strategy: string, requires: readonly string[], forbidden: readonly unknown[]): asserts forbidden is readonly string[] {
   for (const id of forbidden)
-    if (typeof id !== 'string' || !Object.hasOwn(FNAF2_MECHANICS, id))
+    if (typeof id !== 'string' || !Object.hasOwn(MECHANICS, id))
       fail(`constraints.forbidMechanics names ${JSON.stringify(id)}, which is not a known FNaF 2 mechanic ` +
         `(${Object.keys(FNAF2_MECHANICS).join(', ')})`);
   for (const id of requires)
     if (forbidden.includes(id))
-      fail(`strategy ${strategy} requires ${id} (${FNAF2_MECHANICS[id].name}), which the run's constraints forbid`);
+      fail(`strategy ${strategy} requires ${id} (${MECHANICS[id].name}), which the run's constraints forbid`);
 }
 
 /**
@@ -607,15 +686,17 @@ function checkMechanics(strategy: string, requires: readonly string[], forbidden
  * them again before it opens the phone.
  * @param manifest a validated bundle manifest @param forbid the run's own forbidden mechanics
  */
-export function runMechanics(manifest: any, forbid: string[] = []) {
-  if (!Array.isArray(forbid)) fail('the run\'s forbidden mechanics must be an array of mechanic ids');
-  const recorded = manifest.mechanics ?? { requires: [...STRATEGY_REGISTRY[normalizeStrategy(manifest.strategy)].requires], forbidden: [] };
+export function runMechanics(manifest: { readonly strategy: unknown, readonly mechanics?: unknown }, forbid: readonly string[] = []) {
+  if (!isList(forbid)) fail('the run\'s forbidden mechanics must be an array of mechanic ids');
+  // validateBundle checked a recorded mechanics block to be {requires, forbidden} lists.
+  const recorded = (manifest.mechanics as { requires: readonly string[], forbidden: readonly string[] } | undefined) ??
+    { requires: [...STRATEGY_REGISTRY[normalizeStrategy(manifest.strategy)].requires], forbidden: [] };
   const forbidden = [...new Set([...recorded.forbidden, ...forbid])].sort();
-  checkMechanics(manifest.strategy, recorded.requires, forbidden);
+  checkMechanics(String(manifest.strategy), recorded.requires, forbidden);
   return { requires: [...recorded.requires], forbidden };
 }
 
-function emitterFor(winner, night) {
+function emitterFor(winner: Winner, night: number) {
   const strategy = normalizeStrategy(winner.strategy);
   const entry = STRATEGY_REGISTRY[strategy];
   if (winner.phaseOffsetMs !== undefined && !entry.phaseAware)
@@ -625,13 +706,13 @@ function emitterFor(winner, night) {
   return entry.emit(winner, night);
 }
 
-function strategySourceDigest(strategy) {
+function strategySourceDigest(strategy: Strategy) {
   const sources = STRATEGY_REGISTRY[strategy].sources;
   const bytes = sources.map(path => `${path}\n${readFileSync(join(ROOT, path), 'utf8')}`).join('\n');
   return { sources, sha256: sha256(bytes) };
 }
 
-function replaySummary(strategy, result, seed, night) {
+function replaySummary(strategy: string, result: ReplayResult, seed: number, night: number) {
   const sim = result.sim;
   return { strategy, night, seed, won: !!sim.won, alive: !!sim.alive,
     death: sim.death?.reason ?? null, frame: sim.frame,
@@ -640,10 +721,11 @@ function replaySummary(strategy, result, seed, night) {
     missed: result.missed ?? null, detections: result.detections ?? null };
 }
 
-function replayWinner(winner, emittedByNight, replaySeeds) {
-  const results = [];
+function replayWinner(winner: Winner, emittedByNight: ReadonlyMap<number, Emitted>, replaySeeds: readonly number[]) {
+  const results: ReturnType<typeof replaySummary>[] = [];
   for (const night of winner.nights) {
-    const emitter = emittedByNight.get(night);
+    // Every winner night was emitted.
+    const emitter = emittedByNight.get(night) as Emitted;
     for (const seed of replaySeeds) results.push(replaySummary(winner.strategy,
       emitter.replay(seed), seed, night));
   }
@@ -651,30 +733,31 @@ function replayWinner(winner, emittedByNight, replaySeeds) {
     hash: stableHash({ strategy: winner.strategy, results }) };
 }
 
-function normalizedWinner(winner, replay) {
+function normalizedWinner(winner: Winner, replay: { readonly hash: string }) {
   return { ...winner, schema: WINNER_SCHEMA,
     gate: { ...winner.gate, engineHash: winner.engineHash,
       nights: winner.nights, seeds: winner.seeds, replayHash: replay.hash } };
 }
 
-function bundlePlanEntries(manifest, directory) {
+function bundlePlanEntries(manifest: Manifest, directory: string) {
   return manifest.plans.map(entry => {
     if (!isRecord(entry) || typeof entry.file !== 'string' || entry.file !== entry.file.split('/').pop() ||
         !/^night-[1-7]\.plan$/.test(entry.file)) fail('manifest contains an unsafe plan filename');
     const path = join(directory, entry.file);
     const text = readFileSync(path, 'utf8');
     if (sha256(text) !== entry.sha256) fail(`${entry.file} hash does not match manifest`);
-    return { ...entry, text };
+    // Each entry was checked above; the manifest records its night, policy and sha256.
+    return { ...entry, text } as { night: number, file: string, policy: string, sha256: string, text: string };
   });
 }
 
-function validateManifestShape(manifest) {
+function validateManifestShape(manifest: unknown): asserts manifest is Manifest {
   if (!isRecord(manifest) || manifest.schema !== BUNDLE_SCHEMA) fail('manifest schema mismatch');
-  if (!Array.isArray(manifest.plans) || manifest.plans.length === 0) fail('manifest has no plans');
+  if (!isList(manifest.plans) || manifest.plans.length === 0) fail('manifest has no plans');
   if (!isRecord(manifest.profile) || manifest.profile.file !== 'profile.json' || typeof manifest.profile.id !== 'string')
     fail('manifest profile reference is incomplete');
   if (!isRecord(manifest.replay) || manifest.replay.schema !== REPLAY_SCHEMA) fail('manifest replay is incomplete');
-  if (!Array.isArray(manifest.replay.seeds) || manifest.replay.seeds.length === 0 ||
+  if (!isList(manifest.replay.seeds) || manifest.replay.seeds.length === 0 ||
       typeof manifest.replay.hash !== 'string') fail('manifest replay reference is incomplete');
 }
 
@@ -692,7 +775,7 @@ function validateManifestShape(manifest) {
 // its ANCHOR_AIMS entry (the drift that cost Night 6 five days); it is checked
 // wherever it is present, and test-fact-register.ts requires it of any newly
 // registered binding.
-function checkGatePlans(gate: any, emitted: Map<number, {text: string}>) {
+function checkGatePlans(gate: Gate, emitted: ReadonlyMap<number, { readonly text: string }>) {
   if (gate.planSha256 === undefined) return;
   if (!isRecord(gate.planSha256)) fail('gate.planSha256 must be an object of night -> sha256');
   const nights = [...emitted.keys()].sort((a, b) => a - b);
@@ -700,14 +783,14 @@ function checkGatePlans(gate: any, emitted: Map<number, {text: string}>) {
   if (!same(nights, declared))
     fail(`gate.planSha256 declares nights ${declared.join(',')}, the winner emits ${nights.join(',')}`);
   for (const night of nights) {
-    const actual = sha256(emitted.get(night).text);
+    const actual = sha256((emitted.get(night) as { readonly text: string }).text); // a night the keys named
     if (gate.planSha256[night] !== actual)
       fail(`gate.planSha256 for night ${night} is ${gate.planSha256[night]}, the winner emits ${actual}: ` +
         'the gate was measured against a different plan');
   }
 }
 
-export function compileBundle(input: any, outDirectory: string, { constraints = {} }: {constraints?: {forbidMechanics?: string[]}} = {}) {
+export function compileBundle(input: unknown, outDirectory: string, { constraints = {} }: {constraints?: {forbidMechanics?: string[]}} = {}) {
   const winner = validateWinner(input);
   const mechanics = checkConstraints(winner.strategy, constraints);
   const out = resolve(outDirectory);
@@ -716,7 +799,7 @@ export function compileBundle(input: any, outDirectory: string, { constraints = 
   const profile = resolveProfile(winner.profile ??
     (winner.strategy === 'minus3' ? 'hid-mediaprojection' : undefined));
   const emitted = new Map(winner.nights.map(night => [night, emitterFor(winner, night)]));
-  for (const [night, value] of emitted) parsePlan((value as any).text, { strategy: winner.strategy, night, profile });
+  for (const [night, value] of emitted) parsePlan(value.text, { strategy: winner.strategy, night, profile });
   const replaySeeds = (winner.replaySeeds ?? winner.seeds.slice(0, MAX_REPLAY_SEEDS)).map((seed, index) =>
     nonNegativeInt(seed, `replaySeeds[${index}]`));
   if (replaySeeds.length === 0) fail('replaySeeds must not be empty');
@@ -731,16 +814,17 @@ export function compileBundle(input: any, outDirectory: string, { constraints = 
   writeFileSync(join(out, 'winner.json'), winnerText);
   writeFileSync(join(out, 'profile.json'), profileText);
   // The Companion presses these, not a control map of its own (hidControlsText).
-  const controlsText = hidControlsText(profile, sha256(profileText));
+  // parsePlan refused a profile with no controlMap above.
+  const controlsText = hidControlsText(profile as Parameters<typeof hidControlsText>[0], sha256(profileText));
   writeFileSync(join(out, HID_CONTROLS_FILE), controlsText);
-  const plans = [];
+  const plans: { night: number, file: string, policy: string, sha256: string, bytes: number }[] = [];
   for (const night of winner.nights) {
     const file = `night-${night}.plan`;
-    const text = (emitted.get(night) as any).text;
+    const text = (emitted.get(night) as Emitted).text;
     writeFileSync(join(out, file), text);
     plans.push({ night, file, policy: winner.strategy, sha256: sha256(text), bytes: Buffer.byteLength(text) });
   }
-  const compiled = compileArtifactPlans(plans.map(plan => ({ ...plan, text: (emitted.get(plan.night) as any).text })), parsePlan, profile);
+  const compiled = compileArtifactPlans(plans.map(plan => ({ ...plan, text: (emitted.get(plan.night) as Emitted).text })), parsePlan, profile);
   const artifact = {
     schema: ARTIFACT_SCHEMA, version: 1, winnerHash: stableHash(finalWinner), engineHash: winner.engineHash,
     profileHash: sha256(profileText), plans: persistArtifactPlans(compiled),
@@ -763,7 +847,7 @@ export function compileBundle(input: any, outDirectory: string, { constraints = 
 }
 
 /** Validate every file and replay the bounded candidate sample from the bundle. */
-export function validateBundle(directory, { night }: any = {}) {
+export function validateBundle(directory: string, { night }: { night?: number } = {}) {
   const out = resolve(directory);
   const manifest = jsonRead(join(out, 'manifest.json'));
   validateManifestShape(manifest);
@@ -781,13 +865,17 @@ export function validateBundle(directory, { night }: any = {}) {
   // Bundles built before 2026-09-30 record no mechanics; one that does must
   // still name what its strategy requires, and forbid none of it.
   if (manifest.mechanics !== undefined) {
-    const { requires, forbidden } = manifest.mechanics ?? {};
-    if (!isRecord(manifest.mechanics) || !Array.isArray(requires) || !Array.isArray(forbidden))
+    // A field read off anything but an object is undefined, as destructuring `mechanics ?? {}` read it.
+    const mechanics = manifest.mechanics;
+    const requires = isRecord(mechanics) ? mechanics.requires : undefined;
+    const forbidden = isRecord(mechanics) ? mechanics.forbidden : undefined;
+    if (!isRecord(manifest.mechanics) || !isList(requires) || !isList(forbidden))
       fail('manifest mechanics are {requires, forbidden}');
     if (!same([...requires], [...STRATEGY_REGISTRY[normalizeStrategy(winner.strategy)].requires]))
       fail(`manifest mechanics require ${requires.join(', ') || 'nothing'}, and the strategy now requires ` +
         `${STRATEGY_REGISTRY[normalizeStrategy(winner.strategy)].requires.join(', ') || 'nothing'}`);
-    checkMechanics(winner.strategy, requires, forbidden);
+    // requires equals the strategy's own list, checked just above.
+    checkMechanics(winner.strategy, requires as readonly string[], forbidden);
   }
   const source = strategySourceDigest(winner.strategy);
   if (!isRecord(manifest.engine) || manifest.engine.declaredHash !== winner.engineHash ||
@@ -821,7 +909,8 @@ export function validateBundle(directory, { night }: any = {}) {
     if (entry.text !== (expected.get(entry.night) as any).text) fail(`${entry.file} is not the exact emission for winner.json`);
     parsePlan(entry.text, { strategy: winner.strategy, night: entry.night, profile });
   }
-  const replaySeeds = manifest.replay.seeds;
+  // The bundle's own replay seeds; one that changed fails the replay hash below.
+  const replaySeeds = manifest.replay.seeds as readonly number[];
   const actualReplay = replayWinner(winner, expected, replaySeeds);
   if (stableHash(actualReplay.results) !== stableHash(manifest.replay.results) ||
       actualReplay.hash !== manifest.replay.hash || actualReplay.hash !== winner.gate.replayHash)

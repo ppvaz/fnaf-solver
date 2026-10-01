@@ -8,32 +8,35 @@ const JITTER_SALT = 0x6d377374; // "m7st"; separate from the simulator RNG.
 const ROW = Object.freeze({ raise: 1, sweepA: 2, wind: 3, windOff: 4,
   sweepB: 5, lower: 6, hall: 7, mask: 8 });
 
-function jitterer(seed, slackMs) {
+function jitterer(seed: number, slackMs: number): (row: number, win: number) => number {
   if (!slackMs) return () => 0;
   const span = Math.round(slackMs * C.FPS / 1000);
-  return (row, win) => {
+  return (row: number, win: number) => {
     const rng = new Rng((JITTER_SALT ^ (seed * 2654435761) ^ (win * 40503) ^ row) >>> 0);
     return rng.int(-span, span);
   };
 }
 
 /** Run one frame-exact Minus 7 night on the sourced plant model. */
-export function runCycle(seed, opts: any = {}) {
+export function runCycle(seed: number, opts: {
+  night?: number, slackMs?: number, bangLatencyMs?: number, cycle?: typeof CYCLE, simOpts?: ConstructorParameters<typeof Sim>[0],
+  shift?: (row: number, win: number) => number, countUnmask?: boolean,
+} = {}) {
   const { night = 7, slackMs = 0, bangLatencyMs = 0,
-          cycle = CYCLE, simOpts = {} } = (opts as any);
+          cycle = CYCLE, simOpts = {} } = opts;
   routeFor(night, cycle);
   const sim = new Sim({ seed, night, ...simOpts });
   const shift = opts.shift ?? jitterer(seed, slackMs);
   const bangLatency = Math.round(bangLatencyMs * C.FPS / 1000);
-  const queue = new Map();
-  const at = (frame, fn) => {
+  const queue = new Map<number, (() => void)[]>();
+  const at = (frame: number, fn: () => void) => {
     const f = Math.max(sim.frame + 1, frame);
     if (!queue.has(f)) queue.set(f, []);
-    queue.get(f).push(fn);
+    (queue.get(f) as (() => void)[]).push(fn); // set just above when absent
   };
   const up = () => sim.monitor === 'up';
   const rising = () => sim.monitor === 'raising';
-  const sweep = base => {
+  const sweep = (base: number) => {
     at(base, () => { if (up()) { sim.press('cam:10'); sim.press('light'); } });
     at(base + 1, () => { if (up()) sim.press('cam:4'); });
     at(base + 2, () => { if (up()) sim.press('cam:7'); });
@@ -109,7 +112,7 @@ export function cohort({ night = 7, from, to, seeds, count = 3000,
     ? Array.from({ length: Math.max(0, to - from + 1) }, (_, i) => (from + i) >>> 0)
     : randomSeedCohort({ count }));
   if (!population.length) throw new Error('Minus 7 cohort cannot be empty');
-  const deaths = {}, lost = [];
+  const deaths: Record<string, number> = {}, lost: number[] = [];
   let won = 0, minPower = Infinity, minBox = Infinity, loose = 0;
   for (const seed of population) {
     const r = runCycle(seed, { night, slackMs, bangLatencyMs,
@@ -117,7 +120,9 @@ export function cohort({ night = 7, from, to, seeds, count = 3000,
     if (r.won) won++;
     else {
       if (lost.length < 8) lost.push(seed);
-      const key = `${r.death.reason}: ${r.death.detail}`;
+      // A night that is not won ended in a death.
+      const { reason, detail } = r.death as NonNullable<typeof r.death>;
+      const key = `${reason}: ${detail}`;
       deaths[key] = (deaths[key] ?? 0) + 1;
     }
     minPower = Math.min(minPower, r.powerLeft);

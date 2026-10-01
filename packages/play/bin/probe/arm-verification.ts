@@ -5,7 +5,7 @@ export const DOUBLE_GLITCH_CAMERA_PAIRS = Object.freeze({
   minusToys: Object.freeze(['cam:9', 'cam:11']),
 });
 
-export const cameraPairHeader = pair => {
+export const cameraPairHeader = (pair: readonly string[]) => {
   if (!Array.isArray(pair) || pair.length < 2) throw new TypeError('camera arm needs a pair');
   return pair.join(',');
 };

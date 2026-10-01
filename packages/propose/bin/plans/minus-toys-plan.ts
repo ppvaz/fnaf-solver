@@ -165,10 +165,25 @@ export const KNOBS0 = {
   minProofCam09AtMs: 359700, // after the final wind releases: visible CAM 09 proof visit
 };
 
-const clone = k => ({ ...KNOBS0, ...(k || {}) });
+/** The schedule's knobs; the reactive layer's tuning is read only where a caller sets it. */
+type Knobs = typeof KNOBS0 & {
+  camdropLight?: boolean,
+  reactiveIntervalFrames?: number, reactiveDelayFrames?: number, reactiveDropRate?: number,
+  reactiveAudioLatencyFrames?: number, reactiveAudioDropRate?: number,
+  reactiveAudioFalseNegativeRate?: number, reactiveAudioFalsePositiveRate?: number,
+};
+/** One authored row: a contact, a hall pulse, or a camdrop's lead, monitor contact and tail. */
+type PlanRow =
+  | [number, 'tap' | 'hold', string, number]
+  | [number, 'hall', number]
+  | [number, 'camdrop', number, number, number];
+/** A queued press or release, at its frame. */
+type QueuedAction = [number, 'press' | 'release', string];
+
+const clone = (k: Partial<Knobs> | null | undefined): Knobs => ({ ...KNOBS0, ...(k || {}) });
 
 // Derive { opening, loop } from knobs. build() === the shipped schedule.
-export function build(knobs?) {
+export function build(knobs?: Partial<Knobs> | null) {
   const k = clone(knobs);
   const c = k.contactMs;
 
@@ -177,7 +192,7 @@ export function build(knobs?) {
     // CAM 09 (marker), drop, raise -- the split is armed on that raise. Then
     // wind, held until the first loop cycle takes over. No camdrop, no mask.
     const arm = k.minArmAtMs;
-    const open = [];
+    const open: PlanRow[] = [];
     open.push([arm + k.openViewMs, 'tap', 'monitor', c]);
     open.push([arm + k.openLastViewedMs, 'tap', 'cam11', c]);
     const drop = arm + k.openArmMs + k.armingGapMs;
@@ -187,21 +202,21 @@ export function build(knobs?) {
     open.push([raise, 'tap', 'monitor', c]);
     open.push([raise + k.openStunLeadMs, 'hold', V.cameraFeedLight, k.openStunHoldMs]);
     // Steady 5 s cycle: re-flash CAM 09, then wind. Nothing else.
-    const loop = [
+    const loop: PlanRow[] = [
       [k.minFlashAtMs, 'hold', V.cameraFeedLight, k.minFlashHoldMs],
       [k.minWindAtMs, 'hold', 'wind', k.minWindHoldMs],
     ];
     // The final wind ends at 5:08.  Select CAM 09 once more and leave a 300 ms
     // visible dwell before lowering the monitor.  This is proof that the Toys
     // remain held at the terminal boundary, not another defensive cycle.
-    const finish = [
+    const finish: PlanRow[] = [
       [k.minProofCam09AtMs, 'tap', 'cam9', 100],
       [k.minStopAtMs, 'tap', 'monitor', 100],
     ];
     return { opening: open, loop, finish };
   }
 
-  const opening = [];
+  const opening: PlanRow[] = [];
   opening.push([k.openViewMs, 'tap', 'monitor', c]);
   opening.push([k.openLastViewedMs, 'tap', 'cam11', c]);
   const drop = k.openArmMs + k.armingGapMs;
@@ -219,7 +234,7 @@ export function build(knobs?) {
   const camdropEnd = camdropAt + k.openCamdropLeadMs + k.camdropMonitorMs + k.camdropTailMs;
   opening.push([camdropEnd + k.openMaskLeadMs, 'tap', 'mask', c]);
 
-  let loop;
+  let loop: PlanRow[];
   if (k.loopPeriodMs === 10000) {
     loop = [
       [k.maskOffMs, 'tap', 'mask', k.loopContactMs],
@@ -228,7 +243,7 @@ export function build(knobs?) {
       // phases, identical outcomes seed for seed) because the camdrop's held
       // light already resets Foxy every cycle; the phone decides whether that
       // credit is real. Never a route setting.
-      ...(k.hallMs > 0 ? [[k.hallOffsetMs, 'hall', k.hallMs]] : []),
+      ...(k.hallMs > 0 ? [[k.hallOffsetMs, 'hall', k.hallMs] satisfies PlanRow] : []),
       [k.raiseMs, 'tap', 'monitor', k.loopContactMs],
       [k.windLeadMs, 'hold', 'wind', k.windMs],
       // camdropLight false drops the monitor WITHOUT the camera light held
@@ -236,8 +251,8 @@ export function build(knobs?) {
       // when he was created during that cams-up (2026-09-13: two Night 6
       // deaths the second after a camdrop, after 2 AM). A search knob.
       ...(k.camdropLight === false
-        ? [[k.camdropMs + k.camdropLeadMs, 'tap', 'monitor', k.camdropMonitorMs]]
-        : [[k.camdropMs, 'camdrop', k.camdropLeadMs, k.camdropMonitorMs, k.camdropTailMs]]),
+        ? [[k.camdropMs + k.camdropLeadMs, 'tap', 'monitor', k.camdropMonitorMs] satisfies PlanRow]
+        : [[k.camdropMs, 'camdrop', k.camdropLeadMs, k.camdropMonitorMs, k.camdropTailMs] satisfies PlanRow]),
       [k.maskOnMs + k.loopPeriodMs, 'tap', 'mask', k.loopContactMs],
     ];
     // The stun refresh sits just before the wind row: by content, not by
@@ -269,7 +284,7 @@ export function build(knobs?) {
     if (k.preventiveVentLight)
       loop.splice(1, 0, [enter + 50, 'hold', V.cameraFeedLight, k.stunRefreshHoldMs]);
   }
-  return { opening, loop, finish: [] };
+  return { opening, loop, finish: [] as PlanRow[] };
 }
 
 // The shipped schedule, frozen. schedule()/emitPlan() default to these; a
@@ -291,19 +306,19 @@ export const LOOP = _default.loop;
     [10400, 'hold', V.cameraFeedLight, 100], [10570, 'hold', 'wind', 3230],
     [13850, 'camdrop', 150, 200, 67], [14449, 'tap', 'mask', 200],
   ];
-  const eq = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+  const eq = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
   if (!eq(OPENING, OPENING0) || !eq(LOOP, LOOP0))
     throw new Error('build(KNOBS0) does not reproduce the shipped schedule:\n' +
       `opening ${JSON.stringify(OPENING)}\nloop ${JSON.stringify(LOOP)}`);
 }
 
-const frame = ms => Math.round(ms * C.FPS / 1000);
+const frame = (ms: number) => Math.round(ms * C.FPS / 1000);
 
 // The interpreter's control vocabulary is not the engine's: a camera button is
 // `camN`, while the physical cameraFeedLight maps to the simulator's shared
 // context-dependent light action. The old `ventl` spelling is accepted only
 // here for replaying historical inputs; new emitted plans never produce it.
-const actionFor = action =>
+const actionFor = (action: string) =>
   /^cam\d+$/.test(action) ? `cam:${action.slice(3)}`
   : action === V.cameraFeedLight || action === 'ventl' ? MODEL_CONTEXT_LIGHT
   : action;
@@ -324,18 +339,23 @@ export function schedule({ splitCamera = true, shift = () => 0,
                            opening = OPENING, loop = LOOP,
                            finish = [], periodMs = KNOBS0.loopPeriodMs,
                            loopStartMs = 0, untilMs = 420000,
-                           epochMs = 0 } = {}) {
-  const queue = [];
-  const add = (cycle, index, base, row) => {
-    const [at, kind, a, b, cc] = row;
+                           epochMs = 0 }: {
+                             splitCamera?: boolean, shift?: (cycle: string, index: number, at: number) => number,
+                             opening?: readonly PlanRow[], loop?: readonly PlanRow[], finish?: readonly PlanRow[],
+                             periodMs?: number, loopStartMs?: number, untilMs?: number, epochMs?: number,
+                           } = {}) {
+  const queue: QueuedAction[] = [];
+  const add = (cycle: string, index: number, base: number, row: PlanRow) => {
+    const at = row[0];
     const when = base + at + epochMs + shift(cycle, index, base + at);
-    if (kind === 'tap') queue.push([frame(when), 'press', actionFor(a)]);
-    else if (kind === 'hold' || kind === 'hall') {
-      const action = kind === 'hall' ? MODEL_CONTEXT_LIGHT : actionFor(a);
-      const duration = kind === 'hall' ? a : b;
+    if (row[1] === 'tap') queue.push([frame(when), 'press', actionFor(row[2])]);
+    else if (row[1] === 'hold' || row[1] === 'hall') {
+      const action = row[1] === 'hall' ? MODEL_CONTEXT_LIGHT : actionFor(row[2]);
+      const duration = row[1] === 'hall' ? row[2] : row[3];
       queue.push([frame(when), 'press', action],
                  [frame(when + duration), 'release', action]);
-    } else if (kind === 'camdrop') {
+    } else if (row[1] === 'camdrop') {
+      const [, , a, b, cc] = row;
       queue.push([frame(when), 'press', MODEL_CONTEXT_LIGHT],
                  [frame(when + a), 'press', 'monitor'],
                  [frame(when + a + b + cc), 'release', MODEL_CONTEXT_LIGHT]);
@@ -355,7 +375,7 @@ export function schedule({ splitCamera = true, shift = () => 0,
 // mask rows are shifted independently by the device-error model, so their
 // nominal knob difference is not the available window. A mask tick can only
 // accrue after the ON animation and stops when the OFF press begins.
-export function maskWindows(queue) {
+export function maskWindows(queue: readonly QueuedAction[]) {
   const presses = queue.filter(([, kind, action]) => kind === 'press' && action === 'mask');
   const windows = [];
   for (let i = 0; i + 1 < presses.length; i += 2) {
@@ -377,15 +397,19 @@ export function maskWindows(queue) {
 export const ENGINE_PHASE_ORACLE = Object.freeze({
   kind: 'engine-phase-oracle',
   periodFrames: C.FPS,
-  nextBoundaryFrame: frame => frame + ((C.FPS - (frame % C.FPS)) % C.FPS),
+  nextBoundaryFrame: (frame: number) => frame + ((C.FPS - (frame % C.FPS)) % C.FPS),
 });
 
 export function replay({ night = 7, seed = 1, worst = false, splitCamera = true,
                          shift, knobs, epochMs = 0,
-                         phaseClock = ENGINE_PHASE_ORACLE }: any = {}) {
+                         phaseClock = ENGINE_PHASE_ORACLE }: {
+                           night?: number, seed?: number, worst?: boolean, splitCamera?: boolean,
+                           shift?: (cycle: string, index: number, at: number) => number, knobs?: Partial<Knobs> | null,
+                           epochMs?: number, phaseClock?: typeof ENGINE_PHASE_ORACLE,
+                         } = {}) {
   const sim = new Sim({ night, seed, worst });
   const { opening, loop, finish } = knobs ? build(knobs) : _default;
-  const kk = knobs ? clone(knobs) : KNOBS0;
+  const kk: Knobs = knobs ? clone(knobs) : KNOBS0;
   const periodMs = kk.minimal ? kk.minPeriodMs : kk.loopPeriodMs;
   const loopStartMs = kk.minimal ? kk.minLoopStartMs : 0;
   const untilMs = kk.minimal ? kk.minStopAtMs : 420000;
@@ -446,10 +470,12 @@ export function replay({ night = 7, seed = 1, worst = false, splitCamera = true,
     }
     if (reactive) {
       const facts = reactive.obs.read(sim);
-      const window = animated.filter(x => Math.abs(sim.frame - x.at) < GUARD_FRAMES * 3);
+      // Built whenever the reactive layer is.
+      const window = (animated as NonNullable<typeof animated>).filter(x => Math.abs(sim.frame - x.at) < GUARD_FRAMES * 3);
       const maskWindow = scheduledMaskWindows.find(w =>
         sim.frame >= w.onPressFrame && sim.frame <= w.offPressFrame);
-      const intents = reactive.ctrl.decide(facts, {
+      // The controller reads the Observer's facts by name; the read's frame entry is not one it reads.
+      const intents = reactive.ctrl.decide(facts as unknown as Parameters<VentThreatReactive['decide']>[0], {
         frame: sim.frame,
         scheduled: window,
         maskWindow,
@@ -489,11 +515,11 @@ export function replay({ night = 7, seed = 1, worst = false, splitCamera = true,
 // Puppet death, so `wins` separates the two only via `armed`. This is the
 // pricing instrument for any arm change -- it is the model finally seeing the
 // miss branch the 200/200 deterministic gate is blind to.
-export function phaseScan({ night = 1, seeds = 24, worst = false, knobs }: any = {}) {
+export function phaseScan({ night = 1, seeds = 24, worst = false, knobs }: { night?: number, seeds?: number, worst?: boolean, knobs?: Partial<Knobs> } = {}) {
   const step = 1000 / C.FPS;               // one frame in ms
   const n = Math.round(C.LAST_VIEW_SAMPLE_FRAMES); // one sampler period in frames
   const population = randomSeedCohort({ count: seeds });
-  const rows = [];
+  const rows: { epochFrames: number, epochMs: number, wins: number, armed: number, seeds: number }[] = [];
   for (let k = 0; k < n; k++) {
     let wins = 0, armed = 0;
     for (const seed of population) {
@@ -506,9 +532,9 @@ export function phaseScan({ night = 1, seeds = 24, worst = false, knobs }: any =
   return rows;
 }
 
-export function emitPlan(night, knobs) {
+export function emitPlan(night: number, knobs?: Partial<Knobs> | null) {
   const { opening, loop, finish } = knobs ? build(knobs) : _default;
-  const kk = knobs ? clone(knobs) : KNOBS0;
+  const kk: Knobs = knobs ? clone(knobs) : KNOBS0;
   const periodMs = kk.minimal ? kk.minPeriodMs : kk.loopPeriodMs;
   // `#period` names the loop cadence so trial.sh does not have to guess it
   // (POLICY_CYCLE_MS). The 10/20 plan is 10 s; `--minimal` is 5 s.
@@ -556,15 +582,15 @@ const REASON_AI = {
   foxy: 'foxy', puppet: 'puppet', 'balloon-boy': 'bb',
 };
 
-function gate(night, knobs, runs = 3000) {
+function gate(night: number, knobs: Partial<Knobs> | undefined, runs = 3000) {
   const minimal = !!clone(knobs).minimal;
   const population = randomSeedCohort({ count: runs });
   const cohort = seedCohortDescriptor(population, { salt: GOLDEN_MODEL_SEED_SALT });
   for (const worst of [false, true]) {
     const n = population.length;
     let wins = 0;
-    const lossReasons = new Set();
-    const lossFrames = [];
+    const lossReasons = new Set<string>();
+    const lossFrames: number[] = [];
     for (const seed of population) {
       const r = replay({ night, worst, seed, knobs });
       if (r.sim.won && r.splitAt >= 0) wins++;
@@ -608,13 +634,14 @@ function gate(night, knobs, runs = 3000) {
 function parseKnobs() {
   const v = process.argv.find(a => a.startsWith('--knobs='));
   if (!v) return undefined;
-  const k = {};
+  const k: Record<string, unknown> = {};
   for (const pair of v.slice(8).split(',')) {
     const [name, val] = pair.split('=');
     if (!(name in KNOBS0)) throw new Error(`unknown knob: ${name}`);
     k[name] = val === 'true' ? true : val === 'false' ? false : +val;
   }
-  return k;
+  // Each name was checked against KNOBS0; a value of the wrong kind is passed as typed on the command line.
+  return k as Partial<Knobs>;
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
@@ -622,7 +649,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const night = +nightArg;
   if (!Number.isInteger(night) || night < 1 || night > 7)
     throw new Error('--night must be 1..7');
-  let knobs: any = parseKnobs();
+  let knobs: Partial<Knobs> | undefined = parseKnobs();
   if (process.argv.includes('--minimal')) {
     // The elegant story plan is NOT one shape for all nights: Night 1 alone
     // reduces to "arm + flash + wind" (MINUS-3-STRATEGY.md sec.9 -- monitor-down
