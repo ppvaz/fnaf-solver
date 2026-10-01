@@ -4878,6 +4878,15 @@
       ]
     },
     {
+      "file": "tools/test-bash3.ts",
+      "imports": [
+        "./gate-kit.ts",
+        "node:assert/strict",
+        "node:fs",
+        "node:path"
+      ]
+    },
+    {
       "file": "tools/test-change-locality.ts",
       "imports": [
         "./change-locality.ts",

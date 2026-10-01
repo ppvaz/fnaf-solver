@@ -63,7 +63,8 @@ mkdir -p "$CLASSES_DIR" "$DEX_DIR"
 
 # Every source under src/, never a hand list: HidControls.java joined the tree on
 # 2026-09-30 without joining a list here, and the Companion stopped building.
-mapfile -t SOURCES < <(find "$SCRIPT_DIR/src" -name '*.java' | sort)
+SOURCES=()
+while IFS= read -r source; do SOURCES+=("$source"); done < <(find "$SCRIPT_DIR/src" -name '*.java' | sort)
 "$JAVAC" \
     -encoding UTF-8 \
     -source 17 \
