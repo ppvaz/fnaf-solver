@@ -1908,22 +1908,6 @@
       ]
     },
     {
-      "file": "packages/propose/bin/plans/artifact-commands.ts",
-      "imports": [
-        "./recipe.mjs",
-        "@sixam/source",
-        "@sixam/source/fnaf2"
-      ]
-    },
-    {
-      "file": "packages/propose/bin/plans/artifact-commands.ts",
-      "imports": [
-        "./recipe.mjs",
-        "@sixam/source",
-        "@sixam/source/fnaf2"
-      ]
-    },
-    {
       "file": "packages/propose/bin/plans/bundle.ts",
       "imports": [
         "./artifact-commands.ts",
@@ -3461,6 +3445,19 @@
       ]
     },
     {
+      "file": "packages/propose/test/test-terminal-deadline.ts",
+      "imports": [
+        "../../play/src/campaign/modern-campaign-ports.ts",
+        "../bin/plans/bundle.ts",
+        "@sixam/source",
+        "@sixam/source/games/fnaf2/fnaf2.ts",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "packages/propose/test/test-winners-rebuild.ts",
       "imports": [
         "../../play/src/campaign/campaign-bundle.ts",
@@ -4879,36 +4876,6 @@
       "file": "tools/test-media.ts",
       "imports": [
         "node:assert/strict",
-        "node:child_process",
-        "node:fs",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/test-mistake-register.ts",
-      "imports": [
-        "../packages/play/bin/phone/capabilities.ts",
-        "../packages/propose/bin/plans/basin-edge.ts",
-        "../packages/review/bin/grade/run-report.ts",
-        "../packages/review/src/mistakes.ts",
-        "../packages/review/src/refusals.ts",
-        "\\.\\/basin-edge\\.ts",
-        "node:child_process",
-        "node:fs",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/test-mistake-register.ts",
-      "imports": [
-        "../packages/play/bin/phone/capabilities.ts",
-        "../packages/propose/bin/plans/basin-edge.ts",
-        "../packages/review/bin/grade/run-report.ts",
-        "../packages/review/src/mistakes.ts",
-        "../packages/review/src/refusals.ts",
-        "\\.\\/basin-edge\\.ts",
         "node:child_process",
         "node:fs",
         "node:path",

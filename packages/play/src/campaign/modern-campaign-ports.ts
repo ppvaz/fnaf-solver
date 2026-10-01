@@ -33,6 +33,16 @@ const MASK_RULE = new URL('../../../../packages/play/profiles/fnaf2/moto-g56/mas
 const LIFECYCLE_OBSERVER = new URL('../../../../packages/play/src/sensors/screencap/lifecycle-observe.py', import.meta.url);
 const TITLE_OBSERVER = new URL('../../../../packages/play/src/sensors/screencap/title-observe.py', import.meta.url);
 const CUSTOM_NIGHT_READBACK = new URL('../../../../packages/play/bin/probe/custom-night-readback.py', import.meta.url);
+// How long the port watches for 6 AM or game over once an executor returns
+// without a terminal. Every executor shares this port, so the number answers
+// for the lane whose plan returns earliest (mistake register item 4: a 15 s
+// wait tuned for a lane that blocked through the night starved one that
+// returned early). On the HID executor a won night's observed 6 AM comes 1.3
+// to 3.0 s after the nominal 420 s night (34 packs); the artifact lane,
+// retired 2026-09-25, trailed by up to a minute. test-terminal-deadline.ts
+// re-derives the trail from the packs and holds every committed plan's end
+// plus this wait above it.
+export const NIGHT_TERMINAL_WAIT_MS = 120000;
 const AI_DIALS_ALL = ['withfreddy', 'withbonnie', 'withchica', 'foxy', 'toyfreddy', 'toybonnie', 'toychica', 'mangle', 'bb', 'golden'];
 const sleep = milliseconds => new Promise<any>(resolve => setTimeout(resolve, milliseconds));
 const isRecord = value => value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -862,10 +872,9 @@ export async function createCampaignPorts(options: any = {}) {
         state: published.state, outcome: published.outcome });
       return published;
     }
-    // The schedule already spanned the night; the game clock can trail the
-    // plan by a minute, so the terminal window is generous, not 15 s.
+    // The schedule may end before the night does (NIGHT_TERMINAL_WAIT_MS).
     const state = await waitFor(bridge, serial,
-      value => value === 'sixam' || value === 'gameover', 120000, 'night terminal');
+      value => value === 'sixam' || value === 'gameover', NIGHT_TERMINAL_WAIT_MS, 'night terminal');
     if (state === 'sixam') return { night: target.night, identity: target.mode,
       outcome: 'sixam', sixAm: true, positive: true, state };
     if (state === 'gameover') return { night: target.night, identity: target.mode,

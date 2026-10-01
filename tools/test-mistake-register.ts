@@ -30,6 +30,12 @@
 //            night it cannot read (never assumed), and after an abort or a killed
 //            runner the game is driven back to an observed title. It runs in
 //            test:unit:slow, which CI's slow lane runs.
+//   item 4   "Re-derive every deadline when a port crosses executors." Every
+//            executor returns to one port, whose NIGHT_TERMINAL_WAIT_MS has to
+//            answer for the plan that ends earliest; test-terminal-deadline.ts
+//            measures the latest 6 AM from the won packs and holds every
+//            committed plan's end plus that wait above it (a planted 2026-09-06
+//            shape first).
 //   item 8   "Ask the phone what it offers before proposing an instrument."
 //            night-run.sh asks capabilities.ts traceDecision whether a run
 //            carries the Perfetto input trace; it kept the trace on when the
@@ -118,6 +124,7 @@ const EXEMPT = new Map([
 const REGISTER_GATES = [
   [1, 'packages/play/src/sensors/screencap/test-sensor.py'],   // title-observe.py refuses a path it would not read
   [3, 'apps/lab/test/test-night-job.py'],   // a night job refuses on an observed title mismatch and on an unreadable Continue night
+  [4, 'packages/propose/test/test-terminal-deadline.ts'],   // every committed plan's end plus the port's wait covers the latest measured 6 AM
   [5, SELF],
   [7, 'packages/propose/test/test-seam-slack.ts'],
   [9, 'packages/propose/test/test-seam-slack.ts'],
@@ -137,7 +144,6 @@ const REGISTER_GATES = [
 // register entry fails until it has a row or is listed here with its reason.
 const OPEN_ENTRIES = new Map([
   [2, 'an observation-based rule cites its measured row: the FNaF 2 title model\'s item thresholds name no calibration rows'],
-  [4, 'deadlines re-derived per executor: the night-terminal waits are typed-in numbers, and no game-clock trail is measured'],
 ]);
 
 let failed = 0;

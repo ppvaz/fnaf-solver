@@ -134,7 +134,6 @@
       "export:packages/source/src/clockwork/control-registry.ts#FNAF4_PACKAGE": 1,
       "export:packages/source/src/clockwork/night-model.ts#clockLabel": 1,
       "export:packages/source/src/clockwork/night-model.ts#hourDurationMs": 1,
-      "export:packages/source/src/clockwork/night-model.ts#nightLengthMs": 1,
       "export:packages/source/src/clockwork/night-model.ts#nightMatches": 1,
       "export:packages/source/src/clockwork/vocabulary.ts#ALL_GAME_CONTROL_NAMES": 1,
       "export:packages/source/src/clockwork/vocabulary.ts#FNAF1_CONTROL_VOCABULARY": 1,
