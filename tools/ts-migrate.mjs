@@ -111,15 +111,23 @@ function relaxArity(paths) {
           if (index < given || param.questionToken || param.initializer || param.dotDotDotToken) return;
           if (param.name.getText() === 'this') return;
           const file = declaration.getSourceFile().fileName;
-          if (!edits.has(file)) edits.set(file, new Set());
-          edits.get(file).add(param.name.getEnd());
+          if (!edits.has(file)) edits.set(file, new Map());
+          // A one-parameter arrow written without parentheses (`x => ...`) takes them with the `?`:
+          // `x? => ...` does not parse.
+          const bare = ts.isArrowFunction(declaration) &&
+            !declaration.getChildren().some(child => child.kind === ts.SyntaxKind.OpenParenToken);
+          if (bare) edits.get(file).set(param.getStart(), '(');
+          edits.get(file).set(param.name.getEnd(), bare ? '?)' : '?');
         });
       }
     }
     if (!edits.size) break;
-    for (const [file, positions] of edits) {
+    for (const [file, inserts] of edits) {
       let text = readFileSync(file, 'utf8');
-      for (const at of [...positions].sort((a, b) => b - a)) { text = text.slice(0, at) + '?' + text.slice(at); marked += 1; }
+      for (const [at, insert] of [...inserts].sort((a, b) => b[0] - a[0])) {
+        text = text.slice(0, at) + insert + text.slice(at);
+        if (insert.includes('?')) marked += 1;
+      }
       writeFileSync(file, text);
     }
   }

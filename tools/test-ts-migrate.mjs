@@ -58,6 +58,8 @@ Object.defineProperty(Model.prototype, 'twice', { value: twice, writable: true, 
 
 export function arity(a, b) { return b === undefined ? a : a + b; }
 export const one = arity(1);
+export const bare = over => ({ base: 1, ...over });
+export const made = bare();
 export function open(options = {}) { return options.flag ?? null; }
 export const later = cycles => Object.values(cycles).map(cycle => cycle.blocks.length);
 export const settled = new Promise((resolve) => { resolve(); });
@@ -83,6 +85,7 @@ export const total = norm({ x: 1, y: 2 });
   assert.match(out, /^  declare twice: typeof twice;$/m, 'an installed member is declared');
   assert.match(out, /function twice\(this: Model\)/, '@this is a this parameter');
   assert.match(out, /export function arity\(a, b\?\)/, 'a parameter a call leaves out is optional');
+  assert.match(out, /export const bare = \(over\?\) => /, 'a bare arrow parameter a call leaves out takes parentheses with its ?');
   assert.match(out, /export function open\(options: any = \{\}\)/, 'an open literal read types its parameter any');
   assert.match(out, /new Promise<void>\(/, 'a promise resolved with nothing is Promise<void>');
   assert.doesNotMatch(out, /\w: any =>/, 'no unparenthesized typed arrow parameter');
