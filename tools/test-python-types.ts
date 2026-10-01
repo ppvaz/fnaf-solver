@@ -27,14 +27,17 @@ function check(root: string): { areas: Record<string, number>, errors: string[] 
   return JSON.parse(run.stdout);
 }
 
-// Planted cases run first: two script directories whose files share a name, one typed, one not.
+// Planted cases run first: two script directories whose files share a name, one typed, one not. The typed
+// one also calls os.sched_setaffinity, which only Linux has: it stays clean on any host only because the
+// driver checks for Linux, CI's platform, so a count can never depend on the machine that took it.
 {
   const repo = realpathSync(mkdtempSync(join(tmpdir(), 'python-types-')));
   try {
     const git = (...args: string[]) => execFileSync('git', args, { cwd: repo, encoding: 'utf8' });
     git('init', '-q');
     for (const dir of ['packages/demo/bin/typed', 'packages/demo/bin/loose']) mkdirSync(join(repo, dir), { recursive: true });
-    writeFileSync(join(repo, 'packages/demo/bin/typed/tool.py'), 'def double(value: int) -> int:\n    return value * 2\n');
+    writeFileSync(join(repo, 'packages/demo/bin/typed/tool.py'), 'import os\n\n\ndef double(value: int) -> int:\n    return value * 2\n\n\n'
+      + 'def pin() -> None:\n    os.sched_setaffinity(0, {0})\n');
     writeFileSync(join(repo, 'packages/demo/bin/loose/tool.py'),
       'from typing import Any\n\ndef double(value):\n    return value * 2\n\ndef widen(value: Any) -> Any:\n    return value\n');
     git('add', '.');

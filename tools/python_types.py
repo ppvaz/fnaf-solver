@@ -22,8 +22,11 @@ from mypy import api
 
 ROOT = Path(os.environ.get('PYTHON_TYPES_ROOT') or Path(__file__).resolve().parent.parent)
 SHARED = ['packages/play/src/sensors/screencap', 'packages/play/src/safety', 'packages/play/test/testdata']
+# Linux, whatever the host: mypy checks the branches of the platform it is told, and CI is Linux.
+# Counted on the Mac, os.sched_setaffinity (Linux-only) was one more error than CI saw, and every
+# push since 8e6d03fa failed on a baseline the Mac had written.
 FLAGS = ['--strict', '--disallow-any-explicit', '--no-error-summary', '--show-error-codes', '--no-color-output',
-         '--hide-error-context', '--python-version', '3.12', '--cache-dir', str(ROOT / '.mypy_cache')]
+         '--hide-error-context', '--python-version', '3.12', '--platform', 'linux', '--cache-dir', str(ROOT / '.mypy_cache')]
 
 
 def area_of(path: str) -> str:
