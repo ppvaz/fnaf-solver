@@ -1,0 +1,45 @@
+{
+ "schema": "experiment-spec-v2",
+ "id": "s2-seed-readout-night7-0of20",
+ "kind": "confirm",
+ "purpose": "pre-registered test of the phone's office seed against its wall clock, read off the native static readout",
+ "claimLevel": "DEVICE_MEASURED generator states and clocks against MODEL_ONLY draw counts",
+ "date": "2026-10-01",
+ "step": "ROADMAP S2a: establish a valid seed measurement",
+ "question": "Is the phone's office generator seeded with its wall clock in milliseconds, mod 65,536, a fixed 55-90 ms before the night onset, with the phone spending 5 draws more than the model before the first winding window?",
+ "hypothesis": {
+  "source": "docs/evidence/s2-region-readout-night7-0of20-20261001.json (s2-region-readout-night7-0of20-6daba88865e81f6a), exploratory and outside its rule: the stream's state at wind-1 is the wall-clock seed of 63 ms before onset advanced 289 draws, the model's 284 plus 5. The 2026-09-15 logcat measured the seed moment 64-76 ms before onset and the twin-night scan searched onset - 55..90 ms (docs/evidence/night7-k3-twin-nights-result-20260915.json).",
+  "statement": "E-clock-seed: seed = floor(onset phone wall ms - x) mod 65,536 for some x in 55..90, and the phone spends D1 + 5 draws from the seed to the first window's injection, D1 the model's.",
+  "alternatives": [
+   "E-other-seed: the stream is read but no x in the bracket reaches it with c = 5 (NOT_SUPPORTED): the seed is not the clock at that moment, or the extra draws are not a constant 5.",
+   "E-unread: the night's own readout is not SUPPORTED, so no state is known on the stream (UNINFORMATIVE)."
+  ]
+ },
+ "night": {
+  "procedure": "A new k3 Night 7 with every Custom Night dial at 0, run and analysed exactly as docs/evidence/s2-region-readout-night7-0of20-predeclaration-20261001.json declares (command with label k3-0of20-sr02, windows, rule, power check, tool phone-region-readout.ts), its inputs derived from its own pack with --derive-inputs.",
+  "readoutPredeclaration": {
+   "path": "docs/evidence/s2-region-readout-night7-0of20-predeclaration-20261001.json",
+   "sha256": "507da9f4676720a889b9d27f44454f2d2f9cffc6abd42a03b9869c7c3cda1ad5"
+  }
+ },
+ "method": {
+  "anchor": "The earliest window that starts two consecutive consistent pairs in the night's readout; its top state, stepped back by the model's draws to the first window's injection, is S1. D1 is the model's draws from construction to that injection (seed-independent at every dial 0).",
+  "clock": "onsetPhoneWallMs from the pack's origin.anchor (the Companion's onset image time on the phone's wall clock); seed_x = floor(onsetPhoneWallMs - x) mod 65,536."
+ },
+ "decisionRule": {
+  "bracketMs": [
+   55,
+   90
+  ],
+  "extraDraws": 5,
+  "text": "SUPPORTED when some x in 55..90 gives seed_x advanced D1 + 5 draws = S1; NOT_SUPPORTED when the night's readout is SUPPORTED and none does; UNINFORMATIVE when the readout is not SUPPORTED. Under a seed unrelated to the clock a hit has probability about 36 / 65,536 = 5.5e-4. The c each x would need is reported, not tested."
+ },
+ "stoppingRule": {
+  "kind": "fixed-sample",
+  "text": "One night, re-run under the readout predeclaration's own stopping rule if it is not a measurement. Neither the bracket nor c changes after the night; a different rule is a new predeclaration on a new night."
+ },
+ "tool": "node packages/propose/bin/recompile/phone-seed-readout.ts --predeclaration <this file> --readout <the night's readout record> --night-inputs <its inputs>",
+ "fixture": "On the exploratory night it reproduces the lead: S1 57136 from wind-1, D1 284, hit at x = 63 with c = 5 (that night is not part of this test).",
+ "resultRecord": "docs/evidence/s2-seed-readout-night7-0of20-20261001.json",
+ "rung": "None. SUPPORTED makes the static readout a seed measurement (S2a) and the wall clock a seed predictor to be measured further; it is not an outcome claim."
+}
