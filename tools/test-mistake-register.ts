@@ -119,10 +119,6 @@ const EXEMPT = new Map([
   ['packages/propose/bin/plans/test-minus-toys-margin.ts', 'extended tier (minutes): only `npm run test:simulation` runs it, and no CI step does -- open item-13 debt'],
   ['packages/propose/bin/plans/test-minus-toys-jitter.ts', 'extended tier (minutes): only `npm run test:simulation` runs it, and no CI step does -- open item-13 debt'],
   ['packages/propose/bin/plans/test-night-matrix.ts', 'extended tier (minutes): only `npm run test:simulation` runs it, and no CI step does -- open item-13 debt'],
-  // Named like a test, but a runner: it picks gates from the working tree's
-  // diff, so its answer depends on what is dirty, and every gate it can pick
-  // is judged by this file on its own.
-  ['tools/affected-test.ts', 'edit-time runner (`npm run test:affected`) that selects gates from the working-tree diff; not itself a gate'],
 ]);
 
 // --- The gates each register item relies on --------------------------------
