@@ -2992,6 +2992,7 @@
       "file": "packages/propose/bindings/test-anchor-aim-band.ts",
       "imports": [
         "./fact-register.ts",
+        "@sixam/kernel",
         "node:fs",
         "node:path",
         "node:url"

@@ -33,7 +33,7 @@ const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '../../.
 
 const ACTUATING = 'packages/play/src/campaign';
 let failed = 0;
-const fail = message => { failed += 1; process.stdout.write(`  FAIL ${message}\n`); };
+const fail = (message: string) => { failed += 1; process.stdout.write(`  FAIL ${message}\n`); };
 
 const register = build();
 // A register that finds no producer checks nothing: every fact has one in the directories it searches.
@@ -41,10 +41,10 @@ for (const fact of Object.keys(FACTS))
   if (!register.facts[fact].producers.length) fail(`${fact}: no producer found under ${register.generatedFrom.join(', ')}`);
 for (const [fact, info] of Object.entries(register.facts)) {
   const rank = FACTS[fact].evidenceRanking;
-  const best = (info as any).strongestAvailable;
-  if ((info as any).authorityFixedByCharter) {
+  const best = info.strongestAvailable;
+  if (info.authorityFixedByCharter) {
     process.stdout.write(`${fact}: not ranked ` +
-      `(${(info as any).producers.length} producers)\n`);
+      `(${info.producers.length} producers)\n`);
     continue;
   }
   if (!best) { process.stdout.write(`${fact}: no producer found\n`); continue; }
@@ -55,14 +55,14 @@ for (const [fact, info] of Object.entries(register.facts)) {
   // that is the abort case a night would otherwise end on. What is refused is
   // an actuating module that decides the fact WITHOUT the strongest evidence
   // the tree offers.
-  const offenders = (info as any).producers.filter(p => p.file.startsWith(ACTUATING) &&
+  const offenders = info.producers.filter(p => p.file.startsWith(ACTUATING) &&
     !p.evidence.includes(best));
   process.stdout.write(`${fact}: best available ${best}; ` +
-    `${(info as any).producers.length} producers, ${offenders.length} actuating without it\n`);
+    `${info.producers.length} producers, ${offenders.length} actuating without it\n`);
   for (const p of offenders) {
     const weakest = [...p.evidence].sort((a, b) => rank.indexOf(b) - rank.indexOf(a))[0];
     fail(`${p.file} decides ${fact} on ${weakest} without ${best}, which is available in ` +
-      `${(info as any).producers.filter(q => q.evidence.includes(best)).map(q => q.file).join(', ')}. ` +
+      `${info.producers.filter(q => q.evidence.includes(best)).map(q => q.file).join(', ')}. ` +
       `This is the lane that presses buttons; a weak read here does not report a ` +
       `mistake, it makes one.`);
   }
@@ -105,7 +105,7 @@ for (const [hash, entry] of Object.entries(ANCHOR_AIMS)) {
 // the model).
 // "Newest" is by the commit that last touched the file, not by name: two
 // qualifications bound on the same day sort by name in the wrong order.
-const committedAt = name => {
+const committedAt = (name: string) => {
   try {
     return Number(execSync(`git log -1 --format=%ct -- ${JSON.stringify(join('docs/evidence', name))}`,
       { cwd: ROOT, stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim()) || 0;
@@ -120,7 +120,9 @@ const times = new Map(qualifications.map(name => [name, committedAt(name)]));
 // newest where history can order the files; say so otherwise.
 const orderable = new Set(times.values()).size > 1 || qualifications.length === 1;
 if (qualifications.length && orderable) {
-  const newest = [...qualifications].sort((a, b) => times.get(a) - times.get(b) || a.localeCompare(b)).at(-1);
+  // Every qualification has a time, and there is at least one here.
+  const newest = [...qualifications].sort((a, b) => Number(times.get(a)) - Number(times.get(b)) || a.localeCompare(b))
+    .at(-1) as string;
   const bound = JSON.parse(readFileSync(join(ROOT, 'docs/evidence', newest), 'utf8'));
   const hash = bound.policyHash ?? bound.winnerHash ?? bound.binding?.winnerHash;
   if (!hash) fail(`${newest} names no policy/winner hash`);
@@ -148,22 +150,22 @@ if (!ANCHOR_AIMS['fnv1a-81b5e51c'] || anchorAimFor('fnv1a-00000000').ok)
 // `alsoBinds` makes the inheritance executable, and this re-emits the winner
 // to prove the claim that justifies it rather than trusting the note.
 for (const [hash, entry] of Object.entries(ANCHOR_AIMS)) {
-  for (const [migrated, file] of Object.entries((entry as any).alsoBinds ?? {})) {
-    if (typeof (entry as any).replayHash !== 'string') {
+  for (const [migrated, file] of Object.entries(entry.alsoBinds ?? {})) {
+    if (typeof entry.replayHash !== 'string') {
       fail(`binding ${hash} declares alsoBinds but no replayHash: without the plan hash nothing can ` +
         'check that the migrated winner still emits the schedule the aim was measured on');
       continue;
     }
-    let stored;
+    let stored: { readonly gate?: { readonly replayHash?: string } };
     try { stored = JSON.parse(readFileSync(join(ROOT, file), 'utf8')); }
-    catch (error) { fail(`alsoBinds ${migrated} -> ${hash}: ${file} unreadable (${error.message})`); continue; }
+    catch (error) { fail(`alsoBinds ${migrated} -> ${hash}: ${file} unreadable (${(error as Error).message})`); continue; }
     const raw = stableHash(stored);
     if (raw !== migrated) {
       fail(`alsoBinds names ${file} for ${migrated}, but that file hashes to ${raw}: re-key the alias`);
       continue;
     }
-    if (stored.gate?.replayHash !== (entry as any).replayHash) {
-      fail(`${file} carries gate.replayHash ${stored.gate?.replayHash}, the register ${(entry as any).replayHash}`);
+    if (stored.gate?.replayHash !== entry.replayHash) {
+      fail(`${file} carries gate.replayHash ${stored.gate?.replayHash}, the register ${entry.replayHash}`);
       continue;
     }
     // The winner's own gate can only restate what it was emitted with, so
@@ -172,16 +174,16 @@ for (const [hash, entry] of Object.entries(ANCHOR_AIMS)) {
     const out = mkdtempSync(join(tmpdir(), 'fnaf2-alsobinds-'));
     try {
       const built = compileBundle(stored, out);
-      if (built.replay.hash !== (entry as any).replayHash)
+      if (built.replay.hash !== entry.replayHash)
         fail(`alsoBinds ${migrated} -> ${hash}: ${file} now emits plan ${built.replay.hash}, not the ` +
-          `${(entry as any).replayHash} the aim was measured on. The aim belongs to the schedule: re-measure it ` +
+          `${entry.replayHash} the aim was measured on. The aim belongs to the schedule: re-measure it ` +
           'or drop the alias -- never let a changed plan inherit a number priced for the old one.');
       else if (stableHash(built.winner ?? stored) !== migrated)
         fail(`alsoBinds ${migrated} -> ${hash}: ${file} normalises to ${stableHash(built.winner ?? stored)}; ` +
           'the alias key must be the hash a bundle manifest carries');
-      else process.stdout.write(`anchor aim ${hash}: also binds ${migrated} (${file}), same plan ${(entry as any).replayHash}\n`);
+      else process.stdout.write(`anchor aim ${hash}: also binds ${migrated} (${file}), same plan ${entry.replayHash}\n`);
     } catch (error) {
-      fail(`alsoBinds ${migrated} -> ${hash}: ${file} no longer emits (${error.message})`);
+      fail(`alsoBinds ${migrated} -> ${hash}: ${file} no longer emits (${(error as Error).message})`);
     } finally { rmSync(out, { recursive: true, force: true }); }
   }
 }

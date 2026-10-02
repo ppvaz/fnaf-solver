@@ -26,39 +26,51 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { isList } from '@sixam/kernel';
 import { ANCHOR_AIMS } from './fact-register.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../..');
 let failed = 0;
-const fail = message => { failed += 1; process.stdout.write(`  FAIL ${message}\n`); };
+const fail = (message: string) => { failed += 1; process.stdout.write(`  FAIL ${message}\n`); };
+const finite = (value: unknown): value is number => Number.isFinite(value);
 
-const bandsOf = record => (Array.isArray(record.winningBands) ? record.winningBands : [])
-  .filter(b => Number.isFinite(b?.fromMs) && Number.isFinite(b?.toMs));
+/** A winning band as an evidence record writes it. */
+interface Band { readonly fromMs: number; readonly toMs: number }
+/** The fields of an aim's evidence record this check reads; a record may lack any of them. */
+interface AimRecord {
+  readonly winningBands?: readonly (Partial<Band> | null)[];
+  readonly latencyMs?: { readonly min: number; readonly max: number };
+  readonly onsetBiasMs?: number;
+  readonly periodMs?: number;
+}
+
+const bandsOf = (record: AimRecord) => (isList(record.winningBands) ? record.winningBands : [])
+  .filter((b): b is Band => finite(b?.fromMs) && finite(b?.toMs));
 
 let checked = 0;
 let unverifiable = 0;
 for (const [hash, entry] of Object.entries(ANCHOR_AIMS)) {
   // A refuted aim is kept for the record and must not be run; its band claim is
   // already known not to survive the phone, so re-checking it proves nothing.
-  if ((entry as any).refuted) continue;
+  if (entry.refuted) continue;
   if (typeof entry.evidence !== 'string') { unverifiable += 1; continue; }
-  let record;
+  let record: AimRecord;
   try { record = JSON.parse(readFileSync(join(ROOT, entry.evidence), 'utf8')); }
   catch { fail(`${hash}: evidence ${entry.evidence} could not be read`); continue; }
 
   const bands = bandsOf(record);
   const latency = record.latencyMs ?? entry.latencyMs;
   const onsetBias = record.onsetBiasMs;
-  if (!bands.length || !Number.isFinite(latency?.min) || !Number.isFinite(latency?.max) ||
-      !Number.isFinite(onsetBias)) {
+  if (!bands.length || !finite(latency?.min) || !finite(latency?.max) || !finite(onsetBias)) {
     process.stdout.write(`  unverifiable ${hash} (${entry.evidence}): needs winningBands, ` +
       'latencyMs{min,max} and onsetBiasMs to re-derive the effective epoch\n');
     unverifiable += 1;
     continue;
   }
 
-  const period = entry.periodMs ?? record.periodMs;
-  const wrap = value => ((value % period) + period) % period;
+  // Number(): an aim and a record without a period wrap to NaN, as the modulo by undefined did.
+  const period = Number(entry.periodMs ?? record.periodMs);
+  const wrap = (value: number) => ((value % period) + period) % period;
   const low = wrap(entry.aimMs + onsetBias + latency.min);
   const high = wrap(entry.aimMs + onsetBias + latency.max);
   checked += 1;
@@ -72,7 +84,7 @@ for (const [hash, entry] of Object.entries(ANCHOR_AIMS)) {
       `(${onsetBias}) + latency [${latency.min}, ${latency.max}].`);
     continue;
   }
-  const band = bands.find(b => low >= b.fromMs && high <= b.toMs);
+  const band = bands.find(b => low >= b.fromMs && high <= b.toMs) as Band; // `inside` found one
   process.stdout.write(`  ${hash} night ${entry.night}: aim ${entry.aimMs} -> effective ` +
     `[${low.toFixed(2)}, ${high.toFixed(2)}] inside [${band.fromMs}, ${band.toMs}] ` +
     `(${(low - band.fromMs).toFixed(1)} ms low margin, ${(band.toMs - high).toFixed(1)} ms high)\n`);

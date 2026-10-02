@@ -201,7 +201,6 @@
       "debt:apps/desktop/test": 29,
       "debt:apps/trainer/test": 24,
       "debt:packages/play/test": 62,
-      "debt:packages/propose/bindings": 14,
       "debt:packages/propose/parked": 29,
       "debt:packages/propose/test": 30,
       "debt:packages/review/bin": 7,

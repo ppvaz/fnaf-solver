@@ -15,5 +15,5 @@
   },
   "include": ["packages/**/*.ts", "apps/**/*.ts"],
   "files": ["packages/kernel/src/types.ts", "packages/kernel/src/contracts/types.ts"],
-  "exclude": ["node_modules", "dist", "artifacts", "packages/play/test/**/*.ts", "packages/propose/test/**/*.ts", "packages/review/test/**/*.ts", "packages/source/test/**/*.ts", "packages/review/bin/**/*.ts", "apps/desktop/test/**/*.ts", "apps/lab/test/**/*.ts", "apps/trainer/test/**/*.ts", "apps/desktop/bin/**/*.ts", "packages/source/decompile/**/*.ts", "packages/propose/parked/**/*.ts", "packages/propose/bindings/**/*.ts"]
+  "exclude": ["node_modules", "dist", "artifacts", "packages/play/test/**/*.ts", "packages/propose/test/**/*.ts", "packages/review/test/**/*.ts", "packages/source/test/**/*.ts", "packages/review/bin/**/*.ts", "apps/desktop/test/**/*.ts", "apps/trainer/test/**/*.ts", "apps/desktop/bin/**/*.ts", "packages/propose/parked/**/*.ts"]
 }
