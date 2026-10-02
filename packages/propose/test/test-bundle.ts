@@ -252,14 +252,16 @@ try {
   // 2026-09-11 Night 5 bundle shipped `#phase-offset 333` while its replay ran
   // epoch 0: the plan text changed, the replay hash did not, and the winner's
   // `MODEL_ONLY 3000/3000` evidence was re-certified for a stream no census had
-  // seen. These two checks are what makes that impossible.
-  const phased = { ...winner, nights: [7], phaseOffsetMs: 333 };
+  // seen. These two checks are what makes that impossible. The fixture rotates
+  // by 250 ms, not that bundle's 333: a PASS gate must win its replay, and
+  // KNOBS0's Night 7 loses both seeds to the Puppet at 333 (and wins at 250).
+  const phased = { ...winner, nights: [7], phaseOffsetMs: 250 };
   const unphased = { ...winner, nights: [7] };
   const phasedPath = join(root, 'phased');
   const unphasedPath = join(root, 'unphased');
   const phasedBundle = compileBundle(phased, phasedPath);
   const unphasedBundle = compileBundle(unphased, unphasedPath);
-  check(readFileSync(join(phasedPath, 'night-7.plan'), 'utf8').includes('#phase-offset 333'),
+  check(readFileSync(join(phasedPath, 'night-7.plan'), 'utf8').includes('#phase-offset 250'),
     'phase offset did not reach the emitted plan');
   check(phasedBundle.replay.hash !== unphasedBundle.replay.hash,
     'replay hash ignored the phase offset: the gate cannot see the rotation it ships');
@@ -267,12 +269,13 @@ try {
   // An anchored winner replays at the epoch the anchor delivers, and the
   // manifest carries that epoch so the run script can refuse to run it
   // unanchored. 10 s covers the longest game timer the routes are banded on.
-  const anchored = { ...winner, nights: [7], anchorEpochMs: 3850 };
+  // KNOBS0's Night 7 wins both seeds at 300 ms (at 3850 Golden Freddy takes them).
+  const anchored = { ...winner, nights: [7], anchorEpochMs: 300 };
   const anchoredPath = join(root, 'anchored');
   const anchoredBundle = compileBundle(anchored, anchoredPath);
   check(anchoredBundle.replay.hash !== unphasedBundle.replay.hash,
     'replay hash ignored the anchor epoch: the gate cannot see the phase the anchor delivers');
-  check(JSON.parse(readFileSync(join(anchoredPath, 'manifest.json'), 'utf8')).anchorEpochMs === 3850,
+  check(JSON.parse(readFileSync(join(anchoredPath, 'manifest.json'), 'utf8')).anchorEpochMs === 300,
     'anchor epoch did not reach the manifest');
   let anchorRefusal = '';
   try { compileBundle({ ...winner, nights: [7], anchorEpochMs: 10001 }, join(root, 'anchored-late')); }
@@ -330,6 +333,13 @@ try {
   writeFileSync(manifestPath, JSON.stringify({ ...JSON.parse(readFileSync(manifestPath, 'utf8')), model: 'fixture-other' }));
   const otherModel = refusal(() => validateBundle(changedPath, { gates: changed }));
   check(otherModel.includes('gated under model fixture-other'), `a bundle gated under another model validated (${otherModel})`);
+
+  // PASS is a verdict the replay must bear out, not a label. Until 2026-10-02 nothing read the replay's
+  // `won`, so a plan whose model replay lost compiled READY (the code-quality audit's finding). With the
+  // wind held 300 ms the box runs out and the Puppet takes both seeds.
+  const losing = refusal(() => compileBundle({ ...winner, nights: [7], knobs: { windMs: 300 } }, join(root, 'pass-but-loses')));
+  check(losing.includes('a PASS gate needs every replay to win: night 7 seed 1 puppet'),
+    `a PASS gate compiled over a replay that loses (${losing || 'READY'})`);
 
   console.log('device bundle: winner-v1 -> manifest/plans/profile, hash+syntax+control+replay validation, and the executor boundary pass');
 } finally {

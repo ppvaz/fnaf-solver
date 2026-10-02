@@ -739,6 +739,17 @@ function replayWinner(winner: Winner, emittedByNight: ReadonlyMap<number, Emitte
     hash: stableHash({ strategy: winner.strategy, results }) };
 }
 
+// A PASS gate claims the plan wins; the replay is the evidence. Until 2026-10-02 nothing read `won`, and the
+// replay hash only proves the replay is the same one, so a plan whose model replay lost compiled READY.
+// A DEATH_TARGETED gate carries its own prediction and is read against it, not here.
+function checkVerdict(gate: Gate, replay: ReturnType<typeof replayWinner>) {
+  if (gate.status !== 'PASS') return;
+  const lost = replay.results.filter(result => !result.won);
+  if (lost.length > 0)
+    fail(`a PASS gate needs every replay to win: ${lost.map(result =>
+      `night ${result.night} seed ${result.seed} ${result.death ?? 'alive at the end'}`).join(', ')}`);
+}
+
 // `replayHash` is the replay the winner's identity carries: its own gate's, else the one the register first
 // measured it under, else (a candidate never gated) the replay just run. Never the current model's, so a
 // model change does not re-hash a winner.
@@ -900,6 +911,7 @@ export function compileBundle(input: unknown, outDirectory: string,
   if (expected !== undefined && expected !== replay.hash)
     fail(registered.current ? `the winner's replay does not match its gate under model ${C.FNAF2_MODEL}`
       : 'winner.gate.replayHash does not match the candidate replay');
+  checkVerdict(winner.gate, replay);
   checkGatePlans(winner.gate, emitted);
   const finalWinner = normalizedWinner(winner, winner.gate.replayHash ?? registered.origin?.replayHash ?? replay.hash);
   const source = strategySourceDigest(winner.strategy);
@@ -1015,6 +1027,7 @@ export function validateBundle(directory: string,
       actualReplay.hash !== manifest.replay.hash ||
       actualReplay.hash !== expectedReplayHash(registeredGates(gates, 'compiledWinnerHash', manifest.winnerHash), winner))
     fail('candidate replay does not equal the winner replay hash');
+  checkVerdict(winner.gate, actualReplay);
   checkGatePlans(winner.gate, expected);
   const selectedPlans = entries.filter(entry => selected.includes(entry.night));
   let compiled;
