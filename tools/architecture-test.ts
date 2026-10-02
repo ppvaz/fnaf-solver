@@ -22,14 +22,14 @@ import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
 
 const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '..'));
-const rootPackage = JSON.parse(await readFile(join(ROOT, 'package.json')));
+const rootPackage = JSON.parse(String(await readFile(join(ROOT, 'package.json'))));
 assert.deepEqual(rootPackage.workspaces, ['packages/*', 'apps/*']);
 assert.equal(rootPackage.private, true);
 assert.ok(rootPackage.scripts['device:campaign']);
 
-async function files(directory) {
+async function files(directory: string): Promise<string[]> {
   const entries = await readdir(directory, { withFileTypes: true });
-  const output = [];
+  const output: string[] = [];
   for (const entry of entries) {
     const path = join(directory, entry.name);
     if (entry.isDirectory()) output.push(...await files(path));
@@ -51,9 +51,9 @@ function parse(path: string, source: string) {
  * parser cannot know it (a computed dynamic import or require).
  */
 function moduleReferences(file: ts.SourceFile): {specifier: string | null, form: string}[] {
-  const found = [];
-  const literal = node => node && ts.isStringLiteralLike(node) ? node.text : null;
-  const visit = node => {
+  const found: {specifier: string | null, form: string}[] = [];
+  const literal = (node: ts.Node | undefined) => node && ts.isStringLiteralLike(node) ? node.text : null;
+  const visit = (node: ts.Node): void => {
     if (ts.isImportDeclaration(node)) found.push({ specifier: literal(node.moduleSpecifier), form: 'import' });
     else if (ts.isExportDeclaration(node) && node.moduleSpecifier)
       found.push({ specifier: literal(node.moduleSpecifier), form: 're-export' });
@@ -74,10 +74,12 @@ function moduleReferences(file: ts.SourceFile): {specifier: string | null, form:
 }
 
 /** Is this identifier read as a value, rather than naming a property, a member or a declaration? */
-function isReference(node) {
-  const parent: any = node.parent;
+function isReference(node: ts.Identifier) {
+  const parent = node.parent;
   if (!parent) return true;
-  if ((ts.isPropertyAccessExpression(parent) || ts.isQualifiedName(parent)) && (parent as any).name === node) return false;
+  // A QualifiedName has no `name` (its right-hand identifier is `right`), so this never excuses one;
+  // it reads as it always has until that is decided.
+  if ((ts.isPropertyAccessExpression(parent) || ts.isQualifiedName(parent)) && (parent as { name?: ts.Node }).name === node) return false;
   if ((ts.isPropertyAssignment(parent) || ts.isMethodDeclaration(parent) || ts.isPropertyDeclaration(parent) ||
        ts.isGetAccessorDeclaration(parent) || ts.isSetAccessorDeclaration(parent) || ts.isEnumMember(parent) ||
        ts.isPropertySignature(parent) || ts.isMethodSignature(parent)) && parent.name === node) return false;
@@ -89,9 +91,9 @@ function isReference(node) {
 }
 
 /** Names the file binds anywhere: a declared `window` shadows the global in this heuristic, as before. */
-function declaredNames(file) {
-  const names = new Set();
-  const visit = node => {
+function declaredNames(file: ts.SourceFile) {
+  const names = new Set<string>();
+  const visit = (node: ts.Node): void => {
     if ((ts.isVariableDeclaration(node) || ts.isParameter(node) || ts.isBindingElement(node) ||
          ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node) || ts.isFunctionExpression(node) ||
          ts.isClassExpression(node)) && node.name && ts.isIdentifier(node.name)) names.add(node.name.text);
@@ -104,8 +106,8 @@ function declaredNames(file) {
 }
 
 function identifiers(file: ts.SourceFile, test: (node: ts.Identifier) => boolean) {
-  const found = [];
-  const visit = node => {
+  const found: ts.Identifier[] = [];
+  const visit = (node: ts.Node): void => {
     if (ts.isIdentifier(node) && test(node)) found.push(node);
     ts.forEachChild(node, visit);
   };
@@ -129,10 +131,10 @@ function hostGlobals(file: ts.SourceFile) {
  * generator. `new Date(x)` is a pure conversion and passes.
  */
 function ambientEntropy(file: ts.SourceFile) {
-  const found = [];
-  const named = (node, object, property) => ts.isPropertyAccessExpression(node) &&
+  const found: string[] = [];
+  const named = (node: ts.Node, object: string, property: string) => ts.isPropertyAccessExpression(node) &&
     ts.isIdentifier(node.expression) && node.expression.text === object && node.name.text === property;
-  const visit = node => {
+  const visit = (node: ts.Node): void => {
     if (ts.isCallExpression(node) && named(node.expression, 'Math', 'random')) found.push('Math.random()');
     else if (ts.isCallExpression(node) && named(node.expression, 'Date', 'now')) found.push('Date.now()');
     else if (ts.isNewExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 'Date' &&
@@ -156,9 +158,9 @@ const AMBIENT_ENTROPY_TOLERATED = new Map([
 /** Writes into the process-global search knobs. */
 function searchKnobWrites(file: ts.SourceFile) {
   let writes = 0;
-  const onKnobs = node => (ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node)) &&
+  const onKnobs = (node: ts.Node) => (ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node)) &&
     ts.isIdentifier(node.expression) && node.expression.text === 'SEARCH_KNOBS';
-  const visit = node => {
+  const visit = (node: ts.Node): void => {
     if (ts.isBinaryExpression(node) && node.operatorToken.kind >= ts.SyntaxKind.FirstAssignment &&
         node.operatorToken.kind <= ts.SyntaxKind.LastAssignment && onKnobs(node.left)) writes += 1;
     if ((ts.isPrefixUnaryExpression(node) || ts.isPostfixUnaryExpression(node)) &&
@@ -172,7 +174,7 @@ function searchKnobWrites(file: ts.SourceFile) {
 
 // --- Where a reference lands -------------------------------------------------
 
-const WORKSPACES = new Map();
+const WORKSPACES = new Map<string, string>();
 for (const group of ['packages', 'apps']) {
   for (const entry of await readdir(join(ROOT, group), { withFileTypes: true })) {
     if (!entry.isDirectory()) continue;
@@ -183,7 +185,7 @@ for (const group of ['packages', 'apps']) {
   }
 }
 const BUILTINS = new Set(builtinModules);
-const unitOf = path => {
+const unitOf = (path: string) => {
   const [top, next] = path.split('/');
   return (top === 'packages' || top === 'apps') && next ? `${top}/${next}` : top;
 };
@@ -204,7 +206,7 @@ function landing(from: string, specifier: string | null) {
   }
   const name = specifier.split('/').slice(0, specifier.startsWith('@') ? 2 : 1).join('/');
   if (WORKSPACES.has(name)) {
-    const dir = WORKSPACES.get(name);
+    const dir = WORKSPACES.get(name) as string; // has() just above
     return { unit: dir, target: `${dir}${specifier.slice(name.length)}` };
   }
   return { unit: name.startsWith('@sixam/') ? name : 'external', target: specifier };
@@ -239,7 +241,12 @@ const COMPUTED_IMPORTS = new Map([
   ['packages/propose/bin/recompile/pilot/replay.ts', 'the game\'s pilot module (./fnaf3.ts or ./fnaf4.ts) that --game names'],
   ['packages/propose/bin/recompile/pilot/search.ts', 'the game\'s pilot module (./fnaf3.ts or ./fnaf4.ts) that --game names'],
 ]);
-const RULES = [
+/** A module reference: its specifier and form, and where it lands. */
+type Reference = ReturnType<typeof moduleReferences>[number] & ReturnType<typeof landing>;
+/** A guarded area: the files it scopes, the references it refuses, and why. */
+interface Rule { readonly id: string, readonly scope: (path: string) => boolean, readonly refuse: (ref: Reference, path: string) => boolean, readonly why: string }
+
+const RULES: readonly Rule[] = [
   {
     id: 'kernel', scope: path => path.startsWith('packages/kernel/src/'),
     refuse: ref => ref.unit !== 'packages/kernel',
@@ -311,20 +318,20 @@ const RULES = [
  * @param path repository-relative
  */
 function violations(path: string, file: ts.SourceFile) {
-  const found = [];
+  const found: { rule: string, why: string, reference: Reference }[] = [];
   const references = moduleReferences(file).map(reference => ({ ...reference, ...landing(path, reference.specifier) }));
   for (const rule of RULES.filter(item => item.scope(path)))
     for (const reference of references.filter(item => rule.refuse(item, path)))
       found.push({ rule: rule.id, why: rule.why, reference });
   return found;
 }
-const describe = (path, found) => found.map(({ rule, why, reference }) =>
+const describe = (path: string, found: ReturnType<typeof violations>) => found.map(({ rule, why, reference }) =>
   `${path} crosses the ${rule} boundary with ${reference.form} ${JSON.stringify(reference.specifier)} ` +
   `(lands in ${reference.unit}): ${why}`).join('\n');
 
 // --- Planted violations: each must be caught, or the guard measures nothing ---
 
-const planted = (path, source) => violations(path, parse(path, source)).map(item => item.rule);
+const planted = (path: string, source: string) => violations(path, parse(path, source)).map(item => item.rule);
 const REVIEW = 'packages/review/src/planted.mjs';
 // A dynamic import() is an import, however its specifier is written.
 assert.deepEqual(planted(REVIEW, "export const load = () => import('../../../apps/device/src/campaign.js');"), ['review'],
@@ -430,7 +437,7 @@ assert.deepEqual(planted(REVIEW, "export const load = () => import('../../../app
   'review must not import an application');
 assert.deepEqual(planted(REVIEW, "import { NightPolicy } from '@sixam/propose';"), ['propose-importers', 'review'],
   'review must not import propose');
-const globalsOf = source => hostGlobals(parse('packages/source/src/planted.js', source));
+const globalsOf = (source: string) => hostGlobals(parse('packages/source/src/planted.js', source));
 assert.deepEqual(globalsOf('const host = window;'), ['window'],
   'architecture guard must recognize host-global access in module bodies');
 assert.deepEqual(globalsOf('const window = 1; export const again = window;'), [],
@@ -439,7 +446,7 @@ assert.deepEqual(globalsOf('const host = `${window}`;'), ['window'],
   'architecture guard must inspect template interpolations');
 assert.deepEqual(globalsOf('export const read = state => state.window + state.process;'), [],
   'architecture guard must not mistake a property for a host global');
-const entropyOf = source => ambientEntropy(parse('packages/source/src/planted.js', source));
+const entropyOf = (source: string) => ambientEntropy(parse('packages/source/src/planted.js', source));
 assert.deepEqual(entropyOf('export const roll = () => Math.random() < 0.5;'), ['Math.random()'],
   'architecture guard must catch Math.random() in a core module');
 assert.deepEqual(entropyOf('export const stamp = () => [Date.now(), new Date()];'), ['Date.now()', 'new Date()'],
@@ -451,12 +458,12 @@ assert.equal(searchKnobWrites(parse('tools/planted.mjs', '// SEARCH_KNOBS.maskMs
 
 // --- The tree ------------------------------------------------------------------
 
-const parsed = new Map();
-const tree = async path => {
+const parsed = new Map<string, ts.SourceFile>();
+const tree = async (path: string) => {
   if (!parsed.has(path)) parsed.set(path, parse(relative(ROOT, path).split(sep).join('/'), await readFile(path, 'utf8')));
-  return parsed.get(path);
+  return parsed.get(path) as ts.SourceFile; // set just above when missing
 };
-const repoPath = path => relative(ROOT, path).split(sep).join('/');
+const repoPath = (path: string) => relative(ROOT, path).split(sep).join('/');
 
 // Source, the kernel and propose's policy language and game policies came out
 // of the retired packages/core and keep its host-global rule, and so do the
@@ -486,7 +493,7 @@ for (const entry of legacyCatalog.entries) {
   try {
     await readFile(join(ROOT, target));
   } catch (error) {
-    assert.fail(`${entry.id} points at missing path ${entry.path}: ${error.message}`);
+    assert.fail(`${entry.id} points at missing path ${entry.path}: ${(error as Error).message}`);
   }
 }
 // The checked-in inventories describe the REPOSITORY, and a directory walk
@@ -499,7 +506,9 @@ for (const entry of legacyCatalog.entries) {
 const enumerated = new Set(execFileSync('git',
   ['ls-files', '--cached', '--others', '--exclude-standard'],
   { cwd: ROOT, encoding: 'utf8' }).split('\n').filter(Boolean));
-const catalogPaths = {
+/** The fields of the three generated catalogs that name repository paths. */
+interface Catalogs { readonly files: { file: string }[], readonly tests: { id: string }[], readonly links: { path: string }[] }
+const catalogPaths: Readonly<Record<string, (catalog: Catalogs) => string[]>> = {
   'import-graph.json': catalog => catalog.files.map(entry => entry.file),
   'test-manifest.json': catalog => catalog.tests.map(entry => entry.id),
   'reverse-links.json': catalog => catalog.links.map(link => link.path),
@@ -517,7 +526,7 @@ try {
   const rootSrc = await readdir(join(ROOT, 'src'));
   assert.equal(rootSrc.length, 0, 'root src must remain empty after P9 shim removal');
 } catch (error) {
-  assert.equal(error.code, 'ENOENT');
+  assert.equal((error as NodeJS.ErrnoException).code, 'ENOENT');
 }
 const production = await files(join(ROOT, 'packages'));
 for (const path of production) {
@@ -546,8 +555,8 @@ for (const path of AMBIENT_ENTROPY_TOLERATED.keys())
   assert.ok(hostFree.some(file => repoPath(file) === path), `AMBIENT_ENTROPY_TOLERATED names ${path}, which is not a host-free module`);
 // A test is a test-named file, or a `*.test.*` file in a package's or an
 // application's test folder (apps/desktop/test loads package fixtures).
-const testNamed = path => /(?:^|\/)test[^/]*\.(?:js|mjs|ts)$/.test(path) || /\/test\/[^/]+\.test\.m?[jt]s$/.test(path);
-const reportNamed = path => /(?:^|\/)report[^/]*\.(?:js|mjs|ts)$/.test(path);
+const testNamed = (path: string) => /(?:^|\/)test[^/]*\.(?:js|mjs|ts)$/.test(path) || /\/test\/[^/]+\.test\.m?[jt]s$/.test(path);
+const reportNamed = (path: string) => /(?:^|\/)report[^/]*\.(?:js|mjs|ts)$/.test(path);
 assert.ok(testNamed('packages/play/test/planted.test.ts') && testNamed('apps/desktop/test/planted.test.mts'),
   'a TypeScript test in a test folder is a test, not production');
 const operational = [

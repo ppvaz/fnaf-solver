@@ -182,6 +182,10 @@ longer rebuilds.
 - A module both lanes check (the lenient `tsconfig.js.json` reaches it through
   an importer) must also type-check without `strictNullChecks`, where
   `x === null` narrows nothing: return the literal (`return null`).
+- A declaration another module reads as text keeps its text: Review's
+  `roadmap.ts` matches `const REGISTER_GATES = [` in
+  `tools/test-mistake-register.ts`, so that table is typed through an alias,
+  and an annotation on its declaration broke `lab-queries.test.ts`.
 
 ## Sensors and on-device code (Pedro, 2026-09-24/25 — start here, not with the old sensors)
 

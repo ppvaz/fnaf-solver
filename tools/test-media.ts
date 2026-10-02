@@ -35,11 +35,16 @@ const ADMIT = `Look at it. If it is a diagram, icon, UI art or font preview, add
   `once staged) and keep it in the vault (packages/review/src/vault.ts), because the only game media allowed are the two ` +
   `README clips (ADR 0002 decision 6).`;
 
+/** A media manifest entry: the file, its class and what it shows. */
+interface MediaEntry { readonly path: string, readonly class: string, readonly shows?: unknown }
+/** The tracked files, the media manifest, and how big a file is. */
+interface MediaTree { readonly tracked: readonly string[], readonly manifest: { readonly files?: readonly MediaEntry[] }, readonly sizeOf: (path: string) => number }
+
 // Every violation, as a message saying what to do: [] when the tree is clean.
-function mediaProblems({ tracked, manifest, sizeOf }) {
-  const problems = [];
+function mediaProblems({ tracked, manifest, sizeOf }: MediaTree) {
+  const problems: string[] = [];
   const entries = manifest.files || [];
-  const listed = new Map();
+  const listed = new Map<string, MediaEntry>();
   for (const entry of entries) {
     if (listed.has(entry.path)) problems.push(`${entry.path} is listed twice in ${MANIFEST}: keep one entry.`);
     listed.set(entry.path, entry);
@@ -85,7 +90,7 @@ const good = {
   sizeOf: () => 1000,
 };
 assert.deepEqual(mediaProblems(good), [], 'the planted clean tree must pass');
-const planted = [
+const planted: [string, MediaTree, RegExp][] = [
   ['unlisted media', { ...good, tracked: [...good.tracked, 'docs/img/new.webp'] }, /new\.webp is tracked media with no entry/],
   ['stale entry', { ...good, tracked: good.tracked.filter((f) => f !== 'docs/img/a.png') }, /lists docs\/img\/a\.png, which is not in the tree/],
   ['third clip', { ...good, tracked: [...good.tracked, 'docs/img/c.gif'],
@@ -98,7 +103,7 @@ const planted = [
 ];
 for (const [what, input, expect] of planted) {
   const found = mediaProblems(input);
-  assert.ok(found.some((m) => (expect as any).test(m)), `planted ${what} was not caught: ${JSON.stringify(found)}`);
+  assert.ok(found.some((m) => expect.test(m)), `planted ${what} was not caught: ${JSON.stringify(found)}`);
 }
 assert.equal(mediaProblems(good).length, 0);
 assert.ok(MAX_CLIP_BYTES === 4_000_000 && MAX_CLIPS === 2, 'the limits are the decision, not a knob');
@@ -106,13 +111,13 @@ assert.ok(MAX_CLIP_BYTES === 4_000_000 && MAX_CLIPS === 2, 'the limits are the d
 // --- 2. the tree.
 const tracked = execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard'],
   { cwd: ROOT, encoding: 'utf8' }).split('\n').filter(Boolean).filter((f) => existsSync(join(ROOT, f)));
-const manifest = JSON.parse(readFileSync(join(ROOT, MANIFEST), 'utf8'));
+const manifest: { files: MediaEntry[] } = JSON.parse(readFileSync(join(ROOT, MANIFEST), 'utf8'));
 const problems = mediaProblems({ tracked, manifest, sizeOf: (p) => statSync(join(ROOT, p)).size });
 if (problems.length) {
   for (const problem of problems) console.error(`media: ${problem}`);
   process.exit(1);
 }
-const count = (c) => manifest.files.filter((e) => e.class === c).length;
+const count = (c: string) => manifest.files.filter((e) => e.class === c).length;
 console.log(`media: ${planted.length} planted violations caught; ${manifest.files.length} tracked media files ` +
   `listed (${CLASSES.map((c) => `${c} ${count(c)}`).join(', ')}), game clips within ` +
   `${MAX_CLIPS} x ${MAX_CLIP_BYTES} bytes`);

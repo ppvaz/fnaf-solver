@@ -79,6 +79,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, posix, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { report } from '../packages/review/bin/grade/run-report.ts';
+import type { RunEvent } from '../packages/review/bin/grade/run-report.ts';
 import { formatEdge, scanEdge } from '../packages/propose/bin/plans/basin-edge.ts';
 import { report as capabilityReport, traceDecision } from '../packages/play/bin/phone/capabilities.ts';
 import { checkCapabilitiesFirst } from '../packages/review/src/refusals.ts';
@@ -142,11 +143,13 @@ const REGISTER_GATES = [
   [15, 'apps/desktop/test/test-fnaf1-winner.ts'],
   [6, 'apps/lab/test/test-night-job.py'],   // after an abort or a killed runner the game is driven back to an observed title
 ];
+// packages/review/src/roadmap.ts reads the table above by its text, so its rows are typed here, not in its declaration.
+const GATE_ROWS = REGISTER_GATES as [number, string][];
 
 // Register entries no gate holds yet (ROADMAP S7 closes when this is empty).
 // A ratchet: an entry leaves it when a REGISTER_GATES row lands, and a new
 // register entry fails until it has a row or is listed here with its reason.
-const OPEN_ENTRIES = new Map([]);
+const OPEN_ENTRIES = new Map<number, string>([]);
 
 // --- item 2: every title model's item thresholds stand on measured rows ------
 // A model listed here is held to its calibration record below; one listed in
@@ -161,9 +164,14 @@ const TITLE_MODELS_UNMEASURED = new Map([
   ['packages/play/profiles/fnaf3/moto-g56/title-fnaf3-moto-g56-v204.json', 'cites no calibration; its item thresholds have no committed rows'],
   ['packages/play/profiles/fnaf4/moto-g56/title-fnaf4-moto-g56-v204.json', 'cites docs/evidence/companion-game-screen-20260927.json, which holds gate fractions but no item-band rows'],
 ]);
+/** A title model's items and the two thresholds that read an item present or absent. */
+interface TitleModel { readonly items: Readonly<Record<string, unknown>>, readonly present_min: number, readonly absent_max: number }
+/** A measured title frame: its name, the read the observer made, and its items' fractions. */
+interface TitleRow { readonly frame: string, readonly read: string, readonly fractions: Readonly<Record<string, number>> }
+
 /** The read title-observe.py makes of one row's fractions: its items, or the item it refuses as undecided. */
-function titleRead(model, fractions) {
-  const present = [];
+function titleRead(model: TitleModel, fractions: Readonly<Record<string, unknown>>): { undecided?: string, items?: string[] } {
+  const present: string[] = [];
   for (const name of Object.keys(model.items)) {
     const value = fractions[name];
     if (typeof value !== 'number') return { undecided: name };
@@ -174,19 +182,19 @@ function titleRead(model, fractions) {
 }
 
 let failed = 0;
-const fail = (message) => { failed += 1; console.error(`  FAIL ${message}`); };
+const fail = (message: string) => { failed += 1; console.error(`  FAIL ${message}`); };
 
 // --- Reading shell command lines -------------------------------------------
 
 /** Split shell text into simple commands (arrays of words). Quote-aware,
  *  keeps `$(...)` as one word, and treats && || ; | & and newlines as
  *  separators. It reads command lines; it is not a shell. */
-export function simpleCommands(text) {
-  const commands = [];
-  let words = [];
+export function simpleCommands(text: string) {
+  const commands: string[][] = [];
+  let words: string[] = [];
   let word = '';
   let inWord = false;
-  let quote = null;
+  let quote = null as string | null;
   let depth = 0;
   const endWord = () => { if (inWord) words.push(word); word = ''; inWord = false; };
   const endCommand = () => { endWord(); if (words.length) commands.push(words); words = []; };
@@ -220,7 +228,7 @@ export function simpleCommands(text) {
 const INTERPRETERS = new Set(['node', 'python3', 'python', 'bash', 'sh']);
 
 /** What one simple command runs: an npm script, a file, or nothing we track. */
-export function classify(words) {
+export function classify(words: string[]) {
   let i = 0;
   while (i < words.length && /^[A-Za-z_]\w*=/.test(words[i])) i += 1;
   const [command, ...rest] = words.slice(i);
@@ -229,7 +237,7 @@ export function classify(words) {
     const at = rest.findIndex(word => word === 'run' || word === 'run-script');
     if (at < 0) return null;
     const script = rest.slice(at + 1).find(word => !word.startsWith('-'));
-    return script ? { kind: 'npm', script } : null;
+    return script ? { kind: 'npm' as const, script } : null;
   }
   if (INTERPRETERS.has(command)) {
     const at = rest.findIndex(word => !word.startsWith('-'));
@@ -237,20 +245,20 @@ export function classify(words) {
     // Inline code or a module, not a file: `node -e`, `python3 -m pip`, `sh -c`.
     if (at < 0 || flags.some(flag => ['-e', '-p', '-c', '-m', '--eval', '--print'].includes(flag)))
       return null;
-    return { kind: 'file', path: rest[at], args: rest.slice(at + 1) };
+    return { kind: 'file' as const, path: rest[at], args: rest.slice(at + 1) };
   }
   if (command.includes('/') && /\.(?:sh|py|mjs|js|ts|mts)$/.test(command))
-    return { kind: 'file', path: command, args: rest };
+    return { kind: 'file' as const, path: command, args: rest };
   return null;
 }
 
 // --- The registries a command line can reach -------------------------------
 
-const readJson = path => JSON.parse(readFileSync(join(ROOT, path), 'utf8'));
-const SCRIPTS = readJson('package.json').scripts ?? {};
+const readJson = (path: string) => JSON.parse(readFileSync(join(ROOT, path), 'utf8'));
+const SCRIPTS: Readonly<Record<string, string>> = readJson('package.json').scripts ?? {};
 
 /** `- name:` / `run:` pairs of the CI job, single-line and `run: |` blocks. */
-export function ciSteps(text) {
+export function ciSteps(text: string) {
   const lines = text.split('\n');
   const steps = [];
   for (let i = 0; i < lines.length; i += 1) {
@@ -278,8 +286,13 @@ export function ciSteps(text) {
 // tools/test.ts answers what a flag set selects; this never re-derives its
 // --gates filter from the file's text (register item 11: read the tool's own
 // computed output before deriving the same quantity by hand).
-const suiteCache = new Map();
-function suite(args) {
+/** One registered check as `tools/test.ts --list` prints it. */
+interface SuiteEntry {
+  readonly name: string, readonly group: string, readonly path: string, readonly args: string[],
+  readonly selected: boolean, readonly backlog: string | null, readonly extended: boolean,
+}
+const suiteCache = new Map<string, SuiteEntry[]>();
+function suite(args: string[]) {
   const flags = args.filter(arg => arg !== '--list');
   const key = flags.join(' ');
   if (!suiteCache.has(key)) {
@@ -287,15 +300,21 @@ function suite(args) {
       { cwd: ROOT, encoding: 'utf8' });
     suiteCache.set(key, out.trim().split('\n').filter(Boolean).map(line => JSON.parse(line)));
   }
-  return suiteCache.get(key);
+  return suiteCache.get(key) as SuiteEntry[]; // set just above when missing
 }
 
-const normal = path => posix.normalize(path.replace(/^\.\//, ''));
+const normal = (path: string) => posix.normalize(path.replace(/^\.\//, ''));
 
 /** Walk one command text, calling sink.file(path, via, reached) for every file
  *  it names and sink.script(name, via) for every `npm run` it names. `reached`
  *  is false for a tools/test.ts entry these flags do not select. */
-export function walk(text, via, sink, scripts = SCRIPTS, open = new Set()) {
+/** What walk reports: each npm script a line names (and whether it is defined), and each file (and whether these flags reach it). */
+interface Sink {
+  script(name: string, via: string, known: boolean): void;
+  file(path: string, via: string, reached: boolean, entry?: SuiteEntry): void;
+}
+
+export function walk(text: string, via: string, sink: Sink, scripts: Readonly<Record<string, string>> = SCRIPTS, open = new Set<string>()) {
   for (const words of simpleCommands(text)) {
     const target = classify(words);
     if (!target) continue;
@@ -330,7 +349,7 @@ const TEST_FILE = [
   /^android\/[\w.-]+\/test\.sh$/,
 ];
 const JAVA_TEST = /^android\/([\w.-]+)\/test\/(?:[\w.-]+\/)*(\w+Test)\.java$/;
-export const isTestFile = path => TEST_FILE.some(re => re.test(path));
+export const isTestFile = (path: string) => TEST_FILE.some(re => re.test(path));
 
 /** Tracked files only: CI and push-gate measure a commit, and a concurrent
  *  session's untracked test is not yet a claim that anything runs it. */
@@ -339,9 +358,9 @@ function trackedFiles() {
     return execFileSync('git', ['ls-files', '-z'], { cwd: ROOT, encoding: 'utf8', maxBuffer: 1 << 28 })
       .split('\0').filter(Boolean).filter(path => existsSync(join(ROOT, path)));
   } catch {
-    const out = [];
+    const out: string[] = [];
     const skip = new Set(['.git', 'node_modules', 'artifacts', 'captures', 'dist']);
-    const visit = (dir) => {
+    const visit = (dir: string) => {
       for (const entry of readdirSync(join(ROOT, dir), { withFileTypes: true })) {
         if (skip.has(entry.name)) continue;
         const path = dir ? `${dir}/${entry.name}` : entry.name;
@@ -354,8 +373,8 @@ function trackedFiles() {
 }
 
 /** The fully qualified classes a test.sh hands to `java`, not just to `javac`. */
-export function javaExecuted(shellText) {
-  const run = new Set();
+export function javaExecuted(shellText: string) {
+  const run = new Set<string>();
   for (const line of shellText.replace(/\\\r?\n/g, ' ').split('\n')) {
     if (/^\s*#/.test(line)) continue;
     if (!/(?:^|[\s"])\$\{?JAVA\b\}?"?\s|(?:^|\s)java\s/.test(line)) continue;
@@ -365,9 +384,15 @@ export function javaExecuted(shellText) {
 }
 
 /** Item 13 over one inventory. Returns what reaches each test, or why not. */
-export function coverage({ files, reached, backlog, exempt, readText }) {
-  const verdicts = new Map();
-  const executedBy = new Map();
+/** Whether a test is run (by which route) or exempt (why), or why nothing runs it. */
+interface Verdict { readonly ok: boolean, readonly via?: string, readonly exempt?: string, readonly why?: string }
+
+export function coverage({ files, reached, backlog, exempt, readText }: {
+  files: readonly string[], reached: ReadonlyMap<string, string>, backlog: ReadonlyMap<string, string>,
+  exempt: ReadonlyMap<string, string>, readText: (path: string) => string,
+}) {
+  const verdicts = new Map<string, Verdict>();
+  const executedBy = new Map<string, Set<string>>();
   const tracked = new Set(files);
   for (const path of files) {
     const java = path.match(JAVA_TEST);
@@ -380,7 +405,7 @@ export function coverage({ files, reached, backlog, exempt, readText }) {
       if (!executedBy.has(runner)) executedBy.set(runner, javaExecuted(readText(runner)));
       const pkg = readText(path).match(/^\s*package\s+([\w.]+)\s*;/m)?.[1];
       const fqcn = pkg ? `${pkg}.${java[2]}` : java[2];
-      if (!executedBy.get(runner).has(fqcn)) {
+      if (!(executedBy.get(runner) as Set<string>).has(fqcn)) { // set just above when missing
         verdicts.set(path, exempt.has(path) ? { ok: true, exempt: exempt.get(path) }
           : { ok: false, why: `${runner} never executes ${fqcn} (compiling a test is not running it)` });
         continue;
@@ -396,7 +421,7 @@ export function coverage({ files, reached, backlog, exempt, readText }) {
     else if (backlog.has(path)) verdicts.set(path, { ok: true, exempt: `tools/test.ts BACKLOG: ${backlog.get(path)}` });
     else verdicts.set(path, { ok: false, why: 'no CI step reaches it' });
   }
-  const stale = [];
+  const stale: string[] = [];
   for (const [path, reason] of exempt) {
     const runs = verdicts.get(path)?.via;
     if (!tracked.has(path)) stale.push(`${path} is exempt but no such tracked file exists`);
@@ -410,10 +435,10 @@ export function coverage({ files, reached, backlog, exempt, readText }) {
 
 /** Every file a CI step runs, with the first route that reaches it, and the
  *  BACKLOG reason of each tools/test.ts entry it names but does not run. */
-function ciReach(ciText) {
-  const reached = new Map();
-  const backlog = new Map();
-  const sink = {
+function ciReach(ciText: string) {
+  const reached = new Map<string, string>();
+  const backlog = new Map<string, string>();
+  const sink: Sink = {
     script: () => {},
     file: (path, via, isReached, entry) => {
       if (isReached && !reached.has(path)) reached.set(path, via);
@@ -426,11 +451,13 @@ function ciReach(ciText) {
 }
 
 /** Item 5: every script path package.json / CI / tools/test.ts names exists. */
-export function missingPaths({ scripts, ciText, exists }) {
+export function missingPaths({ scripts, ciText, exists }: {
+  scripts: Readonly<Record<string, string>>, ciText: string | null, exists: (path: string) => boolean,
+}) {
   // One message per missing target, at the first line that names it: the
   // same path reached through `npm run test` and CI is one defect, not three.
-  const problems = new Map();
-  const sink = {
+  const problems = new Map<string, string>();
+  const sink: Sink = {
     script: (name, via, known) => {
       if (!known && !problems.has(`npm:${name}`))
         problems.set(`npm:${name}`, `${via} runs \`npm run ${name}\`, which package.json does not define`);
@@ -464,7 +491,7 @@ export function missingPaths({ scripts, ciText, exists }) {
   // item 13: an unregistered test, a compiled-but-never-run Java test, and a stale exemption.
   const shell = '"$JAVAC" -d "$T" "$HERE/test/a/b/RunTest.java" "$HERE/test/a/b/IdleTest.java"\n'
     + '"$JAVA" -cp "$T" a.b.RunTest\n# "$JAVA" -cp "$T" a.b.IdleTest\n';
-  const texts = {
+  const texts: Readonly<Record<string, string>> = {
     'android/x/test.sh': shell,
     'android/x/test/a/b/RunTest.java': 'package a.b;\n',
     'android/x/test/a/b/IdleTest.java': 'package a.b;\n',
@@ -488,7 +515,7 @@ export function missingPaths({ scripts, ciText, exists }) {
     fail('control: an exemption for a test a CI step runs was not reported stale');
 
   // The reader itself: a prose mention is not an invocation.
-  const sink = { names: [], script() {}, file(path) { this.names.push(path); } };
+  const sink = { names: [] as string[], script() {}, file(path: string) { this.names.push(path); } };
   walk('echo "see tools/device/test-x.mjs" && node tools/device/test-y.mjs --flag && python3 -m pip install x', 'ctl', sink, {});
   if (sink.names.join() !== 'tools/device/test-y.mjs')
     fail(`control: the command reader named ${JSON.stringify(sink.names)} (want only tools/device/test-y.mjs)`);
@@ -514,14 +541,14 @@ const missing = missingPaths({ scripts: SCRIPTS, ciText, exists: path => existsS
 // the day someone runs its group.
 for (const message of missing) fail(`${message} -- a wrong path fails silently behind \`> /dev/null && echo\` (item 5)`);
 
-for (const [item, gate] of REGISTER_GATES) {
+for (const [item, gate] of GATE_ROWS) {
   if (!existsSync(join(ROOT, gate))) fail(`register item ${item} relies on ${gate}, which does not exist`);
   else if (!reached.has(gate)) fail(`register item ${item} relies on ${gate}, which no CI step runs (item 13)`);
 }
 // Every entry the registers hold (read where they are written) names a gate or
 // is open with a reason; an open entry that has a gate is stale.
 {
-  const gated = new Set(REGISTER_GATES.map(([item]) => item));
+  const gated = new Set(GATE_ROWS.map(([item]) => item));
   const { source, entries } = readMistakes(ROOT);
   if (!entries.length) fail(`no mistake-register entry was read (${source ?? 'no source'})`);
   for (const { n } of entries) {
@@ -536,8 +563,8 @@ for (const [item, gate] of REGISTER_GATES) {
 {
   // Five cycles of one raise, four graded MISSING: a systematic miss by count.
   // What decides the verdict is how often the rule read `monitorUp: true` at all.
-  const verdict = (positiveReads) => {
-    const events = [];
+  const verdict = (positiveReads: number) => {
+    const events: RunEvent[] = [];
     for (let cycle = 0; cycle < 5; cycle += 1) {
       events.push({ type: 'control.effect.result', actionId: 'raise', signal: 'monitorUp', target: true,
         status: cycle === 0 ? 'PASS' : 'MISSING',
@@ -546,7 +573,7 @@ for (const [item, gate] of REGISTER_GATES) {
     return report(events).effects.systematicMisses.find(row => row.signal === 'monitorUp')?.verdict ?? 'NOT-LISTED';
   };
   // 2 is the 2026-09-12 run: `true` read twice in 266 samples, a blind rule.
-  for (const [reads, want] of [[2, 'UNPROVEN-OBSERVER-BLIND'], [4, 'UNPROVEN-OBSERVER-BLIND'], [5, 'ACTUATOR-GAP']]) {
+  for (const [reads, want] of [[2, 'UNPROVEN-OBSERVER-BLIND'], [4, 'UNPROVEN-OBSERVER-BLIND'], [5, 'ACTUATOR-GAP']] as const) {
     const got = verdict(reads);
     if (got !== want)
       fail(`run-report.mjs calls 4 MISSING of 5 with ${reads} positive read(s) ${got}; item 12 says ${want}`);
@@ -565,15 +592,17 @@ for (const [item, gate] of REGISTER_GATES) {
     if (!models.includes(path)) fail(`${path} is listed for item 2 but is not a committed title model`);
   for (const [path, recordPath] of TITLE_CALIBRATIONS) {
     const bytes = readFileSync(join(ROOT, path));
-    const model = JSON.parse(bytes.toString('utf8'));
-    const record = JSON.parse(readFileSync(join(ROOT, recordPath), 'utf8'));
+    const model: TitleModel = JSON.parse(bytes.toString('utf8'));
+    const record: { readonly model?: { readonly path?: string, readonly sha256?: string }, readonly rows?: readonly TitleRow[] } =
+      JSON.parse(readFileSync(join(ROOT, recordPath), 'utf8'));
     if (record.model?.path !== path || record.model?.sha256 !== createHash('sha256').update(bytes).digest('hex'))
       fail(`${path} is not the model ${recordPath} measured: re-measure its rows before changing its thresholds`);
     if (!Array.isArray(record.rows) || record.rows.length < 20) fail(`${recordPath}: fewer than 20 measured rows`);
-    const reads = (rows, m) => rows.map(row => ({ row, read: titleRead(m, row.fractions) }));
+    const reads = (rows: readonly TitleRow[], m: TitleModel) => rows.map(row => ({ row, read: titleRead(m, row.fractions) }));
     for (const { row, read } of reads(record.rows ?? [], model)) {
+      // A read that is not undecided names its items.
       if (read.undecided) fail(`${recordPath}: ${row.frame} puts ${read.undecided} between the thresholds of ${path}`);
-      else if (row.read !== `items=${read.items.join(',')}`) fail(`${recordPath}: ${row.frame} was read ${row.read}, its fractions say items=${read.items.join(',')}`);
+      else if (row.read !== `items=${(read.items as string[]).join(',')}`) fail(`${recordPath}: ${row.frame} was read ${row.read}, its fractions say items=${(read.items as string[]).join(',')}`);
     }
     // The planted violation: a present threshold above the narrowest measured
     // Continue must leave a measured row undecided.
@@ -597,12 +626,14 @@ for (const [item, gate] of REGISTER_GATES) {
   // android.input.inputevent; the planted case is the one night-run.sh got
   // wrong until 2026-10-01, a phone whose data sources could not be read.
   const base = { serial: 'UNKNOWN', hidBinary: true, screenrecord: true, cueHelper: 'versionName=0.1.14', targetInstalled: true };
-  const devices = [
+  type Probed = Parameters<typeof traceDecision>[0];
+  const devices: [string, Partial<Probed>, boolean][] = [
     ['advertised', { ...base, perfettoDataSources: ['android.input.inputevent', 'android.inputmethod'] }, true],
     ['absent', { ...base, perfettoDataSources: ['android.inputmethod'] }, false],
     ['unreadable', { ...base, perfettoDataSources: null }, false],
   ];
-  for (const [name, device, want] of devices) {
+  for (const [name, partial, want] of devices) {
+    const device = partial as Probed; // the probe's fields the decision and the report read
     const decided = traceDecision(device).trace;
     const allowed = !checkCapabilitiesFirst({ instrument: 'packages/play/bin/probe/inputtrace.py', capabilities: capabilityReport(device) }).refused;
     if (decided !== want) fail(`capabilities.ts traceDecision runs the input trace on a phone whose input source is ${name}: ${decided}; item 8 says ${want}`);
@@ -620,8 +651,8 @@ for (const [item, gate] of REGISTER_GATES) {
   // The 2026-09-11 response: clears to 99 ms, loses 132-198, clears again from
   // 231. A scan that stops at its first failure reads "99", the "cliff" that
   // would have condemned a run the model wins; basin-edge.ts must not.
-  const banded = (k) => k <= 99 || k >= 231;
-  const firstFailure = (clears) => { let last = 0; for (let k = 33; k <= 330; k += 33) { if (!clears(k)) break; last = k; } return String(last); };
+  const banded = (k: number) => k <= 99 || k >= 231;
+  const firstFailure = (clears: (k: number) => boolean) => { let last = 0; for (let k = 33; k <= 330; k += 33) { if (!clears(k)) break; last = k; } return String(last); };
   if (firstFailure(banded) !== '99') fail('the planted stop-at-first-failure scan no longer reproduces the 2026-09-11 reading');
   const read = scanEdge(banded, { step: 33, max: 330 });
   if (read.resumesAt !== 231 || formatEdge(read) === firstFailure(banded))
@@ -634,7 +665,7 @@ for (const [item, gate] of REGISTER_GATES) {
     if (!/from '\.\/basin-edge\.ts'/.test(readFileSync(join(ROOT, tool), 'utf8'))) fail(`${tool} scans a margin without basin-edge.ts (item 11)`);
 }
 
-const counts = [...verdicts.values()].reduce((into, v) => {
+const counts = [...verdicts.values()].reduce((into: Record<'runs' | 'exempt' | 'backlog' | 'orphan', number>, v) => {
   into[v.via ? 'runs' : v.exempt?.startsWith('tools/test.ts BACKLOG') ? 'backlog' : v.exempt ? 'exempt' : 'orphan'] += 1;
   return into;
 }, { runs: 0, exempt: 0, backlog: 0, orphan: 0 });
@@ -648,5 +679,5 @@ console.log(`mistake register: item 13 -- ${verdicts.size} test files, ${counts.
   'item 5 -- every script path and npm script named exists; item 8 -- the input trace runs only on a ' +
   `capability read as present; item 11 -- a margin scan reads a banded ` +
   'response as banded; item 12 -- the five-read threshold holds ' +
-  `on both sides; items ${[...new Set(REGISTER_GATES.map(([item]) => item))].sort((a, b) => a - b).join(', ')} rely only on ` +
+  `on both sides; items ${[...new Set(GATE_ROWS.map(([item]) => item))].sort((a, b) => a - b).join(', ')} rely only on ` +
   `gates a CI step runs; open (no gate yet): ${[...OPEN_ENTRIES.keys()].join(', ') || 'none'}`);

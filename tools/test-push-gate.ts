@@ -22,14 +22,14 @@ const BYPASS = /--no-verify|\bcommit\s+-n\b/;
 const ADVICE = /(?:bypass|push|send|commit)\b[^.\n]*\b(?:with|using|via|or)\s+`?(?:git\s+(?:push|commit)\s+)?(?:--no-verify|-n\b)/i;
 
 /** The string and template literals of a JavaScript source, comments removed first. */
-function jsStrings(source) {
+function jsStrings(source: string) {
   const code = source.replace(/\/\*[\s\S]*?\*\//g, '').split('\n')
     .filter(line => !/^\s*\/\//.test(line)).map(line => line.replace(/\s\/\/\s.*$/, '')).join('\n');
   return [...code.matchAll(/'(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*"|`(?:[^`\\]|\\.)*`/g)].map(match => match[0]);
 }
 
 /** What a JavaScript source or a shell hook says to its user that offers the bypass. */
-function bypassSuggestions(name, source) {
+function bypassSuggestions(name: string, source: string) {
   if (/\.m?[jt]s$/.test(name)) return jsStrings(source).filter(text => BYPASS.test(text));
   return source.split('\n').filter(line => /^\s*#/.test(line) ? ADVICE.test(line) : BYPASS.test(line));
 }
@@ -62,8 +62,9 @@ for (const lane of LANES) {
 // The closing lines: each failed lane, what reproduces it, and how to re-run the gate.
 const sha = '0123456789abcdef0123456789abcdef01234567';
 const other = 'fedcba9876543210fedcba9876543210fedcba98';
-const contracts = LANES.find(lane => lane.name === 'Type and architecture contracts');
-const shellcheck = LANES.find(lane => lane.multiline);
+// Both lanes are in LANES, and the contracts lane is a one-line step with its command.
+const contracts = LANES.find(lane => lane.name === 'Type and architecture contracts') as Extract<(typeof LANES)[number], { run: string }>;
+const shellcheck = LANES.find(lane => lane.multiline) as (typeof LANES)[number];
 const report = failureReport([{ sha, name: contracts.name }, { sha, name: shellcheck.name },
   { sha: other, name: 'push-gate is out of step with ci.yml' }]);
 assert.deepEqual(report.slice(0, 8), [

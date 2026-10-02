@@ -37,19 +37,19 @@ export const LEGACY = new Map([
   ['939f8bd3194e909595d01364569b1357cc6d8dd8', 't <t@t>, 2026-09-19, "root"'],
 ]);
 
-export const allowedAddress = email => NOREPLY.test(email);
+export const allowedAddress = (email: string) => NOREPLY.test(email);
 
 // `Name <email> 1727740800 -0300` (git var) or `Name <email>` -> { name, email }.
-export function parseIdent(ident) {
+export function parseIdent(ident: unknown) {
   const m = /^(.*?) <([^>]*)>/.exec(String(ident).trim());
   return m ? { name: m[1], email: m[2] } : null;
 }
 
-const git = (args, cwd?) => execFileSync('git', args, { cwd, encoding: 'utf8', maxBuffer: 1 << 28 });
+const git = (args: string[], cwd?: string) => execFileSync('git', args, { cwd, encoding: 'utf8', maxBuffer: 1 << 28 });
 
 // Every commit `git log REVS` lists, with the roles whose address is refused:
 // { checked, offenders: [{ sha, subject, role, ident }] }. LEGACY commits pass.
-export function scan(revs, cwd = process.cwd()) {
+export function scan(revs: string[], cwd = process.cwd()) {
   const out = git(['log', '--format=%H%x1f%an <%ae>%x1f%cn <%ce>%x1f%s%x1e', ...revs, '--'], cwd);
   const offenders = [];
   let checked = 0;
@@ -67,7 +67,7 @@ export function scan(revs, cwd = process.cwd()) {
 
 // git's pre-push lines `<local ref> <local sha> <remote ref> <remote sha>` ->
 // the rev-list arguments naming the commits each one would publish.
-export function pushRanges(input, cwd = process.cwd()) {
+export function pushRanges(input: unknown, cwd = process.cwd()) {
   const ranges = [];
   for (const line of String(input).split('\n')) {
     const [, local, , remote] = line.trim().split(/\s+/);
@@ -84,7 +84,10 @@ export function pushRanges(input, cwd = process.cwd()) {
   return ranges;
 }
 
-export function refusal(offenders, where) {
+/** A refused identity: its role and ident, and the commit that carries it when there is one. */
+interface Offender { readonly sha?: string, readonly subject?: string, readonly role: string, readonly ident: string }
+
+export function refusal(offenders: readonly Offender[], where: string) {
   const lines = [`commit identity: refused -- ${where} carries an address that is not GitHub's noreply form`];
   for (const o of offenders) lines.push(`  ${o.sha ? `${o.sha.slice(0, 10)} ` : ''}${o.role}: ${o.ident}${o.subject ? `  (${o.subject})` : ''}`);
   lines.push(
@@ -98,7 +101,7 @@ export function refusal(offenders, where) {
   return lines.join('\n');
 }
 
-function main(argv) {
+function main(argv: string[]) {
   const [mode, rev] = argv;
   if (mode === '--hook') {
     const offenders = [];

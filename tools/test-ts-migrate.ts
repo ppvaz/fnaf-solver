@@ -25,7 +25,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const TOOL = join(ROOT, 'tools/ts-migrate.ts');
 const TSC = join(ROOT, 'node_modules/typescript/bin/tsc');
 const repo = mkdtempSync(join(tmpdir(), 'ts-migrate-'));
-const git = (...args) => execFileSync('git', args, { cwd: repo, encoding: 'utf8' });
+const git = (...args: string[]) => execFileSync('git', args, { cwd: repo, encoding: 'utf8' });
 try {
   git('init', '-q');
   git('config', 'user.email', 'fixture@example.invalid');

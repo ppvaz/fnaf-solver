@@ -15,15 +15,15 @@ const PROBES = ['packages/kernel/probe.ts', 'packages/source/probe.ts', 'package
   ...[1, 3, 4].map(game => `packages/propose/src/games/policy-fnaf${game}.ts`), 'packages/propose/src/experiment/probe.ts',
   'apps/desktop/probe.ts', 'docs/probe.md', 'packages/review/src/vault.ts'];
 const explicit = process.argv.slice(2).filter(path => path !== '--files' && path !== '--self-check');
-const git = args => execFileSync('git', args, { cwd: ROOT, encoding: 'utf8' });
+const git = (args: string[]) => execFileSync('git', args, { cwd: ROOT, encoding: 'utf8' });
 const changed = SELF_CHECK ? PROBES : explicit.length ? explicit : [...new Set([
   ...git(['diff', '--name-only']).split('\n'),
   ...git(['diff', '--cached', '--name-only']).split('\n'),
   ...git(['ls-files', '--others', '--exclude-standard']).split('\n'),
 ].filter(Boolean))];
 
-const checks = new Map();
-const add = (id, command, args = []) => checks.set(id, { command, args });
+const checks = new Map<string, { command: string, args: string[] }>();
+const add = (id: string, command: string, args: string[] = []) => checks.set(id, { command, args });
 add('architecture', 'node', ['tools/architecture-test.ts']);
 add('references', 'node', ['tools/validate-references.ts']);
 

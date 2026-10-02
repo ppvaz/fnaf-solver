@@ -34,7 +34,7 @@ import { currentPath } from '@sixam/review/renamed-path';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 let failed = 0;
-const complain = (message) => { console.error(message); failed = 1; };
+const complain = (message: string) => { console.error(message); failed = 1; };
 
 // Include files present in the working tree but not staged yet. During a
 // normal patch review, a newly added tool must already have an index row; the
@@ -83,7 +83,7 @@ for (const file of markdown.filter((f) => !f.startsWith('plans/archive/'))) {
 // byte and holds no HTML (ADR 0002, Consequences).
 const pages = tracked.filter((f) => /\.html?$/i.test(f) && !f.startsWith('plans/archive/'));
 let htmlLinks = 0;
-const entity = (s) => s.replace(/&amp;/g, '&').replace(/&#39;|&apos;/g, "'").replace(/&quot;/g, '"');
+const entity = (s: string) => s.replace(/&amp;/g, '&').replace(/&#39;|&apos;/g, "'").replace(/&quot;/g, '"');
 for (const file of pages) {
   const text = readFileSync(join(ROOT, file), 'utf8');
   const here = dirname(join(ROOT, file));
@@ -107,7 +107,8 @@ for (const file of pages) {
   // Pages trainer failed on "@sixam/source/fnaf2 ... blocked by a null value"
   // because every address in index.html's map was bare.
   for (const m of text.matchAll(/<script type="importmap">([\s\S]*?)<\/script>/gi)) {
-    for (const [specifier, address] of Object.entries(JSON.parse(m[1]).imports ?? {})) {
+    const imports: Readonly<Record<string, string>> = JSON.parse(m[1]).imports ?? {};
+    for (const [specifier, address] of Object.entries(imports)) {
       htmlLinks += 1;
       if (!/^\.\.?\//.test(address)) complain(`${file} maps ${specifier} to "${address}": an import map address must start with ./ or ../`);
       else if (!existsSync(resolve(here, address))) complain(`${file} maps ${specifier} to ${address}, which does not exist`);
@@ -136,18 +137,18 @@ const TOOL_ROOTS = ['tools', 'packages/source/decompile', 'packages/source/recom
 // Entry points that left tools/ for their context: each package's and application's bin/ and
 // propose's parked work are held to the Scripts table of the nearest README
 // (ADR 0002 layout, LEG-008).
-const underToolRoot = (f) => TOOL_ROOTS.some((root) => f.startsWith(`${root}/`)) ||
+const underToolRoot = (f: string) => TOOL_ROOTS.some((root) => f.startsWith(`${root}/`)) ||
   /^(?:packages|apps)\/[^/]+\/bin\//.test(f) || f.startsWith('packages/propose/parked/') ||
   f.startsWith('packages/propose/bindings/');
 const SCRIPTS_HEADING = '\n## Scripts\n';
-const scriptsIndex = (f) => /^(?:packages|apps)\/[^/]+\/README\.md$/.test(f) &&
+const scriptsIndex = (f: string) => /^(?:packages|apps)\/[^/]+\/README\.md$/.test(f) &&
   readFileSync(join(ROOT, f), 'utf8').includes(SCRIPTS_HEADING);
 const indexes = tracked.filter((f) => /^tools\/(?:[^/]+\/)?README\.md$/.test(f) ||
   f === 'packages/source/decompile/README.md' || f === 'packages/source/recompile/README.md' || f === 'apps/lab/README.md' ||
   scriptsIndex(f)).sort();
-const entriesOf = new Map();
+const entriesOf = new Map<string, Set<string>>();
 for (const index of indexes) {
-  const entries = new Set();
+  const entries = new Set<string>();
   let text = readFileSync(join(ROOT, index), 'utf8');
   if (/^(?:packages|apps)\/[^/]+\/README\.md$/.test(index) && text.includes(SCRIPTS_HEADING))
     text = text.split(SCRIPTS_HEADING)[1].split('\n## ')[0];
@@ -160,7 +161,7 @@ for (const index of indexes) {
   }
   entriesOf.set(index, entries);
 }
-const nearestIndex = (file) => {
+const nearestIndex = (file: string) => {
   for (let dir = dirname(file); dir !== '.' && dir !== ''; dir = dirname(dir))
     if (entriesOf.has(`${dir}/README.md`)) return `${dir}/README.md`;
   return null;
@@ -169,7 +170,8 @@ if (!entriesOf.has('tools/README.md')) complain('tools/README.md, the root tool 
 const scripts = tracked.filter((f) => underToolRoot(f) && /\.(mjs|mts|ts|py|sh|c|S)$/.test(f) && !f.endsWith('.d.ts'));
 for (const script of scripts) {
   const index = nearestIndex(script);
-  if (index && !entriesOf.get(index).has(basename(script)))
+  // nearestIndex names only an index entriesOf holds.
+  if (index && !(entriesOf.get(index) as Set<string>).has(basename(script)))
     complain(`${script} has no entry in ${index}. A row naming it, its ` +
       'kind (check/report/module/device action) and its interface -- not a ' +
       'mention in prose, which is what let this drift to 47 missing scripts');
@@ -192,7 +194,7 @@ for (const [index, entries] of entriesOf) {
 // a committed move, a chain of two, a staged move, and a deletion.
 {
   const repo = mkdtempSync(join(tmpdir(), 'renamed-path-'));
-  const git = (...args) => execFileSync('git', ['-C', repo, '-c', 'user.name=t', '-c', 'user.email=t@t', ...args], { stdio: 'ignore' });
+  const git = (...args: string[]) => execFileSync('git', ['-C', repo, '-c', 'user.name=t', '-c', 'user.email=t@t', ...args], { stdio: 'ignore' });
   try {
     git('init', '-q');
     mkdirSync(join(repo, 'a'));
@@ -203,7 +205,7 @@ for (const [index, entries] of entriesOf) {
     git('commit', '-qm', 'move');
     git('mv', 'b/two.txt', 'c.txt'); git('commit', '-qm', 'again');
     git('mv', 'a/three.txt', 'b/three.txt');
-    const cases = [['a/one.txt', 'b/one.txt'], ['a/two.txt', 'c.txt'], ['a/three.txt', 'b/three.txt'], ['a/gone.txt', null], ['b/one.txt', 'b/one.txt']];
+    const cases: [string, string | null][] = [['a/one.txt', 'b/one.txt'], ['a/two.txt', 'c.txt'], ['a/three.txt', 'b/three.txt'], ['a/gone.txt', null], ['b/one.txt', 'b/one.txt']];
     for (const [from, to] of cases)
       if (currentPath(repo, from) !== to) complain(`renamed-path: ${from} resolved to ${currentPath(repo, from)}, not ${to}`);
   } finally { rmSync(repo, { recursive: true, force: true }); }

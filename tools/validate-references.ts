@@ -9,8 +9,8 @@ const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '..'));
 const SKIP = new Set(['.git', 'node_modules', 'captures', 'artifacts', 'dist', '__pycache__']);
 const sourceExtensions = /\.(?:md|txt|js|mjs|ts|py|sh|c|S|json)$/;
 
-async function walk(directory) {
-  const result = [];
+async function walk(directory: string): Promise<string[]> {
+  const result: string[] = [];
   for (const entry of await readdir(directory, { withFileTypes: true })) {
     if (SKIP.has(entry.name)) continue;
     const path = join(directory, entry.name);
@@ -25,11 +25,11 @@ async function walk(directory) {
 }
 
 const register = JSON.parse(await readFile(join(ROOT, 'packages/kernel/contracts/register.json'), 'utf8'));
-const allowed = {
-  CONTRACT: new Set(register.contracts.map(item => item.id)),
+const allowed: Record<string, Set<string>> = {
+  CONTRACT: new Set(register.contracts.map((item: { id: string }) => item.id)),
   ADR: new Set((await readdir(join(ROOT, 'docs/decisions'))).filter(name => name.endsWith('.md')).map(name => name.replace(/\.md$/, ''))),
-  CLAIM: new Set(),
-  EVIDENCE: new Set(),
+  CLAIM: new Set<string>(),
+  EVIDENCE: new Set<string>(),
 };
 const graph = JSON.parse(await readFile(join(ROOT, 'docs/evidence/graph.json'), 'utf8'));
 for (const node of graph.nodes ?? []) {

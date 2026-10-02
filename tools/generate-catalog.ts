@@ -57,9 +57,12 @@ const toolsIndex = (await Promise.all(toolIndexes.map(async path => {
 const toolCommands = [...toolsIndex.matchAll(/^\| `([^`]+)` \| ([^|]+) \|/gm)].map(match => ({
   id: match[1].split(/\s+/)[0], invocation: match[1], kind: match[2].trim(), lifecycle: /legacy|historical/i.test(match[2]) ? 'legacy' : 'supported',
 }));
-const contractRegister = JSON.parse(await readFile(join(ROOT, 'packages/kernel/contracts/register.json'), 'utf8'));
+/** A register entry: its id, owner, kind and the validator that guards it. */
+interface ContractEntry { readonly id: string, readonly owner: string, readonly kind: string, readonly validator: string }
+const contractRegister: { readonly contracts: readonly ContractEntry[] } =
+  JSON.parse(await readFile(join(ROOT, 'packages/kernel/contracts/register.json'), 'utf8'));
 const protocols = contractRegister.contracts.filter(item => ['wire', 'process'].includes(item.kind));
-const contractEvidence = {
+const contractEvidence: Readonly<Record<string, readonly string[]>> = {
   'plant-model-v1': ['packages/source/test/sourcetest.ts', 'packages/source/test/simtest.ts'],
   'semantic-control-v1': ['packages/source/test/contracts.test.ts', 'packages/source/test/control-catalog.test.ts',
     'packages/propose/bin/policy/test-policy-interpreter.ts'],
@@ -154,7 +157,7 @@ const contractSpecifications = {
 // claim and reach every current reference without maintaining another table.
 const stableLinks = [];
 const linkFiles = files.filter(path => /\.(?:md|txt|js|mjs|ts|py|sh|c|S|json)$/.test(path));
-const stablePatterns = [
+const stablePatterns: [string, RegExp][] = [
   ['CONTRACT', /CONTRACT:([a-z0-9-]+)/gi],
   ['ADR', /ADR:([0-9]{4}-[a-z0-9-]+)/gi],
   ['CLAIM', /CLAIM:([a-z0-9._-]+)/gi],
@@ -166,7 +169,7 @@ for (const path of linkFiles) {
   for (const [kind, pattern] of stablePatterns) {
     for (const match of source.matchAll(pattern)) {
       const line = source.slice(0, match.index).split('\n').length;
-      stableLinks.push({ id: `${(kind as any).toLowerCase()}.${match[1]}`, kind,
+      stableLinks.push({ id: `${kind.toLowerCase()}.${match[1]}`, kind,
         path: relativePath, line, relation: 'REFERENCES' });
     }
   }
@@ -388,7 +391,7 @@ for (const file of custodyWinnerFiles(ROOT)) {
   let compiledWinnerHash = null;
   let notCompiled;
   try { compiledWinnerHash = compileBundle(JSON.parse(bytes.toString('utf8')), join(scratch, 'bundle')).manifest.winnerHash; }
-  catch (error) { notCompiled = error.message; }
+  catch (error) { notCompiled = (error as Error).message; }
   finally { rmSync(scratch, { recursive: true, force: true }); }
   winnerHashes.push({ file, sha256: createHash('sha256').update(bytes).digest('hex'),
     compiledWinnerHash, ...(notCompiled ? { notCompiled } : {}), ...(file.includes('/retired/') ? { retired: true } : {}) });

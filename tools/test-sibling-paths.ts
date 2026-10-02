@@ -32,11 +32,11 @@ const INTENTIONAL = new Map([
     'the planted missing browser the chart must refuse'],
 ]);
 
-const literals = text => [...text.matchAll(/(['"])([^'"]*)\1/g)].map(match => match[2]);
+const literals = (text: string) => [...text.matchAll(/(['"])([^'"]*)\1/g)].map(match => match[2]);
 
 // A binding of NAME to the file's own directory: the right-hand side reads the file's location
 // and climbs nowhere.
-function ownDir(text, name, lang) {
+function ownDir(text: string, name: string, lang: string) {
   const escaped = name.replace(/\$/g, '\\$');
   const binding = lang === 'sh'
     ? new RegExp(`^\\s*(?:export\\s+|local\\s+)?${escaped}=(.*)$`, 'm')
@@ -50,10 +50,10 @@ function ownDir(text, name, lang) {
 }
 
 /** Every literal path FILE builds from its own directory, as [line, relative path]. */
-export function siblingReferences(file, text) {
+export function siblingReferences(file: string, text: string) {
   const lang = file.endsWith('.py') ? 'py' : file.endsWith('.sh') ? 'sh' : 'js';
-  const found = [];
-  const add = (index, parts) => {
+  const found: [number, string][] = [];
+  const add = (index: number, parts: string[]) => {
     if (!parts.length || parts.some(part => /[${}<>|]/.test(part) || part === '')) return;
     // A glob is allowed only in the last segment, where it must match at least one file.
     if (join(...parts).split('/').slice(0, -1).some(part => part.includes('*'))) return;
@@ -89,30 +89,31 @@ function candidates() {
   return listed.filter(file => file && CODE.test(file) && !FROZEN.test(file) && file !== SELF && existsSync(join(ROOT, file)));
 }
 
-function ignored(paths) {
-  if (!paths.length) return new Set();
+function ignored(paths: string[]) {
+  if (!paths.length) return new Set<string>();
   try {
     return new Set(execFileSync('git', ['check-ignore', '--no-index', '--stdin'], { cwd: ROOT, input: paths.join('\n') })
       .toString().split('\n').filter(Boolean));
   } catch (error) {
     // check-ignore exits 1 when nothing is ignored.
-    if (error.status === 1) return new Set();
+    if ((error as { status?: number }).status === 1) return new Set<string>();
     throw error;
   }
 }
 
 /** A path exists, or a glob in its last segment matches at least one entry: a glob that
  *  matches nothing runs its loop zero times and says nothing. */
-function exists(root, target) {
+function exists(root: string, target: string) {
   if (!target.includes('*')) return existsSync(join(root, target));
   const dir = join(root, dirname(target));
-  const pattern = new RegExp(`^${target.split('/').pop().replace(/[.+?^()[\]\\]/g, '\\$&').replace(/\*/g, '.*')}$`);
+  // Splitting yields at least one part.
+  const pattern = new RegExp(`^${(target.split('/').pop() as string).replace(/[.+?^()[\]\\]/g, '\\$&').replace(/\*/g, '.*')}$`);
   return existsSync(dir) && readdirSync(dir).some(name => pattern.test(name));
 }
 
 /** The refusals for FILES under ROOT: references whose target is absent, not ignored and not listed. */
-export function refusals(root, files) {
-  const missing = [];
+export function refusals(root: string, files: readonly string[]) {
+  const missing: { file: string, line: number, target: string, outside?: boolean }[] = [];
   for (const file of files) {
     const text = readFileSync(join(root, file), 'utf8');
     for (const [line, rel] of siblingReferences(file, text)) {
@@ -126,7 +127,7 @@ export function refusals(root, files) {
   }
   // A directory pattern (`build/`) matches only a path git is told is a directory, so each target
   // is asked both ways.
-  const skip = root === ROOT ? ignored(missing.flatMap(item => [item.target, `${item.target}/`])) : new Set();
+  const skip = root === ROOT ? ignored(missing.flatMap(item => [item.target, `${item.target}/`])) : new Set<string>();
   return missing.filter(item => item.outside || (!skip.has(item.target) && !skip.has(`${item.target}/`)));
 }
 

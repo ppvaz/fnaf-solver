@@ -204,7 +204,7 @@
       "debt:packages/propose/test": 30,
       "debt:packages/review/test": 40,
       "debt:packages/source/test": 12,
-      "debt:tools": 17
+      "debt:tools": 10
     }
   }
 }

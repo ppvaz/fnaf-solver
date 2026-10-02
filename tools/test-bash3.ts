@@ -34,7 +34,7 @@ const BASH4 = [
 ] as const;
 
 export function bash4(path: string, text: string) {
-  const found = [];
+  const found: string[] = [];
   text.split('\n').forEach((line, index) => {
     if (/^\s*#/.test(line)) return;
     for (const [pattern, name] of BASH4) {

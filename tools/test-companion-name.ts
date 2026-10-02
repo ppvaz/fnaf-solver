@@ -61,8 +61,8 @@ export const UNSCANNED = [
 ];
 
 /** The lines of `text` that still call the app the Cue Helper once every stored name is removed. */
-export function offenders(text) {
-  const found = [];
+export function offenders(text: string) {
+  const found: { line: number, text: string }[] = [];
   text.split('\n').forEach((line, index) => {
     let rest = line;
     for (const [pattern] of STORED) rest = rest.replace(pattern, '');
@@ -72,7 +72,7 @@ export function offenders(text) {
 }
 
 // Planted cases run first and must come out as expected.
-const PLANTED = [
+const PLANTED: [string, number][] = [
   ['enqueue a Cue Helper job', 1],
   ['tools/device/cue_helper_device_lock.py', 1],
   ['node apps/desktop/src/cue-helper-mcp.mjs', 1],
@@ -93,7 +93,7 @@ if (planted.length) {
   process.exit(1);
 }
 
-const git = (args) => execFileSync('git', args, { cwd: ROOT, encoding: 'utf8', maxBuffer: 1 << 28 });
+const git = (args: string[]) => execFileSync('git', args, { cwd: ROOT, encoding: 'utf8', maxBuffer: 1 << 28 });
 const files = [...new Set(git(['ls-files', '-z', '--cached', '--others', '--exclude-standard']).split('\0').filter(Boolean))].sort();
 const refused = [];
 let scanned = 0;

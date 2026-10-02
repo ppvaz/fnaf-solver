@@ -30,12 +30,14 @@ checks += 3;
 
 // 2. This repository's history: every commit noreply, LEGACY excepted, and LEGACY
 // holds only commits that are here and would be refused (it may only shrink).
+// Every ident this test reads is well-formed.
+const identOf = (text: string) => parseIdent(text) as NonNullable<ReturnType<typeof parseIdent>>;
 const history = scan(['HEAD'], ROOT);
 assert.ok(history.checked > 1000, `only ${history.checked} commits reachable: a shallow clone? CI checks out with fetch-depth: 0`);
 assert.deepEqual(history.offenders, [], refusal(history.offenders, 'the history'));
 for (const [sha, why] of LEGACY) {
   const ident = execFileSync('git', ['log', '-1', '--format=%an <%ae>|%cn <%ce>', sha], { cwd: ROOT, encoding: 'utf8' }).trim();
-  assert.ok(ident.split('|').some(part => !allowedAddress(parseIdent(part).email)), `${sha} (${why}) is noreply now: drop it from LEGACY`);
+  assert.ok(ident.split('|').some(part => !allowedAddress(identOf(part).email)), `${sha} (${why}) is noreply now: drop it from LEGACY`);
 }
 checks += 2;
 
@@ -43,15 +45,15 @@ checks += 2;
 // would record, pre-push on every pushed commit, rebase-made ones included.
 const repo = mkdtempSync(join(tmpdir(), 'commit-identity-'));
 const env = Object.fromEntries(Object.entries(process.env).filter(([name]) => !name.startsWith('GIT_')));
-const git = (...args) => execFileSync('git', args, { cwd: repo, encoding: 'utf8', env }).trim();
-const sh = (file, args, input?) => spawnSync('sh', [file, ...args], { cwd: repo, encoding: 'utf8', env, input });
+const git = (...args: string[]) => execFileSync('git', args, { cwd: repo, encoding: 'utf8', env }).trim();
+const sh = (file: string, args: string[], input?: string) => spawnSync('sh', [file, ...args], { cwd: repo, encoding: 'utf8', env, input });
 try {
   git('init', '-q', '-b', 'master');
-  git('config', 'user.name', parseIdent(GOOD).name);
-  git('config', 'user.email', parseIdent(GOOD).email);
+  git('config', 'user.name', identOf(GOOD).name);
+  git('config', 'user.email', identOf(GOOD).email);
   git('config', 'commit.gpgsign', 'false');
   git('config', 'core.hooksPath', join(repo, '.git', 'hooks')); // no hooks while the fixture is built
-  const commit = (name, ...extra) => { writeFileSync(join(repo, name), `${name}\n`); git('add', name); git('commit', '-q', '-m', name, ...extra); return git('rev-parse', 'HEAD'); };
+  const commit = (name: string, ...extra: string[]) => { writeFileSync(join(repo, name), `${name}\n`); git('add', name); git('commit', '-q', '-m', name, ...extra); return git('rev-parse', 'HEAD'); };
   const one = commit('one');
   const two = commit('two', `--author=${BAD}`);
   git('checkout', '-q', '-b', 'side', one);
@@ -70,7 +72,7 @@ try {
   assert.equal(committer.status, 1, 'hook let a configured address through');
   assert.match(committer.stderr, /committer: Hook Test <someone@example\.com>/);
   assert.match(committer.stderr, /git config user\.email <id>\+<login>@users\.noreply\.github\.com/);
-  git('config', 'user.email', parseIdent(GOOD).email);
+  git('config', 'user.email', identOf(GOOD).email);
   checks += 3;
 
   // pre-push ranges: a new branch publishes what no remote has; an update, what the remote lacks.

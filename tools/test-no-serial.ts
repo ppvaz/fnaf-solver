@@ -42,7 +42,7 @@ const HASH_BOUND = 'calibration record pinned by sha256';
 const MEASURED = 'calibration record: its device block names the handset it was measured on (Truth, ADR 0002)';
 // Path -> [occurrences, reason]. Each is a measurement or calibration record
 // whose device field names the handset measured, not a default any code reads.
-export const ALLOWLIST = {
+export const ALLOWLIST: Readonly<Record<string, readonly [number, string]>> = {
   'docs/device/accessibility-game-acceptance-20260906.json': [1, 'retained 2026-09-06 measurement record (ACCESSIBILITY-VS-HID-BENCHMARK.md); its device block names the handset measured'],
   'docs/device/accessibility-hid-pilot-20260906.json': [1, 'retained 2026-09-06 measurement record (ACCESSIBILITY-VS-HID-BENCHMARK.md); its device block names the handset measured'],
   'packages/play/profiles/fnaf1/moto-g56/controls-fnaf1-moto-g56-v207.json': [1, `${HASH_BOUND} in fnaf1-custom-night7-420-grid420-winner.json and a run pack's probe.json`],
@@ -59,13 +59,13 @@ export const ALLOWLIST = {
   'packages/play/profiles/fnaf1/moto-g56/teach-panel-fnaf1-moto-g56-v207.json': [1, MEASURED],
 };
 
-const count = (buffer, needle) => {
+const count = (buffer: Buffer, needle: Buffer) => {
   let n = 0;
   for (let at = buffer.indexOf(needle); at !== -1; at = buffer.indexOf(needle, at + needle.length)) n += 1;
   return n;
 };
 
-const git = (args) => execFileSync('git', args, { cwd: ROOT, encoding: 'utf8', maxBuffer: 1 << 28 });
+const git = (args: string[]) => execFileSync('git', args, { cwd: ROOT, encoding: 'utf8', maxBuffer: 1 << 28 });
 const files = git(['ls-files', '-z', '--cached', '--others', '--exclude-standard']).split('\0').filter(Boolean);
 const needle = Buffer.from(SERIAL);
 const refused = [];

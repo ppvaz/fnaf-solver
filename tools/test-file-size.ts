@@ -46,7 +46,7 @@ export function oversized(files: Iterable<[string, string]>) {
   assert.equal(lineCount('a\nb'), 2);
 }
 
-const files = repoFiles().filter(path => SOURCE.test(path)).map(path => [path, readFileSync(join(ROOT, path), 'utf8')]);
+const files = repoFiles().filter(path => SOURCE.test(path)).map((path): [string, string] => [path, readFileSync(join(ROOT, path), 'utf8')]);
 const { found, near } = oversized(files);
 if (near.length) console.log(`file-size: over ${WARN_AT} lines, plan the split now: ${near.join(', ')}`);
 report('file-size', ratchet(found, loadBaseline('fileSize')),

@@ -18,7 +18,7 @@ const MARKER = /(?:\/\/|#|\/\*|^\s*\*|<!--).*?\b(TODO|FIXME|XXX|HACK)\b(.*)$/;
 const REFERENCE = /^\s*\((?:Plan \d+|S[1-7][a-z]?|ADR \d{4}|#\d+)\)/;
 
 export function unreferenced(path: string, text: string) {
-  const found = [];
+  const found: string[] = [];
   text.split('\n').forEach((line, index) => {
     const match = line.match(MARKER);
     if (match && !REFERENCE.test(match[2])) found.push(`${path}:${index + 1}: ${match[1]} without (Plan N | S1-S7 | ADR NNNN | #issue)`);

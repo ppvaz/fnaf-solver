@@ -35,7 +35,10 @@ const TRAINER_TOOLS = join(ROOT, 'apps', 'trainer', 'test');
 const PORT = 8731;
 const PAGE = `http://localhost:${PORT}/dist/index.html`;
 
-const ENGINE = [
+/** A check: its name, and the script it runs (relative to tools/) with its arguments. */
+type Check = [string, string[]];
+
+const ENGINE: Check[] = [
   // First, because it is the only check that fails on a wrong *rule* rather
   // than a wrong *outcome*: the population checks below all pass with a
   // corrupted sourced constant.
@@ -423,7 +426,7 @@ const BACKLOG = new Map([
   // read untracked files a concurrent session has not indexed yet.
   ['docs', 'run by the CI documentation step'],
 ]);
-const BROWSER = [
+const BROWSER: Check[] = [
   ['browsertest', ['../apps/trainer/test/browser.test.ts']],
   ['caltest', ['../apps/trainer/test/calibration.test.ts']],
   ['lightcheck', ['../apps/trainer/test/light.test.ts']],
@@ -433,7 +436,7 @@ const BROWSER = [
   // files, from its own GET-only server, the way pages.yml publishes it.
   ['pages entry', ['../apps/trainer/test/pages.test.ts']],
 ];
-const REPORTS = [
+const REPORTS: Check[] = [
   ['minus2test', ['../packages/propose/bin/minus2test.ts']],
   ['minus6test', ['../packages/propose/bin/minus6test.ts']],
   ['rvctest', ['../packages/propose/bin/rvctest.ts', '200']],
@@ -480,10 +483,13 @@ const REPORTS = [
   ['tracereport', ['../apps/trainer/test/tracereport.ts']],
 ];
 
-const secs = (ms) => `${(ms / 1000).toFixed(1)}s`;
+const secs = (ms: number) => `${(ms / 1000).toFixed(1)}s`;
 
-function runTool(argv, { timeoutMs = 120_000, streamLabel = null } = {}) {
-  return new Promise<any>((resolve) => {
+/** A finished check: its exit code (124 on a timeout), its output, and how long it ran. */
+interface ToolRun { code: number | null, out: string, ms: number, timedOut: boolean }
+
+function runTool(argv: string[], { timeoutMs = 120_000, streamLabel = null as string | null } = {}) {
+  return new Promise<ToolRun>((resolve) => {
     const started = Date.now();
     // Most checks are node; the cue front end is stdlib Python, like the rest
     // of the device tooling, so dispatch on the extension.
@@ -494,7 +500,7 @@ function runTool(argv, { timeoutMs = 120_000, streamLabel = null } = {}) {
     let out = '';
     let timedOut = false;
     let settled = false;
-    const stream = (d) => {
+    const stream = (d: Buffer) => {
       const text = d.toString();
       out += text;
       if (streamLabel) {
@@ -525,8 +531,8 @@ function runTool(argv, { timeoutMs = 120_000, streamLabel = null } = {}) {
 // Checks report as they land, because the browser group runs for minutes and a
 // silent terminal is indistinguishable from a hung one. The verdict block that
 // follows is in list order, so a run stays diffable against the last one.
-async function runGroup(group, judge, { progress = false, concurrent = true, concurrency = 6 } = {}) {
-  const one = async ([name, argv]) => {
+async function runGroup(group: readonly Check[], judge: boolean, { progress = false, concurrent = true, concurrency = 6 } = {}) {
+  const one = async ([name, argv]: Check) => {
     if (progress) process.stderr.write(`    ... ${name} started\n`);
     const timeoutMs = name === 'minus7 search' ? 600_000
       : name === 'vent reactive' ? 900_000
@@ -542,7 +548,7 @@ async function runGroup(group, judge, { progress = false, concurrent = true, con
     if (progress) process.stderr.write(`    ... ${name} finished in ${secs(r.ms)}${r.timedOut ? ' (TIMEOUT)' : ''}\n`);
     return r;
   };
-  let results;
+  let results: ToolRun[];
   if (concurrent) {
     results = new Array(group.length);
     let cursor = 0;
@@ -587,7 +593,7 @@ async function serve() {
     { cwd: ROOT, stdio: 'ignore' });
   for (let i = 0; i < 40; i++) {
     if (await reachable()) return child;
-    await new Promise<any>(r => setTimeout(r, 25));
+    await new Promise<void>(r => setTimeout(r, 25));
   }
   child.kill();
   throw new Error(`apps/trainer/test/serve.py never answered on ${PORT}`);
@@ -615,7 +621,7 @@ if (process.argv.includes('--list')) {
     ...(only !== 'engine' ? BROWSER : []),
     ...(process.argv.includes('--reports') ? REPORTS : []),
   ]);
-  for (const [group, entries] of [['engine', ENGINE], ['browser', BROWSER], ['reports', REPORTS]])
+  for (const [group, entries] of [['engine', ENGINE], ['browser', BROWSER], ['reports', REPORTS]] as const)
     for (const entry of entries)
       console.log(JSON.stringify({
         name: entry[0], group, path: relative(ROOT, join(TOOLS, entry[1][0])),

@@ -30,35 +30,41 @@ const SCRIPT = /\.(?:js|mjs|cjs|ts|mts)$/;
 // Other JSON is data -- the generated catalogs list every module and prove nothing.
 const NAMING = /(?:^|\/)package\.json$|\.(?:sh|py|yml|yaml|html)$/;
 /** The libraries this judges: modules under a package's or an application's src/. */
-export const judged = path => /^(?:packages|apps)\/[^/]+\/src\//.test(path) && SCRIPT.test(path) && !path.endsWith('.d.ts');
+export const judged = (path: string) => /^(?:packages|apps)\/[^/]+\/src\//.test(path) && SCRIPT.test(path) && !path.endsWith('.d.ts');
 
 // --- One module's syntax: what it imports and what it exports ------------------
 
-export function readModule(path: string, text: string): {uses: {specifier: string, names: string[] | '*'}[], strings: string[], local: Set<string>, reexports: {name: string, from: string, as: string}[], stars: string[]} {
+/** One module's syntax: the specifiers it imports with the names it reads, path strings, its own exports, re-exports and star re-exports. */
+interface ModuleSyntax {
+  uses: {specifier: string, names: string[] | '*'}[], strings: string[], local: Set<string>,
+  reexports: {name: string, from: string, as: string}[], stars: string[],
+}
+
+export function readModule(path: string, text: string): ModuleSyntax {
   const file = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true,
     /\.m?ts$/.test(path) ? ts.ScriptKind.TS : ts.ScriptKind.JS);
-  const uses = [];
-  const strings = [];
-  const local = new Set();
-  const reexports = [];
-  const stars = [];
-  const exported = node => ts.canHaveModifiers(node) &&
+  const uses: ModuleSyntax['uses'] = [];
+  const strings: string[] = [];
+  const local = new Set<string>();
+  const reexports: ModuleSyntax['reexports'] = [];
+  const stars: string[] = [];
+  const exported = (node: ts.Node): node is ts.HasModifiers => ts.canHaveModifiers(node) &&
     (ts.getModifiers(node) ?? []).some(mod => mod.kind === ts.SyntaxKind.ExportKeyword);
-  const isDefault = node => (ts.getModifiers(node) ?? []).some(mod => mod.kind === ts.SyntaxKind.DefaultKeyword);
-  const bindingNames = name => ts.isIdentifier(name) ? [name.text]
-    : name.elements.flatMap(element => ts.isOmittedExpression(element) ? [] : bindingNames(element.name));
+  const isDefault = (node: ts.HasModifiers) => (ts.getModifiers(node) ?? []).some(mod => mod.kind === ts.SyntaxKind.DefaultKeyword);
+  const bindingNames = (name: ts.BindingName): string[] => ts.isIdentifier(name) ? [name.text]
+    : (name.elements as readonly ts.ArrayBindingElement[]).flatMap(element => ts.isOmittedExpression(element) ? [] : bindingNames(element.name));
   // A module specifier is read as an import above, not as a path string.
-  const specifierOf = node => (ts.isImportDeclaration(node.parent) || ts.isExportDeclaration(node.parent)) &&
+  const specifierOf = (node: ts.StringLiteralLike) => (ts.isImportDeclaration(node.parent) || ts.isExportDeclaration(node.parent)) &&
     node.parent.moduleSpecifier === node || (ts.isCallExpression(node.parent) && node.parent.arguments[0] === node &&
     (node.parent.expression.kind === ts.SyntaxKind.ImportKeyword ||
      (ts.isIdentifier(node.parent.expression) && node.parent.expression.text === 'require')));
-  const visit = node => {
+  const visit = (node: ts.Node): void => {
     if (ts.isImportDeclaration(node) && ts.isStringLiteralLike(node.moduleSpecifier)) {
       const clause = node.importClause;
-      const names = [];
+      const names: string[] = [];
       let whole = false;
       if (clause?.name) names.push('default');
-      const bindings: any = clause?.namedBindings;
+      const bindings = clause?.namedBindings;
       if (bindings && ts.isNamespaceImport(bindings)) whole = true;
       else if (bindings) for (const element of bindings.elements) names.push((element.propertyName ?? element.name).text);
       uses.push({ specifier: node.moduleSpecifier.text, names: whole ? '*' : names });
@@ -77,7 +83,11 @@ export function readModule(path: string, text: string): {uses: {specifier: strin
       if (isDefault(node)) local.add('default');
       else if (ts.isVariableStatement(node))
         for (const declaration of node.declarationList.declarations) bindingNames(declaration.name).forEach(name => local.add(name));
-      else if (node.name && ts.isIdentifier(node.name)) local.add(node.name.text);
+      else {
+        // Any other exported declaration that names itself.
+        const name = (node as { name?: ts.Node }).name;
+        if (name && ts.isIdentifier(name)) local.add(name.text);
+      }
     } else if (ts.isCallExpression(node) && node.arguments.length && ts.isStringLiteralLike(node.arguments[0]) &&
       (node.expression.kind === ts.SyntaxKind.ImportKeyword ||
        (ts.isIdentifier(node.expression) && node.expression.text === 'require'))) {
@@ -93,7 +103,7 @@ export function readModule(path: string, text: string): {uses: {specifier: strin
 
 export function workspaces(root: string) {
   const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
-  const found = [];
+  const found: { name: string, dir: string, exports: string | Readonly<Record<string, ExportTarget>> }[] = [];
   for (const pattern of manifest.workspaces ?? []) {
     const parent = pattern.replace(/\/\*$/, '');
     const listing = repoFiles(root).filter(path => path.startsWith(`${parent}/`) && path.endsWith('/package.json') &&
@@ -106,12 +116,14 @@ export function workspaces(root: string) {
   return found.sort((a, b) => b.name.length - a.name.length);
 }
 
-const target = entry => typeof entry === 'string' ? entry : entry?.import ?? entry?.default ?? null;
+/** A package export's target: a path, or conditions naming one. */
+type ExportTarget = string | { readonly import?: string, readonly default?: string } | null | undefined;
+const target = (entry: ExportTarget) => typeof entry === 'string' ? entry : entry?.import ?? entry?.default ?? null;
 
 /** @param from repository path */
 export function resolveSpecifier(specifier: string, from: string, packages: ReturnType<typeof workspaces>, known: Set<string>) {
-  const candidates = path => [path, path.replace(/\.m?js$/, '.ts'), path.replace(/\.js$/, '.mjs')];
-  const pick = path => candidates(posix.normalize(path)).find(candidate => known.has(candidate)) ?? null;
+  const candidates = (path: string) => [path, path.replace(/\.m?js$/, '.ts'), path.replace(/\.js$/, '.mjs')];
+  const pick = (path: string) => candidates(posix.normalize(path)).find(candidate => known.has(candidate)) ?? null;
   if (specifier.startsWith('.')) return pick(posix.join(posix.dirname(from), specifier));
   const pkg = packages.find(({ name }) => specifier === name || specifier.startsWith(`${name}/`));
   if (!pkg) return null;
@@ -141,17 +153,17 @@ export function resolveSpecifier(specifier: string, from: string, packages: Retu
 export function deadCode(scripts: Map<string, string>, naming: Map<string, string>, packages: ReturnType<typeof workspaces>) {
   const known = new Set(scripts.keys());
   const modules = new Map([...scripts].map(([path, text]) => [path, readModule(path, text)]));
-  const loaded = new Set();
-  const whole = new Set();
+  const loaded = new Set<string>();
+  const whole = new Set<string>();
   const usedNames: Map<string, Set<string>> = new Map();
-  const markName = (path, name, seen = new Set()) => {
+  const markName = (path: string, name: string, seen = new Set<string>()) => {
     const key = `${path}#${name}`;
     if (seen.has(key)) return;
     seen.add(key);
     const module = modules.get(path);
     if (!module) return;
     if (!usedNames.has(path)) usedNames.set(path, new Set());
-    usedNames.get(path).add(name);
+    (usedNames.get(path) as Set<string>).add(name); // set just above when missing
     for (const { as, name: original, from } of module.reexports) {
       if (as !== name) continue;
       const to = resolveSpecifier(from, path, packages, known);
@@ -163,7 +175,7 @@ export function deadCode(scripts: Map<string, string>, naming: Map<string, strin
         if (to) markName(to, name, seen);
       }
   };
-  const markWhole = (path, seen = new Set()) => {
+  const markWhole = (path: string, seen = new Set<string>()) => {
     if (seen.has(path)) return;
     seen.add(path);
     whole.add(path);

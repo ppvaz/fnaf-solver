@@ -124,7 +124,7 @@ try {
   execFileSync('git', ['-C', repo, 'config', 'user.email', 'hook-test@users.noreply.github.com']);
   const env = Object.fromEntries(Object.entries(process.env).filter(([name]) => !name.startsWith('GIT_')));
   const hook = join(ROOT, '.githooks', 'commit-msg');
-  const run = (body) => {
+  const run = (body: string) => {
     const file = join(repo, 'MSG');
     writeFileSync(file, body);
     return spawnSync('sh', [hook, file], { cwd: repo, encoding: 'utf8', env });

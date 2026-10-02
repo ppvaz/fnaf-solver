@@ -102,7 +102,7 @@ export const SIGNATURES = [
 // What git would commit: comment lines go, and so does everything below the
 // scissors line `git commit -v` adds (the staged diff, whose fixtures may be
 // dump-shaped on purpose).
-export function commitMessageBody(text, commentChar = '#') {
+export function commitMessageBody(text: string, commentChar = '#') {
   const out = [];
   for (const line of text.split('\n')) {
     if (line.startsWith(`${commentChar} `) && / -+ >8 -+$/.test(line)) break;
@@ -113,8 +113,11 @@ export function commitMessageBody(text, commentChar = '#') {
 }
 
 // Every line that carries a dump signature: [{ line, id, what, text }].
-export function findDumpText(text) {
-  const hits = [];
+/** A message line that carries a dump signature. */
+interface Hit { readonly line: number, readonly id: string, readonly what: string, readonly text: string }
+
+export function findDumpText(text: string) {
+  const hits: Hit[] = [];
   text.split('\n').forEach((line, i) => {
     for (const { id, what, re } of SIGNATURES) {
       if (re.test(line)) { hits.push({ line: i + 1, id, what, text: line }); break; }
@@ -123,9 +126,9 @@ export function findDumpText(text) {
   return hits;
 }
 
-const clip = (s, n = 110) => (s.length > n ? `${s.slice(0, n - 3)}...` : s);
+const clip = (s: string, n = 110) => (s.length > n ? `${s.slice(0, n - 3)}...` : s);
 
-export function refusal(hits) {
+export function refusal(hits: readonly Hit[]) {
   const lines = [
     'dump-text check: refused -- the message copies decompiled event-sheet text',
     '(ADR 0002, decision 12: cite, never quote). Matched:',
@@ -153,7 +156,7 @@ function commentCharOf() {
   } catch { return '#'; }
 }
 
-function main(argv) {
+function main(argv: string[]) {
   if (argv[0] === '--log') {
     const count = Number(argv[1] || 300);
     const raw = execFileSync('git', ['log', `-${count}`, '--format=%x1e%h%x1f%B'],

@@ -24,12 +24,12 @@ import { ROOT, loadBaseline, ratchet, repoFiles, report } from './gate-kit.ts';
 
 export const WINDOW = 6;
 const SCRIPT = /\.(?:js|mjs|cjs|ts|mts)$/;
-const scanned = path => SCRIPT.test(path) && /^(?:packages|apps|tools|android)\//.test(path) &&
+const scanned = (path: string) => SCRIPT.test(path) && /^(?:packages|apps|tools|android)\//.test(path) &&
   !/(?:^|\/)(?:test|tests|testdata|fixtures?)\//.test(path) && !/(?:^|\/)test[^/]*\.|\.test\.|\.d\.ts$/.test(path);
 
 /** The lines that carry code, each with its line number. */
 export function normalise(text: string) {
-  const lines = [];
+  const lines: { line: number, text: string }[] = [];
   let block = false;
   text.split('\n').forEach((raw, index) => {
     let line = raw.trim();
@@ -53,14 +53,14 @@ export function normalise(text: string) {
  */
 export function clones(files: Map<string, string>) {
   const windows: Map<string, {path: string, at: number}[]> = new Map();
-  const normalised = new Map();
+  const normalised = new Map<string, ReturnType<typeof normalise>>();
   for (const [path, text] of files) {
     const lines = normalise(text);
     normalised.set(path, lines);
     for (let at = 0; at + WINDOW <= lines.length; at += 1) {
       const key = createHash('sha1').update(lines.slice(at, at + WINDOW).map(({ text: code }) => code).join('\n')).digest('hex');
       if (!windows.has(key)) windows.set(key, []);
-      windows.get(key).push({ path, at });
+      (windows.get(key) as { path: string, at: number }[]).push({ path, at }); // set just above when missing
     }
   }
   const pairs: Map<string, {covered: Set<string>, first: string}> = new Map();
@@ -71,8 +71,9 @@ export function clones(files: Map<string, string>) {
       const [a, b] = [occurrences[i], occurrences[j]].sort((x, y) => x.path.localeCompare(y.path));
       if (a.path === b.path) continue;
       const key = `${a.path} <> ${b.path}`;
-      if (!pairs.has(key)) pairs.set(key, { covered: new Set(), first: `${a.path}:${normalised.get(a.path)[a.at].line}` });
-      for (let k = 0; k < WINDOW; k += 1) pairs.get(key).covered.add(`${a.at + k}`);
+      // Every path a window names was normalised above, and a pair is set just above when missing.
+      if (!pairs.has(key)) pairs.set(key, { covered: new Set(), first: `${a.path}:${(normalised.get(a.path) as ReturnType<typeof normalise>)[a.at].line}` });
+      for (let k = 0; k < WINDOW; k += 1) (pairs.get(key) as { covered: Set<string> }).covered.add(`${a.at + k}`);
     }
   }
   return new Map([...pairs].map(([key, { covered, first }]) => [`clone:${key}`, { count: covered.size, detail: `from ${first}` }]));
@@ -88,7 +89,7 @@ export function clones(files: Map<string, string>) {
   ]));
   assert.deepEqual([...found.keys()], ['clone:packages/a/src/one.js <> packages/b/src/two.js'],
     'a pasted block must be caught across comments and blank lines, and a shorter run must not');
-  assert.equal(found.get('clone:packages/a/src/one.js <> packages/b/src/two.js').count, WINDOW + 3);
+  assert.equal(found.get('clone:packages/a/src/one.js <> packages/b/src/two.js')?.count, WINDOW + 3);
   assert.deepEqual(normalise('/*\n * doc\n */\nconst a = 1; // x\n}\n\n'), [{ line: 4, text: 'const a = 1; // x' }]);
 }
 

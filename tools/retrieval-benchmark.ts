@@ -10,8 +10,8 @@ const SKIP = new Set(['.git', 'node_modules', 'artifacts', 'dist', 'captures', '
 const TEXT = /\.(?:md|txt|json)$/;
 const ROUTES = /^(?:README\.md|CLAUDE\.md|CONTRIBUTING\.md|docs\/(?:README\.md|architecture\/(?:README|DEPENDENCY-GRAPH)\.md|evidence\/README\.md)|(?:packages|apps)\/[^/]+\/README\.md)$/;
 
-async function walk(directory) {
-  const result = [];
+async function walk(directory: string): Promise<string[]> {
+  const result: string[] = [];
   for (const entry of await readdir(directory, { withFileTypes: true })) {
     if (SKIP.has(entry.name)) continue;
     const path = join(directory, entry.name);
@@ -21,8 +21,8 @@ async function walk(directory) {
   return result;
 }
 
-const tokenise = text => new Set(text.toLowerCase().match(/[a-z0-9][a-z0-9._/-]*/g) ?? []);
-const corpus = [];
+const tokenise = (text: string) => new Set(text.toLowerCase().match(/[a-z0-9][a-z0-9._/-]*/g) ?? []);
+const corpus: { path: string, tokens: Set<string> }[] = [];
 for (const path of (await walk(ROOT)).sort()) {
   const id = relative(ROOT, path);
   if (ROUTES.test(id)) corpus.push({ path: id, tokens: tokenise(await readFile(path, 'utf8')) });
@@ -39,7 +39,7 @@ const queries = [
   { id: 'research-operation', terms: 'research experiment candidate evaluator statistics', expected: 'packages/propose/README.md' },
 ];
 
-const search = query => {
+const search = (query: { terms: string }) => {
   const terms = tokenise(query.terms);
   return corpus.map(item => ({
     path: item.path,
