@@ -7,26 +7,30 @@
 import { STUN_FRAMES } from '@sixam/source/fnaf2';
 import { initialReducedState, advanceReduced, observeReduced } from '@sixam/source/fnaf2';
 import { CYCLE_LIBRARY, NightPolicy, NIGHT_POLICY_CYCLES } from '@sixam/propose/fnaf2';
+import type { CycleController } from '@sixam/propose/fnaf2';
+import type { ReducedState } from '@sixam/source/games/fnaf2/reduced-model.ts';
+
+type Decision = NonNullable<NightPolicy['lastDecision']>;
 
 let failures = 0;
-const check = (condition, message) => {
+const check = (condition: unknown, message: string) => {
   if (condition) console.log(`ok   ${message}`);
   else { failures++; console.error(`FAIL ${message}`); }
 };
 
-const O = value => ({ state: 'OBSERVED', value });
-const U = reason => ({ state: 'UNKNOWN', reason });
+const O = (value: unknown) => ({ state: 'OBSERVED', value });
+const U = (reason: string) => ({ state: 'UNKNOWN', reason });
 
 // A stand-in for the controller surface the policy is allowed to touch: the
 // reduced belief and the last fact batch. Nothing else exists here, so a
 // policy that reached for an engine would fail to run at all.
-function surface(state, facts = {}) {
-  return { reduced: state, facts };
+function surface(state: ReducedState, facts: Readonly<Record<string, unknown>> = {}) {
+  return { reduced: state, facts } as CycleController; // a partial fake: the policy reads these two fields
 }
 
 // Settle the two control facts so the reduced model stops reporting them
 // UNKNOWN, which every primitive's prerequisites require.
-function settled(night, overrides = {}) {
+function settled(night: number, overrides: Partial<ReducedState> = {}) {
   let state = initialReducedState({ night, frame: 0 });
   state = observeReduced(state, { monitorUp: O(false), maskOn: O(false) }, { frame: 0 });
   return Object.assign(state, overrides);
@@ -64,7 +68,7 @@ const oldAudioOverruled = settled(6, { frame: night6.campFrames + 20 });
 night6.want(surface(oldAudioOverruled, {
   blackout: O(false), leftOpening: O('empty'), bbVent: O('opening'),
 }));
-check(!night6.lastDecision.why.startsWith('balloon boy'),
+check(!(night6.lastDecision as Decision).why.startsWith('balloon boy'), // want() records every decision
   'a current empty office level supersedes an older retained BB audio edge');
 
 // UNKNOWN is not a hazard and it is not an all-clear: with nothing observed
@@ -80,10 +84,10 @@ check(NIGHT_POLICY_CYCLES.includes(night6.want(surface(settled(6), unknownFacts)
 const afterTrip = { lastMonitorUpFrame: 500, lastMaskOnFrame: 100, frame: 520 };
 // The cycle alone cannot tell these apart -- an idle Night 1 masks anyway, to
 // camp -- so this reads the recorded REASON, which is the thing under test.
-const gfWhy = (night) => {
+const gfWhy = (night: number) => {
   const policy = new NightPolicy({ night });
   policy.want(surface(settled(night, afterTrip), { blackout: O(false) }));
-  return policy.lastDecision;
+  return policy.lastDecision as Decision; // want() records every decision
 };
 check(gfWhy(7).cycle === 'mask-now' && gfWhy(7).why.startsWith('golden freddy'),
   'a night that can arm Golden Freddy clears the office after a cams-up trip');

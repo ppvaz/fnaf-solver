@@ -12,7 +12,9 @@ import { minimalPolicy } from '../bin/policy/policy-ir.ts';
 import { classifyPolicy } from '../bin/policy/policy-grammar.ts';
 import { runSearch } from '../bin/policy/policy-search.ts';
 
-const check = (condition, message) => { if (!condition) throw new Error(message); };
+type Candidate = ReturnType<typeof runSearch>['candidates'][number];
+
+const check = (condition: unknown, message: string) => { if (!condition) throw new Error(message); };
 const base = minimalPolicy();
 const temp = mkdtempSync(join(tmpdir(), 'fnaf2-policy-search-'));
 const output = join(temp, 'report.json');
@@ -22,20 +24,22 @@ const report = runSearch(base, {
 });
 
 const accepted = report.candidates.filter(candidate => candidate.status === 'accepted');
-const dropped = report.candidates.find(candidate => candidate.id.endsWith('-drop-wind'));
+// Every candidate here has a policy, so an id.
+const dropped = report.candidates.find(candidate => (candidate.id as string).endsWith('-drop-wind'));
 check(accepted.some(candidate => candidate.id === base.metadata.id),
   'constrained search lost the exact-engine positive control');
 check(dropped?.status === 'rejected' && dropped.reasons.some(reason => reason.startsWith('exact-survival:')),
   'constrained search did not retain the known negative control');
 check(report.frontier.includes(base.metadata.id), 'positive control was pruned from the frontier');
 check(classifyPolicy(base).known, 'base candidate was not classified as a known family');
-check(dropped.dependencies.sourceDependencies.length > 0 &&
-      dropped.dependencies.calibrationProfile === 'moto-g56-v207-landscape',
+// Found above, and evaluateCandidate records every candidate's dependencies.
+check((dropped as Required<Candidate>).dependencies.sourceDependencies.length > 0 &&
+      (dropped as Required<Candidate>).dependencies.calibrationProfile === 'moto-g56-v207-landscape',
   'rejected candidate lost its dependency provenance');
 check(JSON.parse(readFileSync(output, 'utf8')).candidates.length === report.candidates.length,
   'persisted search report omitted candidates');
 check(report.candidates.every(candidate => candidate.closedFamilies
-  .some(match => match.id === 'unconditioned-schedule')),
+  ?.some(match => match.id === 'unconditioned-schedule')),
   'the duplicate control did not classify an unconditioned schedule');
 check(report.options.closedFamilyPolicy === 'record',
   'the search report did not record which duplicate-control mode ran');

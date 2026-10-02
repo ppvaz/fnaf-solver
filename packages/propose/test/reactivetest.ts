@@ -9,12 +9,18 @@ import { Observer, OBSERVE_INTERVAL, val } from '@sixam/play/sim';
 import { BlackoutReactive, guardIntents, GUARD_FRAMES } from '@sixam/propose/fnaf2';
 import { formatRate } from '../../review/src/stat.ts';
 
+// Every read carries each of the Observer's FACTS: the first read's are all
+// UNKNOWN, and each later video sample and audio read restates its own.
+type Read = Required<ReturnType<Observer['read']>>;
+type ReadFact = Read['blackout'];
+type Observation = Parameters<BlackoutReactive['decide']>[0];
+
 let failures = 0;
-const ok = (group, what, cond) => {
+const ok = (group: string, what: string, cond: unknown) => {
   if (!cond) { failures++; console.error(`FAIL  ${group}: ${what}`); }
   else console.log(`ok    ${group}: ${what}`);
 };
-const near = (a, b, tol) => Math.abs(a - b) <= tol;
+const near = (a: number, b: number, tol: number) => Math.abs(a - b) <= tol;
 
 // --- 1. Observer: facts are OBSERVED/UNKNOWN, mid-animation refuses -----------
 {
@@ -22,7 +28,7 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
   const obs = new Observer({ interval: 1 });
 
   // frame 0, monitor down, nothing happening
-  let f: any = obs.read(s);
+  let f = obs.read(s) as Read;
   ok('observer', 'a fact is {state,...} never a bare value',
     f.blackout.state === 'OBSERVED' && typeof f.blackout.value === 'boolean');
   ok('observer', 'monitor-down: the opening is in view',
@@ -33,7 +39,7 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
   // raise the monitor -- mid-animation the monitor fact must refuse
   s.press('monitor');
   s.tick();
-  f = obs.read(s);
+  f = obs.read(s) as Read;
   ok('observer', 'mid monitor animation -> monitorUp UNKNOWN',
     f.monitorUp.state === 'UNKNOWN' && f.monitorUp.reason === 'monitor-animating');
   ok('observer', 'mid monitor animation -> leftOpening UNKNOWN',
@@ -41,7 +47,7 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
 
   // let it finish
   for (let i = 0; i < C.MONITOR_ANIM_UP + 2; i++) s.tick();
-  f = obs.read(s);
+  f = obs.read(s) as Read;
   ok('observer', 'monitor up, settled -> monitorUp OBSERVED true',
     f.monitorUp.state === 'OBSERVED' && f.monitorUp.value === true);
 
@@ -52,7 +58,7 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
   s.cam = 9;
   s.viewing = 11;
   s.tick();
-  f = obs.read(s);
+  f = obs.read(s) as Read;
   ok('observer', 'split camera arm preserves the exact highlighted pair',
     f.cameraHighlights.state === 'OBSERVED' &&
     JSON.stringify(f.cameraHighlights.value) === JSON.stringify(['cam:9', 'cam:11']) &&
@@ -87,14 +93,15 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
   const drop = new Observer({ interval: 1, dropRate: 1, rng: { next: () => 0 } });
   const df = drop.read(s3);
   ok('observer', 'a dropped VIDEO read is UNKNOWN(read-dropped) on every video fact',
-    Object.entries(df).filter(([k]) => k !== 'frame' && k !== 'bbVent' &&
-      k !== 'bbVentId' && k !== 'mangleStatic' && k !== 'mangleStaticCam')
+    Object.entries(df).filter((entry): entry is [string, ReadFact] => entry[0] !== 'frame' && entry[0] !== 'bbVent' &&
+      entry[0] !== 'bbVentId' && entry[0] !== 'mangleStatic' && entry[0] !== 'mangleStaticCam')
       .every(([, v]) => v.state === 'UNKNOWN' && v.reason === 'read-dropped'));
   ok('observer', 'audio does not share the video drop coin (bbVent stays OBSERVED)',
     df.bbVent.state === 'OBSERVED');
 
   const s4 = new Sim({ seed: 4, night: 2 });
-  s4.events.push({ type: 'vent-bang', f: 0, data: { who: 'bb', arrival: true } });
+  // A partial fake: the observer reads only a vent-bang's who and whether it is an arrival.
+  s4.events.push({ type: 'vent-bang', f: 0, data: { who: 'bb', arrival: true } } as unknown as Sim['events'][number]);
   const audio = new Observer({ interval: 60, audioLatencyFrames: 0 });
   const a0 = audio.read(s4);
   ok('observer', 'audio cue is not delayed by the video cadence',
@@ -102,7 +109,7 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
     a0.bbVentId.state === 'OBSERVED');
 
   const fnSim = new Sim({ seed: 5, night: 2 });
-  fnSim.events.push({ type: 'vent-bang', f: 0, data: { who: 'bb', arrival: true } });
+  fnSim.events.push({ type: 'vent-bang', f: 0, data: { who: 'bb', arrival: true } } as unknown as Sim['events'][number]);
   const fn = new Observer({ interval: 60, audioLatencyFrames: 0,
                             audioFalseNegativeRate: 1, rng: { next: () => 0 } });
   const fnFact = fn.read(fnSim);
@@ -121,7 +128,7 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
   const fpFact = fp.read(new Sim({ seed: 7, night: 2 }));
   ok('observer', 'cue-free false positive has no engine visit identity',
     fpFact.bbVent.state === 'OBSERVED' && fpFact.bbVent.value === 'opening' &&
-    fpFact.bbVentId.value?.startsWith('fp:'));
+    (fpFact.bbVentId as { value?: string | null }).value?.startsWith('fp:')); // an id is a cue id or null
 }
 
 // --- 3. controller: the night 6-38 guard ------------------------------------
@@ -143,13 +150,13 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
     monitorUp: { state: 'OBSERVED', value: false } }, { frame: 20, scheduled: [] });
   ok('controller', 'a rejected animated intent does not commit the FSM or cooldown',
     press.length === 1 && tx.state === 'securing' &&
-    tx.settle([]) === false && tx.state === 'idle' && !tx.cooling(20));
+    tx.settle([]) === false && (tx.state as BlackoutReactive['state']) === 'idle' && !tx.cooling(20)); // settle() moves the state narrowed above
 }
 
 // --- 4. BlackoutReactive state machine ------------------------------------
 {
-  const O = (v) => ({ state: 'OBSERVED', value: v });
-  const U = (r) => ({ state: 'UNKNOWN', reason: r });
+  const O = (v: unknown) => ({ state: 'OBSERVED' as const, value: v });
+  const U = (r: string) => ({ state: 'UNKNOWN' as const, reason: r });
   // mask-camp scenario: the monitor is already down.
   const down = { blackout: O(true), leftOpening: U('opening-not-in-view'),
                  maskOn: O(false), monitorUp: O(false) };
@@ -178,7 +185,7 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
 
   // caught while camming: lower -> mask -> hold -> verify -> drop -> raise back
   const cc = new BlackoutReactive({ maxMaskFrames: 100 });
-  const step = (o, fr) => cc.decide({ blackout: O(false), leftOpening: U('x'),
+  const step = (o: Observation, fr: number) => cc.decide({ blackout: O(false), leftOpening: U('x'),
     maskOn: O(false), monitorUp: O(false), ...o }, { frame: fr, scheduled: [] });
   // frames spaced past PRESS_COOLDOWN between animated presses
   d = step({ blackout: O(true), monitorUp: O(true) }, 0);
@@ -223,7 +230,7 @@ const NIGHT = 1;
 const N_BLACKOUTS = 4;
 const { opening: BASE_OPEN, loop: BASE_LOOP } = build({ minimal: true });
 
-function runBase(seed, { reactive = null } = {}) {
+function runBase(seed: number, { reactive = null }: { reactive?: { observer: Observer, ctrl: BlackoutReactive } | null } = {}) {
   const s = new Sim({ seed, night: NIGHT });
   const q = schedule({ opening: BASE_OPEN, loop: BASE_LOOP,
                        periodMs: 5000, loopStartMs: 10000 });
@@ -245,10 +252,11 @@ function runBase(seed, { reactive = null } = {}) {
     if (blackoutFrames.has(s.frame) && !s.blackout.active) s.startBlackout('synthetic', null);
 
     if (reactive) {
-      const facts = obs.read(s);
+      const facts = (obs as Observer).read(s); // set whenever reactive is
       const window = scheduled.filter(x => Math.abs(s.frame - x.at) < GUARD_FRAMES * 3);
       for (const it of guardIntents(
-          reactive.ctrl.decide(facts, { frame: s.frame, scheduled: window }), window)) {
+          // The controller reads the Observer's facts by name; the read's frame entry is not one it reads.
+          reactive.ctrl.decide(facts as Omit<typeof facts, 'frame'>, { frame: s.frame, scheduled: window }), window)) {
         if (it.at <= s.frame) s.press(it.action);
       }
     }
@@ -266,7 +274,7 @@ function runBase(seed, { reactive = null } = {}) {
   // The metric is blackout-specific: leaving CAM 09 to handle a blackout costs
   // the Toy stun a beat, so a few runs then die to a Toy instead -- that is a
   // real strategy cost, not a controller fault, so it is not what P1 gates.
-  const rate = (fn) => {
+  const rate = (fn: (seed: number) => ReturnType<typeof runBase>) => {
     let dead = 0, exercised = 0;
     for (const seed of seeds) {
       const r = fn(seed);

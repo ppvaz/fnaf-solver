@@ -7,9 +7,18 @@ import { compileBundle, parsePlan, validateBundle } from '../bin/plans/bundle.ts
 import { stableHash } from '@sixam/kernel/contracts';
 import { compileArtifactPlans } from '../bin/plans/artifact-commands.ts';
 import { makeExecutorRequest } from '../../play/src/campaign/artifact-executor.ts';
+import type { persistArtifactPlans } from '../bin/plans/artifact-commands.ts';
 
-const check = (condition, message) => { if (!condition) throw new Error(message); };
-const expectFailure = (fn, message) => {
+// A manifest's plan entry, as validateBundle checked it.
+type PlanEntry = Omit<ReturnType<typeof validateBundle>['plans'][number], 'text'>;
+// validateBundle hands back the artifact's plans as persistArtifactPlans wrote them.
+type PersistedPlan = ReturnType<typeof persistArtifactPlans>[number];
+// What these checks read off a compiled artifact-action-v1.
+type CompiledAction = { readonly control?: string, readonly requiresMonitorUp?: boolean, readonly targetMonitorUp?: boolean,
+  readonly compound?: string, readonly ventControl?: string };
+
+const check = (condition: unknown, message: string) => { if (!condition) throw new Error(message); };
+const expectFailure = (fn: () => unknown, message: string) => {
   let failed = false;
   try { fn(); } catch { failed = true; }
   check(failed, message);
@@ -56,18 +65,19 @@ try {
   // mask coming off 300 ms later -- the exact change the device's five-tick
   // defect turns on -- both hashed fnv1a-c651e2ff.
   const planned = compileBundle(winner, join(root, 'plan-sha-probe'));
-  const night2Sha = planned.manifest.plans.find(plan => plan.night === 2).sha256;
+  // The winner names nights 2 and 7.
+  const night2Sha = ((planned.manifest.plans as readonly PlanEntry[]).find(plan => plan.night === 2) as PlanEntry).sha256;
   expectFailure(() => compileBundle({ ...winner, gate: { ...winner.gate, planSha256: { 2: night2Sha } } },
     join(root, 'plan-sha-missing-night')),
     'a gate.planSha256 that omits an emitted night must be refused');
   expectFailure(() => compileBundle({ ...winner,
     gate: { ...winner.gate, planSha256: { 2: night2Sha.replace(/^./, c => c === 'a' ? 'b' : 'a'),
-      7: planned.manifest.plans.find(plan => plan.night === 7).sha256 } } },
+      7: ((planned.manifest.plans as readonly PlanEntry[]).find(plan => plan.night === 7) as PlanEntry).sha256 } } },
   join(root, 'plan-sha-wrong')),
   'a gate.planSha256 that does not match the emitted plan must be refused');
   const boundPath = join(root, 'plan-sha-bound');
   check(compileBundle({ ...winner, gate: { ...winner.gate,
-    planSha256: Object.fromEntries(planned.manifest.plans.map(plan => [plan.night, plan.sha256])) } },
+    planSha256: Object.fromEntries((planned.manifest.plans as readonly PlanEntry[]).map(plan => [plan.night, plan.sha256])) } },
   boundPath).status === 'READY', 'a gate.planSha256 that matches every emitted plan must compile');
   check(validateBundle(boundPath).plans.length === 2,
     'a plan-bound bundle must validate from disk, where the check runs against the re-emission');
@@ -86,7 +96,7 @@ try {
   check(ready.plans.length === 2 && ready.replay.results.length === 4,
     'bundle validator did not replay each selected night and seed');
   check(ready.compiled?.length === 2, 'bundle validator did not return persisted semantic artifact plans');
-  check(ready.compiled.every(plan => plan.timing?.periodMs > 0 &&
+  check(ready.compiled?.every(plan => plan.timing?.periodMs > 0 &&
     plan.timing.stopAtMs >= plan.timing.loopStartMs &&
     plan.timing.observeUntilMs >= plan.timing.stopAtMs),
   'persisted artifact plans did not retain their bounded full-night timing envelope');
@@ -94,8 +104,8 @@ try {
   check(selected.plans.length === 1 && selected.plans[0].night === 7,
     'night selector did not bind to the requested plan');
   const conditioned = compileArtifactPlans(selected.plans, parsePlan, selected.profile);
-  const actions = Object.values(conditioned[0].cycles).flatMap((cycle: any) =>
-    cycle.blocks.flatMap(block => block.actions));
+  const actions = Object.values(conditioned[0].cycles).flatMap(cycle =>
+    cycle.blocks.flatMap(block => block.actions as readonly CompiledAction[]));
   check(actions.filter(action => action.control?.startsWith('cam:'))
     .every(action => action.requiresMonitorUp === true),
   'artifact compiler emitted a camera action without an UP precondition');
@@ -109,7 +119,7 @@ try {
   const allNightBundle = compileBundle({ ...winner, nights: [1, 2, 3, 4, 5, 6, 7], seeds: [1] },
     join(root, 'all-nights'));
   check(allNightBundle.manifest.nights.join(',') === '1,2,3,4,5,6,7' &&
-    allNightBundle.compiled.length === 7,
+    allNightBundle.compiled?.length === 7,
   'bundle compiler did not bind one semantic plan for every night');
 
   const cliWinner = join(root, 'winner-input.json');
@@ -159,7 +169,7 @@ try {
     'manifest winnerHash must be the hash of the stored winner.json');
   writeFileSync(winnerPath, storedWinnerText.replace('"seeds":[1,2]', '"seeds":[1,3]'));
   let tamperMessage = '';
-  try { validateBundle(bundlePath); } catch (error) { tamperMessage = error.message; }
+  try { validateBundle(bundlePath); } catch (error) { tamperMessage = (error as Error).message; }
   check(tamperMessage.includes('winner hash does not match manifest'),
     `an edited stored winner must be refused as a winner hash mismatch, got: ${tamperMessage}`);
   writeFileSync(winnerPath, storedWinnerText);
@@ -196,7 +206,7 @@ try {
     attackFreeEvidence: 'night 1 replays detections=0 over seeds 1..3000 (2026-09-19)',
     gate: { status: 'PASS', claimLevel: 'MODEL_ONLY' },
   }, join(root, 'minus7'));
-  check(minus7.manifest.plans[0].policy === 'minus7', 'minus7 emitter was not registered');
+  check((minus7.manifest.plans as readonly PlanEntry[])[0].policy === 'minus7', 'minus7 emitter was not registered');
   const minus7Plan = readFileSync(join(root, 'minus7', 'night-1.plan'), 'utf8');
   check(!minus7Plan.includes('#cycle attack'),
     'the emitted minus7 device plan must carry a single steady cycle');
@@ -214,9 +224,9 @@ try {
     engineHash: 'minus3-engine-fixture-v1', seeds: [1], profile: 'hid-mediaprojection',
     gate: { status: 'PASS', claimLevel: 'MODEL_ONLY' },
   }, join(root, 'minus3'));
-  check(minus3.manifest.plans[0].policy === 'minus3', 'minus3 emitter was not registered');
-  const minus3Actions = Object.values(minus3.compiled[0].cycles).flatMap((cycle: any) =>
-    cycle.blocks.flatMap(block => block.actions));
+  check((minus3.manifest.plans as readonly PlanEntry[])[0].policy === 'minus3', 'minus3 emitter was not registered');
+  const minus3Actions = Object.values((minus3.compiled as PersistedPlan[])[0].cycles).flatMap(cycle =>
+    cycle.blocks.flatMap(block => block.actions as readonly CompiledAction[]));
   check(minus3Actions.some(action => action.compound === 'hallvent' &&
     action.control === 'hallLight' && action.ventControl === 'rightVentLight'),
   'minus3 did not compile the hall/right-vent compound');
@@ -226,7 +236,7 @@ try {
   // through artifact-runner.mjs until that second lane onto the phone was
   // retired on 2026-09-25; the executor request is the boundary itself.)
   const request = makeExecutorRequest({ manifest: ready.manifest, profile: ready.profile,
-    compiledPlans: ready.compiled.filter(plan => plan.night === 2), mode: 'dry-run' });
+    compiledPlans: (ready.compiled as PersistedPlan[]).filter(plan => plan.night === 2), mode: 'dry-run' });
   check(request.schema === 'device-executor-v1', 'executor request lost its schema');
   check(request.blocks.length > 0 && request.blocks.every(block => block.night === 2),
     'executor request did not carry the selected night\'s compiled blocks');
@@ -264,7 +274,7 @@ try {
     'anchor epoch did not reach the manifest');
   let anchorRefusal = '';
   try { compileBundle({ ...winner, nights: [7], anchorEpochMs: 10001 }, join(root, 'anchored-late')); }
-  catch (error) { anchorRefusal = error.message; }
+  catch (error) { anchorRefusal = (error as Error).message; }
   check(anchorRefusal.includes('anchorEpochMs must be an integer in 0..10000'),
     `an anchor epoch past the longest game timer was accepted (${anchorRefusal})`);
 
@@ -277,7 +287,7 @@ try {
   try {
     compileBundle({ ...winner, strategy: 'minus3', nights: [5], knobs: 'KNOBS0',
       engineHash: 'minus3-engine-fixture-v1', phaseOffsetMs: 333 }, join(root, 'minus3-phased'));
-  } catch (error) { phaseRefusal = error.message; }
+  } catch (error) { phaseRefusal = (error as Error).message; }
   check(phaseRefusal.includes('minus3 cannot replay a phase offset'),
     `a strategy whose replay cannot evaluate a phase offset still accepted one (${phaseRefusal})`);
 

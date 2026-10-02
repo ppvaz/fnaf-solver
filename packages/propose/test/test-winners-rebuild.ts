@@ -21,6 +21,9 @@ import { compileBundle } from '../bin/plans/bundle.ts';
 import { makeCampaignSpec } from '../../play/src/campaign/campaign.ts';
 import { validateCampaignBundle } from '../../play/src/campaign/campaign-bundle.ts';
 
+// compileBundle writes the compiled artifact, so the bundle it returns carries its plans.
+type CompiledPlans = NonNullable<ReturnType<typeof compileBundle>['compiled']>;
+
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, '../../..');
 // The committed FNaF 2 winners (winner-v1): packages/propose/bindings/fnaf2.
@@ -36,14 +39,14 @@ try {
       const built = compileBundle(winner, join(scratch, name));
       const profile = JSON.parse(readFileSync(join(ROOT, 'packages/play/profiles/fnaf2/moto-g56', `${built.profile.id}.json`), 'utf8'));
       const nights = built.manifest.nights;
-      const timingByNight = Object.fromEntries(built.compiled.map(plan => [String(plan.night), plan.timing]));
+      const timingByNight = Object.fromEntries((built.compiled as CompiledPlans).map(plan => [String(plan.night), plan.timing]));
       const spec = makeCampaignSpec({ profile: profile.id, targetBuild: profile.targetBuild, timingByNight, nights });
-      validateCampaignBundle({ spec, plans: built.compiled.filter(plan => nights.includes(plan.night)) });
+      validateCampaignBundle({ spec, plans: (built.compiled as CompiledPlans).filter(plan => nights.includes(plan.night)) });
       rows.push(`${name.replace(/-winner\.json$/, '').padEnd(28)} ${built.manifest.strategy.padEnd(10)} ` +
         `nights ${nights.join(',').padEnd(4)} ${built.manifest.winnerHash}`);
     } catch (error) {
       failed = 1;
-      console.error(`FAIL ${name}: ${error.message}`);
+      console.error(`FAIL ${name}: ${(error as Error).message}`);
     }
   }
 } finally {

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { isList } from '@sixam/kernel';
 import { generateCandidates, replayModelResult, runModelExperiment } from '../src/experiment/experiment.ts';
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
@@ -12,9 +13,9 @@ for (const id of cases) {
   const candidates = generateCandidates(spec);
   const result = runModelExperiment(spec);
   const dimensions = Object.values(spec.candidateSpace?.dimensions ?? {})
-    .filter(values => Array.isArray(values) && values.length);
+    .filter((values): values is readonly unknown[] => isList(values) && values.length > 0);
   const parameterCount = dimensions.length
-    ? dimensions.reduce((count, values: any) => count * values.length, 1)
+    ? dimensions.reduce((count, values) => count * values.length, 1)
     : spec.evaluator ? spec.candidateParameters.length : 1;
   const expectedCandidates = (spec.evaluator || spec.candidateSpace)
     ? spec.seeds.length * parameterCount : spec.seeds.length;
@@ -22,15 +23,18 @@ for (const id of cases) {
   assert.equal(result.evaluations.length, expectedCandidates, `${id}: evaluation count`);
   assert.equal(result.operation, spec.operation, `${id}: operation`);
   assert.equal(result.claimLevel, 'MODEL_ONLY', `${id}: claim ceiling`);
-  assert.ok(result.evaluations.every(item => item.traceHash.startsWith('fnv1a-')), `${id}: trace hashes`);
+  // Every evaluator hashes its trace to a string.
+  assert.ok(result.evaluations.every(item => (item.traceHash as string).startsWith('fnv1a-')), `${id}: trace hashes`);
   const replay = replayModelResult(spec, { evidenceId: `replay-${id}` });
   assert.equal(replay.resultHash, replayModelResult(spec, { evidenceId: `replay-${id}` }).resultHash, `${id}: replay hash`);
   // LEG-009: the result's terminal spans every evaluation, not the first one's.
-  const frames = result.evaluations.map(item => item.terminal.frame);
+  // Every evaluator here ends in a terminal frame.
+  const frames = result.evaluations.map(item => (item.terminal as { readonly frame: number }).frame);
   assert.deepEqual(replay.payload.terminalAggregate,
     { clock: 'simulator-frame', frames: { lo: Math.min(...frames), hi: Math.max(...frames) },
       evaluations: result.evaluations.length, reporting: frames.length }, `${id}: aggregate terminal`);
-  assert.equal(replay.payload.terminal, undefined, `${id}: no first-evaluation terminal`);
+  // Read as a record: the payload's type has no terminal field to look for.
+  assert.equal((replay.payload as Readonly<Record<string, unknown>>).terminal, undefined, `${id}: no first-evaluation terminal`);
 }
 const synthesis = JSON.parse(await readFile(join(ROOT, 'experiments', 'controller-synthesis.json'), 'utf8'));
 assert.equal(generateCandidates(synthesis).length, 18, 'controller synthesis expands its cartesian candidate space');

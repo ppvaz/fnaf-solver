@@ -7,12 +7,14 @@ import { canonicalPolicy, policyGame, roundTripPolicy, validatePolicy } from '@s
 import { minimalPolicy } from '../bin/policy/policy-ir.ts';
 import { compilePolicy } from '../bin/policy/policy-interpreter.ts';
 import { compilePolicyArtifact } from '../bin/policy/policy-artifact.ts';
+import type { PolicyProgram } from '@sixam/propose/policy';
 
-const sha256 = text => createHash('sha256').update(text).digest('hex');
+const sha256 = (text: string) => createHash('sha256').update(text).digest('hex');
 // The program with the first action of its first acting phase renamed.
-const withAction = (program, action) => {
+const withAction = (program: PolicyProgram, action: string) => {
   const copy = structuredClone(program);
-  copy.phases.find(phase => phase.actions?.length).actions[0].action = action;
+  // Every program here has an acting phase, and the clone's action is this fixture's to rename.
+  (copy.phases.find(phase => phase.actions?.length) as { actions: readonly { action: string }[] }).actions[0].action = action;
   return copy;
 };
 
@@ -45,7 +47,7 @@ assert.throws(() => validatePolicy(withAction(minimal, 'cam:13')), /not a FNaF 2
 
 // -- a FNaF 1 policy validates against the FNaF 1 catalog, and FNaF 2's
 //    spellings are not FNaF 1 controls.
-const fnaf1 = {
+const fnaf1: PolicyProgram = {
   schema: 'policy-v1',
   metadata: { id: 'fnaf1-door-fixture', game: 'fnaf1', nights: [1] },
   phases: [

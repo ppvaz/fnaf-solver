@@ -5,7 +5,7 @@ import {
   compileDevicePlan, comparePolicyToDevice,
 } from '../bin/policy/policy-equivalence.ts';
 
-const check = (condition, message) => { if (!condition) throw new Error(message); };
+const check = (condition: unknown, message: string) => { if (!condition) throw new Error(message); };
 const program = minimalPolicy();
 const compiled = compileDevicePlan(program);
 const comparison = comparePolicyToDevice(program, compiled);
@@ -22,7 +22,7 @@ check(comparison.equal, `compiled policy diverged: ${JSON.stringify(comparison.m
 check(comparison.simulatorCount === 185 && comparison.phoneCount === 185,
   'equivalence fixture changed event count without a deliberate update');
 
-function rejects(text, message) {
+function rejects(text: string, message: string) {
   const result = comparePolicyToDevice(program, text);
   check(!result.equal, message);
 }

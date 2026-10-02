@@ -2,8 +2,13 @@
 import { DEVICE_CONSTRAINTS, gateCycle, getCycle } from '@sixam/propose/fnaf2';
 import { initialReducedState, advanceReduced, applyReduced } from '@sixam/source/fnaf2';
 import * as C from '@sixam/source/fnaf2';
+import type { Cycle, CycleAction } from '@sixam/propose/fnaf2';
+import type { ReducedState } from '@sixam/source/games/fnaf2/reduced-model.ts';
 
-const check = (condition, message) => { if (!condition) throw new Error(message); };
+// getCycle hands back a fresh clone, which the fixtures below edit in place.
+type EditableCycle = Omit<Cycle, 'actions'> & { actions: { -readonly [K in keyof CycleAction]: CycleAction[K] }[] };
+
+const check = (condition: unknown, message: string) => { if (!condition) throw new Error(message); };
 
 // Establish the only state the wind primitive is allowed to assume: monitor
 // up, controls known, and the sourced box camera selected.
@@ -14,7 +19,7 @@ state = applyReduced(state, 'cam:11').state;
 state.controlUnknown.monitor = false;
 state.controlUnknown.mask = false;
 
-const exactPass = cycle => ({ accepted: true, cycleId: cycle.id });
+const exactPass = (cycle: Cycle) => ({ accepted: true, cycleId: cycle.id });
 let result = gateCycle(getCycle('wind-and-anchor'), state, { exactGate: exactPass });
 check(result.accepted, `reviewed wind primitive was rejected: ${result.reasons.join(', ')}`);
 check(result.record.cycleId === 'wind-and-anchor' && result.record.reasons.length === 0,
@@ -28,7 +33,7 @@ check(!result.accepted && result.reasons.some(reason => reason.startsWith('prere
 
 // An action that lands during an existing monitor animation is rejected before
 // it can be treated as a verified transition.
-const animation = getCycle('verify-and-resume');
+const animation = getCycle('verify-and-resume') as EditableCycle; // a library id, so never null
 animation.actions.push({ atFrame: 1, kind: 'press', action: 'monitor', contactMs: 33 });
 result = gateCycle(animation, applyReduced(initialReducedState({ night: 1 }), 'monitor').state,
   { exactGate: exactPass });
@@ -36,7 +41,7 @@ check(!result.accepted && result.reasons.some(reason => reason.startsWith('anima
   'monitor animation collision was accepted');
 
 // Device-contact constraints and the exact-engine proof are independent gates.
-const contact = getCycle('wind-and-anchor');
+const contact = getCycle('wind-and-anchor') as EditableCycle; // a library id, so never null
 contact.actions[0].contactMs = 1;
 result = gateCycle(contact, state, { exactGate: exactPass });
 check(!result.accepted && result.reasons.some(reason => reason.startsWith('contact-floor')),
@@ -78,7 +83,7 @@ console.log('cycle library: reviewed primitive, prerequisite, animation, contact
 // above hand-builds the state the library cannot reach on its own.
 import { CYCLE_LIBRARY } from '@sixam/propose/fnaf2';
 
-const keyOf = reduced => JSON.stringify([reduced.monitor, reduced.maskOn,
+const keyOf = (reduced: ReducedState) => JSON.stringify([reduced.monitor, reduced.maskOn,
   reduced.viewedCamera, reduced.winding, reduced.lightHeld,
   reduced.ventLightL, reduced.ventLightR]);
 
@@ -86,7 +91,7 @@ const keyOf = reduced => JSON.stringify([reduced.monitor, reduced.maskOn,
 // purpose: a prerequisite needing a long setup the planner would have to
 // discover is itself a finding, not a passing result.
 const SEARCH_DEPTH = 4;
-function reachableStates(depth) {
+function reachableStates(depth: number) {
   let frontier = [initialReducedState({ night: 1 })];
   const seen = new Map([[keyOf(frontier[0]), frontier[0]]]);
   for (let step = 0; step < depth; step++) {
@@ -116,10 +121,11 @@ function reachableStates(depth) {
 }
 
 const reachable = reachableStates(SEARCH_DEPTH);
-const satisfies = (state, prerequisite) => {
+const satisfies = (state: ReducedState, prerequisite: Cycle['prerequisites'][number]) => {
   const field = prerequisite.field;
   if (field.startsWith('controlUnknown.') || field.startsWith('hazards.')) return true;
-  return JSON.stringify(state[field]) === JSON.stringify(prerequisite.equals);
+  // The library's remaining prerequisites name the reduced state's control fields.
+  return JSON.stringify(state[field as keyof ReducedState]) === JSON.stringify(prerequisite.equals);
 };
 
 const unreachable = [];

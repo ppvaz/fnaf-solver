@@ -7,8 +7,9 @@
 //   gateonly = marker hold alone (the disproved pre-XOR "gate replaces the
 //              timer" hypothesis, kept as a control)
 import { run } from '../parked/minus7/reactive-pilot.ts';
+import type { PilotOptions } from '../parked/minus7/reactive-pilot.ts';
 
-const SEED = i => (i * 2246822519) >>> 0;
+const SEED = (i: number) => (i * 2246822519) >>> 0;
 const models = {
   sourced: {},
   legacy: {
@@ -27,8 +28,8 @@ const models = {
   },
 };
 
-function sweep(model, worst, n) {
-  const deaths = new Map();
+function sweep(model: PilotOptions, worst: boolean, n: number) {
+  const deaths = new Map<string, number>();
   let won = 0;
   for (let i = 0; i < n; i++) {
     const { sim } = run({ ...model, seed: SEED(i), worst });

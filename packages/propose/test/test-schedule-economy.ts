@@ -29,12 +29,13 @@ import { fileURLToPath } from 'node:url';
 import { boxSafeStopMs, threatIdleUntilMs } from '../bin/plans/recipe.ts';
 import { KNOBS0 as TOYS_KNOBS } from '../bin/plans/minus-toys-plan.ts';
 import { parsePlan, validateWinner, STRATEGY_REGISTRY } from '../bin/plans/bundle.ts';
+import type { ParsedRow } from '../bin/plans/artifact-commands.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 // The committed FNaF 2 winners (winner-v1): packages/propose/bindings/fnaf2.
 const WINNERS = join(HERE, '../bindings/fnaf2');
 let failed = 0;
-const fail = message => { failed += 1; process.stdout.write(`  FAIL ${message}\n`); };
+const fail = (message: string) => { failed += 1; process.stdout.write(`  FAIL ${message}\n`); };
 
 // --- 1. the minimal suffix claim must sit inside the derived box bound -------
 {
@@ -60,12 +61,12 @@ if (!winners.length) fail(`no shipped winner was found in ${WINNERS} to characte
 const profile = JSON.parse(readFileSync(
   join(HERE, '../../../packages/play/profiles/fnaf2/moto-g56/hid-mediaprojection.json'), 'utf8'));
 
-const isBoxWork = row => row.kind === 'hold' && row.control === 'wind';
+const isBoxWork = (row: ParsedRow) => row.kind === 'hold' && row.control === 'wind';
 
 // Which semantic controls a row actually touches. A compound names more than
 // one: `hallvent` holds the hall light AND the right vent light, and both are
 // layer-0 objects that scroll with the view.
-const controlsOf = row => {
+const controlsOf = (row: ParsedRow) => {
   if (row.kind === 'tap' || row.kind === 'hold') return [row.control];
   if (row.kind === 'hall' || row.kind === 'hallraise') return ['hallLight'];
   if (row.kind === 'hallvent') return ['hallLight', 'rightVentLight'];
@@ -93,11 +94,11 @@ for (const file of winners) {
     let total = 0, box = 0;
     for (const [name, cycle] of Object.entries(parsed.cycles)) {
       if (name === 'opening' || name === 'finish') {
-        for (const row of (cycle as any).rows) if (row.at < idle) { total += 1; box += isBoxWork(row) ? 1 : 0; }
+        for (const row of cycle.rows) if (row.at < idle) { total += 1; box += isBoxWork(row) ? 1 : 0; }
         continue;
       }
       for (let base = loopStart; base < idle; base += period)
-        for (const row of (cycle as any).rows) if (base + row.at < idle) { total += 1; box += isBoxWork(row) ? 1 : 0; }
+        for (const row of cycle.rows) if (base + row.at < idle) { total += 1; box += isBoxWork(row) ? 1 : 0; }
     }
     rows.push({ file, night, idle, total, box, idleContacts: total - box });
   }
@@ -131,7 +132,7 @@ for (const file of winners) {
         catch { continue; }
         const counts = new Map();
         for (const cycle of Object.values(parsed.cycles))
-          for (const row of (cycle as any).rows) {
+          for (const row of cycle.rows) {
             for (const control of controlsOf(row)) {
               // `true` only. An UNKNOWN control is not counted as pan-dependent and
               // not counted as safe either; it is listed separately below.

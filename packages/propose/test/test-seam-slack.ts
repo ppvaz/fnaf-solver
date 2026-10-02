@@ -37,6 +37,8 @@ import { parsePlan, validateWinner, STRATEGY_REGISTRY } from '../bin/plans/bundl
 import { FUSION_POLL_MS } from '../bin/plans/recipe.ts';
 import { checkDirectionalReuse, DIRECTIONAL_CONSTANTS } from '@sixam/review/refusals';
 
+type Seam = ReturnType<typeof compileArtifactPlans>[number]['seams'][number];
+
 const HERE = dirname(fileURLToPath(import.meta.url));
 // The committed FNaF 2 winners (winner-v1): packages/propose/bindings/fnaf2.
 const WINNERS = join(HERE, '../bindings/fnaf2');
@@ -82,7 +84,7 @@ const WINNERS = join(HERE, '../bindings/fnaf2');
 export const SEAM_JITTER_ALLOWANCE_MS = FUSION_POLL_MS;
 
 let failed = 0;
-const fail = message => { failed += 1; process.stdout.write(`  FAIL ${message}\n`); };
+const fail = (message: string) => { failed += 1; process.stdout.write(`  FAIL ${message}\n`); };
 
 // --- 1. a floor must BE its measurement, not its measurement plus a margin --
 //
@@ -124,7 +126,7 @@ const ANIMATION_FLOORS = Object.freeze({
 for (const floor of Object.keys(SEAM_FLOORS))
   if (!Object.hasOwn(DIRECTIONAL_CONSTANTS, floor) && !Object.hasOwn(ANIMATION_FLOORS, floor))
     fail(`SEAM_FLOORS.${floor} has no registered order (DIRECTIONAL_CONSTANTS) and is not an engine animation`);
-const orderRefusal = seam => {
+const orderRefusal = (seam: Pick<Seam, 'relation' | 'atMs' | 'floor' | 'first' | 'then'>) => {
   if (!seam.floor || !seam.first || !seam.then)
     return `${seam.relation} at +${seam.atMs} names no floor or no order (${seam.floor}: ${seam.first} -> ${seam.then})`;
   if (Object.hasOwn(ANIMATION_FLOORS, seam.floor)) return null;
@@ -175,7 +177,7 @@ const audits = [
 for (const { label: file, winner: rawWinner } of audits) {
   let winner;
   try { winner = validateWinner(rawWinner); }
-  catch (error) { fail(`${file}: ${error.message}`); continue; }
+  catch (error) { fail(`${file}: ${(error as Error).message}`); continue; }
   const emit = STRATEGY_REGISTRY[winner.strategy]?.emit;
   if (typeof emit !== 'function') { fail(`${file}: no emitter for ${winner.strategy}`); continue; }
   let plans;
@@ -183,14 +185,14 @@ for (const { label: file, winner: rawWinner } of audits) {
     plans = winner.nights.map(night => ({
       night, policy: winner.strategy, text: emit(winner, night).text,
     }));
-  } catch (error) { fail(`${file}: ${error.message}`); continue; }
+  } catch (error) { fail(`${file}: ${(error as Error).message}`); continue; }
   let compiled;
   try { compiled = compileArtifactPlans(plans, parsePlan, profile); }
-  catch (error) { fail(`${file}: ${error.message}`); continue; }
+  catch (error) { fail(`${file}: ${(error as Error).message}`); continue; }
   for (const plan of compiled) {
     const tight = (plan.seams ?? []).filter(s => s.slackMs < SEAM_JITTER_ALLOWANCE_MS)
       .sort((a, b) => a.slackMs - b.slackMs);
-    const worst = (plan.seams ?? []).reduce((low, s) =>
+    const worst = (plan.seams ?? []).reduce<Seam | null>((low, s) =>
       (low === null || s.slackMs < low.slackMs ? s : low), null);
     process.stdout.write(`${file} night ${plan.night}: ${(plan.seams ?? []).length} gated rows, ` +
       `worst slack ${worst ? `${worst.slackMs} ms (${worst.relation} at +${worst.atMs})` : 'n/a'}\n`);

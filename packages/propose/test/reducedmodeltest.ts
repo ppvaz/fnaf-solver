@@ -5,11 +5,12 @@ import * as C from '@sixam/source/fnaf2';
 import { Sim } from '@sixam/source/fnaf2';
 import { build, schedule } from '../bin/plans/minus-toys-plan.ts';
 import { advanceReduced, applyReduced, initialReducedState, observeReduced, isMaskFullyOn, isMaskFullyOff } from '@sixam/source/fnaf2';
+import type { ReducedState } from '@sixam/source/games/fnaf2/reduced-model.ts';
 
-const check = (condition, message) => { if (!condition) throw new Error(message); };
-const seed = (i) => (i * 2654435761) >>> 0;
+const check = (condition: unknown, message: string) => { if (!condition) throw new Error(message); };
+const seed = (i: number) => (i * 2654435761) >>> 0;
 
-function compare(sim, reduced, label) {
+function compare(sim: Sim, reduced: ReducedState, label: string) {
   check(sim.frame === reduced.frame, `${label}: frame diverged (${sim.frame} vs ${reduced.frame})`);
   check(sim.monitor === reduced.monitor && sim.monAnim === reduced.monitorAnim,
     `${label}: monitor diverged (${sim.monitor}/${sim.monAnim} vs ` +
@@ -25,7 +26,7 @@ function compare(sim, reduced, label) {
     `${label}: power diverged (${sim.power} vs ${reduced.power})`);
 }
 
-function run(seedValue) {
+function run(seedValue: number) {
   const sim = new Sim({ night: 1, seed: seedValue });
   const built = build({ minimal: true });
   const queue = schedule({
@@ -72,7 +73,7 @@ for (const n of [0, 1, 2, 17]) run(seed(n));
 // either model -- measured 7000 -> 7000 over 30 s, against 7000 -> 5200 for a
 // held hall light in BOTH. What the two models are held to here is the button
 // state and the compared fields; what Sim alone is held to is the sourced rule.
-function ventScenario(monitorUp) {
+function ventScenario(monitorUp: boolean) {
   const sim = new Sim({ night: 1, seed: seed(3) });
   let reduced = initialReducedState({ night: 1 });
   if (monitorUp) {

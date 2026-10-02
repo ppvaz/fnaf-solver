@@ -23,7 +23,7 @@ export const MIN_CONTACT_MS = 33;
 // mask press lost that way stuck the mask on and blinded every later read.
 export const MIN_RELEASED_MS = 20;
 
-export function audit(text) {
+export function audit(text: string) {
   const events = text.split('\n').filter(Boolean).map(line => JSON.parse(line));
   const problems = [];
   const active = new Map();          // id -> {at, xy}
@@ -136,12 +136,12 @@ export function audit(text) {
            rebasedMarks, worstDriftMs, totalMarks, contestedBoundaries, notes };
 }
 
-const R = (count, ...recs) => JSON.stringify({ id: 92, command: 'report',
+const R = (count: number, ...recs: number[][]) => JSON.stringify({ id: 92, command: 'report',
   report: [1, count, ...recs.flat(), ...Array(10 - recs.flat().length).fill(0)] });
-const D = ms => JSON.stringify({ id: 92, command: 'delay', duration: ms });
+const D = (ms: number) => JSON.stringify({ id: 92, command: 'delay', duration: ms });
 
 function selfTest() {
-  const rec = (flags, x, y) => [flags, x & 255, x >> 8, y & 255, y >> 8];
+  const rec = (flags: number, x: number, y: number) => [flags, x & 255, x >> 8, y & 255, y >> 8];
   // Two clean camera selects at 100 ms spacing: 33 ms contacts plus 67 ms
   // released time. Both contacts are named on every release (trap 2).
   const good = [R(2, rec(3, 100, 200), rec(7, 300, 400)), D(33),

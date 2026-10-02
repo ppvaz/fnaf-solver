@@ -3,12 +3,15 @@
 // Interval and their method; and the decision that tags each explanation ruled-out or surviving.
 import assert from 'node:assert/strict';
 import { isUnknown } from '@sixam/kernel';
+import type { Unknown } from '@sixam/kernel';
 import {
   GOLDEN_MODEL_SEED_SALT, describeSeedSet, expandSeedSet, randomSeedCohort, resolveSeedCohort, seedCohortDescriptor,
   seedDerivation, validateSeedList,
 } from '../src/experiment/seeds.ts';
 import { SEED_FLOOR, decideExperiment, evaluatePredicate, probit, rateOf, resolveCensusCohort } from '../src/experiment/census.ts';
 import { aggregateTerminal, makeResultPayload } from '../src/experiment/experiment.ts';
+
+type Evaluation = Parameters<typeof makeResultPayload>[0]['evaluations'][number];
 
 // LEG-010: the derivation is read from the seeds, never inferred from a salt a caller passes.
 const golden = randomSeedCohort({ count: 3000 });
@@ -27,13 +30,15 @@ const misstated = seedCohortDescriptor([1, 2, 3, 4, 5, 6, 7, 8], { salt: GOLDEN_
 assert.equal(misstated.salt, undefined, 'an explicit list never carries the golden salt it was passed beside');
 assert.deepEqual(misstated.derivation, { kind: 'explicit-range', from: 1, to: 8 });
 assert.equal(seedCohortDescriptor(golden, { salt: GOLDEN_MODEL_SEED_SALT }).sha256, described.sha256, 'the hash is the list\'s alone');
-assert.throws(() => seedCohortDescriptor([1, 2], { provenance: 'drawn' }), /provenance/);
+// Deliberately malformed: a provenance the descriptor does not register.
+assert.throws(() => seedCohortDescriptor([1, 2], { provenance: 'drawn' } as unknown as { provenance: 'natural' }), /provenance/);
 // Explicit cohorts obey the generator's own rules: uint32, distinct, non-empty.
 assert.deepEqual(resolveSeedCohort({ seeds: [3, 1, 2] }), [3, 1, 2]);
 assert.equal(resolveSeedCohort().length, 3000);
 assert.deepEqual(resolveSeedCohort({ count: 5 }), randomSeedCohort({ count: 5 }));
 for (const seeds of [[], [1, 1], [-1], [2 ** 32], [1.5], 'seeds'])
-  assert.throws(() => resolveSeedCohort({ seeds: (seeds as any) }), TypeError, JSON.stringify(seeds));
+  // Deliberately malformed seed lists, a string among them.
+  assert.throws(() => resolveSeedCohort({ seeds: (seeds as unknown as number[]) }), TypeError, JSON.stringify(seeds));
 assert.throws(() => validateSeedList([7, 7]), /repeats/);
 // A kernel seed set expands to its seeds, and a count or hash it does not have is refused.
 const range = describeSeedSet({ name: 'development', derivation: { kind: 'explicit-range', from: 0, to: 2999 } });
@@ -48,20 +53,23 @@ const pinned = describeSeedSet({ name: 'pinned window', derivation: { kind: 'exp
 assert.equal(pinned.provenance, 'pinned');
 
 // LEG-009: the result's terminal is an aggregate over EVERY evaluation, not the first one's.
+// Partial fakes: the payload reads only each evaluation's terminal and event count.
 const evaluations = [
   { seed: 1, eventCount: 3, terminal: { alive: true, won: false, death: null, frame: 60 } },
   { seed: 2, eventCount: 4, terminal: { alive: false, won: false, death: { reason: 'foxy' }, frame: 12 } },
   { seed: 3, eventCount: 5, terminal: { alive: true, won: true, death: null, frame: 25200 } },
-];
+] as unknown as Evaluation[];
 const payload = makeResultPayload({ evaluations, schema: 'experiment-result-v1' }, 'fixture');
 assert.deepEqual(payload.terminalAggregate, { clock: 'simulator-frame', frames: { lo: 12, hi: 25200 }, evaluations: 3, reporting: 3 });
-assert.equal(payload.terminal, undefined, 'the first evaluation\'s terminal is no longer promoted to the experiment');
+// Read as a record: the payload's type has no terminal field to look for.
+assert.equal((payload as Readonly<Record<string, unknown>>).terminal, undefined, 'the first evaluation\'s terminal is no longer promoted to the experiment');
 assert.equal(payload.eventCount, 12);
-assert.deepEqual(payload.evaluations.map(item => item.terminal.frame), [60, 12, 25200], 'each evaluation keeps its own terminal');
+assert.deepEqual(payload.evaluations.map(item => item.terminal?.frame), [60, 12, 25200], 'each evaluation keeps its own terminal');
 const reordered = makeResultPayload({ evaluations: [evaluations[2], evaluations[0], evaluations[1]] }, 'fixture');
 assert.deepEqual(reordered.terminalAggregate, payload.terminalAggregate, 'the aggregate does not depend on which evaluation came first');
-assert.ok(isUnknown(aggregateTerminal([{ eventCount: 1 }])), 'no terminal frame is UNKNOWN, never frame 0');
-assert.deepEqual((aggregateTerminal([{ terminal: { frame: 7 } }, {}]) as any).reporting, 1);
+// A partial fake without a terminal; then one evaluation that reports a frame, so the aggregate is known.
+assert.ok(isUnknown(aggregateTerminal([{ eventCount: 1 }] as Evaluation[])), 'no terminal frame is UNKNOWN, never frame 0');
+assert.deepEqual((aggregateTerminal([{ terminal: { frame: 7 } }, {}]) as Exclude<ReturnType<typeof aggregateTerminal>, Unknown>).reporting, 1);
 
 // Rates carry a kernel Interval and name their method.
 assert.ok(Math.abs(probit(0.975) - 1.959963985) < 1e-8);
@@ -80,7 +88,7 @@ assert.throws(() => rateOf('bad', 4, 3), RangeError);
 
 // The cohort a census pre-registers: disjoint, inside its population, and never under the floor.
 assert.equal(SEED_FLOOR, 3000);
-const block = (name, from, to) => describeSeedSet({ name, derivation: { kind: 'explicit-range', from, to } });
+const block = (name: string, from: number, to: number) => describeSeedSet({ name, derivation: { kind: 'explicit-range', from, to } });
 const spec = {
   schema: 'experiment-spec-v2', id: 'fixture-census', purpose: 'census', claimLevel: 'MODEL_ONLY',
   question: 'Does the fixture family win every seed?',

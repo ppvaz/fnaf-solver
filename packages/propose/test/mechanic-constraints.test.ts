@@ -21,11 +21,11 @@ const K3 = join(HERE, '../bindings/fnaf2/campaign-night7-k3-winner.json');
 // The one glitchless winner ever committed; retired from running, read here as a fixture.
 const MINUS7_WINNER = join(HERE, '../bindings/fnaf2/retired/campaign-night1-minus7-n1-first-winner.json');
 const FORBID_SPLIT = { constraints: { forbidMechanics: [CAMERA_SPLIT] } };
-const fixture = (strategy, nights) => ({
+const fixture = (strategy: string, nights: readonly number[]) => ({
   schema: 'winner-v1', strategy, knobs: 'KNOBS0', nights, engineHash: 'mechanic-constraints-fixture',
   seeds: [1], gate: { status: 'PASS', claimLevel: 'MODEL_ONLY' },
 });
-const refusal = strategy => new RegExp(`^TypeError: device bundle: strategy ${strategy} requires ` +
+const refusal = (strategy: string) => new RegExp(`^TypeError: device bundle: strategy ${strategy} requires ` +
   `fnaf2\\.camera-split \\(the double-camera glitch\\), which the run's constraints forbid$`);
 
 // -- Source names the mechanic once, and the section it cites exists.
@@ -53,7 +53,7 @@ const scratch = mkdtempSync(join(tmpdir(), 'mechanic-constraints-'));
 try {
   // -- a split-requiring strategy under a constraint that forbids the split
   //    is refused with the plain message, before anything is written.
-  for (const [strategy, nights] of [['minus-toys', [2]], ['minus3', [3]]]) {
+  for (const [strategy, nights] of [['minus-toys', [2]], ['minus3', [3]]] as const) {
     const out = join(scratch, `refused-${strategy}`);
     assert.throws(() => compileBundle(fixture(strategy, nights), out, FORBID_SPLIT),
       error => refusal(strategy).test(String(error)));
@@ -65,14 +65,14 @@ try {
     { constraints: { forbidMechanics: ['fnaf2.camera-glitch'] } }),
   /forbidMechanics names "fnaf2\.camera-glitch", which is not a known FNaF 2 mechanic \(fnaf2\.camera-split\)/);
   assert.throws(() => compileBundle(fixture('minus-toys', [2]), join(scratch, 'typo'),
-    { constraints: { forbidMechanic: [CAMERA_SPLIT] } }), /constraints has unknown field forbidMechanic/);
+    { constraints: { forbidMechanic: [CAMERA_SPLIT] } as { forbidMechanics?: string[] } }), /constraints has unknown field forbidMechanic/); // deliberately misspelled
 
   // -- the default allows every known mechanic, and a constraint the strategy
   //    satisfies changes only what the manifest records (Pedro, 2026-09-30:
   //    the constraints travel with the bundle): the plans, profile, controls,
   //    winner and artifact are byte-identical.
   const minus7 = JSON.parse(readFileSync(MINUS7_WINNER, 'utf8'));
-  const bytes = dir => Object.fromEntries(readdirSync(dir).sort().map(file => [file, readFileSync(join(dir, file), 'utf8')]));
+  const bytes = (dir: string) => Object.fromEntries(readdirSync(dir).sort().map(file => [file, readFileSync(join(dir, file), 'utf8')]));
   compileBundle(minus7, join(scratch, 'minus7-default'));
   compileBundle(minus7, join(scratch, 'minus7-no-split'), FORBID_SPLIT);
   const { 'manifest.json': constrained, ...constrainedFiles } = bytes(join(scratch, 'minus7-no-split'));

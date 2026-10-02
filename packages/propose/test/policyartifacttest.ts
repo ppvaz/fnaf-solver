@@ -14,8 +14,8 @@ import { fileURLToPath } from 'node:url';
 import { compilePolicyArtifact, verifyPolicyArtifact } from '../bin/policy/policy-artifact.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const check = (condition, message) => { if (!condition) throw new Error(message); };
-const hash = text => createHash('sha256').update(text).digest('hex');
+const check = (condition: unknown, message: string) => { if (!condition) throw new Error(message); };
+const hash = (text: string) => createHash('sha256').update(text).digest('hex');
 
 const artifact = compilePolicyArtifact();
 check(artifact.schema === 'policy-artifact-v1', 'artifact schema is not versioned');
@@ -40,7 +40,7 @@ try { verifyPolicyArtifact(changedPlan); } catch { refused = true; }
 check(refused, 'a changed compiled plan was accepted');
 
 const changedPolicy = structuredClone(artifact);
-changedPolicy.policy.metadata.id += '-tampered';
+(changedPolicy.policy.metadata as { id: string }).id += '-tampered'; // the clone's to tamper with
 refused = false;
 try { verifyPolicyArtifact(changedPolicy); } catch { refused = true; }
 check(refused, 'a changed policy identity was accepted');

@@ -3560,7 +3560,8 @@
       "file": "packages/propose/test/cycle-library.test.ts",
       "imports": [
         "@sixam/propose/fnaf2",
-        "@sixam/source/fnaf2"
+        "@sixam/source/fnaf2",
+        "@sixam/source/games/fnaf2/reduced-model.ts"
       ]
     },
     {
@@ -3574,6 +3575,7 @@
       "file": "packages/propose/test/experiment.test.ts",
       "imports": [
         "../src/experiment/experiment.ts",
+        "@sixam/kernel",
         "node:assert/strict",
         "node:fs/promises",
         "node:path",
@@ -3619,7 +3621,8 @@
       "file": "packages/propose/test/night-policy.test.ts",
       "imports": [
         "@sixam/propose/fnaf2",
-        "@sixam/source/fnaf2"
+        "@sixam/source/fnaf2",
+        "@sixam/source/games/fnaf2/reduced-model.ts"
       ]
     },
     {
@@ -3669,7 +3672,8 @@
       "file": "packages/propose/test/policygrammartest.ts",
       "imports": [
         "../bin/policy/policy-grammar.ts",
-        "../bin/policy/policy-ir.ts"
+        "../bin/policy/policy-ir.ts",
+        "@sixam/propose/policy"
       ]
     },
     {
@@ -3698,7 +3702,8 @@
       "file": "packages/propose/test/reducedmodeltest.ts",
       "imports": [
         "../bin/plans/minus-toys-plan.ts",
-        "@sixam/source/fnaf2"
+        "@sixam/source/fnaf2",
+        "@sixam/source/games/fnaf2/reduced-model.ts"
       ]
     },
     {
@@ -3780,6 +3785,7 @@
     {
       "file": "packages/propose/test/test-schedule-economy.ts",
       "imports": [
+        "../bin/plans/artifact-commands.ts",
         "../bin/plans/bundle.ts",
         "../bin/plans/minus-toys-plan.ts",
         "../bin/plans/recipe.ts",

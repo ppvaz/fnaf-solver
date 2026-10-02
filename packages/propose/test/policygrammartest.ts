@@ -3,10 +3,14 @@ import { minimalPolicy } from '../bin/policy/policy-ir.ts';
 import {
   buildPolicy, classifyPolicy, knownPolicyFamilies, validateGrammarPolicy,
 } from '../bin/policy/policy-grammar.ts';
+import type { PolicyProgram } from '@sixam/propose/policy';
 
-const check = (condition, message) => { if (!condition) throw new Error(message); };
+// A clone of the generated program, which a mutator edits in place.
+type Draft = PolicyProgram & { readonly phases: readonly { actions: { action: string, offsetMs?: number, [field: string]: unknown }[] }[] };
+
+const check = (condition: unknown, message: string) => { if (!condition) throw new Error(message); };
 const source = minimalPolicy();
-source.metadata.setupTarget = 'minus-toys-split';
+(source.metadata as Record<string, unknown>).setupTarget = 'minus-toys-split'; // minimalPolicy builds a fresh program
 const [idle, setup, repeat, finish, observe] = source.phases;
 
 const generated = buildPolicy({
@@ -28,11 +32,11 @@ check(classifyPolicy(generated).family === 'minus-toys-minimal',
 check(knownPolicyFamilies().includes('minus-toys-minimal'),
   'known-family registry is empty');
 
-function rejects(mutator, message) {
-  const candidate = structuredClone(generated);
+function rejects(mutator: (candidate: Draft) => void, message: string) {
+  const candidate = structuredClone(generated) as Draft;
   mutator(candidate);
   let rejected = false;
-  try { validateGrammarPolicy(candidate); } catch (error) { rejected = /policy grammar/.test(error.message); }
+  try { validateGrammarPolicy(candidate); } catch (error) { rejected = /policy grammar/.test((error as Error).message); }
   check(rejected, message);
 }
 

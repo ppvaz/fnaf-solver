@@ -8,7 +8,7 @@ import { runMinusTwo } from '../src/experiment/families/minus-two.ts';
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const seeds = [0, 2654435761, 1013904226, 3668339987];
-const run = (file, args) => execFileSync(process.execPath, [join(ROOT, file), ...args], {
+const run = (file: string, args: string[]) => execFileSync(process.execPath, [join(ROOT, file), ...args], {
   encoding: 'utf8', cwd: ROOT,
 });
 

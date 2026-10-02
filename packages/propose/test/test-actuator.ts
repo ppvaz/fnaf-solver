@@ -11,13 +11,22 @@ import { DeviceActuator, SEAM_SAFE_MS, MONITOR_ANIM_DOWN_MS } from '../../play/b
 import { run as pilotRun } from '../parked/minus7/stock-device-pilot.ts';
 import { cohort } from '../parked/minus7/closed-loop-reclaim.ts';
 
+type ActuatedSim = ConstructorParameters<typeof DeviceActuator>[0];
+/** What a stub records: the frame a contact landed on, press or release, and the action. */
+type Delivery = [number, string, string];
+/** One submission of a schedule: its frame, press or release, and the action. */
+type Submission = readonly [number, 'press' | 'release', string];
+type StubSim = ActuatedSim & { frame: number, maskOn: boolean, delivered: Delivery[] };
+// An actuator built with closedLoop carries its MonitorSupervisor.
+type ClosedLoopActuator = DeviceActuator & { loop: NonNullable<DeviceActuator['loop']> };
+
 // The actuator only reads sim.frame and sim.maskOn, and writes press/release.
 function stubSim() {
   return {
-    frame: 0, maskOn: false, monitor: 'down', delivered: [],
-    press(a) { this.delivered.push([this.frame, 'press', a]); },
-    release(a) { this.delivered.push([this.frame, 'release', a]); },
-  };
+    frame: 0, maskOn: false, monitor: 'down', delivered: [] as Delivery[],
+    press(a: string) { this.delivered.push([this.frame, 'press', a]); },
+    release(a: string) { this.delivered.push([this.frame, 'release', a]); },
+  } as StubSim; // a partial fake: it has no camsUp, which the actuator never reads
 }
 
 // The supervisor reads `sim.monitor`, so its unit checks need a monitor that
@@ -25,16 +34,16 @@ function stubSim() {
 // the cameras are still on screen while the monitor is coming down.
 function monitorSim(start = 'down') {
   return {
-    frame: 0, maskOn: false, monitor: start, anim: 0, delivered: [],
+    frame: 0, maskOn: false, monitor: start, anim: 0, delivered: [] as Delivery[],
     get camsUp() { return this.monitor === 'up'; },
-    press(a) {
+    press(a: string) {
       this.delivered.push([this.frame, 'press', a]);
       if (a !== 'monitor') return;
       if (this.monitor === 'up' || this.monitor === 'raising') {
         this.monitor = 'lowering'; this.anim = C.MONITOR_ANIM_DOWN;
       } else { this.monitor = 'raising'; this.anim = C.MONITOR_ANIM_UP; }
     },
-    release(a) { this.delivered.push([this.frame, 'release', a]); },
+    release(a: string) { this.delivered.push([this.frame, 'release', a]); },
     step() {
       if (this.anim > 0 && --this.anim === 0)
         this.monitor = this.monitor === 'raising' ? 'up' : 'down';
@@ -45,7 +54,7 @@ function monitorSim(start = 'down') {
 // One read cycle of the runner: lower at frame 0, then the vent light 360 ms
 // later, which is where `light_down_at` runs. `hold` gives the classifier's
 // frame its latch, which is where the second checkpoint runs.
-function runLoop(sim, act, untilFrame = 400, ventAt = 22, ventHold = 30) {
+function runLoop(sim: { frame: number, step?(): void }, act: DeviceActuator, untilFrame = 400, ventAt = 22, ventHold = 30) {
   for (sim.frame = 0; sim.frame <= untilFrame; sim.frame++) {
     if (sim.frame === 0) act.press('monitor');
     if (sim.frame === ventAt) act.press('ventL');
@@ -58,11 +67,11 @@ function runLoop(sim, act, untilFrame = 400, ventAt = 22, ventHold = 30) {
 // Submit each event on its scheduled frame while the clock actually runs, the
 // way a pilot does -- submitting first and draining afterwards would deliver
 // the whole backlog on one frame and time nothing.
-function runSchedule(sim, act, events, until) {
+function runSchedule(sim: { frame: number }, act: DeviceActuator, events: readonly Submission[], until: number) {
   const evs = [...events].sort((a, b) => a[0] - b[0]);
   for (sim.frame = 0; sim.frame <= until; sim.frame++) {
     while (evs.length && evs[0][0] === sim.frame) {
-      const [, kind, a] = evs.shift();
+      const [, kind, a] = evs.shift() as Submission; // the loop condition saw it
       act[kind](a);
     }
     act.deliver();
@@ -81,8 +90,9 @@ const problems = [];
       [60, 'press', 'wind'], // unrelated traffic between down and up
       [90, 'release', 'light'],
     ], 200);
-    const down = sim.delivered.find(d => d[2] === 'light' && d[1] === 'press');
-    const up = sim.delivered.find(d => d[2] === 'light' && d[1] === 'release');
+    // Nothing drops a light contact, so both land.
+    const down = sim.delivered.find(d => d[2] === 'light' && d[1] === 'press') as Delivery;
+    const up = sim.delivered.find(d => d[2] === 'light' && d[1] === 'release') as Delivery;
     if (up[0] - down[0] !== 90) {
       problems.push(`seed ${seed}: a 90-frame hold landed as ${up[0] - down[0]} frames`);
       break;
@@ -95,15 +105,15 @@ const problems = [];
 // have drawn the same numbers. The queue's serialization is deliberately still
 // in force, so an ablated press behind a late one is still pushed.
 {
-  const late = (a) => a === 'b';
+  const late = (a: string) => a === 'b';
   for (let seed = 0; seed < 100; seed++) {
     const plain = stubSim(), ablated = stubSim();
-    const events = [[0, 'press', 'a'], [40, 'press', 'b'], [80, 'press', 'c']];
+    const events: Submission[] = [[0, 'press', 'a'], [40, 'press', 'b'], [80, 'press', 'c']];
     runSchedule(plain, new DeviceActuator(plain,
       { seed, lateMinMs: 110, lateMaxMs: 300 }), events, 400);
     runSchedule(ablated, new DeviceActuator(ablated,
       { seed, lateMinMs: 110, lateMaxMs: 300, lateWhen: late }), events, 400);
-    const at = (sim, name) => sim.delivered.find(d => d[2] === name)[0];
+    const at = (sim: StubSim, name: string) => (sim.delivered.find(d => d[2] === name) as Delivery)[0]; // a, b and c all land
     if (at(ablated, 'a') !== 0 || at(ablated, 'c') !== 80) {
       problems.push(`seed ${seed}: lateWhen left a/c at ${at(ablated, 'a')}/${at(ablated, 'c')}, not 0/80`);
       break;
@@ -117,14 +127,15 @@ const problems = [];
   // A hold whose press is ablated must not have its release drawn late either.
   const sim = stubSim();
   const act = new DeviceActuator(sim, { seed: 1, lateMinMs: 110, lateMaxMs: 300,
-                                        lateWhen: (a) => a !== 'light' });
+                                        lateWhen: (a: string) => a !== 'light' });
   runSchedule(sim, act, [[0, 'press', 'light'], [90, 'release', 'light']], 300);
   const [down, up] = ['press', 'release'].map(k =>
-    sim.delivered.find(d => d[2] === 'light' && d[1] === k)[0]);
+    (sim.delivered.find(d => d[2] === 'light' && d[1] === k) as Delivery)[0]); // both contacts of the hold land
   if (down !== 0 || up !== 90)
     problems.push(`an ablated hold landed ${down}..${up}, not 0..90`);
   let threw = false;
-  try { new DeviceActuator(stubSim(), { lateWhen: 'monitor' }); } catch { threw = true; }
+  // Deliberately malformed: a string where the predicate goes.
+  try { new DeviceActuator(stubSim(), { lateWhen: 'monitor' as unknown as (act: string) => boolean }); } catch { threw = true; }
   if (!threw) problems.push('lateWhen accepted a non-predicate');
 }
 
@@ -144,7 +155,7 @@ const problems = [];
 // compare the loss rate to the census (5/7 under 140 ms, 4/8 at 140-180 ms,
 // 0/17 at 180+). The two sampled bands get a tolerance; the safe band gets
 // none, because the measurement there is a clean zero.
-function seamRate(gapFrames, trials, worst = false) {
+function seamRate(gapFrames: number, trials: number, worst = false) {
   let lost = 0;
   for (let seed = 0; seed < trials; seed++) {
     const sim = stubSim();
@@ -161,7 +172,7 @@ function seamRate(gapFrames, trials, worst = false) {
   return { rate: lost / trials };
 }
 {
-  const ms = (fr) => fr * 1000 / C.FPS;
+  const ms = (fr: number) => fr * 1000 / C.FPS;
   const cases = [
     [6, 5 / 7, 0.06],   // 100 ms
     [10, 4 / 8, 0.06],  // 167 ms
@@ -171,8 +182,9 @@ function seamRate(gapFrames, trials, worst = false) {
   for (const [gap, want, tol] of cases) {
     const { rate, broken } = seamRate(gap, 2000);
     if (broken) { problems.push('seamDrops disagrees with what was delivered'); break; }
-    if (Math.abs(rate - want) > tol)
-      problems.push(`seam at ${ms(gap).toFixed(0)} ms lost ${(rate * 100).toFixed(1)}%, ` +
+    // A run that is not broken has a rate.
+    if (Math.abs((rate as number) - want) > tol)
+      problems.push(`seam at ${ms(gap).toFixed(0)} ms lost ${((rate as number) * 100).toFixed(1)}%, ` +
         `census says ${(want * 100).toFixed(1)}%`);
   }
   if (ms(11) < SEAM_SAFE_MS) problems.push('the safe-band case sits under SEAM_SAFE_MS');
@@ -191,7 +203,7 @@ function seamRate(gapFrames, trials, worst = false) {
 
 // Seeded replay: the same seed lands the same schedule on the same frames.
 {
-  const runOnce = (seed) => {
+  const runOnce = (seed: number) => {
     const sim = stubSim();
     const act = new DeviceActuator(sim, { seed, lateMinMs: 110, lateMaxMs: 300 });
     runSchedule(sim, act, [[0, 'press', 'monitor'], [30, 'press', 'cam:11'],
@@ -213,12 +225,13 @@ function seamRate(gapFrames, trials, worst = false) {
     const plain = pilotRun({ vent: true, sync: true, sim });
     const wrapped = pilotRun({ vent: true, sync: true, sim,
       deviceActuator: { lateMinMs: 0, lateMaxMs: 0 } });
-    const key = (r) => JSON.stringify([r.sim.won, r.sim.frame,
+    const key = (r: ReturnType<typeof pilotRun>) => JSON.stringify([r.sim.won, r.sim.frame,
       r.sim.death && r.sim.death.reason, r.sim.death && r.sim.death.detail]);
     if (key(plain) !== key(wrapped))
       problems.push(`seed ${sim.seed}: a zero-lateness actuator changed the night ` +
         `(${key(plain)} vs ${key(wrapped)})`);
-    if (wrapped.actuator.seamDrops)
+    // A deviceActuator option wraps the night, so the run reports its actuator.
+    if ((wrapped.actuator as NonNullable<typeof wrapped.actuator>).seamDrops)
       problems.push(`seed ${sim.seed}: the schedule seam-dropped at zero lateness -- ` +
         'a mask -> monitor pair is under SEAM_SAFE_MS');
   }
@@ -239,7 +252,7 @@ function seamRate(gapFrames, trials, worst = false) {
   for (let seed = 0; seed < 50; seed++) {
     // Cams up, then the anchor lowers them: the geometry the gate checks.
     const sim = monitorSim('up');
-    const act = new DeviceActuator(sim, { seed, perPress: false, closedLoop: {} });
+    const act = new DeviceActuator(sim, { seed, perPress: false, closedLoop: {} }) as ClosedLoopActuator;
     runLoop(sim, act);
     const sent = act.loop.lastMonitorSent;
     for (const readAt of act.loop.gateReadFrames)
@@ -262,7 +275,7 @@ function seamRate(gapFrames, trials, worst = false) {
 {
   const sim = monitorSim('up');
   const act = new DeviceActuator(sim, { seed: 3, perPress: false,
-    lateMinMs: 0, lateMaxMs: 0, closedLoop: {} });
+    lateMinMs: 0, lateMaxMs: 0, closedLoop: {} }) as ClosedLoopActuator;
   // Skip the opening lower so the cams stay up: this is the desync itself.
   for (sim.frame = 0; sim.frame <= 400; sim.frame++) {
     if (sim.frame === 22) act.press('ventL');
@@ -285,7 +298,7 @@ function seamRate(gapFrames, trials, worst = false) {
 {
   const sim = monitorSim('up');
   const act = new DeviceActuator(sim, { seed: 3, perPress: false,
-    lateMinMs: 0, lateMaxMs: 0, closedLoop: {} });
+    lateMinMs: 0, lateMaxMs: 0, closedLoop: {} }) as ClosedLoopActuator;
   for (sim.frame = 0; sim.frame <= 400; sim.frame++) {
     if (sim.frame === 22) act.press('ventL');
     // Between the two reads the cameras are gone -- the flash the runner's
@@ -305,7 +318,7 @@ function seamRate(gapFrames, trials, worst = false) {
 {
   const sim = monitorSim('up');
   const act = new DeviceActuator(sim, { seed: 3, perPress: false,
-    lateMinMs: 0, lateMaxMs: 0, closedLoop: { correct: false } });
+    lateMinMs: 0, lateMaxMs: 0, closedLoop: { correct: false } }) as ClosedLoopActuator;
   for (sim.frame = 0; sim.frame <= 400; sim.frame++) {
     if (sim.frame === 22) act.press('ventL');
     if (sim.frame === 52) act.release('ventL');
@@ -322,7 +335,7 @@ function seamRate(gapFrames, trials, worst = false) {
 {
   const sim = monitorSim('up');
   const act = new DeviceActuator(sim, { seed: 5, perPress: false,
-    lateMinMs: 0, lateMaxMs: 0, closedLoop: { gate: false } });
+    lateMinMs: 0, lateMaxMs: 0, closedLoop: { gate: false } }) as ClosedLoopActuator;
   let maskSubmitted = false;
   for (sim.frame = 0; sim.frame <= 600; sim.frame++) {
     if (sim.frame === 22) act.press('ventL');
@@ -343,7 +356,7 @@ function seamRate(gapFrames, trials, worst = false) {
 {
   const sim = monitorSim('up');
   const act = new DeviceActuator(sim, { seed: 5, perPress: false,
-    lateMinMs: 0, lateMaxMs: 0, closedLoop: { gate: false, correct: false } });
+    lateMinMs: 0, lateMaxMs: 0, closedLoop: { gate: false, correct: false } }) as ClosedLoopActuator;
   for (sim.frame = 0; sim.frame <= 20000; sim.frame++) {
     if (sim.frame % 300 === 22) act.press('ventL');
     if (sim.frame % 300 === 52) act.release('ventL');
@@ -414,7 +427,7 @@ function seamRate(gapFrames, trials, worst = false) {
     // The bar stays zero for every other night, and night 6's exemption is a
     // number, not a threshold -- if it ever exceeds one, this fails, and if it
     // returns to zero the exemption must be DELETED rather than widened.
-    const LOOP_DEBT = { 6: 1 };
+    const LOOP_DEBT: Readonly<Record<number, number>> = { 6: 1 };
     if (loop.desyncs > (LOOP_DEBT[night] || 0))
       problems.push(`night ${night}: ${loop.desyncs} desyncs survived the flip gate ` +
         `(tolerated: ${LOOP_DEBT[night] || 0})`);

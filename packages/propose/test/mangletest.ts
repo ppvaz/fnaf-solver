@@ -13,7 +13,7 @@ import { Observer } from '@sixam/play/sim';
 import { MangleThreatReactive } from '@sixam/propose/fnaf2';
 
 let failures = 0;
-const ok = (what, condition) => {
+const ok = (what: string, condition: unknown) => {
   if (!condition) {
     failures++;
     console.error(`FAIL  ${what}`);
@@ -22,12 +22,12 @@ const ok = (what, condition) => {
   }
 };
 
-const O = value => ({ state: 'OBSERVED', value });
+const O = (value: unknown) => ({ state: 'OBSERVED' as const, value });
 
-function isolateMangle(sim) {
+function isolateMangle(sim: Sim) {
   const mangle = sim.units.find(u => u.id === 'mangle');
   for (const unit of sim.units) if (unit !== mangle) unit.done = true;
-  return mangle;
+  return mangle as Sim['units'][number]; // every Sim seats each stalled unit, Mangle among them
 }
 
 // --- 1. Observer: the two occurrences of the same static stay separated.
@@ -39,8 +39,9 @@ function isolateMangle(sim) {
   const observer = new Observer({ interval: 60, audioLatencyFrames: 0 });
 
   sim.tick();
-  let facts: any = observer.read(sim);
-  ok('Mangle has no visual opening fact yet', facts.mangleOpening === undefined);
+  let facts = observer.read(sim);
+  // Read as a record: the read's type has no mangleOpening field to look for.
+  ok('Mangle has no visual opening fact yet', (facts as Readonly<Record<string, unknown>>).mangleOpening === undefined);
   ok('CAM 11 static is reported in its non-actionable audio context',
     facts.mangleStaticCam.state === 'OBSERVED' && facts.mangleStaticCam.value === true);
   ok('CAM 11 static does not become office static',
@@ -137,7 +138,8 @@ function isolateMangle(sim) {
   let decisionsSettled = true;
   for (let guard = 0; guard < C.s(20) && sim.alive && !sim.won; guard++) {
     const facts = observer.read(sim);
-    const intents = controller.decide(facts, { frame: sim.frame, scheduled: [] });
+    // The controller reads the Observer's facts by name; the read's frame entry is not one it reads.
+    const intents = controller.decide(facts as Omit<typeof facts, 'frame'>, { frame: sim.frame, scheduled: [] });
     decisionsSettled = controller.settle(intents) && decisionsSettled;
     for (const intent of intents) {
       if (intent.at > sim.frame) continue;

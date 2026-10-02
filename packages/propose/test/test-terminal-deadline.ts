@@ -30,6 +30,13 @@ import { CLOCK } from '@sixam/source/games/fnaf2/fnaf2.ts';
 import { NIGHT_TERMINAL_WAIT_MS } from '../../play/src/campaign/modern-campaign-ports.ts';
 import { compileBundle } from '../bin/plans/bundle.ts';
 
+/** A won pack's 6 AM, past the nominal night end. */
+interface Trail { name: string, trailMs: number }
+/** The committed plan with the least headroom over the latest measured 6 AM. */
+interface Tightest { name: string, night: number, observeUntilMs: number, headroomMs: number }
+// compileBundle writes the compiled artifact, so the bundle it returns carries its plans.
+type CompiledPlans = NonNullable<ReturnType<typeof compileBundle>['compiled']>;
+
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, '../../..');
 const RUNS = join(ROOT, 'docs/evidence/runs');
@@ -39,13 +46,13 @@ const NIGHT_MS = nightLengthMs(CLOCK);
 const MIN_MEASURED = 20;
 
 let failed = 0;
-const fail = message => { failed += 1; console.error(`  FAIL ${message}`); };
+const fail = (message: string) => { failed += 1; console.error(`  FAIL ${message}`); };
 
 /** The deficit, in ms, by which a lane stops watching before the latest measured 6 AM (> 0 fails). */
-export const shortfallMs = ({ observeUntilMs, waitMs, trailMs }) => NIGHT_MS + trailMs - (observeUntilMs + waitMs);
+export const shortfallMs = ({ observeUntilMs, waitMs, trailMs }: { observeUntilMs: number, waitMs: number, trailMs: number }) => NIGHT_MS + trailMs - (observeUntilMs + waitMs);
 
 // --- the trail, from the packs -----------------------------------------------
-const trails = [];
+const trails: Trail[] = [];
 for (const name of readdirSync(RUNS).filter(dir => /^night[1-7]-/.test(dir)).sort()) {
   let pack, rows;
   try {
@@ -59,7 +66,7 @@ for (const name of readdirSync(RUNS).filter(dir => /^night[1-7]-/.test(dir)).sor
   trails.push({ name, trailMs: Date.parse(sixam.at) - (anchor.onsetHostMs + anchor.wallMinusHostMs) - NIGHT_MS });
 }
 if (trails.length < MIN_MEASURED) fail(`only ${trails.length} won packs carry an onset and a 6 AM observation (need ${MIN_MEASURED})`);
-const latest = trails.reduce((worst, row) => (worst === null || row.trailMs > worst.trailMs ? row : worst), null);
+const latest = trails.reduce<Trail | null>((worst, row) => (worst === null || row.trailMs > worst.trailMs ? row : worst), null);
 if (latest && latest.trailMs < 0) fail(`${latest.name}: 6 AM observed before the night's nominal end, so the onset or the clock is wrong`);
 const trailMs = latest?.trailMs ?? Infinity;
 
@@ -71,22 +78,22 @@ if (!(shortfallMs({ observeUntilMs: NIGHT_MS - 60000, waitMs: 15000, trailMs }) 
 // --- every committed plan, against the port's wait -------------------------
 const scratch = mkdtempSync(join(tmpdir(), 'terminal-deadline-'));
 let plans = 0;
-let tightest = null;
+let tightest = null as Tightest | null;
 try {
   for (const name of readdirSync(WINNERS).filter(file => file.endsWith('-winner.json')).sort()) {
     const winner = JSON.parse(readFileSync(join(WINNERS, name), 'utf8'));
     if (winner.schema !== 'winner-v1') continue;   // FNaF 1 routes run their own runner
     let built;
     try { built = compileBundle(winner, join(scratch, name)); }
-    catch (error) { fail(`${name}: ${error.message}`); continue; }
-    for (const plan of built.compiled) {
+    catch (error) { fail(`${name}: ${(error as Error).message}`); continue; }
+    for (const plan of built.compiled as CompiledPlans) {
       const observeUntilMs = plan.timing?.observeUntilMs;
       if (!Number.isFinite(observeUntilMs)) { fail(`${name} night ${plan.night}: no observeUntilMs`); continue; }
       plans += 1;
       const short = shortfallMs({ observeUntilMs, waitMs: NIGHT_TERMINAL_WAIT_MS, trailMs });
       if (short > 0)
         fail(`${name} night ${plan.night}: the plan ends at ${observeUntilMs} ms and the port watches ${NIGHT_TERMINAL_WAIT_MS} ms ` +
-          `more, ${Math.round(short)} ms before the latest measured 6 AM (${NIGHT_MS} + ${Math.round(trailMs)} ms, ${latest.name})`);
+          `more, ${Math.round(short)} ms before the latest measured 6 AM (${NIGHT_MS} + ${Math.round(trailMs)} ms, ${latest?.name})`);
       if (tightest === null || -short < tightest.headroomMs) tightest = { name, night: plan.night, observeUntilMs, headroomMs: -short };
     }
   }
@@ -99,6 +106,8 @@ if (failed) {
   console.error(`\nterminal deadline: ${failed} lane(s) stop watching before the night can end`);
   process.exit(1);
 }
+// Past the gates above: at least MIN_MEASURED trails, and every compiled plan counted set the tightest.
+const measured = latest as Trail, tightestPlan = tightest as Tightest;
 console.log(`terminal deadline: latest measured 6 AM ${(trailMs / 1000).toFixed(2)} s past the ${NIGHT_MS / 1000} s night ` +
-  `(${trails.length} won packs, ${latest.name}); ${plans} committed plans plus the port's ${NIGHT_TERMINAL_WAIT_MS} ms wait ` +
-  `cover it, the tightest ${tightest.name} night ${tightest.night} (ends ${tightest.observeUntilMs} ms) by ${Math.round(tightest.headroomMs)} ms`);
+  `(${trails.length} won packs, ${measured.name}); ${plans} committed plans plus the port's ${NIGHT_TERMINAL_WAIT_MS} ms wait ` +
+  `cover it, the tightest ${tightestPlan.name} night ${tightestPlan.night} (ends ${tightestPlan.observeUntilMs} ms) by ${Math.round(tightestPlan.headroomMs)} ms`);

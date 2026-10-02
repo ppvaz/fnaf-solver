@@ -8,15 +8,18 @@ import { Sim } from '@sixam/source/fnaf2';
 import { Observer } from '@sixam/play/sim';
 import { Rng } from '@sixam/source/fnaf2';
 import { CycleController, getCycle, makeUnknownFacts } from '@sixam/propose/fnaf2';
+import type { Cycle, DeferredAction, Hypothesis } from '@sixam/propose/fnaf2';
 
-const check = (condition, message) => { if (!condition) throw new Error(message); };
+type ObserverOptions = ConstructorParameters<typeof Observer>[0];
+
+const check = (condition: unknown, message: string) => { if (!condition) throw new Error(message); };
 const RUNS = 80;
 const HORIZON = C.s(9);
 
-const seedOf = index => (index * 2654435761) >>> 0;
-const O = value => ({ state: 'OBSERVED', value });
+const seedOf = (index: number) => (index * 2654435761) >>> 0;
+const O = (value: unknown) => ({ state: 'OBSERVED', value });
 
-function choose(controller, wanted) {
+function choose(controller: CycleController, wanted: string) {
   return controller.plan({
     exactGate: cycle => ({ accepted: true, cycleId: cycle.id }),
     score: cycle => ({ risk: cycle.id === wanted ? 0 : 1,
@@ -28,7 +31,7 @@ function choose(controller, wanted) {
 // A cycle id names a reusable primitive, not one invocation. Releases survive
 // preemption only for the exact invocation that put that exact contact down.
 const contact = new CycleController({
-  cycles: [getCycle('vent-stall-right'), getCycle('mask-now')],
+  cycles: [getCycle('vent-stall-right') as Cycle, getCycle('mask-now') as Cycle], // library ids, so never null
 });
 contact.observe({ blackout: O(false), monitorUp: O(false), maskOn: O(false) },
   { frame: 0 });
@@ -48,7 +51,7 @@ check(!contact.releaseDeferred(contactCommit.deferred[0], {
   frame: contactCommit.deferred[0].dueFrame,
 }).accepted, 'a duplicate release was accepted after its contact was already lifted');
 
-const emergency = new CycleController({ cycles: [getCycle('vent-stall-right')] });
+const emergency = new CycleController({ cycles: [getCycle('vent-stall-right') as Cycle] }); // a library id, so never null
 emergency.observe({ blackout: O(false), monitorUp: O(false), maskOn: O(false) },
   { frame: 0 });
 const emergencyCommit = emergency.commit(choose(emergency, 'vent-stall-right'), { frame: 0 });
@@ -60,14 +63,14 @@ check(emergency.releaseDeferred(emergencyCommit.deferred[0], {
 // A later release from the same multi-action primitive must not match a
 // contact that an earlier press/release pair already closed.
 const stale = new CycleController({
-  cycles: [getCycle('sweep-routes'), getCycle('lower-monitor')],
+  cycles: [getCycle('sweep-routes') as Cycle, getCycle('lower-monitor') as Cycle], // library ids, so never null
 });
 stale.observe({ blackout: O(false), monitorUp: O(true), maskOn: O(false) },
   { frame: 0 });
 const sweep = stale.commit(choose(stale, 'sweep-routes'), { frame: 0 });
 for (const atFrame of [2, 4, 6]) {
   const action = sweep.deferred.find(candidate => candidate.atFrame === atFrame);
-  check(stale.releaseDeferred(action, { frame: atFrame }).accepted,
+  check(stale.releaseDeferred(action as DeferredAction, { frame: atFrame }).accepted, // the sweep defers one at each
     `sweep action at ${atFrame} was unexpectedly refused`);
 }
 stale.observe({ blackout: O(true), monitorUp: O(true), maskOn: O(false) },
@@ -76,10 +79,10 @@ check(choose(stale, 'lower-monitor').selected === 'lower-monitor',
   'a blackout did not preempt the multi-action sweep');
 const staleRelease = sweep.deferred.find(action =>
   action.kind === 'release' && action.action === 'light' && action.atFrame === 18);
-check(!stale.releaseDeferred(staleRelease, { frame: 18 }).accepted,
+check(!stale.releaseDeferred(staleRelease as DeferredAction, { frame: 18 }).accepted, // the sweep defers its light release to 18
   'a stale future release was allowed to lift a contact it never opened');
 
-function score(cycle, hypothesis) {
+function score(cycle: Cycle, hypothesis: Hypothesis) {
   if (hypothesis.hazard === 'active') {
     return cycle.id === 'defensive-mask'
       ? { risk: 0, resourceMargin: 5, detail: 'mask before the blackout fuse' }
@@ -93,7 +96,7 @@ function score(cycle, hypothesis) {
 // Exact proof is deliberately outside CycleController. It gets a snapshot of
 // the engine only as a proof oracle for the already-reviewed primitive; the
 // controller itself sees facts and reduced state, never this object.
-function exactCycleGate(sim, cycle) {
+function exactCycleGate(sim: Sim, cycle: Cycle) {
   // The observe primitive has no actions or state transition to replay. Its
   // exact proof is the empty trace; spending an engine snapshot on it would
   // obscure the controller comparison rather than strengthen the proof.
@@ -119,7 +122,7 @@ function exactCycleGate(sim, cycle) {
     : { accepted: false, reason: `exact-death:${copy.death?.reason ?? 'unknown'}` };
 }
 
-function blackoutFacts(facts) {
+function blackoutFacts(facts: ReturnType<Observer['read']>) {
   return {
     frame: facts.frame,
     blackout: facts.blackout,
@@ -128,7 +131,7 @@ function blackoutFacts(facts) {
   };
 }
 
-function runOne(index, mode, observerOptions = {}) {
+function runOne(index: number, mode: string, observerOptions: ObserverOptions = {}) {
   const seed = seedOf(index);
   const sim = new Sim({ night: 1, seed, durationFrames: HORIZON });
   const timing = new Rng(seed ^ 0x7f4a7c15);
@@ -147,18 +150,19 @@ function runOne(index, mode, observerOptions = {}) {
       // This is the upper bound only: it reads the exact hidden engine flag.
       if (sim.blackout.active && !sim.maskOn) sim.press('mask');
     } else if (mode !== 'open-loop') {
-      const facts = blackoutFacts(observer.read(sim));
+      // Both are built for every mode but oracle and open-loop.
+      const facts = blackoutFacts((observer as Observer).read(sim));
       const visible = mode === 'disabled' ? makeUnknownFacts(facts) : facts;
       // The watchlist is a four-frame decision cadence. Reading the cached
       // line every frame is fine, but feeding identical lines into a growing
       // belief trace is not a distinct observation.
       if (sim.frame % 4 === 0) {
-        controller.observe(visible, { frame: sim.frame });
-        const decision = controller.plan({
+        (controller as CycleController).observe(visible, { frame: sim.frame });
+        const decision = (controller as CycleController).plan({
           exactGate: cycle => { exactChecks++; return exactCycleGate(sim, cycle); },
           score,
         });
-        const committed = controller.commit(decision, { frame: sim.frame });
+        const committed = (controller as CycleController).commit(decision, { frame: sim.frame });
         for (const action of committed.actions) {
           if (action.action === 'mask' && action.kind === 'press') maskPresses++;
           sim[action.kind](action.action);
@@ -176,8 +180,8 @@ function runOne(index, mode, observerOptions = {}) {
   };
 }
 
-function cohort(mode, options = {}) {
-  const result = { mode, won: 0, deaths: {}, maskPresses: 0, exactChecks: 0, decisions: 0 };
+function cohort(mode: string, options: ObserverOptions = {}) {
+  const result = { mode, won: 0, deaths: {} as Record<string, number>, maskPresses: 0, exactChecks: 0, decisions: 0 };
   for (let i = 0; i < RUNS; i++) {
     const run = runOne(i, mode, options);
     if (run.won) result.won++;

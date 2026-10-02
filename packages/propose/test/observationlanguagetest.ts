@@ -19,11 +19,16 @@ import {
 import { compileDevicePlan } from '../bin/policy/policy-equivalence.ts';
 import { compilePolicy } from '../bin/policy/policy-interpreter.ts';
 import { closedFamilyMatches } from '../bin/policy/closed-families.ts';
+import type { Branch, PolicyPhase } from '@sixam/propose/policy';
 
-const check = (condition, message) => { if (!condition) throw new Error(message); };
-const rejects = (run, pattern, message) => {
-  let error = null;
-  try { run(); } catch (caught) { error = caught; }
+// A fresh program's repeat phase, which branchedPolicy and its mutators edit in place.
+type EditableBranch = Branch & { atMs: number, then: Branch['then'], observe: Branch['observe'], predicate: Branch['predicate'] };
+type EditableRepeat = PolicyPhase & { actions: readonly { durationMs?: number, contactMs?: number }[], branches: EditableBranch[] };
+
+const check = (condition: unknown, message: string) => { if (!condition) throw new Error(message); };
+const rejects = (run: () => unknown, pattern: RegExp, message: string) => {
+  let error = null as Error | null;
+  try { run(); } catch (caught) { error = caught as Error; }
   check(error && pattern.test(error.message), `${message} (got ${error?.message ?? 'no error'})`);
 };
 
@@ -77,7 +82,7 @@ rejects(() => validatePredicate({ op: 'gt', fact: 'boxPie', value: 0.5 }),
 
 // --- Branches against the measured budget ---------------------------------
 
-const branch = () => ({
+const branch = (): Branch => ({
   schema: BRANCH_SCHEMA, id: 'reverify-split', atMs: 4400,
   observe: { fact: 'splitArmed', maxAgeMs: 200, confidenceFloor: 1 },
   predicate: { op: 'observed-equals', fact: 'splitArmed', value: false },
@@ -88,7 +93,7 @@ const branch = () => ({
 validateBranch(branch());
 
 check(worstCaseFactAgeMs('splitArmed') ===
-      OBSERVATION_BUDGET.splitArmed.cadenceMs + VISUAL_READ_COST_MS,
+      (OBSERVATION_BUDGET.splitArmed.cadenceMs as number) + VISUAL_READ_COST_MS, // a visual fact's cadence is measured
   'worst-case fact age is not one sample interval plus one read');
 rejects(() => validateBranch({ ...branch(), observe: { fact: 'splitArmed', maxAgeMs: 20, confidenceFloor: 1 } }),
   /the measured budget delivers/, 'a branch demanded a fact fresher than the sensor delivers');
@@ -105,9 +110,9 @@ rejects(() => validateBranch({
 
 // --- The grammar can now express a branch, and constrains it --------------
 
-function branchedPolicy(mutate = () => {}) {
+function branchedPolicy(mutate: (repeat: EditableRepeat) => void = () => {}) {
   const program = minimalPolicy();
-  const repeat = program.phases.find(phase => phase.kind === 'repeat');
+  const repeat = program.phases.find(phase => phase.kind === 'repeat') as EditableRepeat; // the Minimal program has one
   // Shorten the wind hold so the body has room for a decision point.
   repeat.actions[1].durationMs = 4000;
   repeat.actions[1].contactMs = 4000;

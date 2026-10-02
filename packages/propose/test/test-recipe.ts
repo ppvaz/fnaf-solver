@@ -11,23 +11,27 @@ import { build, track, devicePlan, replay, MIN_CONTACT_MS, DEVICE_SPACING_MS,
          SWEEP_RELEASED_MS, sweepCamMs, sweepCams, sweepSpanMs } from '../bin/plans/recipe.ts';
 import { MIN_RELEASED_MS } from './test-hid-trace.ts';
 
-const check = (ok, message) => { if (!ok) throw new Error(message); };
+/** A device-plan line split into its offset, its instruction and the instruction's fields. */
+interface PlanInstruction { at: number, kind: string, rest: string[] }
+
+const check = (ok: unknown, message: string) => { if (!ok) throw new Error(message); };
 
 // These are the options `tools/test.ts --engine` pins as `hidpilot n6 target`
 // (3000/3000 ordinary, 3000/3000 pinned-worst). The recipe must be built from
 // the policy that was actually verified, not a neighbouring one.
 const PINNED = { night: 6, sweepSlotMs: MODEL_SLOT_MS, maskMarginMs: 900, pilotOffset: 10 };
 const recipe = build({ ...PINNED, readLatencyMs: 550, hallPulseMs: 130 });
+// Object.entries(PINNED) yields PINNED's own keys.
 for (const [key, want] of Object.entries(PINNED))
-  check(recipe.options[key] === want,
-    `recipe option ${key} is ${recipe.options[key]}, but the verified contract pins ${want}`);
+  check(recipe.options[key as keyof typeof PINNED] === want,
+    `recipe option ${key} is ${recipe.options[key as keyof typeof PINNED]}, but the verified contract pins ${want}`);
 check(recipe.options.deviceSweep && recipe.options.pulseLight,
   'the device recipe must use the device sweep and the pulsed light');
 check(recipe.options.prophylacticMask,
   'the device recipe must clear Golden Freddy with the prophylactic mask');
 
 for (const [name, cycle] of Object.entries(recipe.cycles)) {
-  const b = (cycle as any).budget;
+  const b = cycle.budget;
 
   // The regression that motivated this file.
   check(b.minContactMs >= MIN_CONTACT_MS,
@@ -92,10 +96,10 @@ for (const [name, cycle] of Object.entries(recipe.cycles)) {
 
 // The box: a clear cycle has to wind more than it drains, and a BB response is
 // allowed to run a deficit because it is rare and bounded.
-check((recipe.cycles.clear as any).budget.windMarginMs > 0,
-  `a clear cycle winds ${(recipe.cycles.clear as any).budget.windMs} ms against a ` +
-  `${(recipe.cycles.clear as any).budget.windBreakEvenMs} ms break-even`);
-check((recipe.cycles.attack as any).budget.windMarginMs > -600,
+check(recipe.cycles.clear.budget.windMarginMs > 0,
+  `a clear cycle winds ${recipe.cycles.clear.budget.windMs} ms against a ` +
+  `${recipe.cycles.clear.budget.windBreakEvenMs} ms break-even`);
+check(recipe.cycles.attack.budget.windMarginMs > -600,
   'a BB response drains more box than one clear cycle can recover');
 
 // The flashlight: night 6 is 3000 frames and a held sweep alone outspends it.
@@ -121,7 +125,7 @@ for (const [name, cycle] of Object.entries(recipe.cycles)) {
 
 // The device plan is what the phone executes, so it gets the same scrutiny as
 // the recipe it comes from -- including every sweep, not just the first.
-const plan: any = devicePlan(recipe);
+const plan = devicePlan(recipe);
 check(SWEEP_SELECT_MS === MIN_CONTACT_MS,
   `the sweep select is ${SWEEP_SELECT_MS} ms, not the ${MIN_CONTACT_MS} ms contact floor`);
 check(SWEEP_RELEASED_MS >= FUSION_POLL_MS,
@@ -129,7 +133,7 @@ check(SWEEP_RELEASED_MS >= FUSION_POLL_MS,
 const clearMaskRaise = plan.clear.find(line => line.includes(' maskraise '));
 check(clearMaskRaise?.split(' ')[3] === 'hall',
   `the post-read clear raise must carry its first Foxy reset, got "${clearMaskRaise}"`);
-check(+clearMaskRaise.split(' ')[4] >= MIN_CONTACT_MS,
+check(+(clearMaskRaise as string).split(' ')[4] >= MIN_CONTACT_MS, // the check above found it
   `the post-read Foxy reset is under the ${MIN_CONTACT_MS} ms contact floor`);
 
 for (const [name, lines] of Object.entries(plan)) {
@@ -186,7 +190,7 @@ for (const [name, lines] of Object.entries(plan)) {
   // fires. A recorded run measured 0 ms between the WIND release and the
   // CAM 10 press, and 0 ms between the hall pulse and the monitor raise it
   // was supposed to precede.
-  const span = e => {
+  const span = (e: PlanInstruction) => {
     if (e.kind === 'sweep') return [e.at, e.at + sweepSpanMs(e.rest)];
     // A read owns its prophylactic mask: light, released gap, mask contact.
     if (e.kind === 'read') return [e.at, e.at + +e.rest[0] + +e.rest[1] + MIN_CONTACT_MS];
@@ -195,8 +199,8 @@ for (const [name, lines] of Object.entries(plan)) {
     if (e.kind === 'hold') return [e.at, e.at + +e.rest[1]];
     return [e.at, e.at + +e.rest[e.rest.length - 1]];
   };
-  const control = e => e.kind === 'tap' || e.kind === 'hold' ? e.rest[0] : e.kind;
-  const acts = (lines as any).map(l => l.split(' '))
+  const control = (e: PlanInstruction) => e.kind === 'tap' || e.kind === 'hold' ? e.rest[0] : e.kind;
+  const acts = lines.map(l => l.split(' '))
     .map(([at, kind, ...rest]) => ({ at: +at, kind, rest }))
     .sort((a, b) => a.at - b.at);
   for (let i = 1; i < acts.length; i++) {
@@ -216,7 +220,7 @@ for (const [name, lines] of Object.entries(plan)) {
   // and the CAM 10 press: Fusion polls touch per frame, so that reads as one
   // finger dragging from the wind button onto the camera, and the sweep's
   // first select is the one that disappears.
-  const timed = (lines as any).map(l => l.split(' ')).map(([at, kind, ...rest]) => ({ at: +at, kind, rest }));
+  const timed = lines.map(l => l.split(' ')).map(([at, kind, ...rest]) => ({ at: +at, kind, rest }));
   for (const sweep of timed.filter(e => e.kind === 'sweep')) {
     const wind = timed.filter(e => e.kind === 'hold' && e.rest[0] === 'wind' && e.at < sweep.at).pop();
     if (!wind) continue;
@@ -251,7 +255,7 @@ for (const [name, lines] of Object.entries(plan)) {
 // small enough for that to be a compensation rather than a reschedule and that
 // the delivered boundary (not the trace auditor's plan clock) has a legal gap.
 const needsSeamDelay = [];
-const instrSpan = (kind, rest) =>
+const instrSpan = (kind: string, rest: string[]) =>
   kind === 'sweep' ? sweepSpanMs(rest)
   : kind === 'tap' || kind === 'hold' ? +rest[1]
   : kind === 'hall' || kind === 'hallraise' ? +rest[0]
@@ -259,12 +263,13 @@ const instrSpan = (kind, rest) =>
   : +rest[0] + +rest[1] + MIN_CONTACT_MS;
 
 for (const [name, lines] of Object.entries(plan)) {
-  const [at, kind, ...rest] = lines[(lines as any).length - 1].split(' ');
+  const [at, kind, ...rest] = lines[lines.length - 1].split(' ');
   const end = +at + instrSpan(kind, rest);
-  const overrun = end - recipe.cycles[name].lengthMs;
+  // devicePlan emits one plan per recipe cycle, under the cycle's name.
+  const overrun = end - recipe.cycles[name as keyof typeof recipe.cycles].lengthMs;
   check(overrun <= FUSION_POLL_MS,
     `${name}: the last instruction ends ${overrun} ms past the cycle's own ` +
-    `${recipe.cycles[name].lengthMs} ms length. Past one Fusion poll the next ` +
+    `${recipe.cycles[name as keyof typeof recipe.cycles].lengthMs} ms length. Past one Fusion poll the next ` +
     "anchor cannot be delayed into a released gap -- that is a reschedule, not " +
     'a compensation, and the route has to change instead.');
   const nominalReleased = -overrun;
@@ -283,22 +288,23 @@ for (const [name, lines] of Object.entries(plan)) {
 
 // The branch is only known after the read, so both steady cycles must begin
 // with the identical prefix: lower, read, mask.
-const prefix = lines => lines.slice(0, 2).join('|');
+const prefix = (lines: string[]) => lines.slice(0, 2).join('|');
 check(prefix(plan.clear) === prefix(plan.attack),
   `clear and attack disagree before the classifier answers:\n  ${prefix(plan.clear)}\n  ${prefix(plan.attack)}`);
 
 // The perfect-experiment spacing override (plans/17). It only widens the
 // SELECT spacing, anchors the sweep END, and refuses to go below the model.
 {
-  const exp: any = devicePlan(build({ night: 6, sweepSlotMs: 100 }), { deviceSpacingMs: 113 });
-  const shipped: any = devicePlan(build({ night: 6 }));
-  const sweepEnd = lines => {
-    const s = lines.find(l => l.split(' ')[1] === 'sweep');
+  const exp = devicePlan(build({ night: 6, sweepSlotMs: 100 }), { deviceSpacingMs: 113 });
+  const shipped = devicePlan(build({ night: 6 }));
+  // Every cycle of these plans carries a sweep.
+  const sweepEnd = (lines: string[]) => {
+    const s = lines.find(l => l.split(' ')[1] === 'sweep') as string;
     const [at, , ...rest] = s.split(' ');
     return +at + sweepSpanMs(rest);
   };
-  const sweepSpacing = lines =>
-    +lines.find(l => l.split(' ')[1] === 'sweep').split(' ')[2];
+  const sweepSpacing = (lines: string[]) =>
+    +(lines.find(l => l.split(' ')[1] === 'sweep') as string).split(' ')[2];
   check(sweepSpacing(exp.clear) === 113,
     `the experiment plan emits ${sweepSpacing(exp.clear)} ms spacing, not the requested 113`);
   check(sweepSpacing(shipped.clear) === DEVICE_SPACING_MS,
@@ -310,17 +316,17 @@ check(prefix(plan.clear) === prefix(plan.attack),
   // sweep too, not only widen it -- a shorter sweep that ends at the same
   // place is strictly more free time before it. The end anchor (checked above)
   // is the invariant; the spacing floor is gone.
-  const narrow: any = devicePlan(build({ night: 6, sweepSlotMs: 120 }), { deviceSpacingMs: 67, sweepContactMs: 33 });
-  check(narrow.clear.find(l => l.split(' ')[1] === 'sweep').split(' ')[2] === '67',
+  const narrow = devicePlan(build({ night: 6, sweepSlotMs: 120 }), { deviceSpacingMs: 67, sweepContactMs: 33 });
+  check(narrow.clear.find(l => l.split(' ')[1] === 'sweep')?.split(' ')[2] === '67',
     'devicePlan must now accept a device spacing narrower than the model spacing');
   check(sweepEnd(narrow.clear) === sweepEnd(shipped.clear),
     'a narrowed sweep must still end where the model does -- it just starts later');
 
   // The emitter carries the contact length and refuses one that leaves no
   // released gap.
-  const short: any = devicePlan(build({ night: 7, sweepSlotMs: 50 }),
+  const short = devicePlan(build({ night: 7, sweepSlotMs: 50 }),
     { deviceSpacingMs: 66, sweepContactMs: 33 });
-  const shortSweep = short.clear.find(l => l.split(' ')[1] === 'sweep').split(' ');
+  const shortSweep = (short.clear.find(l => l.split(' ')[1] === 'sweep') as string).split(' ');
   check(shortSweep[2] === '66' && shortSweep[3] === '33',
     `the short-contact sweep should emit "66 33", got "${shortSweep[2]} ${shortSweep[3]}"`);
   let threw2 = false;
@@ -334,8 +340,8 @@ check(prefix(plan.clear) === prefix(plan.attack),
   const all17 = devicePlan(build({ night: 6, sweepSlotMs: 50 }),
     { deviceSpacingMs: 66, sweepContactMs: 17, tapContactMs: 17 });
   const tapRows = Object.values(all17).flat()
-    .filter((line: any) => line.split(' ')[1] === 'tap');
-  check(tapRows.length > 0 && tapRows.every((line: any) => line.endsWith(' 17')),
+    .filter(line => line.split(' ')[1] === 'tap');
+  check(tapRows.length > 0 && tapRows.every(line => line.endsWith(' 17')),
     'tapContactMs=17 must reach every emitted tap row');
   check(Object.values(all17).flat().some(line => / hold wind (?!17$)/.test(line)),
     'tapContactMs must not shorten semantic wind holds');
@@ -345,15 +351,16 @@ check(prefix(plan.clear) === prefix(plan.attack),
 // / CAM 07 last-slot leak). Only the final slot's hold lengthens; the geometry
 // stays LIGHT_AFTER, decided by the base contact; the sweep END does not move.
 {
-  const shipped: any = devicePlan(build({ night: 6 }));
-  const sweepEnd = lines => {
-    const [at, , ...rest] = lines.find(l => l.split(' ')[1] === 'sweep').split(' ');
+  const shipped = devicePlan(build({ night: 6 }));
+  // Every cycle of these plans carries a sweep.
+  const sweepEnd = (lines: string[]) => {
+    const [at, , ...rest] = (lines.find(l => l.split(' ')[1] === 'sweep') as string).split(' ');
     return +at + sweepSpanMs(rest);
   };
-  const sweepRest = lines =>
-    lines.find(l => l.split(' ')[1] === 'sweep').split(' ').slice(2);
+  const sweepRest = (lines: string[]) =>
+    (lines.find(l => l.split(' ')[1] === 'sweep') as string).split(' ').slice(2);
 
-  const loc: any = devicePlan(build({ night: 6, sweepSlotMs: 120 }),
+  const loc = devicePlan(build({ night: 6, sweepSlotMs: 120 }),
     { deviceSpacingMs: 100, sweepContactMs: 33, sweepLastContactMs: 67 });
   const [spacing, contact, cams] = sweepRest(loc.clear);
   check(spacing === '100' && contact === '33' && cams === '10,4,7:67',
@@ -378,7 +385,7 @@ check(prefix(plan.clear) === prefix(plan.attack),
   // A last slot may run longer than the spacing -- nothing follows it -- but it
   // may not be SHORTER than the base contact (that is not a localized fix) or
   // non-positive.
-  const longer: any = devicePlan(build({ night: 6, sweepSlotMs: 120 }),
+  const longer = devicePlan(build({ night: 6, sweepSlotMs: 120 }),
     { deviceSpacingMs: 66, sweepContactMs: 33, sweepLastContactMs: 67 });
   check(sweepRest(longer.clear)[2] === '10,4,7:67',
     'a last contact above the spacing is allowed -- the last slot has no successor');
@@ -405,5 +412,5 @@ check(prefix(plan.clear) === prefix(plan.attack),
 
 console.log(`  seam: ${needsSeamDelay.length ? needsSeamDelay.join(', ') + ' rely on the runner delaying the next anchor' : 'every cycle clears its own boundary'}`);
 console.log('recipe checks passed: ' + Object.entries(recipe.cycles)
-  .map(([n, c]) => `${n} ${(c as any).budget.windMarginMs >= 0 ? '+' : ''}${(c as any).budget.windMarginMs} ms wind`)
+  .map(([n, c]) => `${n} ${c.budget.windMarginMs >= 0 ? '+' : ''}${c.budget.windMarginMs} ms wind`)
   .join(', ') + `; ${recipe.powerFramesSpentIfAllClear}/${recipe.powerFramesAvailable} power`);

@@ -12,8 +12,9 @@
 import * as C from '@sixam/source/fnaf2';
 import { compileCycle, SEAM_FLOORS } from '../bin/plans/artifact-commands.ts';
 import { MIN_CONTACT_MS } from '../bin/plans/recipe.ts';
+import type { ParsedRow } from '../bin/plans/artifact-commands.ts';
 
-const check = (ok, message) => { if (!ok) throw new Error(message); };
+const check = (ok: unknown, message: string) => { if (!ok) throw new Error(message); };
 const MONITOR_ANIM_UP_MS = Math.round(C.MONITOR_ANIM_UP * 1000 / C.FPS);
 const MASK_ANIM_OFF_MS = Math.round(C.MASK_ANIM_OFF * 1000 / C.FPS);
 const MONITOR_ANIM_DOWN_MS = Math.round(C.MONITOR_ANIM_DOWN * 1000 / C.FPS);
@@ -23,12 +24,12 @@ const MONITOR_ANIM_DOWN_MS = Math.round(C.MONITOR_ANIM_DOWN * 1000 / C.FPS);
 // old 400 and refused the corrected route. A second copy of a constant is how
 // a gate ends up protecting the value it was supposed to check.
 const MONITOR_MASK_READY_MS = SEAM_FLOORS.monitorMaskReadyMs;
-const refuses = (rows, initial, needle) => {
+const refuses = (rows: readonly ParsedRow[], initial: Parameters<typeof compileCycle>[2], needle: string) => {
   try {
     compileCycle('probe', rows, initial);
   } catch (error) {
     check(error instanceof TypeError && error.message.includes(needle),
-      `refused with the wrong error: ${error.message}`);
+      `refused with the wrong error: ${(error as Error).message}`);
     return true;
   }
   return false;
@@ -41,9 +42,9 @@ const down = { monitorUp: false, maskOn: false };
 // the minus-toys opening that armed all four story-night wins. A camera select
 // is proven at +300 ms by that same arm.
 {
-  const raise = { at: 5300, kind: 'tap', control: 'monitor', duration: 33 };
-  const wind = at => ({ at, kind: 'hold', control: 'wind', duration: 3200 });
-  const cam = at => ({ at, kind: 'tap', control: 'cam11', duration: 33 });
+  const raise: ParsedRow = { at: 5300, kind: 'tap', control: 'monitor', duration: 33 };
+  const wind = (at: number): ParsedRow => ({ at, kind: 'hold', control: 'wind', duration: 3200 });
+  const cam = (at: number): ParsedRow => ({ at, kind: 'tap', control: 'cam11', duration: 33 });
   check(refuses([raise, wind(5400)], down, 'monitor raise'),
     'the wind-at-raise+100 regression still compiles');
   check(refuses([raise, wind(5500)], down, 'monitor raise'),
@@ -62,7 +63,7 @@ const down = { monitorUp: false, maskOn: false };
 
 // --- the mask-off animation -------------------------------------------------
 {
-  const maskOff = { at: 9200, kind: 'tap', control: 'mask', duration: 33 };
+  const maskOff: ParsedRow = { at: 9200, kind: 'tap', control: 'mask', duration: 33 };
   const initial = { monitorUp: false, maskOn: true };
   check(refuses([maskOff, { at: 9200 + MASK_ANIM_OFF_MS - 1, kind: 'hall', duration: 350 }], initial, 'mask-off'),
     'a hall flash inside the mask-off animation was compiled');
@@ -76,8 +77,8 @@ const down = { monitorUp: false, maskOn: false };
 // --- monitor lowering -> mask availability -------------------------------
 {
   const initial = { monitorUp: true, maskOn: false };
-  const lower = { at: 100, kind: 'tap', control: 'monitor', duration: 33 };
-  const mask = at => ({ at, kind: 'tap', control: 'mask', duration: 33 });
+  const lower: ParsedRow = { at: 100, kind: 'tap', control: 'monitor', duration: 33 };
+  const mask = (at: number): ParsedRow => ({ at, kind: 'tap', control: 'mask', duration: 33 });
   check(refuses([lower, mask(100 + MONITOR_MASK_READY_MS - 1)], initial, 'mask control'),
     'a mask press before the monitor-down settle bracket was compiled');
   check(!refuses([lower, mask(100 + MONITOR_MASK_READY_MS)], initial, 'mask control'),
@@ -113,7 +114,7 @@ const down = { monitorUp: false, maskOn: false };
 
   // The reviewed maskraise is the explicit exception to the mask lock: it
   // owns mask-off plus monitor-up/hall choreography as one compound.
-  const maskraise = { at: 0, kind: 'maskraise', gap: 180, mode: 'hall', duration: 33 };
+  const maskraise: ParsedRow = { at: 0, kind: 'maskraise', gap: 180, mode: 'hall', duration: 33 };
   const raised = compileCycle('probe', [maskraise,
     { at: 600, kind: 'sweep', spacing: 100, contact: 33, cams: ['cam10', 'cam4'] }],
   { monitorUp: false, maskOn: true });
@@ -134,7 +135,7 @@ const down = { monitorUp: false, maskOn: false };
   // blind detector. The run still reached 6 AM, because nothing on Night 1 can
   // punish a blind pilot; that is precisely why this needs a gate and not an
   // outcome.
-  const read = { at: 0, kind: 'read', duration: 600, gap: 40 };   // mask on at +640
+  const read: ParsedRow = { at: 0, kind: 'read', duration: 600, gap: 40 };   // mask on at +640
   check(refuses([read, { at: 700, kind: 'maskraise', gap: 300, mode: 'hall', duration: 133 }],
     { monitorUp: false, maskOn: false }, 'mask-on animation'),
     'a maskraise inside the read\'s mask-on animation was compiled');
