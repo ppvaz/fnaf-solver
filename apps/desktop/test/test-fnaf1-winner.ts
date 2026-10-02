@@ -41,48 +41,74 @@ import { FOUR_TWENTY, LANE_FILE, LANE_FILES, POPULATION_KIND, POPULATION_LANES, 
 import { ROOT, RUNNER, listWinners, shapeProblems, pinsAtCommit, pinnedCommit, routeDrift, materialize, removeTree,
   treeProblems, replayArguments, replayInvocation, sha256, sharedLockDir, winnerCustody } from '../../../packages/play/games/fnaf1/fnaf1-winner.ts';
 import { currentPath } from '@sixam/review/renamed-path';
+import type { Loss } from '../../../packages/propose/bin/census/winner-census.ts';
+import type { DevicePolicy, RouteWinner } from '../../../packages/propose/bin/census/fnaf1-device-lane.ts';
 
-const failures = [];
+/** The tree runner's guard against running a drifted winner's night, and the options it reads. */
+type Guard = typeof runnerModule.routeStatus;
+type RouteOptions = Parameters<Guard>[0];
+/** A committed route winner, with the fields this gate reads beyond its pins. */
+type Winner = RouteWinner & {
+  readonly target: { readonly device: string };
+  readonly night: { readonly dials: NonNullable<RouteOptions['dials']> };
+  readonly resolvedOptions: { readonly policy: string, readonly chicaByCamera: boolean, readonly originOffsetMs: number, readonly stopAfterMs: number };
+  readonly replay?: { readonly command?: string };
+};
+type Entry = { readonly path: string, readonly winner: Winner };
+/** A winner-route census record (fnaf1-device-lane-population-v1), in the fields this gate reads and its controls edit. */
+interface CensusRecord {
+  kind: string, id: string, claimLevel: string;
+  method: {
+    winner: { path: string, id: string, commit: string }, policySha256: string, options: Record<string, unknown>, timingSha256: string,
+    designBlock: { sha256: string, inCensus: number }, population: { start: number, count: number }, heldOutBlock: { n: number },
+  };
+  lanes: {
+    lane: string, n: number, wins: number, design: { n: number, wins: number }, heldOut: { n: number, wins: number },
+    deaths: Record<string, number>, losses: Loss[], lossesListed: number, lossesSha256: string,
+  }[];
+}
+
+const failures: string[] = [];
 let checks = 0;
-const ok = (what, condition) => { checks += 1; if (!condition) failures.push(what); };
-const eq = (what, a, b) => {
+const ok = (what: string, condition: unknown) => { checks += 1; if (!condition) failures.push(what); };
+const eq = (what: string, a: unknown, b: unknown) => {
   checks += 1;
   if (JSON.stringify(a) !== JSON.stringify(b)) failures.push(`${what}: expected ${JSON.stringify(b)}, got ${JSON.stringify(a)}`);
 };
-const throws = (what, fn, pattern) => {
+const throws = (what: string, fn: () => unknown, pattern?: RegExp) => {
   checks += 1;
   try { fn(); failures.push(`${what}: did not refuse`); } catch (error) {
-    if (pattern && !pattern.test(error.message)) failures.push(`${what}: refused for another reason: ${error.message}`);
+    if (pattern && !pattern.test((error as Error).message)) failures.push(`${what}: refused for another reason: ${(error as Error).message}`);
   }
 };
 const RUNNER_MJS = RUNNER.replace(/\.sh$/, '.mjs');
-const treeHash = (path) => { try { return sha256(readFileSync(join(ROOT, path))); } catch { return null; } };
+const treeHash = (path: string) => { try { return sha256(readFileSync(join(ROOT, path))); } catch { return null; } };
 
 /**
  * The route a re-run of `winner` by way of the tree's runner executes: null
  * when the runner refuses (nothing runs), else the tree's bytes. `guard` is
  * the runner's routeStatus; the old runner had none.
  */
-function treeRunExecutes(entry, guard) {
+function treeRunExecutes(entry: Entry, guard: Guard | null) {
   const { winner } = entry;
   const tokens = replayArguments(winner, { label: 'gate', home: '/home/gate' });
   const options = { mode: tokens[tokens.indexOf('--mode') + 1], winner: null, route: null,
     dials: Object.fromEntries(['freddy', 'bonnie', 'chica', 'foxy'].map((d, i) =>
-      [d, Number(tokens[tokens.indexOf('--dials') + 1].split(',')[i])])) };
+      [d, Number(tokens[tokens.indexOf('--dials') + 1].split(',')[i])])) as NonNullable<RouteOptions['dials']> }; // one entry per dial
   const status = guard ? guard(options, { winners: [entry] }) : null;
   if (status?.refusal) return { executes: null, refusal: status.refusal };
   return { executes: Object.fromEntries(Object.keys(winner.sources).map((path) => [path, treeHash(path)])), refusal: null };
 }
-const differsFromPins = (winner, executes) => Object.keys(winner.sources).filter((path) => executes[path] !== winner.sources[path]);
+const differsFromPins = (winner: Winner, executes: Readonly<Record<string, string | null>>) => Object.keys(winner.sources).filter((path) => executes[path] !== winner.sources[path]);
 
 const runnerModule = await import('../bin/fnaf1-custom-run.ts');
 const guard = runnerModule.routeStatus ?? null;
 ok('the tree\'s FNaF 1 Custom Night runner exports routeStatus, its guard against running a drifted winner\'s night', Boolean(guard));
 
-const winners = listWinners();
+const winners = listWinners() as Entry[]; // a committed winner states its target, night, options and replay
 ok('at least one fnaf1-route-winner-v1 is committed', winners.length > 0);
 const scratch = mkdtempSync(join(tmpdir(), 'test-fnaf1-winner-'));
-const rows = [];
+const rows: string[] = [];
 try {
   for (const [n, entry] of winners.entries()) {
     const { path, winner } = entry;
@@ -95,25 +121,25 @@ try {
       viaTree.executes === null || differsFromPins(winner, viaTree.executes).length === 0);
     if (drift.length) {
       ok(`${path}: the refusal names every drifted file and the replay`, Boolean(viaTree.refusal)
-        && drift.every((p) => viaTree.refusal.includes(p)) && viaTree.refusal.includes(`fnaf1-winner --winner ${path}`));
+        && drift.every((p) => viaTree.refusal?.includes(p)) && viaTree.refusal?.includes(`fnaf1-winner --winner ${path}`));
       // The old behaviour: no guard, so the tree's bytes run under the winner's name. The property must catch it.
       const unguarded = treeRunExecutes(entry, null);
       eq(`${path}: control -- the old unguarded runner executes the drifted files, and the property fails it`,
-        differsFromPins(winner, unguarded.executes), drift);
+        differsFromPins(winner, unguarded.executes as Record<string, string | null>), drift); // with no guard nothing refuses
       if (guard) {
         const knowing = guard({ ...treeOptions(winner), route: 'tree' }, { winners: [entry] });
         ok(`${path}: --route tree runs the tree's route knowingly and records that it is not the winner's`,
-          knowing.refusal === null && knowing.winner.matches === false && knowing.route === 'tree');
+          knowing?.refusal === null && knowing.winner?.matches === false && knowing.route === 'tree');
         const byName = guard({ ...treeOptions(winner), winner: join(ROOT, path) }, { winners: [entry] });
         ok(`${path}: --winner is refused while the tree drifts, with no way round but the replay`,
-          Boolean(byName.refusal) && !byName.refusal.includes('--route tree'));
+          Boolean(byName?.refusal) && !byName?.refusal?.includes('--route tree'));
       }
     }
     const shape = shapeProblems(winner);
     eq(`${path}: states what a replay needs`, shape, []);
     if (shape.length) continue;
     let commit;
-    try { commit = pinnedCommit(winner); } catch (error) { failures.push(error.message); checks += 1; continue; }
+    try { commit = pinnedCommit(winner); } catch (error) { failures.push((error as Error).message); checks += 1; continue; }
 
     // 2. The pins are what the commit holds.
     for (const pin of pinsAtCommit(winner)) ok(`${path}: ${pin.path} at ${commit.slice(0, 12)} is the pinned file`, pin.ok);
@@ -122,7 +148,7 @@ try {
     const tree = join(scratch, `tree-${n}`);
     const outputs = join(scratch, `out-${n}`);
     let built = null;
-    try { built = materialize(winner, tree, { outputs }); } catch (error) { failures.push(error.message); checks += 1; continue; }
+    try { built = materialize(winner, tree, { outputs }); } catch (error) { failures.push((error as Error).message); checks += 1; continue; }
     eq(`${path}: the materialized tree is the commit, file for file`, treeProblems(tree, commit), []);
     const executes = Object.fromEntries(Object.keys(winner.sources).map((p) => [p, sha256(readFileSync(join(tree, p)))]));
     eq(`${path}: the replay executes the pinned route`, differsFromPins(winner, executes), []);
@@ -173,8 +199,8 @@ try {
 
     // Controls on the census: each wrong census is refused for its own reason.
     if (n === 0 && typeof winner.census === 'string' && !census.problems.length) {
-      const own = JSON.parse(readFileSync(join(ROOT, 'docs/evidence', `${winner.census}.json`), 'utf8'));
-      const refuses = (what, pattern, options) => {
+      const own: CensusRecord = JSON.parse(readFileSync(join(ROOT, 'docs/evidence', `${winner.census}.json`), 'utf8'));
+      const refuses = (what: string, pattern: RegExp, options: Parameters<typeof censusProblems>[4]) => {
         const { problems } = censusProblems(path, winner, commit, policy, options);
         ok(`control -- ${what} is refused${problems.length ? ` for its own reason (got: ${problems.join('; ')})` : ''}`,
           problems.length > 0 && problems.every((p) => pattern.test(p)));
@@ -183,7 +209,7 @@ try {
       const treeCensus = newestTreeRecord();
       if (treeCensus) refuses(`naming the tree route's census (${treeCensus.id})`, /censuses this winner's pinned grid420/,
         { id: treeCensus.id, replay: false });
-      const edited = (edit) => { const copy = JSON.parse(JSON.stringify(own)); edit(copy); return copy; };
+      const edited = (edit: (copy: CensusRecord) => void) => { const copy: CensusRecord = JSON.parse(JSON.stringify(own)); edit(copy); return copy; };
       refuses('a census run with the model\'s default options', /with the options this winner's runner passed/,
         { record: edited((r) => { r.method.options = { chicaByCamera: true }; }), replay: false });
       const worst = own.lanes.findIndex((l) => l.losses.length > 0);
@@ -196,7 +222,7 @@ try {
     // 5. Controls on the materialized tree: each tamper is refused for its own reason.
     if (n === 0) {
       // The lane as the pinned tree and the winner's sources name it: where it stood at that commit.
-      const PINNED_LANE = LANE_FILES.find((path) => path in winner.sources);
+      const PINNED_LANE = LANE_FILES.find((path) => path in winner.sources) as string; // a winner pins the lane at one of its paths
       const lane = join(tree, PINNED_LANE);
       const original = readFileSync(lane);
       writeFileSync(lane, Buffer.concat([original, Buffer.from('\n')]));
@@ -216,7 +242,7 @@ try {
       eq('control -- the tree is whole again once the tampering is undone', (() => {
         unlinkSync(link); symlinkSync('../../packages/adapters', link); return treeProblems(tree, commit);
       })(), []);
-      const wrongPin = { ...winner, sources: { ...winner.sources, [PINNED_LANE]: treeHash(LANE_FILE) } };
+      const wrongPin = { ...winner, sources: { ...winner.sources, [PINNED_LANE]: treeHash(LANE_FILE) as string } }; // the tree holds its own lane
       if (wrongPin.sources[PINNED_LANE] !== winner.sources[PINNED_LANE])
         throws('control -- a pin the commit does not hold refuses the materialization', () => materialize(wrongPin, join(scratch, 'wrong')),
           /tools\/fnaf1-device-lane\.mjs: the commit holds/);
@@ -230,13 +256,14 @@ try {
         () => replayArguments({ ...winner, command: winner.command.replace(RUNNER, 'packages/play/bin/phone/night-run.sh') }), /not tools\/device\/fnaf1-custom-run\.sh/);
       // A winner whose pins the tree holds runs from the tree: the guard is not a blanket refusal.
       if (guard) {
-        const held = { ...winner, sources: Object.fromEntries(Object.keys(winner.sources).map((p) => [p, treeHash(p)])) };
+        // Pinned to the tree's bytes, and to null where the tree lacks a file, as routeStatus hashes it.
+        const held = { ...winner, sources: Object.fromEntries(Object.keys(winner.sources).map((p) => [p, treeHash(p)])) } as Winner;
         const status = guard(treeOptions(held), { winners: [{ path, winner: held }] });
         ok('control -- a winner whose pins the tree still holds runs from the tree, and is recorded as matching',
-          status.refusal === null && status.winner.matches === true);
+          status?.refusal === null && status.winner?.matches === true);
         const other = guard({ ...treeOptions(winner), dials: { freddy: 0, bonnie: 20, chica: 20, foxy: 0 } }, { winners: [entry] });
         ok('control -- a grid420 night no winner names runs from the tree with its route recorded',
-          other.refusal === null && other.winner === null && Object.keys(other.files).length > 0);
+          other?.refusal === null && other.winner === null && Object.keys(other.files).length > 0);
       }
     }
   }
@@ -249,7 +276,7 @@ try {
   mkdirSync(repo);
   const env = { ...Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith('GIT_'))),
     GIT_AUTHOR_NAME: 'gate', GIT_AUTHOR_EMAIL: 'gate@invalid', GIT_COMMITTER_NAME: 'gate', GIT_COMMITTER_EMAIL: 'gate@invalid' };
-  const g = (...args) => execFileSync('git', ['-C', repo, ...args], { env, stdio: ['ignore', 'pipe', 'pipe'] }).toString('utf8').trim();
+  const g = (...args: string[]) => execFileSync('git', ['-C', repo, ...args], { env, stdio: ['ignore', 'pipe', 'pipe'] }).toString('utf8').trim();
   g('init', '-q');
   writeFileSync(join(repo, 'w-winner.json'), '{}\n');
   const custody = [winnerCustody('w-winner.json', repo)];
@@ -265,7 +292,7 @@ try {
   rmSync(scratch, { recursive: true, force: true });
 }
 
-function treeOptions(winner) {
+function treeOptions(winner: Winner) {
   return { mode: winner.resolvedOptions.policy, dials: winner.night.dials, winner: null, route: null };
 }
 
@@ -278,17 +305,18 @@ function treeOptions(winner) {
  * the pinned grid420. Returns the problems rather than failing, so a control
  * can require the refusal of a census that is not this winner's.
  */
-function censusProblems(path, winner, commit, policy, { id = winner.census, record = null, replay = true } = {}) {
-  const problems = [];
+function censusProblems(path: string, winner: Winner, commit: string, policy: DevicePolicy,
+  { id = winner.census, record = null, replay = true }: { id?: unknown, record?: CensusRecord | null, replay?: boolean } = {}) {
+  const problems: string[] = [];
   let checked = 0;
-  const pass = (what, condition) => { checked += 1; if (!condition) problems.push(what); };
-  const same = (what, a, b) => pass(`${what}: expected ${JSON.stringify(b)}, got ${JSON.stringify(a)}`,
+  const pass = (what: string, condition: unknown) => { checked += 1; if (!condition) problems.push(what); };
+  const same = (what: string, a: unknown, b: unknown) => pass(`${what}: expected ${JSON.stringify(b)}, got ${JSON.stringify(a)}`,
     JSON.stringify(a) === JSON.stringify(b));
-  const done = (summary) => ({ problems, checked, summary });
+  const done = (summary: string) => ({ problems, checked, summary });
   pass(`${path}: names the census of its own route (census: an evidence id)`, typeof id === 'string' && /^[\w.-]+$/.test(id));
   if (typeof id !== 'string') return done('');
   if (!record) {
-    try { record = JSON.parse(readFileSync(join(ROOT, 'docs/evidence', `${id}.json`), 'utf8')); } catch {
+    try { record = JSON.parse(readFileSync(join(ROOT, 'docs/evidence', `${id}.json`), 'utf8')) as CensusRecord; } catch { // as populationRecord wrote it
       pass(`${path}: its census ${id} is not docs/evidence/${id}.json`, false);
       return done('');
     }
@@ -297,7 +325,7 @@ function censusProblems(path, winner, commit, policy, { id = winner.census, reco
   same(`${id}: kind and id`, [record.kind, record.id, record.claimLevel], [POPULATION_KIND, id, 'MODEL_ONLY']);
   same(`${id}: censuses this winner's pinned grid420 at its commit`,
     // The record names the winner where it stood when written; that name follows the file's renames.
-    [currentPath(ROOT, m.winner?.path ?? '') ?? m.winner?.path, m.winner?.id, m.winner?.commit, m.policySha256], [path, winner.id, commit, winner.sources[LANE_FILES.find((lane) => lane in winner.sources)]]);
+    [currentPath(ROOT, m.winner?.path ?? '') ?? m.winner?.path, m.winner?.id, m.winner?.commit, m.policySha256], [path, winner.id, commit, winner.sources[LANE_FILES.find((lane) => lane in winner.sources) as string]]); // a winner pins the lane at one of its paths
   same(`${id}: with the options this winner's runner passed`, m.options, winnerPolicyOptions(winner));
   pass(`${id}: the timing model changed since; re-run the winner census`, m.timingSha256 === sha256(readFileSync(TIMING_PATH)));
   const design = designBlock();
@@ -306,7 +334,7 @@ function censusProblems(path, winner, commit, policy, { id = winner.census, reco
   const inDesign = new Set(design.seeds);
   const { start, count } = m.population ?? {};
   const timing = loadTiming();
-  const night = (seed, lane) => runDeviceNight({ night: 7, seed, custom: FOUR_TWENTY, timing, lane, policy, options: { ...m.options } });
+  const night = (seed: number, lane: string) => runDeviceNight({ night: 7, seed, custom: FOUR_TWENTY, timing, lane, policy, options: { ...m.options } });
   let replays = 0;
   for (const row of record.lanes ?? []) {
     const lost = row.n - row.wins;

@@ -12,14 +12,15 @@
 //   node apps/desktop/test/test-native-regions.ts
 
 import { parseRegionRead, regionSetLine } from '../../../packages/play/src/venues/phone/companion.ts';
-import { pngFromRegion, recordFrames } from '../../../packages/play/bin/phone/native-regions.ts';
+import { loadRegionSet, pngFromRegion, recordFrames } from '../../../packages/play/bin/phone/native-regions.ts';
 import { makeClassifier } from '../../../packages/play/games/fnaf1/fnaf1-detectors.ts';
+import type { Detectors, RegionRead } from '../../../packages/play/games/fnaf1/fnaf1-detectors.ts';
 import { parseArgs } from '../bin/fnaf1-custom-run.ts';
 
 const failures = [];
 let checks = 0;
-const ok = (what, cond) => { checks += 1; if (!cond) failures.push(what); };
-const throws = (what, fn) => { checks += 1; try { fn(); failures.push(`${what}: did not throw`); } catch { /* expected */ } };
+const ok = (what: string, cond: unknown) => { checks += 1; if (!cond) failures.push(what); };
+const throws = (what: string, fn: () => unknown) => { checks += 1; try { fn(); failures.push(`${what}: did not throw`); } catch { /* expected */ } };
 
 // --- 1. codec -------------------------------------------------------------------
 const token = 'a'.repeat(32);
@@ -31,7 +32,7 @@ throws('bad token refused', () => regionSetLine('xyz', 'a', { x: 0, y: 0, width:
 {
   const r = parseRegionRead('OK seq=9 imageNs=100 copiedNs=120 captured=9 regions=1 a=10,20,3,2,2:ff0000000000 snapshotNs=200');
   ok('seq', r.seq === 9 && r.imageNs === 100n && r.snapshotNs === 200n);
-  const a = (r.regions as any).a;
+  const a = r.regions.a;
   ok('strided geometry', a.cols === 2 && a.rows === 1 && a.pixels.length === 2);
   ok('raw pixels in order', a.pixels[0] === 0xff0000 && a.pixels[1] === 0x000000);
   throws('sample count must match geometry', () => parseRegionRead('OK seq=1 regions=1 a=0,0,2,2,1:ff0000 snapshotNs=1'));
@@ -41,11 +42,11 @@ throws('bad token refused', () => regionSetLine('xyz', 'a', { x: 0, y: 0, width:
 }
 
 // --- 2. classifier ------------------------------------------------------------------
-const fill = (n, rgb) => new Uint32Array(n).fill(rgb);
-const b64 = (px) => Buffer.from(new Uint8Array(px.buffer)).toString('base64');
+const fill = (n: number, rgb: number) => new Uint32Array(n).fill(rgb);
+const b64 = (px: Uint32Array) => Buffer.from(new Uint8Array(px.buffer)).toString('base64');
 const N = 16;
 const panels = { 'open/off': 0x800000, 'open/on': 0x80ffff, 'shut/off': 0x008000, 'shut/on': 0x00ffff };
-const templates: any = {};
+const templates: Detectors['templates'] = {};
 for (const [state, rgb] of Object.entries(panels)) {
   const lit = state.endsWith('on');
   templates[`pan0|L:${state}`] = { left_panel: b64(fill(N, rgb)), left_doorway: b64(fill(N, lit ? 0x606060 : 0x101010)) };
@@ -53,8 +54,9 @@ for (const [state, rgb] of Object.entries(panels)) {
     right_doorway: b64(fill(N, lit ? 0x505050 : 0x101010)) };
 }
 templates.up42 = { cam_label: b64(fill(N, 0xffffff)), map_cam4b: b64(fill(N, 0x404040)) };
-const classify = makeClassifier({ schema: 'fnaf1-detectors-v1', thresholds: { panelMatch: 8, upMatch: 40, occupied: 4 }, templates });
-const read = (regions) => ({ regions: { cam_label: fill(N, 0), ...regions } });
+// A partial model: the classifier reads only its thresholds and templates.
+const classify = makeClassifier({ schema: 'fnaf1-detectors-v1', thresholds: { panelMatch: 8, upMatch: 40, occupied: 4 }, templates } as Detectors);
+const read = (regions: RegionRead['regions']) => ({ regions: { cam_label: fill(N, 0), ...regions } });
 {
   const lit = classify(read({ left_panel: fill(N, panels['open/on']), left_doorway: fill(N, 0x606060) }), 0);
   ok('lit empty doorway is clear', lit.monitor === 'down' && lit.left === 'clear' && lit.leftDoor === 0);
@@ -83,13 +85,13 @@ const read = (regions) => ({ regions: { cam_label: fill(N, 0), ...regions } });
     ['FNaF 4', 'Fnaf4Lesson.java', 'fnaf4/moto-g56/regions-fnaf4-moto-g56-v204.json'],
   ]) {
     const java = readFileSync(new URL(`../../../android/companion/src/com/ppvaz/fnafcompanion/${lesson}`, import.meta.url), 'utf8');
-    const constant = (name) => Number(new RegExp(`int ${name} = (\\d+);`).exec(java)?.[1]);
+    const constant = (name: string) => Number(new RegExp(`int ${name} = (\\d+);`).exec(java)?.[1]);
     const panel = { left: constant('LEFT'), top: constant('TOP'), right: constant('RIGHT'), bottom: constant('BOTTOM'), guard: constant('GUARD_PX') };
     ok(`${game} panel constants read`, Object.values(panel).every(Number.isFinite));
-    const model = JSON.parse(readFileSync(new URL(`../../../packages/play/profiles/${regions}`, import.meta.url), 'utf8'));
+    const model: { sets: { night: ReturnType<typeof loadRegionSet>['set'] } } = JSON.parse(readFileSync(new URL(`../../../packages/play/profiles/${regions}`, import.meta.url), 'utf8'));
     for (const [name, r] of Object.entries(model.sets.night)) {
-      const apart = (r as any).x >= panel.right + panel.guard || (r as any).x + (r as any).width <= panel.left - panel.guard
-        || (r as any).y >= panel.bottom + panel.guard || (r as any).y + (r as any).height <= panel.top - panel.guard;
+      const apart = r.x >= panel.right + panel.guard || r.x + r.width <= panel.left - panel.guard
+        || r.y >= panel.bottom + panel.guard || r.y + r.height <= panel.top - panel.guard;
       ok(`${game} teach panel clears ${name} by ${panel.guard} px`, apart);
     }
   }
@@ -112,14 +114,16 @@ throws('--winner and --route tree are exclusive', () => parseArgs(['--live', '--
 // A simulated helper on a fake clock: a session copies frame k at 33 ms intervals from `firstAt`, or nothing while the
 // screen is still; a capture restart replaces the session (new endpoint, seq from 1) and leaves an old channel reading
 // its last frame. `fresh` rediscovery can be made to fail, as a rotated logcat line makes it fail mid-night.
+/** A frame row as recordFrames appends it, in the fields these checks read. */
+interface FrameRow { readonly seq: number, readonly imageHostMs: number }
 async function recorderRun({ seconds = 10, stillUntil = 0, restartAt = Infinity, freshFails = false, cachedFails = false }) {
   let clock = 0;
   const now = () => clock;
   const pixels = new Uint32Array([0x808080]);
-  const sessionAt = (t) => (t >= restartAt ? 1 : 0);
+  const sessionAt = (t: number) => (t >= restartAt ? 1 : 0);
   let endpoint = 0;   // the session a cached channel was opened on
   const calls = { cached: 0, fresh: 0 };
-  const channelOn = (session) => {
+  const channelOn = (session: number) => {
     let lastSeq = -1;
     return {
       read: async () => {
@@ -132,7 +136,7 @@ async function recorderRun({ seconds = 10, stillUntil = 0, restartAt = Infinity,
       close: () => {}, clear: async () => {},
     };
   };
-  const open = async (fresh) => {
+  const open = async (fresh: boolean) => {
     clock += 200;
     if (fresh) { calls.fresh += 1; if (freshFails) throw new Error('Companion endpoint: no READY or DEGRADED endpoint'); endpoint = sessionAt(clock); }
     else {
@@ -141,9 +145,10 @@ async function recorderRun({ seconds = 10, stillUntil = 0, restartAt = Infinity,
     }
     return { opened: channelOn(endpoint), read: null };
   };
-  const rows = [];
-  const done = await recordFrames({ open, seconds, append: (row) => rows.push(row), now });
-  return { done, rows, calls, frames: rows.filter((row) => 'seq' in row) };
+  const rows: object[] = [];
+  // A fake channel: its reads carry only the fields recordFrames reads.
+  const done = await recordFrames({ open: open as unknown as Parameters<typeof recordFrames>[0]['open'], seconds, append: (row) => rows.push(row), now });
+  return { done, rows, calls, frames: rows.filter((row): row is FrameRow => 'seq' in row) };
 }
 {
   // night7-k3-sr02: the intro card is still for 5 s; the recorder waits and records the night that follows.
@@ -162,7 +167,7 @@ async function recorderRun({ seconds = 10, stillUntil = 0, restartAt = Infinity,
   ok('a still screen survives a failing rediscovery', rotated.frames.length > 30 && rotated.calls.fresh === 0);
   // Both ways failing is a failure, said as one.
   let refused = null;
-  try { await recorderRun({ restartAt: 2000, freshFails: true }); } catch (error) { refused = error.message; }
+  try { await recorderRun({ restartAt: 2000, freshFails: true }); } catch (error) { refused = (error as Error).message; }
   checks += 1;
   if (!refused || !/could not be reopened/.test(refused)) failures.push(`a restart with no reachable endpoint must throw, got ${refused}`);
 }

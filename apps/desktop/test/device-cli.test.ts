@@ -10,7 +10,7 @@ import { makeVenueIdentity } from '@sixam/kernel/contracts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../..');
 const CLI = join(ROOT, 'apps/desktop/src/device-cli.ts');
-const run = args => spawnSync(process.execPath, [CLI, ...args], {
+const run = (args: string[]) => spawnSync(process.execPath, [CLI, ...args], {
   cwd: ROOT, encoding: 'utf8', env: { ...process.env, NODE_NO_WARNINGS: '1' },
 });
 

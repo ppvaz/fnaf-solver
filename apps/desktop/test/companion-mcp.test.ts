@@ -36,14 +36,33 @@ const child = spawn(process.execPath, [join(root, 'apps/desktop/src/companion-mc
     [VAULT_ENV]: join(temp, 'vault.json'), [CACHE_ENV]: join(temp, 'cache'), PATH: process.env.PATH },
   stdio: ['pipe', 'pipe', 'pipe'],
 });
+/** A JSON-RPC request this test sends. */
+interface RpcRequest { readonly jsonrpc: '2.0', readonly id: number, readonly method: string, readonly params?: object }
+/** A tool as tools/list describes it, in the fields this test reads. */
+interface Tool {
+  readonly name: string, readonly inputSchema: { readonly properties?: object, readonly additionalProperties?: boolean },
+  readonly annotations: { readonly readOnlyHint?: boolean },
+}
+/** A JSON-RPC reply, in the fields this test reads: each reply carries the ones its method answers with. */
+interface RpcReply {
+  readonly id: number;
+  readonly result: {
+    readonly isError?: boolean, readonly content: readonly { readonly text: string }[],
+    readonly serverInfo: { readonly name: string }, readonly capabilities: { readonly resources?: object },
+    readonly tools: readonly Tool[], readonly resources: readonly { readonly uri: string }[],
+    readonly resourceTemplates: readonly { readonly uriTemplate: string }[],
+    readonly contents: readonly { readonly uri: string, readonly text: string }[],
+  };
+  readonly error: { readonly code: number };
+}
 const lines = createInterface({ input: child.stdout });
-const next = async () => {
+const next = async (): Promise<RpcReply> => {
   const [line] = await once(lines, 'line');
   return JSON.parse(line);
 };
-const send = request => child.stdin.write(`${JSON.stringify(request)}\n`);
+const send = (request: RpcRequest) => child.stdin.write(`${JSON.stringify(request)}\n`);
 let id = 100;
-const call = async (name, args) => {
+const call = async (name: string, args: object) => {
   send({ jsonrpc: '2.0', id: ++id, method: 'tools/call', params: { name, arguments: args } });
   const response = await next();
   assert.equal(response.id, id);
@@ -51,10 +70,11 @@ const call = async (name, args) => {
 };
 
 // Every reproducer is a command the generated registry knows: `npm run <script>` or a registered tool.
-const registry = JSON.parse(readFileSync(join(root, 'docs/architecture/generated/command-registry.json'), 'utf8'));
+const registry: { commands: { id: string }[], tools: { id: string }[] } =
+  JSON.parse(readFileSync(join(root, 'docs/architecture/generated/command-registry.json'), 'utf8'));
 const scripts = new Set(registry.commands.map(item => item.id));
 const tools = new Set(registry.tools.map(item => item.id));
-const envelope = (value, what) => {
+const envelope = <T extends { readonly refused?: unknown, readonly reproducer: string }>(value: T, what: string) => {
   validateClaimEnvelope(value);
   if (value.refused) return value;
   const [first, second, script] = value.reproducer.split(' ');
@@ -62,14 +82,14 @@ const envelope = (value, what) => {
     `${what}: reproducer ${value.reproducer} names no registered command`);
   return value;
 };
-const refused = (result, rule, what) => {
+const refused = (result: Awaited<ReturnType<typeof call>>, rule: string, what: string) => {
   assert.equal(result.isError, true, `${what} is reported as an error`);
   envelope(result.value, what);
   assert.equal(result.value.refused, true, `${what} is refused`);
   if (rule) assert.equal(result.value.rule, rule, `${what} is refused by ${rule}`);
   return result.value;
 };
-const claimed = (result, what) => {
+const claimed = (result: Awaited<ReturnType<typeof call>>, what: string) => {
   assert.equal(result.isError, false, `${what}: ${JSON.stringify(result.value).slice(0, 400)}`);
   envelope(result.value, what);
   assert.notEqual(result.value.refused, true, `${what} is a claim`);
@@ -77,9 +97,9 @@ const claimed = (result, what) => {
 };
 
 // The verbs never write: the evidence graph and every pack hash the same before and after.
-const treeHash = dir => {
+const treeHash = (dir: string) => {
   const hash = createHash('sha256');
-  const walk = path => {
+  const walk = (path: string) => {
     for (const name of readdirSync(path).sort()) {
       const full = join(path, name);
       if (statSync(full).isDirectory()) walk(full);
@@ -117,7 +137,7 @@ try {
     assert.equal(tool.inputSchema.additionalProperties, false, `${tool.name} refuses arguments it does not name`);
   }
   for (const name of ['describe', 'query', 'review', 'promote', 'check', 'lab.status', 'lab.next', 'lab.doctor'])
-    assert.equal(listed.result.tools.find(tool => tool.name === name).annotations.readOnlyHint, true, `${name} is read-only`);
+    assert.equal(listed.result.tools.find(tool => tool.name === name)?.annotations.readOnlyHint, true, `${name} is read-only`);
   for (const name of ['start', 'commit', 'end', 'morning'])
     assert.ok(!names.includes(`lab.${name}`), `lab ${name} is not served over MCP: only status, next and doctor are`);
 
@@ -161,7 +181,7 @@ try {
     [52, { kind: 'night', game: 'fnaf2', winner: 'packages/propose/bindings/fnaf2/campaign-night7-k3-winner.json', night: 5 }, 'not the winner\'s night'],
     [53, { kind: 'night', game: 'fnaf2', winner: '/etc/passwd', night: 7 }, 'not a winner path'],
     [54, { kind: 'menu-check', winner: 'packages/propose/bindings/fnaf2/campaign-night7-k3-winner.json' }, 'a night field on a check'],
-  ]) {
+  ] as const) {
     send({ jsonrpc: '2.0', id: requestId, method: 'tools/call', params: { name: 'cue.queue.enqueue', arguments: args } });
     const refusedJob = await next();
     assert.equal(refusedJob.result.isError, true, `a night job with ${why} was queued`);
@@ -204,13 +224,13 @@ try {
   assert.ok(phone.executorWins >= phone.promotedRuns);
   assert.ok(chronicle.entries >= 83 && chronicle.byLabel.DEVICE_MEASURED > 0);
   assert.equal(controls.count, 7);
-  assert.ok(negatives.length >= 24 && negatives.every(entry => ['refutation', 'retraction', 'negative'].includes(entry.kind) || entry.status !== 'standing'));
-  assert.deepEqual(gaps.map(gap => gap.gap), [1, 2, 3, 4], 'Plan 28\'s four gaps, each a query');
+  assert.ok(negatives.length >= 24 && negatives.every((entry: { kind: string, status: string }) => ['refutation', 'retraction', 'negative'].includes(entry.kind) || entry.status !== 'standing'));
+  assert.deepEqual(gaps.map((gap: { gap: number }) => gap.gap), [1, 2, 3, 4], 'Plan 28\'s four gaps, each a query');
   assert.equal(gaps[2].holds, false, 'describe exists, so "no coverage map" no longer holds');
   assert.deepEqual([gaps[1].holds, gaps[1].localDump], [false, true], 'truth exists and this game has a local dump');
   assert.equal(gaps[0].registered, true, 'claim-envelope-v1 is registered');
-  assert.ok(fnaf2.notMeasured.some(item => item.includes('MODEL_ONLY')) || phone.modelOnlyWinners.files.length === 0);
-  assert.ok(!fnaf2.notMeasured.some(item => item.startsWith('Plan 28 gap 2')) && !fnaf2.notMeasured.includes(NO_LOCAL_DUMP));
+  assert.ok(fnaf2.notMeasured.some((item: string) => item.includes('MODEL_ONLY')) || phone.modelOnlyWinners.files.length === 0);
+  assert.ok(!fnaf2.notMeasured.some((item: string) => item.startsWith('Plan 28 gap 2')) && !fnaf2.notMeasured.includes(NO_LOCAL_DUMP));
   const fnaf3 = claimed(await call('describe', { game: 'com.scottgames.fnaf3' }), 'describe fnaf3');
   assert.deepEqual([fnaf3.claim.gaps[1].holds, fnaf3.claim.gaps[1].notMeasured], [false, [NO_LOCAL_DUMP]], 'closed, with no dump for FNaF 3 here');
   assert.ok(fnaf3.notMeasured.includes(NO_LOCAL_DUMP));
@@ -228,19 +248,19 @@ try {
   assert.equal(promotions.claim.consistent, true);
   assert.equal(promotions.claim.edges.matched, promotions.claim.edges.graph);
   const fnaf1Packs = claimed(await call('query', { what: 'packs', game: 'fnaf1' }), 'query packs');
-  assert.ok(fnaf1Packs.claim.packs.length >= 1 && fnaf1Packs.claim.packs.every(pack => pack.game === 'com.scottgames.fivenightsatfreddys'));
+  assert.ok(fnaf1Packs.claim.packs.length >= 1 && fnaf1Packs.claim.packs.every((pack: { game: string }) => pack.game === 'com.scottgames.fivenightsatfreddys'));
   const negative = claimed(await call('query', { what: 'chronicle', negative: true, game: 'fnaf2' }), 'query chronicle');
   assert.equal(negative.claim.entries.length, negatives.length);
   const foxy = claimed(await call('query', { what: 'chronicle', text: 'Foxy' }), 'query chronicle text');
-  assert.ok(foxy.claim.entries.every(entry => JSON.stringify(entry).toLowerCase().includes('foxy')));
+  assert.ok(foxy.claim.entries.every((entry: unknown) => JSON.stringify(entry).toLowerCase().includes('foxy')));
   const contracts = claimed(await call('query', { what: 'contracts', text: 'claim-envelope' }), 'query contracts');
-  assert.deepEqual(contracts.claim.contracts.map(item => item.id), ['claim-envelope-v1']);
+  assert.deepEqual(contracts.claim.contracts.map((item: { id: string }) => item.id), ['claim-envelope-v1']);
   refused(await call('query', { what: 'truth' }), 'invalid-argument', 'a query that does not exist');
 
   // --- lab.*: the operator's read-only verbs, the functions `npm run lab` calls -------------------
   const labStatus = claimed(await call('lab.status', {}), 'lab.status');
   assert.equal(labStatus.reproducer, 'npm run lab -- status');
-  assert.deepEqual(labStatus.claim.steps.map(row => row.id), ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7'], 'every ROADMAP step has a row');
+  assert.deepEqual(labStatus.claim.steps.map((row: { id: string }) => row.id), ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7'], 'every ROADMAP step has a row');
   for (const row of labStatus.claim.steps)
     assert.ok(['open', 'closed'].includes(row.state) || isUnknown(row.state), `${row.id} is open, closed or UNKNOWN(reason)`);
   const s1 = labStatus.claim.steps[0];
@@ -250,19 +270,19 @@ try {
   assert.ok(labStatus.claim.phone.queue.jobs >= 4, 'lab.status reads the queue the jobs above were written to');
   assert.equal(typeof labStatus.claim.doctor.findings, 'number');
   const labNext = claimed(await call('lab.next', {}), 'lab.next');
-  assert.deepEqual(labNext.claim.actions.map(item => item.rank), labNext.claim.actions.map((_, index) => index + 1), 'actions are ranked');
-  if (s1.state === 'open') assert.ok(labNext.claim.actions.some(item => item.step === 'S1'), 'an open S1 is ranked');
-  assert.ok(labNext.claim.blocked.some(row => row.step === 'S3'), 'S3 waits on S2');
+  assert.deepEqual(labNext.claim.actions.map((item: { rank: number }) => item.rank), labNext.claim.actions.map((_: unknown, index: number) => index + 1), 'actions are ranked');
+  if (s1.state === 'open') assert.ok(labNext.claim.actions.some((item: { step: string | null }) => item.step === 'S1'), 'an open S1 is ranked');
+  assert.ok(labNext.claim.blocked.some((row: { step: string }) => row.step === 'S3'), 'S3 waits on S2');
   const labDoctor = claimed(await call('lab.doctor', {}), 'lab.doctor');
-  assert.deepEqual(labDoctor.claim.checks.map(item => item.id), ['hooks-path', 'stale-pending', 'push-gate-worktrees', 'agent-worktrees',
+  assert.deepEqual(labDoctor.claim.checks.map((item: { id: string }) => item.id), ['hooks-path', 'stale-pending', 'push-gate-worktrees', 'agent-worktrees',
     'node-modules', 'local-profile', 'catalog-drift', 'memory', 'untracked-winner']);
-  assert.ok(isUnknown(labDoctor.claim.checks.find(item => item.id === 'catalog-drift').ok), 'the MCP doctor builds no worktree');
+  assert.ok(isUnknown(labDoctor.claim.checks.find((item: { id: string }) => item.id === 'catalog-drift').ok), 'the MCP doctor builds no worktree');
   refused(await call('lab.status', { verbose: true }), 'invalid-argument', 'an argument lab.status does not name');
 
   // --- review --------------------------------------------------------------------------------
   const custody = claimed(await call('review', { pack: HELD_BACK, instrument: 'custody' }), 'review custody');
   assert.equal(custody.claim.custody.kind, 'recovered-from-run-log');
-  assert.ok(custody.notMeasured.some(item => item.startsWith('request.json')), 'what custody lost is named');
+  assert.ok(custody.notMeasured.some((item: string) => item.startsWith('request.json')), 'what custody lost is named');
   const outcome = claimed(await call('review', { pack: HELD_BACK, instrument: 'outcome' }), 'review outcome');
   assert.equal(outcome.claim.reported[0].reportedOutcome.kind, 'SixAM');
   const checks = claimed(await call('review', { pack: HELD_BACK, instrument: 'promotion-checks' }), 'review promotion-checks');
@@ -287,9 +307,9 @@ try {
   // --- truth: the caller's own local dump, never the repository's --------------------------------
   const events = claimed(await call('truth', { op: 'events', game: 'fnaf2', query: { object: 'lamp', value: 2 } }), 'truth events');
   assert.equal(events.label, 'SOURCED');
-  assert.deepEqual(events.claim.matches.map(match => `${match.frame}/${match.group}`), ['1/g0', '1/g1']);
+  assert.deepEqual(events.claim.matches.map((match: { frame: number | null, group: string }) => `${match.frame}/${match.group}`), ['1/g0', '1/g1']);
   assert.deepEqual(events.cite.slice(0, 2), ['fnaf://truth/fnaf2/frame/1/group/0', 'fnaf://truth/fnaf2/frame/1/group/1']);
-  assert.ok(events.claim.matches.every(match => match.conditions.every(row => typeof row.num === 'number' && Array.isArray(row.params))),
+  assert.ok(events.claim.matches.every((match: { conditions: { num: unknown, params: unknown }[] }) => match.conditions.every(row => typeof row.num === 'number' && Array.isArray(row.params))),
     'conditions and actions come back as parsed fields');
   const object = claimed(await call('truth', { op: 'object', game: 'fnaf2', name: 'crate' }), 'truth object');
   assert.deepEqual([object.claim.objects[0].createdBy[0].group, object.claim.objects[0].destroyedBy[0].group], ['g2', 'g3']);
@@ -322,7 +342,7 @@ try {
     ['fnaf://game/{pkg}/controls', 'fnaf://truth/{game}/frame/{frame}/group/{group}']);
   send({ jsonrpc: '2.0', id: 12, method: 'resources/read', params: { uri: 'fnaf://truth/fnaf2/frame/1/group/2' } });
   const citedGroup = envelope(JSON.parse((await next()).result.contents[0].text), 'a cited truth group');
-  assert.deepEqual(citedGroup.claim.matches.map(match => match.group), ['g2'], 'a truth citation reads back as its group');
+  assert.deepEqual(citedGroup.claim.matches.map((match: { group: string }) => match.group), ['g2'], 'a truth citation reads back as its group');
   for (const [index, uri] of resources.entries()) {
     send({ jsonrpc: '2.0', id: 1000 + index, method: 'resources/read', params: { uri } });
     const read = await next();
@@ -333,7 +353,7 @@ try {
   send({ jsonrpc: '2.0', id: 10, method: 'resources/read', params: { uri: 'fnaf://refuted' } });
   const refutedResource = JSON.parse((await next()).result.contents[0].text);
   assert.ok(refutedResource.claim.chronicle.length >= 24 && refutedResource.claim.archivedRoutes.length >= 1);
-  assert.ok(refutedResource.claim.archivedRoutes.every(route => ['parked', 'refuted'].includes(route.status)));
+  assert.ok(refutedResource.claim.archivedRoutes.every((route: { status: string }) => ['parked', 'refuted'].includes(route.status)));
   send({ jsonrpc: '2.0', id: 11, method: 'resources/read', params: { uri: 'fnaf://truth/fnaf2/group/1' } });
   assert.equal((await next()).error.code, -32002, 'an unknown resource is not found');
 

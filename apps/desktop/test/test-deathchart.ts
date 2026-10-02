@@ -19,7 +19,7 @@ import { census, chart, clock, median, renderPng, REASON_ORDER } from '../bin/de
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 let failed = 0;
-const check = (name, cond, detail = '') => {
+const check = (name: string, cond: unknown, detail = '') => {
   if (!cond) { failed++; console.error(`FAIL ${name}${detail ? ` -- ${detail}` : ''}`); }
 };
 
@@ -40,7 +40,7 @@ for (const r of new Set(emitted))
     'add it to REASON_ORDER and re-run the palette validator for the new adjacency');
 
 // ------------------------------------------------------- grouping the census
-const deaths = [
+const deaths: [string, number][] = [
   ['inside-office: Toy Bonnie completed the sourced 40-frame marker-123 attack', 65],
   ['foxy: Foxy had locked on and no blackout covered the 10s interval', 120],
   ['inside-office: Toy Chica completed the sourced 40-frame marker-123 attack', 64],
@@ -59,7 +59,7 @@ check('details sort by count inside a reason',
   rows[1].details.map(d => d.n).join() === '65,64', rows[1].details.map(d => d.n).join());
 
 let threw = '';
-try { census([['soul-crushed: a new endgame', 1]]); } catch (e) { threw = e.message; }
+try { census([['soul-crushed: a new endgame', 1]]); } catch (e) { threw = (e as Error).message; }
 check('an unslicecd reason fails loudly', /has no slice/.test(threw), threw || 'no throw');
 
 // ------------------------------------------------- when a run died, not just why
@@ -117,7 +117,7 @@ check('a clean night says so', /no deaths in 1200 runs/.test(clean));
   process.env.CHROME = join(HERE, 'no-such-chrome-binary');
   const r = renderPng('/dev/null', join(tmpdir(), `dc-${process.pid}.png`), { w: 10, h: 10 });
   check('a missing renderer is reported, not silently skipped',
-    r.ok === false && /UNKNOWN\(/.test(r.why), JSON.stringify(r));
+    r.ok === false && /UNKNOWN\(/.test(r.why as string), JSON.stringify(r)); // a failed render says why
   if (saved === undefined) delete process.env.CHROME; else process.env.CHROME = saved;
 }
 

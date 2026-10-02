@@ -8,6 +8,7 @@ import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpat
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { isUnknown, validateClaimEnvelope } from '@sixam/kernel';
+import type { RefusalEnvelope, Unknown } from '@sixam/kernel';
 import { recordRun, runRecordPath } from '../../../tools/push-gate.ts';
 import { main, parse } from '../src/cli.ts';
 import { LAB_VERBS, SESSION_FILE, STALE_PENDING_HOURS, createLab, lastEvening, parseWorktrees, runStamp } from '../src/lab.ts';
@@ -20,17 +21,17 @@ const base = realpathSync(mkdtempSync(join(tmpdir(), 'lab-test-')));
 let checks = 0;
 
 const cleanEnv = Object.fromEntries(Object.entries(process.env).filter(([name]) => !name.startsWith('GIT_')));
-const run = (cwd, command, args) => {
+const run = (cwd: string, command: string, args: string[]) => {
   const result = spawnSync(command, args, { cwd, encoding: 'utf8', env: cleanEnv });
   assert.equal(result.status, 0, `${command} ${args.join(' ')}: ${result.stderr}`);
   return result.stdout;
 };
-const git = (cwd, ...args) => run(cwd, 'git', args);
-const write = (root, path, text) => { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), text); };
-const commitAll = (root, message) => { git(root, 'add', '-A'); git(root, 'commit', '-q', '-m', message); return git(root, 'rev-parse', 'HEAD').trim(); };
+const git = (cwd: string, ...args: string[]) => run(cwd, 'git', args);
+const write = (root: string, path: string, text: string) => { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), text); };
+const commitAll = (root: string, message: string) => { git(root, 'add', '-A'); git(root, 'commit', '-q', '-m', message); return git(root, 'rev-parse', 'HEAD').trim(); };
 
 /** A repository with the real hook, register and ROADMAP, and scripts the doctor's catalog check can run. */
-function fixture(name) {
+function fixture(name: string) {
   const root = join(base, name);
   mkdirSync(root, { recursive: true });
   git(root, 'init', '-q', '-b', 'master');
@@ -55,23 +56,28 @@ function fixture(name) {
   return root;
 }
 
-const promotionsStub = modelOnly => () => ({
+type LabOptions = Parameters<typeof createLab>[0];
+// A partial promotions answer: the fields the lab reads of it.
+const promotionsStub = (modelOnly: string[]) => (() => ({
   consistent: true, lift: { packs: 2, gameRuns: 2 }, edges: { matched: 1, graph: 1, byAttester: { agent: 1 }, byCustody: { complete: 1 } },
   open: { modelOnlyWinners: { count: modelOnly.length, of: 1, winners: modelOnly.map(file => ({ file })) },
     untrackedWinnerDebt: { summary: '0 of 0', untracked: 0, entries: [] } },
-});
+})) as unknown as NonNullable<LabOptions['promotions']>;
 const NOW = new Date('2026-09-30T09:00:00Z');
 const quietHost = { availableMb: () => 4000, processes: () => [{ pid: 1, name: 'init', rssMb: 10 }], cwds: () => [] };
 
 /** A lab over the fixture, every host path inside the test's own temp directory. */
-function labFor(root, { jobs = [], host = quietHost, modelOnly = ['packages/propose/bindings/fnaf2/campaign-night1-x-winner.json'] } = {}) {
+function labFor(root: string, { jobs = [], host = quietHost, modelOnly = ['packages/propose/bindings/fnaf2/campaign-night1-x-winner.json'] }:
+  { jobs?: ReturnType<NonNullable<LabOptions['queue']>>['jobs'], host?: LabOptions['host'], modelOnly?: string[] } = {}) {
   const env = { ...cleanEnv, FNAF_LAB_DIR: join(root, '..', `${root.split('/').pop()}-lab`), CUE_HELPER_STATE_DIR: join(root, '..', 'state'),
     FNAF_WINDOW_DIR: join(root, '..', `${root.split('/').pop()}-windows`), FNAF2_PUSH_GATE_TMP: join(root, '..', 'pushgate'),
     FNAF_LOCAL_PROFILE: join(root, '..', `${root.split('/').pop()}-profile.json`) };
   return { env, lab: createLab({ root, env, now: () => NOW, promotions: promotionsStub(modelOnly), packs: () => [], queue: () => ({ jobs }), host }) };
 }
-const claim = envelope => { validateClaimEnvelope(envelope); assert.notEqual(envelope.refused, true, JSON.stringify(envelope)); return envelope.claim; };
-const refusal = (envelope, rule) => { validateClaimEnvelope(envelope); assert.equal(envelope.refused, true); assert.equal(envelope.rule, rule); return envelope; };
+/** A verb's answer: a claim, which carries no `refused` or `rule`, or a refusal. */
+type Answer<C> = { readonly claim: C, readonly refused?: undefined, readonly rule?: undefined } | RefusalEnvelope;
+const claim = <C>(envelope: Answer<C>) => { validateClaimEnvelope(envelope); assert.notEqual(envelope.refused, true, JSON.stringify(envelope)); return (envelope as { readonly claim: C }).claim; }; // not refused, so a claim
+const refusal = (envelope: Answer<unknown>, rule: string) => { validateClaimEnvelope(envelope); assert.equal(envelope.refused, true); assert.equal(envelope.rule, rule); return envelope; };
 
 try {
   // --- the verb table and the small readers ------------------------------------------------------
@@ -79,16 +85,16 @@ try {
   assert.deepEqual(LAB_VERBS.filter(row => row.mcp).map(row => row.mcp), ['lab.status', 'lab.next', 'lab.doctor']);
   assert.deepEqual(lastEvening(new Date(2026, 8, 30, 3, 0)), new Date(2026, 8, 29, 18, 0), 'before 18:00, the evening is yesterday');
   assert.deepEqual(lastEvening(new Date(2026, 8, 30, 19, 0)), new Date(2026, 8, 30, 18, 0), 'after 18:00, it is today');
-  assert.equal(runStamp('night1-x-20260914T220233Z').toISOString(), '2026-09-14T22:02:33.000Z');
-  assert.equal(runStamp('fnaf1-custom-grid420-420-a-20260925T024452598Z').toISOString(), '2026-09-25T02:44:52.000Z');
+  assert.equal(runStamp('night1-x-20260914T220233Z')?.toISOString(), '2026-09-14T22:02:33.000Z');
+  assert.equal(runStamp('fnaf1-custom-grid420-420-a-20260925T024452598Z')?.toISOString(), '2026-09-25T02:44:52.000Z');
   assert.equal(runStamp('no-stamp'), null);
   assert.deepEqual(parseWorktrees('worktree /a\nHEAD 1\nbranch refs/heads/m\n\nworktree /b\nHEAD 2\ndetached\nlocked\n'), [
     { path: '/a', head: '1', branch: 'm', locked: false, prunable: false, detached: false },
     { path: '/b', head: '2', branch: null, locked: true, prunable: false, detached: true }]);
-  assert.equal((parse(['status', '--json']) as any).json, true);
-  assert.match((parse(['status', '--step', 'S1']) as any).error, /takes no --step/);
-  assert.match((parse(['start', '--step']) as any).error, /needs a value/);
-  assert.match((parse(['deploy']) as any).error, /unknown verb/);
+  assert.equal((parse(['status', '--json']) as { json: boolean }).json, true); // a status it accepts
+  assert.match((parse(['status', '--step', 'S1']) as { error: string }).error, /takes no --step/); // and three it refuses
+  assert.match((parse(['start', '--step']) as { error: string }).error, /needs a value/);
+  assert.match((parse(['deploy']) as { error: string }).error, /unknown verb/);
   checks += 1;
 
   // --- status: push-gate, steps and decisions, all derived ----------------------------------------
@@ -96,30 +102,32 @@ try {
   const { env, lab } = labFor(root);
   let status = claim(lab.status());
   const headSha = git(root, 'rev-parse', 'HEAD').trim();
-  assert.equal(status.head.sha, headSha);
-  assert.deepEqual([status.pushGate.ran, status.pushGate.command], [false, 'npm run push-gate'], 'no record: not run, and the command');
+  assert.equal(status.head?.sha, headSha);
+  assert.deepEqual([status.pushGate?.ran, status.pushGate?.command], [false, 'npm run push-gate'], 'no record: not run, and the command');
   assert.deepEqual(status.steps.map(row => row.id), ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7']);
   assert.equal(status.steps[0].state, 'open');
   assert.ok(isUnknown(status.steps[1].state));
-  assert.equal(status.promotions.edges, 1);
+  assert.equal((status.promotions as Exclude<typeof status.promotions, Unknown>).edges, 1); // the stub answers
   assert.deepEqual(status.decisions.pending.map(row => row.file), ['docs/decisions/0009-lab-test.md'], 'a proposed ADR is pending');
-  assert.equal(status.sync.origin, null, 'no origin here');
+  assert.equal(status.sync?.origin, null, 'no origin here');
   assert.ok(status.doctor.findings >= 1, 'the fixture has doctor findings (no hooks path)');
   recordRun({ sha: headSha, full: false, failed: [], skipped: ['Slow census gates'] }, runRecordPath(env, root));
   write(root, 'docs/decisions/0009-lab-test.md', '# ADR 0009: a test\n\n**Status:** proposed 2026-09-30; accepted by the commit that carries the override.\n\nSigned.\n');
   git(root, 'add', '-A');
   git(root, 'commit', '-q', '-m', `ADR 0009 signed\n\n${OVERRIDE}`);
   status = claim(lab.status());
-  assert.equal(status.pushGate.ran, false, 'a record for another commit is not a record for HEAD');
-  recordRun({ sha: status.head.sha, full: false, failed: [], skipped: ['Slow census gates'] }, runRecordPath(env, root));
+  assert.equal(status.pushGate?.ran, false, 'a record for another commit is not a record for HEAD');
+  recordRun({ sha: (status.head as NonNullable<typeof status.head>).sha, full: false, failed: [], skipped: ['Slow census gates'] }, runRecordPath(env, root)); // the fixture has commits, so a HEAD
   status = claim(lab.status());
-  assert.deepEqual([status.pushGate.ran, status.pushGate.verdict, status.pushGate.unverified], [true, 'PASSED', ['Slow census gates']]);
+  assert.deepEqual([status.pushGate?.ran, status.pushGate?.verdict, status.pushGate?.unverified], [true, 'PASSED', ['Slow census gates']]);
   assert.deepEqual(status.decisions.pending, [], 'the signed ADR is no longer pending');
-  assert.equal(status.decisions.acceptedSinceProposed[0].by, status.head.short);
+  assert.equal(status.decisions.acceptedSinceProposed[0].by, status.head?.short);
   checks += 1;
 
   // --- commit --dry: the hook's own verdict, and the class ----------------------------------------
-  const dry = (message?) => claim(lab.commit(message === undefined ? {} : { message }));
+  type CommitClaim = Exclude<ReturnType<typeof lab.commit>, RefusalEnvelope>['claim'];
+  // The fixture carries the real hook, so its verdict is never UNKNOWN.
+  const dry = (message?: string) => claim(lab.commit(message === undefined ? {} : { message })) as CommitClaim & { hook: Exclude<CommitClaim['hook'], Unknown> };
   write(root, 'docs/notes/LAB-NOTE.md', 'A note.\n');
   git(root, 'add', 'docs/notes/LAB-NOTE.md');
   let verdict = dry();
@@ -130,7 +138,7 @@ try {
   verdict = dry(`Note the lab\n\nEVIDENCE:${'docs/evidence/prior-record-20260929.json'}\n`);
   assert.equal(verdict.hook.verdict, 'ACCEPT', 'a reference to prior evidence lets the hook accept');
   assert.equal(verdict.consequence.consequence, 'bookkeeping', 'and the change is still bookkeeping');
-  const lines = [];
+  const lines: string[] = [];
   assert.equal(main(['commit', '--dry'], { root, lab, write: text => lines.push(text) }), 1, 'the CLI exits 1 when the hook would refuse');
   assert.match(lines.join(''), /WOULD REFUSE/);
   git(root, 'reset', '-q');
@@ -180,7 +188,7 @@ try {
   assert.deepEqual(ended.ratio, sinceOnly.ratio, 'the same classifier either way');
   assert.deepEqual(ended.records, ['docs/evidence/cohort-result-20260930.json']);
   assert.deepEqual(ended.open.map(row => row.step), ['S4'], 'what remains open is the session step');
-  assert.ok(!existsSync(join(root, SESSION_FILE)) && existsSync(join(root, ended.closed)), 'the session is closed into sessions/');
+  assert.ok(!existsSync(join(root, SESSION_FILE)) && existsSync(join(root, ended.closed as string)), 'the session is closed into sessions/'); // a session was open, so end names the file it closed into
   refusal(lab.end(), 'no-session');
   refusal(lab.end({ since: 'not-a-ref' }), 'invalid-argument');
   checks += 1;
@@ -190,7 +198,7 @@ try {
   assert.equal(ranked.actions[0].kind, 'fix', 'a hooks path that is unset comes first');
   assert.equal(ranked.actions[0].command, 'git config core.hooksPath .githooks');
   const s1 = ranked.actions.find(item => item.step === 'S1');
-  assert.equal(s1.command, 'apps/lab/companion-queue.sh enqueue night --game fnaf2 --winner packages/propose/bindings/fnaf2/campaign-night1-x-winner.json --night 1');
+  assert.equal(s1?.command, 'apps/lab/companion-queue.sh enqueue night --game fnaf2 --winner packages/propose/bindings/fnaf2/campaign-night1-x-winner.json --night 1');
   assert.ok(ranked.blocked.some(row => row.step === 'S3' && row.needs[0].startsWith('S2')), 'S3 waits on S2');
   assert.ok(ranked.actions.findIndex(item => item.step === 'S1') < ranked.actions.findIndex(item => item.step === 'S2'), 'S1 before S2');
   git(root, 'config', 'core.hooksPath', '.githooks');
@@ -218,7 +226,7 @@ try {
   const heavy = { availableMb: () => 1000, processes: () => [{ pid: 4242, name: 'Chowdren', rssMb: 1500 }], cwds: () => [] };
   const sickLab = labFor(sick, { jobs: [staleJob], host: heavy });
   let report = claim(sickLab.lab.doctor());
-  const found = id => report.findings.filter(item => item.id === id);
+  const found = (id: string) => report.findings.filter(item => item.id === id);
   assert.deepEqual(report.checks.map(item => item.id), ['hooks-path', 'stale-pending', 'push-gate-worktrees', 'agent-worktrees', 'node-modules',
     'local-profile', 'catalog-drift', 'memory', 'untracked-winner']);
   assert.equal(found('hooks-path')[0].remedy, 'git config core.hooksPath .githooks');
@@ -252,7 +260,7 @@ try {
   assert.deepEqual(report.findings, [], JSON.stringify(report.findings, null, 2));
   assert.ok(report.checks.every(item => item.ok === true), JSON.stringify(report.checks));
   const fast = claim(well.lab.doctor({ catalog: false }));
-  assert.ok(isUnknown(fast.checks.find(item => item.id === 'catalog-drift').ok), 'without the worktree, catalog drift is UNKNOWN');
+  assert.ok(isUnknown(fast.checks.find(item => item.id === 'catalog-drift')?.ok), 'without the worktree, catalog drift is UNKNOWN');
   checks += 1;
 
   // --- morning: the queue and the packs since the last evening ------------------------------------
@@ -269,20 +277,20 @@ try {
     outcome: 'COMPLETE', reason: 'queue-drained', morning: { summary: '2026-09-30 w1 COMPLETE', nights: [] } }));
   const morning = claim(nightLab.lab.morning({ since: '2026-09-29T21:00:00Z' }));
   assert.deepEqual(morning.windows.map(row => row.id), ['w1']);
-  assert.deepEqual(morning.queue.map(job => job.id), ['cue-2-night'], 'only what moved since the evening');
+  assert.deepEqual((morning.queue as Exclude<typeof morning.queue, Unknown>).map(job => job.id), ['cue-2-night'], 'only what moved since the evening'); // the stubbed queue answers
   assert.deepEqual(morning.packs.map(pack => [pack.id, pack.tracked, pack.attested]), [['night7-q1-20260930T043100Z', false, false]]);
   assert.deepEqual(morning.todo.map(item => item.command), ['git add docs/evidence/runs/night7-q1-20260930T043100Z',
     'npm run evidence -- attest night7-q1-20260930T043100Z --by agent --note "<session>" && npm run evidence -- promote night7-q1-20260930T043100Z',
     'apps/lab/companion-queue.sh list']);
   assert.equal(morning.summary, null);
   const quiet = claim(nightLab.lab.morning({ since: '2026-10-01T00:00:00Z' }));
-  assert.match(quiet.summary, /^nothing since 2026-10-01T00:00:00\.000Z: no overnight window record, no queue activity and no run pack$/);
+  assert.match(quiet.summary as string, /^nothing since 2026-10-01T00:00:00\.000Z: no overnight window record, no queue activity and no run pack$/); // nothing since, so a summary
   refusal(nightLab.lab.morning({ since: 'yesterday-ish' }), 'invalid-argument');
   checks += 1;
 
   // --- the CLI prints what the verbs return ---------------------------------------------------------
-  const out = [];
-  recordRun({ sha: claim(lab.status()).head.sha, full: true, failed: [], skipped: [] }, runRecordPath(env, root));
+  const out: string[] = [];
+  recordRun({ sha: (claim(lab.status()).head as NonNullable<typeof status.head>).sha, full: true, failed: [], skipped: [] }, runRecordPath(env, root)); // a HEAD, as above
   assert.equal(main(['status'], { root, lab, write: text => out.push(text) }), 0);
   assert.match(out.join(''), /^lab status · master /);
   assert.match(out.join(''), /push-gate PASSED/);

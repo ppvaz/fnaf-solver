@@ -15,5 +15,5 @@
   },
   "include": ["packages/**/*.ts", "apps/**/*.ts", "tools/**/*.ts"],
   "files": ["packages/kernel/src/types.ts", "packages/kernel/src/contracts/types.ts"],
-  "exclude": ["node_modules", "dist", "artifacts", "packages/propose/test/**/*.ts", "apps/desktop/test/**/*.ts", "apps/trainer/test/**/*.ts", "packages/propose/parked/**/*.ts", "tools/ts-migrate.ts"]
+  "exclude": ["node_modules", "dist", "artifacts", "packages/propose/test/**/*.ts", "apps/trainer/test/**/*.ts", "packages/propose/parked/**/*.ts", "tools/ts-migrate.ts"]
 }

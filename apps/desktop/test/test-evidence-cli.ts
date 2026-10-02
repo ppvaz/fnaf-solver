@@ -13,14 +13,16 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PACKS_DIR, readPack, trackedWinners } from '@sixam/review/evidence-pack';
+import type { RunPack } from '@sixam/review/evidence-pack';
 import { promotionSummary } from '@sixam/review/evidence-promotion';
 import { validateClaimEnvelope } from '@sixam/kernel';
+import type { ClaimEnvelope, Unknown } from '@sixam/kernel';
 
 const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '../../..'));
 const CLI = join(ROOT, 'apps/desktop/src/evidence.ts');
 // The FNaF 1 pack's events.jsonl is 1.5 MB, and `why` prints all of it: past spawnSync's 1 MB default.
-const cli = (...args) => spawnSync(process.execPath, [CLI, ...args], { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 << 20 });
-const json = (result, what) => {
+const cli = (...args: string[]) => spawnSync(process.execPath, [CLI, ...args], { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 << 20 });
+const json = (result: ReturnType<typeof cli>, what: string) => {
   assert.equal(result.status, 0, `${what} exits 0; stderr: ${result.stderr}`);
   return JSON.parse(result.stdout);
 };
@@ -32,18 +34,18 @@ const FNAF1 = 'fnaf1-custom-grid420-420-a-20260925T024452598Z';
 const ORIGINAL = 'night1-ladder-n1e-20260927T055611Z';
 const RESULT_LOST = 'night1-minus7-n1-first-20260919T215053Z';
 const RECOVERED = 'night1-minus7-n1-first-20260919T215533Z';
-const packDir = id => join(ROOT, PACKS_DIR, id);
+const packDir = (id: string) => join(ROOT, PACKS_DIR, id);
 for (const id of [FNAF1, ORIGINAL, RESULT_LOST, RECOVERED]) {
   assert.ok(existsSync(join(packDir(id), 'pack.json')), `${id} is a committed pack`);
   assert.ok(!existsSync(join(ROOT, 'artifacts', id)), `artifacts/${id} would shadow the pack this test reads`);
 }
-const packJson = id => JSON.parse(readFileSync(join(packDir(id), 'pack.json'), 'utf8'));
-const rows = id => readFileSync(join(packDir(id), 'events.jsonl'), 'utf8').split('\n').filter(line => line.trim())
+const packJson = (id: string): RunPack => JSON.parse(readFileSync(join(packDir(id), 'pack.json'), 'utf8'));
+const rows = (id: string) => readFileSync(join(packDir(id), 'events.jsonl'), 'utf8').split('\n').filter(line => line.trim())
   .map(line => JSON.parse(line));
 
 // promotions runs beside everything else: it compiles every committed winner (~7 s), and the
 // in-process summary it must equal byte for byte compiles them again. So does its --envelope.
-const background = (...args) => new Promise<any>((done, fail) => {
+const background = (...args: string[]) => new Promise<{ status: number | null, stdout: string, stderr: string }>((done, fail) => {
   const child = spawn(process.execPath, [CLI, ...args], { cwd: ROOT });
   let stdout = '';
   let stderr = '';
@@ -82,12 +84,13 @@ assert.equal(json(cli('show', FNAF1), 'show').kind, 'fnaf1-run');
 // --- show --envelope: the same object as a claim-envelope-v1 at the record's own claim level -----
 for (const id of [FNAF1, ORIGINAL, RESULT_LOST, RECOVERED]) {
   const plain = json(cli('show', id), `show ${id}`);
-  const wrapped: any = validateClaimEnvelope(json(cli('show', id, '--envelope'), `show ${id} --envelope`));
+  const wrapped = validateClaimEnvelope(json(cli('show', id, '--envelope'), `show ${id} --envelope`)) as ClaimEnvelope; // show of a committed pack answers, it does not refuse
   assert.deepEqual(wrapped.claim, plain, `show ${id} --envelope wraps exactly what show prints`);
   const level = packJson(id).claimLevel;
-  if (level === 'UNKNOWN') assert.equal(wrapped.label.kind, 'UNKNOWN', `${id}'s UNKNOWN claim level stays UNKNOWN, with its reason`);
+  if (level === 'UNKNOWN') assert.equal((wrapped.label as Unknown).kind, 'UNKNOWN', `${id}'s UNKNOWN claim level stays UNKNOWN, with its reason`);
   else assert.equal(wrapped.label, level, `${id}'s envelope carries its pack's claim level`);
-  assert.equal(wrapped.target, id === FNAF1 ? packJson(id).target.package : 'com.scottgames.fnaf2');
+  // Only the FNaF 1 pack's target is read, and that pack names its game's package.
+  assert.equal(wrapped.target, id === FNAF1 ? (packJson(id).target as { package: string }).package : 'com.scottgames.fnaf2');
   assert.equal(wrapped.reproducer, `npm run evidence -- show ${id}`);
   for (const name of packJson(id).custody?.lost ?? [])
     assert.ok(wrapped.notMeasured.some(item => item.startsWith(`${name}:`)), `${id}: lost ${name} is named as not measured`);
@@ -108,7 +111,7 @@ assert.ok(diff.changed.includes('events.jsonl') && diff.onlyRight.includes('resu
 assert.deepEqual([diff.sides.left.source, diff.sides.right.source], ['pack', 'pack']);
 assert.deepEqual([diff.sides.left.outcome, diff.sides.right.outcome], ['RESULT_LOST', packJson(RECOVERED).outcome]);
 assert.equal(diff.sides.left.packSha256, readPack(packDir(RESULT_LOST)).digest);
-assert.ok(diff.unavailable.some(line => line.startsWith(`${PACKS_DIR}/${RESULT_LOST} lost `) && line.includes('result.json')
+assert.ok(diff.unavailable.some((line: string) => line.startsWith(`${PACKS_DIR}/${RESULT_LOST} lost `) && line.includes('result.json')
   && line.includes('recovered-from-run-log')), 'the left pack\'s lost result is named, not compared as if empty');
 const self = json(cli('diff', ORIGINAL, ORIGINAL), 'diff');
 assert.deepEqual([self.changed, self.onlyLeft, self.onlyRight], [[], [], []]);
@@ -124,7 +127,7 @@ for (const id of [FNAF1, ORIGINAL]) {
 
 // --- an unknown id: the nearest ids, then where the whole list is ------------------------------
 const packs = new Set(readdirSync(join(ROOT, PACKS_DIR)));
-const refused = (result, typo, nearest?, noun = 'run or pack') => {
+const refused = (result: ReturnType<typeof cli>, typo: string, nearest?: string, noun = 'run or pack') => {
   assert.notEqual(result.status, 0, `an unknown id exits non-zero: ${typo}`);
   assert.equal(result.stdout, '', 'and prints nothing on stdout');
   const lines = result.stderr.trimEnd().split('\n');
@@ -158,7 +161,7 @@ assert.equal(promotions.status, 0, promotions.stderr);
 assert.equal(promotions.stdout, expected, 'promotions prints exactly promotionSummary, nothing added or reordered');
 const wrappedPromotions = await promotionsEnvelopeRun;
 assert.equal(wrappedPromotions.status, 0, wrappedPromotions.stderr);
-const promotionsEnvelope: any = validateClaimEnvelope(JSON.parse(wrappedPromotions.stdout));
+const promotionsEnvelope = validateClaimEnvelope(JSON.parse(wrappedPromotions.stdout)) as ClaimEnvelope; // promotions answers, it does not refuse
 assert.deepEqual(promotionsEnvelope.claim, summary, 'promotions --envelope wraps exactly the summary');
 assert.equal(promotionsEnvelope.label, 'DEVICE_MEASURED');
 assert.ok(summary.refusedWins.every(win => promotionsEnvelope.notMeasured.some(item => item.startsWith(`${win.id}:`))),

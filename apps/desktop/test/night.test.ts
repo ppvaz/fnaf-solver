@@ -10,7 +10,7 @@ import { join } from 'node:path';
 import { GAMES, runNight } from '../src/night.ts';
 
 const root = mkdtempSync(join(tmpdir(), 'night-test-'));
-const runner = (path, body) => {
+const runner = (path: string, body: string) => {
   mkdirSync(join(root, path, '..'), { recursive: true });
   writeFileSync(join(root, path), `#!/bin/sh\n${body}\n`);
   chmodSync(join(root, path), 0o755);
@@ -25,8 +25,8 @@ try {
   runner(GAMES.fnaf2.runner, 'mkdir -p artifacts/runs/night7-k3-20260925T000000Z\nexit 0');
   runner(GAMES['fnaf1-custom'].runner, 'exit 0');
 
-  const packed = [];
-  const pack = async (_root, id) => { packed.push(id); return 0; };
+  const packed: string[] = [];
+  const pack = async (_root: string, id: string) => { packed.push(id); return 0; };
   const fnaf1 = await runNight('fnaf1', ['--night', '4', '--label', 'a b'], { root, pack });
   assert.equal(fnaf1.status, 3, 'the runner\'s own exit status is the launcher\'s');
   assert.deepEqual(readFileSync(join(root, 'args.txt'), 'utf8').split('\n').filter(Boolean),
@@ -44,7 +44,7 @@ try {
 
   assert.equal(GAMES['fnaf1-winner'].runner, 'packages/play/games/fnaf1/fnaf1-winner.ts',
     'a committed FNaF 1 winner is re-run from its pinned commit, not by the tree\'s runner');
-  assert.ok(GAMES['fnaf1-winner'].packs.test('fnaf1-custom-grid420-replay-20260927T000000Z'), 'and its run is packed');
+  assert.ok(GAMES['fnaf1-winner'].packs?.test('fnaf1-custom-grid420-replay-20260927T000000Z'), 'and its run is packed');
 
   await assert.rejects(runNight('fnaf9', [], { root, pack }), /unknown game/);
 } finally {

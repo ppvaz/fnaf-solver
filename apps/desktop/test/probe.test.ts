@@ -24,14 +24,14 @@ function run(env = process.env) {
   const lines = result.stdout.trimEnd().split('\n');
   assert.equal(lines.length, 1 + CHECKS.length + ROUTES.length + 1, result.stdout);
   assert.match(lines[0], /^probe: .*no phone, no network\)$/);
-  const checks = {};
+  const checks: Record<string, { status: string, detail: string }> = {};
   lines.slice(1, 1 + CHECKS.length).forEach((line, index) => {
     const match = line.match(/^ {2}(ok|warn|missing) +([^:]+): (\S.*)$/);
     assert.ok(match, `a check line: ${line}`);
     assert.equal(match[2], CHECKS[index], 'one line per check, in order');
     checks[match[2]] = { status: match[1], detail: match[3] };
   });
-  const routes: any = {};
+  const routes: Record<string, { state: string, detail: string, line: string }> = {};
   lines.slice(1 + CHECKS.length, -1).forEach((line, index) => {
     const match = line.match(/^Ready: (.+?) -- (yes|no|not checked)\b(.*)$/);
     assert.ok(match, `a Ready line: ${line}`);
@@ -40,7 +40,7 @@ function run(env = process.env) {
   });
   assert.equal(routes.Phone.line, PHONE, 'the phone is never probed');
   assert.equal(routes.Story.state, 'yes', 'reading needs nothing');
-  const next = lines.at(-1);
+  const next = lines.at(-1) as string; // the length check above leaves a last line
   assert.match(next, /^Next: \S/, 'one Next suggestion, last');
   return { checks, routes, next };
 }
@@ -51,10 +51,10 @@ run();
 const scratch = mkdtempSync(join(tmpdir(), 'probe-test-'));
 try {
   /** A directory of fake programs; each call adds one and returns the directory. */
-  const bin = name => {
+  const bin = (name: string) => {
     const dir = join(scratch, name);
     mkdirSync(dir, { recursive: true });
-    return (program, script) => {
+    return (program: string, script: string) => {
       const path = join(dir, program);
       writeFileSync(path, `#!/bin/sh\n${script}\n`);
       chmodSync(path, 0o755);
@@ -67,7 +67,7 @@ try {
   const bare = run({ PATH: empty, HOME: scratch });
   for (const name of ['Java', 'Python', 'ffmpeg', 'Clone', 'Docker'])
     assert.equal(bare.checks[name].status, 'missing', `${name} is missing on an empty PATH: ${bare.checks[name].detail}`);
-  assert.equal((bare.checks as any).Node.status, 'ok');
+  assert.equal(bare.checks.Node.status, 'ok');
   assert.equal(bare.routes['Full tests'].line, 'Ready: Full tests -- no: needs Java, Python, ffmpeg, Clone');
   assert.equal(bare.routes['Rebuild (owner only)'].line, 'Ready: Rebuild (owner only) -- no: needs Docker');
   assert.match(bare.next, /install Java 17; install Python 3\.12 with Pillow, NumPy and SciPy; install ffmpeg; install git$/,
@@ -87,13 +87,13 @@ try {
     `  info) : > '${asked}'; echo 27.0.0;;`,
     'esac'].join('\n'));
   const faked = run({ PATH: dir, HOME: scratch });
-  assert.deepEqual((faked.checks as any).Java, { status: 'ok', detail: '17 (17 needed)' });
-  assert.deepEqual((faked.checks as any).Python, { status: 'ok', detail: '3.12.4 with Pillow 12.3.0, NumPy 2.2.4, SciPy 1.15.3' });
-  assert.deepEqual((faked.checks as any).ffmpeg, { status: 'ok', detail: '6.1.1' });
-  assert.equal((faked.checks as any).Clone.status, 'missing');
-  assert.match((faked.checks as any).Clone.detail, /shallow/);
-  assert.equal((faked.checks as any).Docker.status, 'warn');
-  assert.match((faked.checks as any).Docker.detail, /tcp:\/\/build-host\.example:2376 is not contacted/);
+  assert.deepEqual(faked.checks.Java, { status: 'ok', detail: '17 (17 needed)' });
+  assert.deepEqual(faked.checks.Python, { status: 'ok', detail: '3.12.4 with Pillow 12.3.0, NumPy 2.2.4, SciPy 1.15.3' });
+  assert.deepEqual(faked.checks.ffmpeg, { status: 'ok', detail: '6.1.1' });
+  assert.equal(faked.checks.Clone.status, 'missing');
+  assert.match(faked.checks.Clone.detail, /shallow/);
+  assert.equal(faked.checks.Docker.status, 'warn');
+  assert.match(faked.checks.Docker.detail, /tcp:\/\/build-host\.example:2376 is not contacted/);
   assert.ok(!existsSync(asked), 'a daemon on another machine is never asked');
   assert.equal(faked.routes['Full tests'].line, 'Ready: Full tests -- no: needs Clone');
   assert.equal(faked.routes['Rebuild (owner only)'].state, 'not checked');
@@ -110,13 +110,13 @@ try {
     `  info) : > '${asked}'; echo 27.0.0;;`,
     'esac'].join('\n'));
   const remote = run({ PATH: otherDir, HOME: scratch, DOCKER_HOST: 'ssh://builder' });
-  assert.deepEqual((remote.checks as any).Java, { status: 'missing', detail: '8 (17 needed)' });
-  assert.equal((remote.checks as any).Python.status, 'missing');
-  assert.match((remote.checks as any).Python.detail, /SciPy missing \(install SciPy\)/);
-  assert.equal((remote.checks as any).Docker.status, 'warn');
+  assert.deepEqual(remote.checks.Java, { status: 'missing', detail: '8 (17 needed)' });
+  assert.equal(remote.checks.Python.status, 'missing');
+  assert.match(remote.checks.Python.detail, /SciPy missing \(install SciPy\)/);
+  assert.equal(remote.checks.Docker.status, 'warn');
   assert.ok(!existsSync(asked), 'DOCKER_HOST naming another machine is not contacted either');
   const local = run({ PATH: otherDir, HOME: scratch });
-  assert.equal((local.checks as any).Docker.status, 'ok');
+  assert.equal(local.checks.Docker.status, 'ok');
   assert.ok(existsSync(asked), 'a daemon on a local socket is asked');
   assert.match(local.routes['Rebuild (owner only)'].line, /^Ready: Rebuild \(owner only\) -- yes: .*your own copy of the game \(not checked\)$/);
 } finally {
