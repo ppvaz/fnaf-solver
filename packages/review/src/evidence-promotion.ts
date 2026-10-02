@@ -26,7 +26,7 @@ import { AI_DIALS, PUPPET_AI } from '@sixam/source/fnaf2';
 import { campaignEntry } from './evidence-campaign.ts';
 import { deriveFnaf1Promotion } from './fnaf1-promotion.ts';
 import { AGENT_DELEGATION, ATTESTATION_FILE, ATTESTATION_SCHEMA, PACKS_DIR, RECOVERY_RECORD, attestationStatus,
-  custodyWinnerFiles, packCustody, packManifestComplete, packPromotionChecks, readPack } from './evidence-pack.ts';
+  custodyWinnerFiles, packCustody, packManifestComplete, packPromotionChecks, readPack, runnerGame } from './evidence-pack.ts';
 import type { RunPack } from './evidence-pack.ts';
 import { isList, isRecord } from '@sixam/kernel';
 import type { CampaignAttempt } from '@sixam/kernel';
@@ -311,7 +311,7 @@ export function fnaf1PromotionChecks(root: string, id: string, loaded: ReturnTyp
     plan12Attestation: attestationStatus(loaded.attestation, loaded.digest).valid, winnerCommitted: pass('winnerCommitted') };
 }
 
-const nightOf = (id: string, pack: RunPack | null | undefined) => pack?.kind === 'fnaf1-run' ? 'fnaf1'
+const nightOf = (id: string, pack: RunPack | null | undefined) => pack?.kind === 'fnaf1-run' ? runnerGame(pack) ?? 'UNKNOWN'
   : pack?.nights?.length ? String(pack.nights[0]) : id.match(/^night(\d+)-/)?.[1] ?? 'UNKNOWN';
 
 /**

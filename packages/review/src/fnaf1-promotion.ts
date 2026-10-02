@@ -17,7 +17,7 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { custodyWinnerFiles, packCustody } from './evidence-pack.ts';
+import { custodyWinnerFiles, packCustody, runnerGame } from './evidence-pack.ts';
 import type { readPack } from './evidence-pack.ts';
 
 type Dials = Readonly<Record<string, number>>;
@@ -67,6 +67,15 @@ function fnaf1Claim(dials: Dials) {
  */
 export function deriveFnaf1Promotion(root: string, id: string, dir: string, loaded: ReturnType<typeof readPack>) {
   const { pack, digest } = loaded;
+  const game = runnerGame(pack);
+  if (game !== 'fnaf1') {
+    // Every runner's pack carries this kind; another game's is refused by name, not judged by FNaF 1's checks.
+    const failed = [`a ${game ?? 'unregistered game'}'s runner pack: no promotion gate reads ${game ?? 'it'} runner packs yet`];
+    return { id, dir, loaded, digest, custody: packCustody(pack), claim: null,
+      verified: ['offlineEvidence', 'terminalPass', 'manifestComplete', 'winnerCommitted', 'claimIdentity']
+        .map((check) => ({ check, pass: false, inputs: [], detail: { game, failed } as Readonly<Record<string, unknown>> })),
+      pass: false };
+  }
   const packed = (name: string) => pack.files.find((file) => file.name === name);
   const inputs = (...names: string[]) => names.map(packed)
     .filter((file): file is NonNullable<ReturnType<typeof packed>> => Boolean(file))

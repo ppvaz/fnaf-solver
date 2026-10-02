@@ -152,7 +152,7 @@ export function catalogUnknowns(catalog: { readonly controls: readonly ControlDe
 // --- run packs -----------------------------------------------------------------------------
 
 /**
- * The game a pack was played on, and the basis for saying so: a FNaF 1 runner's pack names its
+ * The game a pack was played on, and the basis for saying so: a runner's pack names its
  * target package; a campaign pack that kept request.json names its target; any other campaign
  * pack was played by the campaign executor, which runs only the games whose catalog has an
  * artifact action table -- attributed when exactly one does.
@@ -163,7 +163,7 @@ export function packGame(dir: string, loaded: {pack: RunPack, files: readonly st
     const target = isRecord(pack.target) ? pack.target.package : undefined;
     const game = resolveGame(target);
     return game ? { game: game.package, basis: 'pack.json target.package' }
-      : { game: unknown(`the FNaF 1 runner's pack names target ${JSON.stringify(target ?? null)}, not a registered game`), basis: null };
+      : { game: unknown(`the runner's pack names target ${JSON.stringify(target ?? null)}, not a registered game`), basis: null };
   }
   if (files.includes('request.json')) {
     const request: { spec?: { target?: { package?: unknown } }, profile?: { targetBuild?: unknown } } | null =
@@ -205,7 +205,7 @@ export function readPackRow(root: string, id: string, edges: ReturnType<typeof p
   const attestation = attestationStatus(loaded.attestation, loaded.digest);
   return {
     id, valid: true as const, game, gameBasis: basis, kind: fnaf1 ? 'fnaf1-run' : 'device-campaign',
-    // A campaign pack has an index entry; a FNaF 1 runner's pack has none.
+    // A campaign pack has an index entry; a runner's pack has none.
     outcome: entry ? entry.outcome : (isRecord(loaded.pack.outcome) ? loaded.pack.outcome.ended ?? null : null),
     claimLevel: entry ? entry.claimLevel ?? null : loaded.pack.claimLevel ?? null,
     nights: entry ? entry.nights ?? loaded.pack.nights ?? null : null,

@@ -4261,6 +4261,7 @@
         "./evidence-campaign.ts",
         "@sixam/kernel",
         "@sixam/kernel/contracts",
+        "@sixam/source",
         "node:crypto",
         "node:fs",
         "node:path"

@@ -38,6 +38,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSy
 import { basename, join } from 'node:path';
 import { canonicalJson, stableHash } from '@sixam/kernel/contracts';
 import { BINDINGS_DIR, isList, isRecord } from '@sixam/kernel';
+import { PACKAGES } from '@sixam/source';
 import { isCampaignResult, campaignEntry, campaignPromotionChecks } from './evidence-campaign.ts';
 import type { CampaignWrapper } from './evidence-campaign.ts';
 
@@ -411,6 +412,8 @@ export function buildFnaf1Pack({ root, home = '', fnaf1RunDir, packId }: {root: 
     .map(line => JSON.parse(line));
   const ended = events.find(event => event.type === 'night-ended') ?? null;
   const pack = {
+    // The kind every runner's night is packed as: it was named when only FNaF 1 had a runner, and
+    // the committed packs keep it. The game is the record's target (runnerGame), not this kind.
     schema: RUN_PACK_SCHEMA, version: 1, kind: 'fnaf1-run', id: packId, campaign: null, run: basename(fnaf1RunDir),
     outcome: ended ? { ended: ended.ended, atNightMs: ended.atNightMs } : null,
     status: record.status ?? null, claimLevel: String(record.claimLevel ?? '').split(' ')[0] || null,
@@ -419,6 +422,12 @@ export function buildFnaf1Pack({ root, home = '', fnaf1RunDir, packId }: {root: 
     packer: PACKER,
   };
   return { pack, texts };
+}
+
+/** The game a runner's pack played (`fnaf1`, `fnaf4`), by the target package its record names, or null. */
+export function runnerGame(pack: RunPack) {
+  const target = isRecord(pack.target) ? pack.target.package : undefined;
+  return Object.entries(PACKAGES).find(([, name]) => name === target)?.[0] ?? null;
 }
 
 /**

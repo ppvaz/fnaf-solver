@@ -11,7 +11,7 @@ import { join } from 'node:path';
 import { stableHash } from '@sixam/kernel/contracts';
 import { CAMPAIGN_RESULT_SCHEMA } from '../src/evidence-campaign.ts';
 import { AGENT_DELEGATION, ATTESTATION_FILE, ATTESTATION_SCHEMA, ATTESTATION_SCHEMA_V1, ATTESTED_CHECKS, RECOVERY_RECORD,
-  attestationStatus, buildPack, packManifestComplete, packPromotionChecks, readPack, resolvePackTargets, writePack } from '../src/evidence-pack.ts';
+  attestationStatus, buildFnaf1Pack, buildPack, packManifestComplete, packPromotionChecks, readPack, resolvePackTargets, writePack } from '../src/evidence-pack.ts';
 import { GRAPH_FILE, attestPack, derivePromotion, formatGraph, makeAttestation, promotionEdgeFor, promotionSummary, readGraph,
   recordPromotion } from '../src/evidence-promotion.ts';
 import type { RunPack } from '../src/evidence-pack.ts';
@@ -220,6 +220,21 @@ try {
   assert.ok(summary.refusedWins.some(item => item.id === winId && item.failing.includes('not recorded in the graph')));
   assert.ok(summary.nights['5'].refused['terminalPass'] >= 1, 'a refusal names its failing check');
   assert.match(summary.evidenceId, /^plan12-promotions-fnv1a-/);
+  // A runner's pack carries kind fnaf1-run whatever game it played (FNaF 4's runner packs do):
+  // it is filed under the game its record targets, and FNaF 1's gate does not judge it.
+  const fnaf4 = 'fnaf4-loop-n3c-teach-20260925T054831301Z';
+  put(`artifacts/runs/${fnaf4}/run.json`, JSON.stringify({ status: 'COMPLETE', claimLevel: 'DEVICE_MEASURED',
+    target: { package: 'com.scottgames.fnaf4' }, options: { live: true, dryRun: false } }));
+  put(`artifacts/runs/${fnaf4}/events.jsonl`, `${JSON.stringify({ type: 'night-ended', ended: 'SIX_AM', atNightMs: 480000 })}\n`);
+  const [fnaf4Target] = resolvePackTargets(root, fnaf4);
+  writePack(join(root, 'docs/evidence/runs', fnaf4), buildFnaf1Pack({ root, ...fnaf4Target } as Parameters<typeof buildFnaf1Pack>[0]));
+  const fnaf4Derived = derivePromotion(root, fnaf4, winners);
+  assert.equal(fnaf4Derived.pass, false);
+  assert.ok(fnaf4Derived.verified.every(item => !item.pass && /fnaf4/.test(String(item.detail.failed))),
+    'every check refuses, naming the game no promotion gate reads yet');
+  const filed = promotionSummary(root, winners).nights;
+  assert.equal(filed.fnaf4?.packs, 1, 'a FNaF 4 runner\'s pack is filed under fnaf4');
+  assert.equal(filed.fnaf1, undefined, 'and not under FNaF 1');
   // An edge that outlives its attestation is reported, not hidden.
   rmSync(join(recDir, ATTESTATION_FILE));
   assert.deepEqual(promotionSummary(root, winners).staleEdges, [{ id: recId, reason: 'edge recorded but plan12Attestation fail' }]);
