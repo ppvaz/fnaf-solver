@@ -236,6 +236,17 @@ Details:
     mapping
     ([three nights](../docs/evidence/rebuild-release20-three-nights-20261001.json),
     `rebuild-release20-3nights-14895ce02ba0b25e`).
+  - **The mask-window occupant, natively: placement found, classes not yet
+    (2026-10-01, exploratory).** On 375 retained mask-view frames (a dark top
+    band and no camera bar tell the view from the office) the right
+    eyehole's lit fraction separates empty (at most 0.142) from occupied (at
+    least 0.442), but only 10 frames are occupied (7 yellow, 2 blue, 1
+    orange-brown): too few to calibrate the classes the encounter comparison
+    needs, and the grid reader's hue rule cannot tell Toy Chica from Withered
+    Chica (c and C in the model). A Stage B night records the eyehole beside
+    the static view in one region set
+    ([placement](../docs/evidence/mask-eyehole-native-placement-20261001.json),
+    `mask-eyehole-native-f0870e3854683ac4`).
   - **The phone's office random stream is read state by state (2026-10-01,
     pre-registered, SUPPORTED).** On a k3 Night 7 with every Custom Night dial
     at 0, the Companion 16 native static readout (no frame trace) identified
