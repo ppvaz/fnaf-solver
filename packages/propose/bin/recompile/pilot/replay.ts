@@ -17,7 +17,7 @@
  * tools/recompile/fixtures/ whose sha256 the record names, and the trace is
  * compared with the record's replay digest: that re-checks a committed win on
  * another binary. With --input and --save, the rows and the save are given
- * directly and there is no trace to compare (search.mjs checks its wins so). Either way the replay writes its own trace and save and
+ * directly and there is no trace to compare (search.ts checks its wins so). Either way the replay writes its own trace and save and
  * reports whether the traces agree update for update (frame, tick, Random
  * draws, graine and every global value) and what the game wrote to its save.
  * It runs natively (pilot.ts NATIVE_ENV) unless --docker. Nothing leaves DIR.
@@ -29,7 +29,7 @@ import { createHash } from 'node:crypto';
 import { createInterface } from 'node:readline';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { NATIVE_ENV } from './pilot.ts';
+import { NATIVE_ENV, loadGame } from './pilot.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '../../../../..');
@@ -124,7 +124,7 @@ export function runReplay(o, game) {
 
 async function main() {
   const o: any = parseArgs(process.argv.slice(2));
-  const game = await import(`./${o.game}.mjs`);
+  const game = await loadGame(o.game);
   const exit = runReplay(o, game);
   const replay = await traceDigest(join(o.run, 'trace'));
   const pilot = o.expect ? { rows: o.expect.rows, sha256: o.expect.sha256 }

@@ -17,12 +17,12 @@
  * it as soon as the policy reports a loss. `--prefix` replays an earlier
  * run's own pilot.input row for row up to update `--branch` of the play
  * frame, then sends no touch for `--hold` updates, and only then hands the
- * night to the policy (search.mjs branches a lost night this way). The
+ * night to the policy (search.ts branches a lost night this way). The
  * summary names the last update seen in the play frame (`lastPlayTick`).
  * After
  * every update the harness writes the watched objects' state over one TCP
  * connection to this process (CHOWDREN_PILOT_CONNECT) and waits for its touches. The policy module for
- * the game (`./<game>.mjs`) turns each state into touches. Every applied touch
+ * the game (`./<game>.ts`) turns each state into touches. Every applied touch
  * lands in DIR/pilot.input as a plain CHOWDREN_INPUT row, so
  * `replay.ts` can run the same night on a binary with no pilot at all.
  *
@@ -33,7 +33,7 @@ import { spawn } from 'node:child_process';
 import { createServer } from 'node:net';
 import { closeSync, copyFileSync, mkdirSync, openSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '../../../../..');
@@ -42,6 +42,14 @@ const MOUNT = '/home/pedro/fnaf-apks';
 // The native runtime environment: SDL's offscreen driver on a surfaceless EGL
 // display (Mesa llvmpipe), audio to OpenAL Soft's null backend. Forcing
 // LIBGL_ALWAYS_SOFTWARE here crashes EGL's device selection.
+/** The rebuilt games the pilot drives, each a policy module beside this file. */
+export const GAMES = ['fnaf3', 'fnaf4'];
+/** A game's policy module (`./<game>.ts`), the one file pilot, replay, batch and search load and hash for it. */
+export function gameModulePath(game) {
+  if (!GAMES.includes(game)) throw new Error(`pilot: --game must be one of ${GAMES.join(', ')}, not ${game}`);
+  return join(HERE, `${game}.ts`);
+}
+export const loadGame = (game) => import(pathToFileURL(gameModulePath(game)).href);
 export const NATIVE_ENV = { SDL_VIDEODRIVER: 'offscreen', EGL_PLATFORM: 'surfaceless', ALSOFT_DRIVERS: 'null' };
 
 export function parseArgs(argv) {
@@ -86,7 +94,7 @@ export function readRows(path) {
 }
 
 export async function run(o) {
-  const game = await import(`./${o.game}.mjs`);
+  const game = await loadGame(o.game);
   const policyFactory = game.POLICIES[o.policy];
   if (!policyFactory) throw new Error(`pilot: ${o.game} has no policy ${o.policy} (${Object.keys(game.POLICIES).join(', ')})`);
   mkdirSync(o.run, { recursive: true });

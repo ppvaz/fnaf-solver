@@ -304,7 +304,7 @@ export function whatDayRare(seed) {
 }
 
 /**
- * Where a lost night's chain began, for search.mjs: the first logged update
+ * Where a lost night's chain began, for search.ts: the first logged update
  * with Springtrap on an attack stage or a GOT YOU marker, or inside vent 14
  * or 15, whose far ends kill outright (g611, g613). A branch after it is
  * already lost. `records` are the policy log's lines, parsed.
@@ -363,7 +363,7 @@ function guard({ run, knobs }, rev = 1) {
   } };
   const flush = () => { if (knobs.quiet && ring.length) { appendFileSync(out, ring.join('\n') + '\n'); ring.length = 0; } };
   let task = null, taskName = null, last = null, outcome = null;
-  // Every play-frame update a task started on, for search.mjs: the quiet log
+  // Every play-frame update a task started on, for search.ts: the quiet log
   // keeps only its last 200 records.
   const starts = [];
   const rebootAt = knobs.rebootAt ?? -10;

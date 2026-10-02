@@ -25,6 +25,7 @@ import { copyFileSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { currentPath } from '@sixam/review/renamed-path';
+import { gameModulePath } from './pilot.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '../../../../..');
@@ -109,7 +110,7 @@ function record(o) {
     recordedAt: new Date().toISOString().slice(0, 10),
     question: `Does the rebuilt ${o.game} reach 6 AM on its hardest night from the recorded touches alone?`,
     controller: {
-      policy: o.policy, knobs: o.knobs, source: `tools/recompile/pilot/${o.game}.mjs`,
+      policy: o.policy, knobs: o.knobs, source: relative(ROOT, gameModulePath(o.game)),
       reads: 'the rebuilt runtime\'s own objects each update (an oracle, not a player\'s view)',
       acts: 'in-window touches only, through the harness input path',
       pilotOutcome: ps.outcome ?? null,

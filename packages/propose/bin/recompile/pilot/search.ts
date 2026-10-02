@@ -36,7 +36,7 @@
  * DIR/search.jsonl, with each attempt's branch, hold, outcome and death
  * update; the winning attempt's pilot.input is kept as DIR/s<seed>/win.input.
  * Every row carries the sha256 of the sources that decide it (pilot.ts, the
- * game module, search.mjs, replay.ts), and the search stops if any of them
+ * game module, search.ts, replay.ts), and the search stops if any of them
  * changes before the block is done. Host-only; DIR stays outside the
  * repository.
  */
@@ -45,6 +45,7 @@ import { createHash } from 'node:crypto';
 import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { gameModulePath, loadGame } from './pilot.ts';
 import { runReplay } from './replay.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -60,7 +61,7 @@ export const HOLDS = [1, 2, 3, 5, 8, 13, 21];
 export const LEAD = 60;
 export const GAIN = 120;
 
-const SOURCES = (game) => ['pilot.ts', `${game}.mjs`, 'search.mjs', 'replay.ts'].map((f) => join(HERE, f));
+export const SOURCES = (game) => [join(HERE, 'pilot.ts'), gameModulePath(game), join(HERE, 'search.ts'), join(HERE, 'replay.ts')];
 export function sourcesSha256(game) {
   const h = createHash('sha256');
   for (const f of SOURCES(game)) h.update(readFileSync(f));
@@ -266,7 +267,7 @@ async function searchSeed(o, gameModule, seed) {
 
 async function main() {
   const o: any = parseArgs(process.argv.slice(2));
-  const game = await import(`./${o.game}.mjs`);
+  const game = await loadGame(o.game);
   o.sourcesSha256 = sourcesSha256(o.game);
   mkdirSync(o.out, { recursive: true });
   const path = join(o.out, 'search.jsonl');

@@ -288,7 +288,7 @@ function* holdZone(ctx, name, keep, max) {
 }
 
 /**
- * Where a lost night's chain began, for search.mjs: the first logged update
+ * Where a lost night's chain began, for search.ts: the first logged update
  * with the Freddy counter past 53 (from there the bed kills on arrival,
  * g427/g428, and away from it the counter climbs to the black flash), with
  * Foxy's got-you set (g282), or with the black flash counting (g468).
@@ -348,7 +348,7 @@ function warden({ run, knobs }, rev = 1) {
   const menu = knobs.challenges ? menuChallenges(knobs.challenges) : menuNight8();
   let loggedLevel = false;
   let task = null, taskName = null, last = null, outcome = null;
-  // Every play-frame update a task started on, for search.mjs: the quiet log
+  // Every play-frame update a task started on, for search.ts: the quiet log
   // keeps only its last 200 records.
   const starts = [];
   // rev 3 takes the knobs rev 2's development block chose (bedAt 24, foxyTo 3).

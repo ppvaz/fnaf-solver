@@ -6,12 +6,14 @@
 // the negative controls that must fail. It also pins the controller's tables
 // to the core model's graph, so the two cannot drift apart silently.
 import assert from 'node:assert/strict';
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SCHEMA, check, evidenceId, iniKeys, verdict } from './record.ts';
 import { SEAL_FOR, LURE_TO, proxyOf, whereIs, playsLeft, whatDayRare, doomStart } from './fnaf3.ts';
-import { branchPoints, parseSeeds, progress, withoutStrays, LEAD, BACKOFF } from './search.ts';
+import { branchPoints, parseSeeds, progress, withoutStrays, LEAD, BACKOFF, SOURCES as SEARCH_SOURCES } from './search.ts';
+import { SOURCES as BATCH_SOURCES } from './batch.ts';
+import { GAMES, gameModulePath, loadGame } from './pilot.ts';
 import { MARKERS, ACTORS, WATCH as WATCH4, places, doomStart as doomStart4 } from './fnaf4.ts';
 import { GRAPH, LURE_FROM } from '../../../../source/src/games/fnaf3/sim-fnaf3.ts';
 import { currentPath } from '@sixam/review/renamed-path';
@@ -132,5 +134,16 @@ assert.equal(doomStart4([{ t: 5, at: {}, freddy: 40, foxyGot: 0, flash: 0 }, { t
 assert.equal(doomStart4([{ t: 5, at: {}, freddy: 10, foxyGot: 1, flash: 0 }]), 5);
 assert.equal(doomStart4([{ t: 5, at: {}, freddy: 10, foxyGot: 0, flash: 0 }, { t: 7, start: 'bed' }]), null);
 ok('fnaf4 doomStart: Freddy past 53, Foxy\'s got-you or the black flash');
+
+// 6. The game modules the tools load, and the sources they hash, exist: the
+// TypeScript move left every tool importing `./<game>.mjs`, which no longer
+// existed, so pilot, replay, batch and search all failed before any run.
+for (const g of GAMES) {
+  const m = await loadGame(g);
+  assert.ok(m.POLICIES && Object.keys(m.POLICIES).length > 0, `${g}: no POLICIES in ${gameModulePath(g)}`);
+  for (const f of [...BATCH_SOURCES(g), ...SEARCH_SOURCES(g)]) assert.ok(existsSync(f), `${g}: hashed source ${f} is missing`);
+}
+assert.throws(() => gameModulePath('fnaf2'), /must be one of fnaf3, fnaf4/);
+ok('every game module the pilot tools load exists with its policies, and every source they hash exists');
 
 console.log(`# pilot records: ${passed} passed`);

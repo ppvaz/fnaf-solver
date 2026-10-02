@@ -29,6 +29,7 @@ import { createHash } from 'node:crypto';
 import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { gameModulePath, loadGame } from './pilot.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '../../../../..');
@@ -75,7 +76,7 @@ function iniKeys(text) {
   return out;
 }
 
-const SOURCES = (game) => [join(HERE, 'pilot.ts'), join(HERE, `${game}.mjs`)];
+export const SOURCES = (game) => [join(HERE, 'pilot.ts'), gameModulePath(game)];
 const sourcesSha256 = (game) => {
   const h = createHash('sha256');
   for (const f of SOURCES(game)) h.update(readFileSync(f));
@@ -122,7 +123,7 @@ function runSeed(o, saveName, seed) {
 
 async function main() {
   const o: any = parseArgs(process.argv.slice(2));
-  const game = await import(`./${o.game}.mjs`);
+  const game = await loadGame(o.game);
   o.policySha256 = sourcesSha256(o.game);
   mkdirSync(o.out, { recursive: true });
   const resultsPath = join(o.out, 'results.jsonl');
@@ -151,4 +152,6 @@ async function main() {
   console.log(JSON.stringify({ won, lost, noNight, seeds: o.seeds.length, first: o.seeds[0], last: o.seeds[o.seeds.length - 1], skipped: done.size }));
 }
 
-main().catch((e) => { console.error(e.stack ?? String(e)); process.exit(1); });
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().catch((e) => { console.error(e.stack ?? String(e)); process.exit(1); });
+}
