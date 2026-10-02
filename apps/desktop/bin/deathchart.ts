@@ -33,7 +33,7 @@ import { modelGate, GATE_RUNS, HUMAN_SLACK_MS } from '../../../packages/propose/
 import { formatRate } from '../../../packages/review/src/stat.ts';
 import * as C from '@sixam/source/fnaf2';
 
-const arg = (name, def) => {
+const arg = <T>(name: string, def: T) => {
   const v = (process.argv.find(a => a.startsWith(`--${name}=`)) || '').split('=')[1];
   return v === undefined ? def : v;
 };
@@ -48,7 +48,7 @@ const arg = (name, def) => {
 // colour-only identity here.
 export const REASON_ORDER = ['foxy', 'inside-office', 'puppet', 'golden-freddy',
                              'golden-freddy-hall', 'blackout'];
-const FILL = {
+const FILL: Readonly<Record<string, string>> = {
   'foxy':               '#2a78d6',
   'inside-office':      '#eb6834',
   'puppet':             '#1baf7a',
@@ -57,9 +57,23 @@ const FILL = {
   'blackout':           '#008300',
 };
 
+/** Death times in seconds; a replay that does not time its deaths leaves them undefined. */
+type DeathTimes = readonly (number | undefined)[];
+/** One death reason: its count, its detail rows with their median times, and its own times and median. */
+export interface ReasonRow {
+  reason: string; n: number; details: { detail: string; n: number; t: number | undefined | null }[];
+  ts: (number | undefined)[]; t?: number | undefined | null;
+}
+/** A gate's census as the chart reads it: the night, survival against its bar, the deaths and their times. */
+export interface GateCensus {
+  readonly night: number; readonly survived: number; readonly runs: number; readonly minSurvival: number;
+  readonly ok: boolean; readonly deaths: Iterable<readonly [string, number]>;
+  readonly deathTimes?: ReadonlyMap<string, DeathTimes>;
+}
+
 // `reason: detail` rows -> counts per reason, plus the detail rows under each.
-export function census(deaths, deathTimes = new Map()) {
-  const byReason = new Map();
+export function census(deaths: Iterable<readonly [string, number]>, deathTimes: ReadonlyMap<string, DeathTimes> = new Map()) {
+  const byReason = new Map<string, ReasonRow>();
   for (const [key, n] of deaths) {
     const i = key.indexOf(': ');
     const reason = i < 0 ? key : key.slice(0, i);
@@ -77,20 +91,22 @@ export function census(deaths, deathTimes = new Map()) {
     r.details.sort((a, b) => b.n - a.n);
     r.t = median(r.ts);
   }
-  return REASON_ORDER.filter(r => byReason.has(r)).map(r => byReason.get(r));
+  return REASON_ORDER.filter(r => byReason.has(r)).map(r => byReason.get(r) as ReasonRow); // the reasons it has
 }
 
-export const median = a =>
-  a.length ? [...a].sort((x, y) => x - y)[a.length >> 1] : null;
+// sort() places undefined last without comparing it.
+export const median = (a: DeathTimes) =>
+  a.length ? [...a].sort((x, y) => (x as number) - (y as number))[a.length >> 1] : null;
 
 // Seconds of engine time -> the clock the player sees. A night is 420 s over
 // six in-game hours (HOUR_FRAMES), so 214 s is 3 AM -- which is the form that
 // can be compared against the AI table's hour rows and against a device run.
 // `null` when nobody died of this cause: an absent time is not 12 AM.
-export const clock = t => t === null ? '' :
-  `${Math.round(t)} s \u00b7 ${(Math.floor(t / (C.HOUR_FRAMES / C.FPS)) || 12)} AM`;
+// Number(): an untimed death (undefined) renders as NaN, as it did.
+export const clock = (t: number | undefined | null) => t === null ? '' :
+  `${Math.round(Number(t))} s \u00b7 ${(Math.floor(Number(t) / (C.HOUR_FRAMES / C.FPS)) || 12)} AM`;
 
-const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 // Panel geometry. The pie sits BELOW the three header lines, not across them,
 // and both number columns stay inside W -- a percentage that overflowed by
 // 32 px printed itself on top of the next night's panel.
@@ -106,9 +122,9 @@ const COL_N = W - 250, COL_PCT = W - 180, COL_T = W - 85, LEGEND_TOP = 310;
 // output carries every string in full; this backstop only protects the image.
 const ROW_GAP = 34, COLS_DEFAULT = 2;
 const MAX_DETAIL = Math.floor((COL_N - 19 - 10) / 5.45);
-const clip = s => s.length <= MAX_DETAIL ? s : s.slice(0, MAX_DETAIL - 1) + '\u2026';
+const clip = (s: string) => s.length <= MAX_DETAIL ? s : s.slice(0, MAX_DETAIL - 1) + '\u2026';
 
-function slices(rows, total) {
+function slices(rows: readonly ReasonRow[], total: number) {
   if (!total) return '';
   // One reason taking every death is a full circle: an arc of exactly 360
   // degrees draws nothing at all.
@@ -131,7 +147,7 @@ function slices(rows, total) {
   return out;
 }
 
-function panel(g) {
+function panel(g: GateCensus) {
   const rows = census(g.deaths, g.deathTimes);
   const total = rows.reduce((s, r) => s + r.n, 0);
   let y = LEGEND_TOP, body = '';
@@ -165,7 +181,7 @@ function panel(g) {
 
 // The renderer, kept honest about its own failure. The SVG is always written;
 // this only says whether the raster beside it exists.
-export function renderPng(svgPath, pngPath, size) {
+export function renderPng(svgPath: string, pngPath: string, size: { w: number; h: number }) {
   if (!chromeAvailable())
     return { ok: false, why: `UNKNOWN(no chrome on this machine; set $CHROME)` };
   const r = spawnSync(chromeBinary(), ['--headless', '--disable-gpu',
@@ -177,14 +193,14 @@ export function renderPng(svgPath, pngPath, size) {
   return { ok: true };
 }
 
-export function chart(gates, build, cols = COLS_DEFAULT) {
+export function chart(gates: readonly GateCensus[], build: string, cols = COLS_DEFAULT) {
   // Six nights in one row is 3082 px, which nobody reads. Wrap into rows of
   // `cols`, each row as tall as its tallest panel -- the legend length varies
   // with how many characters actually reached the office that night.
   const across = Math.min(cols, gates.length);
   const panels = gates.map(panel);
   let y = 0;
-  const placed = [];
+  const placed: string[] = [];
   for (let i = 0; i < panels.length; i += across) {
     const row = panels.slice(i, i + across);
     row.forEach((p, j) => placed.push(`<g transform="translate(${j * W},${y})">${p.svg}</g>`));
@@ -221,7 +237,7 @@ function main() {
   // Which build produced these numbers. A census an agent cannot place is a
   // census it has to re-measure, and `-dirty` is the difference between a
   // figure that can be reproduced from a commit and one that cannot.
-  let build;
+  let build: string;
   try { build = execFileSync('git', ['rev-parse', '--short', 'HEAD']).toString().trim(); }
   catch { build = 'UNKNOWN(not a git checkout)'; }
   try { if (execFileSync('git', ['status', '--porcelain', '--', ':(top)packages/source', ':(top)packages/propose']).toString().trim()) build += '-dirty'; }
@@ -248,7 +264,7 @@ function main() {
   writeFileSync(svgPath, svg);
   if (svgPath === out) { console.log(`wrote ${out} (${build})`); return; }
 
-  const m = svg.match(/width="(\d+)" height="(\d+)"/);
+  const m = svg.match(/width="(\d+)" height="(\d+)"/) as RegExpMatchArray; // chart() writes both
   const png = renderPng(svgPath, out, { w: +m[1], h: +m[2] });
   console.log(`wrote ${svgPath} (${build})`);
   if (!png.ok) {

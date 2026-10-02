@@ -82,8 +82,8 @@ interface CustomNightModel {
 /** The measured FNaF 1 title model. */
 interface TitleModel { readonly schema: string, readonly build?: string, readonly items: Readonly<Record<string, unknown>> }
 type Options = ReturnType<typeof parseArgs>;
-/** A bridge built on the serial the lease resolved. */
-type Bridge = AdbDeviceBridge & { readonly serial: string };
+/** What the probe asks of a bridge, on the serial the lease resolved: a frame and a preflight. */
+type Bridge = Pick<AdbDeviceBridge, 'capturePng' | 'preflight'> & { readonly serial: string };
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '../../../..');
@@ -199,13 +199,13 @@ class ProbeRecord {
   declare outdir: string;
   declare captureDir: string;
   declare document: {
-    schema: string, id: string, startedAt: string, claimLevel: string, target: { package: string, build: string }, options: Options,
+    schema: string, id: string, startedAt: string, claimLevel: string, target: { package: string, build: string }, options: object,
     bindings: object, capture: { sensor: string, directory: string, frames: CaptureFrame[] }, inputsSent: number, events: object[],
     status: string, updatedAt?: string, preflight?: unknown, titleReads?: string[], titleBefore?: string, titleAfter?: string,
     dialsAtEntry?: unknown, dialsSet?: unknown, dialsRestored?: unknown, recovery?: string, error?: string,
   };
   declare eventsPath: string;
-  constructor({ id, outdir, captureDir, options, bindings }: { id: string, outdir: string, captureDir: string, options: Options, bindings: object }) {
+  constructor({ id, outdir, captureDir, options, bindings }: { id: string, outdir: string, captureDir: string, options: object, bindings: object }) {
     this.outdir = outdir; this.captureDir = captureDir;
     this.document = {
       schema: 'fnaf1-menu-probe-v1', id, startedAt: new Date().toISOString(),

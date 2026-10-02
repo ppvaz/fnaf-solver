@@ -32,7 +32,7 @@ export function chromeAvailable() {
 
 // The standard flags all five tools pass. `port` and `profile` differ per tool
 // so two of them can run at once.
-export const chromeArgs = (port, profile) => [
+export const chromeArgs = (port: number, profile: string) => [
   '--headless=new', `--remote-debugging-port=${port}`, `--user-data-dir=${profile}`,
   '--no-first-run', '--no-default-browser-check', '--disable-gpu',
   '--window-size=880,420', 'about:blank',
