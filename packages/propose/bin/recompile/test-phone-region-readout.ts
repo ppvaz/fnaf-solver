@@ -10,6 +10,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { deriveInputs, identifyReading, measuredNight, readoutStrength, regionImages, updateOf } from './phone-region-readout.ts';
+import { anchorIndex, back, seedCandidates } from './phone-seed-readout.ts';
 
 const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '../../../..');
 const sha = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex');
@@ -74,6 +75,21 @@ assert.equal(identifyReading(rule, [{ state: top, r: null }]).verdict, 'UNIDENTI
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
+}
+
+// --- the seed from a read stream (phone-seed-readout.ts)
+for (const s of [0, 12345, 57136]) assert.equal(back(along(s, 289), 289), s, `stepping back undoes stepping forward from ${s}`);
+assert.equal(anchorIndex([{ differ: null }, { differ: 0 }, { differ: 3 }, { differ: 0 }], 10), 1, 'the earliest of two consecutive consistent pairs');
+assert.equal(anchorIndex([{ differ: 0 }, { differ: 99 }, { differ: 0 }], 10), null, 'no two consecutive consistent pairs');
+{
+  // The 0/20 night's exploratory lead, from its committed record: wind-1's state 57136, the model's 284 draws to it,
+  // the onset on the phone's wall clock from the pack; the wall-clock seed 63 ms before onset needs exactly 5 more.
+  const rec = JSON.parse(readFileSync(join(ROOT, 'docs/evidence/s2-region-readout-night7-0of20-20261001.json'), 'utf8'));
+  assert.equal(rec.windows[0].reading.top.state, 57136);
+  const events = readFileSync(join(ROOT, 'docs/evidence/runs', rec.run, 'events.jsonl'), 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l));
+  const onset = events.find((r) => r.type === 'origin.anchor' && r.status === 'scheduled').onsetPhoneWallMs;
+  const rows = seedCandidates(onset, 57136, 284, 55, 90);
+  assert.deepEqual(rows.filter((r) => r.c === 5).map((r) => r.x), [63], 'the lead: x = 63 ms with c = 5, and no other x in the bracket');
 }
 
 // --- the records

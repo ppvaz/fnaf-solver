@@ -2550,6 +2550,18 @@
       ]
     },
     {
+      "file": "packages/propose/bin/recompile/phone-seed-readout.ts",
+      "imports": [
+        "../../../source/recompile/model-draw-trace.ts",
+        "./phone-region-readout.ts",
+        "./phone-static-readout.ts",
+        "./sweep-common.ts",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "packages/propose/bin/recompile/phone-static-readout.ts",
       "imports": [
         "../../../source/recompile/model-draw-trace.ts",
@@ -2777,6 +2789,7 @@
       "file": "packages/propose/bin/recompile/test-phone-region-readout.ts",
       "imports": [
         "./phone-region-readout.ts",
+        "./phone-seed-readout.ts",
         "node:assert/strict",
         "node:crypto",
         "node:fs",

@@ -1,0 +1,1078 @@
+{
+ "schema": "evidence-record-v1",
+ "date": "2026-10-01",
+ "step": "ROADMAP S2a: the static-readout instrument",
+ "claimLevel": "MODEL_ONLY (synthetic frames from the model)",
+ "question": "Does the readout analysis recover a planted generator stream, and find none in a night with no signal?",
+ "tool": {
+  "path": "packages/propose/bin/recompile/phone-region-readout.ts",
+  "sha256": "2634de6e8c8fef8f12210ecb50cc579d7684d281887cef04475243c2ca30c142",
+  "commit": "78cc22f2"
+ },
+ "spec": {
+  "what": "the 0/20 night predeclaration's procedure (20 winding windows of k3 at every dial 0, offsets -6..6, 60 Hz clock) on a draft spec with a nominal release; the rule is the one the predeclaration fixed",
+  "decisionRule": {
+   "minR": 0.85,
+   "minMargin": 0.08,
+   "consistencyDraws": 10,
+   "supportIdentified": 12,
+   "supportConsistentShare": 0.8,
+   "refuteIdentified": 4,
+   "aliasSteps": 5,
+   "supportConsistentPairs": 5,
+   "refuteConsistentPairs": 1
+  },
+  "specSha256": "dfb9c506697efdc37c9ba4c633acf8333a7130695b17fa5f710de4c435145755"
+ },
+ "rule": {
+  "minR": 0.85,
+  "minMargin": 0.08,
+  "consistencyDraws": 10,
+  "supportIdentified": 12,
+  "supportConsistentShare": 0.8,
+  "refuteIdentified": 4,
+  "aliasSteps": 5,
+  "supportConsistentPairs": 5,
+  "refuteConsistentPairs": 1
+ },
+ "nights": [
+  {
+   "label": "planted",
+   "what": "state 12345 planted at gain 30, noise SD 2, frames every 2 updates (30 fps), a slow pan; seed 1",
+   "state": 12345,
+   "noiseSd": 2,
+   "gain": 30,
+   "windows": [
+    {
+     "name": "wind-1",
+     "reading": {
+      "verdict": "IDENTIFIED",
+      "top": {
+       "state": 12345,
+       "r": 0.9141826529613201,
+       "o": -1,
+       "blocks": 32
+      },
+      "rival": {
+       "state": 29189,
+       "r": 0.808112211552824,
+       "o": -6,
+       "blocks": 32
+      }
+     }
+    },
+    {
+     "name": "wind-2",
+     "reading": {
+      "verdict": "IDENTIFIED",
+      "top": {
+       "state": 40713,
+       "r": 0.8847131963028182,
+       "o": -1,
+       "blocks": 32
+      },
+      "rival": {
+       "state": 57062,
+       "r": 0.7939929278186187,
+       "o": -1,
+       "blocks": 32
+      }
+     }
+    },
+    {
+     "name": "wind-3",
+     "reading": {
+      "verdict": "UNIDENTIFIED",
+      "top": {
+       "state": 49547,
+       "r": 0.8027344376172255,
+       "o": -3,
+       "blocks": 32
+      },
+      "rival": {
+       "state": 7505,
+       "r": 0.7889824369968511,
+       "o": -1,
+       "blocks": 32
+      }
+     }
+    },
+    {
+     "name": "wind-4",
+     "reading": {
+      "verdict": "IDENTIFIED",
+      "top": {
+       "state": 53728,
+       "r": 0.8508734624127449,
+       "o": -1,
+       "blocks": 32
+      },
+      "rival": {
+       "state": 2833,
+       "r": 0.7338894634974299,
+       "o": 1,
+       "blocks": 32
+      }
+     }
+    },
+    {
+     "name": "wind-5",
+     "reading": {
+      "verdict": "IDENTIFIED",
+      "top": {
+       "state": 31320,
+       "r": 0.9114600023476293,
+       "o": -1,
+       "blocks": 32
+      },
+      "rival": {
+       "state": 19812,
+       "r": 0.7966673558269365,
+       "o": -6,
+       "blocks": 32
+      }
+     }
+    },
+    {
+     "name": "wind-6",
+     "reading": {
+      "verdict": "UNIDENTIFIED",
+      "top": {
+       "state": 51260,
+       "r": 0.812557837887989,
+       "o": -3,
+       "blocks": 31
+      },
+      "rival": {
+       "state": 49232,
+       "r": 0.7928464858206181,
+       "o": -1,
+       "blocks": 32
+      }
+     }
+    },
+    {
+     "name": "wind-7",
+     "reading": {
+      "verdict": "IDENTIFIED",
+      "top": {
+       "state": 60409,
+       "r": 0.9495264527990572,
+       "o": -1,
+       "blocks": 32
+      },
+      "rival": {
+       "state": 41192,
+       "r": 0.8293415891902229,
+       "o": 1,
+       "blocks": 31
+      }
+     }
+    },
+    {
+     "name": "wind-8",
+     "reading": {
+      "verdict": "UNIDENTIFIED",
+      "top": {
+       "state": 25921,
+       "r": 0.8344640662082153,
+       "o": -1,
+       "blocks": 32
+      },
+      "rival": {
+       "state": 32645,
+       "r": 0.7505884347088431,
+       "o": 5,
+       "blocks": 32
+      }
+     }
+    },
+    {
+     "name": "wind-9",
+     "reading": {
+      "verdict": "UNIDENTIFIED",
+      "top": {
+       "state": 7024,
+       "r": 0.807014739965609,
+       "o": -1,
+       "blocks": 32
+      },
+      "rival": {
+       "state": 41915,
+       "r": 0.7887064514574135,
+       "o": -3,
+       "blocks": 32
+      }
+     }
+    },
+    {
+     "name": "wind-10",
+     "reading": {
+      "verdict": "IDENTIFIED",
+      "top": {
+       "state": 20712,
+       "r": 0.8717545316511546,
+       "o": -1,
+       "blocks": 32
+      },
+      "rival": {
+       "state": 25879,
+       "r": 0.7541393761636811,
+       "o": 1,
+       "blocks": 31
+      }
+     }
+    },
+    {
+     "name": "wind-11",
+     "reading": {
+      "verdict": "IDENTIFIED",
+      "top": {
+       "state": 54561,
+       "r": 0.9056996276072301,
+       "o": -1,
+       "blocks": 32
+      },
+      "rival": {
+       "state": 7548,
+       "r": 0.7557315222076032,
+       "o": 3,
+       "blocks": 32
+      }
+     }
+    },
+    {
+     "name": "wind-12",
+     "reading": {
+      "verdict": "IDENTIFIED",
+      "top": {
+       "state": 52880,
+       "r": 0.8965017129836336,
+       "o": -1,
+       "blocks": 32
+      },
+      "rival": {
+       "state": 13336,
+       "r": 0.740736187976661,
+       "o": -5,
+       "blocks": 31
+      }
+     }
+    },
+    {
+     "name": "wind-13",
+     "reading": {
+      "verdict": "IDENTIFIED",
+      "top": {
+       "state": 7688,
+       "r": 0.9016795725294243,
+       "o": -1,
+       "blocks": 32
+      },
+      "rival": {
+       "state": 31807,
+       "r": 0.7591803891383021,
+       "o": 5,
+       "blocks": 32
+      }
+     }
+    },
+    {
+     "name": "wind-14",
+     "reading": {
+      "verdict": "IDENTIFIED",
+      "top": {
+       "state": 42424,
+       "r": 0.9201237158231698,
+       "o": -1,
+       "blocks": 32
+      },
+      "rival": {
+       "state": 44218,
+       "r": 0.8271298318749605,
+       "o": -1,
+       "blocks": 32
+      }
+     }
+    },
+    {
+     "name": "wind-15",
+     "reading": {
+      "verdict": "UNIDENTIFIED",
+      "top": {
+       "state": 55728,
+       "r": 0.8057291283623,
+       "o": -1,
+       "blocks": 32
+      },
+      "rival": {
+       "state": 27460,
+       "r": 0.7730642043348083,
+       "o": 3,
+       "blocks": 31
+      }
+     }
+    },
+    {
+     "name": "wind-16",
+     "reading": {
+      "verdict": "UNIDENTIFIED",
+      "top": {
+       "state": 37273,
+       "r": 0.8693601329761232,
+       "o": -1,
+       "blocks": 32
+      },
+      "rival": {
+       "state": 42795,
+       "r": 0.8088884860579307,
+       "o": 5,
+       "blocks": 32
+      }
+     }
+    },
+    {
+     "name": "wind-17",
+     "reading": {
+      "verdict": "UNIDENTIFIED",
+      "top": {
+       "state": 27873,
+       "r": 0.8349868448934542,
+       "o": -1,
+       "blocks": 32
+      },
+      "rival": {
+       "state": 49557,
+       "r": 0.7460639407460524,
+       "o": 1,
+       "blocks": 32
+      }
+     }
+    },
+    {
+     "name": "wind-18",
+     "reading": {
+      "verdict": "UNIDENTIFIED",
+      "top": {
+       "state": 38569,
+       "r": 0.8539229368839517,
+       "o": -1,
+       "blocks": 32
+      },
+      "rival": {
+       "state": 52055,
+       "r": 0.8212130002620024,
+       "o": 5,
+       "blocks": 32
+      }
+     }
+    },
+    {
+     "name": "wind-19",
+     "reading": {
+      "verdict": "IDENTIFIED",
+      "top": {
+       "state": 16456,
+       "r": 0.9084874274371026,
+       "o": -1,
+       "blocks": 32
+      },
+      "rival": {
+       "state": 37957,
+       "r": 0.8000572611799153,
+       "o": -3,
+       "blocks": 31
+      }
+     }
+    },
+    {
+     "name": "wind-20",
+     "reading": {
+      "verdict": "IDENTIFIED",
+      "top": {
+       "state": 20800,
+       "r": 0.8806769264578574,
+       "o": -1,
+       "blocks": 32
+      },
+      "rival": {
+       "state": 4310,
+       "r": 0.7865799541999697,
+       "o": 1,
+       "blocks": 32
+      }
+     }
+    }
+   ],
+   "identified": 12,
+   "pairs": [
+    {
+     "from": "wind-1",
+     "to": "wind-2",
+     "steps": 276,
+     "modelDraws": 276,
+     "differ": 0
+    },
+    {
+     "from": "wind-2",
+     "to": "wind-3",
+     "steps": null,
+     "modelDraws": 274,
+     "differ": null
+    },
+    {
+     "from": "wind-3",
+     "to": "wind-4",
+     "steps": null,
+     "modelDraws": 275,
+     "differ": null
+    },
+    {
+     "from": "wind-4",
+     "to": "wind-5",
+     "steps": 274,
+     "modelDraws": 274,
+     "differ": 0
+    },
+    {
+     "from": "wind-5",
+     "to": "wind-6",
+     "steps": null,
+     "modelDraws": 274,
+     "differ": null
+    },
+    {
+     "from": "wind-6",
+     "to": "wind-7",
+     "steps": null,
+     "modelDraws": 275,
+     "differ": null
+    },
+    {
+     "from": "wind-7",
+     "to": "wind-8",
+     "steps": 274,
+     "modelDraws": 274,
+     "differ": 0
+    },
+    {
+     "from": "wind-8",
+     "to": "wind-9",
+     "steps": 275,
+     "modelDraws": 275,
+     "differ": 0
+    },
+    {
+     "from": "wind-9",
+     "to": "wind-10",
+     "steps": 274,
+     "modelDraws": 274,
+     "differ": 0
+    },
+    {
+     "from": "wind-10",
+     "to": "wind-11",
+     "steps": 275,
+     "modelDraws": 275,
+     "differ": 0
+    },
+    {
+     "from": "wind-11",
+     "to": "wind-12",
+     "steps": 275,
+     "modelDraws": 275,
+     "differ": 0
+    },
+    {
+     "from": "wind-12",
+     "to": "wind-13",
+     "steps": 274,
+     "modelDraws": 274,
+     "differ": 0
+    },
+    {
+     "from": "wind-13",
+     "to": "wind-14",
+     "steps": 276,
+     "modelDraws": 276,
+     "differ": 0
+    },
+    {
+     "from": "wind-14",
+     "to": "wind-15",
+     "steps": 274,
+     "modelDraws": 274,
+     "differ": 0
+    },
+    {
+     "from": "wind-15",
+     "to": "wind-16",
+     "steps": 275,
+     "modelDraws": 275,
+     "differ": 0
+    },
+    {
+     "from": "wind-16",
+     "to": "wind-17",
+     "steps": 274,
+     "modelDraws": 274,
+     "differ": 0
+    },
+    {
+     "from": "wind-17",
+     "to": "wind-18",
+     "steps": 274,
+     "modelDraws": 274,
+     "differ": 0
+    },
+    {
+     "from": "wind-18",
+     "to": "wind-19",
+     "steps": 275,
+     "modelDraws": 275,
+     "differ": 0
+    },
+    {
+     "from": "wind-19",
+     "to": "wind-20",
+     "steps": 274,
+     "modelDraws": 274,
+     "differ": 0
+    }
+   ],
+   "consistent": 15,
+   "verdict": "SUPPORTED"
+  },
+  {
+   "label": "null",
+   "what": "the same frames with gain 0 (no signal), noise SD 2; seed 21",
+   "state": 12345,
+   "noiseSd": 2,
+   "gain": 0,
+   "windows": [
+    {
+     "name": "wind-1",
+     "reading": {
+      "verdict": "UNIDENTIFIED",
+      "top": {
+       "state": 10235,
+       "r": 0.7828089942335201,
+       "o": -1,
+       "blocks": 32
+      },
+      "rival": {
+       "state": 9207,
+       "r": 0.7621112004684083,
+       "o": 5,
+       "blocks": 32
+      }
+     }
+    },
+    {
+     "name": "wind-2",
+     "reading": {
+      "verdict": "UNIDENTIFIED",
+      "top": {
+       "state": 40547,
+       "r": 0.8154005296979943,
+       "o": 3,
+       "blocks": 32
+      },
+      "rival": {
+       "state": 61722,
+       "r": 0.7811686111465601,
+       "o": -5,
+       "blocks": 31
+      }
+     }
+    },
+    {
+     "name": "wind-3",
+     "reading": {
+      "verdict": "UNIDENTIFIED",
+      "top": {
+       "state": 2283,
+       "r": 0.8680132648792369,
+       "o": 1,
+       "blocks": 31
+      },
+      "rival": {
+       "state": 41893,
+       "r": 0.8131908332384795,
+       "o": -3,
+       "blocks": 32
+      }
+     }
+    },
+    {
+     "name": "wind-4",
+     "reading": {
+      "verdict": "UNIDENTIFIED",
+      "top": {
+       "state": 738,
+       "r": 0.7704459894823632,
+       "o": -1,
+       "blocks": 32
+      },
+      "rival": {
+       "state": 30749,
+       "r": 0.7598917021377162,
+       "o": 5,
+       "blocks": 32
+      }
+     }
+    },
+    {
+     "name": "wind-5",
+     "reading": {
+      "verdict": "UNIDENTIFIED",
+      "top": {
+       "state": 7905,
+       "r": 0.8319155182974034,
+       "o": -6,
+       "blocks": 32
+      },
+      "rival": {
+       "state": 23107,
+       "r": 0.8057309561225219,
+       "o": -6,
+       "blocks": 32
+      }
+     }
+    },
+    {
+     "name": "wind-6",
+     "reading": {
+      "verdict": "UNIDENTIFIED",
+      "top": {
+       "state": 54604,
+       "r": 0.8293916903056971,
+       "o": -6,
+       "blocks": 32
+      },
+      "rival": {
+       "state": 62078,
+       "r": 0.7737994850209083,
+       "o": -6,
+       "blocks": 32
+      }
+     }
+    },
+    {
+     "name": "wind-7",
+     "reading": {
+      "verdict": "UNIDENTIFIED",
+      "top": {
+       "state": 42656,
+       "r": 0.792650803059879,
+       "o": -3,
+       "blocks": 32
+      },
+      "rival": {
+       "state": 55196,
+       "r": 0.7884253174697419,
+       "o": -5,
+       "blocks": 31
+      }
+     }
+    },
+    {
+     "name": "wind-8",
+     "reading": {
+      "verdict": "UNIDENTIFIED",
+      "top": {
+       "state": 12762,
+       "r": 0.7566508807517442,
+       "o": -5,
+       "blocks": 31
+      },
+      "rival": {
+       "state": 22454,
+       "r": 0.7490744918531521,
+       "o": -5,
+       "blocks": 31
+      }
+     }
+    },
+    {
+     "name": "wind-9",
+     "reading": {
+      "verdict": "UNIDENTIFIED",
+      "top": {
+       "state": 24947,
+       "r": 0.8260683316990218,
+       "o": 1,
+       "blocks": 31
+      },
+      "rival": {
+       "state": 43717,
+       "r": 0.786659434997412,
+       "o": 1,
+       "blocks": 31
+      }
+     }
+    },
+    {
+     "name": "wind-10",
+     "reading": {
+      "verdict": "UNIDENTIFIED",
+      "top": {
+       "state": 6860,
+       "r": 0.86548786858458,
+       "o": -1,
+       "blocks": 32
+      },
+      "rival": {
+       "state": 31500,
+       "r": 0.8261763691379904,
+       "o": -5,
+       "blocks": 31
+      }
+     }
+    },
+    {
+     "name": "wind-11",
+     "reading": {
+      "verdict": "UNIDENTIFIED",
+      "top": {
+       "state": 30685,
+       "r": 0.8140876563835622,
+       "o": 1,
+       "blocks": 31
+      },
+      "rival": {
+       "state": 62625,
+       "r": 0.8084594833179916,
+       "o": -6,
+       "blocks": 32
+      }
+     }
+    },
+    {
+     "name": "wind-12",
+     "reading": {
+      "verdict": "UNIDENTIFIED",
+      "top": {
+       "state": 36263,
+       "r": 0.7874163582016435,
+       "o": -5,
+       "blocks": 31
+      },
+      "rival": {
+       "state": 45541,
+       "r": 0.7607176007284602,
+       "o": -6,
+       "blocks": 32
+      }
+     }
+    },
+    {
+     "name": "wind-13",
+     "reading": {
+      "verdict": "UNIDENTIFIED",
+      "top": {
+       "state": 45172,
+       "r": 0.8103851684075032,
+       "o": 3,
+       "blocks": 31
+      },
+      "rival": {
+       "state": 53799,
+       "r": 0.8017122340467405,
+       "o": -5,
+       "blocks": 31
+      }
+     }
+    },
+    {
+     "name": "wind-14",
+     "reading": {
+      "verdict": "UNIDENTIFIED",
+      "top": {
+       "state": 60355,
+       "r": 0.8162448536976088,
+       "o": -6,
+       "blocks": 32
+      },
+      "rival": {
+       "state": 64674,
+       "r": 0.8113072440159381,
+       "o": 1,
+       "blocks": 32
+      }
+     }
+    },
+    {
+     "name": "wind-15",
+     "reading": {
+      "verdict": "UNIDENTIFIED",
+      "top": {
+       "state": 15236,
+       "r": 0.7673499384730423,
+       "o": 5,
+       "blocks": 32
+      },
+      "rival": {
+       "state": 51720,
+       "r": 0.7573269163196097,
+       "o": 1,
+       "blocks": 32
+      }
+     }
+    },
+    {
+     "name": "wind-16",
+     "reading": {
+      "verdict": "UNIDENTIFIED",
+      "top": {
+       "state": 2045,
+       "r": 0.7499982825238442,
+       "o": -6,
+       "blocks": 32
+      },
+      "rival": {
+       "state": 34251,
+       "r": 0.7474198846431315,
+       "o": -5,
+       "blocks": 32
+      }
+     }
+    },
+    {
+     "name": "wind-17",
+     "reading": {
+      "verdict": "UNIDENTIFIED",
+      "top": {
+       "state": 51781,
+       "r": 0.8009198774331642,
+       "o": 5,
+       "blocks": 32
+      },
+      "rival": {
+       "state": 9187,
+       "r": 0.7884576141460283,
+       "o": 3,
+       "blocks": 31
+      }
+     }
+    },
+    {
+     "name": "wind-18",
+     "reading": {
+      "verdict": "UNIDENTIFIED",
+      "top": {
+       "state": 4796,
+       "r": 0.7717587877399907,
+       "o": 1,
+       "blocks": 32
+      },
+      "rival": {
+       "state": 47039,
+       "r": 0.747543016320412,
+       "o": 1,
+       "blocks": 32
+      }
+     }
+    },
+    {
+     "name": "wind-19",
+     "reading": {
+      "verdict": "UNIDENTIFIED",
+      "top": {
+       "state": 22137,
+       "r": 0.7791379572246703,
+       "o": -1,
+       "blocks": 32
+      },
+      "rival": {
+       "state": 26819,
+       "r": 0.7780087912045072,
+       "o": -5,
+       "blocks": 32
+      }
+     }
+    },
+    {
+     "name": "wind-20",
+     "reading": {
+      "verdict": "UNIDENTIFIED",
+      "top": {
+       "state": 12766,
+       "r": 0.7508218035747221,
+       "o": -1,
+       "blocks": 32
+      },
+      "rival": {
+       "state": 118,
+       "r": 0.7446192132643009,
+       "o": 1,
+       "blocks": 32
+      }
+     }
+    }
+   ],
+   "identified": 0,
+   "pairs": [
+    {
+     "from": "wind-1",
+     "to": "wind-2",
+     "steps": 50,
+     "modelDraws": 276,
+     "differ": -226
+    },
+    {
+     "from": "wind-2",
+     "to": "wind-3",
+     "steps": 13498,
+     "modelDraws": 274,
+     "differ": 13224
+    },
+    {
+     "from": "wind-3",
+     "to": "wind-4",
+     "steps": null,
+     "modelDraws": 275,
+     "differ": null
+    },
+    {
+     "from": "wind-4",
+     "to": "wind-5",
+     "steps": null,
+     "modelDraws": 274,
+     "differ": null
+    },
+    {
+     "from": "wind-5",
+     "to": "wind-6",
+     "steps": null,
+     "modelDraws": 274,
+     "differ": null
+    },
+    {
+     "from": "wind-6",
+     "to": "wind-7",
+     "steps": null,
+     "modelDraws": 275,
+     "differ": null
+    },
+    {
+     "from": "wind-7",
+     "to": "wind-8",
+     "steps": null,
+     "modelDraws": 274,
+     "differ": null
+    },
+    {
+     "from": "wind-8",
+     "to": "wind-9",
+     "steps": null,
+     "modelDraws": 275,
+     "differ": null
+    },
+    {
+     "from": "wind-9",
+     "to": "wind-10",
+     "steps": null,
+     "modelDraws": 274,
+     "differ": null
+    },
+    {
+     "from": "wind-10",
+     "to": "wind-11",
+     "steps": 9363,
+     "modelDraws": 275,
+     "differ": 9088
+    },
+    {
+     "from": "wind-11",
+     "to": "wind-12",
+     "steps": null,
+     "modelDraws": 275,
+     "differ": null
+    },
+    {
+     "from": "wind-12",
+     "to": "wind-13",
+     "steps": null,
+     "modelDraws": 274,
+     "differ": null
+    },
+    {
+     "from": "wind-13",
+     "to": "wind-14",
+     "steps": null,
+     "modelDraws": 276,
+     "differ": null
+    },
+    {
+     "from": "wind-14",
+     "to": "wind-15",
+     "steps": null,
+     "modelDraws": 274,
+     "differ": null
+    },
+    {
+     "from": "wind-15",
+     "to": "wind-16",
+     "steps": 7465,
+     "modelDraws": 275,
+     "differ": 7190
+    },
+    {
+     "from": "wind-16",
+     "to": "wind-17",
+     "steps": 13570,
+     "modelDraws": 274,
+     "differ": 13296
+    },
+    {
+     "from": "wind-17",
+     "to": "wind-18",
+     "steps": 4103,
+     "modelDraws": 274,
+     "differ": 3829
+    },
+    {
+     "from": "wind-18",
+     "to": "wind-19",
+     "steps": null,
+     "modelDraws": 275,
+     "differ": null
+    },
+    {
+     "from": "wind-19",
+     "to": "wind-20",
+     "steps": null,
+     "modelDraws": 274,
+     "differ": null
+    }
+   ],
+   "consistent": 0,
+   "verdict": "NOT_SUPPORTED"
+  }
+ ],
+ "singleWindowScans": {
+  "what": "one window each, all 65,536 states, before the night (tool before its power-check patch, worker path unchanged)",
+  "lines": [
+   "planted 12345 in wind-3 (gain 30, noise sd 1): rank 1, IDENTIFIED, top 12345:0.972@-1 rival 41603:0.840; null p50 0.242 p999 0.692",
+   "planted 12345 in wind-3 (gain 30, noise sd 2): rank 1, IDENTIFIED, top 12345:0.898@-1 rival 41603:0.807; null p50 0.252 p999 0.689",
+   "planted 777 in wind-8 (gain 30, noise sd 1): rank 1, IDENTIFIED, top 777:0.933@-1 rival 52070:0.791; null p50 0.237 p999 0.676",
+   "planted 777 in wind-8 (gain 30, noise sd 2): rank 1, UNIDENTIFIED, top 777:0.809@-1 rival 7053:0.783; null p50 0.258 p999 0.679",
+   "planted 40000 in wind-15 (gain 30, noise sd 1): rank 1, IDENTIFIED, top 40000:0.941@-1 rival 50056:0.757; null p50 0.228 p999 0.653",
+   "planted 40000 in wind-15 (gain 30, noise sd 2): rank 1, UNIDENTIFIED, top 40000:0.833@-1 rival 5881:0.774; null p50 0.248 p999 0.669",
+   "planted 12345 in wind-3 (gain 0, noise sd 2): rank 29992, UNIDENTIFIED, top 4015:0.767@-3 rival 60344:0.755; null p50 0.237 p999 0.644",
+   "planted 777 in wind-8 (gain 0, noise sd 2): rank 3904, UNIDENTIFIED, top 19082:0.791@-5 rival 49167:0.770; null p50 0.255 p999 0.661",
+   "planted 40000 in wind-15 (gain 0, noise sd 2): rank 10998, UNIDENTIFIED, top 19891:0.796@-6 rival 10589:0.745; null p50 0.263 p999 0.659"
+  ]
+ },
+ "reading": {
+  "planted": "At noise SD 2 and 30 fps the planted stream is read in 12 of 20 windows and 15 of 19 consecutive pairs are consistent: SUPPORTED. The same run before the power-check patch gave the same 12 and 15 (the worker path did not change).",
+  "null": "With no signal no window is identified and no pair is consistent: NOT_SUPPORTED.",
+  "sense": "The pair rule separates a stream at the calibration's strength from none; the 0/20 night recorded 60 fps, twice the frames, and its own power check (at its measured strength) is what that night's verdict depends on."
+ },
+ "predeclaration": {
+  "path": "docs/evidence/s2-region-readout-night7-0of20-predeclaration-20261001.json",
+  "sha256": "507da9f4676720a889b9d27f44454f2d2f9cffc6abd42a03b9869c7c3cda1ad5"
+ },
+ "id": "s2-region-readout-calibration-8accdbb1d424eab6"
+}
