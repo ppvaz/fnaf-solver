@@ -14,39 +14,29 @@
 // each remedy; the only thing it removes is the throwaway worktree it built for the catalog check),
 // and never writes the owner's override.
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, readlinkSync, rmSync, statSync,
-  writeFileSync } from 'node:fs';
-import { homedir, hostname, tmpdir } from 'node:os';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { hostname, tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { BINDINGS_DIR, REPOSITORY_TARGET, type Unknown, claimEnvelope, isRecord, isUnknown, refusalEnvelope, unknown } from '@sixam/kernel';
+import { REPOSITORY_TARGET, type Unknown, claimEnvelope, isUnknown, refusalEnvelope, unknown } from '@sixam/kernel';
 import { CONSEQUENCE_CITES, classifyChange, consequenceKey } from '@sixam/review/consequence';
 import { trackedWinners, winnerFiles } from '@sixam/review/evidence-pack';
 import { matchMistakes, readMistakes, stepFamily } from '@sixam/review/mistakes';
 import { queryPromotions } from '@sixam/review/promotions-query';
 import { readPacks } from '@sixam/review/registers';
 import { ORDER, ORDER_OF, ROADMAP, STEPS, stateKey, stepStatus } from '@sixam/review/roadmap';
-import { PROFILE_PATH, mainCheckout, profilePaths } from '../../../packages/play/bin/phone/local-profile.ts';
-import { laneCommand, linkDependencies, runRecordPath } from '../../../tools/push-gate.ts';
+import { runRecordPath } from '../../../tools/push-gate.ts';
+import { CATALOG_COMMANDS, type Check, runDoctor as doctorChecks } from './lab-doctor.ts';
+import { PROC_HOST, QUEUE_TOOL, type QueueJob, iso, labContext, lines, mtime, phoneState, readJson } from './lab-host.ts';
+
+export { PROC_HOST, STALE_PENDING_HOURS, parseWorktrees } from './lab-host.ts';
 
 export const LAB_DOC = 'docs/operations/LAB.md';
 export const SESSION_FILE = 'artifacts/lab/session.json';
 export const SESSIONS_DIR = 'artifacts/lab/sessions';
 export const SESSION_SCHEMA = 'lab-session-v1';
 export const HOOK = '.githooks/commit-msg';
-export const QUEUE_TOOL = 'apps/lab/companion-queue.sh';
-/** A PENDING job older than this is stale (the operators note's doctor table: "older than 72 h"). */
-export const STALE_PENDING_HOURS = 72;
-/** An agent worktree idle this long, unlocked and with no process inside, is orphaned. */
-export const AGENT_WORKTREE_IDLE_HOURS = 24;
-/** Below this much available memory, a heavy process makes the next heavy command an OOM risk. */
-export const MEMORY_FLOOR_MB = 1536;
-/** A process holding this much resident memory is heavy. */
-export const HEAVY_RSS_MB = 1024;
 /** The evening a morning report starts from: the last 18:00, local time. */
 export const EVENING_HOUR = 18;
-/** What CI diffs after `npm run catalog && npm run chronicle` (ci.yml, "Documentation and catalog links"). */
-export const GENERATED_DIRS = Object.freeze(['docs/architecture/generated', 'docs/portal']);
-export const CATALOG_COMMANDS = Object.freeze(['npm run catalog', 'npm run chronicle']);
 const OVERRIDE = 'PEDRO-OK';
 
 /** The verb table every door reads. `mcp` names the read-only tool a verb is served as, if any. */
@@ -63,12 +53,6 @@ export const LAB_VERBS = Object.freeze([
   { verb: 'doctor', mcp: 'lab.doctor', writes: null, answers: 'what is broken on this host and checkout, each with the command that fixes it' },
 ].map(row => Object.freeze(row)));
 
-/** A Companion queue job, as companion-queue.py lists it. */
-interface QueueJob {
-  readonly id: string, readonly kind: string, readonly state: string, readonly night?: number | null, readonly winner?: string | null,
-  readonly createdAt?: string | null, readonly startedAt?: string | null, readonly finishedAt?: string | null,
-  readonly cancelledAt?: string | null, readonly result?: unknown,
-}
 /** A lab session, as start() writes it. */
 interface Session {
   readonly schema: string, readonly id: string, readonly step: string, readonly stepFamily: string, readonly artifact: string,
@@ -76,21 +60,6 @@ interface Session {
 }
 /** A push-gate run, as tools/push-gate.ts records it. */
 interface RunRecord { readonly sha: string, readonly full: boolean, readonly failed: string[], readonly skipped: string[], readonly at: string, readonly host: string }
-/** An overnight window, as overnight-window.py records it. */
-interface WindowRecord {
-  readonly window?: { readonly openedAt?: string, readonly closedAt?: string }, readonly outcome?: string, readonly reason?: string,
-  readonly morning?: { readonly summary?: string, readonly nights?: unknown[] },
-}
-/** A device lock's owner record, as companion_device_lock.py writes it. */
-interface LockOwner { readonly pid: number, readonly host: string | null, readonly acquiredAt: number | null }
-/** The queue as status and doctor read it; status drops the raw jobs. */
-interface QueueView {
-  jobs: number, byState: Record<string, number>,
-  pending: { id: string, kind: string, night: number | null, winner: string | null, createdAt: string | null | undefined, ageHours: number | null, stale: boolean }[],
-  running: { id: string, kind: string, startedAt: string | null }[], staleAfterHours: number, jobsRaw?: QueueJob[],
-}
-/** One doctor check: what it asked, and yes, no or UNKNOWN. */
-interface Check { id: string, what: string, ok: boolean | Unknown, detail?: unknown }
 /** One ranked action of next. */
 interface NextAction {
   kind: string, step: string | null, where: string, action: string, command: string | null, because: string,
@@ -98,26 +67,8 @@ interface NextAction {
 }
 type StepRow = ReturnType<typeof stepStatus>[number];
 
-const HOUR = 3600 * 1000;
-const lines = (text: string | null | undefined) => (text ?? '').split('\n').map(line => line.trimEnd()).filter(Boolean);
 const plain = (text: string) => text.replace(/\*\*/g, '');
 const shellQuote = (text: string) => (/^[\w@%+=:,./-]+$/.test(text) ? text : `'${String(text).replaceAll("'", "'\\''")}'`);
-const withoutGit = (env: NodeJS.ProcessEnv): NodeJS.ProcessEnv => Object.fromEntries(Object.entries(env).filter(([name]) => !name.startsWith('GIT_')));
-const readJson = (path: string): unknown => JSON.parse(readFileSync(path, 'utf8'));
-const iso = (date: Date) => date.toISOString();
-const hoursBetween = (from: Date, to: Date) => Math.round(((to.getTime() - from.getTime()) / HOUR) * 10) / 10;
-const mtime = (path: string) => { try { return statSync(path).mtime; } catch { return null; } };
-
-/** A lock file's owner, or null when it holds no record with a pid (empty, unreadable or malformed). */
-function lockOwner(path: string): LockOwner | null {
-  let record: unknown;
-  try { record = readJson(path); } catch { return null; }
-  if (!isRecord(record)) return null;
-  const { pid } = record;
-  if (typeof pid !== 'number' || !Number.isInteger(pid) || pid <= 0) return null;
-  return { pid, host: typeof record.host === 'string' ? record.host : null,
-    acquiredAt: typeof record.acquiredAt === 'number' ? record.acquiredAt : null };
-}
 
 /** The last evening before `now`: 18:00 local, today if that has passed, else yesterday. */
 export function lastEvening(now: Date) {
@@ -133,75 +84,6 @@ export function runStamp(id: string) {
   return match ? new Date(Date.UTC(+match[1], +match[2] - 1, +match[3], +match[4], +match[5], +match[6])) : null;
 }
 
-/** `git worktree list --porcelain`, one row per worktree. */
-export function parseWorktrees(text: string) {
-  return text.split('\n\n').map(block => block.split('\n').filter(Boolean)).filter(rows => rows.length).map(rows => {
-    const row = { path: null as string | null, head: null as string | null, branch: null as string | null, locked: false, prunable: false, detached: false };
-    for (const line of rows) {
-      const [key, ...rest] = line.split(' ');
-      const value = rest.join(' ');
-      if (key === 'worktree') row.path = value;
-      else if (key === 'HEAD') row.head = value;
-      else if (key === 'branch') row.branch = value.replace(/^refs\/heads\//, '');
-      else if (key === 'locked') row.locked = true;
-      else if (key === 'prunable') row.prunable = true;
-      else if (key === 'detached') row.detached = true;
-    }
-    return row;
-  });
-}
-type Worktree = ReturnType<typeof parseWorktrees>[number];
-/** A worktree whose block named its path, as git's always does. */
-type Placed = Worktree & { path: string };
-
-/** How long `lsof` may take to list working directories before the answer is UNKNOWN. */
-const LSOF_TIMEOUT_MS = 10_000;
-
-/**
- * This host: available memory and resident processes from /proc, each process's working directory
- * from /proc or, where there is none (macOS), from `lsof`, and a pid's liveness from signal 0.
- */
-export const PROC_HOST = Object.freeze({
-  availableMb() {
-    const match = /^MemAvailable:\s+(\d+)\s+kB/m.exec(readFileSync('/proc/meminfo', 'utf8'));
-    return match ? Math.round(Number(match[1]) / 1024) : null;
-  },
-  processes() {
-    const out = [];
-    for (const pid of readdirSync('/proc').filter(name => /^\d+$/.test(name))) {
-      try {
-        const status = readFileSync(`/proc/${pid}/status`, 'utf8');
-        const rss = /^VmRSS:\s+(\d+)\s+kB/m.exec(status);
-        if (rss) out.push({ pid: Number(pid), name: /^Name:\s+(.*)$/m.exec(status)?.[1] ?? '?', rssMb: Math.round(Number(rss[1]) / 1024) });
-      } catch { /* gone, or another user's */ }
-    }
-    return out;
-  },
-  /** Every readable process's working directory, or null when this host cannot list them. */
-  cwds(): string[] | null {
-    if (existsSync('/proc/self/cwd')) {
-      const out = [];
-      for (const pid of readdirSync('/proc').filter(name => /^\d+$/.test(name))) {
-        try { out.push(readlinkSync(`/proc/${pid}/cwd`)); } catch { /* gone, or another user's */ }
-      }
-      return out;
-    }
-    // A partial listing would call a worktree unused that a process is inside, so anything but a clean exit is no answer.
-    const result = spawnSync('lsof', ['-a', '-d', 'cwd', '-Fn'], { encoding: 'utf8', timeout: LSOF_TIMEOUT_MS, maxBuffer: 64 * 1024 * 1024 });
-    if (result.status !== 0) return null;
-    return result.stdout.split('\n').filter(line => line.startsWith('n')).map(line => line.slice(1));
-  },
-  /** Whether `pid` names a running process; EPERM is a live process another user owns. */
-  alive(pid: number) {
-    try {
-      process.kill(pid, 0);
-      return true;
-    } catch (error) {
-      return (error as NodeJS.ErrnoException).code === 'EPERM';
-    }
-  },
-});
-
 /** Stat fingerprint of the committed winners, to know when a cached compile is stale (as solver.ts keeps it). */
 function winnersKey(root: string) {
   return winnerFiles(root)
@@ -216,23 +98,13 @@ function winnersKey(root: string) {
 export function createLab({ root: rootIn, env = process.env, now = () => new Date(), winners: winnersOverride, promotions: promotionsOverride,
   packs: packsOverride, queue: queueOverride, host = PROC_HOST, catalogCommands = CATALOG_COMMANDS }: {root: string, env?: NodeJS.ProcessEnv, now?: () => Date, winners?: () => Map<string, string>, promotions?: () => ReturnType<typeof queryPromotions>, packs?: () => ReturnType<typeof readPacks>, queue?: () => {jobs: QueueJob[]}, host?: typeof PROC_HOST, catalogCommands?: readonly string[]}) {
   const root = resolve(rootIn);
-  const cleanEnv = withoutGit(env);
+  const context = labContext({ root, env, now, host });
+  const { cleanEnv, git, mainRoot } = context;
+  const { queue, leases, windows } = phoneState(context, queueOverride);
+  const runDoctor = ({ catalog = true }: { catalog?: boolean } = {}) => doctorChecks(context, queue, { catalog, catalogCommands });
 
-  // --- reading git and the host ------------------------------------------------------------------
+  // --- reading git ------------------------------------------------------------------------------
 
-  function git(args: string[], options?: { cwd?: string, allowFail?: false }): string;
-  function git(args: string[], options: { cwd?: string, allowFail: boolean }): string | null;
-  function git(args: string[], { cwd = root, allowFail = false }: { cwd?: string, allowFail?: boolean } = {}) {
-    const result = spawnSync('git', args, { cwd, encoding: 'utf8', env: cleanEnv, maxBuffer: 256 * 1024 * 1024 });
-    if (result.status === 0) return result.stdout;
-    if (allowFail) return null;
-    throw new Error(`git ${args.join(' ')}: ${(result.stderr || result.error?.message || '').trim()}`);
-  }
-  const mainRoot = () => mainCheckout(root);
-  const stateDir = () => (env.CUE_HELPER_STATE_DIR ? resolve(env.CUE_HELPER_STATE_DIR) : join(mainRoot(), 'captures/cue-helper'));
-  const lockDir = () => (env.CUE_HELPER_LOCK_DIR ? resolve(env.CUE_HELPER_LOCK_DIR) : join(stateDir(), 'locks'));
-  const windowDir = () => (env.FNAF_WINDOW_DIR ? resolve(env.FNAF_WINDOW_DIR) : join(mainRoot(), 'artifacts/overnight-windows'));
-  const pushGateBase = () => env.FNAF2_PUSH_GATE_TMP ?? join(env.HOME ?? homedir(), '.cache/fnaf2-pushgate-tmp');
   const sessionPath = () => join(root, SESSION_FILE);
   const commonDir = () => git(['rev-parse', '--path-format=absolute', '--git-common-dir']).trim();
 
@@ -323,208 +195,6 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
       rule: `an ADR under docs/decisions/ whose Status line says proposed is pending until a commit that touches it carries the owner's override`,
       pending: rows.filter(row => !row.accepted), acceptedSinceProposed: rows.filter(row => row.accepted),
     };
-  }
-
-  // --- the phone's host-side state ---------------------------------------------------------------
-
-  function queueJobs() {
-    if (queueOverride) return queueOverride();
-    const result = spawnSync('python3', [join(root, 'apps/lab/companion-queue.py'), 'list', '--json'],
-      { cwd: root, encoding: 'utf8', env: cleanEnv, timeout: 30000 });
-    if (result.status !== 0) throw new Error((result.stderr || result.error?.message || 'no output').trim().split('\n').at(-1));
-    // What companion-queue.py list --json prints.
-    return JSON.parse(result.stdout) as { jobs: QueueJob[] };
-  }
-
-  function queue(): QueueView | Unknown {
-    let jobs: QueueJob[];
-    try { jobs = queueJobs().jobs; } catch (error) { return unknown(`the queue could not be listed: ${(error as Error).message}`); }
-    const at = now();
-    const byState: Record<string, number> = {};
-    for (const job of jobs) byState[job.state] = (byState[job.state] ?? 0) + 1;
-    const age = (job: QueueJob) => (job.createdAt ? hoursBetween(new Date(job.createdAt), at) : null);
-    const pending = jobs.filter(job => job.state === 'PENDING').map(job => ({ id: job.id, kind: job.kind, night: job.night ?? null,
-      winner: job.winner ?? null, createdAt: job.createdAt, ageHours: age(job), stale: (age(job) ?? 0) > STALE_PENDING_HOURS }));
-    const running = jobs.filter(job => job.state === 'RUNNING').map(job => ({ id: job.id, kind: job.kind, startedAt: job.startedAt ?? null }));
-    return { jobs: jobs.length, byState, pending, running, staleAfterHours: STALE_PENDING_HOURS, jobsRaw: jobs };
-  }
-
-  function leases() {
-    const dir = lockDir();
-    const rows = existsSync(dir) ? readdirSync(dir).filter(name => /^device-.*\.lock$/.test(name)).sort().map(name => {
-      const owner = lockOwner(join(dir, name));
-      if (!owner || !host.alive(owner.pid)) return { file: name, held: false, pid: null, host: null, acquiredAt: null };
-      return { file: name, held: true, pid: owner.pid, host: owner.host,
-        acquiredAt: owner.acquiredAt === null ? null : iso(new Date(owner.acquiredAt * 1000)) };
-    }) : [];
-    return { dir, leases: rows, held: rows.filter(row => row.held).length,
-      rule: 'a lease is held while the pid its owner record names is alive; the record is read, the lock is never taken' };
-  }
-
-  function windows() {
-    const dir = windowDir();
-    const records = existsSync(dir) ? readdirSync(dir).flatMap(name => {
-      // What overnight-window.py wrote.
-      try { return [{ id: name, ...(readJson(join(dir, name, 'window.json')) as WindowRecord) }]; } catch { return []; }
-    }) : [];
-    const rows = records.map(record => ({ id: record.id, openedAt: record.window?.openedAt ?? null, closedAt: record.window?.closedAt ?? null,
-      outcome: record.outcome ?? null, reason: record.reason ?? null, summary: record.morning?.summary ?? null,
-      nights: record.morning?.nights ?? [] })).sort((a, b) => String(a.openedAt).localeCompare(String(b.openedAt)));
-    const restoreDir = join(stateDir(), 'overnight-window');
-    const pendingRestores = existsSync(restoreDir) ? readdirSync(restoreDir).filter(name => name.startsWith('pending-restore-')) : [];
-    return { dir, records: rows.length, last: rows.at(-1) ?? null, all: rows, pendingRestores };
-  }
-
-  // --- doctor ------------------------------------------------------------------------------------
-
-  const inUse = (cwds: readonly string[], path: string) => cwds.some(cwd => cwd === path || cwd.startsWith(`${path}/`));
-
-  function catalogDrift(sha: string): { ok: boolean | Unknown, files?: string[] } {
-    const dir = mkdtempSync(join(tmpdir(), 'fnaf-lab-catalog-'));
-    rmSync(dir, { recursive: true, force: true });
-    try {
-      git(['worktree', 'add', '--detach', dir, sha]);
-    } catch (error) { return { ok: unknown(`a worktree at ${sha.slice(0, 7)} could not be built: ${(error as Error).message}`) }; }
-    try {
-      if (existsSync(join(root, 'node_modules')) && existsSync(join(root, 'package-lock.json')) && existsSync(join(dir, 'package-lock.json')))
-        linkDependencies(dir, root);
-      for (const command of catalogCommands) {
-        const result = spawnSync('sh', ['-c', laneCommand(command)], { cwd: dir, encoding: 'utf8', env: cleanEnv });
-        if (result.status !== 0)
-          return { ok: unknown(`${command} failed in a clean worktree at ${sha.slice(0, 7)}: ${`${result.stdout}${result.stderr}`.trim().split('\n').at(-1)}`) };
-      }
-      const changed = lines(git(['status', '--porcelain', '--', ...GENERATED_DIRS], { cwd: dir })).map(line => line.slice(3));
-      return { ok: changed.length === 0, files: changed };
-    } finally {
-      git(['worktree', 'remove', '--force', dir], { allowFail: true });
-      rmSync(dir, { recursive: true, force: true });
-    }
-  }
-
-  function runDoctor({ catalog = true }: {catalog?: boolean} = {}) {
-    const checks: Check[] = [];
-    const findings: { id: string, finding: string, remedy: string }[] = [];
-    const check = (id: string, what: string, ok: boolean | Unknown, detail: unknown = null) => { checks.push({ id, what, ok, ...(detail ? { detail } : {}) }); };
-    const find = (id: string, finding: string, remedy: string) => findings.push({ id, finding, remedy });
-    const at = now();
-
-    // Hooks.
-    const hooksPath = git(['config', '--get', 'core.hooksPath'], { allowFail: true })?.trim() || null;
-    const hooksOk = !!hooksPath && existsSync(join(resolve(root, hooksPath), 'commit-msg'));
-    check('hooks-path', 'core.hooksPath names the repository hooks', hooksOk, hooksPath);
-    if (!hooksPath) find('hooks-path', 'core.hooksPath is unset: git runs neither the commit-msg hook nor the pre-push gate',
-      'git config core.hooksPath .githooks');
-    else if (!hooksOk) find('hooks-path', `core.hooksPath is ${hooksPath}, which holds no commit-msg hook`, 'git config core.hooksPath .githooks');
-
-    // Stale PENDING queue jobs.
-    const jobs = queue();
-    if (isUnknown(jobs)) check('stale-pending', `no PENDING queue job is older than ${STALE_PENDING_HOURS} h`, jobs);
-    else {
-      const stale = jobs.pending.filter(job => job.stale);
-      check('stale-pending', `no PENDING queue job is older than ${STALE_PENDING_HOURS} h`, stale.length === 0);
-      for (const job of stale) find('stale-pending', `queue job ${job.id} (${job.kind}) has been PENDING for ${job.ageHours} h`,
-        `${QUEUE_TOOL} cancel ${job.id} --reason stale`);
-    }
-
-    // Worktrees: push-gate's orphans, and idle agent worktrees.
-    let cwds: string[] | null;
-    try { cwds = host.cwds(); } catch { cwds = null; }
-    const noCwds = unknown('this host lists no process working directories, so no worktree can be called unused');
-    // A worktree whose directory is gone has no process inside; any other is unused only if the listing says so.
-    const unused = (path: string) => (!existsSync(path) ? true : cwds === null ? null : !inUse(cwds, path));
-    const worktrees = parseWorktrees(git(['worktree', 'list', '--porcelain']) ?? '');
-    const base = pushGateBase();
-    const gateDirs = existsSync(base) ? readdirSync(base).filter(name => name.startsWith('fnaf2-push-gate-')).map(name => join(base, name)) : [];
-    const gateRegistered = worktrees.filter((row): row is Placed => Boolean(row.path?.startsWith(`${base}/`)));
-    const gatePaths = [...new Set([...gateDirs, ...gateRegistered.map(row => row.path)])].sort();
-    const gateOrphans = gatePaths.filter(path => unused(path) === true);
-    check('push-gate-worktrees', `no orphaned push-gate worktree under ${base}`,
-      gatePaths.some(path => unused(path) === null) ? noCwds : gateOrphans.length === 0);
-    for (const path of gateOrphans) {
-      const registered = gateRegistered.find(row => row.path === path);
-      find('push-gate-worktrees', `${path} is a push-gate worktree no running process is inside`,
-        registered ? (existsSync(path) ? `git worktree remove --force ${path}` : 'git worktree prune') : `rm -r ${path}`);
-    }
-    const agents = worktrees.filter((row): row is Placed => Boolean(row.path && /\/\.claude\/worktrees\/agent-[^/]+$/.test(row.path) && resolve(row.path) !== root));
-    const idle: { row: (typeof agents)[number], hours: number | null }[] = [];
-    let undecided = false;
-    for (const row of agents) {
-      if (row.locked) continue;
-      if (row.prunable || !existsSync(row.path)) { idle.push({ row, hours: null }); continue; }
-      let admin: string | null = null;
-      try { admin = resolve(row.path, readFileSync(join(row.path, '.git'), 'utf8').trim().replace(/^gitdir:\s*/, '')); } catch { admin = null; }
-      const dirOf = admin;
-      const times = [row.path, ...(dirOf ? ['HEAD', 'index', 'logs/HEAD'].map(name => join(dirOf, name)) : [])].map(mtime)
-        .filter((time): time is Date => Boolean(time));
-      const last = new Date(Math.max(...times.map(time => time.getTime())));
-      const hours = hoursBetween(last, at);
-      if (hours <= AGENT_WORKTREE_IDLE_HOURS) continue;
-      const free = unused(row.path);
-      if (free === null) undecided = true;
-      else if (free) idle.push({ row, hours });
-    }
-    check('agent-worktrees', `no unlocked agent worktree idle over ${AGENT_WORKTREE_IDLE_HOURS} h`, undecided ? noCwds : idle.length === 0);
-    for (const { row, hours } of idle)
-      find('agent-worktrees', hours === null ? `${row.path} is registered but gone (prunable)`
-        : `${row.path} (${row.branch ?? 'detached'}) is unlocked, idle ${hours} h, and no process is inside`,
-      hours === null ? 'git worktree prune' : `git worktree remove ${row.path}   (git refuses a worktree that holds changes; inspect it then)`);
-
-    // Workspace links.
-    const modules = join(root, 'node_modules');
-    const stale = existsSync(join(modules, '@fnaf2-1020'));
-    const missing = !existsSync(join(modules, '@sixam'));
-    check('node-modules', 'node_modules links the @sixam scope and not the retired @fnaf2-1020 one', !stale && !missing);
-    if (stale) find('node-modules', 'node_modules still links the retired @fnaf2-1020 scope', 'npm ci');
-    if (missing) find('node-modules', 'node_modules has no @sixam scope, so the workspaces do not resolve', 'npm ci');
-
-    // The local device profile.
-    const profiles = profilePaths({ env, root });
-    const profile = profiles.find(path => existsSync(path)) ?? null;
-    check('local-profile', `a local device profile (${PROFILE_PATH}) exists`, Boolean(profile), profile);
-    if (!profile) find('local-profile', `no local device profile: looked at ${profiles.join(', ')}`,
-      'node packages/play/bin/phone/local-profile.ts set <serial>   (`adb devices -l` lists it; the file is gitignored)');
-
-    // Generated-catalog drift at HEAD, in a clean worktree like push-gate's.
-    const sha = git(['rev-parse', '--verify', '--quiet', 'HEAD'], { allowFail: true })?.trim();
-    if (!catalog) check('catalog-drift', 'the generated catalogs at HEAD match what the catalog and chronicle regenerate',
-      unknown('not computed here: it builds a temporary worktree (npm run lab -- doctor)'));
-    else if (!sha) check('catalog-drift', 'the generated catalogs at HEAD match what the catalog and chronicle regenerate', unknown('no HEAD'));
-    else {
-      const drift = catalogDrift(sha);
-      check('catalog-drift', 'the generated catalogs at HEAD match what the catalog and chronicle regenerate', drift.ok,
-        drift.files?.length ? drift.files : null);
-      // A drift verdict carries the files it found.
-      if (drift.ok === false) find('catalog-drift', `HEAD ${sha.slice(0, 7)}'s generated catalogs are stale: ${(drift.files as string[]).join(', ')}`,
-        `${CATALOG_COMMANDS.join(' && ')}, then commit ${GENERATED_DIRS.join(' and ')}`);
-    }
-
-    // Memory.
-    let available: number | null = null;
-    let heavy: ReturnType<typeof host.processes> = [];
-    try {
-      available = host.availableMb();
-      heavy = host.processes().filter(item => item.rssMb >= HEAVY_RSS_MB).sort((a, b) => b.rssMb - a.rssMb);
-    } catch { available = null; }
-    if (available === null) check('memory', `at least ${MEMORY_FLOOR_MB} MB available, or no heavy process`, unknown('/proc/meminfo is not readable here'));
-    else {
-      const low = available < MEMORY_FLOOR_MB && heavy.length > 0;
-      check('memory', `at least ${MEMORY_FLOOR_MB} MB available, or no process over ${HEAVY_RSS_MB} MB`, !low,
-        { availableMb: available, heavy: heavy.slice(0, 3) });
-      if (low) find('memory', `${available} MB available while ${heavy.slice(0, 3).map(item => `${item.name} (pid ${item.pid}, ${item.rssMb} MB)`).join(', ')} run`,
-        'wait for it to finish, or run heavy commands one at a time under ' +
-        'systemd-run --user --scope -q -p MemoryMax=2500M -p MemorySwapMax=3G -- <command>');
-    }
-
-    // Winners that live outside git.
-    const untracked = lines(git(['ls-files', '--others', '--exclude-standard', '--', ':(glob)**/*-winner.json']));
-    const ignored = lines(git(['ls-files', '--others', '--ignored', '--exclude-standard', '--',
-      ':(glob)artifacts/**/*-winner.json', `:(glob)${BINDINGS_DIR}/*/*-winner.json`]));
-    const loose = [...new Set([...untracked, ...ignored])].sort();
-    check('untracked-winner', 'every *-winner.json is tracked', loose.length === 0);
-    for (const file of loose) find('untracked-winner', `${file} is not tracked: it cannot be re-run on another machine`,
-      `commit it as ${BINDINGS_DIR}/<game>/campaign-night<N>-<name>-winner.json in the commit that uses it (CLAUDE.md; test-fact-register.ts)`);
-
-    return { checks, findings };
   }
 
   // --- the verbs ---------------------------------------------------------------------------------

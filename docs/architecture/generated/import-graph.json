@@ -105,10 +105,35 @@
       ]
     },
     {
-      "file": "apps/desktop/src/lab.ts",
+      "file": "apps/desktop/src/lab-doctor.ts",
       "imports": [
         "../../../packages/play/bin/phone/local-profile.ts",
         "../../../tools/push-gate.ts",
+        "./lab-host.ts",
+        "@sixam/kernel",
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path"
+      ]
+    },
+    {
+      "file": "apps/desktop/src/lab-host.ts",
+      "imports": [
+        "../../../packages/play/bin/phone/local-profile.ts",
+        "@sixam/kernel",
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path"
+      ]
+    },
+    {
+      "file": "apps/desktop/src/lab.ts",
+      "imports": [
+        "../../../tools/push-gate.ts",
+        "./lab-doctor.ts",
+        "./lab-host.ts",
         "@sixam/kernel",
         "@sixam/review/consequence",
         "@sixam/review/evidence-pack",
