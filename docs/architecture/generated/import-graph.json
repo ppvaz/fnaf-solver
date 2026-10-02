@@ -2436,6 +2436,7 @@
         "../../../source/recompile/model-draw-trace.ts",
         "./rebuild-options-census.ts",
         "./schedule-to-input.ts",
+        "@sixam/source/fnaf2",
         "node:crypto",
         "node:fs",
         "node:path",

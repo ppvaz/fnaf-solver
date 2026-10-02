@@ -360,11 +360,11 @@ export function maskPresses(queue) {
 // ---------------------------------------------------------------- trace reading and window codes
 
 /** `# overlap F T v...` lines of the first visit to `frame`: tick -> [1 | 0 | null], in WATCH.overlap order. */
-export function overlapSeries(text, frame) {
-  let names = null;
+export function overlapSeries(text: string, frame: number) {
+  let names = null as string[] | null;
   let visit = -1;
-  let current = null;
-  const series = new Map();
+  let current = null as number | null;
+  const series = new Map<number, (number | null)[]>();
   for (const line of text.split('\n')) {
     const seeded = /^# frame (\d+) seeded /.exec(line);
     if (seeded) { current = Number(seeded[1]); if (current === frame) visit += 1; }

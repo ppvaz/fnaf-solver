@@ -34,6 +34,14 @@ const CONTINUE_ROWS = ['1 301 down 0 512.0 460.0', '1 304 up 0'];
 
 type Event = { type: string, control?: string, kind?: string, gapMs?: number, point?: { x: number, y: number },
   hostMs: number, firstReleasedHostMs?: number };
+/** The predeclaration, as the scan and the decision read it. */
+interface Predeclaration {
+  tool: { path: string, sha256: string }, sources: readonly { path: string, sha256: string }[];
+  run: { dir: string }, mapping: { pressMs: number, releaseMs: number }, rows: { sha256: string };
+  save: { path: string }, maxTicks: number, rollTicks: readonly number[];
+  prefix: readonly { update: number, before: number, withFive: boolean, heard: string }[];
+  validity: { seeds: readonly number[] }, decisionRule: { ticks: string, deathWindow: [number, number] };
+}
 
 /** A fnaf4-run-v1 night's touches as CHOWDREN_INPUT rows: Continue on the title, then the level's contacts. */
 export function phoneRows(runDir: string, pressMs: number, releaseMs: number) {
@@ -46,10 +54,11 @@ export function phoneRows(runDir: string, pressMs: number, releaseMs: number) {
   for (const e of events) {
     if (e.type === 'input.requested') { asked = e; continue; }
     if (e.type !== 'input.released' || !asked || asked.control === 'continue') continue;
-    const p = asked.point;
+    // A level touch's request names its point; a double's names its gap, and its release the first contact's.
+    const p = asked.point as { x: number, y: number };
     const at = `${(p.x / SCREEN_PER_WINDOW.x).toFixed(1)} ${(p.y / SCREEN_PER_WINDOW.y).toFixed(1)}`;
     const contacts = asked.kind === 'double'
-      ? [[asked.hostMs, e.firstReleasedHostMs], [e.firstReleasedHostMs + asked.gapMs, e.hostMs]]
+      ? [[asked.hostMs, e.firstReleasedHostMs as number], [(e.firstReleasedHostMs as number) + (asked.gapMs as number), e.hostMs]]
       : [[asked.hostMs, e.hostMs]];
     for (const [down, up] of contacts) rows.push(`3 ${tick(down + pressMs)} down 0 ${at}`, `3 ${tick(up + releaseMs)} up 0`);
     asked = null;
@@ -94,7 +103,7 @@ export function readNight(stillJsonl: string, rollTicks: readonly number[]) {
   return { ticks: rollTicks.map((t) => side(at.get(t))).join(''), dead: rows.some((r) => r.dead), gameoverAt: over ? over.t : null };
 }
 
-type Row = { seed: number, kept?: boolean, error?: string, ticks?: string, gameoverAt?: number | null, prefixOk?: boolean };
+type Row = { seed: number, kept?: boolean, error?: string, ticks?: string, dead?: boolean, gameoverAt?: number | null, prefixOk?: boolean };
 /** The predeclared rule over the scan's rows (the kept seeds' and the validity seeds'). */
 export function decide(rule: { ticks: string, deathWindow: [number, number] }, rows: readonly Row[]) {
   const stage2 = rows.filter((r) => r.kept && !r.error);
@@ -118,7 +127,7 @@ function args(argv: string[]) {
   return o;
 }
 
-function runSeed(pre, o, rowsPath: string, seed: number) {
+function runSeed(pre: Predeclaration, o: Readonly<Record<string, string>>, rowsPath: string, seed: number) {
   const dir = join(o.out, `s${seed}`);
   const pilot = [join(HERE, 'pilot/pilot.ts'), '--game', 'fnaf4', '--run', dir, '--binary', o.binary, '--assets', o.assets,
     '--save', resolve(ROOT, pre.save.path), '--policy', 'still', '--knobs', JSON.stringify({ input: rowsPath }),
@@ -129,7 +138,7 @@ function runSeed(pre, o, rowsPath: string, seed: number) {
     child.stdout.on('data', (d) => { out += d; });
     child.stderr.on('data', (d) => { err += d; });
     child.on('close', (code) => {
-      let row;
+      let row: Row;
       try {
         const night = readNight(readFileSync(join(dir, 'still.jsonl'), 'utf8'), pre.rollTicks);
         // The prefix the stage-1 rule read must be this seed's own: its draws before each prefix roll.
@@ -146,9 +155,9 @@ function runSeed(pre, o, rowsPath: string, seed: number) {
   });
 }
 
-async function scan(o) {
+async function scan(o: Readonly<Record<string, string>>) {
   const preBytes = readFileSync(o.predeclaration);
-  const pre = JSON.parse(preBytes.toString('utf8'));
+  const pre: Predeclaration = JSON.parse(preBytes.toString('utf8'));
   // This tool, the pilot and its policy decide every row: each must be the predeclared file, and stay so (a seed
   // spawns a fresh pilot that reads them again).
   const pinned = [{ path: pre.tool.path, sha256: pre.tool.sha256 }, ...pre.sources];
@@ -160,7 +169,7 @@ async function scan(o) {
   if (sha256(readFileSync(rowsPath)) !== pre.rows.sha256) throw new Error('scan: the rows are not the predeclared ones');
   const kept = prefilter(pre.prefix);
   const resultsPath = join(o.out, 'results.jsonl');
-  const done = new Set(existsSync(resultsPath) ? readFileSync(resultsPath, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l).seed) : []);
+  const done = new Set<number>(existsSync(resultsPath) ? readFileSync(resultsPath, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l).seed) : []);
   const todo = [...kept, ...pre.validity.seeds].filter((s) => !done.has(s));
   console.log(`stage 1: ${kept.length} of 65,536 seeds kept; stage 2: ${todo.length} to replay`);
   let next = 0;
@@ -184,8 +193,8 @@ function main(argv: string[]) {
   }
   if (argv[0] === 'scan') { scan(o).catch((e) => { console.error(e.stack ?? String(e)); process.exit(1); }); return; }
   if (argv[0] === 'decide') {
-    const pre = JSON.parse(readFileSync(o.predeclaration, 'utf8'));
-    const rows = readFileSync(o.results, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l));
+    const pre: Predeclaration = JSON.parse(readFileSync(o.predeclaration, 'utf8'));
+    const rows: Row[] = readFileSync(o.results, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l));
     const result = { schema: SCHEMA, ...decide(pre.decisionRule, rows) };
     if (o.out) writeFileSync(o.out, `${JSON.stringify(result, null, 1)}\n`);
     console.log(JSON.stringify(result));

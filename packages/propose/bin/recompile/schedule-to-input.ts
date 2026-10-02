@@ -25,6 +25,7 @@
 //
 // Content-free: control names, times and window points only. MODEL_ONLY input; no device claim.
 import { createHash } from 'node:crypto';
+import type { BinaryLike } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -40,62 +41,87 @@ export const DEFAULT_PROFILE = 'packages/play/profiles/fnaf2/moto-g56/hid-mediap
 export const NATIVE = Object.freeze([2400, 1080]);
 export const WINDOW = Object.freeze([1024, 768]);
 
-const sha256 = (value) => createHash('sha256').update(value).digest('hex');
-export const frameOf = (ms) => Math.round(ms * FPS / 1000);
+/** One authored plan row, as minus-toys-plan.ts's schedule() takes it. */
+type PlanRow = NonNullable<NonNullable<Parameters<typeof schedule>[0]>['opening']>[number];
+/** A queued Sim press or release at its frame, as schedule() returns them. */
+type QueuedAction = ReturnType<typeof schedule>[number];
+/** One contact of the expanded schedule, in ms and in 60 Hz updates, and the row it came from. */
+export interface Contact {
+  control: string, downMs: number, upMs: number, downFrame: number, upFrame: number, cycle: string, index: number;
+}
+/** A device profile, as its control points are read from it. */
+export interface ProfileView {
+  readonly controlMap?: Readonly<Record<string, unknown>>, readonly geometry?: unknown;
+  readonly viewScroll?: { readonly windowWidth?: number, readonly windowHeight?: number };
+}
+/** The control points in window pixels, by profile key. */
+export type ControlPoints = Readonly<Record<string, readonly [number, number]>>;
+/** A harness row: a touch going down at its point, or the pointer coming up. */
+export interface HarnessRow { tick: number, op: 'down' | 'up', pointer: number, x?: number, y?: number, control: string }
+
+const sha256 = (value: BinaryLike) => createHash('sha256').update(value).digest('hex');
+export const frameOf = (ms: number) => Math.round(ms * FPS / 1000);
 
 /** The profile's control points in window pixels, one per control name the schedules use. */
-export function controlPoints(profile) {
+export function controlPoints(profile: ProfileView): ControlPoints {
   if (!profile?.controlMap) throw new Error('profile has no controlMap');
   const scroll = profile.viewScroll ?? {};
   if (scroll.windowWidth !== WINDOW[0] || scroll.windowHeight !== WINDOW[1] || !String(profile.geometry).includes(`${NATIVE[0]}x${NATIVE[1]}`))
     throw new Error(`profile geometry is not a ${NATIVE.join('x')} native frame over a ${WINDOW.join('x')} window`);
-  const points = {};
+  const points: Record<string, [number, number]> = {};
   for (const [control, point] of Object.entries(profile.controlMap)) {
-    if (!Number.isFinite((point as any)?.x) || !Number.isFinite((point as any)?.y)) continue;
-    points[control] = [Math.round((point as any).x * WINDOW[0] / NATIVE[0]), Math.round((point as any).y * WINDOW[1] / NATIVE[1])];
+    // A control point is { x, y } in native pixels; Number.isFinite skips anything else.
+    const { x, y } = (point ?? {}) as { readonly x: number, readonly y: number };
+    if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+    points[control] = [Math.round(x * WINDOW[0] / NATIVE[0]), Math.round(y * WINDOW[1] / NATIVE[1])];
   }
   return points;
 }
 
 // A plan control's profile key (cam9 -> cam:9) and its Sim action (as minus-toys-plan.ts actionFor).
-const profileKey = (control) => (/^cam\d+$/.test(control) ? `cam:${control.slice(3)}` : control);
-export const simAction = (control) => (/^cam\d+$/.test(control) ? `cam:${control.slice(3)}`
+const profileKey = (control: string) => (/^cam\d+$/.test(control) ? `cam:${control.slice(3)}` : control);
+export const simAction = (control: string) => (/^cam\d+$/.test(control) ? `cam:${control.slice(3)}`
   : control === 'cameraFeedLight' || control === 'hallLight' ? MODEL_CONTEXT_LIGHT : control);
 
 /** The same measured intervals used by the harness, expressed in the source model's actions. */
-export const modelContacts = (contacts) => contacts.map(({ control, downFrame, upFrame }) =>
+export const modelContacts = (contacts: readonly Contact[]) => contacts.map(({ control, downFrame, upFrame }) =>
   ({ action: simAction(control), downFrame, upFrame }));
 
 /**
  * Contacts and the Sim queue from one expansion of opening/loop/finish rows (schedule()'s loop bounds
  * and arithmetic, shift 0). A contact is { control, downMs, upMs, downFrame, upFrame, cycle, index }.
  */
-export function expandRows({ opening, loop, finish = [], periodMs, loopStartMs = 0, untilMs = 420000, epochMs = 0 }) {
-  const contacts = [];
-  const queue = [];
-  const contact = (control, downMs, upMs, cycle, index) => {
+export function expandRows({ opening, loop, finish = [], periodMs, loopStartMs = 0, untilMs = 420000, epochMs = 0 }: {
+  opening: readonly PlanRow[], loop: readonly PlanRow[], finish?: readonly PlanRow[], periodMs: number;
+  loopStartMs?: number, untilMs?: number, epochMs?: number,
+}) {
+  const contacts: Contact[] = [];
+  const queue: QueuedAction[] = [];
+  const contact = (control: string, downMs: number, upMs: number, cycle: string, index: number) => {
     const downFrame = frameOf(downMs);
     const upFrame = frameOf(upMs);
     if (upFrame <= downFrame) throw new Error(`${cycle}[${index}] ${control}: a ${upMs - downMs} ms contact is shorter than one ${FPS} Hz update`);
     contacts.push({ control, downMs, upMs, downFrame, upFrame, cycle, index });
   };
-  const add = (cycle, index, base, row) => {
-    const [at, kind, a, b, cc] = row;
-    const when = base + at + epochMs;
-    if (kind === 'tap') {
+  const add = (cycle: string, index: number, base: number, row: PlanRow) => {
+    const when = base + row[0] + epochMs;
+    if (row[1] === 'tap') {
+      const [, , a, b] = row;
       queue.push([frameOf(when), 'press', simAction(a)]);
       contact(a, when, when + b, cycle, index);
-    } else if (kind === 'hold' || kind === 'hall') {
-      const control = kind === 'hall' ? 'hallLight' : a;
-      const duration = kind === 'hall' ? a : b;
+    } else if (row[1] === 'hold' || row[1] === 'hall') {
+      const control = row[1] === 'hall' ? 'hallLight' : row[2];
+      const duration = row[1] === 'hall' ? row[2] : row[3];
       queue.push([frameOf(when), 'press', simAction(control)], [frameOf(when + duration), 'release', simAction(control)]);
       contact(control, when, when + duration, cycle, index);
-    } else if (kind === 'camdrop') {
+    } else if (row[1] === 'camdrop') {
+      const [, , a, b, cc] = row;
       queue.push([frameOf(when), 'press', MODEL_CONTEXT_LIGHT], [frameOf(when + a), 'press', 'monitor'],
         [frameOf(when + a + b + cc), 'release', MODEL_CONTEXT_LIGHT]);
       contact('cameraFeedLight', when, when + a + b + cc, cycle, index);
       contact('monitor', when + a, when + a + b, cycle, index);
-    } else throw new Error(`${cycle}[${index}]: row kind ${kind} has no harness form`);
+      // A row of another kind: the rows come from JSON as well as from build().
+    } else throw new Error(`${cycle}[${index}]: row kind ${(row as PlanRow)[1]} has no harness form`);
   };
   opening.forEach((row, i) => add('opening', i, 0, row));
   for (let base = loopStartMs; base < untilMs; base += periodMs) loop.forEach((row, i) => add('loop', i, base, row));
@@ -107,30 +133,34 @@ export function expandRows({ opening, loop, finish = [], periodMs, loopStartMs =
  * The schedule a winner's gate replays on `night`, as contacts and the Sim queue. Refuses a strategy
  * or knob whose replay presses anything the schedule does not (minus-toys only; reactiveBB off).
  */
-export function winnerSchedule(winner, night) {
+export function winnerSchedule(winner: unknown, night: number) {
   const valid = validateWinner(winner);
   if (!valid.nights.includes(night)) throw new Error(`the binding does not name night ${night}`);
   if (valid.strategy !== 'minus-toys') throw new Error(`strategy ${valid.strategy}: only minus-toys schedules have a harness form yet`);
   const emitted = STRATEGY_REGISTRY[valid.strategy].emit(valid, night);
-  const kk = { ...KNOBS0, ...emitted.knobs };
+  // The minus-toys emitter's knobs are the plan's own.
+  const knobs = emitted.knobs as Parameters<typeof build>[0];
+  const kk = { ...KNOBS0, ...knobs };
   if (kk.reactiveBB) throw new Error('reactiveBB adds presses the schedule does not hold; no harness form');
   const epochMs = (valid.anchorEpochMs ?? 0) + (valid.phaseOffsetMs ?? 0);
-  const rows = build(emitted.knobs);
+  const rows = build(knobs);
   const bounds = { periodMs: kk.minimal ? kk.minPeriodMs : kk.loopPeriodMs, loopStartMs: kk.minimal ? kk.minLoopStartMs : 0,
     untilMs: kk.minimal ? kk.minStopAtMs : 420000, epochMs };
   const expanded = expandRows({ ...rows, ...bounds });
   const replayQueue = schedule({ ...rows, ...bounds });
   if (JSON.stringify(replayQueue) !== JSON.stringify(expanded.queue)) throw new Error('the expansion does not reproduce the replay schedule');
-  return { strategy: valid.strategy, night, epochMs, ...bounds, emitted, ...expanded };
+  const { periodMs, loopStartMs, untilMs } = bounds;
+  return { strategy: valid.strategy, night, epochMs, periodMs, loopStartMs, untilMs, emitted, ...expanded };
 }
 
 /**
  * Harness rows on `frame` for the contacts: { rows: [{ tick, op, pointer, x, y, control }], sameTickEdges }.
  * Releases sort before presses on one tick, so a freed pointer can be taken again.
  */
-export function harnessRows(contacts, points, { frame = OFFICE_FRAME } = {}) {
-  const active = new Map();   // pointer -> release frame
-  const edges = [];
+export function harnessRows(contacts: readonly Pick<Contact, 'control' | 'downFrame' | 'upFrame'>[], points: ControlPoints,
+  { frame = OFFICE_FRAME } = {}) {
+  const active = new Map<number, number>();   // pointer -> release frame
+  const edges: HarnessRow[] = [];
   for (const c of contacts) {
     const point = points[profileKey(c.control)];
     if (!point) throw new Error(`control ${c.control} is absent from the profile's controlMap`);
@@ -143,7 +173,7 @@ export function harnessRows(contacts, points, { frame = OFFICE_FRAME } = {}) {
   }
   const rank = { up: 0, down: 1 };
   edges.sort((a, b) => a.tick - b.tick || rank[a.op] - rank[b.op] || a.pointer - b.pointer);
-  const byTick = new Map();
+  const byTick = new Map<number, HarnessRow[]>();
   for (const e of edges) byTick.set(e.tick, [...(byTick.get(e.tick) ?? []), e]);
   const sameTickEdges = [...byTick].filter(([, list]) => list.filter((e) => e.op === 'down').length > 1 ||
     (list.some((e) => e.op === 'down') && list.some((e) => e.op === 'up')))
@@ -151,12 +181,15 @@ export function harnessRows(contacts, points, { frame = OFFICE_FRAME } = {}) {
   return { frame, rows: edges, sameTickEdges };
 }
 
-export function formatRows({ frame, rows }) {
+export function formatRows({ frame, rows }: { frame: number, rows: readonly HarnessRow[] }) {
   return rows.map((r) => (r.op === 'down' ? `${frame} ${r.tick} down ${r.pointer} ${r.x} ${r.y}` : `${frame} ${r.tick} up ${r.pointer}`)).join('\n') + '\n';
 }
 
 /** Navigation text (unchanged, never on `frame`) followed by the schedule's office rows. */
-export function harnessInput({ navigation = '', schedule: sched, points, frame = OFFICE_FRAME, header = [] }) {
+export function harnessInput({ navigation = '', schedule: sched, points, frame = OFFICE_FRAME, header = [] }: {
+  navigation?: string, schedule: { readonly contacts: readonly Contact[] }, points: ControlPoints, frame?: number;
+  header?: readonly string[],
+}) {
   if (navigation.split('\n').some((line) => line.trim() && !line.trim().startsWith('#') && Number(line.trim().split(/\s+/)[0]) === frame))
     throw new Error(`navigation input already acts on frame ${frame}`);
   const office = harnessRows(sched.contacts, points, { frame });
@@ -166,7 +199,7 @@ export function harnessInput({ navigation = '', schedule: sched, points, frame =
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const args: any = {};
+  const args: Record<string, string> = {};
   for (let i = 2; i < process.argv.length; i += 2) {
     if (!['--winner', '--night', '--out', '--navigation', '--profile', '--frame'].includes(process.argv[i]) || !process.argv[i + 1]) throw new Error('see usage at top of file');
     args[process.argv[i].slice(2)] = process.argv[i + 1];

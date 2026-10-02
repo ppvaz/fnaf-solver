@@ -73,7 +73,8 @@ export interface Winner {
 /** What a strategy's replay of one seed reports. */
 interface ReplayResult {
   readonly sim: { readonly won: boolean, readonly alive: boolean, readonly death: { readonly reason: string, readonly t?: number } | null,
-    readonly frame: number, readonly events: readonly unknown[] };
+    readonly frame: number, readonly events: readonly unknown[], readonly opts: Readonly<Record<string, unknown>>;
+    readonly rng: { readonly state: number } };
   readonly minBox?: number; readonly splitAt?: number; readonly missed?: number; readonly detections?: number;
 }
 /** One night's emitted plan and the replay that gates it. */

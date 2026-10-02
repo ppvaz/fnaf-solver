@@ -14,6 +14,11 @@ import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Rng, Sim } from '@sixam/source/fnaf2';
 
+/** A Sim input row: before the tick from `frame`, call the Sim's `op` with the action. */
+export type SimRow = readonly [frame: number, op: 'press' | 'release' | 'contactDown' | 'contactUp', action: string];
+/** An explicit semantic contact: the action held from one update to another. */
+export interface ModelContact { readonly action: string, readonly downFrame: number, readonly upFrame: number }
+
 // The Sim measured here must be this checkout's. A git worktree without its own node_modules resolves
 // @sixam/source up the tree to the parent checkout's package, and a record would then describe a model
 // other than the one beside the tool (2026-09-27: a drop-flag replay ran the parent's model, unchanged).
@@ -22,11 +27,12 @@ const MECHANICS = fileURLToPath(import.meta.resolve('@sixam/source/fnaf2'));
  *  rng.ts first, the list records written before the 2026-09-30 splits name, then every other module
  *  plant-model.ts reaches by a relative import, so a later split cannot leave a defining file unhashed. */
 export const MODEL_SOURCES = Object.freeze(modelSources(dirname(MECHANICS)));
-function modelSources(dir) {
+function modelSources(dir: string) {
   const first = ['plant-model.ts', 'config.ts', 'rng.ts'];
   const seen = new Set(['plant-model.ts']);
+  // The loop checks the queue's length.
   for (const queue = ['plant-model.ts']; queue.length;) {
-    for (const [, name] of readFileSync(join(dir, queue.shift()), 'utf8').matchAll(/from '\.\/([\w-]+\.ts)'/g))
+    for (const [, name] of readFileSync(join(dir, queue.shift() as string), 'utf8').matchAll(/from '\.\/([\w-]+\.ts)'/g))
       if (!seen.has(name)) { seen.add(name); queue.push(name); }
   }
   return [...first, ...[...seen].filter((name) => !first.includes(name)).sort()].map((name) => join(dir, name));
@@ -34,7 +40,7 @@ function modelSources(dir) {
 if (relative(join(dirname(fileURLToPath(import.meta.url)), '../../..'), MECHANICS).startsWith('..'))
   throw new Error(`@sixam/source resolves outside this checkout (${MECHANICS}): run npm ci here`);
 
-const flag = (name, dflt) => { const i = process.argv.indexOf(`--${name}`); return i < 0 ? dflt : process.argv[i + 1]; };
+const flag = <T extends string | null>(name: string, dflt: T): string | T => { const i = process.argv.indexOf(`--${name}`); return i < 0 ? dflt : process.argv[i + 1]; };
 const night = Number(flag('night', '1'));
 const seed = Number(flag('seed', '0'));
 const frames = Number(flag('frames', '600'));
@@ -46,16 +52,17 @@ const optionsFile = flag('model-options', null);
 // The model's named research knobs are booleans too.
 const HOOK_CONSTANTS = ['frameMs', 'frameValue5'];
 const RESEARCH_KNOBS = ['footstepFoxy', 'footstepCamMarkers'];
-const validOption = ([key, value]) => ((/^sourced[A-Z]/.test(key) || RESEARCH_KNOBS.includes(key)) && typeof value === 'boolean') ||
-  (HOOK_CONSTANTS.includes(key) && Number.isFinite(value) && value > 0);
+// Number.isFinite passes only a number.
+const validOption = ([key, value]: [string, unknown]) => ((/^sourced[A-Z]/.test(key) || RESEARCH_KNOBS.includes(key)) && typeof value === 'boolean') ||
+  (HOOK_CONSTANTS.includes(key) && Number.isFinite(value) && (value as number) > 0);
 
 /** A model-options JSON object as Sim options: each hook constant becomes its per-frame function. */
-export function simOptionsFrom(modelOptions) {
+export function simOptionsFrom(modelOptions: unknown): Readonly<Record<string, unknown>> {
   if (!modelOptions || Array.isArray(modelOptions) || typeof modelOptions !== 'object' || !Object.entries(modelOptions).every(validOption)) {
     throw new Error('model options must be sourced* or research-knob booleans, or positive frameMs/frameValue5 constants');
   }
   return Object.fromEntries(Object.entries(modelOptions)
-    .map(([key, value]) => [key, HOOK_CONSTANTS.includes(key) ? () => value : value]));
+    .map(([key, value]: [string, unknown]) => [key, HOOK_CONSTANTS.includes(key) ? () => value : value]));
 }
 
 /**
@@ -66,8 +73,8 @@ export function simOptionsFrom(modelOptions) {
 export function measuredClock(frameTimes: number[]) {
   if (!Array.isArray(frameTimes) || !frameTimes.length || !frameTimes.every((ms) => Number.isFinite(ms) && ms > 0))
     throw new Error('frameTimes must be a non-empty list of positive ms');
-  const frameMs = (/** @type {number} */ f) => frameTimes[f - 1] ?? 1000 / 60;
-  return { frameMs, frameValue5: (/** @type {number} */ f) => Math.min(4, frameMs(f) / (1000 / 60)) };
+  const frameMs = (f: number) => frameTimes[f - 1] ?? 1000 / 60;
+  return { frameMs, frameValue5: (f: number) => Math.min(4, frameMs(f) / (1000 / 60)) };
 }
 
 /**
@@ -77,28 +84,35 @@ export function measuredClock(frameTimes: number[]) {
  * `contacts` replaces rows with explicit semantic contacts { action, downFrame, upFrame }.
  */
 export function drawTrace({ night, seed, frames, rows = [], contacts = null, customNight = undefined, modelOptions = {}, observe = null,
-  frameTimes = null }) {
+  frameTimes = null }: {
+  night: number, seed: number, frames: number, rows?: readonly SimRow[], contacts?: readonly ModelContact[] | null;
+  customNight?: Readonly<Record<string, number>>, modelOptions?: unknown, observe?: ((sim: Sim) => unknown) | null;
+  frameTimes?: number[] | null,
+}) {
   if (contacts !== null) {
     if (rows.length) throw new Error('choose contacts or legacy rows, not both');
     rows = contactEdges(contacts);
   }
   const simOptions = simOptionsFrom(modelOptions);
   if (frameTimes) {
-    if (!(modelOptions as any).frameMs) throw new Error('a measured clock replaces the frame-time hook: the options must carry frameMs');
+    // simOptionsFrom accepted the options: an object of options.
+    const given = modelOptions as { readonly frameMs?: unknown, readonly sourcedValue5?: unknown };
+    if (!given.frameMs) throw new Error('a measured clock replaces the frame-time hook: the options must carry frameMs');
     const clock = measuredClock(frameTimes);
     // sourcedValue5 derives global value 5 from frameMs as g1236 writes it (the previous loop's delta over its
     // 32.32 divisor), and refuses a frameValue5 beside it: the measured clock then supplies frameMs alone.
-    Object.assign(simOptions, (modelOptions as any).sourcedValue5 ? { frameMs: clock.frameMs } : clock);
+    Object.assign(simOptions, given.sourcedValue5 ? { frameMs: clock.frameMs } : clock);
   }
   let draws = 0;
   // Sim's constructor spends draws too (for example Foxy's initial readyAt).
   // Instrument its synchronous construction, restoring the shared prototype
   // even on failure, then keep instrumentation local to this one instance.
   const originalNext = Rng.prototype.next;
-  let sim;
+  let sim: Sim;
   try {
-    Rng.prototype.next = function () { draws += 1; return originalNext.call(this); };
-    sim = new Sim({ ...simOptions, night, seed, ...(customNight ? { customNight } : {}) });
+    Rng.prototype.next = function (this: Rng) { draws += 1; return originalNext.call(this); };
+    // Sim options, as simOptionsFrom admitted them.
+    sim = new Sim({ ...simOptions as ConstructorParameters<typeof Sim>[0], night, seed, ...(customNight ? { customNight } : {}) });
   } finally {
     Rng.prototype.next = originalNext;
   }
@@ -112,21 +126,21 @@ export function drawTrace({ night, seed, frames, rows = [], contacts = null, cus
     while (i < rows.length && rows[i][0] <= sim.frame) { const [, op, action] = rows[i++]; sim[op](action); }
     sim.tick();
     out.push({ frame: sim.frame, draws, state: sim.rng.state });
-    if (observed) observed.push(observe(sim));
+    if (observed) observed.push((observe as (sim: Sim) => unknown)(sim));
   }
   return { out, death: sim.death ?? null, won: !!sim.won, ...(observed ? { observed } : {}) };
 }
 
 /** Explicit semantic contacts, with releases before presses on the same update. */
-export function contactEdges(contacts) {
+export function contactEdges(contacts: readonly ModelContact[]): SimRow[] {
   if (!Array.isArray(contacts)) throw new Error('contacts must be an array');
   const rows = contacts.flatMap(({ action, downFrame, upFrame }) => {
     if (typeof action !== 'string' || !action || !Number.isInteger(downFrame) || downFrame < 0 ||
         !Number.isInteger(upFrame) || upFrame <= downFrame)
       throw new Error('a contact needs an action and integer update bounds with upFrame > downFrame >= 0');
-    return [[downFrame, 'contactDown', action], [upFrame, 'contactUp', action]];
+    return [[downFrame, 'contactDown', action] as const, [upFrame, 'contactUp', action] as const];
   }).sort((a, b) => a[0] - b[0] || (a[1] === b[1] ? 0 : a[1] === 'contactUp' ? -1 : 1));
-  const held = new Set();
+  const held = new Set<string>();
   for (const [, edge, action] of rows) {
     if (edge === 'contactDown') {
       if (held.has(action)) throw new Error(`overlapping semantic contacts for ${action} are not supported`);
@@ -138,7 +152,8 @@ export function contactEdges(contacts) {
 
 if (process.argv[1] && process.argv[1].endsWith('model-draw-trace.ts')) {
   const rows = inputs ? readFileSync(inputs, 'utf8').split('\n').filter((l) => l.trim() && !l.startsWith('#'))
-    .map((l) => { const [f, op, action] = l.trim().split(/\s+/); return [Number(f), op, action]; }) : [];
+    // A row names a Sim input method; a misspelt one fails where drawTrace calls it.
+    .map((l): SimRow => { const [f, op, action] = l.trim().split(/\s+/); return [Number(f), op as SimRow[1], action]; }) : [];
   const modelOptions = optionsFile ? JSON.parse(readFileSync(optionsFile, 'utf8')) : {};
   const { out, death, won } = drawTrace({ night, seed, frames, rows, modelOptions });
   console.log(`# model night ${night} seed ${seed}: frame draws state`);

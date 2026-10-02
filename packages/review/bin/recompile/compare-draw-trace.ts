@@ -5,37 +5,48 @@
 //   [--custom-night FILE]   a JSON map of the ten Custom Night dials (AI_DIALS) the rebuild's customize frame set; night 7 only
 // Raw game values, names, source and assets never enter the output.
 import { createHash } from 'node:crypto';
+import type { BinaryLike } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { drawTrace } from '../../../source/recompile/model-draw-trace.ts';
+import type { ModelContact, SimRow } from '../../../source/recompile/model-draw-trace.ts';
 import { AI_DIALS } from '@sixam/source/fnaf2';
+import type { Sim } from '@sixam/source/fnaf2';
 
-const hash = (value) => createHash('sha256').update(value).digest('hex');
-const fileHash = (path) => hash(readFileSync(path));
+const hash = (value: BinaryLike) => createHash('sha256').update(value).digest('hex');
+const fileHash = (path: string | URL) => hash(readFileSync(path));
+
+/** The night a trace is compared on, and what drives the model through it. */
+export interface CompareOptions {
+  night: number, seed: number, frame: number, frames: number, modelOptions?: unknown;
+  customNight?: Readonly<Record<string, number>> | null, schedule?: readonly SimRow[], observe?: ((sim: Sim) => unknown) | null;
+  frameTimes?: number[] | null, contacts?: readonly ModelContact[] | null;
+}
 
 // A Custom Night is night 7 with the ten dials the customize frame copied into `cust_*` (office g787).
 // Every dial must be named: an omitted one would silently stay 0 in the model.
-export function checkCustomNight(night, customNight) {
+export function checkCustomNight(night: number, customNight: Readonly<Record<string, unknown>> | null | undefined) {
   if (customNight == null) return;
   if (night !== 7) throw new Error('a Custom Night dial vector requires night 7');
   const keys = Object.keys(customNight);
   if (keys.length !== AI_DIALS.length || !AI_DIALS.every((id) => keys.includes(id)) ||
-    !Object.values(customNight).every((v) => Number.isInteger(v) && v >= 0 && v <= 20)) {
+    // Number.isInteger passes only a number.
+    !Object.values(customNight).every((v) => Number.isInteger(v) && (v as number) >= 0 && (v as number) <= 20)) {
     throw new Error(`a Custom Night must set each of ${AI_DIALS.join(', ')} to an integer 0-20`);
   }
 }
 
 // `schedule` (a Sim queue, `[frame, press|release, action]`) drives the model with a replayed schedule;
 // the harness trace must then come from the same schedule (compare-schedule-replay.ts binds the two).
-export function compareTrace(text, { night, seed, frame, frames, modelOptions = {}, customNight = null, schedule = [], observe = null,
-  frameTimes = null, contacts = null }) {
+export function compareTrace(text: string, { night, seed, frame, frames, modelOptions = {}, customNight = null, schedule = [], observe = null,
+  frameTimes = null, contacts = null }: CompareOptions) {
   checkCustomNight(night, customNight);
   if (!text.endsWith('\n')) throw new Error('trace is truncated: missing final newline');
-  const visits = [];
-  const rows = [];
-  const projection = [];
-  let visit = null;
-  let stop = null;
+  const visits: { frame: number, seed: number, updates: number }[] = [];
+  const rows: { tick: number, draws: number, state: number }[] = [];
+  const projection: string[] = [];
+  let visit = null as (typeof visits)[number] | null;
+  let stop = null as string | null;
   let touches = 0;
   for (const line of text.split('\n')) {
     const match = /^# frame (\d+) seeded (\d+)$/.exec(line);
@@ -60,7 +71,9 @@ export function compareTrace(text, { night, seed, frame, frames, modelOptions = 
   const targetVisits = visits.filter((v) => v.frame === frame);
   const alignments = [0, 1].map((offset) => {
     let compared = 0;
-    let firstMismatch = null;
+    let firstMismatch = null as {
+      tick: number, modelFrame: number, rebuilt: { draws: number, state: number }, model: { draws: number, state: number },
+    } | null;
     for (const row of rows) {
       const expected = model.out[row.tick + offset];
       if (!expected) break;
@@ -98,7 +111,7 @@ export function compareTrace(text, { night, seed, frame, frames, modelOptions = 
       inputMode: contacts !== null ? 'explicit-contact-duration' : 'legacy-semantic-edges' },
     runtime: { visits, targetUpdates: rows.length, namedTouches: touches, stop, traceSha256: hash(text), drawTraceSha256: hash(`${projection.join('\n')}\n`) },
     model: { traceSha256: hash(JSON.stringify({ out: model.out, death: model.death, won: model.won })),
-      terminal: model.out.at(-1), death: model.death, won: model.won },
+      terminal: model.out[model.out.length - 1], death: model.death, won: model.won },
     alignment: 'Harness tick 0 is after its first event update, compared to model frame 1. Offset 0 is also retained to expose an initialization boundary discrepancy.',
     alignments,
     limitations: ['Host reimplementation; no device claim or promotion.',
@@ -108,24 +121,27 @@ export function compareTrace(text, { night, seed, frame, frames, modelOptions = 
   };
   // The traces themselves, for a caller that reads past the first mismatch; never serialized.
   Object.defineProperty(result, 'traces', { value: { rows, model }, enumerable: false });
-  return result;
+  // The property just defined, unseen by JSON.
+  return result as typeof result & { readonly traces: { readonly rows: typeof rows, readonly model: typeof model } };
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const args: any = {};
+  const args: Record<string, string> = {};
   for (let i = 2; i < process.argv.length; i += 2) {
     if (!['--trace', '--night', '--seed', '--frame', '--frames', '--out', '--binary', '--input', '--save', '--model-options', '--repeat-trace', '--custom-night'].includes(process.argv[i]) || !process.argv[i + 1]) throw new Error('see usage at top of file');
     args[process.argv[i].slice(2)] = process.argv[i + 1];
   }
   if (!args.trace || !args.out) throw new Error('--trace and --out are required');
-  const settings: any = { night: Number(args.night ?? 1), seed: Number(args.seed ?? 24850), frame: Number(args.frame ?? 3), frames: Number(args.frames ?? 18000) };
-  if (Object.values(settings).some((v) => !Number.isInteger(v) || v < 0) || settings.frames === 0) throw new Error('invalid numeric argument');
+  const settings: CompareOptions = { night: Number(args.night ?? 1), seed: Number(args.seed ?? 24850), frame: Number(args.frame ?? 3), frames: Number(args.frames ?? 18000) };
+  // Number.isInteger passes only a number.
+  if (Object.values(settings).some((v) => !Number.isInteger(v) || (v as number) < 0) || settings.frames === 0) throw new Error('invalid numeric argument');
   settings.modelOptions = args['model-options'] ? JSON.parse(readFileSync(args['model-options'], 'utf8')) : {};
   if (args['custom-night']) settings.customNight = JSON.parse(readFileSync(args['custom-night'], 'utf8'));
   if (args.input && readFileSync(args.input, 'utf8').split('\n').some((line) => line.trim() && !line.trim().startsWith('#') && Number(line.trim().split(/\s+/)[0]) === settings.frame)) {
     throw new Error('this comparison accepts navigation-only input; gameplay input needs a corresponding model replay');
   }
-  const result: any = compareTrace(readFileSync(args.trace, 'utf8'), settings);
+  const result: ReturnType<typeof compareTrace> & { repeatability?: object, provenance?: object, evidenceId?: string } =
+    compareTrace(readFileSync(args.trace, 'utf8'), settings);
   if (args['repeat-trace']) {
     const repeat = compareTrace(readFileSync(args['repeat-trace'], 'utf8'), settings);
     result.repeatability = {

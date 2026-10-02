@@ -35,17 +35,20 @@
 //
 // Content-free and hash-bound like compare-draw-trace.mjs; MODEL_ONLY, rebuilt-runtime fidelity.
 import { createHash } from 'node:crypto';
+import type { BinaryLike } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { compareTrace } from '../../../review/bin/recompile/compare-draw-trace.ts';
 import { MODEL_SOURCES, simOptionsFrom } from '../../../source/recompile/model-draw-trace.ts';
 import { DEFAULT_PROFILE, controlPoints, harnessInput, winnerSchedule, modelContacts } from './schedule-to-input.ts';
+import type { ProfileView } from './schedule-to-input.ts';
 import { withModelOptions } from './rebuild-options-census.ts';
+import type { Sim } from '@sixam/source/fnaf2';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
-const hash = (value) => createHash('sha256').update(value).digest('hex');
-const fileHash = (path) => hash(readFileSync(path));
+const hash = (value: BinaryLike) => createHash('sha256').update(value).digest('hex');
+const fileHash = (path: string | URL) => hash(readFileSync(path));
 export const DEATH_FRAME = 4;      // 05-static
 export const SIX_AM_FRAME = 5;     // 06-next day
 export const MAX_RUNS = 40;        // mismatch runs listed in a record (the count is always whole)
@@ -53,17 +56,19 @@ export const MAX_RUNS = 40;        // mismatch runs listed in a record (the coun
 // A watched object's alterable and the model state it is the rebuild's copy of.
 export const LEDGERS = Object.freeze({
   monitor: { watch: 'flip panel button:0', states: '0 down, 1 raising, 2 up, 3 lowering',
-    model: (sim) => ({ down: 0, raising: 1, up: 2, lowering: 3 })[sim.monitor] },
+    model: (sim: Sim) => ({ down: 0, raising: 1, up: 2, lowering: 3 })[sim.monitor] },
   mask: { watch: 'mask:0', states: '0 off, 1 putting on, 2 on, 3 taking off',
-    model: (sim) => sim.maskState },
+    model: (sim: Sim) => sim.maskState },
 });
+/** A ledger the harness can watch. */
+export type LedgerName = keyof typeof LEDGERS;
 
 // `being attacked by` (object 136), the committed attack: its value names the attacker, as the office
 // sheet (03-04-Office) writes it. The office's only jumps to 05-static (g588-g595) end the attack
 // animation that g575-g587 show, force and count while it is > 0. Balloon Boy never writes it; 10 and
 // 11 are unused.
 export const ATTACKER_COUNTER = 'being attacked by';
-export const ATTACKERS = Object.freeze({
+export const ATTACKERS: Readonly<Record<number, { readonly name: string, readonly object: string, readonly setBy: readonly string[] }>> = Object.freeze({
   1: { name: 'Withered Freddy', object: 'old freddy', setBy: ['g556', 'g560', 'g564'] },
   2: { name: 'Withered Bonnie', object: 'old bonnie', setBy: ['g557', 'g561', 'g565'] },
   3: { name: 'Withered Chica', object: 'old chica', setBy: ['g558', 'g562', 'g566'] },
@@ -76,18 +81,18 @@ export const ATTACKERS = Object.freeze({
   12: { name: 'Golden Freddy', object: 'golden', setBy: ['g570'] },
 });
 
-const actionLines = (text) => text.split('\n').map((l) => l.trim()).filter((l) => l && !l.startsWith('#'));
+const actionLines = (text: string) => text.split('\n').map((l) => l.trim()).filter((l) => l && !l.startsWith('#'));
 
 /**
  * The harness's counter watch: `# counters a,b,...` once, then `# counter F T v...` per update.
  * Returns the lines of the first visit to `frame` as { names, series: Map tick -> [value | null] }
  * (null where the frame had no such Counter), or null when the trace watched no counter.
  */
-export function counterSeries(text, frame) {
-  let names = null;
+export function counterSeries(text: string, frame: number) {
+  let names = null as string[] | null;
   let visit = -1;
-  let current = null;
-  const series = new Map();
+  let current = null as number | null;
+  const series = new Map<number, (number | null)[]>();
   for (const line of text.split('\n')) {
     const seeded = /^# frame (\d+) seeded /.exec(line);
     if (seeded) {
@@ -113,13 +118,26 @@ export function counterSeries(text, frame) {
  * and every watched counter at the end of that update and of the one before. Null when the watch
  * does not include the counter.
  */
-export function rebuiltAttacker(counters, lastTick) {
+/** The rebuild's attacker as its counter watch names it, and the watched counters around its setting. */
+export interface Attacker {
+  counter: string, value: number | null, name: string | null, object?: string | null, setBy?: readonly string[];
+  setAtTick?: number, lastTick: number, updatesHeld?: number;
+  before?: Readonly<Record<string, number | null>> | null, at: Readonly<Record<string, number | null>> | null;
+}
+
+export function rebuiltAttacker(counters: Counters | null, lastTick: number): Attacker | null {
   const index = counters?.names.indexOf(ATTACKER_COUNTER) ?? -1;
   if (index < 0) return null;
-  const valuesAt = (tick) => counters.series.get(tick);
-  if (!valuesAt(lastTick)) throw new Error(`the counter watch has no office update ${lastTick}`);
-  const value = valuesAt(lastTick)[index];
-  const snapshot = (tick) => (valuesAt(tick) ? Object.fromEntries(counters.names.map((n, i) => [n, valuesAt(tick)[i]])) : null);
+  // A watch that names the counter (index >= 0).
+  const watched = counters as Counters;
+  const valuesAt = (tick: number) => watched.series.get(tick);
+  const last = valuesAt(lastTick);
+  if (!last) throw new Error(`the counter watch has no office update ${lastTick}`);
+  const value = last[index];
+  const snapshot = (tick: number) => {
+    const values = valuesAt(tick);
+    return values ? Object.fromEntries(watched.names.map((n, i) => [n, values[i]])) : null;
+  };
   if (!value) return { counter: ATTACKER_COUNTER, value, name: null, lastTick, at: snapshot(lastTick) };
   let setAt = lastTick;
   while (valuesAt(setAt - 1)?.[index] === value) setAt -= 1;
@@ -128,9 +146,12 @@ export function rebuiltAttacker(counters, lastTick) {
     setAtTick: setAt, lastTick, updatesHeld: lastTick - setAt + 1, before: snapshot(setAt - 1), at: snapshot(setAt) };
 }
 
+/** The counters a trace watched and their values per office update (counterSeries). */
+type Counters = NonNullable<ReturnType<typeof counterSeries>>;
+
 /** `# watch F T off X Y new N x X v<i> value ...` lines of `frame`: tick -> value of the first listed alterable. */
-export function watchSeries(text, frame) {
-  const series = new Map();
+export function watchSeries(text: string, frame: number) {
+  const series = new Map<number, number>();
   for (const line of text.split('\n')) {
     const m = /^# watch (\d+) (\d+) off -?\d+ -?\d+ new -?\d+ x -?\d+ v\d+ (-?[\d.e+-]+)/.exec(line);
     if (m && Number(m[1]) === frame) series.set(Number(m[2]), Number(m[3]));
@@ -139,8 +160,8 @@ export function watchSeries(text, frame) {
 }
 
 /** Value changes of a per-tick series: [{ tick, from, to }]. */
-export function transitions(pairs) {
-  const out = [];
+export function transitions<T>(pairs: readonly (readonly [number, T])[]) {
+  const out: { tick: number, from: T, to: T }[] = [];
   for (let i = 1; i < pairs.length; i += 1)
     if (pairs[i][1] !== pairs[i - 1][1]) out.push({ tick: pairs[i][0], from: pairs[i - 1][1], to: pairs[i][1] });
   return out;
@@ -152,22 +173,22 @@ export function transitions(pairs) {
  * rebuilt tick minus model tick. Pairing stops at the first change the two sides do not share. Both
  * series start from the model's frame-0 state (tick -1), so a press on the first update is a change.
  */
-export function compareLedger(series, observed, name) {
+export function compareLedger(series: ReadonlyMap<number, number>, observed: readonly unknown[], name: LedgerName) {
   const pairs = [...series].sort((a, b) => a[0] - b[0]).filter(([tick]) => observed[tick + 1] !== undefined);
   let mismatches = 0;
-  let firstMismatch = null;
+  let firstMismatch = null as { tick: number, rebuilt: number, model: unknown } | null;
   for (const [tick, value] of pairs) {
     if (value === observed[tick + 1]) continue;
     mismatches += 1;
     firstMismatch ??= { tick, rebuilt: value, model: observed[tick + 1] };
   }
   // Both sides change from the state before the first office update: the model's frame 0.
-  const base = [-1, observed[0]];
-  const rebuilt = transitions([base, ...pairs]);
-  const model = transitions([base, ...pairs.map(([tick]) => [tick, observed[tick + 1]])]);
-  const offsets = {};
+  const base: [number, unknown] = [-1, observed[0]];
+  const rebuilt = transitions<unknown>([base, ...pairs]);
+  const model = transitions([base, ...pairs.map(([tick]): [number, unknown] => [tick, observed[tick + 1]])]);
+  const offsets: Record<string, number> = {};
   let paired = 0;
-  let firstUnpaired = null;
+  let firstUnpaired = null as { index: number, rebuilt: (typeof rebuilt)[number] | null, model: (typeof model)[number] | null } | null;
   for (; paired < Math.min(rebuilt.length, model.length); paired += 1) {
     const [r, m] = [rebuilt[paired], model[paired]];
     if (r.from !== m.from || r.to !== m.to) { firstUnpaired = { index: paired, rebuilt: r, model: m }; break; }
@@ -184,9 +205,10 @@ export function compareLedger(series, observed, name) {
  * Every run of consecutive mismatched updates (offset 1), in order: [{ start, length, rejoined }].
  * `rejoined` is false only for a run that lasts to the end of the compared updates.
  */
-export function mismatchRuns(rows, out) {
-  const runs = [];
-  let run = null;
+export function mismatchRuns(rows: readonly { tick: number, draws: number, state: number }[],
+  out: readonly { draws: number, state: number }[]) {
+  const runs: { start: number, length: number, rejoined: boolean }[] = [];
+  let run = null as (typeof runs)[number] | null;
   let compared = 0;
   for (const row of rows) {
     const expected = out[row.tick + 1];
@@ -194,14 +216,15 @@ export function mismatchRuns(rows, out) {
     compared += 1;
     const bad = row.draws !== expected.draws || row.state !== expected.state;
     if (bad && !run) runs.push(run = { start: row.tick, length: 0, rejoined: false });
-    if (bad) run.length += 1;
+    // A bad update has a run: the line above opened one.
+    if (bad) (run as (typeof runs)[number]).length += 1;
     else if (run) { run.rejoined = true; run = null; }
   }
   return { compared, mismatchedUpdates: runs.reduce((n, r) => n + r.length, 0), runs };
 }
 
 /** `counters`: counterSeries() of the office visit, or null when the trace watched none. */
-export function outcomes(result, { frame, counters = null }) {
+export function outcomes(result: ComparedTrace, { frame, counters = null }: { frame: number, counters?: Counters | null }) {
   const visits = result.runtime.visits;
   const index = visits.findIndex((v) => v.frame === frame);
   const next = index >= 0 ? visits[index + 1] : undefined;
@@ -227,14 +250,17 @@ export function outcomes(result, { frame, counters = null }) {
 }
 
 /** The binding's gate replay under the same options, against the comparison's model trace. */
-function gateReplayCheck(sched, seed, modelOptions, result) {
+function gateReplayCheck(sched: ReturnType<typeof winnerSchedule>, seed: number, modelOptions: unknown, result: ComparedTrace) {
   const { sim } = withModelOptions(simOptionsFrom(modelOptions), () => sched.emitted.replay(seed));
   const replay = { won: !!sim.won, death: sim.death?.reason ?? null, frame: sim.frame, state: sim.rng.state };
   const traced = { won: result.model.won, death: result.model.death?.reason ?? null, frame: result.model.terminal.frame, state: result.model.terminal.state };
   return { agrees: JSON.stringify(replay) === JSON.stringify(traced), replay, traced };
 }
 
-const officeProjection = (text, frame) => hash(text.split('\n').filter((l) => l.startsWith(`${frame} `))
+/** A harness trace compared with the model (compare-draw-trace.ts compareTrace). */
+type ComparedTrace = ReturnType<typeof compareTrace>;
+
+const officeProjection = (text: string, frame: number) => hash(text.split('\n').filter((l) => l.startsWith(`${frame} `))
   .map((l) => l.split(/\s+/).slice(0, 4).join(' ')).join('\n'));
 
 /**
@@ -243,7 +269,11 @@ const officeProjection = (text, frame) => hash(text.split('\n').filter((l) => l.
  * false none.
  */
 export function compareScheduleReplay({ text, inputText, navigationText, winner, night, seed, frame = 3, frames = 30000,
-  modelOptions = {}, customNight = null, profile, ledgers = [], counters: counterSource = undefined }) {
+  modelOptions = {}, customNight = null, profile, ledgers = [], counters: counterSource = undefined }: {
+  text: string, inputText: string, navigationText: string, winner: unknown, night: number, seed: number, frame?: number;
+  frames?: number, modelOptions?: unknown, customNight?: Readonly<Record<string, number>> | null, profile: ProfileView;
+  ledgers?: readonly { name: LedgerName, text?: string }[], counters?: { text: string } | false,
+}): ScheduleReplay {
   for (const { name } of ledgers) if (!LEDGERS[name]) throw new Error(`--ledger must be one of ${Object.keys(LEDGERS).join(', ')}`);
   if (new Set(ledgers.map((l) => l.name)).size !== ledgers.length) throw new Error('a ledger is named twice');
   const sched = winnerSchedule(winner, night);
@@ -251,9 +281,11 @@ export function compareScheduleReplay({ text, inputText, navigationText, winner,
   const expected = harnessInput({ navigation: navigationText, schedule: sched, points, frame });
   if (JSON.stringify(actionLines(inputText)) !== JSON.stringify(actionLines(expected.text)))
     throw new Error('the input is not the navigation plus this winner\'s schedule rows (schedule-to-input.ts)');
-  const observe = ledgers.length ? (sim) => ledgers.map(({ name }) => LEDGERS[name].model(sim)) : null;
-  const contacts = (modelOptions as any).sourcedDropFlagOrder && (modelOptions as any).sourcedSheetOrder ? modelContacts(sched.contacts) : null;
-  const result: any = compareTrace(text, { night, seed, frame, frames, modelOptions, customNight, schedule: sched.queue,
+  const observe = ledgers.length ? (sim: Sim) => ledgers.map(({ name }) => LEDGERS[name].model(sim)) : null;
+  // compareTrace refuses options that are not an object of model options.
+  const flags = modelOptions as { readonly sourcedDropFlagOrder?: unknown, readonly sourcedSheetOrder?: unknown };
+  const contacts = flags.sourcedDropFlagOrder && flags.sourcedSheetOrder ? modelContacts(sched.contacts) : null;
+  const result: ComparedTrace & Partial<ScheduleReplayFields> = compareTrace(text, { night, seed, frame, frames, modelOptions, customNight, schedule: sched.queue,
     contacts,
     ...(observe ? { observe } : {}) });
   result.schema = 'recompile-schedule-replay-v1';
@@ -271,7 +303,7 @@ export function compareScheduleReplay({ text, inputText, navigationText, winner,
     quantization: 'ms -> Math.round(ms * 60 / 1000) model frames; office tick = queue frame; down at press, up at release',
   };
   const main = officeProjection(text, frame);
-  if (counterSource?.text !== undefined && officeProjection(counterSource.text, frame) !== main)
+  if (counterSource && officeProjection(counterSource.text, frame) !== main)
     throw new Error('the counter trace is not a run of the same replay');
   const counters = counterSource === false ? null : counterSeries(counterSource?.text ?? text, frame);
   result.outcome = outcomes(result, { frame, counters });
@@ -279,7 +311,7 @@ export function compareScheduleReplay({ text, inputText, navigationText, winner,
     const lastTick = [...counters.series.keys()].reduce((a, b) => Math.max(a, b), -1);
     const changes = Object.fromEntries(counters.names.map((name, i) => {
       let n = 0;
-      let previous;
+      let previous: number | null | undefined;
       for (const [, values] of [...counters.series].sort((a, b) => a[0] - b[0])) {
         if (previous !== undefined && values[i] !== previous) n += 1;
         previous = values[i];
@@ -287,13 +319,15 @@ export function compareScheduleReplay({ text, inputText, navigationText, winner,
       return [name, n];
     }));
     result.counters = { watch: counters.names, officeUpdates: counters.series.size, changes,
-      final: lastTick < 0 ? null : Object.fromEntries(counters.names.map((name, i) => [name, counters.series.get(lastTick)[i]])),
-      trace: counterSource?.text === undefined ? 'main' : { traceSha256: hash(counterSource.text), officeDrawProjectionMatches: true },
+      // lastTick is a key of the series.
+      final: lastTick < 0 ? null : Object.fromEntries(counters.names.map((name, i) => [name, (counters.series.get(lastTick) as (number | null)[])[i]])),
+      trace: !counterSource ? 'main' : { traceSha256: hash(counterSource.text), officeDrawProjectionMatches: true },
       scope: 'values at the end of each office update (harness_after_events); a change inside an update is not seen' };
   }
   result.gateReplay = gateReplayCheck(sched, seed, modelOptions, result);
-  if (contacts) result.gateReplay.inputNote = 'The binding gate uses legacy semantic taps; this comparison preserves contact durations and camera selection on release.';
-  if (customNight) result.gateReplay.note = 'the gate replay carries no dial vector; the comparison model does';
+  const gate: { inputNote?: string, note?: string } = result.gateReplay;
+  if (contacts) gate.inputNote = 'The binding gate uses legacy semantic taps; this comparison preserves contact durations and camera selection on release.';
+  if (customNight) gate.note = 'the gate replay carries no dial vector; the comparison model does';
   const { rows, model } = result.traces;
   const runs = mismatchRuns(rows, model.out);
   const persistent = runs.runs.find((r) => !r.rejoined) ?? null;
@@ -303,7 +337,8 @@ export function compareScheduleReplay({ text, inputText, navigationText, winner,
   if (ledgers.length) {
     result.ledgers = ledgers.map(({ name, text: own }, i) => {
       if (own !== undefined && officeProjection(own, frame) !== main) throw new Error(`the ${name} ledger trace is not a run of the same replay`);
-      return { ...compareLedger(watchSeries(own ?? text, frame), model.observed.map((o) => o[i]), name),
+      // observe ran (there are ledgers): one list of ledger states per model frame.
+      return { ...compareLedger(watchSeries(own ?? text, frame), (model.observed as unknown[][]).map((o) => o[i]), name),
         trace: own === undefined ? 'main' : { traceSha256: hash(own), officeDrawProjectionMatches: true } };
     });
   }
@@ -311,14 +346,36 @@ export function compareScheduleReplay({ text, inputText, navigationText, winner,
     'One schedule quantized to 60 Hz frames; the phone\'s actuation latency, contact loss and frame stalls are not in either replay.',
     'The harness raises one new-touch trigger per update; same-tick edges are listed in schedule.sameTickEdges.',
     'Window points are the device profile\'s control points through the FULL stretch; the office pan is not modelled.'];
-  return result;
+  // Every field of a schedule replay is set above.
+  return result as ScheduleReplay;
 }
+
+/** What compareScheduleReplay adds to the comparison: the schedule, both outcomes, the gate replay and the draw runs. */
+interface ScheduleReplayFields {
+  schedule: { readonly officeRowsSha256: string, readonly [field: string]: unknown };
+  outcome: ReturnType<typeof outcomes>;
+  counters: {
+    watch: string[], officeUpdates: number, changes: Record<string, number>, final: Record<string, number | null> | null;
+    trace: 'main' | { traceSha256: string, officeDrawProjectionMatches: boolean }, scope: string,
+  };
+  gateReplay: ReturnType<typeof gateReplayCheck> & { inputNote?: string, note?: string };
+  drawRuns: ReturnType<typeof mismatchRuns> & {
+    listed: number, total: number, firstPersistent: ReturnType<typeof mismatchRuns>['runs'][number] | null;
+    matchedBeforeFirstPersistent: number | null, scope: string,
+  };
+  ledgers: (ReturnType<typeof compareLedger> & { trace: unknown })[];
+}
+/** A schedule replay's record, and what the command line adds to it. */
+type ScheduleReplay = ComparedTrace & Pick<ScheduleReplayFields, 'schedule' | 'outcome' | 'gateReplay' | 'drawRuns'>
+  & Partial<Pick<ScheduleReplayFields, 'counters' | 'ledgers'>>
+  & { repeatability?: object, provenance?: object, evidenceId?: string;
+    baseline?: { readonly evidenceId: unknown, readonly drawTraceMatches: boolean, readonly [field: string]: unknown } };
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const names = ['--trace', '--input', '--navigation', '--winner', '--night', '--seed', '--frame', '--frames', '--out', '--profile',
     '--model-options', '--custom-night', '--binary', '--save', '--repeat-trace', '--ledger', '--counter-trace', '--baseline'];
-  const args: any = {};
-  const ledgerArgs = [];
+  const args: Record<string, string> = {};
+  const ledgerArgs: string[][] = [];
   for (let i = 2; i < process.argv.length; i += 2) {
     if (!names.includes(process.argv[i]) || !process.argv[i + 1]) throw new Error('see usage at top of file');
     if (process.argv[i] === '--ledger') ledgerArgs.push(process.argv[i + 1].split('='));
@@ -333,9 +390,10 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     winner: JSON.parse(readFileSync(args.winner, 'utf8')), profile: JSON.parse(readFileSync(profilePath, 'utf8')),
     modelOptions: args['model-options'] ? JSON.parse(readFileSync(args['model-options'], 'utf8')) : {},
     customNight: args['custom-night'] ? JSON.parse(readFileSync(args['custom-night'], 'utf8')) : null,
-    ledgers: ledgerArgs.map(([name, file]) => ({ name, ...(file ? { text: readFileSync(file, 'utf8') } : {}) })),
+    // compareScheduleReplay refuses a name that is not a ledger.
+    ledgers: ledgerArgs.map(([name, file]) => ({ name: name as LedgerName, ...(file ? { text: readFileSync(file, 'utf8') } : {}) })),
   };
-  const result: any = compareScheduleReplay({ ...common, text: readFileSync(args.trace, 'utf8'),
+  const result = compareScheduleReplay({ ...common, text: readFileSync(args.trace, 'utf8'),
     ...(args['counter-trace'] ? { counters: { text: readFileSync(args['counter-trace'], 'utf8') } } : {}) });
   if (args['repeat-trace']) {
     const repeat = compareScheduleReplay({ ...common, text: readFileSync(args['repeat-trace'], 'utf8'), ledgers: [], counters: false });
@@ -344,7 +402,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
       wholeTraceMatches: repeat.runtime.traceSha256 === result.runtime.traceSha256,
       scope: 'Ordered frame/tick/draw-count/RNG-state projection. Other global values are not covered by draw repeatability.' };
   }
-  const rel = (path) => relative(ROOT, resolve(path));
+  const rel = (path: string) => relative(ROOT, resolve(path));
   if (args.baseline) {
     const base = JSON.parse(readFileSync(args.baseline, 'utf8'));
     if (base.schema !== result.schema || base.scope?.night !== result.scope.night || base.scope?.seed !== result.scope.seed ||

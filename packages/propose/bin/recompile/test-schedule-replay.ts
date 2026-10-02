@@ -5,26 +5,29 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { schedule } from '../plans/minus-toys-plan.ts';
+import type { Attacker, LedgerName } from './compare-schedule-replay.ts';
 import { ATTACKERS, LEDGERS, compareScheduleReplay, counterSeries, mismatchRuns, rebuiltAttacker, transitions, watchSeries } from './compare-schedule-replay.ts';
 import { drawTrace } from '../../../source/recompile/model-draw-trace.ts';
 import { controlPoints, expandRows, frameOf, harnessInput, harnessRows, winnerSchedule, modelContacts } from './schedule-to-input.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
-const read = (path) => readFileSync(join(ROOT, path), 'utf8');
-const json = (path) => JSON.parse(read(path));
+const read = (path: string) => readFileSync(join(ROOT, path), 'utf8');
+const json = (path: string) => JSON.parse(read(path));
+// A lookup or optional field the fixture knows is there; the assertion reads it.
+const found = <T>(value: T | null | undefined) => value as T;
 
 // --- window points: the profile's native points through the FULL stretch ---
 const profile = { geometry: 'phone-landscape-2400x1080-v1', viewScroll: { windowWidth: 1024, windowHeight: 768 },
   controlMap: { monitor: { x: 1780, y: 995 }, mask: { x: 600, y: 995 }, cameraFeedLight: { x: 900, y: 540 },
     hallLight: { x: 1200, y: 540 }, 'cam:9': { x: 2144, y: 548 }, 'cam:11': { x: 2228, y: 652 } } };
-const points: any = controlPoints(profile);
+const points = controlPoints(profile);
 assert.deepEqual(points.monitor, [759, 708]);
 assert.deepEqual(points['cam:9'], [915, 390]);
 assert.deepEqual(points.cameraFeedLight, [384, 384]);
 assert.throws(() => controlPoints({ ...profile, geometry: 'tablet-1920x1200-v1' }), /geometry/);
 
 // --- one expansion: contacts and the Sim queue, the queue equal to schedule()'s ---
-const rows = { opening: [[0, 'tap', 'monitor', 33], [300, 'tap', 'cam11', 33]],
+const rows: Pick<Parameters<typeof expandRows>[0], 'opening' | 'loop' | 'finish'> = { opening: [[0, 'tap', 'monitor', 33], [300, 'tap', 'cam11', 33]],
   loop: [[100, 'hold', 'cameraFeedLight', 100], [200, 'camdrop', 150, 200, 67], [900, 'hall', 33]], finish: [] };
 const bounds = { periodMs: 1000, loopStartMs: 0, untilMs: 2000, epochMs: 50 };
 const expanded = expandRows({ ...rows, ...bounds });
@@ -36,11 +39,13 @@ assert.deepEqual(camdrop.map((c) => [c.control, c.downFrame, c.upFrame]),
   [['cameraFeedLight', frameOf(250), frameOf(667)], ['monitor', frameOf(400), frameOf(600)]]);
 assert.ok(expanded.contacts.some((c) => c.control === 'hallLight' && c.downFrame === frameOf(950)));
 assert.throws(() => expandRows({ opening: [[0, 'tap', 'monitor', 5]], loop: [], periodMs: 1000, untilMs: 0 }), /shorter than one/);
-assert.throws(() => expandRows({ opening: [[0, 'sweep', 'cam9']], loop: [], periodMs: 1000, untilMs: 0 }), /no harness form/);
+// A row kind no plan has.
+const sweep = [[0, 'sweep', 'cam9']] as unknown as Parameters<typeof expandRows>[0]['opening'];
+assert.throws(() => expandRows({ opening: sweep, loop: [], periodMs: 1000, untilMs: 0 }), /no harness form/);
 
 // --- harness rows: an overlapping contact takes pointer 1; same-tick edges are listed ---
 const office = harnessRows(expanded.contacts, points);
-const monitorInCamdrop = office.rows.find((r) => r.op === 'down' && r.control === 'monitor' && r.tick === frameOf(400));
+const monitorInCamdrop = found(office.rows.find((r) => r.op === 'down' && r.control === 'monitor' && r.tick === frameOf(400)));
 assert.equal(monitorInCamdrop.pointer, 1, 'the camdrop monitor contact overlaps the held light');
 assert.deepEqual([monitorInCamdrop.x, monitorInCamdrop.y], [759, 708]);
 assert.ok(office.rows.every((r, i, all) => i === 0 || all[i - 1].tick < r.tick || (all[i - 1].tick === r.tick && !(all[i - 1].op === 'down' && r.op === 'up'))),
@@ -48,7 +53,7 @@ assert.ok(office.rows.every((r, i, all) => i === 0 || all[i - 1].tick < r.tick |
 const touching = harnessRows([{ control: 'monitor', downFrame: 0, upFrame: 2 }, { control: 'mask', downFrame: 2, upFrame: 4 },
   { control: 'cam9', downFrame: 10, upFrame: 12 }, { control: 'cam11', downFrame: 10, upFrame: 12 }], points.monitor ? { ...points, cam9: points['cam:9'] } : points);
 assert.deepEqual(touching.sameTickEdges.map((e) => e.tick), [2, 10]);
-assert.equal(touching.rows.find((r) => r.op === 'down' && r.control === 'mask').pointer, 0, 'a pointer released on the tick is free again');
+assert.equal(found(touching.rows.find((r) => r.op === 'down' && r.control === 'mask')).pointer, 0, 'a pointer released on the tick is free again');
 assert.throws(() => harnessRows([{ control: 'wind', downFrame: 0, upFrame: 2 }], points), /absent from the profile/);
 assert.throws(() => harnessInput({ navigation: '3 0 down 0 1 1\n', schedule: expanded, points }), /already acts on frame 3/);
 
@@ -69,7 +74,12 @@ assert.equal(input.office.rows.length, 192);
 const modelOptions = json('packages/source/recompile/sourced-rebuild-model-options.json');
 const model = drawTrace({ night: 1, seed: 24850, frames: 30000, contacts: modelContacts(sched.contacts), modelOptions, observe: LEDGERS.monitor.model });
 assert.ok(model.won);
-const traceOf = (out, { from = 0, to = out.length - 1, draws = (r) => r.draws, next = 5, watch = model.observed, counters = null } = {}) => {
+type Out = typeof model.out;
+const traceOf = (out: Out, { from = 0, to = out.length - 1, draws = (r: Out[number], _t: number) => r.draws, next = 5,
+  watch = found(model.observed), counters = null }: {
+  from?: number, to?: number, draws?: (r: Out[number], t: number) => number, next?: number, watch?: readonly unknown[];
+  counters?: { names: readonly string[], at: (t: number) => readonly (number | null)[] } | null,
+} = {}) => {
   let text = `# frame tick draws graine values...\n${counters ? `# counters ${counters.names.join(',')}\n` : ''}# frame 3 seeded 24850\n`;
   for (let t = from; t + 1 <= to; t += 1) {
     text += `# watch 3 ${t} off 0 0 new 0 x 757 v0 ${watch[t + 1]}\n`;
@@ -78,20 +88,21 @@ const traceOf = (out, { from = 0, to = out.length - 1, draws = (r) => r.draws, n
   }
   return `${text}# frame ${next} seeded 24850\n${next} 0 0 1\n`;
 };
-const args = { inputText: input.text, navigationText: navigation, winner: minimal, night: 1, seed: 24850, modelOptions, profile: devProfile, ledgers: [{ name: 'monitor' }] };
-const same: any = compareScheduleReplay({ ...args, text: traceOf(model.out) });
+const args = { inputText: input.text, navigationText: navigation, winner: minimal, night: 1, seed: 24850, modelOptions, profile: devProfile,
+  ledgers: [{ name: 'monitor' as const }] };
+const same = compareScheduleReplay({ ...args, text: traceOf(model.out) });
 assert.equal(same.schema, 'recompile-schedule-replay-v1');
 assert.equal(same.status, 'MATCHED_PREFIX', 'a prefix match, never an equivalence');
 assert.deepEqual([same.outcome.rebuilt.result, same.outcome.model.result, same.outcome.sameResult], ['6am', '6am', true]);
 assert.equal(same.gateReplay.agrees, true, 'the comparison model is the gate replay');
 assert.equal(same.drawRuns.total, 0);
-assert.deepEqual(same.ledgers[0].changes.offsets, { '0>1 +0': 2, '1>2 +0': 2, '2>3 +0': 2, '3>0 +0': 2 });
+assert.deepEqual(found(same.ledgers)[0].changes.offsets, { '0>1 +0': 2, '1>2 +0': 2, '2>3 +0': 2, '3>0 +0': 2 });
 // A second ledger reads its own run of the same replay; a run with another draw stream is refused.
 const maskSeries = drawTrace({ night: 1, seed: 24850, frames: 30000, contacts: modelContacts(sched.contacts), modelOptions, observe: LEDGERS.mask.model }).observed;
-const withMask: any = compareScheduleReplay({ ...args, text: traceOf(model.out),
+const withMask = compareScheduleReplay({ ...args, text: traceOf(model.out),
   ledgers: [{ name: 'monitor' }, { name: 'mask', text: traceOf(model.out, { watch: maskSeries }) }] });
-assert.deepEqual(withMask.ledgers.map((l) => [l.name, l.mismatches, l.changes.rebuilt]), [['monitor', 0, 8], ['mask', 0, 0]], 'minimal never masks');
-assert.ok((compareScheduleReplay({ ...args, text: traceOf(model.out), ledgers: [{ name: 'mask' }] }) as any).ledgers[0].mismatches > 0,
+assert.deepEqual(found(withMask.ledgers).map((l) => [l.name, l.mismatches, l.changes.rebuilt]), [['monitor', 0, 8], ['mask', 0, 0]], 'minimal never masks');
+assert.ok(found(compareScheduleReplay({ ...args, text: traceOf(model.out), ledgers: [{ name: 'mask' }] }).ledgers)[0].mismatches > 0,
   'the main trace watched the monitor: read as a mask ledger, it disagrees');
 assert.throws(() => compareScheduleReplay({ ...args, text: traceOf(model.out),
   ledgers: [{ name: 'mask', text: traceOf(model.out, { draws: (r, t) => (t === 5 ? r.draws + 1 : r.draws) }) }] }), /not a run of the same replay/);
@@ -102,44 +113,46 @@ assert.equal(same.schedule.officeRows, 192);
 assert.ok(!Object.keys(same).includes('traces') && !('traces' in JSON.parse(JSON.stringify(same))), 'the traces are not part of the record');
 
 // A one-update slip that rejoins, then a split that does not.
-const slip: any = compareScheduleReplay({ ...args, text: traceOf(model.out, { draws: (r, t) => (t === 7000 || t >= 12000 ? r.draws + 1 : r.draws) }) });
+const slip = compareScheduleReplay({ ...args, text: traceOf(model.out, { draws: (r, t) => (t === 7000 || t >= 12000 ? r.draws + 1 : r.draws) }) });
 assert.equal(slip.status, 'DIVERGENT');
-assert.equal(slip.alignments[1].firstMismatch.tick, 7000);
+assert.equal(found(slip.alignments[1].firstMismatch).tick, 7000);
 assert.deepEqual(slip.drawRuns.runs[0], { start: 7000, length: 1, rejoined: true });
-assert.deepEqual([slip.drawRuns.firstPersistent.start, slip.drawRuns.matchedBeforeFirstPersistent], [12000, 11999]);
+assert.deepEqual([found(slip.drawRuns.firstPersistent).start, slip.drawRuns.matchedBeforeFirstPersistent], [12000, 11999]);
 // The rebuild leaves for the static frame while the model plays on: a death whose reason is not read.
-const died: any = compareScheduleReplay({ ...args, ledgers: [], text: traceOf(model.out, { to: 9001, next: 4 }) });
+const died = compareScheduleReplay({ ...args, ledgers: [], text: traceOf(model.out, { to: 9001, next: 4 }) });
 assert.deepEqual([died.outcome.rebuilt.result, died.outcome.rebuilt.reason, died.outcome.sameResult], ['death', 'UNKNOWN', false]);
 assert.equal(died.status, 'INCOMPLETE');
 // With the harness counter watch, the rebuild names its own attacker: `being attacked by` on its last office update.
 const watched = ['being attacked by', 'in danger', 'viewing'];
-const foxyAt = (t) => [t >= 8980 ? 4 : 0, 0, t % 600 < 300 ? 1 : 0];
-const named: any = compareScheduleReplay({ ...args, ledgers: [], text: traceOf(model.out, { to: 9001, next: 4, counters: { names: watched, at: foxyAt } }) });
+const foxyAt = (t: number) => [t >= 8980 ? 4 : 0, 0, t % 600 < 300 ? 1 : 0];
+const named = compareScheduleReplay({ ...args, ledgers: [], text: traceOf(model.out, { to: 9001, next: 4, counters: { names: watched, at: foxyAt } }) });
 assert.deepEqual([named.outcome.rebuilt.result, named.outcome.rebuilt.reason], ['death', 'Withered Foxy']);
-assert.match(named.outcome.rebuilt.reasonSource, /own `being attacked by` \(CHOWDREN_WATCH_COUNTER\) = 4/);
-assert.deepEqual([named.outcome.rebuilt.attacker.setAtTick, named.outcome.rebuilt.attacker.updatesHeld, named.outcome.rebuilt.attacker.lastTick], [8980, 21, 9000]);
-assert.deepEqual(named.outcome.rebuilt.attacker.before, { 'being attacked by': 0, 'in danger': 0, viewing: 0 });
-assert.deepEqual(named.counters.changes, { 'being attacked by': 1, 'in danger': 0, viewing: 30 }, 'ticks 0..9000 flip viewing every 300');
-assert.equal(named.counters.officeUpdates, 9001);
-assert.equal(named.counters.trace, 'main');
+assert.match(found(named.outcome.rebuilt.reasonSource), /own `being attacked by` \(CHOWDREN_WATCH_COUNTER\) = 4/);
+const foxy = found(named.outcome.rebuilt.attacker);
+assert.deepEqual([foxy.setAtTick, foxy.updatesHeld, foxy.lastTick], [8980, 21, 9000]);
+assert.deepEqual(foxy.before, { 'being attacked by': 0, 'in danger': 0, viewing: 0 });
+assert.deepEqual(found(named.counters).changes, { 'being attacked by': 1, 'in danger': 0, viewing: 30 }, 'ticks 0..9000 flip viewing every 300');
+assert.equal(found(named.counters).officeUpdates, 9001);
+assert.equal(found(named.counters).trace, 'main');
 // The same counters read from another run of the replay, and a run with another draw stream refused.
 const plain = traceOf(model.out, { to: 9001, next: 4 });
-const fromOther: any = compareScheduleReplay({ ...args, ledgers: [], text: plain,
+const fromOther = compareScheduleReplay({ ...args, ledgers: [], text: plain,
   counters: { text: traceOf(model.out, { to: 9001, next: 4, counters: { names: watched, at: foxyAt } }) } });
 assert.equal(fromOther.outcome.rebuilt.reason, 'Withered Foxy');
-assert.equal(fromOther.counters.trace.officeDrawProjectionMatches, true);
+assert.equal((found(fromOther.counters).trace as { officeDrawProjectionMatches: boolean }).officeDrawProjectionMatches, true);
 assert.throws(() => compareScheduleReplay({ ...args, ledgers: [], text: plain, counters: { text: traceOf(model.out,
   { to: 9001, next: 4, counters: { names: watched, at: foxyAt }, draws: (r, t) => (t === 5 ? r.draws + 1 : r.draws) }) } }), /counter trace is not a run of the same replay/);
-assert.equal((compareScheduleReplay({ ...args, ledgers: [], counters: false,
-  text: traceOf(model.out, { to: 9001, next: 4, counters: { names: watched, at: foxyAt } }) }) as any).outcome.rebuilt.reason, 'UNKNOWN', 'counters: false reads none');
+assert.equal(compareScheduleReplay({ ...args, ledgers: [], counters: false,
+  text: traceOf(model.out, { to: 9001, next: 4, counters: { names: watched, at: foxyAt } }) }).outcome.rebuilt.reason, 'UNKNOWN', 'counters: false reads none');
 // A death whose counter reads 0 (or a value the sheet never writes) stays UNKNOWN, and says what it read.
-const unnamed: any = compareScheduleReplay({ ...args, ledgers: [], text: traceOf(model.out, { to: 9001, next: 4, counters: { names: watched, at: () => [0, 0, 0] } }) });
+const unnamed = compareScheduleReplay({ ...args, ledgers: [], text: traceOf(model.out, { to: 9001, next: 4, counters: { names: watched, at: () => [0, 0, 0] } }) });
 assert.equal(unnamed.outcome.rebuilt.reason, 'UNKNOWN');
-assert.match(unnamed.outcome.rebuilt.reasonSource, /read 0 on its last office update, which names no attacker/);
+assert.match(found(unnamed.outcome.rebuilt.reasonSource), /read 0 on its last office update, which names no attacker/);
 // A 6 AM carries no attacker even with the watch on.
-assert.equal((compareScheduleReplay({ ...args, ledgers: [], text: traceOf(model.out, { counters: { names: watched, at: () => [0, 0, 0] } }) }) as any).outcome.rebuilt.attacker, undefined);
+assert.equal(compareScheduleReplay({ ...args, ledgers: [], text: traceOf(model.out, { counters: { names: watched, at: () => [0, 0, 0] } }) }).outcome.rebuilt.attacker, undefined);
 assert.throws(() => compareScheduleReplay({ ...args, text: traceOf(model.out), inputText: navigation }), /not the navigation plus/);
-assert.throws(() => compareScheduleReplay({ ...args, text: traceOf(model.out), ledgers: [{ name: 'vents' }] }), /--ledger/);
+// A ledger the harness has no watch for.
+assert.throws(() => compareScheduleReplay({ ...args, text: traceOf(model.out), ledgers: [{ name: 'vents' as LedgerName }] }), /--ledger/);
 
 // --- helpers ---
 assert.deepEqual(transitions([[-1, 0], [0, 0], [1, 1], [5, 2]]), [{ tick: 1, from: 0, to: 1 }, { tick: 5, from: 1, to: 2 }]);
@@ -150,16 +163,17 @@ assert.deepEqual(counterSeries('# counters being attacked by,in danger\n# frame 
 assert.equal(counterSeries('# frame 3 seeded 1\n3 0 0 1\n', 3), null, 'no watch, no series');
 assert.throws(() => counterSeries('# frame 3 seeded 1\n# counter 3 0 1\n', 3), /without its # counters header/);
 assert.throws(() => counterSeries('# counters a,b\n# frame 3 seeded 1\n# counter 3 0 1\n', 3), /one value per watched counter/);
-const series = { names: ['being attacked by', 'viewing'], series: new Map([[0, [0, 1]], [1, [0, 0]], [2, [9, 0]], [3, [9, 0]]]) };
-assert.deepEqual((({ value, name, object, setAtTick, updatesHeld }) => [value, name, object, setAtTick, updatesHeld])(rebuiltAttacker(series, 3)),
+const series = { names: ['being attacked by', 'viewing'], series: new Map<number, (number | null)[]>([[0, [0, 1]], [1, [0, 0]], [2, [9, 0]], [3, [9, 0]]]) };
+assert.deepEqual((({ value, name, object, setAtTick, updatesHeld }: Attacker) => [value, name, object, setAtTick, updatesHeld])(found(rebuiltAttacker(series, 3))),
   [9, 'The Puppet', 'sockpuppet', 2, 2]);
-assert.equal(rebuiltAttacker({ names: ['viewing'], series: new Map([[0, [1]]]) }, 0), null, 'a watch without the counter');
+assert.equal(rebuiltAttacker({ names: ['viewing'], series: new Map<number, (number | null)[]>([[0, [1]]]) }, 0), null, 'a watch without the counter');
 assert.throws(() => rebuiltAttacker(series, 7), /no office update 7/);
 // The sheet's `being attacked by` writes (03-04-Office g556-574, g722, g731): ten attackers, never Balloon Boy.
 assert.deepEqual(Object.keys(ATTACKERS).map(Number), [1, 2, 3, 4, 5, 6, 7, 8, 9, 12]);
 assert.ok(Object.values(ATTACKERS).every((a) => a.setBy.length && a.setBy.every((g) => /^g\d+$/.test(g))));
 assert.ok(!Object.values(ATTACKERS).some((a) => /balloon/i.test(a.name)));
+// Model frame 0 is never compared (harness tick t reads frame t + 1).
 assert.deepEqual(mismatchRuns([{ tick: 0, draws: 1, state: 2 }, { tick: 1, draws: 9, state: 2 }],
-  [{}, { draws: 1, state: 2 }, { draws: 1, state: 2 }]).runs, [{ start: 1, length: 1, rejoined: false }]);
+  [{} as { draws: number, state: number }, { draws: 1, state: 2 }, { draws: 1, state: 2 }]).runs, [{ start: 1, length: 1, rejoined: false }]);
 console.log('PASS schedule replay: FULL-stretch points, one expansion for harness and model, pointers and same-tick edges, ' +
   'the Night 1 minimal binding, prefix/slip/split/death outcomes, the attacker from the counter watch, ledger pairing and input binding (FIXTURE)');

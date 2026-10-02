@@ -58,6 +58,7 @@
 // lateness, seam loss and the frame phase the phone re-rolls are not in it,
 // and no option default changes.
 import { createHash } from 'node:crypto';
+import type { BinaryLike } from 'node:crypto';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -67,8 +68,9 @@ import { STRATEGY_REGISTRY, compileBundle, validateWinner } from '../plans/bundl
 import { PRESET_KNOBS, loadPresets, runNight } from '../plans/night7-presets.ts';
 import { simOptionsFrom } from '../../../source/recompile/model-draw-trace.ts';
 import { committedWinners, designBlock, forkBlocks, gitState, phoneCohorts } from '../census/winner-census.ts';
+import type { ForkedChild } from '../census/winner-census.ts';
 import { heldOutSeeds } from '../census/winner-phase-census.ts';
-import { winnerTag } from '@sixam/kernel';
+import { isList, winnerTag } from '@sixam/kernel';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
 export const KIND = 'fnaf2-rebuild-options-census-v1';
@@ -80,7 +82,30 @@ export const ALPHA = 0.05;
 // A listing longer than this is kept as a count and a hash of the full list.
 export const MAX_LISTED = 20;
 
-const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
+const sha256 = (bytes: BinaryLike) => createHash('sha256').update(bytes).digest('hex');
+
+/** Sim options, as model-draw-trace.ts makes them from model-options JSON. */
+type SimOptions = ReturnType<typeof simOptionsFrom>;
+/** One seed's play: the Sim it ran (the options it was built with), whether it won, and why not. */
+interface Play {
+  sim: { readonly won: boolean, readonly frame: number, readonly opts: Readonly<Record<string, unknown>> };
+  won: boolean, reason: string | null;
+}
+/** A subject: a binding's night or the Night 7 preset, the key two identical replays share, and one seed's play. */
+interface Subject {
+  id: string, binding: string | null, night: number, strategy: string, epochMs: number, replayKey: string;
+  winnerSha256?: string, planSha256?: string, knobsSha256?: string, dials?: Readonly<Record<string, number>>;
+  play(seed: number): Play;
+}
+/** A lost seed: [seed, reason, frame]. */
+type Loss = [number, string, number];
+/** One (subject, set)'s losses over a block of seeds. */
+interface CensusRow { key: string, set: string, n: number, losses: Loss[] }
+/** A stopped run's record of where its rows came from. */
+interface Run {
+  status: string, assembledWith: string, reason: string, checkpointGeneratorStamp: string;
+  blocks: { file: string, rows: number }[];
+}
 
 /**
  * The options file a run scores: `--options FILE` (a repository path), carried to the forked blocks in
@@ -93,7 +118,7 @@ export function optionsFile() {
 
 /** The three option sets, as model-options JSON (not yet Sim options). */
 export function optionSets(path = optionsFile()) {
-  const file = JSON.parse(readFileSync(join(ROOT, path), 'utf8'));
+  const file: Readonly<Record<string, unknown>> = JSON.parse(readFileSync(join(ROOT, path), 'utf8'));
   if (file[DISPUTED_OPTION] !== true) throw new Error(`${path} no longer switches ${DISPUTED_OPTION} on`);
   return [
     { id: 'default', modelOptions: {} },
@@ -103,14 +128,14 @@ export function optionSets(path = optionsFile()) {
 }
 
 // --- constructor-time options -------------------------------------------
-let active = null;
+let active = null as SimOptions | null;
 let installed = false;
 function install() {
   if (installed) return;
   if (Object.getOwnPropertyDescriptor(Sim.prototype, 'opts')) throw new Error('Sim.prototype.opts is already defined');
   Object.defineProperty(Sim.prototype, 'opts', {
     configurable: true,
-    set(value) {
+    set(this: object, value: object) {
       Object.defineProperty(this, 'opts', { value: active ? Object.assign(value, active) : value,
         writable: true, configurable: true, enumerable: true });
     },
@@ -119,7 +144,7 @@ function install() {
 }
 
 /** Run `fn` with every Sim constructed inside it carrying `simOptions`. */
-export function withModelOptions(simOptions, fn) {
+export function withModelOptions<T>(simOptions: SimOptions, fn: () => T): T {
   install();
   if (active) throw new Error('withModelOptions does not nest');
   active = Object.keys(simOptions).length ? simOptions : null;
@@ -127,7 +152,7 @@ export function withModelOptions(simOptions, fn) {
 }
 
 /** The Sim was built with exactly this set: the injected values, or the defaults for an empty set. */
-function assertCarries(sim, simOptions, tag) {
+function assertCarries(sim: Play['sim'], simOptions: SimOptions, tag: string) {
   const entries = Object.entries(simOptions);
   if (!entries.length) {
     if (sim.opts.sourcedHourTable !== false || sim.opts.frameMs !== null || sim.opts[DISPUTED_OPTION] !== false)
@@ -139,7 +164,7 @@ function assertCarries(sim, simOptions, tag) {
 }
 
 // --- seeds ---------------------------------------------------------------
-export function seedBlocks(count) {
+export function seedBlocks(count: number) {
   const design = Array.from({ length: count }, (_, i) => i + 1);
   const inDesign = new Set(designBlock().seeds);
   if (!design.every((seed) => inDesign.has(seed))) throw new Error(`seeds 1..${count} are not all in the design block`);
@@ -152,7 +177,7 @@ export function seedBlocks(count) {
  * repository-relative; a record's reader passes a retired binding's path here
  * to replay the bytes it scored.
  */
-export function bindingSubjects(path) {
+export function bindingSubjects(path: string): Subject[] {
   const text = readFileSync(join(ROOT, path));
   const winner = validateWinner(JSON.parse(text.toString('utf8')));
   return winner.nights.filter((night) => night <= 6 || path === K3_BINDING).map((night) => {
@@ -162,7 +187,7 @@ export function bindingSubjects(path) {
       id: `${winnerTag(path)}@${night}`, binding: path, night,
       strategy: winner.strategy, epochMs, winnerSha256: sha256(text), planSha256: sha256(emitted.text),
       replayKey: sha256(JSON.stringify({ strategy: winner.strategy, night, epochMs, knobs: emitted.knobs, plan: emitted.text })),
-      play: (seed) => {
+      play: (seed: number) => {
         const { sim } = emitted.replay(seed);
         return { sim, won: !!sim.won, reason: sim.won ? null : (sim.death?.reason ?? 'alive') };
       },
@@ -175,7 +200,7 @@ export function bindingSubjects(path) {
  * winnerSha256, play(seed) -> {sim, won, reason} }. `replayKey` is equal for
  * two bindings whose replays are identical by construction.
  */
-export function subjects() {
+export function subjects(): Subject[] {
   const out = committedWinners().flatMap((path) => bindingSubjects(path));
   const preset = loadPresets().find((p) => p.id === PRESET_ID);
   if (!preset) throw new Error(`no ${PRESET_ID} preset in the menu model`);
@@ -183,7 +208,7 @@ export function subjects() {
     id: `night7-preset-${PRESET_ID}@7`, binding: null, night: 7, strategy: 'minus-toys', epochMs: 0,
     knobsSha256: sha256(JSON.stringify(PRESET_KNOBS)), dials: preset.dials,
     replayKey: sha256(JSON.stringify({ preset: PRESET_ID, knobs: PRESET_KNOBS })),
-    play: (seed) => {
+    play: (seed: number) => {
       const { sim, splitAt } = runNight({ preset, seed, knobs: PRESET_KNOBS });
       const won = !!sim.won && splitAt >= 0;
       return { sim, won, reason: won ? null : sim.won ? 'unarmed' : (sim.death?.reason ?? 'alive') };
@@ -193,8 +218,8 @@ export function subjects() {
 }
 
 /** The first subject of each replayKey, in subject order. */
-function uniqueSubjects(all) {
-  const seen = new Set();
+function uniqueSubjects(all: readonly Subject[]) {
+  const seen = new Set<string>();
   return all.filter((s) => (seen.has(s.replayKey) ? false : seen.add(s.replayKey)));
 }
 
@@ -203,7 +228,7 @@ function uniqueSubjects(all) {
  * With a checkpoint directory, the rows so far are saved after each subject and a restarted block resumes
  * after the last saved subject; the file names the block and the generator's hash, so a stale one is ignored.
  */
-function censusBlock(a, b, count, checkpointDir = null) {
+function censusBlock(a: number, b: number, count: number, checkpointDir: string | null = null) {
   const { design, heldOut } = seedBlocks(count);
   const seeds = [...design, ...heldOut].slice(a, b);
   const sets = optionSets().map((set) => ({ id: set.id, simOptions: simOptionsFrom(set.modelOptions) }));
@@ -211,7 +236,7 @@ function censusBlock(a, b, count, checkpointDir = null) {
   const unique = uniqueSubjects(subjects());
   const stamp = sha256(readFileSync(fileURLToPath(import.meta.url))).slice(0, 16);
   const checkpoint = checkpointDir ? join(checkpointDir, `block-${count}-${a}-${b}-${stamp}.json`) : null;
-  let rows = [];
+  let rows: CensusRow[] = [];
   if (checkpoint && existsSync(checkpoint)) {
     rows = JSON.parse(readFileSync(checkpoint, 'utf8'));
     console.error(`  seeds[${a}../../../..${b}) resuming after ${rows.length / sets.length} subjects from ${checkpoint}`);
@@ -219,14 +244,15 @@ function censusBlock(a, b, count, checkpointDir = null) {
   for (const [k, subject] of unique.entries()) {
     if (rows.some((row) => row.key === subject.replayKey)) continue;
     for (const set of sets) {
-      const losses = [];
+      const losses: Loss[] = [];
       for (const seed of seeds) {
         const tag = `${subject.id} ${set.id} seed ${seed}`;
-        let result;
+        let result: Play;
         try { result = withModelOptions(set.simOptions, () => subject.play(seed)); }
-        catch (error) { losses.push([seed, `replay-error: ${String(error.message).slice(0, 160)}`, -1]); continue; }
+        catch (error) { losses.push([seed, `replay-error: ${String((error as Error).message).slice(0, 160)}`, -1]); continue; }
         assertCarries(result.sim, set.simOptions, tag);
-        if (!result.won) losses.push([seed, result.reason, result.sim.frame]);
+        // A lost play names its reason.
+        if (!result.won) losses.push([seed, result.reason as string, result.sim.frame]);
       }
       rows.push({ key: subject.replayKey, set: set.id, n: seeds.length, losses });
     }
@@ -238,13 +264,13 @@ function censusBlock(a, b, count, checkpointDir = null) {
 
 // --- statistics ----------------------------------------------------------
 const logFactorials = [0];
-function logFactorial(n) {
+function logFactorial(n: number) {
   for (let i = logFactorials.length; i <= n; i += 1) logFactorials.push(logFactorials[i - 1] + Math.log(i));
   return logFactorials[n];
 }
 
 /** Exact two-sided McNemar p: the discordant seeds split b : c under p = 1/2. */
-export function mcnemarExact(b, c) {
+export function mcnemarExact(b: number, c: number) {
   const n = b + c;
   if (n === 0) return 1;
   let tail = 0;
@@ -254,7 +280,7 @@ export function mcnemarExact(b, c) {
 }
 
 /** Wilson 95% interval for wins/n. */
-export function wilson95(wins, n) {
+export function wilson95(wins: number, n: number) {
   const z = 1.959963984540054;
   const p = wins / n;
   const centre = (p + z * z / (2 * n)) / (1 + z * z / n);
@@ -263,28 +289,35 @@ export function wilson95(wins, n) {
 }
 
 /** IDENTICAL, WITHIN_NOISE, ONE_BLOCK or MOVED, from the two blocks' paired comparisons. */
-export function verdict(design, heldOut) {
-  const sig = (x) => x.pExact < ALPHA;
-  const sign = (x) => Math.sign(x.optionOnlyWins - x.defaultOnlyWins);
+export function verdict(design: Comparison, heldOut: Comparison) {
+  const sig = (x: Comparison) => x.pExact < ALPHA;
+  const sign = (x: Comparison) => Math.sign(x.optionOnlyWins - x.defaultOnlyWins);
   if (design.defaultOnlyWins + design.optionOnlyWins + heldOut.defaultOnlyWins + heldOut.optionOnlyWins === 0) return 'IDENTICAL';
   if (sig(design) && sig(heldOut) && sign(design) === sign(heldOut)) return 'MOVED';
   if (sig(design) || sig(heldOut)) return 'ONE_BLOCK';
   return 'WITHIN_NOISE';
 }
 
-const listed = (list) => (list.length <= MAX_LISTED ? { list } : { list: list.slice(0, MAX_LISTED), truncated: true });
+/** One block's paired comparison of a set with the default (or with rebuild). */
+type Paired = ReturnType<typeof paired>;
+/** What a verdict reads of a block's comparison. */
+type Comparison = Pick<Paired, 'pExact' | 'defaultOnlyWins' | 'optionOnlyWins'>;
+/** IDENTICAL, WITHIN_NOISE, ONE_BLOCK or MOVED. */
+type Verdict = ReturnType<typeof verdict>;
 
-function blockSummary(seeds, losses) {
+const listed = <T>(list: readonly T[]) => (list.length <= MAX_LISTED ? { list } : { list: list.slice(0, MAX_LISTED), truncated: true });
+
+function blockSummary(seeds: readonly number[], losses: readonly Loss[]) {
   const inBlock = new Set(seeds);
   const lost = losses.filter(([seed]) => inBlock.has(seed));
-  const deaths = {};
+  const deaths: Record<string, number> = {};
   for (const [, reason] of lost) deaths[reason] = (deaths[reason] ?? 0) + 1;
   const wins = seeds.length - lost.length;
   return { wins, n: seeds.length, rate: Number((wins / seeds.length).toFixed(6)), wilson95: wilson95(wins, seeds.length),
     deaths, losses: { count: lost.length, sha256: sha256(JSON.stringify(lost)), ...listed(lost) } };
 }
 
-function paired(seeds, defaultLosses, setLosses) {
+function paired(seeds: readonly number[], defaultLosses: readonly Loss[], setLosses: readonly Loss[]) {
   const inBlock = new Set(seeds);
   const lostDefault = new Map(defaultLosses.filter(([seed]) => inBlock.has(seed)).map((row) => [row[0], row]));
   const lostSet = new Map(setLosses.filter(([seed]) => inBlock.has(seed)).map((row) => [row[0], row]));
@@ -300,13 +333,26 @@ function paired(seeds, defaultLosses, setLosses) {
 }
 
 // --- the record ----------------------------------------------------------
-export function buildRecord({ merged, count, all, winnerHashes, cohorts, git, date, command, wallSeconds, run = null, suffix = '' }) {
+/** A row of the record: a subject under one option set, scored or NOT_RUN. */
+type RecordRow = { subject: string, binding: string | null, night: number, set: string, status: 'NOT_RUN' } | ScoredRow;
+/** A scored row: each block's summary and, but for the default set, its comparisons. */
+interface ScoredRow {
+  subject: string, binding: string | null, night: number, set: string, status: 'SCORED', sharesReplayWith?: string;
+  design: ReturnType<typeof blockSummary>, heldOut: ReturnType<typeof blockSummary>;
+  vsDefault?: { verdict: Verdict, design: Paired, heldOut: Paired }, vsRebuild?: { verdict: Verdict, design: Paired, heldOut: Paired };
+}
+
+export function buildRecord({ merged, count, all, winnerHashes, cohorts, git, date, command, wallSeconds, run = null, suffix = '' }: {
+  merged: readonly CensusRow[], count: number, all: readonly Subject[], winnerHashes: Readonly<Record<string, string>>;
+  cohorts: ReturnType<typeof phoneCohorts>, git: ReturnType<typeof gitState>, date: string, command: string;
+  wallSeconds: number | null, run?: Run | null, suffix?: string,
+}) {
   const { design, heldOut } = seedBlocks(count);
   const sets = optionSets();
   const byKey = new Map(merged.map((row) => [`${row.key} ${row.set}`, row.losses]));
-  const firstOf = new Map();
+  const firstOf = new Map<string, string>();
   for (const s of all) if (!firstOf.has(s.replayKey)) firstOf.set(s.replayKey, s.id);
-  const rows = [];
+  const rows: RecordRow[] = [];
   // A subject is scored only when every option set has its row: a stopped run leaves the rest NOT_RUN, with no figures.
   const scoredKeys = new Set(all.map((s) => s.replayKey).filter((key) => sets.every((set) => byKey.has(`${key} ${set.id}`))));
   for (const s of all) {
@@ -314,13 +360,13 @@ export function buildRecord({ merged, count, all, winnerHashes, cohorts, git, da
       for (const set of sets) rows.push({ subject: s.id, binding: s.binding, night: s.night, set: set.id, status: 'NOT_RUN' });
       continue;
     }
-    const losses = (set) => {
+    const losses = (set: string) => {
       const found = byKey.get(`${s.replayKey} ${set}`);
       if (!found) throw new Error(`no census row for ${s.id} ${set}`);
       return found;
     };
     for (const set of sets) {
-      const row: any = {
+      const row: ScoredRow = {
         subject: s.id, binding: s.binding, night: s.night, set: set.id, status: 'SCORED',
         ...(firstOf.get(s.replayKey) !== s.id ? { sharesReplayWith: firstOf.get(s.replayKey) } : {}),
         design: blockSummary(design, losses(set.id)), heldOut: blockSummary(heldOut, losses(set.id)),
@@ -342,24 +388,26 @@ export function buildRecord({ merged, count, all, winnerHashes, cohorts, git, da
   const bindings = all.map((s) => ({
     subject: s.id, binding: s.binding, night: s.night, strategy: s.strategy, epochMs: s.epochMs,
     ...(s.binding ? { winnerSha256: s.winnerSha256, winnerHash: winnerHashes[s.binding], planSha256: s.planSha256,
-      phone: cohorts.filter((c) => c.binding === winnerHashes[s.binding] && c.night === s.night)
+      phone: cohorts.filter((c) => c.binding === winnerHashes[s.binding as string] && c.night === s.night)
         .map(({ record, wins, counted, size, status }) => ({ record, wins, counted, size, status })) }
       : { schedule: 'night7-presets.ts PRESET_KNOBS', knobsSha256: s.knobsSha256, preset: PRESET_ID, dials: s.dials,
           win: 'sim.won AND splitAt >= 0' }),
     replayKey: s.replayKey, status: scoredKeys.has(s.replayKey) ? 'SCORED' : 'NOT_RUN',
   }));
   const notRun = all.filter((s) => !scoredKeys.has(s.replayKey)).map((s) => s.id);
-  const scoredRows = rows.filter((r) => r.status === 'SCORED');
-  const tally = {};
+  const scoredRows = rows.filter((r): r is ScoredRow => r.status === 'SCORED');
+  const tally: Record<string, Record<Verdict, string[]>> = {};
   for (const set of sets.slice(1)) {
     tally[set.id] = { IDENTICAL: [], WITHIN_NOISE: [], ONE_BLOCK: [], MOVED: [] };
-    for (const row of scoredRows.filter((r) => r.set === set.id)) tally[set.id][row.vsDefault.verdict].push(row.subject);
+    // Every set but the default is compared with it.
+    for (const row of scoredRows.filter((r) => r.set === set.id)) tally[set.id][(row.vsDefault as NonNullable<ScoredRow['vsDefault']>).verdict].push(row.subject);
   }
-  const markers = { IDENTICAL: [], WITHIN_NOISE: [], ONE_BLOCK: [], MOVED: [] };
-  for (const row of scoredRows.filter((r) => r.vsRebuild)) markers[row.vsRebuild.verdict].push(row.subject);
+  const markers: Record<Verdict, string[]> = { IDENTICAL: [], WITHIN_NOISE: [], ONE_BLOCK: [], MOVED: [] };
+  for (const row of scoredRows.filter((r) => r.vsRebuild)) markers[(row.vsRebuild as NonNullable<ScoredRow['vsRebuild']>).verdict].push(row.subject);
   tally[`${DISPUTED_OPTION} (rebuild vs rebuild-no-cam-markers)`] = markers;
-  const rateText = (b) => `${b.wins}/${b.n}`;
-  const rowOf = (subject, set) => rows.find((r) => r.subject === subject && r.set === set);
+  const rateText = (b: { readonly wins: number, readonly n: number }) => `${b.wins}/${b.n}`;
+  // Read only for a scored subject, which has a scored row in every set.
+  const rowOf = (subject: string, set: string) => rows.find((r) => r.subject === subject && r.set === set) as ScoredRow;
   const flagged = scoredRows.filter((r) => r.vsDefault?.verdict === 'MOVED').map((r) => ({
     subject: r.subject, set: r.set,
     design: `${rateText(rowOf(r.subject, 'default').design)} -> ${rateText(r.design)}`,
@@ -436,46 +484,53 @@ export function buildRecord({ merged, count, all, winnerHashes, cohorts, git, da
  * The rows a stopped `--checkpoint` run left: the block files of the same `--jobs` partition, all written by one
  * generator (the stamp in their names). A (replay, set) row is kept only when every block finished it.
  */
-export function assembleCheckpoints(dir, count, jobs) {
+export function assembleCheckpoints(dir: string, count: number, jobs: number) {
   const total = 2 * count;
   const size = Math.ceil(total / jobs);
   const files = readdirSync(dir);
-  const parts = [];
+  const parts: { file: string, stamp: string, rows: CensusRow[] }[] = [];
   for (let a = 0; a < total; a += size) {
     const b = Math.min(a + size, total);
     const found = files.filter((f) => f.startsWith(`block-${count}-${a}-${b}-`) && f.endsWith('.json'));
     if (found.length !== 1) throw new Error(`--assemble: expected one checkpoint for seeds[${a}../../../..${b}) in ${dir}, found ${found.length}`);
-    const rows = JSON.parse(readFileSync(join(dir, found[0]), 'utf8'));
+    const rows: CensusRow[] = JSON.parse(readFileSync(join(dir, found[0]), 'utf8'));
     for (const row of rows) if (row.n !== b - a) throw new Error(`--assemble: ${found[0]} holds a row of ${row.n} seeds, not ${b - a}`);
     parts.push({ file: found[0], stamp: found[0].slice(`block-${count}-${a}-${b}-`.length, -'.json'.length), rows });
   }
   const stamps = [...new Set(parts.map((p) => p.stamp))];
   if (stamps.length !== 1) throw new Error(`--assemble: the checkpoints come from different generators (${stamps.join(', ')})`);
   const keyed = parts.map((p) => new Map(p.rows.map((row) => [`${row.key} ${row.set}`, row])));
+  // Every block holds each key kept here (the filter).
   const merged = [...keyed[0].keys()].filter((k) => keyed.every((m) => m.has(k))).map((k) => ({
-    ...keyed[0].get(k),
-    n: keyed.reduce((sum, m) => sum + (m.get(k) as any).n, 0),
-    losses: keyed.flatMap((m) => (m.get(k) as any).losses).sort((x, y) => x[0] - y[0]),
+    ...keyed[0].get(k) as CensusRow,
+    n: keyed.reduce((sum, m) => sum + (m.get(k) as CensusRow).n, 0),
+    losses: keyed.flatMap((m) => (m.get(k) as CensusRow).losses).sort((x, y) => x[0] - y[0]),
   }));
   return { merged, stamp: stamps[0], blocks: parts.map((p) => ({ file: p.file, rows: p.rows.length })) };
 }
 
 /** JSON with arrays of scalars (and of scalar arrays) on one line. */
-export function formatRecord(value, indent = '') {
+export function formatRecord(value: unknown, indent = ''): string {
   const inner = `${indent}  `;
-  const flat = (x) => x === null || typeof x !== 'object' || (Array.isArray(x) && x.every((y) => y === null || typeof y !== 'object'));
+  const flat = (x: unknown) => x === null || typeof x !== 'object' || (isList(x) && x.every((y) => y === null || typeof y !== 'object'));
   if (flat(value)) return JSON.stringify(value);
-  if (Array.isArray(value)) {
+  if (isList(value)) {
     if (value.every(flat)) return `[${value.map((x) => JSON.stringify(x)).join(', ')}]`;
     return `[\n${value.map((x) => inner + formatRecord(x, inner)).join(',\n')}\n${indent}]`;
   }
-  const entries = Object.entries(value);
+  // Not flat and not a list: an object.
+  const entries = Object.entries(value as object);
   if (!entries.length) return '{}';
   return `{\n${entries.map(([k, v]) => `${inner}${JSON.stringify(k)}: ${formatRecord(v, inner)}`).join(',\n')}\n${indent}}`;
 }
 
-function parseArgs(argv) {
-  const args: any = { jobs: 1, count: 3000, out: null, checkpoint: null, suffix: '', date: new Date().toISOString().slice(0, 10) };
+/** The command line: the partition and size, the record's date, name and destination, and a run to resume or assemble. */
+interface Args {
+  jobs: number, count: number, out: string | null, checkpoint: string | null, suffix: string, date: string, assemble?: string;
+}
+
+function parseArgs(argv: readonly string[]) {
+  const args: Args = { jobs: 1, count: 3000, out: null, checkpoint: null, suffix: '', date: new Date().toISOString().slice(0, 10) };
   for (let i = 0; i < argv.length; i += 1) {
     const flag = argv[i];
     if (flag === '--jobs') args.jobs = Number(argv[++i]);
@@ -495,18 +550,18 @@ function parseArgs(argv) {
   return args;
 }
 
-async function main(argv) {
+async function main(argv: string[]) {
   if (argv[0] === '--child') {
     const [, a, b, count, checkpoint] = argv;
-    process.send(censusBlock(Number(a), Number(b), Number(count), checkpoint || null));
+    (process as ForkedChild).send(censusBlock(Number(a), Number(b), Number(count), checkpoint || null));
     return;
   }
-  const args: any = parseArgs(argv);
+  const args = parseArgs(argv);
   const all = subjects();
   const scratch = mkdtempSync(join(tmpdir(), 'rebuild-options-census-'));
-  const winnerHashes = {};
+  const winnerHashes: Record<string, string> = {};
   try {
-    for (const path of new Set(all.map((s) => s.binding).filter(Boolean))) {
+    for (const path of new Set(all.map((s) => s.binding).filter((b): b is string => Boolean(b)))) {
       const built = compileBundle(JSON.parse(readFileSync(join(ROOT, path), 'utf8')), join(scratch, path.replace(/\//g, '_')));
       winnerHashes[path] = built.manifest.winnerHash;
     }
@@ -514,8 +569,8 @@ async function main(argv) {
   const started = Date.now();
   const command = `node packages/propose/bin/recompile/rebuild-options-census.ts --jobs ${args.jobs} --count ${args.count} --date ${args.date}` +
     (args.suffix ? ` --suffix ${args.suffix}` : '');
-  let merged;
-  let run = null;
+  let merged: CensusRow[];
+  let run = null as Run | null;
   if (args.assemble) {
     const assembled = assembleCheckpoints(args.assemble, args.count, args.jobs);
     merged = assembled.merged;
@@ -525,7 +580,7 @@ async function main(argv) {
       checkpointGeneratorStamp: assembled.stamp, blocks: assembled.blocks };
   } else {
     if (args.checkpoint) mkdirSync(args.checkpoint, { recursive: true });
-    merged = await forkBlocks({ script: fileURLToPath(import.meta.url),
+    merged = await forkBlocks<CensusRow>({ script: fileURLToPath(import.meta.url),
       args: [String(args.count), ...(args.checkpoint ? [args.checkpoint] : [])],
       start: 0, count: 2 * args.count, jobs: args.jobs });
   }

@@ -26,6 +26,7 @@
 // record does not cover is reported as UNSCORED_WINNERS, not failed.
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
+import type { BinaryLike } from 'node:crypto';
 import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -38,7 +39,11 @@ import { currentPath } from '@sixam/review/renamed-path';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
 const EVIDENCE = join(ROOT, 'docs/evidence');
-const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
+const sha256 = (bytes: BinaryLike) => createHash('sha256').update(bytes).digest('hex');
+// A lookup the record says succeeds; the assertion that follows reads it.
+const found = <T>(value: T | undefined) => value as T;
+/** A subject the tree offers. */
+type Subject = ReturnType<typeof subjects>[number];
 
 // The statistics against values computed by hand: 0 : 10 discordant seeds is
 // 2 * 2^-10; an even split is no evidence; 3000/3000's Wilson floor is
@@ -49,7 +54,7 @@ assert.ok(Math.abs(mcnemarExact(10, 0) - 2 / 1024) < 1e-12);
 assert.ok(Math.abs(mcnemarExact(5, 5) - 1) < 1e-12);
 assert.ok(Math.abs(mcnemarExact(1, 9) - 22 / 1024) < 1e-12);
 assert.deepEqual(wilson95(3000, 3000), [0.998721, 1]);
-const pair = (defaultOnlyWins, optionOnlyWins) => ({ defaultOnlyWins, optionOnlyWins, pExact: mcnemarExact(defaultOnlyWins, optionOnlyWins) });
+const pair = (defaultOnlyWins: number, optionOnlyWins: number) => ({ defaultOnlyWins, optionOnlyWins, pExact: mcnemarExact(defaultOnlyWins, optionOnlyWins) });
 assert.equal(verdict(pair(0, 0), pair(0, 0)), 'IDENTICAL');
 assert.equal(verdict(pair(2, 0), pair(0, 1)), 'WITHIN_NOISE');
 assert.equal(verdict(pair(10, 0), pair(1, 0)), 'ONE_BLOCK');
@@ -60,7 +65,7 @@ const names = readdirSync(EVIDENCE).filter((file) => /^rebuild-options-census-\d
 assert.ok(names.length, 'no docs/evidence/rebuild-options-census-YYYYMMDD.json is committed');
 const current = new Map(subjects().map((s) => [s.id, s]));
 
-function checkRecord(name) {
+function checkRecord(name: string) {
   const record = JSON.parse(readFileSync(join(EVIDENCE, name), 'utf8'));
   assert.equal(record.kind, KIND);
   assert.equal(record.claimLevel, 'MODEL_ONLY');
@@ -86,7 +91,7 @@ function checkRecord(name) {
   // The injection reaches the constructor: on a story night sourcedHourTable
   // leaves hour 0's AI table to the first loop, so a fresh Sim has every AI at 0.
   {
-    const rebuild = simOptionsFrom(sets.find((s) => s.id === 'rebuild').modelOptions);
+    const rebuild = simOptionsFrom(found(sets.find((s) => s.id === 'rebuild')).modelOptions);
     const inside = withModelOptions(rebuild, () => new Sim({ night: 6, seed: 1 }));
     const outside = new Sim({ night: 6, seed: 1 });
     assert.equal(inside.opts.sourcedHourTable, true);
@@ -97,11 +102,11 @@ function checkRecord(name) {
 
   // A binding retired since the record was written (bindings/<game>/retired/)
   // is replayed from the bytes it scored, which its rename keeps reachable.
-  const retired = (b) => {
+  const retired = (b: { readonly binding: string | null, readonly subject: string }) => {
     const path = b.binding && currentPath(ROOT, b.binding);
     return path?.includes('/retired/') ? bindingSubjects(path).find((s) => s.id === b.subject) : undefined;
   };
-  const offered = new Map();
+  const offered = new Map<string, Subject>();
   for (const b of record.bindings) {
     const s = current.get(b.subject) ?? retired(b);
     assert.ok(s, `${name} scored ${b.subject}, which the tree no longer offers`);
@@ -117,9 +122,9 @@ function checkRecord(name) {
 
   assert.equal(record.rows.length, record.bindings.length * sets.length, 'a row is missing for some subject and option set');
   let replays = 0;
-  const play = (subject, set, seed) => {
+  const play = (subject: Subject, set: string, seed: number) => {
     replays += 1;
-    return withModelOptions(simOptionsFrom(sets.find((x) => x.id === set).modelOptions), () => subject.play(seed));
+    return withModelOptions(simOptionsFrom(found(sets.find((x) => x.id === set)).modelOptions), () => subject.play(seed));
   };
   let notRun = 0;
   for (const row of record.rows) {
@@ -135,11 +140,11 @@ function checkRecord(name) {
     for (const block of [row.design, row.heldOut]) {
       assert.equal(block.n, count, `${tag}: a block is not ${count} seeds`);
       assert.equal(block.wins + block.losses.count, block.n, `${tag}: wins and losses do not add up`);
-      assert.equal(Object.values(block.deaths).reduce((a, b) => a + b, 0), block.losses.count, `${tag}: deaths do not add up`);
+      assert.equal(Object.values(block.deaths as Record<string, number>).reduce((a, b) => a + b, 0), block.losses.count, `${tag}: deaths do not add up`);
     }
     const pairs = [['vsDefault', 'default'], ['vsRebuild', 'rebuild']].filter(([key]) => row[key]);
     for (const [pairKey, baseSet] of pairs) {
-      const base = record.rows.find((r) => r.subject === row.subject && r.set === baseSet);
+      const base = record.rows.find((r: { readonly subject: string, readonly set: string }) => r.subject === row.subject && r.set === baseSet);
       for (const key of ['design', 'heldOut']) {
         const v = row[pairKey][key];
         assert.equal(v.deltaWins, row[key].wins - base[key].wins, `${tag} ${pairKey} ${key}: delta is not the difference of the rates`);
@@ -149,12 +154,12 @@ function checkRecord(name) {
       assert.equal(row[pairKey].verdict, verdict(row[pairKey].design, row[pairKey].heldOut), `${tag} ${pairKey}: verdict`);
     }
     if (row.sharesReplayWith) continue;
-    const subject = offered.get(row.subject);
+    const subject = found(offered.get(row.subject));
     // One fixed held-out seed per distinct replay and set, spread by the row's position; when the
     // row lists every loss, its outcome is known and must replay.
     if (!row.heldOut.losses.truncated) {
       const seed = heldOut[(record.rows.indexOf(row) * 977) % heldOut.length];
-      const lost = row.heldOut.losses.list.find(([s]) => s === seed);
+      const lost = row.heldOut.losses.list.find(([s]: readonly [number, string, number]) => s === seed);
       const r = play(subject, row.set, seed);
       assert.equal(r.won, !lost, `${tag} held-out seed ${seed} replays ${r.won ? 'WON' : 'LOST'}; ${name} says otherwise`);
     }
@@ -180,7 +185,7 @@ function checkRecord(name) {
     }
   }
 
-  const scored = new Set(record.bindings.map((b) => b.binding).filter(Boolean));
+  const scored = new Set(record.bindings.map((b: { readonly binding: string | null }) => b.binding).filter(Boolean));
   const unscored = committedWinners().filter((path) => !scored.has(path) &&
     [...current.values()].some((s) => s.binding === path));
   console.log(`rebuild-options census ${name} (${scoredOptions}): ${record.bindings.length} subjects x ${sets.length} ` +
