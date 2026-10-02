@@ -4049,6 +4049,7 @@
     {
       "file": "packages/review/bin/grade/post-night-static.ts",
       "imports": [
+        "../../src/records.ts",
         "node:crypto",
         "node:fs",
         "node:path",
@@ -4058,6 +4059,8 @@
     {
       "file": "packages/review/bin/grade/run-report.ts",
       "imports": [
+        "../../src/records.ts",
+        "@sixam/kernel",
         "node:fs",
         "node:path",
         "node:url"
@@ -4066,6 +4069,7 @@
     {
       "file": "packages/review/bin/grade/static-terminal-window.ts",
       "imports": [
+        "../../src/records.ts",
         "node:crypto",
         "node:fs",
         "node:path",
@@ -4230,6 +4234,13 @@
       ]
     },
     {
+      "file": "packages/review/src/custom-night.ts",
+      "imports": [
+        "./records.ts",
+        "@sixam/kernel"
+      ]
+    },
+    {
       "file": "packages/review/src/envelopes.ts",
       "imports": [
         "./evidence-pack.ts",
@@ -4248,7 +4259,9 @@
     {
       "file": "packages/review/src/evidence-cohort.ts",
       "imports": [
+        "./custom-night.ts",
         "./evidence-pack.ts",
+        "./records.ts",
         "@sixam/kernel",
         "@sixam/kernel/contracts",
         "node:fs",
@@ -4259,6 +4272,7 @@
       "file": "packages/review/src/evidence-pack.ts",
       "imports": [
         "./evidence-campaign.ts",
+        "./records.ts",
         "@sixam/kernel",
         "@sixam/kernel/contracts",
         "@sixam/source",
@@ -4270,9 +4284,11 @@
     {
       "file": "packages/review/src/evidence-promotion.ts",
       "imports": [
+        "./custom-night.ts",
         "./evidence-campaign.ts",
         "./evidence-pack.ts",
         "./fnaf1-promotion.ts",
+        "./records.ts",
         "@sixam/kernel",
         "@sixam/kernel/contracts",
         "@sixam/source/fnaf2",
@@ -4285,6 +4301,8 @@
       "file": "packages/review/src/fnaf1-promotion.ts",
       "imports": [
         "./evidence-pack.ts",
+        "./records.ts",
+        "@sixam/kernel",
         "node:crypto",
         "node:fs",
         "node:path"
@@ -4322,6 +4340,7 @@
       "file": "packages/review/src/pack-lift.ts",
       "imports": [
         "./evidence-pack.ts",
+        "./records.ts",
         "@sixam/kernel",
         "node:fs",
         "node:path"
@@ -4333,11 +4352,18 @@
         "./evidence-pack.ts",
         "./evidence-promotion.ts",
         "./pack-lift.ts",
+        "./records.ts",
         "@sixam/kernel",
         "@sixam/kernel/contracts",
         "node:crypto",
         "node:fs",
         "node:path"
+      ]
+    },
+    {
+      "file": "packages/review/src/records.ts",
+      "imports": [
+        "@sixam/kernel"
       ]
     },
     {
@@ -4352,6 +4378,7 @@
         "./chronicle-schema.ts",
         "./evidence-pack.ts",
         "./evidence-promotion.ts",
+        "./records.ts",
         "@sixam/kernel",
         "@sixam/kernel/contracts",
         "@sixam/source",
@@ -4460,6 +4487,7 @@
       "imports": [
         "../src/evidence-campaign.ts",
         "../src/evidence-pack.ts",
+        "../src/records.ts",
         "@sixam/kernel/contracts",
         "node:assert/strict",
         "node:crypto",

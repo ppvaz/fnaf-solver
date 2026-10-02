@@ -29,7 +29,7 @@ const isCampaignError = (wrapper: { status?: unknown, mode?: unknown, result?: u
   && typeof wrapper.error === 'string' && wrapper.error.trim().length > 0;
 
 /** @param wrapper parsed result.json */
-export const isCampaignResult = (wrapper: unknown) => {
+export const isCampaignResult = (wrapper: unknown): wrapper is CampaignWrapper => {
   const fields = isRecord(wrapper) ? wrapper : undefined;
   return (isRecord(fields?.result) && fields.result.schema === CAMPAIGN_RESULT_SCHEMA) || isCampaignError(fields);
 };

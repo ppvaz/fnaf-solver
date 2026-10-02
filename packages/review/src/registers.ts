@@ -8,7 +8,7 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { GAME_PACKAGES, controlCatalogFor } from '@sixam/source';
-import { isRecord, isUnknown, unknown } from '@sixam/kernel';
+import { isList, isRecord, isUnknown, unknown } from '@sixam/kernel';
 import type { EnvelopeLabel } from '@sixam/kernel';
 import type { ControlDescriptor } from '@sixam/kernel/contracts';
 import { KINDS, ROUTES, RUNGS, SCHEMAS, V1_GAME, checkCorpus, readEntries } from './chronicle-schema.ts';
@@ -16,6 +16,8 @@ import type { ChronicleCheckpoint } from './chronicle-schema.ts';
 import { PACKS_DIR, attestationStatus, packCustody, packEntry, readPack } from './evidence-pack.ts';
 import type { RunPack } from './evidence-pack.ts';
 import { GRAPH_FILE, PROMOTION_EDGE, readGraph } from './evidence-promotion.ts';
+import { jsonObject, listOrEmpty, objectOrNull } from './records.ts';
+import type { JsonObject } from './records.ts';
 
 export const CHRONICLE_DIR = 'docs/chronicle/entries';
 export const CHRONICLE_SCHEMA_MODULE = 'packages/review/src/chronicle-schema.ts';
@@ -27,7 +29,9 @@ export const CONTROL_CATALOG_DIR = 'packages/source/src/games';
 /** A registered game's control catalog, `packages/source/src/games/<alias>/controls.js`. */
 export const controlCatalogFile = (alias: string) => `${CONTROL_CATALOG_DIR}/${alias}/controls.js`;
 
-const readJson = (root: string, path: string) => JSON.parse(readFileSync(join(root, path), 'utf8'));
+const readJson = (root: string, path: string) => jsonObject(readFileSync(join(root, path), 'utf8'), path);
+/** A register row that names itself by a string id. */
+const isIdentified = (item: unknown): item is JsonObject & { readonly id: string } => isRecord(item) && typeof item.id === 'string';
 
 // --- games ---------------------------------------------------------------------------------
 
@@ -64,10 +68,11 @@ export const NEGATIVE_KINDS = Object.freeze(['refutation', 'retraction', 'negati
  */
 export function readChronicle(root: string) {
   const names = readdirSync(join(root, CHRONICLE_DIR)).filter(name => name.endsWith('.json')).sort();
-  // Checked by checkCorpus below before any entry is read.
-  const checkpoints: ChronicleCheckpoint[] = names.map(name => ({ file: `${CHRONICLE_DIR}/${name}`, ...readJson(root, `${CHRONICLE_DIR}/${name}`) }));
-  const problems = checkCorpus(checkpoints);
+  const files = names.map(name => ({ file: `${CHRONICLE_DIR}/${name}`, ...readJson(root, `${CHRONICLE_DIR}/${name}`) }));
+  const problems = checkCorpus(files);
   if (problems.length) throw new Error(`the chronicle fails its own checks: ${problems.slice(0, 3).join('; ')}`);
+  // checkCorpus is the chronicle's validator: every checkpoint passed it.
+  const checkpoints = files as unknown as ChronicleCheckpoint[];
   const entries = readEntries(checkpoints).map(entry => ({ ...entry, target: resolveGame(entry.game)?.package ?? CHRONICLE_GAME }));
   return { schemas: SCHEMAS, v1Game: V1_GAME, checkpoints, entries, rungs: RUNGS, routes: ROUTES, kinds: KINDS };
 }
@@ -108,22 +113,25 @@ export function readArchivedRoutes(root: string) {
 
 /** The contract register, each contract with its conformance fixtures from the generated specifications. */
 export function readContracts(root: string) {
-  const register: { schema: unknown, owner: unknown, contracts: readonly { readonly id: string, readonly [field: string]: unknown }[] } =
-    readJson(root, CONTRACT_REGISTER);
-  const specifications: readonly { readonly contractId: string, readonly conformanceFixtures?: unknown }[] =
-    existsSync(join(root, CONTRACT_SPECIFICATIONS)) ? readJson(root, CONTRACT_SPECIFICATIONS).specifications : [];
-  const fixtures = new Map(specifications.map(spec => [spec.contractId, spec.conformanceFixtures ?? []]));
+  const register = readJson(root, CONTRACT_REGISTER);
+  const { contracts } = register;
+  if (!isList(contracts) || !contracts.every(isIdentified)) throw new Error(`${CONTRACT_REGISTER} lists a contract with no id`);
+  const specifications = existsSync(join(root, CONTRACT_SPECIFICATIONS))
+    ? listOrEmpty(readJson(root, CONTRACT_SPECIFICATIONS).specifications).map(objectOrNull) : [];
+  const fixtures = new Map(specifications.map(spec => [spec?.contractId, spec?.conformanceFixtures ?? []]));
   return {
     schema: register.schema, owner: register.owner,
-    contracts: register.contracts.map((item): Readonly<Record<string, unknown>> & { id: string, conformanceFixtures: unknown } => ({ ...item,
+    contracts: contracts.map((item): Readonly<Record<string, unknown>> & { id: string, conformanceFixtures: unknown } => ({ ...item,
       conformanceFixtures: fixtures.get(item.id) ?? unknown(`${CONTRACT_SPECIFICATIONS} lists no fixture for ${item.id}; run npm run catalog`) })),
   };
 }
 
 /** The command ids and tool ids of the generated command registry. */
 export function readCommandRegistry(root: string) {
-  const registry: { commands: readonly { readonly id: string }[], tools: readonly { readonly id: string }[] } = readJson(root, COMMAND_REGISTRY);
-  return { commands: registry.commands.map(item => item.id), tools: registry.tools.map(item => item.id) };
+  const { commands, tools } = readJson(root, COMMAND_REGISTRY);
+  if (!isList(commands) || !commands.every(isIdentified) || !isList(tools) || !tools.every(isIdentified))
+    throw new Error(`${COMMAND_REGISTRY} lists a command or tool with no id`);
+  return { commands: commands.map(item => item.id), tools: tools.map(item => item.id) };
 }
 
 // --- control catalogs ----------------------------------------------------------------------
@@ -166,9 +174,9 @@ export function packGame(dir: string, loaded: {pack: RunPack, files: readonly st
       : { game: unknown(`the runner's pack names target ${JSON.stringify(target ?? null)}, not a registered game`), basis: null };
   }
   if (files.includes('request.json')) {
-    const request: { spec?: { target?: { package?: unknown } }, profile?: { targetBuild?: unknown } } | null =
-      JSON.parse(readFileSync(join(dir, 'request.json'), 'utf8'));
-    const named = request?.spec?.target?.package ?? String(request?.profile?.targetBuild ?? '').split(':')[0];
+    const request = jsonObject(readFileSync(join(dir, 'request.json'), 'utf8'), 'request.json');
+    const named = objectOrNull(objectOrNull(request.spec)?.target)?.package
+      ?? String(objectOrNull(request.profile)?.targetBuild ?? '').split(':')[0];
     const game = resolveGame(named);
     if (game) return { game: game.package, basis: 'request.json spec.target.package' };
   }

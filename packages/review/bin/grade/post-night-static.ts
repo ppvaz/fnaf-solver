@@ -34,6 +34,8 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { jsonlRecords } from '../../src/records.ts';
+import type { JsonObject } from '../../src/records.ts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
 export const RUNS_DIR = 'docs/evidence/runs';
@@ -57,9 +59,13 @@ const EPISODE_END = new Set([...TERMINAL, 'state=title', 'state=intro']);
 // still a post-night static to it (night7-night7-k3-seedlog-01).
 const RUN_END = new Set([...TERMINAL, 'state=title']);
 
-const readJsonl = (path: string) => readFileSync(path, 'utf8').split('\n').filter(line => line.trim())
-  .map(line => JSON.parse(line));
-const stamp = (value: number | string) => typeof value === 'number' ? value : Date.parse(value);
+/** A pack's events or observations, each row checked for the fields these episodes read. */
+const readRows = (path: string): PackRow[] => jsonlRecords(readFileSync(path, 'utf8'), path).map((row, index) => {
+  if (!isPackRow(row)) throw new Error(`${path} line ${index + 1} is not an event or observation row`);
+  return row;
+});
+// Date.parse reads a missing time as NaN, as it reads the text "undefined".
+const stamp = (value: number | string | undefined) => typeof value === 'number' ? value : Date.parse(String(value));
 const isLifecycle = (label: unknown): label is string =>
   typeof label === 'string' && (label.startsWith('state=') || label.startsWith('unknown='));
 const isPositive = (label: unknown) => typeof label === 'string' && label.startsWith('state=');
@@ -67,9 +73,15 @@ const finite = (value: number | null): value is number => Number.isFinite(value)
 
 /** A pack row this tool reads: a lifecycle read or an event, stamped in ms or as an ISO time. */
 interface PackRow {
-  readonly type?: string; readonly script?: string; readonly at: number | string; readonly label?: unknown;
-  readonly reason?: string; readonly releaseAt?: number;
+  readonly type?: string; readonly script?: string; readonly at?: number | string; readonly label?: unknown;
+  readonly reason?: string | null; readonly releaseAt?: number;
 }
+const absentOr = (value: unknown, check: (present: unknown) => boolean) => value === undefined || check(value);
+const isPackRow = (row: JsonObject): row is JsonObject & PackRow => absentOr(row.type, type => typeof type === 'string')
+  && absentOr(row.script, script => typeof script === 'string')
+  && absentOr(row.at, at => typeof at === 'number' || typeof at === 'string')
+  && absentOr(row.reason, reason => reason === null || typeof reason === 'string')
+  && absentOr(row.releaseAt, at => typeof at === 'number');
 /** A lifecycle read on the host clock. */
 export interface Read { readonly at: number; readonly label: string }
 type ReadSource = 'reads' | 'label-changes';
@@ -88,12 +100,12 @@ type MisreadCounts = Record<string, { reads: number; liveNight: number }>;
 export function packReads(dir: string): { source: ReadSource, reads: Read[] } {
   const observations = join(dir, 'observations.jsonl');
   if (existsSync(observations)) {
-    const rows: PackRow[] = readJsonl(observations);
+    const rows = readRows(observations);
     const reads = rows.filter((row): row is PackRow & { label: string } => row.script === LIFECYCLE_SCRIPT && isLifecycle(row.label))
       .map(row => ({ at: stamp(row.at), label: row.label }));
     if (reads.length) return { source: 'reads', reads };
   }
-  const rows: PackRow[] = readJsonl(join(dir, 'events.jsonl'));
+  const rows = readRows(join(dir, 'events.jsonl'));
   const reads = rows
     .filter((row): row is PackRow & { label: string } => row.type === 'observation' && isLifecycle(row.label))
     .map(row => ({ at: stamp(row.at), label: row.label }));
@@ -205,7 +217,7 @@ const summary = (values: number[]) => values.length === 0 ? { n: 0, minMs: null,
  * that stop -- what halting at the static would have withheld.
  */
 function sixamActuation(dir: string, firstAt: number, endMs: number) {
-  const rows: PackRow[] = readJsonl(join(dir, 'events.jsonl'));
+  const rows = readRows(join(dir, 'events.jsonl'));
   const stop = rows.find(row => row.type === 'campaign.abort.restart' && stamp(row.at) >= firstAt);
   const stopMs = stop ? stamp(stop.at) - firstAt : null;
   const until = stopMs ?? endMs;

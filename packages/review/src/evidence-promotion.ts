@@ -28,6 +28,9 @@ import { deriveFnaf1Promotion } from './fnaf1-promotion.ts';
 import { AGENT_DELEGATION, ATTESTATION_FILE, ATTESTATION_SCHEMA, PACKS_DIR, RECOVERY_RECORD, attestationStatus,
   custodyWinnerFiles, packCustody, packManifestComplete, packPromotionChecks, readPack, runnerGame } from './evidence-pack.ts';
 import type { RunPack } from './evidence-pack.ts';
+import { lastDialReadback, requestedDials } from './custom-night.ts';
+import { jsonObject, jsonlRecords, objectOrNull } from './records.ts';
+import type { JsonObject } from './records.ts';
 import { isList, isRecord } from '@sixam/kernel';
 import type { CampaignAttempt } from '@sixam/kernel';
 
@@ -47,8 +50,6 @@ type GraphEdge = { readonly from: string, readonly to: string, readonly type: st
 /** docs/evidence/graph.json: claim-evidence-v1, one node or edge per line. */
 type EvidenceGraph = { readonly schema: string, readonly version: unknown,
   readonly nodes: readonly Readonly<Record<string, unknown>>[], readonly edges: readonly GraphEdge[], readonly [field: string]: unknown };
-/** The custody-recovery record's summary a recovered pack's manifest check cites. */
-type RecoverySummary = { campaigns?: number, eventsIdentical?: number, resultsIdentical?: number, resultsPrinted?: number };
 type NightRow = { packs: number, executorWins: number, attested: number, promoted: number, refused: Record<string, number> };
 
 export const GRAPH_FILE = 'docs/evidence/graph.json';
@@ -58,6 +59,10 @@ export const PROMOTION_SUMMARY_SCHEMA = 'plan12-promotion-summary-v1';
 const sha256 = (data: string | Buffer) => createHash('sha256').update(data).digest('hex');
 const night7Label = (dials: Readonly<Record<string, number>>) => AI_DIALS.every(dial => dials[dial] === 20) ? '10-20'
   : AI_DIALS.filter(dial => dials[dial] > 0).map(dial => `${dial}${dials[dial]}`).join('-') || 'all0';
+
+/** A readback's dial vector: all ten dials read as integers. */
+const isDialVector = (value: unknown): value is Readonly<Record<string, number>> =>
+  isRecord(value) && AI_DIALS.every(dial => Number.isInteger(value[dial]));
 
 /**
  * The claim a won night supports. Story nights are named by number. A Custom Night is named by
@@ -72,37 +77,22 @@ function claimFor(night: number, mode: string, eventsText: string | null, reques
       claim: { id: `claim.fnaf2.night${night}.device-6am`, night, mode,
         label: `FNaF 2 Night ${night} reaches 6 AM on the phone (executor-proven)` } };
   if (night !== 7 || mode !== 'custom') return { pass: false, claim: null, detail: { night, mode, failed: ['not a FNaF 2 night 1-7'] } };
-  let readback: Readonly<Record<string, unknown>> | null = null;
-  for (const line of (eventsText ?? '').split('\n')) {
-    if (!line.trim()) continue;
-    const event: Readonly<Record<string, unknown>> = JSON.parse(line);
-    if (event.type !== 'observation') continue;
-    if (event.label === 'state=night') break;
-    try {
-      // JSON.parse reads its argument as text, as String() does.
-      const read: unknown = JSON.parse(String(event.label));
-      if (isRecord(read) && read.status === 'PASS' && read.dials) readback = read;
-    } catch { /* a lifecycle label, not a dial readback */ }
-  }
-  // The readback's dials, checked dial by dial below.
-  const observed = readback ? readback.dials as Readonly<Record<string, number>> : null;
-  const request: { spec?: { nights?: readonly { night?: unknown, dials?: Readonly<Record<string, number>> }[] } } | null =
-    requestText ? JSON.parse(requestText) : null;
-  const requested = request?.spec?.nights?.find(item => item.night === 7)?.dials ?? null;
+  const readback = lastDialReadback(jsonlRecords(eventsText ?? '', 'events.jsonl'));
+  const dials = readback?.dials ?? null;
+  const requested = requestedDials(requestText === null ? null : jsonObject(requestText, 'request.json'), 7);
   const failed: string[] = [];
-  if (!observed) failed.push('no PASS Custom Night readback before the night began');
+  if (!readback) failed.push('no PASS Custom Night readback before the night began');
   else {
-    if (!AI_DIALS.every(dial => Number.isInteger(observed[dial]))) failed.push('the readback does not read all ten dials');
-    // observed is readback's own dials, so readback is set here.
-    const read = readback as Readonly<Record<string, unknown>>;
-    if (read.puppet !== PUPPET_AI) failed.push(`the readback reads Puppet ${read.puppet}, not ${PUPPET_AI}`);
-    if (isList(read.unknown) && read.unknown.length) failed.push(`the readback left ${read.unknown.join(', ')} unknown`);
-    if (requested && stableHash(requested) !== stableHash(observed)) failed.push('the readback differs from the requested dials');
+    if (!isDialVector(dials)) failed.push('the readback does not read all ten dials');
+    if (readback.puppet !== PUPPET_AI) failed.push(`the readback reads Puppet ${readback.puppet}, not ${PUPPET_AI}`);
+    if (isList(readback.unknown) && readback.unknown.length) failed.push(`the readback left ${readback.unknown.join(', ')} unknown`);
+    if (requested && stableHash(requested) !== stableHash(dials)) failed.push('the readback differs from the requested dials');
   }
-  const detail = { night, mode, observedDials: observed, requestedDials: requested,
+  const detail = { night, mode, observedDials: dials, requestedDials: requested,
     requested: requested ? 'request.json' : 'UNKNOWN (request.json not in the pack)', ...(failed.length ? { failed } : {}) };
-  // A missing readback is already a failure; the second test only says so to the checker.
-  if (failed.length || !observed) return { pass: false, claim: null, detail };
+  // A missing or partial readback is already a failure; the second test only says so to the checker.
+  if (failed.length || !isDialVector(dials)) return { pass: false, claim: null, detail };
+  const observed = dials;
   const vector = night7Label(observed);
   return { pass: true, detail, claim: { id: `claim.fnaf2.night7.${vector}.device-6am`, night, mode, dials: observed,
     label: vector === '10-20' ? 'FNaF 2 Custom Night 10/20 (all ten at 20) reaches 6 AM on the phone (executor-proven)'
@@ -153,13 +143,12 @@ export function derivePromotion(root: string, id: string, winners: Map<string, s
       terminalFailed.push('the terminal verification is not positive');
     try { validateSaveProof(attempt.save, { night: attempt.night }); } catch (error) { terminalFailed.push((error as Error).message); }
   }
-  const rows: Readonly<Record<string, unknown>>[] = (text('events.jsonl') ?? '').split('\n').filter(line => line.trim())
-    .map(line => JSON.parse(line));
+  const rows = jsonlRecords(text('events.jsonl') ?? '', 'events.jsonl');
   const terminalRow = rows.find(row => row.type === 'campaign.terminal.from-executor' && row.outcome === 'sixam');
   if (!terminalRow) terminalFailed.push('events.jsonl holds no campaign.terminal.from-executor sixam row');
   const timeline = text('run/timeline.json');
-  const graded: { terminal?: { outcome?: unknown } } | null = timeline ? JSON.parse(timeline) : null;
-  const videoGrade = graded ? graded.terminal?.outcome ?? 'UNKNOWN' : null;
+  const graded = timeline === null ? null : jsonObject(timeline, 'run/timeline.json');
+  const videoGrade = graded ? objectOrNull(graded.terminal)?.outcome ?? 'UNKNOWN' : null;
   if (videoGrade !== null && videoGrade !== 'clear') terminalFailed.push(`the packed video grade reads ${videoGrade}, not clear`);
   add('terminalPass', terminalFailed, { night: attempt?.night ?? null, attempt: attempt?.attempt ?? null,
     proofHash: attempt?.proofHash ?? null, terminalEventAt: terminalRow?.at ?? null,
@@ -170,7 +159,7 @@ export function derivePromotion(root: string, id: string, winners: Map<string, s
   const custody = packCustody(pack);
   const manifestFailed = wrapper !== null && packManifestComplete(pack, files) ? [] : [`custody ${custody.kind} is not complete enough to promote`];
   const manifestInputs = inputs('result.json', 'events.jsonl', 'request.json');
-  let recovery: RecoverySummary | null = null;
+  let recovery: JsonObject | null = null;
   // custody.kind is read from pack.custody, so a recovered kind has it.
   if (custody.kind === 'recovered-from-run-log' && pack.custody) {
     manifestInputs.push({ name: pack.custody.source, sha256: pack.custody.sourceSha256 });
@@ -178,10 +167,11 @@ export function derivePromotion(root: string, id: string, winners: Map<string, s
     if (!existsSync(record)) manifestFailed.push(`${RECOVERY_RECORD} is missing`);
     else {
       const bytes = readFileSync(record);
-      const summary: RecoverySummary = JSON.parse(bytes.toString('utf8')).summary ?? {};
+      const summary = objectOrNull(jsonObject(bytes.toString('utf8'), RECOVERY_RECORD).summary) ?? {};
       recovery = summary;
       manifestInputs.push({ name: RECOVERY_RECORD, sha256: sha256(bytes) });
-      if (!((summary.campaigns ?? 0) > 0 && summary.eventsIdentical === summary.campaigns && summary.resultsIdentical === summary.resultsPrinted))
+      const { campaigns, eventsIdentical, resultsIdentical, resultsPrinted } = summary;
+      if (!(typeof campaigns === 'number' && campaigns > 0 && eventsIdentical === campaigns && resultsIdentical === resultsPrinted))
         manifestFailed.push('the recovery check it cites is not byte-identical');
     }
   }
@@ -239,7 +229,7 @@ export function attestPack(root: string, id: string, winners: Map<string, string
   const file = join(derived.dir, ATTESTATION_FILE);
   let status: 'WRITTEN' | 'UNCHANGED' | 'REPLACED' | 'REFUSED' = 'WRITTEN';
   if (existsSync(file)) {
-    const existing = JSON.parse(readFileSync(file, 'utf8'));
+    const existing = jsonObject(readFileSync(file, 'utf8'), file);
     if (withoutDate(existing) === withoutDate(attestation)) return { status: 'UNCHANGED', derived, attestation: existing, failed };
     if (!replace) throw new Error(`${id} already holds a different attestation; pass --replace to supersede it`);
     status = 'REPLACED';
@@ -258,10 +248,12 @@ export function formatGraph(graph: EvidenceGraph) {
 }
 
 export function readGraph(root: string): EvidenceGraph {
-  const graph: EvidenceGraph = JSON.parse(readFileSync(join(root, GRAPH_FILE), 'utf8'));
-  if (graph.schema !== 'claim-evidence-v1' || !Array.isArray(graph.nodes) || !Array.isArray(graph.edges))
+  const graph = jsonObject(readFileSync(join(root, GRAPH_FILE), 'utf8'), GRAPH_FILE);
+  const { nodes, edges } = graph;
+  if (graph.schema !== 'claim-evidence-v1' || !isList(nodes) || !isList(edges) || !nodes.every(isRecord)
+    || !edges.every(edge => isRecord(edge) && typeof edge.from === 'string' && typeof edge.to === 'string' && typeof edge.type === 'string'))
     throw new Error(`${GRAPH_FILE} is not a claim-evidence-v1 graph`);
-  return graph;
+  return graph as unknown as EvidenceGraph;
 }
 
 export const runNodeId = (id: string) => `run.${id}`;

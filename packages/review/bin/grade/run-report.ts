@@ -18,6 +18,9 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { isList, isRecord } from '@sixam/kernel';
+import { jsonlCounted } from '../../src/records.ts';
+import type { JsonObject } from '../../src/records.ts';
 
 export const SCHEMA = 'device-run-report-v1';
 
@@ -26,12 +29,13 @@ const UNKNOWN = 'UNKNOWN';
 /** An executor event row: its type, and the fields this report reads from the rows that carry them. */
 export interface RunEvent {
   readonly type: string;
-  readonly at?: number;
+  /** Epoch ms on the HID rows this report times, an ISO string on the campaign's own rows. */
+  readonly at?: number | string;
   readonly armGoAt?: number;
   readonly armReadyAtMs?: number;
   readonly phaseLagMs?: number;
   readonly elapsedMs?: number;
-  readonly reason?: string;
+  readonly reason?: string | null;
   readonly mode?: string;
   readonly status?: string;
   readonly outcome?: string;
@@ -48,11 +52,27 @@ export interface RunEvent {
 /** Misses of one action's target state, counted over its cycles. */
 interface ActionMisses { key: string; total: number; missing: number; pass: number; signal?: string; target?: unknown }
 
-const readJsonl = (path: string): RunEvent[] => (existsSync(path)
-  ? readFileSync(path, 'utf8').trim().split('\n').filter(Boolean).map(line => {
-    try { return JSON.parse(line); } catch { return null; }
-  }).filter(Boolean)
-  : []);
+const NUMBERS = ['armGoAt', 'armReadyAtMs', 'phaseLagMs', 'elapsedMs', 'count', 'gateLagMs', 'deliveredOffsetMs', 'gateAtMs'];
+const TEXTS = ['mode', 'status', 'outcome', 'actionId', 'signal'];
+const absentOr = (value: unknown, check: (present: unknown) => boolean) => value === undefined || check(value);
+
+/** An events.jsonl row as a RunEvent: its type, and every field this report reads, of the kind it reads it as. */
+const isRunEvent = (row: JsonObject): row is JsonObject & RunEvent => typeof row.type === 'string'
+  && absentOr(row.at, at => typeof at === 'number' || typeof at === 'string')
+  && absentOr(row.reason, reason => reason === null || typeof reason === 'string')
+  && NUMBERS.every(field => absentOr(row[field], value => typeof value === 'number'))
+  && TEXTS.every(field => absentOr(row[field], value => typeof value === 'string'))
+  && absentOr(row.samples, samples => isList(samples) && samples.every(sample => sample === null || isRecord(sample)));
+
+/**
+ * A run's events, and how many of its rows could not be read as one: a run killed mid-write
+ * leaves a torn last line, and the report reads the rest and says so.
+ */
+export function readEvents(path: string) {
+  const { rows, unparsable } = jsonlCounted(readFileSync(path, 'utf8'));
+  const events = rows.filter(isRunEvent);
+  return { events, unreadable: unparsable + rows.length - events.length };
+}
 
 const ms = (value: number | null) => (Number.isFinite(value) ? `${Math.round(Number(value))} ms` : UNKNOWN);
 
@@ -149,7 +169,8 @@ export function report(events: readonly RunEvent[]) {
   // The arm gate's cost is the wall time between the night's release and the
   // instant the remainder was let go, minus the plan time the parked prefix
   // was meant to consume. That excess is added to every later press.
-  const nightAt = released?.at ?? nightGo?.at ?? null;
+  const epochMs = (at: unknown) => (typeof at === 'number' ? at : undefined);
+  const nightAt = epochMs(released?.at) ?? epochMs(nightGo?.at) ?? null;
   const armGoAt = armVerified?.armGoAt ?? null;
   const armReadyAtMs = start?.armReadyAtMs ?? null;
   const phaseLagMs = (nightAt !== null && armGoAt !== null && Number.isFinite(armReadyAtMs))
@@ -278,11 +299,13 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     process.stderr.write('usage: run-report.mjs --run artifacts/campaign-... [--json]\n');
     process.exit(2);
   }
-  const events = readJsonl(join(run, 'events.jsonl'));
+  const path = join(run, 'events.jsonl');
+  const { events, unreadable } = existsSync(path) ? readEvents(path) : { events: [], unreadable: 0 };
   if (!events.length) {
     process.stderr.write(`run-report: ${run} has no readable events.jsonl\n`);
     process.exit(1);
   }
+  if (unreadable) process.stderr.write(`run-report: ${unreadable} events.jsonl row(s) could not be read; the report reads the rest\n`);
   const value = report(events);
   process.stdout.write(process.argv.includes('--json')
     ? `${JSON.stringify(value, null, 2)}\n` : `${render(value)}\n`);

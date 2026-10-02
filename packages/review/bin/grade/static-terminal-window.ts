@@ -32,6 +32,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { jsonlRecords } from '../../src/records.ts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
 export const RUNS_DIR = 'docs/evidence/runs';
@@ -48,11 +49,22 @@ const TERMINAL = new Set(['state=gameover', 'state=sixam']);
 // intro card and then the title. Reads before that are still the dying game's.
 const RELAUNCH = new Set(['state=intro', 'state=title']);
 
-const readJsonl = (path: string) => readFileSync(path, 'utf8').split('\n').filter(line => line.trim())
-  .map(line => JSON.parse(line));
+/** A pack's events.jsonl, each row checked for the fields the episodes read. */
+const readEvents = (path: string): PackRow[] => jsonlRecords(readFileSync(path, 'utf8'), path).map((row, index) => {
+  if (!(typeof row.type === 'string' && (row.at === undefined || typeof row.at === 'string' || typeof row.at === 'number')
+    && (row.reason === undefined || row.reason === null || typeof row.reason === 'string')))
+    throw new Error(`${path} line ${index + 1} is not an event row`);
+  return row as unknown as PackRow;
+});
+/** A pack's observations.jsonl, each row checked as a lifecycle read. */
+const readObservations = (path: string): LifecycleRead[] => jsonlRecords(readFileSync(path, 'utf8'), path).map((row, index) => {
+  if (!(typeof row.at === 'number' && typeof row.label === 'string' && (row.script === undefined || typeof row.script === 'string')))
+    throw new Error(`${path} line ${index + 1} is not a lifecycle read`);
+  return row as unknown as LifecycleRead;
+});
 
 /** A pack's event row: its type and host-clock time, an observation's label, an abort's reason. */
-export interface PackRow { readonly type: string; readonly at: string; readonly label?: unknown; readonly reason?: string }
+export interface PackRow { readonly type: string; readonly at?: string | number; readonly label?: unknown; readonly reason?: string | null }
 /** One lifecycle read in a pack's observations.jsonl. */
 export interface LifecycleRead { readonly script?: string; readonly at: number; readonly label: string }
 
@@ -76,7 +88,8 @@ export function staticEpisodes(run: string, rows: readonly PackRow[]) {
   let first = null as number | null;
   let aborted = null as StaticAbort | null;
   for (const row of rows) {
-    const at = Date.parse(row.at);
+    // Date.parse reads a missing or numeric time as text, as it always did.
+    const at = Date.parse(String(row.at));
     const label = row.type === 'observation' && typeof row.label === 'string' ? row.label : null;
     if (aborted) {
       // Between the static abort and the relaunch: did the dying game still
@@ -153,7 +166,7 @@ export function measureStaticTerminalWindow({ root = ROOT, runs }: { root?: stri
   const directGaps: number[] = [];
   let directPacks = 0;
   for (const run of scanned) {
-    const rows: PackRow[] = readJsonl(join(runsDir, run, 'events.jsonl'));
+    const rows = readEvents(join(runsDir, run, 'events.jsonl'));
     const episodes = staticEpisodes(run, rows);
     for (const episode of episodes) {
       if (episode.kind === 'terminal') terminal.push(episode);
@@ -163,7 +176,7 @@ export function measureStaticTerminalWindow({ root = ROOT, runs }: { root?: stri
     const observationsPath = join(runsDir, run, 'observations.jsonl');
     if (episodes.length > 0 && existsSync(observationsPath)) {
       const abortRow = rows.find(row => row.type === 'campaign.abort.restart' && row.reason === STATIC_EXIT_REASON);
-      const gaps = staticReadGaps(readJsonl(observationsPath), abortRow ? Date.parse(abortRow.at) : null);
+      const gaps = staticReadGaps(readObservations(observationsPath), abortRow ? Date.parse(String(abortRow.at)) : null);
       if (gaps.length > 0) { directPacks += 1; directGaps.push(...gaps); }
     }
   }
@@ -237,7 +250,7 @@ export function newerPacksBeyondMaximum(
   const offenders: { run: string; delayMs: number }[] = [];
   for (const run of readdirSync(runsDir).sort()) {
     if (known.has(run) || !existsSync(join(runsDir, run, 'events.jsonl'))) continue;
-    for (const episode of staticEpisodes(run, readJsonl(join(runsDir, run, 'events.jsonl')))) {
+    for (const episode of staticEpisodes(run, readEvents(join(runsDir, run, 'events.jsonl')))) {
       // Only a terminal episode and a static abort carry a terminal read.
       const delayMs = episode.kind === 'terminal' ? episode.delayMs
         : episode.kind === 'static-abort' ? episode.terminalAfterAbort?.delayMs : undefined;

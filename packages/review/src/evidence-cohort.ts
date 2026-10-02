@@ -23,7 +23,9 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { stableHash } from '@sixam/kernel/contracts';
 import { packEntry, readPack } from './evidence-pack.ts';
-import { isRecord } from '@sixam/kernel';
+import { lastDialReadback, requestedDials } from './custom-night.ts';
+import { jsonObject, jsonlRecords, objectOrNull } from './records.ts';
+import { isList } from '@sixam/kernel';
 
 /** One corner of a corner cohort: its own labels and the dial vector it plays. */
 type Corner = { readonly id?: string, readonly labels?: unknown, readonly dials?: unknown };
@@ -48,9 +50,7 @@ export function labelPrefix(predeclaration: Predeclaration | null | undefined) {
 /** The video's terminal from a pack's own files, or null when the pack carries no grade. */
 export function videoTerminal(dir: string, files: readonly string[]) {
   if (files.includes('run/timeline.json')) {
-    const timeline: { terminal?: { outcome?: unknown, evidence?: unknown, at_s?: unknown, note?: unknown } } =
-      JSON.parse(readFileSync(join(dir, 'run/timeline.json'), 'utf8'));
-    const terminal = timeline.terminal;
+    const terminal = objectOrNull(jsonObject(readFileSync(join(dir, 'run/timeline.json'), 'utf8'), 'run/timeline.json').terminal);
     if (typeof terminal?.outcome === 'string') {
       const detail = terminal.evidence ? `${terminal.evidence}${terminal.at_s === null || terminal.at_s === undefined ? '' : ` at ${terminal.at_s} s`}`
         : terminal.note ?? null;
@@ -68,11 +68,8 @@ export function videoTerminal(dir: string, files: readonly string[]) {
 function lastAbort(dir: string, files: readonly string[]) {
   if (!files.includes('events.jsonl')) return null;
   let reason: string | null = null;
-  for (const line of readFileSync(join(dir, 'events.jsonl'), 'utf8').split('\n')) {
-    if (!line.includes('"type":"campaign.abort')) continue;
-    const row: { reason?: unknown } = JSON.parse(line);
-    if (typeof row.reason === 'string') reason = row.reason;
-  }
+  for (const row of jsonlRecords(readFileSync(join(dir, 'events.jsonl'), 'utf8'), 'events.jsonl'))
+    if (typeof row.type === 'string' && row.type.startsWith('campaign.abort') && typeof row.reason === 'string') reason = row.reason;
   return reason;
 }
 
@@ -92,7 +89,7 @@ function slotStatus(entry: { readonly outcome: unknown }, video: { readonly outc
  */
 export function computeCohort(predeclaration: Predeclaration, packsDir: string, { prefix, source = null }: {prefix?: string, source?: string | null} = {}) {
   if (predeclaration?.schema !== 'cohort-predeclaration-v1') throw new Error('not a cohort-predeclaration-v1');
-  if (Array.isArray(predeclaration.corners)) {
+  if (isList(predeclaration.corners)) {
     if (prefix !== undefined) throw new Error('a corner cohort uses each corner\'s declared labels, not a prefix override');
     return computeCorners(predeclaration, packsDir, source);
   }
@@ -122,9 +119,9 @@ function cohortSlots(predeclaration: Predeclaration, packsDir: string, prefix: s
       const dir = join(packsDir, id);
       const loaded = readPack(dir);
       const entry = packEntry(id, loaded);
-      const report: { night?: { reached?: unknown } } | null = loaded.files.includes('run/run-report.json')
-        ? JSON.parse(readFileSync(join(dir, 'run/run-report.json'), 'utf8')) : null;
-      const reached = report?.night?.reached === true;
+      const report = loaded.files.includes('run/run-report.json')
+        ? jsonObject(readFileSync(join(dir, 'run/run-report.json'), 'utf8'), 'run/run-report.json') : null;
+      const reached = objectOrNull(report?.night)?.reached === true;
       const video = videoTerminal(dir, loaded.files);
       return { run: id, packSha256: loaded.digest, reached, executor: entry.outcome, video: video?.outcome ?? null,
         videoDetail: video?.detail ?? null, abort: lastAbort(dir, loaded.files), bindingMatches: binding === null || loaded.pack.bundle?.winnerHash === binding,
@@ -176,22 +173,11 @@ function computeCorners(predeclaration: Predeclaration, packsDir: string, source
       if (run.role !== 'counted') continue;
       const dir = join(packsDir, run.run);
       const requestPath = join(dir, 'request.json');
-      const request: { spec?: { nights?: readonly { night?: unknown, dials?: unknown }[] } } | null =
-        existsSync(requestPath) ? JSON.parse(readFileSync(requestPath, 'utf8')) : null;
-      const requested = request?.spec?.nights?.find(n => n.night === predeclaration.night)?.dials ?? null;
-      let observed: unknown = null;
+      const request = existsSync(requestPath) ? jsonObject(readFileSync(requestPath, 'utf8'), 'request.json') : null;
+      const requested = requestedDials(request, predeclaration.night);
       const eventsPath = join(dir, 'events.jsonl');
-      for (const line of existsSync(eventsPath) ? readFileSync(eventsPath, 'utf8').trim().split('\n') : []) {
-        if (!line) continue;
-        const event: { type?: unknown, label?: unknown } = JSON.parse(line);
-        if (event.type !== 'observation') continue;
-        if (event.label === 'state=night') break;
-        try {
-          // JSON.parse reads its argument as text, as String() does.
-          const readback: unknown = JSON.parse(String(event.label));
-          if (isRecord(readback) && readback.status === 'PASS' && readback.dials) observed = readback.dials;
-        } catch { /* Non-JSON lifecycle labels carry no dial readback. */ }
-      }
+      const events = existsSync(eventsPath) ? jsonlRecords(readFileSync(eventsPath, 'utf8'), 'events.jsonl') : [];
+      const observed = lastDialReadback(events)?.dials ?? null;
       run.dialVerification = { requested, observed,
         matches: requested !== null && observed !== null
           && stableHash(requested) === stableHash(corner.dials) && stableHash(observed) === stableHash(corner.dials) };

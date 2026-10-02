@@ -19,6 +19,9 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { custodyWinnerFiles, packCustody, runnerGame } from './evidence-pack.ts';
 import type { readPack } from './evidence-pack.ts';
+import { jsonObject, jsonlRecords, objectOrNull } from './records.ts';
+import type { JsonObject } from './records.ts';
+import { isList, isRecord } from '@sixam/kernel';
 
 type Dials = Readonly<Record<string, number>>;
 /** One row of a FNaF 1 runner's events.jsonl, by the fields these checks read. */
@@ -37,6 +40,46 @@ type TitleStars = { readonly schema?: unknown, readonly run?: unknown, readonly 
 type RouteWinner = { readonly won?: { readonly run?: unknown }, readonly resolvedOptions?: Readonly<Record<string, unknown>>,
   readonly night?: { readonly dials?: Dials }, readonly sources?: Readonly<Record<string, unknown>> };
 
+const isDials = (value: unknown): value is Dials => isRecord(value) && Object.values(value).every((dial) => typeof dial === 'number');
+const optional = (value: unknown, check: (present: unknown) => boolean) => value === undefined || check(value);
+const isString = (value: unknown) => typeof value === 'string';
+
+/** A runner's events.jsonl row, checked for the fields these checks read. */
+function runnerEvent(row: JsonObject, index: number): RunnerEvent {
+  if (typeof row.atWallMs !== 'number' || typeof row.atMonotonicMs !== 'number' || !optional(row.type, isString) || !optional(row.dials, isDials))
+    throw new Error(`events.jsonl line ${index + 1} is not a runner event`);
+  return row as unknown as RunnerEvent;
+}
+
+/** The runner's probe.json, checked for the fields these checks read. */
+function runnerRecord(value: JsonObject): RunnerRecord {
+  const frames = objectOrNull(value.capture)?.frames;
+  if (!optional(value.options, isRecord) || !optional(value.dialsSet, isDials) || !optional(value.capture, isRecord)
+    || !optional(frames, (list) => isList(list) && list.every((frame) => isRecord(frame) && typeof frame.name === 'string'
+      && typeof frame.atWallMs === 'number' && optional(frame.sha256, isString)))
+    || !optional(value.bindings, (bindings) => isRecord(bindings)
+      && Object.values(bindings).every((binding) => isRecord(binding) && optional(binding.sha256, isString))))
+    throw new Error('probe.json is not a runner record');
+  return value as unknown as RunnerRecord;
+}
+
+/** title-stars.json, checked for the fields these checks read. */
+function titleStars(value: JsonObject): TitleStars {
+  if (typeof value.before !== 'number' || typeof value.after !== 'number' || !isList(value.frames)
+    || !value.frames.every((frame) => isRecord(frame) && typeof frame.name === 'string' && typeof frame.phase === 'string'
+      && optional(frame.sha256, isString) && optional(frame.confident, (confident) => typeof confident === 'boolean')))
+    throw new Error(`${FNAF1_STARS_FILE} is not a title-stars record`);
+  return value as unknown as TitleStars;
+}
+
+/** A fnaf1-route-winner-v1, checked for the fields that bind it to a run. */
+function routeWinner(value: JsonObject, file: string): RouteWinner {
+  if (!optional(value.won, isRecord) || !optional(value.resolvedOptions, isRecord) || !optional(value.sources, isRecord)
+    || !optional(value.night, (night) => isRecord(night) && optional(night.dials, isDials)))
+    throw new Error(`${file} is not a ${FNAF1_WINNER_SCHEMA}`);
+  return value as unknown as RouteWinner;
+}
+
 const FNAF1_STARS_FILE = 'title-stars.json';
 const FNAF1_STARS_SCHEMA = 'fnaf1-title-stars-v1';
 const FNAF1_WINNER_SCHEMA = 'fnaf1-route-winner-v1';
@@ -46,7 +89,7 @@ const sha256 = (data: string | Buffer) => createHash('sha256').update(data).dige
 /** Committed FNaF 1 route winners (active and retired), repository-relative. */
 function fnaf1WinnerFiles(root: string): string[] {
   return custodyWinnerFiles(root).filter((file) => {
-    try { return JSON.parse(readFileSync(join(root, file), 'utf8')).schema === FNAF1_WINNER_SCHEMA; } catch { return false; }
+    try { return jsonObject(readFileSync(join(root, file), 'utf8'), file).schema === FNAF1_WINNER_SCHEMA; } catch { return false; }
   });
 }
 
@@ -80,11 +123,13 @@ export function deriveFnaf1Promotion(root: string, id: string, dir: string, load
   const inputs = (...names: string[]) => names.map(packed)
     .filter((file): file is NonNullable<ReturnType<typeof packed>> => Boolean(file))
     .map((file) => ({ name: file.name, sha256: file.sha256 }));
-  const json = (name: string) => (packed(name) ? JSON.parse(readFileSync(join(dir, name), 'utf8')) : null);
-  const probe: RunnerRecord | null = json('probe.json');
-  const events: RunnerEvent[] = packed('events.jsonl')
-    ? readFileSync(join(dir, 'events.jsonl'), 'utf8').split('\n').filter((l) => l.trim()).map((l) => JSON.parse(l)) : [];
-  const stars: TitleStars | null = json(FNAF1_STARS_FILE);
+  const json = (name: string) => (packed(name) ? jsonObject(readFileSync(join(dir, name), 'utf8'), name) : null);
+  const probeJson = json('probe.json');
+  const probe = probeJson ? runnerRecord(probeJson) : null;
+  const events = packed('events.jsonl')
+    ? jsonlRecords(readFileSync(join(dir, 'events.jsonl'), 'utf8'), 'events.jsonl').map(runnerEvent) : [];
+  const starsJson = json(FNAF1_STARS_FILE);
+  const stars = starsJson ? titleStars(starsJson) : null;
   const verified: { check: string, pass: boolean, inputs: readonly { name: string, sha256: string }[], detail: Readonly<Record<string, unknown>> }[] = [];
   const add = (check: string, failed: readonly string[], detail: Readonly<Record<string, unknown>>, from: readonly { name: string, sha256: string }[]) => verified.push({ check, pass: failed.length === 0, inputs: from, detail: failed.length ? { ...detail, failed } : detail });
 
@@ -127,7 +172,8 @@ export function deriveFnaf1Promotion(root: string, id: string, dir: string, load
     ...(custody.lost.length ? [`custody lost ${custody.lost.join(', ')}`] : [])], { custody: custody.kind, lost: custody.lost }, inputs('probe.json', 'events.jsonl', FNAF1_STARS_FILE));
 
   const candidates = fnaf1WinnerFiles(root).map((file) => ({ file, bytes: readFileSync(join(root, file)) }))
-    .map((item) => ({ ...item, winner: JSON.parse(item.bytes.toString('utf8')) as RouteWinner })).filter((item) => item.winner.won?.run === pack.run);
+    .map((item) => ({ ...item, winner: routeWinner(jsonObject(item.bytes.toString('utf8'), item.file), item.file) }))
+    .filter((item) => item.winner.won?.run === pack.run);
   const winnerFailed: string[] = [];
   const winner = candidates[0] ?? null;
   if (!winner) winnerFailed.push(`no committed ${FNAF1_WINNER_SCHEMA} names run ${pack.run}`);

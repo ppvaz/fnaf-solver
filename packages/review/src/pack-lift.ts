@@ -17,6 +17,7 @@ import { aborted, death, invalid, isRecord, sixAm, timeout, unknown, validateGam
 import type { CampaignResult, Unknown } from '@sixam/kernel';
 import { PACKS_DIR, readPack } from './evidence-pack.ts';
 import type { RunPack } from './evidence-pack.ts';
+import { jsonObject, jsonlRecords, objectOrNull } from './records.ts';
 
 /** One row of a pack's events.jsonl. */
 type EventRow = Readonly<Record<string, unknown>>;
@@ -26,8 +27,10 @@ type Loaded = ReturnType<typeof readPack>;
 
 export const LIFT_SOURCE = 'run-pack-v1';
 
-/** @param text a .jsonl file */
-const rows = (text: string): EventRow[] => text.split('\n').filter(line => line.trim()).map(line => JSON.parse(line));
+/** @param text a pack's events.jsonl */
+const rows = (text: string): EventRow[] => jsonlRecords(text, 'events.jsonl');
+/** A pack file's JSON object, or null when the pack does not hold it. */
+const packedJson = (dir: string, name: string, held: boolean) => (held ? jsonObject(readFileSync(join(dir, name), 'utf8'), name) : null);
 
 /** The events a phase of the run holds, cut at the venue's own reads of the night's start and end. */
 function phases(events: readonly EventRow[], { isStart, isEnd, startName, endName }: NightCut) {
@@ -90,7 +93,7 @@ function liftCampaign(dir: string, loaded: Loaded) {
   const { pack, wrapper } = loaded;
   const packed = (name: string) => pack.files.some(file => file.name === name);
   const events = packed('events.jsonl') ? rows(readFileSync(join(dir, 'events.jsonl'), 'utf8')) : null;
-  const request: { spec?: unknown } | null = packed('request.json') ? JSON.parse(readFileSync(join(dir, 'request.json'), 'utf8')) : null;
+  const request = packedJson(dir, 'request.json', packed('request.json'));
   const custody = custodyOf(pack);
   const lostWhy = (name: string) => `${name} is not in the pack (custody ${pack.custody?.kind ?? 'original'}` +
     `${pack.custody?.lost?.includes(name) ? `, which lists it as lost` : ''})`;
@@ -150,15 +153,13 @@ function liftFnaf1(dir: string, loaded: Loaded) {
   const { pack } = loaded;
   const packed = (name: string) => pack.files.some(file => file.name === name);
   const recordName = ['probe.json', 'run.json'].find(packed);
-  const record: { schema?: unknown, target?: unknown, options?: Readonly<Record<string, unknown>> } | null =
-    recordName ? JSON.parse(readFileSync(join(dir, recordName), 'utf8')) : null;
+  const record = recordName ? packedJson(dir, recordName, true) : null;
   const events = packed('events.jsonl') ? rows(readFileSync(join(dir, 'events.jsonl'), 'utf8')) : null;
-  const options = record?.options;
+  const options = objectOrNull(record?.options) ?? undefined;
   const ended = isRecord(pack.outcome) ? pack.outcome.ended : undefined;
   // The save's own mark, read off the run's title frames (fnaf1-title-stars.py): a star earned across the night is
   // the game recording a completed night, whatever bound stopped the route (fnaf1-promotion.ts reads the same file).
-  const stars: { before?: unknown, after?: unknown } | null =
-    packed('title-stars.json') ? JSON.parse(readFileSync(join(dir, 'title-stars.json'), 'utf8')) : null;
+  const stars = packedJson(dir, 'title-stars.json', packed('title-stars.json'));
   const integer = (value: unknown): value is number => Number.isInteger(value);
   const earned = Boolean(stars && integer(stars.before) && integer(stars.after) && stars.after > stars.before);
   const reportedOutcome = earned ? sixAm() : ended === 'STOP_AFTER' ? timeout()

@@ -11,7 +11,8 @@ import { stableHash } from '@sixam/kernel/contracts';
 import { CAMPAIGN_RESULT_SCHEMA } from '../src/evidence-campaign.ts';
 import { ATTESTATION_FILE, ATTESTATION_SCHEMA, ATTESTATION_SCHEMA_V1, buildFnaf1Pack, buildPack, packCustody, packDigest, packEntry,
   packPromotionChecks, readPack, recoverFromRunLog, recoveryCheck, refuseFrames, resolvePackTargets, trackedWinners,
-  writePack, WINNER_HASHES } from '../src/evidence-pack.ts';
+  validateRunPack, writePack, WINNER_HASHES } from '../src/evidence-pack.ts';
+import { jsonObject, jsonlCounted, jsonlRecords } from '../src/records.ts';
 
 type CampaignTarget = Extract<ReturnType<typeof resolvePackTargets>[number], { campaignDir: string }>;
 type ErrorEntry = Extract<ReturnType<typeof packEntry>, { error: unknown }>;
@@ -339,4 +340,13 @@ try {
     assert.throws(() => trackedWinners(root), /stale/, 'an unlisted winner makes the register stale');
   } finally { rmSync(root, { recursive: true, force: true }); }
 }
+// The JSON a pack holds is read through checked readers: a row nobody can read throws naming
+// its file and line, or is counted by a reader whose verdict says how many it skipped.
+assert.deepEqual(jsonlRecords('{"type":"a"}\n\n{"type":"b"}\n', 'events.jsonl').map(row => row.type), ['a', 'b']);
+assert.throws(() => jsonlRecords('{"type":"a"}\n{"type":', 'events.jsonl'), /^Error: events\.jsonl line 2: /);
+assert.throws(() => jsonlRecords('[1, 2]\n', 'events.jsonl'), /events\.jsonl line 1: not a JSON object/);
+assert.throws(() => jsonObject('"text"', 'pack.json'), /pack\.json: not a JSON object/);
+assert.deepEqual(jsonlCounted('{"type":"a"}\n{"type":\n7\n'), { rows: [{ type: 'a' }], unparsable: 2 });
+assert.throws(() => validateRunPack({ schema: 'run-pack-v1', version: 1, files: [], custody: { kind: 'recovered', lost: 'result.json' } }, 'pack.json'),
+  /pack\.json: not a run-pack-v1 \(custody\)/, 'a custody whose lost list is a string is refused, not read by substring');
 console.log('evidence pack: text crosses, frames and pixel grids stay behind by hash, paths are portable, tampering and unknown pixel fields are refused, the gate reads the pack, and a lost campaign recovered from its run log passes custody while saying what is lost');
