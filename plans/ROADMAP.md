@@ -223,6 +223,13 @@ Details:
     ([release latency](../docs/evidence/phone-release-latency-20261001.json),
     `phone-release-latency-4dd971d24ad952a1`). The 10/20 seed-scan
     pre-registration was superseded before its night to land releases at 20 ms.
+    Replayed into the recompiled game with releases at 20 ms, full-06 reaches
+    6 AM at 420.0 s as the phone did, and the model matches the rebuild on all
+    42 windows with no draw split: on these inputs the model and the real game
+    logic are one program, and both still part from the phone at window 6, so
+    that divergence lies in the inputs (seed, clock, landings), not in a rule
+    ([rebuild](../docs/evidence/rebuild-release20-full06-20261001.json),
+    `rebuild-release20-a9847b473591a6fe`).
   - **The phone's office random stream is read state by state (2026-10-01,
     pre-registered, SUPPORTED).** On a k3 Night 7 with every Custom Night dial
     at 0, the Companion 16 native static readout (no frame trace) identified

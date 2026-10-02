@@ -12,6 +12,7 @@ import { fileURLToPath } from 'node:url';
 import { deriveInputs, identifyReading, measuredNight, periodValue, readoutStrength, regionImages, updateOf } from './phone-region-readout.ts';
 import { anchorIndex, back, seedCandidates } from './phone-seed-readout.ts';
 import { identifySeed } from './phone-seed-scan.ts';
+import { check as checkEncounters } from './phone-encounter-replay.ts';
 
 const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '../../../..');
 const sha = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex');
@@ -133,6 +134,21 @@ assert.equal(identifySeed(seedRule, []).verdict, 'UNIDENTIFIED', 'no seed scored
   for (const n of rel.nights) assert.ok(n.rows.find((r: { releaseMs: number }) => r.releaseMs === v2.releaseLatencyMs)?.outcome === '6am', `${n.night}: the v2 release latency plays the night as the phone did`);
   const { id, ...body } = rel;
   assert.equal(id, `phone-release-latency-${sha(canon(body)).slice(0, 16)}`, 'release latency record id');
+}
+
+// --- the recompiled game with releases at 20 ms (docs/evidence/rebuild-release20-full06-20261001.json): the committed
+// compare result's arithmetic rechecked, the rebuild and the model at 6 AM and alike on every window, the control dead
+{
+  const rec = JSON.parse(readFileSync(join(ROOT, 'docs/evidence/rebuild-release20-full06-20261001.json'), 'utf8'));
+  assert.equal(rec.result.sha256, sha(readFileSync(join(ROOT, rec.result.path))), 'the compare result is the committed one');
+  checkEncounters(JSON.parse(readFileSync(join(ROOT, rec.result.path), 'utf8')));
+  const r20 = rec.variants['landed-r20']; const ctl = rec.variants.landed;
+  assert.equal(r20.rebuilt.outcome.result, '6am'); assert.equal(r20.model.outcome.result, '6am');
+  assert.equal(r20.rebuilt.windows, r20.model.windows, 'rebuild and model alike on every window');
+  assert.equal(r20.drawSplit ?? null, null, 'no draw split');
+  assert.notEqual(ctl.rebuilt.outcome.result, '6am', 'the press-latency control loses the night');
+  const { id, ...body } = rec;
+  assert.equal(id, `rebuild-release20-${sha(canon(body)).slice(0, 16)}`, 'rebuild release record id');
 }
 
 // --- the records

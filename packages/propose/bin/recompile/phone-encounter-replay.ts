@@ -518,6 +518,14 @@ export function prepare(cfg, nightCfg, variant, inputsRoot) {
     tickOf = (ms) => traceTick(ms + shift, clock);
   } else if (spec.presses === 'cum') tickOf = (ms) => cumTick(ms, deltas);
   else throw new Error(`unknown press rule ${spec.presses}`);
+  // A variant may land releases at their own latency after the send (docs/evidence/phone-release-latency-20261001.json:
+  // at the press's latency the model drops a monitor still held when its raise completes, on nights the phone won).
+  if (Number.isFinite(spec.releaseLatencyMs)) {
+    if (!clock) throw new Error('a release latency needs a frame trace');
+    const pressTick = tickOf;
+    const sendShift = nightCfg.trace.releaseAfterFirstNightFrameMs - nightCfg.originMs;
+    tickOf = (ms, kind) => (kind === 'release' ? traceTick(ms + sendShift + spec.releaseLatencyMs, clock) : pressTick(ms));
+  }
   let responses = null;
   let mapped = mapSchedule(sched, tickOf);
   if (spec.presses === 'native-response') {

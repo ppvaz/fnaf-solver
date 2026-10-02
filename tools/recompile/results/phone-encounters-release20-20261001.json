@@ -1,0 +1,1143 @@
+{
+ "schema": "recompile-phone-encounters-v1",
+ "claimLevel": "MODEL_ONLY",
+ "fidelity": "rebuilt-runtime",
+ "comparedWith": "DEVICE_MEASURED phone reads and terminals, reused from the records each night names; no new phone run",
+ "question": "On phone nights whose seed is established, replayed into the rebuilt runtime at that seed on the phone's own frame clock: does each mask window hold the same occupant as on the phone, and does the night end the same way?",
+ "status": "DIVERGENT",
+ "method": {
+  "config": "../../fnaf-apks/fnaf2-recompile-20260927/agent-release/config.json",
+  "configSha256": "0645f52715e248e747d60eda2bdede402190b96a813b4766d38492734ee63693",
+  "variants": {
+   "landed": {
+    "clock": "trace-catchup",
+    "presses": "landed",
+    "what": "the phone's frame trace with Fusion's catch-up; each press on the pass that drew the frame it landed in: send plus the night's measured landing latency"
+   },
+   "sched": {
+    "clock": "trace-catchup",
+    "presses": "sched",
+    "what": "the same clock; each press on the frame of its send (no landing latency)"
+   },
+   "cum": {
+    "clock": "trace-catchup",
+    "presses": "cum",
+    "what": "the same clock; presses by the model encounter records' rule (t after the seed on the update clock, mid-update)"
+   },
+   "raw": {
+    "clock": "trace-raw",
+    "presses": "landed",
+    "what": "one update per captured frame, no catch-up; presses landed"
+   },
+   "const60": {
+    "clock": "constant-60hz",
+    "presses": "cum",
+    "what": "a constant 60 Hz clock, as a night with no trace runs; presses by the cum rule on it"
+   },
+   "landed-r20": {
+    "clock": "trace-catchup",
+    "presses": "landed",
+    "what": "landed presses; releases 20 ms after their send (docs/evidence/phone-release-latency-20261001.json)",
+    "releaseLatencyMs": 20
+   }
+  },
+  "windowMs": 1500,
+  "watch": {
+   "counters": [
+    "being attacked by",
+    "in danger",
+    "got you stage",
+    "viewing",
+    "viewing hall light"
+   ],
+   "overlapZone": "in office",
+   "overlap": [
+    "old bonnie",
+    "old chica",
+    "old freddy",
+    "new freddy",
+    "new bonnie",
+    "new chica",
+    "new foxy",
+    "balloon boy",
+    "Active 19",
+    "chicalookatyou"
+   ],
+   "object": "mask:0"
+  },
+  "officeFrame": 3,
+  "modelOptions": "tools/recompile/sourced-rebuild-model-options.json",
+  "modelOptionsSha256": "cd70e32798006c48b4ecbc5a13e0fc5b82b9bedb211a0b984b4c58767ab64834",
+  "binary": {
+   "sha256": "7ab9a755efa80383467a53f1914a7c23232341f39e6abda68b491a41a79c1737",
+   "assetsSha256": "7163d6283de2a10e2cd2842a1402ea6e724b52abc7b5efcb0fc227abe9ef78a8",
+   "pinned": "pinned/7ab9a755-7163d628 in the external recompile directory",
+   "note": "8eb41219 plus CHOWDREN_FRAME_TIMES/_FRAME and CHOWDREN_WATCH_OVERLAP; with neither set it replays grid-screen n6-h's frame/tick/draw/state projection exactly (25,822 updates)"
+  },
+  "harness": {
+   "container": "fnaf2-chowdren:buster",
+   "runner": "tools/recompile/run-harness.sh (CHOWDREN_BINARY = the pinned binary), CHOWDREN_HARNESS=1, CHOWDREN_NO_DRAW=1",
+   "env": "the RUNDIR/env lines emit writes: seed, stop at 06-next day, 40000 total updates, the three watches, and the measured clock"
+  },
+  "windowRule": "window k = the k-th schedule mask-on press; its code is the first occupant in its first 1500 ms of the update clock",
+  "scoring": "agree = same code on a window both sides read (\"*\" never agrees on the character); hits = agreeing occupied phone windows; occupancyAgree = both empty or both occupied"
+ },
+ "provenance": {
+  "toolSha256": "d0e1e047ccac30b2026f9e54ecd2fc44b328ed1b1e952b44339efe59223da461",
+  "patchSha256": "64064abaa9d984f299108f35f0884c68416049e2b139561a57464874e71af4d0",
+  "modelSourceSha256": {
+   "packages/source/src/games/fnaf2/plant-model.ts": "5559626beb70aa35129b1a85d98d957bdc85478ebffd096b09a6a901c250e3a4",
+   "packages/source/src/games/fnaf2/config.ts": "e10ad9b97126abacbf234067a41aeccf6351b558ab598e713975ce9c5b9dbc49",
+   "packages/source/src/games/fnaf2/rng.ts": "6904b329d5fa16a3263430bf0d15798087db8172aaecad0bd7b6cd37e17d8a7f",
+   "packages/source/src/games/fnaf2/attack-animation.ts": "24395e91ca3591dfe6411e0f3ae7175d7129c17229b3f5f7ab2f91dd40d217e1",
+   "packages/source/src/games/fnaf2/blackout-clock.ts": "cc0afa0ebe8720a7e8295ded2c0aa28746a38e431c90771eb6d6b8ff94414c43",
+   "packages/source/src/games/fnaf2/contact-input.ts": "e4a2848b35183e869267b758359ae7f49beaba5d3040021dd4155e9f6eca3e89",
+   "packages/source/src/games/fnaf2/movement-clock.ts": "1fe53bd164464e7f9776a460b917c588a306f8afb3d20b75a92c53835c3cdaf0",
+   "packages/source/src/games/fnaf2/plant-constants.ts": "9d4b593b6b55665c1311950e12b52357724b8206744df1e9ccb7d3d393423160",
+   "packages/source/src/games/fnaf2/plant-hall.ts": "0f7bd4cf41adbc9fca1fc5ce7def68493a4b79b029c2152e6dbd1bce8a26265f",
+   "packages/source/src/games/fnaf2/plant-office.ts": "061ca131fb09f40b3392095cdc408a2c69c252b90a60807f5077ee3ada28ab09",
+   "packages/source/src/games/fnaf2/plant-options.ts": "21352a2a8e53add009ede86cbfff59a67ecab619d50f04cfe873c9027a5b56d8",
+   "packages/source/src/games/fnaf2/plant-puppet.ts": "258cbc1c40bfbf6234018ea3b9ca39a05d40eb52e62bbb5c10e1fe0485f60dd9",
+   "packages/source/src/games/fnaf2/plant-sheet.ts": "6dbf76b81790da95a2ae2a8cf1ea587d9261e97542c7f15cfd81702930bbfa59",
+   "packages/source/src/games/fnaf2/plant-units.ts": "7da1b7dbe92a3dc73efeccc34d773871539e0c07352a1719c43bec664afd0d6a"
+  }
+ },
+ "nights": [
+  {
+   "name": "full-06",
+   "run": "night7-night7-k3-full-06-20260915T225056Z",
+   "night": 7,
+   "seed": 47593,
+   "seedEvidence": "docs/evidence/night6-h-seedlock-census-20260916.json reDerived: k3 full-06 20260915 14 -> 1: 47593",
+   "winner": "tools/device/campaign-night7-k3-winner.json",
+   "winnerSha256": "7d45d04cffdb353af3127f375f755a6b66a3eb597fb22e6fc993350ee7bf2d78",
+   "originMs": 2516.8,
+   "presses": {
+    "path": "artifacts/forensics/frametrace-night6-20260918/full-06-k3-presses.json",
+    "sha256": "be2066875caec6a65be6e149e973223addc231f6068dbf6ec7436b4ec21a4cde"
+   },
+   "trace": {
+    "path": "artifacts/forensics/k3-frametrace-nights-20260915/ft2-full-06-875229878053244.tsv",
+    "sha256": "3fe9587c06708a991e5a2c983ebc1feaf9be89cda9c7c787999a2ac6052dd261",
+    "first": 201,
+    "releaseAfterFirstNightFrameMs": 2435.8,
+    "source": "artifacts/forensics/frametrace-night6-20260918/k3-night7-origins.json: origin 2516.8 ms after the seed less seedToFirstFrameMs 81.0, first 201"
+   },
+   "customNight": "tools/recompile/fixtures/night7-dials20.json",
+   "phone": {
+    "windows": "...BC..BC.BC.BC..BC.BCF.BCFBC.B.CBC.BC.CBC",
+    "source": "artifacts/forensics/k3-frametrace-nights-20260915/eyehole-full-06.json (sha256 e43aeeb820166b368e3b747df09185a5d736d8078233682cfeeb427d7036daf7; eyehole-read.py right-eyehole reads, retained DEVICE_MEASURED); read c is window c",
+    "terminal": {
+     "result": "6am",
+     "seedClockMs": 422706,
+     "killer": null,
+     "source": "docs/evidence/runs/night7-night7-k3-full-06-20260915T225056Z/events.jsonl: state=sixam at 2026-09-15T22:58:38.357Z (host wall, a poll), skew 1402.2 ms, seed stamp 1789512694249; executor terminal sixam, 42/42 gates agreed"
+    }
+   },
+   "modelRecord": {
+    "path": "docs/evidence/model-encounter-fidelity-20260927.json",
+    "pointer": "night7Reproduction.rows[name=full-06-k3].windows",
+    "windows": "..CBC.FBC..BC..BC.BC.fCbBC.BC",
+    "outcome": "death"
+   },
+   "primaryVariant": "landed",
+   "variants": [
+    {
+     "variant": "landed",
+     "clock": "trace-catchup",
+     "presses": "landed",
+     "landingLatency": {
+      "raises": 17,
+      "officeViewLuma": 117,
+      "medianMs": 81.6,
+      "p10Ms": 52.3,
+      "p90Ms": 99.8,
+      "minMs": 48.8,
+      "maxMs": 106.7
+     },
+     "input": {
+      "officeRows": 692,
+      "officeRowsSha256": "07f841ef3532526eaf8c666f4de2273a1497832c1cb155c7c37f5bdee4af7013",
+      "stretchedContacts": 0,
+      "sameTickEdgeSets": 1,
+      "firstPressTick": 152,
+      "measuredUpdates": 25435,
+      "frameTimesSha256": "383d25c80bb3648e9199589ebce7b6782a510eacee4409df3c90e940869541cf",
+      "inputSha256": "cac3d1e7055825725e5a0859532d48e9945ef9d7bd6cf90ce957bf2acc010cc9",
+      "modelInputMode": "explicit-contact-duration",
+      "modelContactsSha256": "c4ca5d3320b8a65c3522d3a3a072a79c7a10251447f5112a61a903d45da6c67f"
+     },
+     "runtime": {
+      "traceSha256": "ab1bf20759437a4cd05b3191f69807674bd77cfb2ca8b485b6b30b157707d70f",
+      "drawTraceSha256": "3c38fd087850b62099c1e5275abb6979b0429714049d8f48f6e034d548c68a74",
+      "officeUpdates": 22698
+     },
+     "windows": {
+      "rebuilt": "...BC.BC.BC.BC.C..BC.BC.BC.BC.BC..BC.B?????",
+      "model": "...BC.BC.BC.BC.C..BC.BC.BC.BC.BC..BC.B?????",
+      "rows": [
+       {
+        "index": 0,
+        "tick": 325,
+        "ms": 5433.7,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 1,
+        "tick": 859,
+        "ms": 14267.3,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 2,
+        "tick": 1460,
+        "ms": 24265.4,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 3,
+        "tick": 2057,
+        "ms": 34270.2,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 2057,
+        "rebuiltArrivalMs": -3936.7,
+        "model": "B"
+       },
+       {
+        "index": 4,
+        "tick": 2660,
+        "ms": 44266.8,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 2660,
+        "rebuiltArrivalMs": -3931.4,
+        "model": "C"
+       },
+       {
+        "index": 5,
+        "tick": 3262,
+        "ms": 54266.5,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 6,
+        "tick": 3866,
+        "ms": 64267.6,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 3866,
+        "rebuiltArrivalMs": -3930.3,
+        "model": "B"
+       },
+       {
+        "index": 7,
+        "tick": 4467,
+        "ms": 74271.2,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 4467,
+        "rebuiltArrivalMs": -3952.8,
+        "model": "C"
+       },
+       {
+        "index": 8,
+        "tick": 5069,
+        "ms": 84271.8,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 9,
+        "tick": 5669,
+        "ms": 94276.4,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 5669,
+        "rebuiltArrivalMs": -3941.4,
+        "model": "B"
+       },
+       {
+        "index": 10,
+        "tick": 6269,
+        "ms": 104268.8,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 6269,
+        "rebuiltArrivalMs": -3932.8,
+        "model": "C"
+       },
+       {
+        "index": 11,
+        "tick": 6870,
+        "ms": 114268.1,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 12,
+        "tick": 7469,
+        "ms": 124275.5,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 7469,
+        "rebuiltArrivalMs": -3938.4,
+        "model": "B"
+       },
+       {
+        "index": 13,
+        "tick": 8077,
+        "ms": 134268.4,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 8077,
+        "rebuiltArrivalMs": -3935.4,
+        "model": "C"
+       },
+       {
+        "index": 14,
+        "tick": 8677,
+        "ms": 144271.7,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 15,
+        "tick": 9279,
+        "ms": 154278.7,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 9279,
+        "rebuiltArrivalMs": -3939.5,
+        "model": "C"
+       },
+       {
+        "index": 16,
+        "tick": 9877,
+        "ms": 164270.8,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 17,
+        "tick": 10479,
+        "ms": 174274,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 18,
+        "tick": 11080,
+        "ms": 184272.4,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 11080,
+        "rebuiltArrivalMs": -3948.7,
+        "model": "B"
+       },
+       {
+        "index": 19,
+        "tick": 11682,
+        "ms": 194270.7,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 11682,
+        "rebuiltArrivalMs": -3917.4,
+        "model": "C"
+       },
+       {
+        "index": 20,
+        "tick": 12281,
+        "ms": 204272.8,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 21,
+        "tick": 12881,
+        "ms": 214271.7,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 12881,
+        "rebuiltArrivalMs": -3949.4,
+        "model": "B"
+       },
+       {
+        "index": 22,
+        "tick": 13480,
+        "ms": 224273.3,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 13480,
+        "rebuiltArrivalMs": -3933.6,
+        "model": "C"
+       },
+       {
+        "index": 23,
+        "tick": 14081,
+        "ms": 234279.1,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 24,
+        "tick": 14683,
+        "ms": 244276.3,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 14683,
+        "rebuiltArrivalMs": -3934.9,
+        "model": "B"
+       },
+       {
+        "index": 25,
+        "tick": 15283,
+        "ms": 254272,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 15283,
+        "rebuiltArrivalMs": -3944.2,
+        "model": "C"
+       },
+       {
+        "index": 26,
+        "tick": 15886,
+        "ms": 264274.8,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 27,
+        "tick": 16488,
+        "ms": 274275.7,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 16488,
+        "rebuiltArrivalMs": -3927.5,
+        "model": "B"
+       },
+       {
+        "index": 28,
+        "tick": 17087,
+        "ms": 284274.1,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 17087,
+        "rebuiltArrivalMs": -3950.3,
+        "model": "C"
+       },
+       {
+        "index": 29,
+        "tick": 17684,
+        "ms": 294277.4,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 30,
+        "tick": 18282,
+        "ms": 304275.6,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 18282,
+        "rebuiltArrivalMs": -3950.6,
+        "model": "B"
+       },
+       {
+        "index": 31,
+        "tick": 18883,
+        "ms": 314276.1,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 18883,
+        "rebuiltArrivalMs": -3935.1,
+        "model": "C"
+       },
+       {
+        "index": 32,
+        "tick": 19484,
+        "ms": 324280.5,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 33,
+        "tick": 20081,
+        "ms": 334280,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 34,
+        "tick": 20683,
+        "ms": 344275,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 20683,
+        "rebuiltArrivalMs": -3933.3,
+        "model": "B"
+       },
+       {
+        "index": 35,
+        "tick": 21282,
+        "ms": 354271.5,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 21282,
+        "rebuiltArrivalMs": -3930.1,
+        "model": "C"
+       },
+       {
+        "index": 36,
+        "tick": 21882,
+        "ms": 364276.1,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 37,
+        "tick": 22482,
+        "ms": 374267.6,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 22482,
+        "rebuiltArrivalMs": -3963.5,
+        "model": "B"
+       },
+       {
+        "index": 38,
+        "tick": 23085,
+        "ms": 384278.7,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 39,
+        "tick": 23684,
+        "ms": 394277.2,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 40,
+        "tick": 24289,
+        "ms": 404262.9,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 41,
+        "tick": 24890,
+        "ms": 414276,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 42,
+        "tick": 25488,
+        "ms": 424276,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       }
+      ]
+     },
+     "outcome": {
+      "rebuilt": {
+       "result": "death",
+       "reason": "Withered Bonnie",
+       "officeUpdates": 22698,
+       "endMs": 377842.7,
+       "attackSetTick": 22666,
+       "attackSetMs": 377310.3
+      },
+      "model": {
+       "result": "death",
+       "reason": "inside-office",
+       "frame": 22698,
+       "endMs": 377842.7
+      }
+     },
+     "drawStream": {
+      "status": "MATCHED_PREFIX",
+      "firstMismatch": null,
+      "firstMismatchMs": null,
+      "mismatchRuns": 0,
+      "mismatchedUpdates": 0,
+      "firstPersistent": null,
+      "compared": 22698
+     },
+     "maskLedger": {
+      "compared": 22698,
+      "mismatches": 0,
+      "paired": 151,
+      "rebuiltChanges": 151,
+      "modelChanges": 151,
+      "offsets": {
+       "0>1 +0": 38,
+       "1>2 +0": 38,
+       "2>3 +0": 38,
+       "3>0 +0": 37
+      }
+     },
+     "heldTapDrops": [
+      {
+       "tick": 22244,
+       "ms": 370321.9,
+       "downTick": 22231,
+       "upTick": 22244,
+       "holdUpdates": 13,
+       "upAtTick": 22243
+      }
+     ]
+    },
+    {
+     "variant": "landed-r20",
+     "clock": "trace-catchup",
+     "presses": "landed",
+     "landingLatency": {
+      "raises": 17,
+      "officeViewLuma": 117,
+      "medianMs": 81.6,
+      "p10Ms": 52.3,
+      "p90Ms": 99.8,
+      "minMs": 48.8,
+      "maxMs": 106.7
+     },
+     "input": {
+      "officeRows": 692,
+      "officeRowsSha256": "c21c55866408b604e851fb7ad31e65416abc59f965d0df39519b3d16a579b993",
+      "stretchedContacts": 49,
+      "sameTickEdgeSets": 0,
+      "firstPressTick": 152,
+      "measuredUpdates": 25435,
+      "frameTimesSha256": "44ac91701dbb09918678581ceb953d2b596ce59ed43e8fdd68e184b193962aa2",
+      "inputSha256": "b1606a3caa3d4a0b2d5ca24d4460ecaee8200dfc5b555d2fa65c345e8b3aa6d2",
+      "modelInputMode": "explicit-contact-duration",
+      "modelContactsSha256": "f1aea45b4d7c51e5e3a44450ae5050adf1d4354eb1a42fe26b116d749895d101"
+     },
+     "runtime": {
+      "traceSha256": "8609b950da2c648619450f5c2629d1026f6676941ce1c4b5362d8abac01e0d6e",
+      "drawTraceSha256": "c38fb79755ff5ed0dd3b1d1f1a221dc34314166e42aa8509e3728b73d7053c5f",
+      "officeUpdates": 25235
+     },
+     "windows": {
+      "rebuilt": "...BC.BC.BC.BC.C..BC.BC.BC.BC.BC..BC.BC.BC?",
+      "model": "...BC.BC.BC.BC.C..BC.BC.BC.BC.BC..BC.BC.BC?",
+      "rows": [
+       {
+        "index": 0,
+        "tick": 325,
+        "ms": 5433.7,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 1,
+        "tick": 859,
+        "ms": 14267.3,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 2,
+        "tick": 1460,
+        "ms": 24265.4,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 3,
+        "tick": 2057,
+        "ms": 34270.2,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 2057,
+        "rebuiltArrivalMs": -3936.7,
+        "model": "B"
+       },
+       {
+        "index": 4,
+        "tick": 2660,
+        "ms": 44266.8,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 2660,
+        "rebuiltArrivalMs": -3931.4,
+        "model": "C"
+       },
+       {
+        "index": 5,
+        "tick": 3262,
+        "ms": 54266.5,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 6,
+        "tick": 3866,
+        "ms": 64267.6,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 3866,
+        "rebuiltArrivalMs": -3930.3,
+        "model": "B"
+       },
+       {
+        "index": 7,
+        "tick": 4467,
+        "ms": 74271.2,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 4467,
+        "rebuiltArrivalMs": -3952.8,
+        "model": "C"
+       },
+       {
+        "index": 8,
+        "tick": 5069,
+        "ms": 84271.8,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 9,
+        "tick": 5669,
+        "ms": 94276.4,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 5669,
+        "rebuiltArrivalMs": -3941.4,
+        "model": "B"
+       },
+       {
+        "index": 10,
+        "tick": 6269,
+        "ms": 104268.8,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 6269,
+        "rebuiltArrivalMs": -3932.8,
+        "model": "C"
+       },
+       {
+        "index": 11,
+        "tick": 6870,
+        "ms": 114268.1,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 12,
+        "tick": 7469,
+        "ms": 124275.5,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 7469,
+        "rebuiltArrivalMs": -3938.4,
+        "model": "B"
+       },
+       {
+        "index": 13,
+        "tick": 8077,
+        "ms": 134268.4,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 8077,
+        "rebuiltArrivalMs": -3935.4,
+        "model": "C"
+       },
+       {
+        "index": 14,
+        "tick": 8677,
+        "ms": 144271.7,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 15,
+        "tick": 9279,
+        "ms": 154278.7,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 9279,
+        "rebuiltArrivalMs": -3939.5,
+        "model": "C"
+       },
+       {
+        "index": 16,
+        "tick": 9877,
+        "ms": 164270.8,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 17,
+        "tick": 10479,
+        "ms": 174274,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 18,
+        "tick": 11080,
+        "ms": 184272.4,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 11080,
+        "rebuiltArrivalMs": -3948.7,
+        "model": "B"
+       },
+       {
+        "index": 19,
+        "tick": 11682,
+        "ms": 194270.7,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 11682,
+        "rebuiltArrivalMs": -3917.4,
+        "model": "C"
+       },
+       {
+        "index": 20,
+        "tick": 12281,
+        "ms": 204272.8,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 21,
+        "tick": 12881,
+        "ms": 214271.7,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 12881,
+        "rebuiltArrivalMs": -3949.4,
+        "model": "B"
+       },
+       {
+        "index": 22,
+        "tick": 13480,
+        "ms": 224273.3,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 13480,
+        "rebuiltArrivalMs": -3933.6,
+        "model": "C"
+       },
+       {
+        "index": 23,
+        "tick": 14081,
+        "ms": 234279.1,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 24,
+        "tick": 14683,
+        "ms": 244276.3,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 14683,
+        "rebuiltArrivalMs": -3934.9,
+        "model": "B"
+       },
+       {
+        "index": 25,
+        "tick": 15283,
+        "ms": 254272,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 15283,
+        "rebuiltArrivalMs": -3944.2,
+        "model": "C"
+       },
+       {
+        "index": 26,
+        "tick": 15886,
+        "ms": 264274.8,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 27,
+        "tick": 16488,
+        "ms": 274275.7,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 16488,
+        "rebuiltArrivalMs": -3927.5,
+        "model": "B"
+       },
+       {
+        "index": 28,
+        "tick": 17087,
+        "ms": 284274.1,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 17087,
+        "rebuiltArrivalMs": -3950.3,
+        "model": "C"
+       },
+       {
+        "index": 29,
+        "tick": 17684,
+        "ms": 294277.4,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 30,
+        "tick": 18282,
+        "ms": 304275.6,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 18282,
+        "rebuiltArrivalMs": -3950.6,
+        "model": "B"
+       },
+       {
+        "index": 31,
+        "tick": 18883,
+        "ms": 314276.1,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 18883,
+        "rebuiltArrivalMs": -3935.1,
+        "model": "C"
+       },
+       {
+        "index": 32,
+        "tick": 19484,
+        "ms": 324280.5,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 33,
+        "tick": 20081,
+        "ms": 334280,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 34,
+        "tick": 20683,
+        "ms": 344275,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 20683,
+        "rebuiltArrivalMs": -3933.3,
+        "model": "B"
+       },
+       {
+        "index": 35,
+        "tick": 21282,
+        "ms": 354271.5,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 21282,
+        "rebuiltArrivalMs": -3930.1,
+        "model": "C"
+       },
+       {
+        "index": 36,
+        "tick": 21882,
+        "ms": 364276.1,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 37,
+        "tick": 22482,
+        "ms": 374267.6,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 22482,
+        "rebuiltArrivalMs": -3963.5,
+        "model": "B"
+       },
+       {
+        "index": 38,
+        "tick": 23085,
+        "ms": 384278.7,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 23085,
+        "rebuiltArrivalMs": -3949.7,
+        "model": "C"
+       },
+       {
+        "index": 39,
+        "tick": 23684,
+        "ms": 394277.2,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 40,
+        "tick": 24289,
+        "ms": 404262.9,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 24289,
+        "rebuiltArrivalMs": -3913.6,
+        "model": "B"
+       },
+       {
+        "index": 41,
+        "tick": 24890,
+        "ms": 414276,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 24890,
+        "rebuiltArrivalMs": -3962.4,
+        "model": "C"
+       },
+       {
+        "index": 42,
+        "tick": 25488,
+        "ms": 424276,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       }
+      ]
+     },
+     "outcome": {
+      "rebuilt": {
+       "result": "6am",
+       "reason": null,
+       "officeUpdates": 25235,
+       "endMs": 420012.9
+      },
+      "model": {
+       "result": "6am",
+       "reason": null,
+       "frame": 25235,
+       "endMs": 420012.9
+      }
+     },
+     "drawStream": {
+      "status": "MATCHED_PREFIX",
+      "firstMismatch": null,
+      "firstMismatchMs": null,
+      "mismatchRuns": 0,
+      "mismatchedUpdates": 0,
+      "firstPersistent": null,
+      "compared": 25235
+     },
+     "maskLedger": {
+      "compared": 25235,
+      "mismatches": 0,
+      "paired": 168,
+      "rebuiltChanges": 168,
+      "modelChanges": 168,
+      "offsets": {
+       "0>1 +0": 42,
+       "1>2 +0": 42,
+       "2>3 +0": 42,
+       "3>0 +0": 42
+      }
+     },
+     "heldTapDrops": []
+    }
+   ],
+   "derived": {
+    "landed": {
+     "rebuiltVsPhone": {
+      "read": 42,
+      "occupied": 27,
+      "compared": 38,
+      "agree": 14,
+      "hits": 7,
+      "occupancyAgree": 22,
+      "unplayed": 4,
+      "firstDisagreement": {
+       "window": 6,
+       "phone": ".",
+       "side": "B"
+      }
+     },
+     "modelVsPhone": {
+      "read": 42,
+      "occupied": 27,
+      "compared": 38,
+      "agree": 14,
+      "hits": 7,
+      "occupancyAgree": 22,
+      "unplayed": 4,
+      "firstDisagreement": {
+       "window": 6,
+       "phone": ".",
+       "side": "B"
+      }
+     },
+     "rebuiltVsModel": {
+      "compared": 38,
+      "agree": 38,
+      "firstDisagreement": null
+     },
+     "rebuiltOutcome": {
+      "sameResult": false,
+      "deltaMs": -44863.3,
+      "agrees": false
+     },
+     "modelOutcome": {
+      "sameResult": false,
+      "deltaMs": -44863.3,
+      "agrees": false
+     }
+    },
+    "landed-r20": {
+     "rebuiltVsPhone": {
+      "read": 42,
+      "occupied": 27,
+      "compared": 42,
+      "agree": 16,
+      "hits": 9,
+      "occupancyAgree": 24,
+      "unplayed": 0,
+      "firstDisagreement": {
+       "window": 6,
+       "phone": ".",
+       "side": "B"
+      }
+     },
+     "modelVsPhone": {
+      "read": 42,
+      "occupied": 27,
+      "compared": 42,
+      "agree": 16,
+      "hits": 9,
+      "occupancyAgree": 24,
+      "unplayed": 0,
+      "firstDisagreement": {
+       "window": 6,
+       "phone": ".",
+       "side": "B"
+      }
+     },
+     "rebuiltVsModel": {
+      "compared": 42,
+      "agree": 42,
+      "firstDisagreement": null
+     },
+     "rebuiltOutcome": {
+      "sameResult": true,
+      "deltaMs": -2693.1,
+      "agrees": true
+     },
+     "modelOutcome": {
+      "sameResult": true,
+      "deltaMs": -2693.1,
+      "agrees": true
+     }
+    },
+    "modelRecordVsPhone": {
+     "read": 42,
+     "occupied": 27,
+     "compared": 29,
+     "agree": 12,
+     "hits": 8,
+     "occupancyAgree": 16,
+     "unplayed": 13,
+     "firstDisagreement": {
+      "window": 2,
+      "phone": ".",
+      "side": "C"
+     }
+    },
+    "atFirstDisagreement": {
+     "window": 6,
+     "phone": ".",
+     "rebuilt": {
+      "landed": "B",
+      "landed-r20": "B"
+     },
+     "model": {
+      "landed": "B",
+      "landed-r20": "B"
+     },
+     "modelRecord": "F"
+    }
+   },
+   "verdict": "DIVERGENT"
+  }
+ ],
+ "limitations": [
+  "The rebuild and the model are host programs; neither result is a phone observation and neither promotes anything.",
+  "Phone windows are the retained right-eyehole readers' codes (B/C/F, \".\" empty); they cannot see Balloon Boy or the vent Toys.",
+  "Visible responses are not input dispatch: the press-to-update rule and action-specific response lag remain assumptions. Each variant names its mapping.",
+  "Frame traces time the displayed frames; the runtime's loops, its catch-up rule and its integer-ms timer are inferred from them.",
+  "The harness raises one new-touch trigger per update; same-tick edges are counted per replay."
+ ],
+ "evidenceId": "recompile-phone-encounters-7f49b8e5a17f9754"
+}

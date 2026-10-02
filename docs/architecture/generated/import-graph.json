@@ -2818,6 +2818,7 @@
     {
       "file": "packages/propose/bin/recompile/test-phone-region-readout.ts",
       "imports": [
+        "./phone-encounter-replay.ts",
         "./phone-region-readout.ts",
         "./phone-seed-readout.ts",
         "./phone-seed-scan.ts",

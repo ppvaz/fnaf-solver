@@ -1,0 +1,165 @@
+{
+ "schema": "evidence-record-v1",
+ "date": "2026-10-01",
+ "step": "ROADMAP S2b (the clean-room recompile against the phone)",
+ "claimLevel": "MODEL_ONLY (the rebuilt runtime and the model, against DEVICE_MEASURED phone reads)",
+ "question": "Replaying full-06 into the recompiled game with releases landed 20 ms after their send instead of at the press latency, do the rebuild and the model play the night as the phone did?",
+ "exploratory": "Follows docs/evidence/phone-release-latency-20261001.json; no predeclared rule.",
+ "result": {
+  "path": "tools/recompile/results/phone-encounters-release20-20261001.json",
+  "sha256": "52ce30cdababf7faabc4b3862d74b6206b0af9fd0e64f7a23fec6e0e1f963a06",
+  "evidenceId": "recompile-phone-encounters-7f49b8e5a17f9754"
+ },
+ "config": {
+  "path": "tools/recompile/results/phone-encounter-nights-release20-20261001.json",
+  "sha256": "0645f52715e248e747d60eda2bdede402190b96a813b4766d38492734ee63693"
+ },
+ "harness": "pinned/7ab9a755-7163d628 (the binary of docs/evidence/rebuild-phone-encounters-20260927.json), run through packages/source/recompile/run-harness.sh in fnaf2-chowdren:buster",
+ "phone": {
+  "windows": "...BC..BC.BC.BC..BC.BCF.BCFBC.B.CBC.BC.CBC",
+  "terminal": "6am"
+ },
+ "variants": {
+  "landed": {
+   "rebuilt": {
+    "windows": "...BC.BC.BC.BC.C..BC.BC.BC.BC.BC..BC.B????",
+    "outcome": {
+     "result": "death",
+     "reason": "Withered Bonnie",
+     "officeUpdates": 22698,
+     "endMs": 377842.7,
+     "attackSetTick": 22666,
+     "attackSetMs": 377310.3
+    }
+   },
+   "model": {
+    "windows": "...BC.BC.BC.BC.C..BC.BC.BC.BC.BC..BC.B????",
+    "outcome": {
+     "result": "death",
+     "reason": "inside-office",
+     "frame": 22698,
+     "endMs": 377842.7
+    }
+   },
+   "derived": {
+    "rebuiltVsPhone": {
+     "read": 42,
+     "occupied": 27,
+     "compared": 38,
+     "agree": 14,
+     "hits": 7,
+     "occupancyAgree": 22,
+     "unplayed": 4,
+     "firstDisagreement": {
+      "window": 6,
+      "phone": ".",
+      "side": "B"
+     }
+    },
+    "modelVsPhone": {
+     "read": 42,
+     "occupied": 27,
+     "compared": 38,
+     "agree": 14,
+     "hits": 7,
+     "occupancyAgree": 22,
+     "unplayed": 4,
+     "firstDisagreement": {
+      "window": 6,
+      "phone": ".",
+      "side": "B"
+     }
+    },
+    "rebuiltVsModel": {
+     "compared": 38,
+     "agree": 38,
+     "firstDisagreement": null
+    },
+    "rebuiltOutcome": {
+     "sameResult": false,
+     "deltaMs": -44863.3,
+     "agrees": false
+    },
+    "modelOutcome": {
+     "sameResult": false,
+     "deltaMs": -44863.3,
+     "agrees": false
+    }
+   },
+   "drawSplit": null
+  },
+  "landed-r20": {
+   "rebuilt": {
+    "windows": "...BC.BC.BC.BC.C..BC.BC.BC.BC.BC..BC.BC.BC",
+    "outcome": {
+     "result": "6am",
+     "reason": null,
+     "officeUpdates": 25235,
+     "endMs": 420012.9
+    }
+   },
+   "model": {
+    "windows": "...BC.BC.BC.BC.C..BC.BC.BC.BC.BC..BC.BC.BC",
+    "outcome": {
+     "result": "6am",
+     "reason": null,
+     "frame": 25235,
+     "endMs": 420012.9
+    }
+   },
+   "derived": {
+    "rebuiltVsPhone": {
+     "read": 42,
+     "occupied": 27,
+     "compared": 42,
+     "agree": 16,
+     "hits": 9,
+     "occupancyAgree": 24,
+     "unplayed": 0,
+     "firstDisagreement": {
+      "window": 6,
+      "phone": ".",
+      "side": "B"
+     }
+    },
+    "modelVsPhone": {
+     "read": 42,
+     "occupied": 27,
+     "compared": 42,
+     "agree": 16,
+     "hits": 9,
+     "occupancyAgree": 24,
+     "unplayed": 0,
+     "firstDisagreement": {
+      "window": 6,
+      "phone": ".",
+      "side": "B"
+     }
+    },
+    "rebuiltVsModel": {
+     "compared": 42,
+     "agree": 42,
+     "firstDisagreement": null
+    },
+    "rebuiltOutcome": {
+     "sameResult": true,
+     "deltaMs": -2693.1,
+     "agrees": true
+    },
+    "modelOutcome": {
+     "sameResult": true,
+     "deltaMs": -2693.1,
+     "agrees": true
+    }
+   },
+   "drawSplit": null
+  }
+ },
+ "reading": {
+  "control": "With releases at the press latency (landed, 81.6 ms) the rebuild reproduces the committed record: dead to Withered Bonnie at 377.8 s, the model dead inside the office at the same instant, 38 of 38 windows alike, no draw split.",
+  "release20": "With releases 20 ms after their send the recompiled game reaches 6 AM at 420.0 s, as the phone did (2.7 s apart), and the model agrees with it on all 42 windows with no draw split over the night: on these inputs the model and the real game logic are the same program.",
+  "phone": "Both still disagree with the phone from window 6 (16 of 42): the window-6 divergence is upstream of both programs, in the inputs (seed, clock, landings), not in a model rule. The seed is what the pre-registered 10/20 readout night measures directly.",
+  "S2b": "Not closed: the outcome now matches the phone; the per-cycle ledger does not."
+ },
+ "id": "rebuild-release20-a9847b473591a6fe"
+}
