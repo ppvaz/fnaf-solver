@@ -83,6 +83,7 @@ import type { RunEvent } from '../packages/review/bin/grade/run-report.ts';
 import { formatEdge, scanEdge } from '../packages/propose/bin/plans/basin-edge.ts';
 import { report as capabilityReport, traceDecision } from '../packages/play/bin/phone/capabilities.ts';
 import { checkCapabilitiesFirst } from '../packages/review/src/refusals.ts';
+import { readLanes } from '../packages/review/src/lanes.ts';
 import { readMistakes } from '../packages/review/src/mistakes.ts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -314,7 +315,10 @@ interface Sink {
   file(path: string, via: string, reached: boolean, entry?: SuiteEntry): void;
 }
 
-export function walk(text: string, via: string, sink: Sink, scripts: Readonly<Record<string, string>> = SCRIPTS, open = new Set<string>()) {
+const LANES = readLanes(ROOT);
+
+export function walk(text: string, via: string, sink: Sink, scripts: Readonly<Record<string, string>> = SCRIPTS, open = new Set<string>(),
+  lanes: ReturnType<typeof readLanes> = LANES) {
   for (const words of simpleCommands(text)) {
     const target = classify(words);
     if (!target) continue;
@@ -323,12 +327,25 @@ export function walk(text: string, via: string, sink: Sink, scripts: Readonly<Re
       sink.script(target.script, via, known);
       if (!known || open.has(target.script)) continue;
       walk(scripts[target.script], `${via} > npm run ${target.script}`, sink, scripts,
-        new Set([...open, target.script]));
+        new Set([...open, target.script]), lanes);
       continue;
     }
     if (target.path.includes('$')) continue;   // a variable path is resolved at run time
     const path = normal(target.path);
     sink.file(path, via, true);
+    if (path === 'tools/lanes.ts') {
+      // A lane is data (tools/lanes.json): its node files run under node --test, then its steps.
+      const name = target.args[0] ?? '';
+      const lane = lanes[name];
+      if (!lane) sink.file(`tools/lanes.json#${name}`, via, true);
+      else if (!open.has(`lane:${name}`)) {
+        const inside = `${via} > tools/lanes.ts ${name}`;
+        for (const file of lane.node) sink.file(file, inside, true);
+        for (const step of lane.steps)
+          walk(step[0] === 'lane' ? `node tools/lanes.ts ${step[1]}` : step.join(' '), inside, sink, scripts,
+            new Set([...open, `lane:${name}`]), lanes);
+      }
+    }
     if (path === 'tools/test.ts') {
       // A report selected by --reports is printed and never judged: not a gate.
       for (const entry of suite(target.args))
@@ -451,8 +468,9 @@ function ciReach(ciText: string) {
 }
 
 /** Item 5: every script path package.json / CI / tools/test.ts names exists. */
-export function missingPaths({ scripts, ciText, exists }: {
+export function missingPaths({ scripts, ciText, exists, lanes = LANES }: {
   scripts: Readonly<Record<string, string>>, ciText: string | null, exists: (path: string) => boolean,
+  lanes?: ReturnType<typeof readLanes>,
 }) {
   // One message per missing target, at the first line that names it: the
   // same path reached through `npm run test` and CI is one defect, not three.
@@ -466,8 +484,8 @@ export function missingPaths({ scripts, ciText, exists }: {
       if (!exists(path) && !problems.has(path)) problems.set(path, `${via} names ${path}, which does not exist`);
     },
   };
-  if (ciText) for (const step of ciSteps(ciText)) walk(step.run, `ci.yml "${step.name}"`, sink, scripts);
-  for (const [name, body] of Object.entries(scripts)) walk(body, `package.json "${name}"`, sink, scripts);
+  if (ciText) for (const step of ciSteps(ciText)) walk(step.run, `ci.yml "${step.name}"`, sink, scripts, new Set(), lanes);
+  for (const [name, body] of Object.entries(scripts)) walk(body, `package.json "${name}"`, sink, scripts, new Set(), lanes);
   return [...problems.values()];
 }
 
@@ -487,6 +505,14 @@ export function missingPaths({ scripts, ciText, exists }: {
     fail('control: a package.json script naming tools/test-bundle.ts (the item-5 wrong path) was not caught');
   if (!planted.some(p => p.includes('npm run test:nope')))
     fail('control: `npm run` of an undefined script was not caught');
+  // The lane table (tools/lanes.json) is read as the command lines are: a missing node file, a missing
+  // step's script and an unknown lane are each caught.
+  const plantedLanes = missingPaths({
+    scripts: { 'test:planted': 'node tools/lanes.ts planted' }, ciText: null, exists: path => existsSync(join(ROOT, path)),
+    lanes: { planted: { node: ['tools/test-planted-lane.ts'], steps: [['python3', 'tools/test-planted-step.py'], ['lane', 'nope']] } },
+  });
+  for (const want of ['tools/test-planted-lane.ts', 'tools/test-planted-step.py', 'tools/lanes.json#nope'])
+    if (!plantedLanes.some(p => p.includes(want))) fail(`control: a lane naming ${want} was not caught`);
 
   // item 13: an unregistered test, a compiled-but-never-run Java test, and a stale exemption.
   const shell = '"$JAVAC" -d "$T" "$HERE/test/a/b/RunTest.java" "$HERE/test/a/b/IdleTest.java"\n'

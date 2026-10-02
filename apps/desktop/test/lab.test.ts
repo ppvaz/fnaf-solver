@@ -30,7 +30,7 @@ const git = (cwd: string, ...args: string[]) => run(cwd, 'git', args);
 const write = (root: string, path: string, text: string) => { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), text); };
 const commitAll = (root: string, message: string) => { git(root, 'add', '-A'); git(root, 'commit', '-q', '-m', message); return git(root, 'rev-parse', 'HEAD').trim(); };
 
-/** A repository with the real hook, register and ROADMAP, and scripts the doctor's catalog check can run. */
+/** A repository with the real hook, register, ROADMAP and lanes, and scripts the doctor's catalog check can run. */
 function fixture(name: string) {
   const root = join(base, name);
   mkdirSync(root, { recursive: true });
@@ -38,7 +38,7 @@ function fixture(name: string) {
   git(root, 'config', 'user.name', 'Lab Test');
   git(root, 'config', 'user.email', 'lab-test@users.noreply.github.com');
   git(root, 'config', 'commit.gpgsign', 'false');
-  for (const path of ['CLAUDE.md', 'plans/ROADMAP.md', '.githooks/commit-msg', 'tools/dump-text-check.ts', 'tools/change-locality.ts', 'tools/commit-identity.ts', 'tools/test-mistake-register.ts']) {
+  for (const path of ['CLAUDE.md', 'plans/ROADMAP.md', '.githooks/commit-msg', 'tools/dump-text-check.ts', 'tools/change-locality.ts', 'tools/commit-identity.ts', 'tools/test-mistake-register.ts', 'tools/lanes.json']) {
     mkdirSync(dirname(join(root, path)), { recursive: true });
     copyFileSync(join(REPO, path), join(root, path));
   }

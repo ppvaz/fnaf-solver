@@ -5,14 +5,14 @@
 // carried through every move, and it is where a stale rule survives unnoticed.
 //
 // A module is loaded when any tracked script imports it (static, dynamic,
-// `require`, a re-export) or names its path in a string that resolves to it
-// (a URL built from its own location, a spawned script), or when a
-// package.json, shell, Python, YAML or HTML file names its path. An export is
-// used when a module imports that name from it, directly or through a
-// re-export (`export * from`, `export { a as b } from`), and every name counts
-// as used when a module is loaded whole (a namespace import, a dynamic import,
-// a path string). Tests count as users. Entry scripts (`bin/`, tools, tests)
-// are not judged: people and CI run them by name.
+// `require`, a re-export) or names its path in a string that resolves to it (a
+// URL built from its own location, a spawned script), or when a package.json,
+// the lane table (tools/lanes.json), shell, Python, YAML or HTML file names its
+// path. An export is used when a module imports that name from it, directly or
+// through a re-export (`export * from`, `export { a as b } from`), and every
+// name counts as used when a module is loaded whole (a namespace import, a
+// dynamic import, a path string). Tests count as users. Entry scripts (`bin/`,
+// tools, tests) are not judged: people and CI run them by name.
 //
 // The debt that existed when this landed is recorded in
 // tools/quality-baseline.json (`deadCode`) and only shrinks (tools/gate-kit.ts).
@@ -26,9 +26,9 @@ import ts from 'typescript';
 import { ROOT, loadBaseline, ratchet, repoFiles, report } from './gate-kit.ts';
 
 const SCRIPT = /\.(?:js|mjs|cjs|ts|mts)$/;
-// What can start a module by its path: manifests, shell, Python, CI and pages.
+// What can start a module by its path: manifests, the lane table, shell, Python, CI and pages.
 // Other JSON is data -- the generated catalogs list every module and prove nothing.
-const NAMING = /(?:^|\/)package\.json$|\.(?:sh|py|yml|yaml|html)$/;
+const NAMING = /(?:^|\/)package\.json$|^tools\/lanes\.json$|\.(?:sh|py|yml|yaml|html)$/;
 /** The libraries this judges: modules under a package's or an application's src/. */
 export const judged = (path: string) => /^(?:packages|apps)\/[^/]+\/src\//.test(path) && SCRIPT.test(path) && !path.endsWith('.d.ts');
 

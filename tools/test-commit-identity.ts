@@ -9,6 +9,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { LEGACY, allowedAddress, parseIdent, pushRanges, refusal, scan } from './commit-identity.ts';
+import { readLanes } from '../packages/review/src/lanes.ts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const TOOL = join(ROOT, 'tools', 'commit-identity.ts');
@@ -113,10 +114,10 @@ try {
   rmSync(repo, { recursive: true, force: true });
 }
 
-// 4. Both hooks run it, and test:unit runs this gate.
+// 4. Both hooks run it, and test:unit runs this gate (its lane in tools/lanes.json).
 assert.match(readFileSync(join(ROOT, '.githooks', 'commit-msg'), 'utf8'), /tools\/commit-identity\.ts" --hook \|\| exit 1/);
-assert.ok(JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')).scripts['test:unit'].includes('node tools/test-commit-identity.ts'),
-  'test:unit does not run tools/test-commit-identity.ts');
+assert.equal(JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')).scripts['test:unit'], 'node tools/lanes.ts unit');
+assert.ok(readLanes(ROOT).unit.node.includes('tools/test-commit-identity.ts'), 'test:unit does not run tools/test-commit-identity.ts');
 checks += 1;
 
 console.log(`commit identity: ${checks} checks pass (${history.checked} commits noreply, ${LEGACY.size} legacy; ` +

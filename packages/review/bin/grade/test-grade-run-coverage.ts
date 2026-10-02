@@ -16,6 +16,7 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { readLanes } from '../../src/lanes.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '../../../..');
@@ -289,6 +290,10 @@ const scriptNamesRun = new Set<string>();
 for (const command of Object.values(JSON.parse(readFileSync(pkgPath, 'utf8')).scripts ?? {}))
   for (const m of String(command).matchAll(/([\w./-]+\.(?:py|mjs|ts|sh))/g))
     scriptNamesRun.add(lastPart(m[1]));
+// And the lanes those scripts run as data (`node tools/lanes.ts LANE`): each lane's node files and steps.
+for (const lane of Object.values(readLanes(ROOT)))
+  for (const path of [...lane.node, ...lane.steps.flat()])
+    if (/\.(?:py|mjs|ts|sh)$/.test(path)) scriptNamesRun.add(lastPart(path));
 
 const runs = (gate: string) => {
   const base = lastPart(gate);

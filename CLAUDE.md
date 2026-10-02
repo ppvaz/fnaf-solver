@@ -242,6 +242,14 @@ every commit (`tools/commit-identity.ts`, also at pre-push). The first four are 
 only as `{count, why}` naming why the finding is accepted, and lower or remove
 entries as debt is paid.
 
+The lanes are data (Pedro, 2026-10-02: the `&&` chains "look historical"):
+`tools/lanes.json` names each lane's node test files and its other steps, and
+`npm run test:<lane>` is `node tools/lanes.ts <lane>`, which runs the files
+through `node --test`, one process each, and names every failure rather than
+stopping at the first. `--only TEXT` runs a subset. A gate that asks what a
+lane runs reads the table through `readLanes` (`packages/review/src/lanes.ts`),
+not `package.json`'s command lines.
+
 What no gate can run, before implementing:
 - Classify the task (research, bug, feature, refactor, qualification). If you
   cannot say what is known, from which evidence, what would refute it and the

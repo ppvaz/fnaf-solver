@@ -30,6 +30,7 @@ import { homedir, hostname, tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { mainCheckout } from '../packages/play/bin/phone/local-profile.ts';
+import { type Lane as TableLane, readLanes } from '../packages/review/src/lanes.ts';
 
 const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '..'));
 const ZERO = /^0+$/;
@@ -237,6 +238,8 @@ function run(command: string, cwd: string, { live = false } = {}) {
 // The scripts of the CHECKOUT being validated, not of the working tree: a
 // pushed commit may have redefined the very chain the lane runs.
 let SCRIPTS: Record<string, string> = {};
+// And its lane table (tools/lanes.json), which `node tools/lanes.ts LANE` runs; empty before the table existed.
+let LANE_TABLE: Readonly<Record<string, TableLane>> = {};
 
 /**
  * The commands a failing command is made of, or null when it is a leaf. An
@@ -249,7 +252,11 @@ function expand(command: string, depth: number) {
   const parts = command.split(' && ').filter(Boolean);
   if (parts.length > 1) return parts;
   const script = command.match(/^npm run ([\w:-]+)$/);
-  return script && SCRIPTS[script[1]] ? [SCRIPTS[script[1]]] : null;
+  if (script && SCRIPTS[script[1]]) return [SCRIPTS[script[1]]];
+  const lane = command.match(/^node tools\/lanes\.ts ([\w:-]+)$/)?.[1];
+  if (lane === undefined || !LANE_TABLE[lane]) return null;
+  return [...LANE_TABLE[lane].node.map(file => `node ${file}`),
+    ...LANE_TABLE[lane].steps.map(step => (step[0] === 'lane' ? `node tools/lanes.ts ${step[1]}` : step.join(' ')))];
 }
 
 /**
@@ -333,6 +340,7 @@ function validate(sha: string, subject: string) {
       return { failed: ['push-gate is out of step with ci.yml'], skipped: [] };
     }
     SCRIPTS = JSON.parse(readFileSync(join(worktree, 'package.json'), 'utf8')).scripts;
+    LANE_TABLE = existsSync(join(worktree, 'tools', 'lanes.json')) ? readLanes(worktree) : {};
     linkDependencies(worktree);
     const python = ciPythonEnv(worktree);
     if (python.env) {
