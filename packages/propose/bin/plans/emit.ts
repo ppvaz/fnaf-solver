@@ -4,7 +4,7 @@ import { compileBundle } from './bundle.ts';
 
 const VALUED = ['--winner', '--out', '--forbid-mechanic'];
 
-function arg(name) {
+function arg(name: string) {
   const index = process.argv.indexOf(`--${name}`);
   return index < 0 ? undefined : process.argv[index + 1];
 }
@@ -32,6 +32,6 @@ try {
   console.log(`  strategy=${result.manifest.strategy} nights=${result.manifest.nights.join(',')} ` +
     `plans=${result.plans.length} replay=${result.replay.hash}`);
 } catch (error) {
-  console.error(`device:emit: ${error.message}`);
+  console.error(`device:emit: ${(error as Error).message}`);
   process.exit(1);
 }

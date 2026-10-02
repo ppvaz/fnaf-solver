@@ -540,9 +540,7 @@ export async function loopNight({ act, c, record, eyes, ears, epochHostMs, stopA
     const listen = async (fromWall: number, minMs = 900, maxMs = 4500) => {
       const start = performance.now();
       for (;;) {
-        // Node has findLast; the ES2022 lib this checks against does not name it, and the call allows its absence.
-        const lines = ears.cues.events as CueLine[] & { findLast?: (match: (e: CueLine) => boolean) => CueLine | undefined };
-        const hop = lines.findLast?.((e) => e.cue === 'breath');
+        const hop = ears.cues.events.findLast((e) => e.cue === 'breath');
         if (hop) teach.level(hop.ncc);
         const now = wallOf(performance.now());
         const cov = ears.coverage(fromWall - AUDIO_LAG_MS, now - AUDIO_LAG_MS);

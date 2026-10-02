@@ -56,7 +56,7 @@ interface Gate {
   readonly [field: string]: unknown;
 }
 /** A winner-v1 as validateWinner returns it: its strategy normalized, its nights, seeds and knobs filled. */
-interface Winner {
+export interface Winner {
   readonly schema: typeof WINNER_SCHEMA;
   readonly strategy: Strategy;
   readonly nights: number[];
@@ -72,7 +72,7 @@ interface Winner {
 }
 /** What a strategy's replay of one seed reports. */
 interface ReplayResult {
-  readonly sim: { readonly won: boolean, readonly alive: boolean, readonly death: { readonly reason: string } | null,
+  readonly sim: { readonly won: boolean, readonly alive: boolean, readonly death: { readonly reason: string, readonly t?: number } | null,
     readonly frame: number, readonly events: readonly unknown[] };
   readonly minBox?: number; readonly splitAt?: number; readonly missed?: number; readonly detections?: number;
 }
@@ -88,7 +88,7 @@ interface Manifest {
 }
 /** A manifest validateBundle has matched to its winner, its profile and its hashes. */
 type VerifiedManifest = Manifest & {
-  readonly strategy: Strategy, readonly winnerHash: string, readonly engineHash: string,
+  readonly strategy: Strategy, readonly winnerHash: string, readonly engineHash: string, readonly nights: readonly number[],
   readonly profile: Manifest['profile'] & { readonly sha256: string },
 };
 

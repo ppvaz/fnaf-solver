@@ -24,6 +24,12 @@ import { Sim } from '@sixam/source/fnaf2';
 import { FNAF2_CONTROL_VOCABULARY as V } from '@sixam/source';
 import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort, seedCohortDescriptor } from '@sixam/propose/seeds';
 import { KNOBS0, schedule } from './minus-3-plan.ts';
+import type { build } from './minus-3-plan.ts';
+
+/** One authored row of the Minus 3 route: a tap or hold, a hall flash, or a camdrop. */
+type RouteRow = ReturnType<typeof build>['opening'][number];
+/** Every knob of the route, as a number or a flag. */
+type Knobs = Required<NonNullable<NonNullable<Parameters<typeof schedule>[0]>['knobs']>>;
 
 /** Measured monitor DOWN -> mask DOWN gap on the winning runs. */
 export const MASK_GAP_MS = 67;
@@ -52,7 +58,7 @@ export const WIN_KNOBS = Object.freeze({
 });
 
 /** The winning opening/clear rows, in the checked-in row vocabulary. */
-export function winRows(k = WIN_KNOBS) {
+export function winRows(k: Knobs = WIN_KNOBS) {
   const c = k.contactMs;
   const opening = [
     [k.openViewMs, 'tap', 'monitor', c],
@@ -63,7 +69,7 @@ export function winRows(k = WIN_KNOBS) {
     [k.openWindAtMs, 'hold', 'wind', k.openWindMs],
     [k.openCamdropAtMs, 'camdrop', k.openCamdropLeadMs, k.openCamdropMonitorMs, k.openCamdropTailMs],
     [k.openMaskAtMs, 'tap', 'mask', c],
-  ];
+  ] satisfies RouteRow[];
   const clear = [
     [k.maskOffMs, 'tap', 'mask', c],
     [k.secondHallMs, k.secondHallVent ? 'hallvent' : 'hall', k.secondHallHoldMs],
@@ -71,7 +77,7 @@ export function winRows(k = WIN_KNOBS) {
     [k.windAtMs, 'hold', 'wind', k.windMs],
     [k.camdropMs, 'camdrop', k.camdropLeadMs, k.camdropMonitorMs, k.camdropTailMs],
     [k.maskOnMs, 'tap', 'mask', c],
-  ];
+  ] satisfies RouteRow[];
   return { opening, clear };
 }
 
@@ -81,12 +87,12 @@ export function winRows(k = WIN_KNOBS) {
  * distinct control from that light, and the winning run pressed two different
  * measured points for them.
  */
-export function deviceEdges({ knobs = WIN_KNOBS, untilMs = 540000 } = {}) {
-  const edges = [];
-  const contact = (atMs, control, durationMs) =>
+export function deviceEdges({ knobs = WIN_KNOBS, untilMs = 540000 }: { knobs?: Knobs, untilMs?: number } = {}) {
+  const edges: { atMs: number, control: string, down: boolean }[] = [];
+  const contact = (atMs: number, control: string, durationMs: number) =>
     edges.push({ atMs, control, down: true }, { atMs: atMs + durationMs, control, down: false });
-  const camName = a => (a === 'cam11' ? 'cam:11' : a === 'cam8' ? 'cam:8' : a);
-  const expand = (base, rows) => {
+  const camName = (a: string) => (a === 'cam11' ? 'cam:11' : a === 'cam8' ? 'cam:8' : a);
+  const expand = (base: number, rows: readonly RouteRow[]) => {
     for (const [at, kind, a, b, tail] of rows) {
       const when = base + at;
       if (kind === 'tap') contact(when, camName(a), b);
@@ -110,18 +116,18 @@ export function edgesSha256(edges = deviceEdges()) {
   // Keep the evidence identity stable across this vocabulary-only rename:
   // these aliases are the historical labels for the same measured contacts,
   // not accepted device input names.
-  const historical = { [V.cameraFeedLight]: 'light', [V.hallLight]: 'hall' };
+  const historical: Readonly<Record<string, string>> = { [V.cameraFeedLight]: 'light', [V.hallLight]: 'hall' };
   const canonical = JSON.stringify(edges.map(e => [e.atMs, historical[e.control] ?? e.control, e.down]));
   return createHash('sha256').update(canonical).digest('hex');
 }
 
 /** MODEL_ONLY census of this exact schedule. Not a promotion gate. */
-export function census(night, { runs = 3000, seeds, knobs = WIN_KNOBS }: any = {}) {
+export function census(night: number, { runs = 3000, seeds, knobs = WIN_KNOBS }: { runs?: number, seeds?: number[], knobs?: Knobs } = {}) {
   const population = seeds ?? randomSeedCohort({ count: runs });
   const { opening, clear } = winRows(knobs);
   const queue = schedule({ opening, clear, knobs });
   let wins = 0, split = 0, minPower = Infinity, minBox = 1;
-  const losses = new Map();
+  const losses = new Map<string, number>();
   for (const seed of population) {
     const sim = new Sim({ night, seed });
     let cursor = 0, sawSplit = false;

@@ -25,8 +25,10 @@ import { compileArtifactPlans } from './artifact-commands.ts';
 import * as C from '@sixam/source/fnaf2';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const check = (ok, message) => { if (!ok) throw new Error(message); };
-const seed = i => (i * 2654435761) >>> 0;
+const check: (ok: unknown, message: string) => asserts ok = (ok, message) => { if (!ok) throw new Error(message); };
+const seed = (i: number) => (i * 2654435761) >>> 0;
+/** A row the test reads where the plan has it; a missing one fails the check that reads it. */
+const found = <T>(value: T | null | undefined) => value as T;
 
 // --- 0. the parametrized build reproduces the shipped schedule ---------------
 //
@@ -36,7 +38,7 @@ const seed = i => (i * 2654435761) >>> 0;
 // and the shipped default does not.
 {
   const d = build();
-  const eq = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+  const eq = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
   check(eq(d.opening, OPENING) && eq(d.loop, LOOP),
     'build() does not reproduce the exported OPENING/LOOP');
   check(!eq(build({ windMs: KNOBS0.windMs + 500 }).loop, LOOP),
@@ -53,9 +55,9 @@ const seed = i => (i * 2654435761) >>> 0;
   // check that was only ever asserting a relationship. The relationship is what
   // this pins: coverage starts once the ON animation has run, and ends on the
   // authored OFF press.
-  const frameOf = ms => Math.round(ms / 1000 * C.FPS);
-  const openingMaskAt = OPENING.find(row => row[2] === 'mask')[0];
-  const loopMaskOffAt = LOOP.find(row => row[2] === 'mask')[0];
+  const frameOf = (ms: number) => Math.round(ms / 1000 * C.FPS);
+  const openingMaskAt = found(OPENING.find(row => row[2] === 'mask'))[0];
+  const loopMaskOffAt = found(LOOP.find(row => row[2] === 'mask'))[0];
   check(exactWindows[0].startFrame === frameOf(openingMaskAt) + C.MASK_ANIM_ON &&
         exactWindows[0].endFrame === frameOf(loopMaskOffAt),
     'mask coverage does not start after ON animation or end at the OFF press');
@@ -140,7 +142,8 @@ for (const night of ['2', '7']) {
   check(armed === 200, `minimal night 1: split armed on only ${armed}/200`);
 
   const m = build({ minimal: true });
-  const kinds = new Set([...m.opening, ...m.loop, ...m.finish].map(r => r[1]));
+  // A row's kind is tap, hold, hall or camdrop; 'mask' is a control, so the first test below never holds.
+  const kinds = new Set<string>([...m.opening, ...m.loop, ...m.finish].map(r => r[1]));
   check(!kinds.has('mask') && !kinds.has('hall') && !kinds.has('camdrop'),
     `the minimal plan still has defensive churn: ${[...kinds].join(', ')}`);
   check(m.opening[0][0] === 115000,
@@ -241,7 +244,7 @@ check(lines.includes('#cycle toys'), 'the emitted plan has no toys loop cycle');
 check(plan.endsWith('\n'), 'the plan must end with a newline for `read` to see its last row');
 
 // Rows round-trip: what emitPlan writes is exactly OPENING then LOOP, joined.
-const rowText = rows => rows.map(r => r.join(' '));
+const rowText = (rows: readonly (readonly unknown[])[]) => rows.map(r => r.join(' '));
 check(
   lines.slice(openAt + 1, openAt + 1 + OPENING.length).join('|') === rowText(OPENING).join('|'),
   'the opening rows are not the OPENING table verbatim');
@@ -260,11 +263,11 @@ const profile = JSON.parse(readFileSync(
 const parsed = parsePlan(plan, { strategy: 'minus-toys', night: 7, profile });
 const compiled = compileArtifactPlans(
   [{ text: plan, policy: 'minus-toys', night: 7 }], parsePlan, profile)[0];
-const actions = Object.values(compiled.cycles).flatMap((cycle: any) =>
+const actions: readonly { readonly control?: string }[] = Object.values(compiled.cycles).flatMap((cycle) =>
   cycle.blocks.flatMap(block => block.actions));
-check((parsed.cycles as any).opening.rows.some(row => row.kind === 'camdrop'),
+check(parsed.cycles.opening.rows.some(row => row.kind === 'camdrop'),
   'the parsed opening lost its camdrop compound');
-check((parsed.cycles as any).toys.rows.some(row => row.kind === 'hall'),
+check(parsed.cycles.toys.rows.some(row => row.kind === 'hall'),
   'the parsed toys loop lost its standalone hall row');
 // hallMs 0 is the death-targeting knob that drops the post-mask flash; the
 // default keeps it, and nothing else in the loop may move when it goes.
@@ -281,7 +284,7 @@ check(actions.some(action => action.control === 'cameraFeedLight'),
   'the artifact compiler did not emit cameraFeedLight');
 check(actions.some(action => action.control === 'hallLight'),
   'the artifact compiler did not emit hallLight');
-check(actions.every(action => !['light', 'hall', 'ventL', 'ventR', 'ventl', 'ventr'].includes(action.control)),
+check(actions.every(action => !(['light', 'hall', 'ventL', 'ventR', 'ventl', 'ventr'] as readonly unknown[]).includes(action.control)),
   'the modern artifact retained an ambiguous legacy control name');
 
 console.log(

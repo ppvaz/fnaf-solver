@@ -13,11 +13,11 @@
 //                response is banded and `edge` is one band's edge (read the loss bands instead)
 //   formatEdge(result) -> "264", ">=264" or "99|banded@231"
 
-export function scanEdge(clears, { step, max }) {
+export function scanEdge(clears: (k: number) => boolean, { step, max }: { step: number, max: number }) {
   if (!(step > 0) || !(max >= step)) throw new RangeError(`scanEdge needs 0 < step <= max (step ${step}, max ${max})`);
   let edge = 0;
   let failed = false;
-  let resumesAt = null;
+  let resumesAt: number | null = null;
   for (let k = step; k <= max; k += step) {
     const ok = clears(k);
     if (!failed) {
@@ -31,7 +31,7 @@ export function scanEdge(clears, { step, max }) {
   return { edge, capped: !failed, resumesAt };
 }
 
-export function formatEdge({ edge, capped, resumesAt }) {
+export function formatEdge({ edge, capped, resumesAt }: ReturnType<typeof scanEdge>) {
   if (resumesAt !== null) return `${edge}|banded@${resumesAt}`;
   return capped ? `>=${edge}` : String(edge);
 }

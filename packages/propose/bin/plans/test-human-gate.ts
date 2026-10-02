@@ -14,15 +14,16 @@ import { parsePlanText, jitterPlan, modelGate, HUMAN_SLACK_MS, GATE_MIN_SURVIVAL
 import { build, devicePlan } from './recipe.ts';
 
 let failed = 0;
-const check = (name, cond, detail = '') => {
+const check = (name: string, cond: unknown, detail = '') => {
   if (!cond) { failed++; console.error(`FAIL ${name}${detail ? ` -- ${detail}` : ''}`); }
 };
 
 // ------------------------------------------------- parse: text -> plan shape
 const recipe = build({ night: 6 });
+const cycles: Readonly<Record<string, { lengthMs: number }>> = recipe.cycles;
 const plan = devicePlan(recipe);
 const text = `#night ${recipe.night}\n` + Object.entries(plan).map(([name, lines]) =>
-  `#cycle ${name} ${recipe.cycles[name].lengthMs}\n${(lines as any).join('\n')}`).join('\n') + '\n';
+  `#cycle ${name} ${cycles[name].lengthMs}\n${lines.join('\n')}`).join('\n') + '\n';
 const { night: parsedNight, plan: parsed } = parsePlanText(text);
 check('round-trips the emitted plan', JSON.stringify(parsed) === JSON.stringify(plan));
 check('the plan names its own night', parsedNight === 6);
@@ -33,7 +34,7 @@ check('unknown instruction refused', threw);
 // have gated a Night 3 plan against Night 6's AI table; see plans/13.
 let unnamed = '';
 try { modelGate(text.replace(/^#night 6\n/, ''), { runs: 1 }); }
-catch (e) { unnamed = e.message; }
+catch (e) { unnamed = (e as Error).message; }
 check('a plan that names no night is refused', /does not name its night/.test(unnamed), unnamed);
 
 // -------------------------------------------------------- the error injection
@@ -58,7 +59,7 @@ check('only offsets move (hold durations, sweep spacing untouched)', tailsIntact
 check('draws actually move rows', moved > offsets / 2, `${moved}/${offsets}`);
 
 // ------------------------------------------------------- verdict thresholding
-const stub = (survivals) => {
+const stub = (survivals: boolean[]) => {
   let i = 0;
   return () => ({ sim: { won: survivals[i++ % survivals.length], death: { reason: 'x', detail: 'y' } } });
 };

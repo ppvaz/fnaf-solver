@@ -23,15 +23,23 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { replay, KNOBS0 } from './minus-toys-plan.ts';
 import { DEATH_PREDICTION_SCHEMA, DEATH_TARGETED_STATUS, STRATEGY_REGISTRY } from './bundle.ts';
+import type { Winner } from './bundle.ts';
 
-const argValue = (name, fallback?) => {
+/** A winner file as read: its strategy and knobs, and whatever else it records. */
+type WinnerFile = { readonly strategy: string, readonly knobs?: unknown, readonly [field: string]: unknown };
+/** The Minus Toys knobs a replay takes. */
+type Knobs = NonNullable<Parameters<typeof replay>[0]>['knobs'];
+
+function argValue(name: string): string | undefined;
+function argValue(name: string, fallback: number): string | number;
+function argValue(name: string, fallback?: number) {
   const index = process.argv.indexOf(name);
   return index >= 0 && process.argv[index + 1] !== undefined ? process.argv[index + 1] : fallback;
-};
+}
 
-const quantile = (sorted, p) => sorted[Math.min(sorted.length - 1, Math.floor(p * sorted.length))];
+const quantile = (sorted: number[], p: number) => sorted[Math.min(sorted.length - 1, Math.floor(p * sorted.length))];
 
-export function predictDeaths(winner: { strategy: string; knobs: any; }, { night, replays = 3000, stepMs = 50, periodMs = 1000 }: {night: number, replays?: number, stepMs?: number}) {
+export function predictDeaths(winner: WinnerFile, { night, replays = 3000, stepMs = 50, periodMs = 1000 }: {night: number, replays?: number, stepMs?: number, periodMs?: number}) {
   // A death prediction is the only honest gate for a route that is not
   // zero-RNG, and every community strategy except Minus Toys and Minus 7 is in
   // that class -- Minus 3 scores 2980/3000, Right Vent Camp about 99%. While
@@ -41,11 +49,12 @@ export function predictDeaths(winner: { strategy: string; knobs: any; }, { night
   // validator was always strategy-independent; only this was not.
   const strategy = winner.strategy === 'minus7' || winner.strategy === 'minus-7'
     ? 'minus7' : winner.strategy;
-  const entry = STRATEGY_REGISTRY[strategy];
+  const registry: Readonly<Record<string, (typeof STRATEGY_REGISTRY)[keyof typeof STRATEGY_REGISTRY]>> = STRATEGY_REGISTRY;
+  const entry = registry[strategy];
   if (!entry) throw new Error(`no device emitter is registered for strategy ${JSON.stringify(winner.strategy)}`);
   if (!Number.isInteger(night) || night < 1 || night > 7) throw new Error('night must be 1..7');
   if (!Number.isInteger(replays) || replays < 3000) throw new Error('death prediction needs at least 3000 replays');
-  const times = new Map();
+  const times = new Map<string, number[]>();
   let wins = 0;
 
   // minus3 and minus7 replay at epoch 0 only. Sweeping `phasesMs` for them
@@ -62,12 +71,13 @@ export function predictDeaths(winner: { strategy: string; knobs: any; }, { night
   // it as all of them. Worse, validateDeathPrediction refused anything at or
   // above 1000, so the correct sweep could not be expressed at all.
   const phaseAware = entry.phaseAware === true;
-  const phasesMs = [];
+  const phasesMs: number[] = [];
   if (phaseAware) for (let ms = 0; ms < periodMs; ms += stepMs) phasesMs.push(ms);
   else phasesMs.push(0);
 
   if (phaseAware) {
-    const knobs = typeof winner.knobs === 'string' ? KNOBS0 : winner.knobs;
+    // A minus-toys winner's knobs are minus-toys knobs, as written.
+    const knobs = typeof winner.knobs === 'string' ? KNOBS0 : winner.knobs as Knobs;
     // Seeds and phases are interleaved so every phase sees the same seed cohort.
     for (let i = 0; i < replays; i += 1) {
       const seed = 1 + Math.floor(i / phasesMs.length);
@@ -76,18 +86,19 @@ export function predictDeaths(winner: { strategy: string; knobs: any; }, { night
       if (sim.won) { wins += 1; continue; }
       const killer = sim.death?.reason ?? 'unknown';
       if (!times.has(killer)) times.set(killer, []);
-      times.get(killer).push(sim.death?.t ?? NaN);
+      (times.get(killer) as number[]).push(sim.death?.t ?? NaN);
     }
   } else {
     // The emitted plan's own replay, so the prediction describes the bytes the
     // phone will execute rather than a parallel model of them.
-    const emitted = entry.emit(winner, night);
+    // The emitter reads the winner file as written; nothing here validates it.
+    const emitted = entry.emit(winner as Winner, night);
     for (let seed = 1; seed <= replays; seed += 1) {
       const { sim } = emitted.replay(seed);
       if (sim.won) { wins += 1; continue; }
       const killer = sim.death?.reason ?? 'unknown';
       if (!times.has(killer)) times.set(killer, []);
-      times.get(killer).push(sim.death?.t ?? NaN);
+      (times.get(killer) as number[]).push(sim.death?.t ?? NaN);
     }
   }
   const killers = [...times.entries()]
@@ -95,7 +106,7 @@ export function predictDeaths(winner: { strategy: string; knobs: any; }, { night
       const sorted = ts.filter(Number.isFinite).sort((a, b) => a - b);
       return { killer, count: ts.length, share: ts.length / replays,
         tSeconds: { min: sorted[0], p10: quantile(sorted, 0.1), p50: quantile(sorted, 0.5),
-          p90: quantile(sorted, 0.9), max: sorted.at(-1) } };
+          p90: quantile(sorted, 0.9), max: sorted[sorted.length - 1] } };
     })
     .sort((a, b) => b.count - a.count);
   return { schema: DEATH_PREDICTION_SCHEMA, night, replays, phasesMs, wins, winRate: wins / replays, killers,
@@ -103,7 +114,7 @@ export function predictDeaths(winner: { strategy: string; knobs: any; }, { night
     generatedBy: 'packages/propose/bin/plans/death-prediction.ts', generatedAt: new Date().toISOString() };
 }
 
-export function describe(prediction) {
+export function describe(prediction: ReturnType<typeof predictDeaths>) {
   const lines = [`death prediction night ${prediction.night}: ${prediction.replays} replays over ${prediction.phasesMs.length} phases, ` +
     `wins ${prediction.wins} (${(100 * prediction.winRate).toFixed(1)}%)`];
   for (const k of prediction.killers)

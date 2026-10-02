@@ -6,7 +6,7 @@
 // re-anchor helps, and the model is reproducible under a seed.
 import { evalEnsemble, basinWidth, DEFAULTS } from './minus-toys-jitter.ts';
 
-const check = (ok, msg) => { if (!ok) throw new Error(msg); };
+const check = (ok: unknown, msg: string) => { if (!ok) throw new Error(msg); };
 
 // 1. Zero error reproduces the deterministic gate: every seed clears night 2.
 {

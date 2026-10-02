@@ -39,17 +39,19 @@ const NIGHTS = [1, 2, 3, 4, 5, 6];
 const EXACT_RUNS = 100;
 
 let failed = 0;
-const check = (name, cond, detail = '') => {
+const check = (name: string, cond: unknown, detail = '') => {
   if (!cond) { failed++; console.error(`FAIL ${name}${detail ? ` -- ${detail}` : ''}`); }
 };
 
 // Must match what --device-plan prints, header for header: this text is
 // compared against a pinned file, and a header the CLI emits but this does not
 // makes the pin compare two different plans.
-const planText = (recipe, plan) =>
+/** A value the test reads where the matrix has it; a missing one fails the check that reads it. */
+const found = <T>(value: T | null | undefined) => value as T;
+const planText = (recipe: ReturnType<typeof build>, plan: ReturnType<typeof devicePlan>) =>
   `#night ${recipe.night}\n#idle-until ${idleUntilMs(recipe.night)}\n` +
   Object.entries(plan).map(([name, lines]) =>
-    `#cycle ${name} ${recipe.cycles[name].lengthMs}\n${(lines as any).join('\n')}`).join('\n') + '\n';
+    `#cycle ${name} ${(recipe.cycles as Readonly<Record<string, { lengthMs: number }>>)[name].lengthMs}\n${lines.join('\n')}`).join('\n') + '\n';
 
 // The gate over six nights is 7200 simulated nights and was the whole wall
 // time of the engine suite. It is embarrassingly parallel, so it goes through
@@ -65,7 +67,7 @@ for (const night of NIGHTS)
 const gateParts = await pool().map(WORKER, 'survivors', chunks);
 const gateSurvivors = new Map(NIGHTS.map(n => [n, 0]));
 for (const part of gateParts)
-  gateSurvivors.set(part.night, gateSurvivors.get(part.night) + part.won);
+  gateSurvivors.set(part.night, found(gateSurvivors.get(part.night)) + part.won);
 
 // ------------------------------------------------------------- the matrix
 const rows = [];
@@ -79,11 +81,11 @@ for (const night of NIGHTS) {
   for (let seed = 1; seed <= EXACT_RUNS; seed++) {
     const r = replay(plan, { night, seed });
     if (r.sim.won) won++;
-    else deaths.set(r.sim.death.reason, (deaths.get(r.sim.death.reason) || 0) + 1);
+    else deaths.set(found(r.sim.death).reason, (deaths.get(found(r.sim.death).reason) || 0) + 1);
     missed += r.missed;
     detections += r.detections;
   }
-  const survived = gateSurvivors.get(night);
+  const survived = found(gateSurvivors.get(night));
   const verdict = contractVerdict(survived, GATE_RUNS, GATE_MIN_SURVIVAL);
   const gate = { night, survived, runs: GATE_RUNS, slackMs: HUMAN_SLACK_MS,
                  minSurvival: GATE_MIN_SURVIVAL,
@@ -171,8 +173,8 @@ for (const { night, attack, detections } of rows) {
 // change that collapses the two facts again fails here by name. Whether the
 // fixed sample supplies Night 3's branch is deliberately not pinned.
 {
-  const n1 = rows.find(r => r.night === 1).attack;
-  const n3 = rows.find(r => r.night === 3).attack;
+  const n1 = found(rows.find(r => r.night === 1)).attack;
+  const n3 = found(rows.find(r => r.night === 3)).attack;
   check('night 1 carries a borrowed, unreachable branch',
     !n1.reachable && n1.peakAi === 0 && n1.source === 'template', JSON.stringify(n1));
   check('night 3 keeps a real branch, cut from night 3',
@@ -193,7 +195,7 @@ for (const { night, attack, detections } of rows) {
     pilotOffset: 10, prophylacticMask: true, night: 6, seed: 7 });
   let threw = '';
   try { resolveAttack({ night: 1, seed: 7 }, nightSixLog); }
-  catch (e) { threw = e.message; }
+  catch (e) { threw = (e as Error).message; }
   check('an unexpected Balloon Boy attack fails closed',
     /never arms him/.test(threw), threw || 'built a plan anyway');
 
@@ -205,10 +207,10 @@ for (const { night, attack, detections } of rows) {
 
 // A plan that does not name its night is not gated against a guess.
 {
-  const { recipe, plan } = rows.find(r => r.night === 6);
+  const { recipe, plan } = found(rows.find(r => r.night === 6));
   const unnamed = planText(recipe, plan).replace(/^#night 6\n/, '');
   let threw = '';
-  try { modelGate(unnamed, { runs: 1 }); } catch (e) { threw = e.message; }
+  try { modelGate(unnamed, { runs: 1 }); } catch (e) { threw = (e as Error).message; }
   check('an unnamed plan is refused', /does not name its night/.test(threw), threw);
 }
 
@@ -219,7 +221,7 @@ for (const { night, attack, detections } of rows) {
 // was separated from the night being evaluated, with only the new `#night`
 // header added.
 {
-  const six = rows.find(r => r.night === 6);
+  const six = found(rows.find(r => r.night === 6));
   const emitted = planText(six.recipe, six.plan);
   const pinned = readFileSync(join(HERE, '../../../play/test/testdata/n6-device-plan.txt'), 'utf8');
   check('the shipped night 6 plan is unchanged', emitted === pinned,

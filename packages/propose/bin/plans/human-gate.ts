@@ -73,10 +73,13 @@ const JITTER_SALT = 0x68756d61; // "huma"; its own stream, never the sim's rolls
 // night the plan names. A plan that names no night is not gated against a
 // guess: modelGate refuses it. See plans/13 -- pricing a Night 3 plan against
 // Night 6's AI table is a silent substitution, not a conservative default.
-export function parsePlanText(text) {
-  const plan = {};
-  let night = null;
-  let cur = null;
+/** A plan as replay() takes it: each cycle's rows, by cycle name. */
+export type PlanRows = Record<string, string[]>;
+
+export function parsePlanText(text: string) {
+  const plan: PlanRows = {};
+  let night: number | null = null;
+  let cur: string | null = null;
   // Absent means zero, so a plan emitted before this header existed still
   // prices. A plan that names one must name a valid one.
   let idleUntilMs = 0;
@@ -128,18 +131,18 @@ export function parsePlanText(text) {
 //   'correlated' -- one shared draw plus a small independent term
 //                   (+/- round(slackMs/3)); the CENSUS-shaped model plan 04
 //                   asked for, pending the trainer trace.
-export function jitterPlan(plan, seed, slackMs = HUMAN_SLACK_MS, shape = 'iid') {
+export function jitterPlan(plan: Readonly<Record<string, readonly string[]>>, seed: number, slackMs = HUMAN_SLACK_MS, shape = 'iid') {
   const rng = new Rng((((seed >>> 0) ^ JITTER_SALT) >>> 0));
   const spread = shape === 'correlated' ? Math.round(slackMs / 3)
     : shape === 'common' ? 0 : slackMs;
-  const out = {};
+  const out: PlanRows = {};
   for (const [name, lines] of Object.entries(plan)) {
     // The shared "started this pass late" term is drawn per CYCLE, not once
     // per night: a human's lateness is consistent within a pass and varies
     // between them. (`policy.ts`'s minus7 control draws it per cycle() call
     // for the same reason.) 'iid' has no shared term.
     const common = shape === 'iid' ? 0 : rng.int(-slackMs, slackMs);
-    out[name] = (lines as any).map(line => {
+    out[name] = lines.map(line => {
       const sp = line.indexOf(' ');
       const draw = common + (spread ? rng.int(-spread, spread) : 0);
       const offs = Math.max(0, +line.slice(0, sp) + draw);
@@ -149,23 +152,32 @@ export function jitterPlan(plan, seed, slackMs = HUMAN_SLACK_MS, shape = 'iid') 
   return out;
 }
 
-export function modelGate(planText, {
+/** What the gate needs of a replay: whether the night was won, and what killed it and when. */
+type GateReplay = (plan: PlanRows, options: { night: number, seed: number, idleUntilMs: number, attackWindowMs: number }) =>
+  { readonly sim: { readonly won: boolean, readonly death: { readonly reason: string, readonly detail?: unknown, readonly t?: number } | null } };
+/** The gate's sample: its size, slack, bar and night, the replay it prices with, and whether to keep each outcome. */
+interface GateOptions {
+  runs?: number, slackMs?: number, minSurvival?: number, night?: number | null, replayFn?: GateReplay,
+  shape?: string, seedStart?: number, outcomes?: boolean,
+}
+
+export function modelGate(planText: string, {
   runs = GATE_RUNS, slackMs = HUMAN_SLACK_MS, minSurvival = GATE_MIN_SURVIVAL,
   night, replayFn = replay, shape = 'iid', seedStart = 1, outcomes = false,
-}: any = {}) {
+}: GateOptions = {}) {
   const { night: named, plan, idleUntilMs, attackWindowMs } = parsePlanText(planText);
   night = night ?? named;
   if (night === undefined || night === null)
     throw new Error('this plan does not name its night, and the gate will not guess one');
   let survived = 0;
-  const outcomeVector = outcomes ? [] : null;
-  const deaths = new Map();
+  const outcomeVector: number[] | null = outcomes ? [] : null;
+  const deaths = new Map<string, number>();
   // When a run died, not only what killed it. A census of causes alone once
   // shipped the wrong conclusion here (death-census.py's header): nineteen
   // Foxy deaths read as the BB->Foxy chain until their ~30 s clustering showed
   // Balloon Boy could not have arrived yet. Seconds of in-game time, so the
   // caller can place a death against the AI table's hour rows.
-  const deathTimes = new Map();
+  const deathTimes = new Map<string, (number | undefined)[]>();
   for (let seed = seedStart; seed < seedStart + runs; seed++) {
     const { sim } = replayFn(jitterPlan(plan, seed, slackMs, shape),
                              { night, seed, idleUntilMs, attackWindowMs });
@@ -178,7 +190,8 @@ export function modelGate(planText, {
       const k = `${sim.death.reason}: ${sim.death.detail}`;
       deaths.set(k, (deaths.get(k) || 0) + 1);
       if (!deathTimes.has(k)) deathTimes.set(k, []);
-      deathTimes.get(k).push(sim.death.t);
+      // Set just above when missing.
+      (deathTimes.get(k) as (number | undefined)[]).push(sim.death.t);
     }
   }
   const verdict = contractVerdict(survived, runs, minSurvival);
@@ -200,9 +213,9 @@ export function modelGate(planText, {
 function main() {
   const file = process.argv[2];
   if (!file) { console.error('usage: human-gate.ts plan.txt'); process.exit(2); }
-  let r;
+  let r: ReturnType<typeof modelGate>;
   try { r = modelGate(readFileSync(file, 'utf8')); }
-  catch (e) { console.error(`model gate: ${e.message}`); process.exit(44); }
+  catch (e) { console.error(`model gate: ${(e as Error).message}`); process.exit(44); }
   const need = Math.ceil(r.runs * r.minSurvival);
   const stats = formatRate(r.survived, r.runs);
   if (!r.ok) {

@@ -17,21 +17,23 @@ import { build, devicePlan } from './recipe.ts';
 import { jitterPlan, parsePlanText, HUMAN_SLACK_MS } from './human-gate.ts';
 import { replay } from './recipe.ts';
 
-const cache = new Map();
+const cache = new Map<number, ReturnType<typeof parsePlanText>['plan']>();
 
-function planFor(night) {
+function planFor(night: number) {
   if (!cache.has(night)) {
     const recipe = build({ night });
+    const cycles: Readonly<Record<string, { lengthMs: number }>> = recipe.cycles;
     const plan = devicePlan(recipe);
     const text = `#night ${recipe.night}\n` + Object.entries(plan).map(([name, lines]) =>
-      `#cycle ${name} ${recipe.cycles[name].lengthMs}\n${(lines as any).join('\n')}`).join('\n') + '\n';
+      `#cycle ${name} ${cycles[name].lengthMs}\n${lines.join('\n')}`).join('\n') + '\n';
     cache.set(night, parsePlanText(text).plan);
   }
-  return cache.get(night);
+  // Set above when missing.
+  return cache.get(night) as ReturnType<typeof parsePlanText>['plan'];
 }
 
 // `from`..`to` inclusive, the same seeds the serial gate uses.
-export function survivors({ night, from, to, slackMs = HUMAN_SLACK_MS }) {
+export function survivors({ night, from, to, slackMs = HUMAN_SLACK_MS }: { night: number, from: number, to: number, slackMs?: number }) {
   const plan = planFor(night);
   let won = 0;
   for (let seed = from; seed <= to; seed++) {

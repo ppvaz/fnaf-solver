@@ -46,20 +46,35 @@ import { FPS, Sim, Rng } from '@sixam/source/fnaf2';
 import { stableHash } from '@sixam/kernel/contracts';
 import { MODEL_CONTEXT_LIGHT } from '@sixam/source';
 import { validateExecutorRequest } from '../../../play/src/campaign/artifact-executor.ts';
+import type { ExecutorRequest } from '../../../play/src/campaign/artifact-executor.ts';
 import { compileDeviceLocalHidSchedule } from '../../../play/src/campaign/hid-schedule.ts';
 import { DeviceActuator } from '../../../play/bin/phone/actuator.ts';
 import { SEAM_FLOORS } from './artifact-commands.ts';
 
 export const FUSION_POLL_MS = 33;
-const frame = (ms) => Math.round(ms * FPS / 1000);
+const frame = (ms: number) => Math.round(ms * FPS / 1000);
+
+/** A block of a bundle's compiled plan: its actions and whatever else the executor reads. */
+type LaneBlock = { readonly actions: readonly unknown[], readonly [field: string]: unknown };
+/** A bundle's artifact.json as the lane reads it: each night's plan, its cycles' blocks, and its hashes. */
+interface LaneArtifact {
+  readonly winnerHash?: string;
+  readonly plans: readonly {
+    readonly night: number, readonly sha256?: string, readonly timing: unknown, readonly armVerification?: unknown,
+    readonly cycles: Readonly<Record<string, { readonly blocks: readonly LaneBlock[] }>>,
+  }[];
+}
+/** A contact transition on the night timeline: when, on which slot, down or up, and its profile control. */
+export interface LaneEvent { readonly t: number, readonly slot: number, readonly down: boolean, readonly control: string }
 
 /** The executor request for one night of a bundle, built as campaign-bundle.js builds it. */
-export function laneRequest(bundleDir, night, { mutate = null } = {}) {
-  const artifact = JSON.parse(readFileSync(join(bundleDir, 'artifact.json'), 'utf8'));
-  const profile = JSON.parse(readFileSync(join(bundleDir, 'profile.json'), 'utf8'));
+export function laneRequest(bundleDir: string, night: number, { mutate = null }: { mutate?: ((action: unknown) => unknown) | null } = {}) {
+  const artifact: LaneArtifact = JSON.parse(readFileSync(join(bundleDir, 'artifact.json'), 'utf8'));
+  const profile: { readonly limits?: { readonly maxActions?: number, readonly maxDurationMs?: number } } =
+    JSON.parse(readFileSync(join(bundleDir, 'profile.json'), 'utf8'));
   const plan = artifact.plans.find((p) => p.night === night);
   if (!plan) throw new Error(`device lane: ${bundleDir} has no night ${night}`);
-  let blocks = Object.values(plan.cycles).flatMap((cycle: any) => cycle.blocks.map((block) => ({ ...block, night })));
+  let blocks = Object.values(plan.cycles).flatMap((cycle) => cycle.blocks.map((block) => ({ ...block, night })));
   if (mutate) blocks = blocks.map((block) => ({ ...block, actions: block.actions.map(mutate) }));
   return validateExecutorRequest({
     schema: 'device-executor-v1', version: 1, mode: 'live',
@@ -75,9 +90,9 @@ export function laneRequest(bundleDir, night, { mutate = null } = {}) {
 // A report is [1, count, ...count records of [flags, xlo, xhi, ylo, yhi], filler].
 // flags bit 0 is the tip switch, bit 2 names contact 1 (hid.js record/report).
 // toRaw: raw x = floor((1080 - y) * 20/9), raw y = floor(x * 9/20).
-function decodeReport(bytes) {
+function decodeReport(bytes: readonly number[]) {
   const count = bytes[1];
-  const out = [];
+  const out: { slot: number, down: boolean, x: number, y: number }[] = [];
   for (let i = 0; i < count; i += 1) {
     const [flags, xlo, xhi, ylo, yhi] = bytes.slice(2 + 5 * i, 7 + 5 * i);
     const rawX = xlo | (xhi << 8); const rawY = ylo | (yhi << 8);
@@ -86,24 +101,27 @@ function decodeReport(bytes) {
   return out;
 }
 
-const SIM_ACTION = { cameraFeedLight: MODEL_CONTEXT_LIGHT, hallLight: MODEL_CONTEXT_LIGHT,
+const SIM_ACTION: Readonly<Record<string, string>> = { cameraFeedLight: MODEL_CONTEXT_LIGHT, hallLight: MODEL_CONTEXT_LIGHT,
   leftVentLight: 'ventL', rightVentLight: 'ventR', mask: 'mask', monitor: 'monitor', wind: 'wind' };
 
 /** Contact transitions on the night timeline (ms from the night origin), each with its profile control. */
-export function hidTimeline(request) {
+export function hidTimeline(request: ExecutorRequest) {
   const schedule = compileDeviceLocalHidSchedule(request);
-  const points = Object.entries(request.profile.controlMap);
-  const controlAt = (x, y) => {
-    let best = null; let bestD = Infinity;
-    for (const [name, p] of points) { const d = Math.hypot((p as any).x - x, (p as any).y - y); if (d < bestD) { bestD = d; best = name; } }
+  // The schedule just compiled read every control it presses from this map.
+  const points = Object.entries(request.profile.controlMap as NonNullable<ExecutorRequest['profile']['controlMap']>);
+  const controlAt = (x: number, y: number) => {
+    let best: string | null = null; let bestD = Infinity;
+    for (const [name, p] of points) { const d = Math.hypot(p.x - x, p.y - y); if (d < bestD) { bestD = d; best = name; } }
     if (bestD > 6) throw new Error(`device lane: no control within 6 px of (${x.toFixed(0)}, ${y.toFixed(0)})`);
-    return best;
+    // A point within 6 px was found.
+    return best as string;
   };
-  const events = [];
-  const held = [null, null];
+  const events: LaneEvent[] = [];
+  const held: (string | null)[] = [null, null];
   let t = -schedule.readyDelayMs;
   for (const text of schedule.lines) {
-    const row = JSON.parse(text);
+    // The schedule's vocabulary is register, delay and report.
+    const row: { command: 'register' } | { command: 'delay', duration: number } | { command: 'report', report: number[] } = JSON.parse(text);
     if (row.command === 'delay') t += row.duration;
     else if (row.command === 'report') {
       for (const rec of decodeReport(row.report)) {
@@ -112,7 +130,7 @@ export function hidTimeline(request) {
           held[rec.slot] = control;
           events.push({ t, slot: rec.slot, down: true, control });
         } else if (!rec.down && held[rec.slot] !== null) {
-          events.push({ t, slot: rec.slot, down: false, control: held[rec.slot] });
+          events.push({ t, slot: rec.slot, down: false, control: held[rec.slot] as string });
           held[rec.slot] = null;
         }
       }
@@ -122,25 +140,32 @@ export function hidTimeline(request) {
 }
 
 /** Controls the game detects by a trigger (a new touch or a click), which a dragged touch does not fire. */
-export const TRIGGERED = (action) => action === 'monitor' || action === 'mask' || /^cam:\d+$/.test(action ?? '');
+export const TRIGGERED = (action: string | null) => action === 'monitor' || action === 'mask' || /^cam:\d+$/.test(action ?? '');
 
 /** Sim action for a profile control, or null for one the simulator does not model (mute). */
-export const simAction = (control) => (/^cam:\d+$/.test(control) ? control : SIM_ACTION[control] ?? null);
+export const simAction = (control: string) => (/^cam:\d+$/.test(control) ? control : SIM_ACTION[control] ?? null);
 
 /**
  * One night of `timeline` on the simulator, through the device constraints.
  * `epochMs` places the night origin on the game's clock.
  */
+/** One lane night: the timeline, its seed and night, where the origin lands, and which device rules apply. */
+interface LaneOptions {
+  events: readonly LaneEvent[], seed: number, night: number, epochMs?: number,
+  customNight?: NonNullable<ConstructorParameters<typeof Sim>[0]>['customNight'],
+  merge?: boolean, maskFloor?: boolean, seams?: boolean, late?: readonly number[] | null,
+}
+
 export function playLane({ events, seed, night, epochMs = 0, customNight = undefined,
-  merge = true, maskFloor = true, seams = true, late = null }: any = {}) {
+  merge = true, maskFloor = true, seams = true, late = null }: LaneOptions) {
   const sim = new Sim({ night, seed, ...(customNight ? { customNight } : {}) });
   const actuator = new DeviceActuator(sim, { seed, lateMinMs: late ? late[0] : 0, lateMaxMs: late ? late[1] : 0,
     maskFloorMs: maskFloor ? SEAM_FLOORS.maskButtonFullyVisibleAfterMonitorDownMs : null });
   if (!seams) actuator.seamDropped = () => false;
   const rng = new Rng(((seed >>> 0) ^ 0x51ed270b) >>> 0);
   const lastUp = [-Infinity, -Infinity];
-  const lostDowns = new Set();
-  const queue = [];
+  const lostDowns = new Set<number>();
+  const queue: [frame: number, op: 'press' | 'release', action: string, index: number][] = [];
   let merged = 0;
   for (let i = 0; i < events.length; i += 1) {
     const e = events[i];
@@ -167,19 +192,20 @@ export function playLane({ events, seed, night, epochMs = 0, customNight = undef
     maskFloorDrops: actuator.maskFloorDrops, seamDrops: actuator.seamDrops };
 }
 
-async function main(argv) {
-  const flag = (name, dflt) => { const i = argv.indexOf(`--${name}`); return i < 0 ? dflt : argv[i + 1]; };
+async function main(argv: string[]) {
+  const flag = (name: string, dflt: string | null) => { const i = argv.indexOf(`--${name}`); return i < 0 ? dflt : argv[i + 1]; };
   const bundle = flag('bundle', null); const night = Number(flag('night', 'NaN'));
   if (!bundle || !Number.isInteger(night)) throw new Error('usage: device-lane.ts --bundle DIR --night N [--seeds N] [--epoch MS]');
   const count = Number(flag('seeds', '300'));
   const winner = JSON.parse(readFileSync(join(bundle, 'winner.json'), 'utf8'));
   const epochMs = Number(flag('epoch', String((winner.anchorEpochMs ?? 0) + (winner.phaseOffsetMs ?? 0))));
   const lateArg = flag('late', null);
+  const dials = flag('dials', null);
   const opts = { merge: !argv.includes('--no-merge'), maskFloor: !argv.includes('--no-floor'), seams: !argv.includes('--no-seams'),
     late: lateArg ? lateArg.split(',').map(Number) : null,
-    customNight: flag('dials', null) ? JSON.parse(flag('dials', null)) : undefined };
+    customNight: dials ? JSON.parse(dials) : undefined };
   const { events } = hidTimeline(laneRequest(bundle, night));
-  let wins = 0; const deaths = {}; let merged = 0;
+  let wins = 0; const deaths: Record<string, number> = {}; let merged = 0;
   for (let seed = 1; seed <= count; seed += 1) {
     const r = playLane({ events, seed, night, epochMs, ...opts });
     merged += r.merged;

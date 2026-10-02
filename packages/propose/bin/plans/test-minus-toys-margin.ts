@@ -13,7 +13,7 @@ const out = execFileSync('node',
   [join(here, 'minus-toys-margin.ts'), '--night=2', '--seeds=24', '--max=264'],
   { encoding: 'utf8' });
 
-const check = (ok, msg) => { if (!ok) throw new Error(msg); };
+const check: (ok: unknown, msg: string) => asserts ok = (ok, msg) => { if (!ok) throw new Error(msg); };
 
 check(/Minus Toys margin map/.test(out), 'the tool printed no header');
 check(/WHOLE-SCHEDULE PHASE/.test(out), 'the tool printed no whole-schedule phase margin');

@@ -51,7 +51,8 @@ export const KNOBS0 = Object.freeze({
   ventless: false,
 });
 
-type Knobs = typeof KNOBS0;
+/** KNOBS0's names, each a number or a flag a caller may set (Object.freeze types each as its default). */
+type Knobs = { readonly [K in keyof typeof KNOBS0]: (typeof KNOBS0)[K] extends boolean ? boolean : number };
 /** One authored row of the route, in ms: a tap or hold of a control, a hall flash, or a camdrop. */
 type RouteRow =
   | readonly [at: number, kind: 'tap' | 'hold', action: string, ms: number]

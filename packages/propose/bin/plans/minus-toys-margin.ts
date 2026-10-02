@@ -23,7 +23,7 @@ import { OPENING, LOOP, replay } from './minus-toys-plan.ts';
 import { formatEdge, scanEdge } from './basin-edge.ts';
 import { FNAF2_CONTROL_VOCABULARY as V } from '@sixam/source';
 
-const arg = (k, d) => {
+const arg = (k: string, d: number) => {
   const v = process.argv.find(a => a.startsWith(`--${k}=`));
   return v ? +v.slice(k.length + 3) : d;
 };
@@ -32,10 +32,12 @@ const SEEDS = arg('seeds', 200);
 const MAX = arg('max', 800);          // ms; search this far each way
 const STEP = 33;                       // ms; one Fusion poll
 
-const seed = i => (i * 2654435761) >>> 0;
+const seed = (i: number) => (i * 2654435761) >>> 0;
+/** A schedule() offset: how far one instruction of one cycle moves, in ms. */
+type Shift = (cycle: string, index: number, at: number) => number;
 
 // All seeds survive with this shift applied? `shift` is a schedule() offset fn.
-function allSurvive(shift) {
+function allSurvive(shift: Shift) {
   for (let i = 0; i < SEEDS; i++) {
     const r = replay({ night: NIGHT, seed: seed(i), shift });
     if (!(r.sim.won && r.splitAt >= 0)) return false;
@@ -46,9 +48,9 @@ function allSurvive(shift) {
 // Largest k in [0, MAX] (ms, multiples of STEP) for which `mk(k)` still clears.
 // The scan goes on past the first failure, and a response that clears again
 // prints as banded rather than as a budget (basin-edge.ts).
-const edge = mk => formatEdge(scanEdge(k => allSurvive(mk(k)), { step: STEP, max: MAX }));
+const edge = (mk: (k: number) => Shift) => formatEdge(scanEdge(k => allSurvive(mk(k)), { step: STEP, max: MAX }));
 
-const rowShift = (cycle, index, delta) =>
+const rowShift = (cycle: string, index: number, delta: number): Shift =>
   (c, i) => (c === cycle && i === index ? delta : 0);
 
 console.log(`Minus Toys margin map -- night ${NIGHT}, ${SEEDS} seeds, ` +
@@ -63,8 +65,8 @@ if (!allSurvive(() => 0)) {
   process.exit(1);
 }
 
-const rows = [];
-for (const [cycle, table] of [['opening', OPENING], ['toys', LOOP]]) {
+const rows: { label: string, early: string, late: string }[] = [];
+for (const [cycle, table] of [['opening', OPENING], ['toys', LOOP]] as const) {
   table.forEach((row, index) => {
     const [at, kind, a] = row;
     const label = `${cycle}[${index}] +${at} ${kind} ${a}`;
@@ -119,8 +121,8 @@ if (ARM_AT === undefined) {
 } else {
   const PERIOD = 1000;                   // the game second the response repeats on
   const SCAN = Math.round(1000 / 60);    // one frame
-  const bands = [];
-  let open = null;
+  const bands: [number, number][] = [];
+  let open: number | null = null;
   for (let lag = 0; lag <= PERIOD; lag += SCAN) {
     const lost = !allSurvive((cycle, index, at) => (at >= ARM_AT ? lag : 0));
     if (lost && open === null) open = lag;

@@ -54,19 +54,19 @@ const WITHEREDS = Object.freeze(['withfreddy', 'withbonnie', 'withchica']);
 const TOYS = Object.freeze(['toyfreddy', 'toybonnie', 'toychica']);
 const UNSTALLABLE = Object.freeze(['foxy', 'bb', 'golden']);
 const ROSTER = Object.freeze([...WITHEREDS, ...TOYS, 'mangle', ...UNSTALLABLE]);
-const STALLS = Object.freeze({
+const STALLS: Readonly<Record<string, readonly string[]>> = Object.freeze({
   'minus-toys': TOYS,
   minus3: WITHEREDS,
   minus7: ROSTER.filter(id => !UNSTALLABLE.includes(id)),
 });
 
-function stallCoverage(strategy, night) {
+function stallCoverage(strategy: string, night: number) {
   const armed = ROSTER.filter(id => C.peakAi(night, id) > 0);
   const held = armed.filter(id => (STALLS[strategy] ?? []).includes(id));
   return { armed, held, loose: armed.filter(id => !held.includes(id)) };
 }
 
-const arg = (name, fallback) => {
+const arg = (name: string, fallback: number) => {
   const i = process.argv.indexOf(`--${name}`);
   return i >= 0 && process.argv[i + 1] !== undefined ? process.argv[i + 1] : fallback;
 };
@@ -78,7 +78,7 @@ const DIALS_10_20 = Object.freeze({
   toybonnie: 20, toychica: 20, mangle: 20, bb: 20, golden: 20,
 });
 
-function probeWinner(strategy, night) {
+function probeWinner(strategy: string, night: number) {
   return {
     schema: 'winner-v1', strategy,
     knobs: strategy === 'minus7' ? {} : 'KNOBS0',
@@ -97,21 +97,30 @@ function probeWinner(strategy, night) {
 const profile = JSON.parse(readFileSync(
   join(HERE, '../../../../packages/play/profiles/fnaf2/moto-g56/hid-mediaprojection.json'), 'utf8'));
 
-export function probeCell(strategy, night, { runs = 0 } = {}) {
-  const cell = { strategy, night, emit: null, emitReason: null, model: null, modelReason: null,
+/** A strategy's registry entry, looked up by the name a caller gives. */
+const REGISTRY: Readonly<Record<string, (typeof STRATEGY_REGISTRY)[keyof typeof STRATEGY_REGISTRY]>> = STRATEGY_REGISTRY;
+/** One strategy-night cell: whether it emits, how its model replay scores, and what its stall holds. */
+interface Cell {
+  strategy: string, night: number, emit: boolean | null, emitReason: string | null,
+  model: { wins: number, runs: number, topKiller: { killer: string, count: number } | null } | null,
+  modelReason: string | null, stall: ReturnType<typeof stallCoverage>,
+}
+
+export function probeCell(strategy: string, night: number, { runs = 0 }: { runs?: number } = {}) {
+  const cell: Cell = { strategy, night, emit: null, emitReason: null, model: null, modelReason: null,
     stall: stallCoverage(strategy, night) };
-  let emitted;
+  let emitted: ReturnType<(typeof REGISTRY)[string]['emit']>;
   try {
-    emitted = STRATEGY_REGISTRY[strategy].emit(validateWinner(probeWinner(strategy, night)), night);
-  } catch (error) { cell.emit = false; cell.emitReason = error.message; return cell; }
+    emitted = REGISTRY[strategy].emit(validateWinner(probeWinner(strategy, night)), night);
+  } catch (error) { cell.emit = false; cell.emitReason = (error as Error).message; return cell; }
   try {
     compileArtifactPlans([{ night, policy: strategy, text: emitted.text }], parsePlan, profile);
     cell.emit = true;
-  } catch (error) { cell.emit = false; cell.emitReason = error.message; }
+  } catch (error) { cell.emit = false; cell.emitReason = (error as Error).message; }
   if (!runs) return cell;
   try {
     let wins = 0;
-    const losses = new Map();
+    const losses = new Map<string, number>();
     for (let seed = 1; seed <= runs; seed += 1) {
       const { sim } = emitted.replay(seed);
       if (sim.won) { wins += 1; continue; }
@@ -120,20 +129,22 @@ export function probeCell(strategy, night, { runs = 0 } = {}) {
     }
     const top = [...losses.entries()].sort((a, b) => b[1] - a[1])[0];
     cell.model = { wins, runs, topKiller: top ? { killer: top[0], count: top[1] } : null };
-  } catch (error) { cell.modelReason = error.message; }
+  } catch (error) { cell.modelReason = (error as Error).message; }
   return cell;
 }
 
 const runs = process.argv.includes('--structural') ? 0 : Number(arg('runs', 3000));
 const strategies = Object.keys(STRATEGY_REGISTRY);
-const cells = [];
+const cells: Cell[] = [];
 for (const strategy of strategies)
   for (const night of NIGHTS) cells.push(probeCell(strategy, night, { runs }));
+// Every strategy-night pair was probed above.
+const cellAt = (strategy: string, night: number) => cells.find(c => c.strategy === strategy && c.night === night) as Cell;
 
 if (process.argv.includes('--json')) {
   console.log(JSON.stringify({ schema: 'strategy-night-matrix-v1', runs, cells }, null, 2));
 } else {
-  const label = cell => {
+  const label = (cell: Cell) => {
     if (cell.emit === false) return 'no-emit';
     // A reached-but-dropped branch is structural, not a replay failure: the
     // device executor cannot branch, so that night has no single-cycle form.
@@ -146,14 +157,14 @@ if (process.argv.includes('--json')) {
   process.stdout.write(`${''.padEnd(14)}${NIGHTS.map(n => `N${n}`.padStart(12)).join('')}\n`);
   for (const strategy of strategies) {
     const row = NIGHTS.map(night =>
-      label(cells.find(c => c.strategy === strategy && c.night === night)).padStart(12)).join('');
+      label(cellAt(strategy, night)).padStart(12)).join('');
     process.stdout.write(`${strategy.padEnd(14)}${row}\n`);
   }
   process.stdout.write('\nwhat each strategy\'s own stall holds, of what the night arms:\n');
   process.stdout.write(`${''.padEnd(14)}${NIGHTS.map(n => `N${n}`.padStart(12)).join('')}\n`);
   for (const strategy of strategies) {
     const row = NIGHTS.map(night => {
-      const s = cells.find(c => c.strategy === strategy && c.night === night).stall;
+      const s = cellAt(strategy, night).stall;
       return `${s.held.length}/${s.armed.length}`.padStart(12);
     }).join('');
     process.stdout.write(`${strategy.padEnd(14)}${row}\n`);
@@ -161,7 +172,7 @@ if (process.argv.includes('--json')) {
   process.stdout.write('\nwho each strategy leaves moving (armed, not held by its stall):\n');
   for (const strategy of strategies) {
     for (const night of NIGHTS) {
-      const s = cells.find(c => c.strategy === strategy && c.night === night).stall;
+      const s = cellAt(strategy, night).stall;
       if (!s.armed.length) continue;
       process.stdout.write(`  ${strategy} N${night}: ${s.loose.join(', ') || 'nothing'}\n`);
     }

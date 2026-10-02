@@ -24,7 +24,7 @@ import { WIN_KNOBS, MASK_GAP_MS, EDGES_SHA256, deviceEdges, edgesSha256, winRows
   from './minus3-frame-light.ts';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const check = (ok, message) => { if (!ok) throw new Error(message); };
+const check: (ok: unknown, message: string) => asserts ok = (ok, message) => { if (!ok) throw new Error(message); };
 
 // --- 1. the recipe still reproduces the edges that won -----------------------
 const edges = deviceEdges();
@@ -54,7 +54,7 @@ check(deviceEdges({ knobs: { ...WIN_KNOBS, windMs: WIN_KNOBS.windMs + 250 } }).l
 
 // --- 2. the recipe is a delta on KNOBS0, and the default is untouched --------
 {
-  const changed = Object.keys(WIN_KNOBS).filter(k => WIN_KNOBS[k] !== KNOBS0[k]).sort();
+  const changed = (Object.keys(WIN_KNOBS) as (keyof typeof WIN_KNOBS)[]).filter(k => WIN_KNOBS[k] !== KNOBS0[k]).sort();
   // KNOBS0's wind timing was corrected to the device-proven raise+500 ms on
   // 2026-09-09, so the recipe no longer has to override it: the delta shrank
   // from five fields to three.
@@ -73,7 +73,8 @@ check(deviceEdges({ knobs: { ...WIN_KNOBS, windMs: WIN_KNOBS.windMs + 250 } }).l
     'the shipped default lost its right-vent second contact -- that is what the story gate measured');
   check(WIN_KNOBS.secondHallVent === false,
     'the recipe gained a right-vent hold the winning device runs did not fire');
-  check(emitPlan(3).includes('hallvent') && !emitPlan(3, WIN_KNOBS).includes('hallvent'),
+  // minus-3-plan.ts types its overrides as its defaults' literal values; it is a hashed strategy source.
+  check(emitPlan(3).includes('hallvent') && !emitPlan(3, WIN_KNOBS as unknown as Parameters<typeof emitPlan>[1]).includes('hallvent'),
     'the secondHallVent knob no longer selects the emitted second contact');
   // The mask follows the monitor press by the measured gap, not the light tail.
   check(WIN_KNOBS.openMaskAtMs === WIN_KNOBS.openCamdropAtMs + WIN_KNOBS.openCamdropLeadMs + MASK_GAP_MS,
@@ -84,7 +85,7 @@ check(deviceEdges({ knobs: { ...WIN_KNOBS, windMs: WIN_KNOBS.windMs + 250 } }).l
 
 // --- 3. controls resolve, and the two flash points stay distinct -------------
 {
-  const profile = JSON.parse(readFileSync(join(here, '../../../../packages/play/profiles/fnaf2/moto-g56/hid-mediaprojection.json')));
+  const profile = JSON.parse(readFileSync(join(here, '../../../../packages/play/profiles/fnaf2/moto-g56/hid-mediaprojection.json'), 'utf8'));
   const map = profile.controlMap;
   const used = [...new Set(edges.map(e => e.control))].sort();
   for (const control of used)

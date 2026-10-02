@@ -39,9 +39,11 @@ import { scanEdge } from './basin-edge.ts';
 
 const HOUR_MS = 70000;
 const NIGHT_MS = 420000;
+/** The knobs a replay of the loop takes. */
+type Knobs = NonNullable<Parameters<typeof replay>[0]>['knobs'];
 
 // --- seeded PRNG -----------------------------------------------------------
-function mulberry32(a) {
+function mulberry32(a: number) {
   return function () {
     a |= 0; a = a + 0x6D2B79F5 | 0;
     let t = Math.imul(a ^ a >>> 15, 1 | a);
@@ -58,13 +60,15 @@ export const DEFAULTS = {
   amReadErrMs: 17,
   phaseMs: 0,          // extra deterministic global offset (basin sweep)
 };
+/** One run's error model; an unset term takes its default above. */
+type ErrorModel = Partial<typeof DEFAULTS>;
 
 // Build the per-instruction shift function for one run. `shift(cycle, index,
 // whenMs)` -> ms offset; feeds minus-toys-plan.ts's schedule()/replay().
-export function makeShift(opts, rng) {
+export function makeShift(opts: ErrorModel, rng: () => number) {
   const o = { ...DEFAULTS, ...opts };
-  const uni = e => (rng() * 2 - 1) * e;
-  const gauss = s => {
+  const uni = (e: number) => (rng() * 2 - 1) * e;
+  const gauss = (s: number) => {
     let u = 0, v = 0;
     while (!u) u = rng();
     while (!v) v = rng();
@@ -77,19 +81,19 @@ export function makeShift(opts, rng) {
     for (let h = HOUR_MS; h < NIGHT_MS; h += HOUR_MS)
       anchors.push({ at: h, epoch: uni(o.amReadErrMs) });
   const driftPerMs = o.driftMsPerMin / 60000;
-  return (_cycle, _index, whenMs) => {
+  return (_cycle: string, _index: number, whenMs: number) => {
     let a = anchors[0];
     for (const c of anchors) if (c.at <= whenMs) a = c;
     return o.phaseMs + a.epoch + driftPerMs * (whenMs - a.at) + gauss(o.jitterMs);
   };
 }
 
-const deathKey = sim => {
+const deathKey = (sim: ReturnType<typeof replay>['sim']) => {
   if (!sim.death) return 'unknown';
   return (sim.bb.inside ? 'BBin/' : '') + sim.death.reason;
 };
 
-export function runOne(night, seed, opts, knobs) {
+export function runOne(night: number, seed: number, opts: ErrorModel, knobs?: Knobs) {
   const rng = mulberry32((seed ^ 0x9e3779b9) >>> 0);
   const r = replay({ night, seed, shift: makeShift(opts, rng), knobs });
   // A run counts only if it survives AND the split armed -- a phase error can
@@ -102,14 +106,15 @@ export function runOne(night, seed, opts, knobs) {
 }
 
 // The fitness primitive a search calls: survival of `seeds` runs under `opts`.
-export function evalEnsemble({ night, opts = {}, seeds = 400, knobs }) {
+export function evalEnsemble({ night, opts = {}, seeds = 400, knobs }: { night: number, opts?: ErrorModel, seeds?: number, knobs?: Knobs }) {
   let survived = 0;
-  const deaths = {};
+  const deaths: Record<string, number> = {};
   for (let i = 0; i < seeds; i++) {
     const s = (i * 2654435761) >>> 0;
     const { won, key } = runOne(night, s, opts, knobs);
     if (won) survived++;
-    else deaths[key] = (deaths[key] || 0) + 1;
+    // A run that is not won has a key.
+    else deaths[key as string] = (deaths[key as string] || 0) + 1;
   }
   return { survived, n: seeds, deaths };
 }
@@ -120,18 +125,26 @@ export function evalEnsemble({ night, opts = {}, seeds = 400, knobs }) {
 // per-press jitter, then sweeps that fixed offset and reports the contiguous
 // band around 0 that still clears `threshold`, plus the survival curve. Width 0
 // means jitter alone already sinks it -- no amount of phase alignment helps.
+/** The phase basin: its early and late edges, the survival curve, and where a band clears again. */
+interface Basin {
+  early: number, late: number, width: number, curve: [number, number][],
+  cappedLate?: boolean, cappedEarly?: boolean, resumesLate: number | null, resumesEarly: number | null,
+}
+
 export function basinWidth({ night, opts = {}, seeds = 200, max = 560, step = 33,
-                             threshold = 0.7, knobs }) {
+                             threshold = 0.7, knobs }: {
+                               night: number, opts?: ErrorModel, seeds?: number, max?: number, step?: number,
+                               threshold?: number, knobs?: Knobs }): Basin {
   const base = { epochErrMs: 0, driftMsPerMin: 0, jitterMs: DEFAULTS.jitterMs,
-                 reanchor: (opts as any).reanchor ?? 'none', ...opts };
-  const rate = phaseMs => {
+                 reanchor: opts.reanchor ?? 'none', ...opts };
+  const rate = (phaseMs: number) => {
     const { survived, n } = evalEnsemble({ night, opts: { ...base, phaseMs }, seeds, knobs });
     return survived / n;
   };
   const offs = [0];
   for (let k = step; k <= max; k += step) offs.push(-k, k);
-  const curve = offs.sort((a, b) => a - b).map(k => [k, rate(k)]);
-  const at = k => (curve.find(([p]) => p === k) ?? [k, 0])[1];
+  const curve = offs.sort((a, b) => a - b).map((k): [number, number] => [k, rate(k)]);
+  const at = (k: number) => (curve.find(([p]) => p === k) ?? [k, 0])[1];
   if (at(0) < threshold) return { early: 0, late: 0, width: 0, curve, resumesLate: null, resumesEarly: null };
   const late = scanEdge(k => at(k) >= threshold, { step, max });
   const early = scanEdge(k => at(-k) >= threshold, { step, max });
@@ -144,7 +157,7 @@ export function basinWidth({ night, opts = {}, seeds = 200, max = 560, step = 33
 
 // --- CLI -----------------------------------------------------------------
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const arg = (k, d) => {
+  const arg = <T>(k: string, d: T): string | T => {
     const v = process.argv.find(a => a.startsWith(`--${k}=`));
     return v === undefined ? d : v.slice(k.length + 3);
   };
@@ -182,7 +195,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     banner();
     const night = nights[0] ?? 2;
     console.log(`\npure per-press jitter (epoch 0, drift 0), night ${night}, ${seeds} seeds`);
-    let crossed = null;
+    let crossed: number | null = null;
     for (const j of [0, 10, 15, 20, 25, 29, 35, 45, 60, 80]) {
       const { survived, n } = evalEnsemble({
         night, seeds, knobs, opts: { epochErrMs: 0, driftMsPerMin: 0, jitterMs: j, reanchor },
