@@ -3,8 +3,10 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { compileBundle, parsePlan, validateBundle } from '../bin/plans/bundle.ts';
+import { GATES_SCHEMA, compileBundle, measureWinner, parsePlan, validateBundle } from '../bin/plans/bundle.ts';
+import type { GateRegister, ModelGate } from '../bin/plans/bundle.ts';
 import { stableHash } from '@sixam/kernel/contracts';
+import { FNAF2_MODEL } from '@sixam/source/fnaf2';
 import { compileArtifactPlans } from '../bin/plans/artifact-commands.ts';
 import { makeExecutorRequest } from '../../play/src/campaign/artifact-executor.ts';
 import type { persistArtifactPlans } from '../bin/plans/artifact-commands.ts';
@@ -290,6 +292,44 @@ try {
   } catch (error) { phaseRefusal = (error as Error).message; }
   check(phaseRefusal.includes('minus3 cannot replay a phase offset'),
     `a strategy whose replay cannot evaluate a phase offset still accepted one (${phaseRefusal})`);
+
+  // A committed winner's replay is checked against its gate under the model the Sim runs (gates.json),
+  // and its identity carries the replay of the first model that measured it, so a model change never
+  // re-hashes it. Registers are injected here; the fixture winner is in none of the real ones.
+  const refusal = (fn: () => unknown) => { try { fn(); } catch (error) { return (error as Error).message; } return ''; };
+  const register = (...models: { model: string, gates: ModelGate[] }[]): GateRegister =>
+    ({ schema: GATES_SCHEMA, models: models.map(section => ({ ...section, description: 'fixture' })) });
+  const fresh = measureWinner(winner, register());
+  const gateOf = (measured: typeof fresh, replayHash = measured.replayHash): ModelGate =>
+    ({ file: 'fixture', winnerHash: measured.winnerHash, compiledWinnerHash: measured.compiledWinnerHash, replayHash });
+  const current = register({ model: FNAF2_MODEL, gates: [gateOf(fresh)] });
+  const gatedPath = join(root, 'gated');
+  const gated = compileBundle(winner, gatedPath, { gates: current });
+  check(gated.manifest.winnerHash === fresh.compiledWinnerHash && gated.manifest.model === FNAF2_MODEL,
+    'a registered winner must compile to the hash the register records, under the model the Sim runs');
+  check(validateBundle(gatedPath, { gates: current }).status === 'READY', 'a registered winner\'s bundle must validate');
+  const drift = refusal(() => compileBundle(winner, join(root, 'gate-drift'),
+    { gates: register({ model: FNAF2_MODEL, gates: [gateOf(fresh, 'fnv1a-00000000')] }) }));
+  check(drift.includes(`under model ${FNAF2_MODEL}`), `a replay that left its model's gate was accepted (${drift})`);
+  const unmeasured = refusal(() => compileBundle(winner, join(root, 'gate-unmeasured'),
+    { gates: register({ model: 'fixture-older', gates: [gateOf(fresh)] }) }));
+  check(unmeasured.includes(`has no gate under model ${FNAF2_MODEL}`),
+    `a registered winner with no gate under the current model was accepted (${unmeasured})`);
+  const placeholder = register({ model: 'fixture-older', gates: [gateOf(fresh, 'fnv1a-0ld0ld00')] });
+  const kept = measureWinner(winner, placeholder);
+  check(kept.compiledWinnerHash !== fresh.compiledWinnerHash,
+    'a winner\'s identity must carry the first model\'s replay hash, not the replay just run');
+  const changed = register({ model: 'fixture-older', gates: [gateOf(kept, 'fnv1a-0ld0ld00')] },
+    { model: FNAF2_MODEL, gates: [gateOf(kept, fresh.replayHash)] });
+  const changedPath = join(root, 'model-change');
+  check(compileBundle(winner, changedPath, { gates: changed }).manifest.winnerHash === kept.compiledWinnerHash,
+    'a model change re-hashed a winner: its identity must keep the replay hash it was first measured with');
+  check(validateBundle(changedPath, { gates: changed }).status === 'READY',
+    'a bundle compiled after a model change must validate against the current model\'s gate');
+  const manifestPath = join(changedPath, 'manifest.json');
+  writeFileSync(manifestPath, JSON.stringify({ ...JSON.parse(readFileSync(manifestPath, 'utf8')), model: 'fixture-other' }));
+  const otherModel = refusal(() => validateBundle(changedPath, { gates: changed }));
+  check(otherModel.includes('gated under model fixture-other'), `a bundle gated under another model validated (${otherModel})`);
 
   console.log('device bundle: winner-v1 -> manifest/plans/profile, hash+syntax+control+replay validation, and the executor boundary pass');
 } finally {

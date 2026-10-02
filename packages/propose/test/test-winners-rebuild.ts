@@ -17,7 +17,10 @@ import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { compileBundle } from '../bin/plans/bundle.ts';
+import { GATES_FILE, compileBundle, readGateRegister } from '../bin/plans/bundle.ts';
+import { gatedWinnerFiles } from '../bindings/gates.ts';
+import { stableHash } from '@sixam/kernel/contracts';
+import { FNAF2_MODEL } from '@sixam/source/fnaf2';
 import { makeCampaignSpec } from '../../play/src/campaign/campaign.ts';
 import { validateCampaignBundle } from '../../play/src/campaign/campaign-bundle.ts';
 
@@ -53,6 +56,20 @@ try {
   rmSync(scratch, { recursive: true, force: true });
 }
 if (!rows.length) { failed = 1; console.error(`FAIL no winner-v1 binding found in ${WINNERS}`); }
+// compileBundle checks a registered winner against its gate under the current model and falls back to
+// the winner's own gate for a candidate; a committed winner, retired ones included (custody reads them),
+// must be registered, or that fallback would let it skip the model it now runs under.
+const register = readGateRegister();
+const section = register.models.find(model => model.model === FNAF2_MODEL);
+const custody = gatedWinnerFiles(ROOT);
+for (const file of custody) {
+  const hash = stableHash(JSON.parse(readFileSync(join(ROOT, file), 'utf8')));
+  if (!section?.gates.some(gate => gate.winnerHash === hash)) {
+    failed = 1;
+    console.error(`FAIL ${file} has no gate under model ${FNAF2_MODEL} in ${GATES_FILE}: packages/propose/bindings/gates.ts --measure`);
+  }
+}
+if (!custody.length) { failed = 1; console.error('FAIL no custody winner found for the gate register'); }
 if (failed) process.exit(1);
 console.log(rows.join('\n'));
-console.log(`winners rebuild: ${rows.length} committed winners compile into bundles the campaign accepts`);
+console.log(`winners rebuild: ${rows.length} committed winners compile into bundles the campaign accepts; ${custody.length} custody winners hold a gate under ${FNAF2_MODEL}`);

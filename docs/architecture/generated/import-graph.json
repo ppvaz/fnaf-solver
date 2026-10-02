@@ -3007,6 +3007,17 @@
       ]
     },
     {
+      "file": "packages/propose/bindings/gates.ts",
+      "imports": [
+        "../bin/plans/bundle.ts",
+        "@sixam/review/evidence-pack",
+        "@sixam/source/fnaf2",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "packages/propose/bindings/test-anchor-aim-band.ts",
       "imports": [
         "./fact-register.ts",
@@ -3753,6 +3764,7 @@
         "../bin/plans/artifact-commands.ts",
         "../bin/plans/bundle.ts",
         "@sixam/kernel/contracts",
+        "@sixam/source/fnaf2",
         "node:child_process",
         "node:fs",
         "node:os",
@@ -3833,6 +3845,9 @@
         "../../play/src/campaign/campaign-bundle.ts",
         "../../play/src/campaign/campaign.ts",
         "../bin/plans/bundle.ts",
+        "../bindings/gates.ts",
+        "@sixam/kernel/contracts",
+        "@sixam/source/fnaf2",
         "node:fs",
         "node:os",
         "node:path",
@@ -4505,6 +4520,7 @@
       "imports": [
         "./config.ts",
         "./plant-model.ts",
+        "./plant-options.ts",
         "./plant.ts",
         "./reduced-model.ts",
         "./rng.ts",

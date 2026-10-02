@@ -2639,6 +2639,12 @@
       "lifecycle": "supported"
     },
     {
+      "id": "packages/propose/bindings/gates.ts",
+      "invocation": "packages/propose/bindings/gates.ts [--measure --description TEXT]",
+      "kind": "register",
+      "lifecycle": "supported"
+    },
+    {
       "id": "packages/review/src/vault.ts",
       "invocation": "packages/review/src/vault.ts <export|import|verify|refs|list>",
       "kind": "evidence CLI",

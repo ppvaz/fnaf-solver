@@ -1,0 +1,173 @@
+{
+  "schema": "winner-gates-v1",
+  "models": [
+    {
+      "model": "fnaf2-legacy",
+      "description": "The Sim's defaults before 2026-10-02: every sourced* option off (plant-options.ts at 824d7b35). Each replay hash equals the gate.replayHash the winner carries, where it carries one.",
+      "gates": [
+        {
+          "file": "packages/propose/bindings/fnaf2/campaign-night1-minimal-winner.json",
+          "winnerHash": "fnv1a-cad93418",
+          "compiledWinnerHash": "fnv1a-537a1bbf",
+          "replayHash": "fnv1a-87a6a5b2"
+        },
+        {
+          "file": "packages/propose/bindings/fnaf2/retired/campaign-night1-minus7-n1-first-winner.json",
+          "winnerHash": "fnv1a-2e6a42e3",
+          "compiledWinnerHash": "fnv1a-2e6a42e3",
+          "replayHash": "fnv1a-154b7abd"
+        },
+        {
+          "file": "packages/propose/bindings/fnaf2/retired/campaign-night1-minus7-winner.json",
+          "winnerHash": "fnv1a-276a219b",
+          "compiledWinnerHash": "fnv1a-58e73bd5",
+          "replayHash": "fnv1a-154b7abd"
+        },
+        {
+          "file": "packages/propose/bindings/fnaf2/campaign-night5-contact-final-20260912-winner.json",
+          "winnerHash": "fnv1a-81b5e51c",
+          "compiledWinnerHash": "fnv1a-f430f190",
+          "replayHash": "fnv1a-afa3aafd"
+        },
+        {
+          "file": "packages/propose/bindings/fnaf2/campaign-night5-contact-final-winner.json",
+          "winnerHash": "fnv1a-f430f190",
+          "compiledWinnerHash": "fnv1a-f430f190",
+          "replayHash": "fnv1a-afa3aafd"
+        },
+        {
+          "file": "packages/propose/bindings/fnaf2/campaign-night5-hallfix-winner.json",
+          "winnerHash": "fnv1a-34463603",
+          "compiledWinnerHash": "fnv1a-148bab0b",
+          "replayHash": "fnv1a-68744f84"
+        },
+        {
+          "file": "packages/propose/bindings/fnaf2/campaign-night5-mask5plus-winner.json",
+          "winnerHash": "fnv1a-de41e791",
+          "compiledWinnerHash": "fnv1a-4a7ea155",
+          "replayHash": "fnv1a-c08db392"
+        },
+        {
+          "file": "packages/propose/bindings/fnaf2/campaign-night5-noflash-winner.json",
+          "winnerHash": "fnv1a-9f883b27",
+          "compiledWinnerHash": "fnv1a-1a0e32b7",
+          "replayHash": "fnv1a-3142aab3"
+        },
+        {
+          "file": "packages/propose/bindings/fnaf2/campaign-night5-toys-n5-winner.json",
+          "winnerHash": "fnv1a-9ca64157",
+          "compiledWinnerHash": "fnv1a-9ca64157",
+          "replayHash": "fnv1a-afa3aafd"
+        },
+        {
+          "file": "packages/propose/bindings/fnaf2/campaign-night6-b-winner.json",
+          "winnerHash": "fnv1a-94baf687",
+          "compiledWinnerHash": "fnv1a-3c7ba773",
+          "replayHash": "fnv1a-3403ea16"
+        },
+        {
+          "file": "packages/propose/bindings/fnaf2/campaign-night6-c-winner.json",
+          "winnerHash": "fnv1a-5d414fce",
+          "compiledWinnerHash": "fnv1a-cf41e97e",
+          "replayHash": "fnv1a-31cc3217"
+        },
+        {
+          "file": "packages/propose/bindings/fnaf2/campaign-night6-d-winner.json",
+          "winnerHash": "fnv1a-1292e481",
+          "compiledWinnerHash": "fnv1a-e3a68491",
+          "replayHash": "fnv1a-46f115de"
+        },
+        {
+          "file": "packages/propose/bindings/fnaf2/campaign-night6-e-winner.json",
+          "winnerHash": "fnv1a-1cd7cd43",
+          "compiledWinnerHash": "fnv1a-ad6993c7",
+          "replayHash": "fnv1a-9cd69de2"
+        },
+        {
+          "file": "packages/propose/bindings/fnaf2/campaign-night6-f-winner.json",
+          "winnerHash": "fnv1a-3554e353",
+          "compiledWinnerHash": "fnv1a-b6c36d77",
+          "replayHash": "fnv1a-c651e2ff"
+        },
+        {
+          "file": "packages/propose/bindings/fnaf2/campaign-night6-g-winner.json",
+          "winnerHash": "fnv1a-e89a28ca",
+          "compiledWinnerHash": "fnv1a-1b43db92",
+          "replayHash": "fnv1a-c651e2ff"
+        },
+        {
+          "file": "packages/propose/bindings/fnaf2/campaign-night6-h-registered-winner.json",
+          "winnerHash": "fnv1a-37278c63",
+          "compiledWinnerHash": "fnv1a-3d5b2167",
+          "replayHash": "fnv1a-c651e2ff"
+        },
+        {
+          "file": "packages/propose/bindings/fnaf2/campaign-night6-h-winner.json",
+          "winnerHash": "fnv1a-3d5b2167",
+          "compiledWinnerHash": "fnv1a-3d5b2167",
+          "replayHash": "fnv1a-c651e2ff"
+        },
+        {
+          "file": "packages/propose/bindings/fnaf2/campaign-night6-h2-winner.json",
+          "winnerHash": "fnv1a-c27182da",
+          "compiledWinnerHash": "fnv1a-c27182da",
+          "replayHash": "fnv1a-c651e2ff"
+        },
+        {
+          "file": "packages/propose/bindings/fnaf2/campaign-night6-winner.json",
+          "winnerHash": "fnv1a-de095950",
+          "compiledWinnerHash": "fnv1a-59908edd",
+          "replayHash": "fnv1a-0024c926"
+        },
+        {
+          "file": "packages/propose/bindings/fnaf2/campaign-night7-420-minus3-winner.json",
+          "winnerHash": "fnv1a-c839fc9f",
+          "compiledWinnerHash": "fnv1a-c839fc9f",
+          "replayHash": "fnv1a-f1b23729"
+        },
+        {
+          "file": "packages/propose/bindings/fnaf2/campaign-night7-i-winner.json",
+          "winnerHash": "fnv1a-651ed623",
+          "compiledWinnerHash": "fnv1a-651ed623",
+          "replayHash": "fnv1a-a576ef9e"
+        },
+        {
+          "file": "packages/propose/bindings/fnaf2/campaign-night7-j-winner.json",
+          "winnerHash": "fnv1a-f337717a",
+          "compiledWinnerHash": "fnv1a-f337717a",
+          "replayHash": "fnv1a-6cd85ae3"
+        },
+        {
+          "file": "packages/propose/bindings/fnaf2/campaign-night7-k2-winner.json",
+          "winnerHash": "fnv1a-7e4bf3e8",
+          "compiledWinnerHash": "fnv1a-7e4bf3e8",
+          "replayHash": "fnv1a-1c9c6847"
+        },
+        {
+          "file": "packages/propose/bindings/fnaf2/campaign-night7-k3-winner.json",
+          "winnerHash": "fnv1a-5c8dcb5f",
+          "compiledWinnerHash": "fnv1a-5c8dcb5f",
+          "replayHash": "fnv1a-1c9c6847"
+        },
+        {
+          "file": "packages/propose/bindings/fnaf2/campaign-toys-night5-winner.json",
+          "winnerHash": "fnv1a-f3e5facd",
+          "compiledWinnerHash": "fnv1a-959f7cb5",
+          "replayHash": "fnv1a-afa3aafd"
+        },
+        {
+          "file": "packages/propose/bindings/fnaf2/campaign-toys-nights1-2-winner.json",
+          "winnerHash": "fnv1a-185460cd",
+          "compiledWinnerHash": "fnv1a-e75e1b68",
+          "replayHash": "fnv1a-778b167f"
+        },
+        {
+          "file": "packages/propose/bindings/fnaf2/campaign-toys-nights3-4-winner.json",
+          "winnerHash": "fnv1a-ce4aa3d8",
+          "compiledWinnerHash": "fnv1a-ce4aa3d8",
+          "replayHash": "fnv1a-488cf8ce"
+        }
+      ]
+    }
+  ]
+}

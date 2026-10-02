@@ -739,10 +739,94 @@ function replayWinner(winner: Winner, emittedByNight: ReadonlyMap<number, Emitte
     hash: stableHash({ strategy: winner.strategy, results }) };
 }
 
-function normalizedWinner(winner: Winner, replay: { readonly hash: string }) {
+// `replayHash` is the replay the winner's identity carries: its own gate's, else the one the register first
+// measured it under, else (a candidate never gated) the replay just run. Never the current model's, so a
+// model change does not re-hash a winner.
+function normalizedWinner(winner: Winner, replayHash: string) {
   return { ...winner, schema: WINNER_SCHEMA,
     gate: { ...winner.gate, engineHash: winner.engineHash,
-      nights: winner.nights, seeds: winner.seeds, replayHash: replay.hash } };
+      nights: winner.nights, seeds: winner.seeds, replayHash } };
+}
+
+// --- the model verdicts on the committed winners ------------------------------------------------------
+//
+// A winner's identity (the stableHash records, run packs and ANCHOR_AIMS key it by) is its plan. Its
+// replay under the Sim is a verdict about that plan under one model, and until 2026-10-02 it lived inside
+// the identity: compileBundle stamped the current replay hash into the winner, so any change to the Sim
+// re-hashed all 25 winners and orphaned the packs, promotions and aims that name them. Pedro, 2026-10-02,
+// dropping the legacy/sourced split: the verdict moves out, to a register of one section per model.
+
+export const GATES_SCHEMA = 'winner-gates-v1';
+/** The register, written by packages/propose/bindings/gates.ts --measure. */
+export const GATES_FILE = join(ROOT, 'packages/propose/bindings/fnaf2/gates.json');
+
+/** One committed winner's replay under one model, keyed by both hashes the winner is known by. */
+export interface ModelGate {
+  readonly file: string;
+  /** stableHash of the winner file. */
+  readonly winnerHash: string;
+  /** The winnerHash a bundle compiled from it records. */
+  readonly compiledWinnerHash: string;
+  readonly replayHash: string;
+}
+/** A model and its verdict on every committed winner. */
+export interface GateModel { readonly model: string, readonly description: string, readonly gates: readonly ModelGate[] }
+/** The models in the order they were introduced. */
+export interface GateRegister { readonly schema: typeof GATES_SCHEMA, readonly models: readonly GateModel[] }
+
+export function validateGateRegister(value: unknown): GateRegister {
+  if (!isRecord(value) || value.schema !== GATES_SCHEMA) fail(`gate register schema is not ${GATES_SCHEMA}`);
+  if (!isList(value.models)) fail('gate register models must be a list');
+  const models = new Set<unknown>();
+  for (const section of value.models) {
+    if (!isRecord(section) || typeof section.model !== 'string' || section.model.length === 0 ||
+        typeof section.description !== 'string' || section.description.length === 0 || !isList(section.gates))
+      fail('a gate register model is {model, description, gates}');
+    if (models.has(section.model)) fail(`gate register names model ${section.model} twice`);
+    models.add(section.model);
+    for (const gate of section.gates)
+      if (!isRecord(gate) || ['file', 'winnerHash', 'compiledWinnerHash', 'replayHash'].some(key => typeof gate[key] !== 'string'))
+        fail(`gate register model ${section.model} holds a malformed gate`);
+  }
+  return value as unknown as GateRegister;
+}
+
+export const readGateRegister = (path = GATES_FILE) => validateGateRegister(jsonRead(path));
+
+/**
+ * A winner's gates, found by either of its hashes: `origin` under the first model that measured it (the
+ * replay its identity carries) and `current` under the model the Sim runs (FNAF2_MODEL).
+ */
+function registeredGates(register: GateRegister, key: 'winnerHash' | 'compiledWinnerHash', hash: string) {
+  let origin: ModelGate | undefined, current: ModelGate | undefined;
+  for (const section of register.models) {
+    const gate = section.gates.find(entry => entry[key] === hash);
+    if (gate && !origin) origin = gate;
+    if (gate && section.model === C.FNAF2_MODEL) current = gate;
+  }
+  return { origin, current };
+}
+
+/** The replay hash a winner must reproduce: its gate under the current model, or a candidate's own. */
+function expectedReplayHash(gates: ReturnType<typeof registeredGates>, winner: Winner) {
+  if (gates.current) return gates.current.replayHash;
+  if (gates.origin)
+    fail(`${gates.origin.file} has no gate under model ${C.FNAF2_MODEL}: measure it (packages/propose/bindings/gates.ts --measure)`);
+  return winner.gate.replayHash;
+}
+
+/** A committed winner's replay under the Sim as it runs now, with the hashes the register keys it by. */
+export function measureWinner(input: unknown, register: GateRegister) {
+  const winner = validateWinner(input);
+  const emitted = new Map(winner.nights.map(night => [night, emitterFor(winner, night)]));
+  const replay = replayWinner(winner, emitted, winner.replaySeeds ?? winner.seeds.slice(0, MAX_REPLAY_SEEDS));
+  const winnerHash = stableHash(input);
+  const { origin } = registeredGates(register, 'winnerHash', winnerHash);
+  // A winner the register does not hold yet is measured under the model that gated it, or not at all.
+  if (!origin && winner.gate.replayHash !== undefined && winner.gate.replayHash !== replay.hash)
+    fail(`winner.gate.replayHash ${winner.gate.replayHash} was measured under another model than ${C.FNAF2_MODEL}`);
+  const identity = winner.gate.replayHash ?? origin?.replayHash ?? replay.hash;
+  return { winnerHash, compiledWinnerHash: stableHash(normalizedWinner(winner, identity)), replayHash: replay.hash };
 }
 
 function bundlePlanEntries(manifest: Manifest, directory: string) {
@@ -796,7 +880,8 @@ function checkGatePlans(gate: Gate, emitted: ReadonlyMap<number, { readonly text
   }
 }
 
-export function compileBundle(input: unknown, outDirectory: string, { constraints = {} }: {constraints?: {forbidMechanics?: string[]}} = {}) {
+export function compileBundle(input: unknown, outDirectory: string,
+  { constraints = {}, gates = readGateRegister() }: { constraints?: {forbidMechanics?: string[]}, gates?: GateRegister } = {}) {
   const winner = validateWinner(input);
   const mechanics = checkConstraints(winner.strategy, constraints);
   const out = resolve(outDirectory);
@@ -810,10 +895,13 @@ export function compileBundle(input: unknown, outDirectory: string, { constraint
     nonNegativeInt(seed, `replaySeeds[${index}]`));
   if (replaySeeds.length === 0) fail('replaySeeds must not be empty');
   const replay = replayWinner(winner, emitted, replaySeeds);
-  if (winner.gate.replayHash !== undefined && winner.gate.replayHash !== replay.hash)
-    fail('winner.gate.replayHash does not match the candidate replay');
+  const registered = registeredGates(gates, 'winnerHash', stableHash(input));
+  const expected = expectedReplayHash(registered, winner);
+  if (expected !== undefined && expected !== replay.hash)
+    fail(registered.current ? `the winner's replay does not match its gate under model ${C.FNAF2_MODEL}`
+      : 'winner.gate.replayHash does not match the candidate replay');
   checkGatePlans(winner.gate, emitted);
-  const finalWinner = normalizedWinner(winner, replay);
+  const finalWinner = normalizedWinner(winner, winner.gate.replayHash ?? registered.origin?.replayHash ?? replay.hash);
   const source = strategySourceDigest(winner.strategy);
   const winnerText = canonicalJson(finalWinner);
   const profileText = canonicalJson(profile);
@@ -843,17 +931,18 @@ export function compileBundle(input: unknown, outDirectory: string, { constraint
     controls: { file: HID_CONTROLS_FILE, schema: HID_CONTROLS_SCHEMA, sha256: sha256(controlsText) },
     mechanics,
     ...(winner.anchorEpochMs === undefined ? {} : { anchorEpochMs: winner.anchorEpochMs }),
-    plans, gate: finalWinner.gate, replay,
+    plans, gate: finalWinner.gate, replay, model: C.FNAF2_MODEL,
     source: { compiler: 'packages/propose/bin/plans/bundle.ts', registry: Object.keys(STRATEGY_REGISTRY) },
     engine: { declaredHash: winner.engineHash, sourceSha256: source.sha256, sources: source.sources },
     artifact: { file: 'artifact.json', schema: ARTIFACT_SCHEMA, sha256: sha256(canonicalJson(artifact)) },
   };
   jsonWrite(join(out, 'manifest.json'), manifest);
-  return validateBundle(out);
+  return validateBundle(out, { gates });
 }
 
 /** Validate every file and replay the bounded candidate sample from the bundle. */
-export function validateBundle(directory: string, { night }: { night?: number } = {}) {
+export function validateBundle(directory: string,
+  { night, gates = readGateRegister() }: { night?: number, gates?: GateRegister } = {}) {
   const out = resolve(directory);
   const manifest = jsonRead(join(out, 'manifest.json'));
   validateManifestShape(manifest);
@@ -864,6 +953,9 @@ export function validateBundle(directory: string, { night }: { night?: number } 
   // plan-hash checks below are what catch a default that changes what runs.
   const storedWinner = jsonRead(join(out, 'winner.json'));
   if (stableHash(storedWinner) !== manifest.winnerHash) fail('winner hash does not match manifest');
+  // Bundles built before 2026-10-02 name no model; one that does was gated under it.
+  if (manifest.model !== undefined && manifest.model !== C.FNAF2_MODEL)
+    fail(`the bundle was gated under model ${String(manifest.model)}, and the Sim is ${C.FNAF2_MODEL}`);
   const winner = validateWinner(storedWinner);
   if (winner.strategy !== manifest.strategy || manifest.policy !== manifest.strategy ||
       manifest.engineHash !== winner.engineHash || !same(winner.nights, manifest.nights))
@@ -920,7 +1012,8 @@ export function validateBundle(directory: string, { night }: { night?: number } 
   const replaySeeds = manifest.replay.seeds as readonly number[];
   const actualReplay = replayWinner(winner, expected, replaySeeds);
   if (stableHash(actualReplay.results) !== stableHash(manifest.replay.results) ||
-      actualReplay.hash !== manifest.replay.hash || actualReplay.hash !== winner.gate.replayHash)
+      actualReplay.hash !== manifest.replay.hash ||
+      actualReplay.hash !== expectedReplayHash(registeredGates(gates, 'compiledWinnerHash', manifest.winnerHash), winner))
     fail('candidate replay does not equal the winner replay hash');
   checkGatePlans(winner.gate, expected);
   const selectedPlans = entries.filter(entry => selected.includes(entry.night));

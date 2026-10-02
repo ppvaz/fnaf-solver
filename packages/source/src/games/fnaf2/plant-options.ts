@@ -1,6 +1,13 @@
 import * as C from './config.ts';
 
 /**
+ * The model the defaults below and the mechanisms beside this file define. A committed winner's gate is
+ * its replay under one model (packages/propose/bindings/fnaf2/gates.json), so a change that moves any
+ * winner's replay takes a new id here and measures every winner under it in the same diff.
+ */
+export const FNAF2_MODEL = 'fnaf2-legacy';
+
+/**
  * The Sim's options at their defaults, a new object on every call (the default seed is drawn per Sim).
  * The comment above each option says what it models and where it was read.
  */

@@ -9,3 +9,4 @@ export * from './seed-recovery.ts';
 export * from './plant-model.ts';
 export * from './reduced-model.ts';
 export * from './plant.ts';
+export { FNAF2_MODEL } from './plant-options.ts';
