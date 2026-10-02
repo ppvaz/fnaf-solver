@@ -3,6 +3,7 @@
 // the frame indices are the rebuild's (0 setup, 1 title, 2 what day, 3 office).
 import { appendFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { controllerLog, view } from './pilot.ts';
 
 export const SAVE_NAME = 'freddy3';
 export const TITLE = 1;
@@ -28,14 +29,6 @@ export const WATCH = [
   'Multiple Touch', 'olivier_touchDect4.Active', 'olivier_touchDect5.Active', 'olivier_MuteHitbox.Active', 'nose honk',
 ];
 
-/** Accessors over one pilot state line. */
-export function view(s) {
-  const all = (n) => s.o[n] ?? [];
-  const one = (n) => all(n)[0] ?? null;
-  const al = (n, i) => one(n)?.al?.[i] ?? 0;
-  const cv = (n) => one(n)?.cv ?? null;
-  return { s, all, one, al, cv, frame: s.f, tick: s.t };
-}
 
 const overlaps = (a, b) => a && b && a.box && b.box &&
   a.box[0] < b.box[2] && b.box[0] < a.box[2] && a.box[1] < b.box[3] && b.box[1] < a.box[3];
@@ -351,17 +344,8 @@ export function playsLeft(audio, ai) {
  * night on Nightmare anyway (g220/g662 with AI 7).
  */
 function guard({ run, knobs }, rev = 1) {
-  const out = join(run, 'guard.jsonl');
-  writeFileSync(out, '');
-  // knobs.quiet keeps the last 200 records in memory and writes them when the
-  // night ends, for batch runs over many seeds.
-  const ring = [];
-  const ctx = { v: null, log: (o) => {
-    const line = JSON.stringify({ t: ctx.v?.tick, ...o });
-    if (!knobs.quiet) appendFileSync(out, line + '\n');
-    else { ring.push(line); if (ring.length > 200) ring.shift(); }
-  } };
-  const flush = () => { if (knobs.quiet && ring.length) { appendFileSync(out, ring.join('\n') + '\n'); ring.length = 0; } };
+  const { write, flush } = controllerLog(join(run, 'guard.jsonl'), knobs.quiet);
+  const ctx = { v: null, log: (o) => write(JSON.stringify({ t: ctx.v?.tick, ...o })) };
   let task = null, taskName = null, last = null, outcome = null;
   // Every play-frame update a task started on, for search.ts: the quiet log
   // keeps only its last 200 records.

@@ -31,7 +31,7 @@
  */
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:net';
-import { closeSync, copyFileSync, mkdirSync, openSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { appendFileSync, closeSync, copyFileSync, mkdirSync, openSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -82,6 +82,32 @@ export function parseArgs(argv) {
   if (o.run.startsWith(ROOT)) throw new Error('pilot: --run must be outside the repository');
   if ((o.prefix === null) !== (o.branch === null)) throw new Error('pilot: --prefix and --branch go together');
   return o;
+}
+
+/** Accessors over one pilot state line. */
+export function view(s) {
+  const all = (n) => s.o[n] ?? [];
+  const one = (n) => all(n)[0] ?? null;
+  const al = (n, i) => one(n)?.al?.[i] ?? 0;
+  const cv = (n) => one(n)?.cv ?? null;
+  return { s, all, one, al, cv, frame: s.f, tick: s.t };
+}
+
+/**
+ * A controller's log, `out` emptied first: each line appended as it is
+ * written, or with `quiet` only the last 200 kept in memory and written by
+ * flush when the night ends, for batch runs over many seeds.
+ */
+export function controllerLog(out, quiet) {
+  writeFileSync(out, '');
+  const ring = [];
+  return {
+    write: (line) => {
+      if (!quiet) appendFileSync(out, line + '\n');
+      else { ring.push(line); if (ring.length > 200) ring.shift(); }
+    },
+    flush: () => { if (quiet && ring.length) { appendFileSync(out, ring.join('\n') + '\n'); ring.length = 0; } },
+  };
 }
 
 /** A pilot.input as rows: { f, t, cmd } in the order the harness applied them. */

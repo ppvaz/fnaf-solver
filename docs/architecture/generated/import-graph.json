@@ -2649,6 +2649,7 @@
     {
       "file": "packages/propose/bin/recompile/pilot/fnaf3.ts",
       "imports": [
+        "./pilot.ts",
         "node:fs",
         "node:path"
       ]

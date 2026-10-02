@@ -4,7 +4,7 @@
 // win, 10 extras, 15 nightmare jumpscare).
 import { appendFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { readRows } from './pilot.ts';
+import { controllerLog, readRows, view } from './pilot.ts';
 
 export const SAVE_NAME = 'fn4';
 export const TITLE = 1;
@@ -33,13 +33,6 @@ export const WATCH = [
   ...MARKERS, ...ACTORS, ...HUD, ...COUNTERS,
 ];
 
-export function view(s) {
-  const all = (n) => s.o[n] ?? [];
-  const one = (n) => all(n)[0] ?? null;
-  const al = (n, i) => one(n)?.al?.[i] ?? 0;
-  const cv = (n) => one(n)?.cv ?? null;
-  return { s, all, one, al, cv, frame: s.f, tick: s.t };
-}
 const inWindow = (c) => c && c[0] >= 0 && c[0] < WINDOW.w && c[1] >= 0 && c[1] < WINDOW.h;
 
 /** nav: title -> Extras -> Nightmare x8 -> Start, logging each frame's watched state. */
@@ -382,17 +375,8 @@ export function facts4(v) {
  * or in the right hall (g481).
  */
 function warden({ run, knobs }, rev = 1) {
-  const out = join(run, 'warden.jsonl');
-  writeFileSync(out, '');
-  // knobs.quiet keeps the last 200 records in memory and writes them when the
-  // night ends, for batch runs over many seeds.
-  const ring = [];
-  const ctx: any = { v: null, log: (o) => {
-    const line = JSON.stringify({ t: ctx.v?.tick, ...o });
-    if (!knobs.quiet) appendFileSync(out, line + '\n');
-    else { ring.push(line); if (ring.length > 200) ring.shift(); }
-  } };
-  const flush = () => { if (knobs.quiet && ring.length) { appendFileSync(out, ring.join('\n') + '\n'); ring.length = 0; } };
+  const { write, flush } = controllerLog(join(run, 'warden.jsonl'), knobs.quiet);
+  const ctx: any = { v: null, log: (o) => write(JSON.stringify({ t: ctx.v?.tick, ...o })) };
   const menu = knobs.challenges ? menuChallenges(knobs.challenges) : menuNight8();
   let loggedLevel = false;
   let task = null, taskName = null, last = null, outcome = null;

@@ -353,7 +353,10 @@ Each entry below broke a gate, a test or a replay during the ADR 0002 moves.
     lane a pinned tree imports are where each file stood at the pinned commit;
     rewriting them to the new location made every FNaF 1 replay refuse
     (`test-fnaf1-winner.ts`). A record pinned by sha256 keeps its bytes too,
-    and its readers follow the file instead.
+    and its readers follow the file instead. A predeclaration pins its tool's
+    and sources' sha256 (`tool`, `sources`) and its run refuses any drift:
+    before editing a file one names, find its `resultRecord`; while that is
+    not committed, the edit blocks the predeclared run.
 
 Canonical routes: [charter](PROJECT-CHARTER.md),
 [architecture](docs/architecture/README.md),

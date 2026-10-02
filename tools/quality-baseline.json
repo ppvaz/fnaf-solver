@@ -166,7 +166,6 @@
       "clone:packages/propose/bin/recompile/phone-clock-sweep.ts <> packages/propose/bin/recompile/phone-encounter-replay.ts": 6,
       "clone:packages/propose/bin/recompile/pilot/batch.ts <> packages/propose/bin/recompile/pilot/record.ts": 9,
       "clone:packages/propose/bin/recompile/pilot/batch.ts <> packages/propose/bin/recompile/pilot/search.ts": 27,
-      "clone:packages/propose/bin/recompile/pilot/fnaf3.ts <> packages/propose/bin/recompile/pilot/fnaf4.ts": 6,
       "clone:packages/propose/bin/recompile/pilot/record.ts <> packages/propose/bin/recompile/pilot/search.ts": 9,
       "clone:packages/propose/parked/minus7/hid-device-pilot.ts <> packages/propose/parked/minus7/stock-device-pilot.ts": 6,
       "clone:packages/propose/parked/minus7/model.ts <> packages/propose/src/strategies/minus-toys/model.ts": 9,
