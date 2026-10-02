@@ -394,6 +394,162 @@ function assertHeld(id: string, loaded: Loaded): asserts loaded is Held {
     throw new Error(`diff compares two sessions, or two campaigns or packs; ${id} is a ${loaded.kind}`);
 }
 
+/** Two sessions by their records, or two campaigns or packs file by file. */
+async function diff(first: string, second: string) {
+  const left = await loadAny(first);
+  const right = await loadAny(second);
+  if (left.kind === 'session' && right.kind === 'session') {
+    const changes: string[] = [];
+    if (stable(left.result) !== stable(right.result)) changes.push('result');
+    if (stable(left.manifest) !== stable(right.manifest)) changes.push('manifest');
+    return console.log(JSON.stringify({ schema: 'evidence-diff-v1', left: first, right: second, changed: changes }, null, 2));
+  }
+  // A campaign directory or a committed pack: the text each holds, file by file, beside the
+  // facts its index entry reads. What a pack lost is named, never compared as if empty.
+  assertHeld(first, left);
+  assertHeld(second, right);
+  const sides = [[first, left], [second, right]] as const;
+  const [[leftPlace, leftHeld], [rightPlace, rightHeld]] = await Promise.all(sides.map(async ([id, loaded]) => {
+    const place = holder(id, loaded);
+    return [place, await heldFiles(place, loaded)] as const;
+  }));
+  const names = [...new Set([...leftHeld.keys(), ...rightHeld.keys()])].sort();
+  const both = names.filter(name => leftHeld.has(name) && rightHeld.has(name));
+  return console.log(JSON.stringify({ schema: 'evidence-diff-v1', left: first, right: second,
+    changed: both.filter(name => leftHeld.get(name) !== rightHeld.get(name)),
+    onlyLeft: names.filter(name => !rightHeld.has(name)), onlyRight: names.filter(name => !leftHeld.has(name)),
+    unchanged: both.filter(name => leftHeld.get(name) === rightHeld.get(name)),
+    sides: { left: sideView(left, leftPlace), right: sideView(right, rightPlace) },
+    unavailable: [...unavailable(leftPlace, left, leftHeld), ...unavailable(rightPlace, right, rightHeld)] }, null, 2));
+}
+
+/** A run's causal trace: a session's events, or a campaign's or pack's event rows verbatim. */
+async function why(first: string) {
+  const loaded = await loadAny(first);
+  if (loaded.kind === 'session') {
+    const { manifest } = loaded;
+    return console.log(JSON.stringify({ schema: 'causal-trace-v1', run: first, events: manifest.events.map(event => ({ type: event.type, component: event.component, at: event.at, data: event.data })) }, null, 2));
+  }
+  if (loaded.kind === 'device-bundle')
+    throw new Error(`${first} is a compiled device bundle, a plan rather than a run, so it has no causal trace; \`npm run evidence -- replay ${first}\` replays it`);
+  // A campaign directory or a pack: the event rows as the executor (or a FNaF 1 runner) appended
+  // them, verbatim -- their stamps keep their own clocks -- beside the custody they came through.
+  const place = holder(first, loaded);
+  if (!loaded.files.includes('events.jsonl'))
+    throw new Error(`why reads a run's event rows, and ${lacking(place, 'events.jsonl')}`);
+  const text = await readFile(join(place.dir, 'events.jsonl'), 'utf8');
+  const events = text.split('\n').filter(line => line.trim()).map((line, index) => {
+    try { return JSON.parse(line); } catch (error) { throw new Error(`${place.where}/events.jsonl line ${index + 1}: ${(error as Error).message}`); }
+  });
+  return console.log(JSON.stringify({ schema: 'causal-trace-v1', run: first, source: place.source, kind: loaded.kind,
+    ...(place.custody ? { custody: place.custody } : {}), events }, null, 2));
+}
+
+/** Plan 12's promotion gate over one run: a pack is recorded as a PROMOTED_BY edge when it passes. */
+async function promote(first: string) {
+  const loaded = await loadAny(first);
+  if (loaded.kind === 'fnaf1-run') {
+    // A FNaF 1 runner's pack: Plan 12's checks read from the runner's record, its events and the
+    // title-star read (fnaf1-promotion.ts), then the attestation; recorded as the FNaF 2 path records.
+    const checks = fnaf1PromotionChecks(ROOT, first, loaded.packed);
+    const derived = derivePromotion(ROOT, first, new Map());
+    // Every pack's derivation verifies claimIdentity.
+    const identity = derived.verified.find(item => item.check === 'claimIdentity') as (typeof derived.verified)[number];
+    const allChecks = { ...checks, claimIdentity: identity.pass };
+    const accepted = Object.values(allChecks).every(Boolean);
+    let recorded = null;
+    if (accepted) {
+      // claimIdentity passes only on a named claim.
+      const result = recordPromotion(readGraph(ROOT), { id: first, claim: derived.claim as NonNullable<typeof derived.claim>, digest: loaded.packed.digest,
+        attestation: loaded.packed.attestation, custody: derived.custody, nights: loaded.packed.pack.nights ?? [],
+        runLabel: `FNaF 1 Custom Night 6 AM on the phone, run pack ${first}` });
+      if (result.status !== 'ALREADY_RECORDED') writeFileSync(join(ROOT, GRAPH_FILE), formatGraph(result.graph));
+      recorded = { graph: GRAPH_FILE, status: result.status, edge: result.edge };
+    }
+    return console.log(JSON.stringify({ schema: 'plan12-promotion-gate-v1', evidenceId: first, kind: 'fnaf1-run', source: 'pack',
+      packSha256: loaded.packed.digest, custody: derived.custody, attestation: attestationView(loaded.packed), claim: derived.claim,
+      authority: 'plans/12-end-to-end-evidence-campaign.md (its checks, read from a FNaF 1 runner pack: packages/review/src/fnaf1-promotion.ts)',
+      accepted, checks: allChecks, status: accepted ? 'PROMOTED' : 'REFUSED', ...(recorded ? { recorded } : {}),
+      ...(accepted ? {} : { failed: derived.verified.filter(item => !item.pass).map(item => ({ check: item.check, failed: item.detail.failed })) }) }, null, 2));
+  }
+  if (loaded.kind === 'device-campaign' && loaded.packed) {
+    // A pack: the five checks, then the claim the night supports, re-derived from the pack.
+    // An accepted pack is recorded as a PROMOTED_BY edge in the evidence graph, naming who
+    // attested and the pack's custody; a refused pack writes nothing.
+    const winners = trackedWinners(ROOT);
+    const checks = packPromotionChecks(loaded.packed, winners);
+    const derived = derivePromotion(ROOT, first, winners);
+    // Every pack's derivation verifies claimIdentity.
+    const identity = derived.verified.find(item => item.check === 'claimIdentity') as (typeof derived.verified)[number];
+    const allChecks = { ...checks, claimIdentity: identity.pass };
+    const accepted = Object.values(allChecks).every(Boolean);
+    let recorded = null;
+    if (accepted) {
+      // claimIdentity passes only on a named claim.
+      const result = recordPromotion(readGraph(ROOT), { id: first, claim: derived.claim as NonNullable<typeof derived.claim>, digest: loaded.packed.digest,
+        // recordPromotion joins them: a pack naming no nights throws there, as it did untyped.
+        attestation: loaded.packed.attestation, custody: derived.custody, nights: loaded.entry.nights as readonly number[] });
+      if (result.status !== 'ALREADY_RECORDED') writeFileSync(join(ROOT, GRAPH_FILE), formatGraph(result.graph));
+      recorded = { graph: GRAPH_FILE, status: result.status, edge: result.edge };
+    }
+    const view = attestationView(loaded.packed);
+    return console.log(JSON.stringify({
+      schema: 'plan12-promotion-gate-v1', evidenceId: first, kind: 'device-campaign', source: 'pack',
+      packSha256: loaded.packed.digest, nights: loaded.entry.nights, outcome: loaded.entry.outcome,
+      custody: loaded.packed.pack.custody ?? { kind: 'original', lost: [] },
+      attestation: view, claim: derived.claim,
+      authority: 'plans/12-end-to-end-evidence-campaign.md', accepted, checks: allChecks,
+      status: accepted ? 'PROMOTED' : 'REFUSED', ...(recorded ? { recorded } : {}),
+      reason: accepted ? null
+        : `Plan 12 requires a live executor-proven 6 AM, complete custody, a committed winner, a nameable claim, and an attestation bound to pack sha256 ${loaded.packed.digest}`
+          + (view.reason && !checks.plan12Attestation ? ` (attestation: ${view.reason})` : ''),
+    }, null, 2));
+  }
+  if (loaded.kind === 'device-campaign') {
+    const checks = campaignPromotionChecks(loaded.wrapper, loaded.files);
+    const accepted = Object.values(checks).every(Boolean);
+    return console.log(JSON.stringify({
+      schema: 'plan12-promotion-gate-v1', evidenceId: first, kind: 'device-campaign', source: 'artifacts',
+      nights: loaded.entry.nights, outcome: loaded.entry.outcome,
+      authority: 'plans/12-end-to-end-evidence-campaign.md', accepted, checks,
+      status: accepted ? 'READY_FOR_REVIEW' : 'REFUSED',
+      reason: accepted ? null
+        : 'Plan 12 requires external evidence, a passing terminal result, and an attestation; pack the run (npm run evidence -- pack) and attest the pack',
+    }, null, 2));
+  }
+  if (loaded.kind === 'device-bundle') {
+    const { bundle } = loaded;
+    const gate: Readonly<Record<string, unknown>> = isRecord(bundle.manifest.gate) ? bundle.manifest.gate : {};
+    const checks = {
+      offlineEvidence: gate.claimLevel === 'DEVICE_MEASURED',
+      terminalPass: gate.status === 'PASS' && bundle.replay.results.every(item => item.won === true),
+      manifestComplete: true,
+      plan12Attestation: field(bundle.manifest.plan12Gate, 'status') === 'PASS',
+    };
+    const accepted = Object.values(checks).every(Boolean);
+    return console.log(JSON.stringify({
+      schema: 'plan12-promotion-gate-v1', evidenceId: first,
+      authority: 'plans/12-end-to-end-evidence-campaign.md', accepted, checks,
+      status: accepted ? 'READY_FOR_REVIEW' : 'REFUSED',
+      reason: accepted ? null : 'Plan 12 requires external evidence, a passing terminal result, and an explicit gate attestation',
+    }, null, 2));
+  }
+  const { result, manifest } = loaded;
+  const checks = {
+    offlineEvidence: result.claimLevel === 'DEVICE_MEASURED',
+    terminalPass: result.outcome === 'PASS',
+    manifestComplete: manifest.outcome === 'COMPLETED' && Boolean(manifest.artifacts?.result),
+    plan12Attestation: field(manifest.plan12Gate, 'status') === 'PASS',
+  };
+  const accepted = Object.values(checks).every(Boolean);
+  return console.log(JSON.stringify({
+    schema: 'plan12-promotion-gate-v1', evidenceId: result.evidenceId,
+    authority: 'plans/12-end-to-end-evidence-campaign.md', accepted, checks,
+    status: accepted ? 'READY_FOR_REVIEW' : 'REFUSED',
+    reason: accepted ? null : 'Plan 12 requires external evidence, a passing terminal result, and an explicit gate attestation',
+  }, null, 2));
+}
+
 async function main({ operation, ids: [first, second], values }: ReturnType<typeof parseCommand>) {
   const envelope = values.envelope === true;
   if (operation === 'help') return help();
@@ -443,33 +599,7 @@ async function main({ operation, ids: [first, second], values }: ReturnType<type
     }
     return print(loaded);
   }
-  if (operation === 'diff') {
-    const left = await loadAny(first);
-    const right = await loadAny(second);
-    if (left.kind === 'session' && right.kind === 'session') {
-      const changes: string[] = [];
-      if (stable(left.result) !== stable(right.result)) changes.push('result');
-      if (stable(left.manifest) !== stable(right.manifest)) changes.push('manifest');
-      return console.log(JSON.stringify({ schema: 'evidence-diff-v1', left: first, right: second, changed: changes }, null, 2));
-    }
-    // A campaign directory or a committed pack: the text each holds, file by file, beside the
-    // facts its index entry reads. What a pack lost is named, never compared as if empty.
-    assertHeld(first, left);
-    assertHeld(second, right);
-    const sides = [[first, left], [second, right]] as const;
-    const [[leftPlace, leftHeld], [rightPlace, rightHeld]] = await Promise.all(sides.map(async ([id, loaded]) => {
-      const place = holder(id, loaded);
-      return [place, await heldFiles(place, loaded)] as const;
-    }));
-    const names = [...new Set([...leftHeld.keys(), ...rightHeld.keys()])].sort();
-    const both = names.filter(name => leftHeld.has(name) && rightHeld.has(name));
-    return console.log(JSON.stringify({ schema: 'evidence-diff-v1', left: first, right: second,
-      changed: both.filter(name => leftHeld.get(name) !== rightHeld.get(name)),
-      onlyLeft: names.filter(name => !rightHeld.has(name)), onlyRight: names.filter(name => !leftHeld.has(name)),
-      unchanged: both.filter(name => leftHeld.get(name) === rightHeld.get(name)),
-      sides: { left: sideView(left, leftPlace), right: sideView(right, rightPlace) },
-      unavailable: [...unavailable(leftPlace, left, leftHeld), ...unavailable(rightPlace, right, rightHeld)] }, null, 2));
-  }
+  if (operation === 'diff') return diff(first, second);
   if (operation === 'replay') {
     const loaded = await loadAny(first);
     if (loaded.kind === 'device-campaign')
@@ -489,129 +619,8 @@ async function main({ operation, ids: [first, second], values }: ReturnType<type
     if (replayHash !== result.resultHash) throw new Error(`replay result hash mismatch: ${replayHash} != ${result.resultHash}`);
     return console.log(`replay=${result.evidenceId} evaluations=${evaluation.evaluations.length} resultHash=${replayHash} status=REPLAYED`);
   }
-  if (operation === 'why') {
-    const loaded = await loadAny(first);
-    if (loaded.kind === 'session') {
-      const { manifest } = loaded;
-      return console.log(JSON.stringify({ schema: 'causal-trace-v1', run: first, events: manifest.events.map(event => ({ type: event.type, component: event.component, at: event.at, data: event.data })) }, null, 2));
-    }
-    if (loaded.kind === 'device-bundle')
-      throw new Error(`${first} is a compiled device bundle, a plan rather than a run, so it has no causal trace; \`npm run evidence -- replay ${first}\` replays it`);
-    // A campaign directory or a pack: the event rows as the executor (or a FNaF 1 runner) appended
-    // them, verbatim -- their stamps keep their own clocks -- beside the custody they came through.
-    const place = holder(first, loaded);
-    if (!loaded.files.includes('events.jsonl'))
-      throw new Error(`why reads a run's event rows, and ${lacking(place, 'events.jsonl')}`);
-    const text = await readFile(join(place.dir, 'events.jsonl'), 'utf8');
-    const events = text.split('\n').filter(line => line.trim()).map((line, index) => {
-      try { return JSON.parse(line); } catch (error) { throw new Error(`${place.where}/events.jsonl line ${index + 1}: ${(error as Error).message}`); }
-    });
-    return console.log(JSON.stringify({ schema: 'causal-trace-v1', run: first, source: place.source, kind: loaded.kind,
-      ...(place.custody ? { custody: place.custody } : {}), events }, null, 2));
-  }
-  if (operation === 'promote') {
-    const loaded = await loadAny(first);
-    if (loaded.kind === 'fnaf1-run') {
-      // A FNaF 1 runner's pack: Plan 12's checks read from the runner's record, its events and the
-      // title-star read (fnaf1-promotion.ts), then the attestation; recorded as the FNaF 2 path records.
-      const checks = fnaf1PromotionChecks(ROOT, first, loaded.packed);
-      const derived = derivePromotion(ROOT, first, new Map());
-      // Every pack's derivation verifies claimIdentity.
-      const identity = derived.verified.find(item => item.check === 'claimIdentity') as (typeof derived.verified)[number];
-      const allChecks = { ...checks, claimIdentity: identity.pass };
-      const accepted = Object.values(allChecks).every(Boolean);
-      let recorded = null;
-      if (accepted) {
-        // claimIdentity passes only on a named claim.
-        const result = recordPromotion(readGraph(ROOT), { id: first, claim: derived.claim as NonNullable<typeof derived.claim>, digest: loaded.packed.digest,
-          attestation: loaded.packed.attestation, custody: derived.custody, nights: loaded.packed.pack.nights ?? [],
-          runLabel: `FNaF 1 Custom Night 6 AM on the phone, run pack ${first}` });
-        if (result.status !== 'ALREADY_RECORDED') writeFileSync(join(ROOT, GRAPH_FILE), formatGraph(result.graph));
-        recorded = { graph: GRAPH_FILE, status: result.status, edge: result.edge };
-      }
-      return console.log(JSON.stringify({ schema: 'plan12-promotion-gate-v1', evidenceId: first, kind: 'fnaf1-run', source: 'pack',
-        packSha256: loaded.packed.digest, custody: derived.custody, attestation: attestationView(loaded.packed), claim: derived.claim,
-        authority: 'plans/12-end-to-end-evidence-campaign.md (its checks, read from a FNaF 1 runner pack: packages/review/src/fnaf1-promotion.ts)',
-        accepted, checks: allChecks, status: accepted ? 'PROMOTED' : 'REFUSED', ...(recorded ? { recorded } : {}),
-        ...(accepted ? {} : { failed: derived.verified.filter(item => !item.pass).map(item => ({ check: item.check, failed: item.detail.failed })) }) }, null, 2));
-    }
-    if (loaded.kind === 'device-campaign' && loaded.packed) {
-      // A pack: the five checks, then the claim the night supports, re-derived from the pack.
-      // An accepted pack is recorded as a PROMOTED_BY edge in the evidence graph, naming who
-      // attested and the pack's custody; a refused pack writes nothing.
-      const winners = trackedWinners(ROOT);
-      const checks = packPromotionChecks(loaded.packed, winners);
-      const derived = derivePromotion(ROOT, first, winners);
-      // Every pack's derivation verifies claimIdentity.
-      const identity = derived.verified.find(item => item.check === 'claimIdentity') as (typeof derived.verified)[number];
-      const allChecks = { ...checks, claimIdentity: identity.pass };
-      const accepted = Object.values(allChecks).every(Boolean);
-      let recorded = null;
-      if (accepted) {
-        // claimIdentity passes only on a named claim.
-        const result = recordPromotion(readGraph(ROOT), { id: first, claim: derived.claim as NonNullable<typeof derived.claim>, digest: loaded.packed.digest,
-          // recordPromotion joins them: a pack naming no nights throws there, as it did untyped.
-          attestation: loaded.packed.attestation, custody: derived.custody, nights: loaded.entry.nights as readonly number[] });
-        if (result.status !== 'ALREADY_RECORDED') writeFileSync(join(ROOT, GRAPH_FILE), formatGraph(result.graph));
-        recorded = { graph: GRAPH_FILE, status: result.status, edge: result.edge };
-      }
-      const view = attestationView(loaded.packed);
-      return console.log(JSON.stringify({
-        schema: 'plan12-promotion-gate-v1', evidenceId: first, kind: 'device-campaign', source: 'pack',
-        packSha256: loaded.packed.digest, nights: loaded.entry.nights, outcome: loaded.entry.outcome,
-        custody: loaded.packed.pack.custody ?? { kind: 'original', lost: [] },
-        attestation: view, claim: derived.claim,
-        authority: 'plans/12-end-to-end-evidence-campaign.md', accepted, checks: allChecks,
-        status: accepted ? 'PROMOTED' : 'REFUSED', ...(recorded ? { recorded } : {}),
-        reason: accepted ? null
-          : `Plan 12 requires a live executor-proven 6 AM, complete custody, a committed winner, a nameable claim, and an attestation bound to pack sha256 ${loaded.packed.digest}`
-            + (view.reason && !checks.plan12Attestation ? ` (attestation: ${view.reason})` : ''),
-      }, null, 2));
-    }
-    if (loaded.kind === 'device-campaign') {
-      const checks = campaignPromotionChecks(loaded.wrapper, loaded.files);
-      const accepted = Object.values(checks).every(Boolean);
-      return console.log(JSON.stringify({
-        schema: 'plan12-promotion-gate-v1', evidenceId: first, kind: 'device-campaign', source: 'artifacts',
-        nights: loaded.entry.nights, outcome: loaded.entry.outcome,
-        authority: 'plans/12-end-to-end-evidence-campaign.md', accepted, checks,
-        status: accepted ? 'READY_FOR_REVIEW' : 'REFUSED',
-        reason: accepted ? null
-          : 'Plan 12 requires external evidence, a passing terminal result, and an attestation; pack the run (npm run evidence -- pack) and attest the pack',
-      }, null, 2));
-    }
-    if (loaded.kind === 'device-bundle') {
-      const { bundle } = loaded;
-      const gate: Readonly<Record<string, unknown>> = isRecord(bundle.manifest.gate) ? bundle.manifest.gate : {};
-      const checks = {
-        offlineEvidence: gate.claimLevel === 'DEVICE_MEASURED',
-        terminalPass: gate.status === 'PASS' && bundle.replay.results.every(item => item.won === true),
-        manifestComplete: true,
-        plan12Attestation: field(bundle.manifest.plan12Gate, 'status') === 'PASS',
-      };
-      const accepted = Object.values(checks).every(Boolean);
-      return console.log(JSON.stringify({
-        schema: 'plan12-promotion-gate-v1', evidenceId: first,
-        authority: 'plans/12-end-to-end-evidence-campaign.md', accepted, checks,
-        status: accepted ? 'READY_FOR_REVIEW' : 'REFUSED',
-        reason: accepted ? null : 'Plan 12 requires external evidence, a passing terminal result, and an explicit gate attestation',
-      }, null, 2));
-    }
-    const { result, manifest } = loaded;
-    const checks = {
-      offlineEvidence: result.claimLevel === 'DEVICE_MEASURED',
-      terminalPass: result.outcome === 'PASS',
-      manifestComplete: manifest.outcome === 'COMPLETED' && Boolean(manifest.artifacts?.result),
-      plan12Attestation: field(manifest.plan12Gate, 'status') === 'PASS',
-    };
-    const accepted = Object.values(checks).every(Boolean);
-    return console.log(JSON.stringify({
-      schema: 'plan12-promotion-gate-v1', evidenceId: result.evidenceId,
-      authority: 'plans/12-end-to-end-evidence-campaign.md', accepted, checks,
-      status: accepted ? 'READY_FOR_REVIEW' : 'REFUSED',
-      reason: accepted ? null : 'Plan 12 requires external evidence, a passing terminal result, and an explicit gate attestation',
-    }, null, 2));
-  }
+  if (operation === 'why') return why(first);
+  if (operation === 'promote') return promote(first);
   throw new Error(`unknown evidence operation: ${operation}`);
 }
 
