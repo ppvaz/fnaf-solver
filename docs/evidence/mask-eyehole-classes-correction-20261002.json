@@ -1,0 +1,87 @@
+{
+ "schema": "evidence-record-v1",
+ "date": "2026-10-02",
+ "step": "ROADMAP S2",
+ "claimLevel": "MODEL_ONLY sheet reading and record counts",
+ "question": "Which occupant classes must a native eyehole reader separate: is Toy Chica (c) beside Withered Chica (C) a confusion that arises?",
+ "corrects": {
+  "record": "docs/evidence/mask-eyehole-native-placement-20261001.json",
+  "id": "mask-eyehole-native-f0870e3854683ac4",
+  "part": "occupants.classes: \"the grid reader's hue rule also cannot tell Toy Chica from Withered Chica, which the model codes c and C\""
+ },
+ "operator": [
+  "Pedro, 2026-10-02: \"the eyehole will never show toy chica. she's from the vents straight to a kill\"",
+  "Pedro, 2026-10-02: \"toy freddy will show on the mask though? check dump\""
+ ],
+ "sheet": {
+  "source": "the Office event sheet of the local dump (fnaf2 events, 03-04-Office), cited by group, not quoted",
+  "toyFreddy": "g420-g423 move him cam 9 -> cam 10 -> hall stage 1 -> hall stage 2 -> `in office` (marker 122), the marker the withered three stand at; g545/g551 then send him into the `got you box` or back to cam 9 (the mask's repel)",
+  "toyChica": "g431/g434 put her at hall stage 1 from cam 7 and cam 4, and g435 at `in office` from cam 5 (the left vent); g904/g905 count her seconds there and send her to the `got you box` past 5 while the monitor is up. Where her office image is drawn is not in the events."
+ },
+ "counts": {
+  "pattern": "\"(?:codes|modelWindows|rebuiltWindows|windows|phone|model)\"\\s*:\\s*\"([.?BCFbcfMx]{8,})\"",
+  "strings": 119,
+  "letters": {
+   ".": 1946,
+   "?": 845,
+   "B": 707,
+   "C": 807,
+   "F": 145,
+   "b": 13,
+   "f": 21
+  },
+  "sources": [
+   {
+    "path": "docs/evidence/full06-stream-census-20261001.json",
+    "sha256": "d4ca083ce0fba9e02f7f61791c47e34625ea922af47d955b27a19727e94167d9",
+    "strings": 1
+   },
+   {
+    "path": "docs/evidence/full06-stream-census-release20-20261001.json",
+    "sha256": "441b5cd25b26bf2bd1ce3ad3aadd6245f85cf7fac94e0b9a04e392d891e02ab6",
+    "strings": 1
+   },
+   {
+    "path": "docs/evidence/model-encounter-fidelity-20260927.json",
+    "sha256": "7e06d20b3b4bb10f0b1eca832ad0d7f387d8a5b8c72bfbf54f75f1d1758e991b",
+    "strings": 49
+   },
+   {
+    "path": "tools/recompile/results/phone-encounter-nights-release20-20261001.json",
+    "sha256": "0645f52715e248e747d60eda2bdede402190b96a813b4766d38492734ee63693",
+    "strings": 2
+   },
+   {
+    "path": "tools/recompile/results/phone-encounter-nights-release20-3nights-20261001.json",
+    "sha256": "da396542a8dff74f487fd7e494dc243cb088955e6e42f90d8ccde48a8859465e",
+    "strings": 5
+   },
+   {
+    "path": "tools/recompile/results/phone-encounters-20260927.json",
+    "sha256": "7cea083dcf87de999e2a1fc3d8c91abcf3126a90bcf4871aaeb611b9cd1f10dc",
+    "strings": 23
+   },
+   {
+    "path": "tools/recompile/results/phone-encounters-20260930.json",
+    "sha256": "c9eb1089fb1cbc2879b8d945c4713b42ce472909a2ee7e04eec9ef1cc53dd43f",
+    "strings": 23
+   },
+   {
+    "path": "tools/recompile/results/phone-encounters-release20-20261001.json",
+    "sha256": "52ce30cdababf7faabc4b3862d74b6206b0af9fd0e64f7a23fec6e0e1f963a06",
+    "strings": 4
+   },
+   {
+    "path": "tools/recompile/results/phone-encounters-release20-3nights-20261001.json",
+    "sha256": "58caf6849613d8cdc532bbb5f05bedac68e18c4aadc6203c5e3b532f7c5c0fcf",
+    "strings": 11
+   }
+  ]
+ },
+ "reading": {
+  "classes": "No phone or model window string holds a c (0 in 119 strings); f, Toy Freddy, holds 21 windows. The pair a native reader must separate is F against f, both Freddys, not C against c: the placement record's caveat names a confusion that has not arisen.",
+  "stageB": "The Stage B night's classes are B, C, F and f (b holds 13 windows and is kept)."
+ },
+ "reproducer": "python3 over the listed sources with the pattern above; re-counted by test-phone-stream-census.ts",
+ "id": "mask-eyehole-classes-98e09026a4b87917"
+}

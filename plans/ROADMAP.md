@@ -257,7 +257,14 @@ Details:
     Chica (c and C in the model). A Stage B night records the eyehole beside
     the static view in one region set
     ([placement](../docs/evidence/mask-eyehole-native-placement-20261001.json),
-    `mask-eyehole-native-f0870e3854683ac4`).
+    `mask-eyehole-native-f0870e3854683ac4`). Corrected 2026-10-02: Toy Chica
+    is not a class the reader meets (no `c` in 119 phone and model window
+    strings; Pedro: "she's from the vents straight to a kill"), while Toy
+    Freddy walks the hall to the withered three's marker (Office g420-g423)
+    and holds 21 windows, so the pair to separate is F against f, and Stage
+    B's classes are B, C, F and f
+    ([correction](../docs/evidence/mask-eyehole-classes-correction-20261002.json),
+    `mask-eyehole-classes-98e09026a4b87917`).
   - **The phone's office random stream is read state by state (2026-10-01,
     pre-registered, SUPPORTED).** On a k3 Night 7 with every Custom Night dial
     at 0, the Companion 16 native static readout (no frame trace) identified

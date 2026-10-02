@@ -83,6 +83,23 @@ assert.equal(id, `s2-stream-census-${sha256(canon(body)).slice(0, 16)}`, 'record
   assert.equal(id20, `s2-stream-census-release20-${sha256(canon(body20)).slice(0, 16)}`, 'release-20 record id');
 }
 
+// --- the eyehole classes correction (docs/evidence/mask-eyehole-classes-correction-20261002.json): re-count its letters
+{
+  const cls = json('docs/evidence/mask-eyehole-classes-correction-20261002.json');
+  const letters: Record<string, number> = {};
+  let strings = 0;
+  for (const s of cls.counts.sources) {
+    const bytes = read(s.path);
+    assert.equal(sha256(bytes), s.sha256, `${s.path} is the file the correction counted`);
+    for (const m of bytes.toString('utf8').matchAll(new RegExp(cls.counts.pattern, 'g'))) { strings += 1; for (const c of m[1]) letters[c] = (letters[c] ?? 0) + 1; }
+  }
+  assert.equal(strings, cls.counts.strings);
+  assert.deepEqual(Object.fromEntries(Object.entries(letters).sort()), cls.counts.letters);
+  assert.equal(letters.c ?? 0, 0, 'no window string holds Toy Chica');
+  const { id: clsId, ...clsBody } = cls;
+  assert.equal(clsId, `mask-eyehole-classes-${sha256(canon(clsBody)).slice(0, 16)}`);
+}
+
 // --- the occupancy-rate correction of this record's exploratory reading
 const occ = json('docs/evidence/full06-occupancy-rates-20261001.json');
 assert.equal(occ.corrects.id, rec.id);
@@ -100,4 +117,4 @@ const best40 = [...rows].sort((a, b) => b.agree - a.agree || a.state - b.state).
 assert.deepEqual(missExpectation(best40, rec.phoneWindows, occ.model, occ.played).filter((m) => m && [22, 26, 31, 32].includes(m.window)), occ.censusBest40.windows);
 const { id: occId, ...occBody } = occ;
 assert.equal(occId, `s2-occupancy-rates-${sha256(canon(occBody)).slice(0, 16)}`, 'occupancy record id');
-console.log(`phone-stream-census: decision rule fixtures, and ${id} (${decision.verdict}) re-derived from its rows, its release-20 repeat re-derived, and its occupancy-rate correction rechecked`);
+console.log(`phone-stream-census: decision rule fixtures, and ${id} (${decision.verdict}) re-derived from its rows, its release-20 repeat re-derived, the eyehole classes re-counted, and its occupancy-rate correction rechecked`);
