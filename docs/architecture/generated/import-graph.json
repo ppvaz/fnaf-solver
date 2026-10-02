@@ -4541,6 +4541,7 @@
         "../src/run-audit.ts",
         "@sixam/kernel",
         "node:assert/strict",
+        "node:crypto",
         "node:fs",
         "node:os",
         "node:path"

@@ -29,8 +29,8 @@ import { createHash } from 'node:crypto';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { canonicalJson } from '@sixam/kernel/contracts';
-import { validateAnnotation } from '@sixam/kernel';
-import { PACKS_DIR } from './evidence-pack.ts';
+import { isList, isRecord, validateAnnotation } from '@sixam/kernel';
+import { PACKS_DIR, verifiedPack } from './evidence-pack.ts';
 
 export const RUN_AUDIT_INSTRUMENT = 'run-audit@1';
 export const RUN_AUDIT_KIND = 'run-audit-v1';
@@ -52,28 +52,50 @@ type RunReport = { readonly effects?: { readonly systematicMisses?: readonly { r
 const sha256 = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex');
 // Date.parse reads its argument as text, as String() does.
 const epoch = (at: unknown) => (typeof at === 'number' ? at : Date.parse(String(at)));
+const recordOrNull = (value: unknown) => (isRecord(value) ? value : null);
+
+/** run/run-report.json, narrowed to the fields the audit reads; anything else reads as absent. */
+function narrowReport(value: unknown): RunReport | null {
+  if (!isRecord(value)) return null;
+  const effects = recordOrNull(value.effects);
+  const misses = effects && isList(effects.systematicMisses) ? effects.systematicMisses.filter(isRecord) : undefined;
+  const tally = effects ? recordOrNull(effects.tally) ?? undefined : undefined;
+  const arm = recordOrNull(value.arm);
+  return { effects: effects ? { systematicMisses: misses, tally } : undefined, arm: arm ?? undefined };
+}
+
+/** run/phase.json, narrowed to the fields the audit reads. */
+function narrowPhase(value: unknown): PhaseRecord | null {
+  if (!isRecord(value)) return null;
+  return { terminal: recordOrNull(value.terminal) ?? undefined, deliveredBand: recordOrNull(value.deliveredBand) ?? undefined };
+}
 
 /**
- * The pack's own files, parsed, with the sha256 of each one read.
+ * The pack's own files, read through its integrity check and parsed, with the sha256 of each one
+ * read. A file the pack does not list is not part of it; an events line that does not parse is
+ * counted, not dropped.
  */
 function readInputs(dir: string) {
-  const inputs: string[] = [];
+  const pack = verifiedPack(dir);
+  const listed = new Set(pack.files.map((file) => file.name));
+  const inputs = [sha256(readFileSync(join(dir, 'pack.json')))];
   const read = (rel: string) => {
-    const file = join(dir, rel);
-    if (!existsSync(file)) return null;
-    const bytes = readFileSync(file);
+    if (!listed.has(rel)) return null;
+    const bytes = readFileSync(join(dir, rel));
     inputs.push(sha256(bytes));
     return bytes.toString('utf8');
   };
-  const json = (rel: string) => { const text = read(rel); return text === null ? null : JSON.parse(text); };
-  const pack: { readonly outcome?: unknown, readonly id?: unknown } | null = json('pack.json');
-  const eventsText = read('events.jsonl');
-  const events = (eventsText ?? '').split('\n').filter(Boolean).flatMap((line): RunEvent[] => {
-    try { return [JSON.parse(line)]; } catch { return []; }
+  const json = (rel: string): unknown => { const text = read(rel); return text === null ? null : JSON.parse(text); };
+  let unparsable = 0;
+  const events = (read('events.jsonl') ?? '').split('\n').filter(Boolean).flatMap((line): RunEvent[] => {
+    try {
+      const row: unknown = JSON.parse(line);
+      if (isRecord(row)) return [row];
+    } catch { /* counted below */ }
+    unparsable += 1;
+    return [];
   });
-  const report: RunReport | null = json('run/run-report.json');
-  const phase: PhaseRecord | null = json('run/phase.json');
-  return { pack, events, report, phase, inputs };
+  return { pack, events, unparsable, report: narrowReport(json('run/run-report.json')), phase: narrowPhase(json('run/phase.json')), inputs };
 }
 
 /**
@@ -118,8 +140,8 @@ function executionFaults(events: readonly RunEvent[], report: RunReport | null, 
  * @param dir the pack directory
  */
 export function auditRun(dir: string) {
-  const { pack, events, report, phase, inputs } = readInputs(dir);
-  const outcome = typeof pack?.outcome === 'string' ? pack.outcome : 'UNKNOWN';
+  const { pack, events, unparsable, report, phase, inputs } = readInputs(dir);
+  const outcome = typeof pack.outcome === 'string' ? pack.outcome : 'UNKNOWN';
   const undecided: string[] = [];
   const onset = deathOnset(phase, events);
   let attribution = 'UNKNOWN';
@@ -133,7 +155,10 @@ export function auditRun(dir: string) {
     // Faults are split only around a known onset; without one there are none after it.
     faultsAfterOnset: onset ? faults.after.map((fault) => ({ kind: fault.kind, detail: fault.detail, afterOnsetMs: Math.round(fault.at - onset.at) })) : [] };
   let delivered: { epochMs: unknown, uncertaintyMs: unknown, verdict: unknown, band: unknown, conclusive: boolean } | null = null;
-  if (!onset) {
+  if (unparsable) {
+    undecided.push(`events-unparsable (${unparsable} line${unparsable === 1 ? '' : 's'})`);
+    because = 'an events line that does not parse could hold an earlier fault, so no fault can be called the first';
+  } else if (!onset) {
     undecided.push('death-onset-unknown');
     because = 'no observation dates the end of the night, so no fault can be ordered before it';
   } else {
@@ -165,7 +190,7 @@ export function auditRun(dir: string) {
     }
   }
   return validateAnnotation({
-    subject: { kind: 'GameRun', id: String(pack?.id ?? dir.split('/').pop()) },
+    subject: { kind: 'GameRun', id: String(pack.id ?? dir.split('/').pop()) },
     instrument: RUN_AUDIT_INSTRUMENT,
     class: attribution,
     value: { outcome, onset, firstDivergence, execution, deliveredPhase: delivered, undecided, because },
@@ -183,8 +208,14 @@ export function auditRuns(root: string) {
   const ids = existsSync(dir) ? readdirSync(dir).filter((id) => existsSync(join(dir, id, 'pack.json'))).sort() : [];
   const outcomes: Record<string, number> = {};
   const annotations: ReturnType<typeof auditRun>[] = [];
+  const invalid: { id: string, error: string }[] = [];
   for (const id of ids) {
-    const outcome: unknown = JSON.parse(readFileSync(join(dir, id, 'pack.json'), 'utf8')).outcome;
+    let outcome: unknown;
+    try { outcome = verifiedPack(join(dir, id)).outcome; } catch (error) {
+      // A pack that fails its own integrity check is named, not audited and not dropped.
+      invalid.push({ id, error: (error as Error).message });
+      continue;
+    }
     const key = typeof outcome === 'string' ? outcome : 'OTHER';
     outcomes[key] = (outcomes[key] ?? 0) + 1;
     if (typeof outcome === 'string' && AUDITED_OUTCOMES.includes(outcome)) annotations.push(auditRun(join(dir, id)));
@@ -194,7 +225,7 @@ export function auditRuns(root: string) {
   // auditRun writes each annotation's value with its undecided list.
   for (const annotation of annotations) for (const reason of (annotation.value as { undecided: readonly string[] }).undecided)
     undecided[reason.replace(/ \(.*\)$/, '')] = (undecided[reason.replace(/ \(.*\)$/, '')] ?? 0) + 1;
-  return { packs: ids.length, outcomes, audited: annotations.length, byAttribution, undecided, annotations };
+  return { packs: ids.length, outcomes, audited: annotations.length, byAttribution, undecided, invalid, annotations };
 }
 
 /**

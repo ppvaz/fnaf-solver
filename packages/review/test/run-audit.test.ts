@@ -2,7 +2,8 @@
 // the strategy only on a verified execution with a conclusive delivered phase, and otherwise
 // answers UNKNOWN naming what it could not decide.
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Annotation } from '@sixam/kernel';
@@ -20,15 +21,18 @@ const at = (offsetMs: number) => new Date(ONSET + offsetMs).toISOString();
 const verified = { arm: { status: 'VERIFIED' }, effects: { tally: { PASS: 12 }, systematicMisses: [] } };
 const band = (verdict: string) => ({ epochMs: 2430, uncertaintyMs: 8, verdict, band: [2366, 2500], conclusive: true });
 
-/** Writes one pack and returns its directory. */
-function pack(id: string, { outcome = 'DEATH', events = [], report = verified, phase = { terminal: { lastNightAt: ONSET } } }:
-  { outcome?: string, events?: readonly Row[], report?: Row, phase?: Row | null } = {}) {
+/** Writes one pack, its files listed by sha256 as a packer lists them, and returns its directory. */
+function pack(id: string, { outcome = 'DEATH', events = [], report = verified, phase = { terminal: { lastNightAt: ONSET } }, eventsText }:
+  { outcome?: string, events?: readonly Row[], report?: Row, phase?: Row | null, eventsText?: string } = {}) {
   const dir = join(root, 'docs/evidence/runs', id);
   mkdirSync(join(dir, 'run'), { recursive: true });
-  writeFileSync(join(dir, 'pack.json'), JSON.stringify({ id, outcome }));
-  writeFileSync(join(dir, 'events.jsonl'), events.map(event => JSON.stringify(event)).join('\n'));
-  if (report) writeFileSync(join(dir, 'run/run-report.json'), JSON.stringify(report));
-  if (phase) writeFileSync(join(dir, 'run/phase.json'), JSON.stringify(phase));
+  const files: Record<string, string> = { 'events.jsonl': eventsText ?? events.map(event => JSON.stringify(event)).join('\n') };
+  if (report) files['run/run-report.json'] = JSON.stringify(report);
+  if (phase) files['run/phase.json'] = JSON.stringify(phase);
+  for (const [name, text] of Object.entries(files)) writeFileSync(join(dir, name), text);
+  writeFileSync(join(dir, 'pack.json'), JSON.stringify({ schema: 'run-pack-v1', version: 1, id, outcome,
+    files: Object.entries(files).map(([name, text]) => ({ name, bytes: Buffer.byteLength(text),
+      sha256: createHash('sha256').update(text).digest('hex') })) }));
   return dir;
 }
 
@@ -69,16 +73,24 @@ try {
   const edge = auditRun(pack('edge', { phase: { terminal: { lastNightAt: ONSET }, deliveredBand: { ...band('IN A LOSS BAND'), conclusive: false } } })) as Audit; // as above
   assert.deepEqual(edge.value.undecided, ['delivered-phase-within-its-uncertainty-of-a-band-edge']);
 
+  const torn = auditRun(pack('torn', { eventsText: `${JSON.stringify({ type: 'observation', label: 'state=night', at: at(-500) })}\n{"type":"control.gate` })) as Audit; // as above
+  assert.equal(torn.class, 'UNKNOWN', 'a line the audit cannot read could hold an earlier fault');
+  assert.ok(torn.value.undecided.includes('events-unparsable (1 line)'));
+
   pack('won', { outcome: 'WIN' });
+  const tampered = pack('tampered', { events: [{ type: 'control.gate.abort', at: at(-2500), reason: 'mask unreadable' }] });
+  writeFileSync(join(tampered, 'events.jsonl'), readFileSync(join(tampered, 'events.jsonl'), 'utf8').replace('mask', 'MASK'));
+  assert.throws(() => auditRun(tampered), /pack integrity mismatch: events.jsonl/, 'a pack whose files no longer match is not audited');
   const all = auditRuns(root);
-  assert.equal(all.packs, 9);
-  assert.equal(all.audited, 8, 'a win needs no attribution');
+  assert.equal(all.packs, 11);
+  assert.equal(all.audited, 9, 'a win needs no attribution');
+  assert.deepEqual(all.invalid, [{ id: 'tampered', error: 'pack integrity mismatch: events.jsonl' }], 'and is named, not dropped');
   assert.deepEqual(Object.keys(all.byAttribution), ATTRIBUTIONS);
-  assert.equal(all.byAttribution.UNKNOWN, 4);
+  assert.equal(all.byAttribution.UNKNOWN, 5);
   const record = runAuditRecord(all, { date: '2026-09-30', command: 'npm run review -- query audit', commit: 'a'.repeat(40), dirtyInputs: [] });
   assert.equal(record.kind, 'run-audit-v1');
   assert.match(record.evidenceId, /^run-audit-sha256-[0-9a-f]{16}$/);
-  assert.match(record.answer, /^4 of 8 audited runs attributed/);
+  assert.match(record.answer, /^4 of 9 audited runs attributed/);
   console.log('run-audit: onset ordering, the five attributions, UNKNOWN with its reasons, and the record');
 } finally {
   rmSync(root, { recursive: true, force: true });

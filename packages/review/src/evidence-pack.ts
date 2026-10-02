@@ -557,10 +557,10 @@ export function writePack(dir: string, { pack, texts }: { pack: unknown, texts: 
 }
 
 /**
- * Read and verify a pack: every file must match its recorded sha256 and size and still be
- * frame-free. The attestation, if one has been written, is returned alongside, unjudged.
+ * A pack's manifest, verified: every file it lists must match its recorded sha256 and size and
+ * still be frame-free. Every reader of a pack's files reads through this.
  */
-export function readPack(dir: string) {
+export function verifiedPack(dir: string) {
   // Checked below: the schema, then every file it lists against its own sha256.
   const pack: RunPack = readJson(join(dir, 'pack.json'));
   if (pack.schema !== RUN_PACK_SCHEMA || pack.version !== 1) throw new Error('not a run-pack-v1');
@@ -570,6 +570,15 @@ export function readPack(dir: string) {
     if (sha256(data) !== file.sha256 || data.length !== file.bytes) throw new Error(`pack integrity mismatch: ${file.name}`);
     refuseFrames(file.name, data.toString('utf8'));
   }
+  return pack;
+}
+
+/**
+ * Read and verify a pack (verifiedPack). The attestation, if one has been written, is returned
+ * alongside, unjudged.
+ */
+export function readPack(dir: string) {
+  const pack = verifiedPack(dir);
   if (pack.kind === 'fnaf1-run') {
     const attested = join(dir, ATTESTATION_FILE);
     return { pack, digest: packDigest(pack), wrapper: null, files: pack.files.map(file => file.name),
