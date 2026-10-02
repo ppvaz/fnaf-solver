@@ -5,7 +5,7 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { ENTRIES_SCHEMA, ENTRIES_SCHEMA_V2, NIGHTS, checkCorpus, readEntries } from '@sixam/review/chronicle-schema';
 import { STORY_OUTPUT, chapterView, checkStory } from '../chronicle-story.ts';

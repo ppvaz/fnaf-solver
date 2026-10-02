@@ -40,7 +40,6 @@ import { AdbDeviceBridge } from '../../../packages/play/src/campaign/adb-bridge.
 import { AdbCompanionPort, AdbHidProcess } from '../../../packages/play/src/campaign/physical-ports.ts';
 import { HidWireTransport } from '../../../packages/play/src/venues/phone/hid.ts';
 import { BINDINGS_DIR } from '@sixam/kernel';
-import { INPUT } from '@sixam/source/fnaf1';
 import { ProbeRecord, ensureTitle, titleRead, titleConsensus, settleCustomNight, setDials, restartToTitle,
   DIALS, LEAVE_WAIT_MS } from '../../../packages/play/games/fnaf1/fnaf1-menu-probe.ts';
 import { loadRegionSet, registerSet } from '../../../packages/play/bin/phone/native-regions.ts';
