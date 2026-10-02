@@ -39,31 +39,35 @@ import * as C from '@sixam/source/fnaf2';
 import { run as hidRun } from './hid-device-pilot.ts';
 import { N6_TARGET, NIGHTS } from './closed-loop-reclaim.ts';
 
-const seedOf = (i) => (i * 2246822519) >>> 0;
-const frames = (ms) => Math.round(ms / 1000 * C.FPS);
+const seedOf = (i: number) => (i * 2246822519) >>> 0;
+const frames = (ms: number) => Math.round(ms / 1000 * C.FPS);
 
 // The actuator quantises every draw to a frame, so a band is only ever worth
 // what its frame count is worth. Printing both stops a reader inferring a
 // millisecond threshold from what is really a 2-frame one.
-export function cohort(night, runs, lateMinMs, lateMaxMs, lateWhen = null) {
+export function cohort(night: number, runs: number, lateMinMs: number, lateMaxMs: number,
+  lateWhen: ((act: string) => boolean) | null = null) {
   let won = 0;
-  const reasons = new Map();
+  const reasons = new Map<string, number>();
   for (let i = 0; i < runs; i++) {
     const r = hidRun({ ...N6_TARGET,
       deviceActuator: { lateMinMs, lateMaxMs, ...(lateWhen ? { lateWhen } : {}) },
       sim: { seed: seedOf(i), night } });
     if (r.sim.won) won++;
-    else reasons.set(r.sim.death.reason, (reasons.get(r.sim.death.reason) || 0) + 1);
+    else {
+      const death = r.sim.death as NonNullable<typeof r.sim.death>; // a night that is not won ended in a death
+      reasons.set(death.reason, (reasons.get(death.reason) || 0) + 1);
+    }
   }
   return { won, reasons };
 }
 
-const row = (label, runs, lo, hi, lateWhen?) =>
+const row = (label: string, runs: number, lo: number, hi: number, lateWhen?: (act: string) => boolean) =>
   `${label.padEnd(26)} ` +
   NIGHTS.map(n => String(cohort(n, runs, lo, hi, lateWhen).won).padStart(4)).join('') +
   `   ${frames(lo)}-${frames(hi)}f`;
 
-const header = (title) => {
+const header = (title: string) => {
   console.log(`\n${title}`);
   console.log(`${''.padEnd(26)} ` + NIGHTS.map(n => `  n${n}`).join('') + '   frames');
 };
@@ -71,7 +75,7 @@ const header = (title) => {
 // The bands that exist as device measurements, each with where it came from.
 // A band is only in this table if a page in this repository can be cited for
 // it; a plausible number with no run behind it belongs in a comment.
-export const BANDS = [
+export const BANDS: [number, number, string, string][] = [
   [0, 0, 'perfect actuator', 'the control: must equal the exact figure'],
   [0, 10, 'fork-free clock',
    '/proc/uptime is a builtin read, 0.36 ms, 10 ms resolution (device probe 2026-08-26)'],
@@ -85,7 +89,7 @@ export const BANDS = [
    'the older traces plus night 6-40\'s inferred ~300 ms'],
 ];
 
-export function bandTable(runs) {
+export function bandTable(runs: number) {
   header('The bands this repository can cite, priced (simulator, per-beat draw)');
   for (const [lo, hi, label] of BANDS) console.log(row(label, runs, lo, hi));
   console.log('\n  sources:');
@@ -93,13 +97,13 @@ export function bandTable(runs) {
     console.log(`    ${String(lo)}-${String(hi)} ms  ${label}: ${why}`);
 }
 
-export function meanSweep(runs) {
+export function meanSweep(runs: number) {
   header('Mean only (zero spread): a uniformly late schedule');
   for (const ms of [0, 17, 33, 41, 42, 50, 58, 66, 83, 110, 205, 300])
     console.log(row(`+${ms} ms, no spread`, runs, ms, ms));
 }
 
-export function spreadSweep(runs) {
+export function spreadSweep(runs: number) {
   header('Spread only, at zero mean: what a per-boundary re-roll costs');
   for (const hi of [0, 10, 17, 20, 33, 40, 42, 45, 50, 58, 66, 100])
     console.log(row(`0-${hi} ms`, runs, 0, hi));
@@ -112,7 +116,7 @@ export function spreadSweep(runs) {
 // row is "this class late, with the backlog that follows it" -- which is what
 // the coprocess pipe does too, and is why the rows do not decompose cleanly
 // once the delay exceeds the plan's own 33 ms gaps.
-const CLASSES = {
+const CLASSES: Readonly<Record<string, (act: string) => boolean>> = {
   sweep: (a) => a.startsWith('cam:') || a === 'light',
   monitor: (a) => a === 'monitor',
   mask: (a) => a === 'mask',
@@ -120,7 +124,7 @@ const CLASSES = {
   vent: (a) => a === 'ventL' || a === 'ventR',
 };
 
-export function ablation(runs) {
+export function ablation(runs: number) {
   header('One class late, the rest exactly on time (diagnostic, not a phone model)');
   for (const fr of [1, 2, 3]) {
     const ms = Math.round(fr * 1000 / C.FPS);
@@ -134,8 +138,8 @@ export function ablation(runs) {
 
 // The two cells that are not allowed to drift, because published tables rest
 // on them. Tolerances are binomial slack at 200 seeds, not opinion.
-export function assertPins(runs) {
-  const problems = [];
+export function assertPins(runs: number) {
+  const problems: string[] = [];
   for (const night of NIGHTS) {
     const zero = cohort(night, runs, 0, 0).won;
     if (zero !== runs)

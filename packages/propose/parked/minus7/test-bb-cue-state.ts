@@ -35,7 +35,7 @@ const bang = { cue: 'bang' };
   const bb = new BbCueState();
   bb.movementOpportunity({ monitorUp: true, invariants: safe });
   // A loud/unknown vocal on a selected BB camera is not a route movement.
-  const ignored: any = bb.movementOpportunity({
+  const ignored = bb.movementOpportunity({
     monitorUp: true,
     events: [{ cue: 'bb_voice', role: 'view' }],
     invariants: safe,

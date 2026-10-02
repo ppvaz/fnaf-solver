@@ -15,16 +15,29 @@ export const BB_POSITION = Object.freeze({
   CAM5_PENDING: 'cam5-pending',
   OPENING: 'opening',
 });
+/** A route position Balloon Boy may hold. */
+type BbPosition = typeof BB_POSITION[keyof typeof BB_POSITION];
+/** One heard cue; `role` qualifies a voice as route movement or the selected feed. */
+interface CueEvent { readonly cue: string, readonly role?: string }
+/** The invariants that make a bang attributable to Balloon Boy. */
+interface CueInvariants { readonly stunsCurrent?: boolean, readonly boxWound?: boolean }
+/** A position he may move to, and the cues that move emits. */
+interface Move { to: BbPosition, emits: readonly string[] }
+/** What the tracker reports after each observation. */
+interface CueSnapshot {
+  readonly positions: BbPosition[], readonly masked: boolean, readonly maskTicks: number,
+  readonly fault: string | null, readonly directive: string, readonly note?: string,
+}
 
-const ROUTE_MOVE = new Map([
+const ROUTE_MOVE = new Map<BbPosition, Move>([
   [BB_POSITION.CAM10, { to: BB_POSITION.CAM7, emits: [] }],
   [BB_POSITION.CAM7, { to: BB_POSITION.CAM3, emits: ['bb_voice'] }],
   [BB_POSITION.CAM3, { to: BB_POSITION.CAM1, emits: ['bb_voice'] }],
   [BB_POSITION.CAM1, { to: BB_POSITION.CAM5, emits: ['bb_voice', 'bang'] }],
 ]);
 
-function keys(events) {
-  const accepted = new Set();
+function keys(events: readonly CueEvent[]) {
+  const accepted = new Set<string>();
   let ambiguousVoice = false;
   for (const event of events ?? []) {
     if (event.cue === 'bb_voice') {
@@ -39,22 +52,22 @@ function keys(events) {
   return { accepted, ambiguousVoice };
 }
 
-function compatible(observed, emitted) {
+function compatible(observed: ReadonlySet<string>, emitted: readonly string[]) {
   const available = new Set(emitted);
   for (const cue of observed) if (!available.has(cue)) return false;
   return true;
 }
 
-function sorted(states) {
+function sorted(states: ReadonlySet<BbPosition>) {
   const order = Object.values(BB_POSITION);
   return [...states].sort((a, b) => order.indexOf(a) - order.indexOf(b));
 }
 
 export class BbCueState {
-  declare positions: Set<"cam10">;
+  declare positions: Set<BbPosition>;
   declare masked: boolean;
   declare maskTicks: number;
-  declare fault: any;
+  declare fault: string | null;
   constructor() {
     this.positions = new Set([BB_POSITION.CAM10]);
     this.masked = false;
@@ -62,7 +75,7 @@ export class BbCueState {
     this.fault = null;
   }
 
-  snapshot() {
+  snapshot(): CueSnapshot {
     return Object.freeze({
       positions: sorted(this.positions),
       masked: this.masked,
@@ -83,12 +96,12 @@ export class BbCueState {
     return 'continue';
   }
 
-  fail(reason) {
+  fail(reason: string) {
     this.fault ??= reason;
     return this.snapshot();
   }
 
-  validate(events, invariants) {
+  validate(events: readonly CueEvent[], invariants: CueInvariants | undefined) {
     const observed = keys(events);
     if (observed.accepted.has('bang') &&
         (!invariants?.stunsCurrent || !invariants?.boxWound)) {
@@ -99,11 +112,13 @@ export class BbCueState {
 
   // One sourced five-second movement opportunity. A missing cue never proves
   // no move: both the stay and every legal move remain in the set.
-  movementOpportunity({ monitorUp, events = [], invariants }: any = {}) {
+  movementOpportunity({ monitorUp, events = [], invariants }: {
+    monitorUp?: boolean, events?: readonly CueEvent[], invariants?: CueInvariants,
+  } = {}): CueSnapshot {
     if (this.fault || this.masked) return this.fail(this.fault ?? 'movement-while-masked');
     const { accepted, ambiguousVoice } = this.validate(events, invariants);
     if (this.fault) return this.snapshot();
-    const candidates = [];
+    const candidates: Move[] = [];
     for (const from of this.positions) {
       candidates.push({ to: from, emits: [] });
       const route = ROUTE_MOVE.get(from);
@@ -128,11 +143,11 @@ export class BbCueState {
 
   // A successful final roll made with cams down is latched and is spent when
   // the next monitor raise completes. This is distinct from a 5 s opportunity.
-  monitorRaised({ events = [], invariants }: any = {}) {
+  monitorRaised({ events = [], invariants }: { events?: readonly CueEvent[], invariants?: CueInvariants } = {}): CueSnapshot {
     if (this.fault || this.masked) return this.fail(this.fault ?? 'raise-while-masked');
     const { accepted } = this.validate(events, invariants);
     if (this.fault) return this.snapshot();
-    const candidates = [];
+    const candidates: Move[] = [];
     for (const from of this.positions) {
       candidates.push({ to: from, emits: [] });
       if (from === BB_POSITION.CAM5_PENDING)
@@ -159,7 +174,9 @@ export class BbCueState {
   // arrive early. At five sourced ticks departure is guaranteed, but without
   // its timestamp the full-duration recovery deadline is unknowable; fail
   // closed instead of inventing an unmask time.
-  maskedWindow({ events = [], elapsedTick = false, invariants }: any = {}) {
+  maskedWindow({ events = [], elapsedTick = false, invariants }: {
+    events?: readonly CueEvent[], elapsedTick?: boolean, invariants?: CueInvariants,
+  } = {}): CueSnapshot {
     if (this.fault || !this.masked) return this.fail(this.fault ?? 'masked-window-outside-mask');
     const { accepted } = this.validate(events, invariants);
     if (this.fault) return this.snapshot();

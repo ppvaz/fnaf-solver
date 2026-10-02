@@ -24,13 +24,15 @@
 //     sourced (see PROFILES in model/reactive-pilot.ts); this is a sensitivity analysis.
 import * as C from '@sixam/source/fnaf2';
 import { DEFAULT_CYCLE, labelCycle } from './reactive-pilot.ts';
+import type { PilotOptions, PlanRow, summarize } from './reactive-pilot.ts';
 import { pool, closePool } from '../../bin/census/pool.ts';
 
 // Every night this file simulates goes through the pool, so the hill-climb
 // spreads across cores instead of one. `--serial` pins it to a single worker,
 // which must produce identical output.
 const BBTEST = new URL('./reactive-pilot.ts', import.meta.url).href;
-const sweep = (optsList) => pool().map(BBTEST, 'summarize', optsList);
+const sweep = (optsList: PilotOptions[]) =>
+  pool().map(BBTEST, 'summarize', optsList) as Promise<ReturnType<typeof summarize>[]>; // one summary per night
 
 // The current cycle, expressed as knobs. genCycle(KNOBS0) reproduces
 // DEFAULT_CYCLE exactly (asserted below).
@@ -47,6 +49,8 @@ export const KNOBS0 = {
   homeDelay: 7,  // last light off -> CAM 11 tap
   windDelay: 3,  // CAM 11 tap -> wind press
 };
+/** A cycle as named gaps between its events, in frames. */
+type Knobs = typeof KNOBS0;
 const ORDER0 = [10, 4, 7];
 
 // hallDelay's floor is sourced, not chosen: `mask` reaches 0 only when the
@@ -54,12 +58,12 @@ const ORDER0 = [10, 4, 7];
 // hall flash any earlier produces no light and no Foxy reset (g489 -> g745).
 // Likewise, the put-on animation rejects a premature mask-off tap (g267/g270,
 // the sourced input gate). Search may not shrink this below MASK_ANIM_ON.
-export const MIN = { maskDelay: 15, maskHold: C.MASK_ANIM_ON, hallDelay: C.MASK_ANIM_OFF, hallHold: 1,
+export const MIN: Knobs = { maskDelay: 15, maskHold: C.MASK_ANIM_ON, hallDelay: C.MASK_ANIM_OFF, hallHold: 1,
               upDelay: 1, camDelay: 15, flashDelay: 1, flashHold: 1, camGap: 1,
               homeDelay: 1, windDelay: 1 };
 
-export function genCycle(k, order = ORDER0) {
-  const rows = [[0, 'tap', 'monitor']];
+export function genCycle(k: Knobs, order: readonly number[] = ORDER0) {
+  const rows: PlanRow[] = [[0, 'tap', 'monitor']];
   let t = k.maskDelay;
   rows.push([t, 'tap', 'mask']);
   rows.push([t += k.maskHold, 'tap', 'mask']);
@@ -86,13 +90,13 @@ export function genCycle(k, order = ORDER0) {
   if (a !== b) throw new Error(`genCycle(KNOBS0) != DEFAULT_CYCLE\n${a}\n${b}`);
 }
 
-const SEED = (i) => (i * 2246822519) >>> 0;
+const SEED = (i: number) => (i * 2246822519) >>> 0;
 
 // Set once from --profile; null keeps the original uniform error mechanism.
 // Historical curves are for their old table/engine, not the corrected default.
-let PROFILE = null;
+let PROFILE = null as string | null;
 
-async function survivors(cycle, jitter, n) {
+async function survivors(cycle: readonly PlanRow[], jitter: number, n: number) {
   const nights = await sweep(Array.from({ length: n },
     (_, i) => ({ seed: SEED(i), jitter, cycle, profile: PROFILE })));
   return nights.reduce((ok, r) => ok + (r.won ? 1 : 0), 0);
@@ -100,7 +104,7 @@ async function survivors(cycle, jitter, n) {
 
 // Lexicographic fitness: (largest all-survive jitter, survivors just past it).
 const J_CAP = 30;
-async function fitness(cycle, n) {
+async function fitness(cycle: readonly PlanRow[], n: number) {
   let j = 0;
   while (j <= J_CAP && await survivors(cycle, j, n) === n) j++;
   const maxJ = j - 1;
@@ -117,7 +121,7 @@ async function fitness(cycle, n) {
 // bisection could step straight over it.
 const SHIFT_CAP = 45; // 0.75s either way; past that the pass has left its anchor
 
-async function edge(cycle, id, dir, n) {
+async function edge(cycle: readonly PlanRow[], id: string, dir: number, n: number) {
   for (let k = 1; k <= SHIFT_CAP; k++) {
     const nights = await sweep(Array.from({ length: n },
       (_, i) => ({ seed: SEED(i), cycle, stepShift: { id, frames: dir * k } })));
@@ -126,9 +130,9 @@ async function edge(cycle, id, dir, n) {
   return dir * SHIFT_CAP;
 }
 
-async function stepWindows(cycle, n) {
+async function stepWindows(cycle: readonly PlanRow[], n: number) {
   const ids = [...new Set(labelCycle(cycle))];
-  const out = [];
+  const out: { id: string, early: number, late: number }[] = [];
   for (const id of ids) {
     const early = await edge(cycle, id, -1, n);
     const late = await edge(cycle, id, +1, n);
@@ -137,15 +141,16 @@ async function stepWindows(cycle, n) {
   return out;
 }
 
-const better = (a, b) => a.maxJ > b.maxJ || (a.maxJ === b.maxJ && a.tie > b.tie);
+type Fitness = Awaited<ReturnType<typeof fitness>>;
+const better = (a: Fitness, b: Fitness) => a.maxJ > b.maxJ || (a.maxJ === b.maxJ && a.tie > b.tie);
 
-async function hillClimb(knobs, order, n, log) {
+async function hillClimb(knobs: Knobs, order: readonly number[], n: number, log: (line: string) => void) {
   let best = { ...knobs };
   let bestFit = await fitness(genCycle(best, order), n);
   log(`start: maxJ ${bestFit.maxJ} frames (${Math.round(bestFit.maxJ / C.FPS * 1000)}ms), tie ${bestFit.tie}`);
   for (let pass = 0; ; pass++) {
     let improved = false;
-    for (const key of Object.keys(best)) {
+    for (const key of Object.keys(best) as (keyof Knobs)[]) { // best is a copy of a Knobs
       for (const step of [-4, -2, -1, 1, 2, 4]) {
         const cand = { ...best, [key]: best[key] + step };
         if (cand[key] < MIN[key]) continue;
@@ -161,10 +166,10 @@ async function hillClimb(knobs, order, n, log) {
   return { knobs: best, fit: bestFit };
 }
 
-const msOf = (f) => `${(f / C.FPS * 1000).toFixed(0)}ms`;
+const msOf = (f: number) => `${(f / C.FPS * 1000).toFixed(0)}ms`;
 
-async function curve(cycle, n) {
-  const out = [];
+async function curve(cycle: readonly PlanRow[], n: number) {
+  const out: string[] = [];
   for (const ms of [0, 50, 100, 120, 150, 200, 250, 300]) {
     const j = Math.round(ms / 1000 * C.FPS);
     out.push(`${ms}ms:${(await survivors(cycle, j, n) / n * 100).toFixed(0)}%`);
@@ -189,7 +194,7 @@ if (isMain) {
   for (const pair of knobArg ? knobArg.split(',') : []) {
     const [k, v] = pair.split('=');
     if (!(k in KNOBS0)) throw new Error(`unknown knob: ${k} (have ${Object.keys(KNOBS0).join(', ')})`);
-    knobs0[k] = +v;
+    knobs0[k as keyof Knobs] = +v; // checked against KNOBS0 just above
   }
   const baseOrderArg = (process.argv.find(a => a.startsWith('--order=')) || '').split('=')[1];
   const baseOrder = baseOrderArg ? baseOrderArg.split('-').map(Number) : ORDER0;
@@ -203,7 +208,7 @@ if (isMain) {
     console.log('one step moved at a time, the rest of the pass perfect):\n');
     console.log('step           earliest    target    latest     window');
     for (const w of await stepWindows(cycle, N_VALID)) {
-      const cap = (v) => (Math.abs(v) === SHIFT_CAP ? '*' : ' ');
+      const cap = (v: number) => (Math.abs(v) === SHIFT_CAP ? '*' : ' ');
       console.log(
         `${w.id.padEnd(14)} ${msOf(w.early).padStart(8)}${cap(w.early)} ` +
         `${'0ms'.padStart(8)}  ${msOf(w.late).padStart(8)}${cap(w.late)}  ` +

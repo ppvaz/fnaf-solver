@@ -8,15 +8,16 @@
 import * as C from '@sixam/source/fnaf2';
 import { Sim } from '@sixam/source/fnaf2';
 import { view, ACTIONS, run } from './sim.ts';
+import type { View } from './sim.ts';
 
-const arg = (k, d) => {
+const arg = (k: string, d: string) => {
   const m = process.argv.find(a => a.startsWith(`--${k}=`));
   return m ? m.split('=')[1] : d;
 };
-const FLAG = k => process.argv.includes(`--${k}`);
+const FLAG = (k: string) => process.argv.includes(`--${k}`);
 
 // Decide the next semantic action from the sourced state alone.
-export function decide(v, night, customNight = null) {
+export function decide(v: View, night: number, customNight: Readonly<Record<string, number>> | null = null) {
   // `peakAi` takes the Custom Night dials; without them this policy believes
   // Foxy sits at the standard night's level whatever the dial says, which
   // mis-sizes its own safety band under Custom Night (Plan 05 pkg 7b).
@@ -64,7 +65,7 @@ export function decide(v, night, customNight = null) {
   return 'WIND';
 }
 
-export function runPolicy(night, seed, { verbose = false } = {}) {
+export function runPolicy(night: number, seed: number, { verbose = false } = {}) {
   const sim = new Sim({ seed, night });
   let guard = 0;
   while (sim.alive && !sim.won && guard++ < 4000) {

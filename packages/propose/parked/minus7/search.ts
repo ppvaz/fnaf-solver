@@ -26,7 +26,7 @@ import { decide } from './reactive-policy.ts';
 // far better than any myopic heuristic can. A proper implementation would be
 // MCTS with this as the default policy; the beam + rollout here is the cheap
 // first cut the user's note calls for before upgrading.
-function rollout(sim, night, horizon) {
+function rollout(sim: Sim, night: number, horizon: number) {
   const s = cloneSim(sim);
   const stop = Math.min(C.NIGHT_FRAMES, s.frame + horizon);
   let guard = 0;
@@ -35,11 +35,11 @@ function rollout(sim, night, horizon) {
   return s.won ? C.NIGHT_FRAMES + 1 : s.frame;
 }
 
-const arg = (k, d) => {
+const arg = (k: string, d: string) => {
   const m = process.argv.find(a => a.startsWith(`--${k}=`));
   return m ? m.split('=')[1] : d;
 };
-const FLAG = k => process.argv.includes(`--${k}`);
+const FLAG = (k: string) => process.argv.includes(`--${k}`);
 
 const DECISION = 30;                 // frames between decisions
 const ROLLOUT_HORIZON = 3000;        // ~50 s reactive lookahead per beam node
@@ -48,7 +48,7 @@ const ACTION_KEYS = Object.keys(ACTIONS);
 // Heuristic: survival frame dominates; the shaping terms are threat DEADLINES
 // derived from sourced rates -- "how many frames until this kills me if I do
 // nothing" -- not guesses about strategy. A short deadline is a steep penalty.
-function score(sim) {
+function score(sim: Sim) {
   if (!sim.alive) return -1e12 + sim.frame;      // dead: earlier death is worse
   if (sim.won) return 1e12;
   const v = view(sim);
@@ -86,26 +86,29 @@ function score(sim) {
 
 // Pareto dominance on the resource frontier, gated on identical categorical
 // state so we never merge two genuinely different situations.
-function key(sim) {
+function key(sim: Sim) {
   const v = view(sim);
   return [v.monitor, v.maskOn, v.foxyLoc, v.foxyGotYou, v.bbInside, v.bbOpening,
     v.blackout, v.atOpening.sort().join(','), v.inside.sort().join(','),
     v.committed.sort().join(',')].join('|');
 }
-function dominates(a, b) {   // does a dominate b? (a at least as good on every axis, better on one)
+function dominates(a: Sim, b: Sim) {   // does a dominate b? (a at least as good on every axis, better on one)
   const x = view(a), y = view(b);
   const axes = [x.box - y.box, x.power - y.power, y.foxyD - x.foxyD,
     y.foxyExposure - x.foxyExposure];
   return axes.every(d => d >= 0) && axes.some(d => d > 0);
 }
 
-function prune(beam, width) {
+/** A beam state: the branched Sim, its score and the actions that reached it. */
+interface BeamNode { sim: Sim; score: number; trace: string[] }
+
+function prune(beam: BeamNode[], width: number) {
   // group by categorical key, drop Pareto-dominated within a group
-  const groups = new Map();
+  const groups = new Map<string, BeamNode[]>();
   for (const b of beam) {
     const k = key(b.sim);
     if (!groups.has(k)) groups.set(k, []);
-    groups.get(k).push(b);
+    (groups.get(k) as BeamNode[]).push(b); // set just above when missing
   }
   const kept = [];
   for (const g of groups.values()) {
@@ -117,15 +120,15 @@ function prune(beam, width) {
   return kept.slice(0, width);
 }
 
-export function searchSeed(night, seed, { beam = 40 } = {}) {
-  let states = [{ sim: new Sim({ seed, night }), score: 0, trace: [] }];
+export function searchSeed(night: number, seed: number, { beam = 40 } = {}) {
+  let states: BeamNode[] = [{ sim: new Sim({ seed, night }), score: 0, trace: [] }];
   const end = C.NIGHT_FRAMES;
   let best = states[0];
   while (states.length) {
     // all beam states are frame-aligned to a DECISION boundary
     const f0 = states[0].sim.frame;
     if (f0 >= end) { best = states[0]; break; }
-    const next = [];
+    const next: BeamNode[] = [];
     for (const st of states) {
       for (const ak of ACTION_KEYS) {
         const sim = cloneSim(st.sim);
@@ -186,5 +189,5 @@ function main() {
   }
 }
 
-if (process.argv[1] && import.meta.url.endsWith(process.argv[1].split('/').pop()))
+if (process.argv[1] && import.meta.url.endsWith(process.argv[1].split('/').pop() as string)) // split yields at least one piece
   main();

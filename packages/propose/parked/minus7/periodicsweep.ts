@@ -15,17 +15,18 @@ console.log('every   BB in office   foxy   BB->foxy   median   best   dominant d
 for (const periodic of [0, 3, 4, 5, 6, 7, 8, 10, 12]) {
   let foxy = 0, bbIn = 0, chain = 0, survived = 0;
   const depth = [];
-  const causes = {};
+  const causes: Record<string, number> = {};
   for (let i = 0; i < N; i++) {
     const result = run({ cycles: 80, sync: true, periodic,
       sim: { seed: (i * 2246822519) >>> 0 } });
     const sim = result.sim;
     depth.push(sim.frame / C.FPS);
     if (sim.won) { survived++; continue; }
-    causes[sim.death.reason] = (causes[sim.death.reason] || 0) + 1;
-    if (sim.death.reason === 'foxy') foxy++;
+    // A night that is not won ended in a death.
+    causes[(sim.death as C.Death).reason] = (causes[(sim.death as C.Death).reason] || 0) + 1;
+    if ((sim.death as C.Death).reason === 'foxy') foxy++;
     if (sim.bb.inside) bbIn++;
-    if (sim.bb.inside && sim.death.reason === 'foxy') chain++;
+    if (sim.bb.inside && (sim.death as C.Death).reason === 'foxy') chain++;
   }
   depth.sort((left, right) => left - right);
   const top = Object.entries(causes).sort((left, right) => right[1] - left[1])[0];

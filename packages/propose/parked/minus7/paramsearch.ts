@@ -19,14 +19,14 @@ import { makeSearchKnobs } from './hid-device-pilot.ts';
 import { canonicalJson } from '@sixam/kernel/contracts';
 import * as C from '@sixam/source/fnaf2';
 
-const arg = (k, d) => {
+const arg = (k: string, d: string) => {
   const m = process.argv.find(a => a.startsWith(`--${k}=`));
   return m ? m.split('=')[1] : d;
 };
 
 // Each knob's admissible delta window, in ms, with the sourced floor it may
 // not cross. Steps are the perturbations beam expansion tries.
-export const FLOORS = {
+export const FLOORS: Readonly<Record<string, { min: number, max: number, step: number[] }>> = {
   // off+0.25 is exactly MASK_ANIM_OFF (15 fr, config.js:487); earlier lands
   // inside the mask-off animation and hallLightOn never asserts. Later is
   // bounded by the sweep (attackSweepDeltaMs).
@@ -67,17 +67,20 @@ const KNOBS = Object.keys(FLOORS);
 // top of -- which is how the two levers compose: pick the sweep geometry, then
 // search the attack/opening/bang-anchor knobs at that geometry. `null` fields
 // mean devicePlan()'s own device-validated defaults (spacing 133, contact 100).
-export const SHIPPED_GEOM = { sweepSlotMs: 120, deviceSpacingMs: null, sweepContactMs: null };
+/** A sweep geometry: the model's select slot, and the emitted spacing and contact (null = devicePlan's). */
+interface Geom { sweepSlotMs: number, deviceSpacingMs: number | null, sweepContactMs: number | null }
+export const SHIPPED_GEOM: Geom = { sweepSlotMs: 120, deviceSpacingMs: null, sweepContactMs: null };
 
-function planTextFor(night, geom = SHIPPED_GEOM, knobs = undefined) {
+function planTextFor(night: number, geom = SHIPPED_GEOM, knobs: ReturnType<typeof makeSearchKnobs> | undefined = undefined) {
   const recipe = build({ night, sweepSlotMs: geom.sweepSlotMs, knobs });
   const plan = devicePlan(recipe,
     geom.deviceSpacingMs != null || geom.sweepContactMs != null
-      ? { deviceSpacingMs: geom.deviceSpacingMs, sweepContactMs: geom.sweepContactMs }
+      // A null field reaches devicePlan as null, not as its default.
+      ? { deviceSpacingMs: geom.deviceSpacingMs, sweepContactMs: geom.sweepContactMs } as Parameters<typeof devicePlan>[1]
       : {});
   let text = `#night ${recipe.night}\n#idle-until ${idleUntilMs(recipe.night)}\n`;
   for (const [name, lines] of Object.entries(plan))
-    text += `#cycle ${name} ${recipe.cycles[name].lengthMs}\n${(lines as any).join('\n')}\n`;
+    text += `#cycle ${name} ${recipe.cycles[name as keyof typeof recipe.cycles].lengthMs}\n${lines.join('\n')}\n`; // devicePlan names its cycles after the recipe's
   return text;
 }
 
@@ -85,7 +88,16 @@ function planTextFor(night, geom = SHIPPED_GEOM, knobs = undefined) {
 // per-night { pct, won, runs, cvar } plus `ok` (false if any night threw --
 // an over-floor value that devicePlan/makeRoom rejects, which is the sourced
 // constraint doing its job).
-export function evalParams(params, nights, runs, shape, seedStart = 1, geom = SHIPPED_GEOM) {
+/** A parameter assignment: knob -> delta, an absent knob meaning 0. */
+export type Params = Readonly<Record<string, number>>;
+/** One night's score: seeds won of `runs`, the percentage, and the worst-decile survival. */
+export interface NightScore { won: number, runs: number, pct: number, cvar: number }
+/** An assignment's per-night scores; `ok` false with `error` when it could not be built or replayed. */
+interface EvalResult {
+  params: Params, nights: Record<number, NightScore>, ok: boolean, error?: string,
+  admit?: Record<number, NightScore>,
+}
+export function evalParams(params: Params, nights: readonly number[], runs: number, shape: string, seedStart = 1, geom = SHIPPED_GEOM): EvalResult {
   for (const k of KNOBS) {
     const v = params[k] || 0;
     if (!Number.isInteger(v) || v < FLOORS[k].min || v > FLOORS[k].max)
@@ -99,14 +111,14 @@ export function evalParams(params, nights, runs, shape, seedStart = 1, geom = SH
     return { params: { ...params }, nights: {}, ok: false,
       error: 'bangAgeFrames may only control an in-read hall reset' };
   const knobs = makeSearchKnobs(params);
-  const out: any = { params: { ...params }, nights: {}, ok: true };
+  const out: EvalResult = { params: { ...params }, nights: {}, ok: true };
   try {
     for (const night of nights) {
       const text = planTextFor(night, geom, knobs);
       // Keep the per-seed vector from modelGate itself so screening and
       // admission share exactly one jitter/replay implementation.
       const gate = modelGate(text, { night, runs, shape, seedStart, outcomes: true });
-      const alive = gate.outcomes;
+      const alive = gate.outcomes as number[]; // outcomes: true keeps the per-seed vector
       const won = gate.survived;
       // seed-CVaR: survival over the worst decile of seed trajectories. With a
       // 0/1 outcome this is just the mean of the lowest 10% -- i.e. is the
@@ -115,29 +127,31 @@ export function evalParams(params, nights, runs, shape, seedStart = 1, geom = SH
       const cvar = alive.slice().sort((a, b) => a - b).slice(0, dec).reduce((a, b) => a + b, 0) / dec;
       out.nights[night] = { won, runs, pct: +(100 * won / runs).toFixed(1), cvar };
     }
-  } catch (e) { out.ok = false; out.error = e.message; }
+  } catch (e) { out.ok = false; out.error = (e as Error).message; }
   return out;
 }
 
-export function baselineLadder(nights, runs, shape = 'iid', geom = SHIPPED_GEOM) {
+export function baselineLadder(nights: readonly number[], runs: number, shape = 'iid', geom = SHIPPED_GEOM) {
   const r = evalParams({}, nights, runs, shape, 1, geom);
-  const lad = {};
+  const lad: Record<number, number> = {};
   for (const n of nights) lad[n] = r.nights[n].pct;
   return lad;
 }
 
-const minPct = (r, nights) => Math.min(...nights.map(n => r.nights[n].pct));
-function dominates(a, b, nights) {  // a dominates b: >= on every night pct AND cvar, > somewhere
+const minPct = (r: EvalResult, nights: readonly number[]) => Math.min(...nights.map(n => r.nights[n].pct));
+function dominates(a: EvalResult, b: EvalResult, nights: readonly number[]) {  // a dominates b: >= on every night pct AND cvar, > somewhere
   const axes = nights.flatMap(n => [a.nights[n].pct - b.nights[n].pct, a.nights[n].cvar - b.nights[n].cvar]);
   return axes.every(d => d >= -1e-9) && axes.some(d => d > 1e-9);
 }
 
-export function searchParams({ nights, runs = 400, beam = 12, rounds = 6, shape = 'correlated', admit = 0, geom = SHIPPED_GEOM }: any = {}) {
+export function searchParams({ nights, runs = 400, beam = 12, rounds = 6, shape = 'correlated', admit = 0, geom = SHIPPED_GEOM }: {
+  nights: readonly number[], runs?: number, beam?: number, rounds?: number, shape?: string, admit?: number, geom?: Geom,
+}) {
   const zero = Object.fromEntries(KNOBS.map(k => [k, 0]));
   let frontier = [evalParams(zero, nights, runs, shape, 1, geom)];
   let pool = [...frontier];
   for (let round = 0; round < rounds; round++) {
-    const cand = [];
+    const cand: EvalResult[] = [];
     for (const node of pool) {
       for (const k of KNOBS) {
         for (const d of FLOORS[k].step) {
@@ -163,19 +177,19 @@ export function searchParams({ nights, runs = 400, beam = 12, rounds = 6, shape 
   if (admit) {
     for (const node of frontier.slice(0, beam)) {
       const hi = evalParams(node.params, nights, admit, shape, 1, geom);
-      (node as any).admit = hi.nights;
+      node.admit = hi.nights;
     }
   }
   return frontier;
 }
-const bestDeltas = node => Object.fromEntries(Object.entries(node.params).filter(([, v]) => v));
+const bestDeltas = (node: EvalResult) => Object.fromEntries(Object.entries(node.params).filter(([, v]) => v));
 
-function persistWinner(path, node, nights, geom, runs, shape) {
+function persistWinner(path: string, node: EvalResult, nights: readonly number[], geom: Geom, runs: number, shape: string) {
   if (!runs) throw new Error('--winner-out requires --admit so the persisted gate is explicit');
   const gateByNight = nights.map(night => {
     const text = planTextFor(night, geom, makeSearchKnobs(node.params));
     const result = modelGate(text, { night, runs, shape });
-    return { night, ...result, outcomes: undefined };
+    return { ...result, outcomes: undefined };
   });
   const status = gateByNight.every(result => result.ok) ? 'PASS'
     : gateByNight.some(result => result.verdict === 'INCONCLUSIVE') ? 'INCONCLUSIVE' : 'FAIL';
@@ -186,7 +200,7 @@ function persistWinner(path, node, nights, geom, runs, shape) {
     hallPulseMs: 130, pilotOffset: 10, maskMarginMs: 900,
     search: node.params,
   };
-  const planOptions: any = {};
+  const planOptions: { deviceSpacingMs?: number, sweepContactMs?: number } = {};
   if (geom.deviceSpacingMs != null) planOptions.deviceSpacingMs = geom.deviceSpacingMs;
   if (geom.sweepContactMs != null) planOptions.sweepContactMs = geom.sweepContactMs;
   const seeds = Array.from({ length: runs }, (_, index) => index + 1);
@@ -230,8 +244,9 @@ function main() {
   for (const node of frontier.slice(0, 8)) {
     const line = nights.map(n => `n${n} ${node.nights[n].pct}%`).join('  ');
     console.log(`  min ${minPct(node, nights).toFixed(1)}%  ${line}   ${JSON.stringify(bestDeltas(node))}`);
-    if ((node as any).admit)
-      console.log(`      @${admit}: ${nights.map(n => `n${n} ${(node as any).admit[n].pct}%`).join('  ')}`);
+    const admitted = node.admit;
+    if (admitted)
+      console.log(`      @${admit}: ${nights.map(n => `n${n} ${admitted[n].pct}%`).join('  ')}`);
   }
   if (winnerOut) persistWinner(winnerOut, frontier[0], nights, geom, admit, shape);
 }

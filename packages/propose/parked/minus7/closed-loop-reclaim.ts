@@ -18,6 +18,11 @@
 import { pathToFileURL } from 'node:url';
 import { run as hidRun } from './hid-device-pilot.ts';
 import { run as pilotRun } from './stock-device-pilot.ts';
+import type { Sim } from '@sixam/source/fnaf2';
+import type { DeviceActuator } from '../../../play/bin/phone/actuator.ts';
+
+/** The runner's monitor loop as `MonitorSupervisor` models it: null for open loop, `{}` for the shipped one. */
+type ClosedLoop = NonNullable<ConstructorParameters<typeof DeviceActuator>[1]>['closedLoop'];
 
 // `hidpilot n6 target` in tools/test.ts, which is the route plans/12 priced.
 export const N6_TARGET = {
@@ -27,12 +32,12 @@ export const N6_TARGET = {
 };
 
 export const NIGHTS = [1, 2, 3, 4, 5, 6, 7];
-const seedOf = (i) => (i * 2246822519) >>> 0;
+const seedOf = (i: number) => (i * 2246822519) >>> 0;
 
 // A night the runner aborts (`exit 48`) is not a night that survived, however
 // the simulator's clock ends. This is the one place the loop can make things
 // worse without the engine noticing.
-export function trial(night, seed, closedLoop, deviceActuator = true) {
+export function trial(night: number, seed: number, closedLoop: ClosedLoop, deviceActuator = true) {
   const r = hidRun({ ...N6_TARGET,
     deviceActuator: deviceActuator ? (closedLoop ? { closedLoop } : true) : false,
     sim: { seed, night } });
@@ -40,7 +45,8 @@ export function trial(night, seed, closedLoop, deviceActuator = true) {
   return {
     won: r.sim.won && !(loop && loop.aborted),
     aborted: Boolean(loop && loop.aborted),
-    reason: r.sim.won ? (loop && loop.aborted ? 'runner-abort' : null) : r.sim.death.reason,
+    // A night that is not won ended in a death.
+    reason: r.sim.won ? (loop && loop.aborted ? 'runner-abort' : null) : (r.sim.death as NonNullable<Sim['death']>).reason,
     gateReads: loop ? loop.gateReads : 0,
     gateCorrections: loop ? loop.gateCorrections : 0,
     gateFalse: loop ? loop.gateFalse : 0,
@@ -51,10 +57,10 @@ export function trial(night, seed, closedLoop, deviceActuator = true) {
   };
 }
 
-export function cohort(night, runs, closedLoop, deviceActuator = true) {
+export function cohort(night: number, runs: number, closedLoop: ClosedLoop, deviceActuator = true) {
   const acc = { won: 0, aborted: 0, gateReads: 0, gateCorrections: 0,
                 gateFalse: 0, checkpointFalse: 0,
-                desyncs: 0, presses: 0, frames: 0, reasons: new Map() };
+                desyncs: 0, presses: 0, frames: 0, reasons: new Map<string, number>() };
   for (let i = 0; i < runs; i++) {
     const t = trial(night, seedOf(i), closedLoop, deviceActuator);
     if (t.won) acc.won++;
@@ -77,7 +83,7 @@ export function cohort(night, runs, closedLoop, deviceActuator = true) {
 // `--vent --sync` against the HID route and so changed the route as well as the
 // loop. Run both and the resync turns out to be worth almost nothing; the
 // tolerance belongs to the schedule.
-export function syncCohort(night, runs, deviceActuator, sync = true) {
+export function syncCohort(night: number, runs: number, deviceActuator: boolean, sync = true) {
   let won = 0;
   for (let i = 0; i < runs; i++) {
     const r = pilotRun({ vent: true, sync, deviceActuator,
@@ -87,11 +93,11 @@ export function syncCohort(night, runs, deviceActuator, sync = true) {
   return won;
 }
 
-const top = (reasons) => [...reasons.entries()].sort((a, b) => b[1] - a[1])
+const top = (reasons: Map<string, number>) => [...reasons.entries()].sort((a, b) => b[1] - a[1])
   .slice(0, 2).map(([k, v]) => `${k} ${v}`).join(', ') || '-';
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const arg = (name, def) => {
+  const arg = (name: string, def: number) => {
     const v = (process.argv.find(a => a.startsWith(`--${name}=`)) || '').split('=')[1];
     return v === undefined ? def : +v;
   };
@@ -101,7 +107,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     const night = arg('night', 6);
     // Each control is a way the loop could be flattering itself. The first two
     // must NOT help; the third must be able to hurt.
-    const cases = [
+    const cases: [string, ClosedLoop][] = [
       ['open loop (no supervisor)', null],
       ['shipped loop', {}],
       ['CONTROL classifier always wrong', { errorRate: 1 }],
@@ -122,7 +128,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     console.log(`night ${night}, ${runs} seeds, measured actuator -- in the simulator`);
     for (const [label, loop] of cases) {
       const a = cohort(night, runs, loop);
-      console.log(`  ${String(a.won).padStart(3)}/${runs}  ${(label as any).padEnd(52)}` +
+      console.log(`  ${String(a.won).padStart(3)}/${runs}  ${label.padEnd(52)}` +
         ` reads ${String(a.gateReads).padStart(6)}` +
         ` corrections ${String(a.gateCorrections).padStart(5)}` +
         ` corr-on-a-down-monitor ${String(a.gateFalse + a.checkpointFalse).padStart(5)}` +

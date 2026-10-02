@@ -13,17 +13,18 @@ const rows = [];
 for (let base = 5200; base <= 10000; base += 200) {
   let foxy = 0, bbIn = 0, chain = 0, survived = 0;
   const depth = [];
-  const causes = {};
+  const causes: Record<string, number> = {};
   for (let i = 0; i < N; i++) {
     const result = run({ cycles: 80, base, sync: SYNC,
       sim: { seed: (i * 2246822519) >>> 0 } });
     const sim = result.sim;
     depth.push(sim.frame / C.FPS);
     if (sim.won) { survived++; continue; }
-    causes[sim.death.reason] = (causes[sim.death.reason] || 0) + 1;
-    if (sim.death.reason === 'foxy') foxy++;
+    // A night that is not won ended in a death.
+    causes[(sim.death as C.Death).reason] = (causes[(sim.death as C.Death).reason] || 0) + 1;
+    if ((sim.death as C.Death).reason === 'foxy') foxy++;
     if (sim.bb.inside) bbIn++;
-    if (sim.bb.inside && sim.death.reason === 'foxy') chain++;
+    if (sim.bb.inside && (sim.death as C.Death).reason === 'foxy') chain++;
   }
   depth.sort((left, right) => left - right);
   const phase = ((-base % 5000) + 5000) % 5000;

@@ -3026,8 +3026,10 @@
     {
       "file": "packages/propose/parked/minus7/closed-loop-reclaim.ts",
       "imports": [
+        "../../../play/bin/phone/actuator.ts",
         "./hid-device-pilot.ts",
         "./stock-device-pilot.ts",
+        "@sixam/source/fnaf2",
         "node:url"
       ]
     },
@@ -3041,6 +3043,7 @@
       "file": "packages/propose/parked/minus7/constrainedsearch.ts",
       "imports": [
         "../../bin/census/pool.ts",
+        "./constrained-worker.ts",
         "./paramsearch.ts",
         "node:fs",
         "node:url"

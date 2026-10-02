@@ -21,13 +21,18 @@ import { Sim } from '@sixam/source/fnaf2';
 import { DeviceActuator } from '../../../play/bin/phone/actuator.ts';
 import { formatRate } from '../../../review/src/stat.ts';
 
-const ms = (v) => Math.round(v / 1000 * C.FPS);
+const ms = (v: number) => Math.round(v / 1000 * C.FPS);
+
+/** A table row: its offset in ms, the motion, and for a tap or hold its control (and a hold's ms). */
+type Row = readonly [number, string, string?, number?];
+/** A row on the night's clock: its frame, the motion, its control if any, and a hold's frames. */
+type Scheduled = [number, string, string | undefined, number];
 
 // trial.sh, PRESS_MODE=fast-swipe: the opening sequence, then a 5000 ms
 // cycle from base = 7000 + cycle * 5000. Camera-light and hall presses are
 // holds; the phone's 60 ms swipe is one frame of contact but the game latches
 // the flash for the frame it lands on.
-const OPENING = [
+const OPENING: Row[] = [
   [180, 'tap', 'monitor'], [460, 'tap', 'cam:11'],
   [4000, 'tap', 'cam:10'], [4190, 'hold', 'light', 60],
   [4380, 'tap', 'cam:4'], [4570, 'hold', 'light', 60],
@@ -35,7 +40,7 @@ const OPENING = [
   [5140, 'tap', 'cam:11'],
 ];
 
-const CYCLE = [
+const CYCLE: Row[] = [
   [0, 'down'],                                 // cams down (see `--sync`)
   [450, 'tap', 'mask'], [800, 'tap', 'mask'],  // Golden Freddy flick
   [950, 'hold', 'light', 200],                 // hall, two attempts
@@ -61,18 +66,18 @@ const CYCLE = [
 // same reason: after a forcedown the monitor otherwise stays down for the rest
 // of the cycle, and that cycle's winding is lost -- which is what turns the
 // rescued nights into Puppet deaths instead.
-const CYCLE_GUARDED = [
+const CYCLE_GUARDED = ([
   ...CYCLE,
   [3200, 'tap', 'mask'], [3550, 'tap', 'mask'],   // defuse; dropped if the cams are up
   [3750, 'up'],                                   // sync intent: no-op unless forced down
   [3950, 'tap', 'cam:11'], [4140, 'hold', 'wind', 860],
-].sort((a, b) => a[0] - b[0]);
+] satisfies Row[]).sort((a, b) => a[0] - b[0]);
 
 // Same cycle with the box wound first and the three stall cameras refreshed
 // last, so the newest flash is ~1 s old when the cams drop. That is what makes
 // a Balloon Boy mask hold survivable: the 400-frame stun has to cover the whole
 // masked window, and the human Phase B buys that margin the same way.
-const CYCLE_LATE_FLASH = [
+const CYCLE_LATE_FLASH: Row[] = [
   [0, 'down'],                                 // cams down (see `--sync`)
   [450, 'tap', 'mask'], [800, 'tap', 'mask'],  // Golden Freddy flick
   [950, 'hold', 'light', 200],
@@ -90,7 +95,7 @@ const CYCLE_LATE_FLASH = [
 // the mask goes on immediately and holds for more than the five consecutive
 // fully-masked scheduler ticks that send him back to CAM 10 (g294). The
 // response occupies two cycles and re-flashes the stall cameras on the way out.
-const RESPONSE = [
+const RESPONSE: Row[] = [
   // Golden Freddy first: flashing the hall with him in the office is lethal
   // and only a mask touch clears him, so flick the mask, then flash, then mask
   // for real. Foxy cover has to be bought before the mask goes on and repaid
@@ -123,7 +128,7 @@ const RESPONSE = [
 // than a second old at VENT_CHECK_AT; the 5.2 s hold is therefore still
 // covered by the sourced 400-frame stuns in the worst one-second tick phase.
 // Recover Foxy's hall reset before raising, then refresh the three targets.
-const RESPONSE_FAST = [
+const RESPONSE_FAST: Row[] = [
   [0, 'tap', 'mask'],
   [5200, 'tap', 'mask'],
   [5500, 'hold', 'light', 250],
@@ -140,7 +145,7 @@ const RESPONSE_FAST = [
 // the stall sweep ever lapsing. Each cams-down segment also latches Balloon
 // Boy wherever he is (g417 needs the monitor up), so the eviction holds him
 // while it runs, and every raise is preceded by a vent check.
-const EVICT = [
+const EVICT: Row[] = [
   [0, 'tap', 'mask'], [250, 'tap', 'mask'],    // clear Golden Freddy first
   [600, 'hold', 'light', 5000],                // segment 1
   [5700, 'check'],
@@ -178,7 +183,16 @@ const CAM5_PEEK_AT = 4800;
 // last moment a response can still beat the raise that would let him in.
 const VENT_CHECK_AT = 300;
 
-export function run(opts: any = {}) {
+/** A night of the device pilot: the schedule's variant, the Sim's options, and the measured actuator. */
+export interface StockPilotOptions {
+  cycles?: number; base?: number; periodic?: number;
+  vent?: boolean; sync?: boolean; evict?: boolean; guard?: boolean;
+  lateFlash?: boolean; fastResponse?: boolean; noFlick?: boolean;
+  sim?: ConstructorParameters<typeof Sim>[0];
+  deviceActuator?: boolean | ConstructorParameters<typeof DeviceActuator>[1];
+}
+
+export function run(opts: StockPilotOptions = {}) {
   const cycles = opts.cycles ?? 80;
   const sim = new Sim(Object.assign({ seed: 1 }, opts.sim));
   // The measured phone between the table and the game: per-press launch
@@ -190,11 +204,11 @@ export function run(opts: any = {}) {
         { seed: (opts.sim && opts.sim.seed) ?? 1, worst: opts.sim && opts.sim.worst },
         opts.deviceActuator === true ? {} : opts.deviceActuator))
     : null;
-  const press = (a) => actuator ? actuator.press(a) : sim.press(a);
-  const release = (a) => actuator ? actuator.release(a) : sim.release(a);
-  let queue = [];
+  const press = (a: string) => actuator ? actuator.press(a) : sim.press(a);
+  const release = (a: string) => actuator ? actuator.release(a) : sim.release(a);
+  let queue: Scheduled[] = [];
   const responseTable = opts.fastResponse ? RESPONSE_FAST : RESPONSE;
-  const at = (t0, table) => table.forEach(([o, kind, act, dur]) =>
+  const at = (t0: number, table: readonly Row[]) => table.forEach(([o, kind, act, dur]) =>
     queue.push([t0 + ms(o), kind, act, dur ? ms(dur) : 0]));
 
   at(0, OPENING);
@@ -204,7 +218,7 @@ export function run(opts: any = {}) {
   // varies this base to quantify that limited benefit; no phase eliminates
   // his arrival.
   const base = opts.base ?? 7000;
-  const cycleAt = (k) => ms(base + k * 5000);
+  const cycleAt = (k: number) => ms(base + k * 5000);
   let cycleTable = opts.lateFlash ? CYCLE_LATE_FLASH
     : opts.guard ? CYCLE_GUARDED : CYCLE;
   // The per-cycle Golden Freddy mask flick is blind insurance. g336 spawns
@@ -215,12 +229,12 @@ export function run(opts: any = {}) {
   if (opts.noFlick) cycleTable = cycleTable.filter(event => event[2] !== 'mask');
   for (let k = 0; k < cycles; k++) at(cycleAt(k), cycleTable);
 
-  const releases = [];
+  const releases: [number, string][] = [];
   let busyUntil = -1;
 
   // Replace everything scheduled between now and `until` with `table`. `until`
   // must land on a cycle boundary or the resumed cycle starts mid-table.
-  const takeOver = (f, until, table) => {
+  const takeOver = (f: number, until: number, table: readonly Row[]) => {
     queue = queue.filter(e => e[0] < f || e[0] >= until);
     at(f, table);
     queue.sort((a, b) => a[0] - b[0]);
@@ -230,7 +244,7 @@ export function run(opts: any = {}) {
   // The one thing the phone can see with the cams down: flash the left vent
   // light and classify a screenshot. g289 draws Balloon Boy at the opening,
   // g287 draws it empty.
-  const ventCheck = (f) => {
+  const ventCheck = (f: number) => {
     checks++;
     if (!sim.bb.inOpening) return false;
     responses++;
@@ -272,7 +286,7 @@ export function run(opts: any = {}) {
     }
 
     while (queue.length && queue[0][0] <= f) {
-      const [, kind, act, dur] = queue.shift();
+      const [, kind, act, dur] = queue.shift() as Scheduled; // the loop checked queue.length
       if (kind === 'check') { if (ventCheck(f)) break; }
       // `down`/`up` are monitor *intents*, not presses. Blind, they are the
       // old unconditional toggle. With --sync the pilot spends one screenshot
@@ -286,8 +300,8 @@ export function run(opts: any = {}) {
         syncs++;
         if (sim.camsUp !== want) press('monitor');
       }
-      else if (kind === 'tap') press(act);
-      else { press(act); releases.push([f + dur, act]); }
+      else if (kind === 'tap') press(act as string);   // a tap or hold row names its control
+      else { press(act as string); releases.push([f + dur, act as string]); }
     }
     for (let i = releases.length - 1; i >= 0; i--)
       if (releases[i][0] <= f) { release(releases[i][1]); releases.splice(i, 1); }
@@ -302,7 +316,7 @@ export function run(opts: any = {}) {
 // Counts night-6 deaths whose last office entry was the forcedown's fuse
 // expiring. This is the one claim `--guard` makes, and it is checked as a
 // ratio rather than a threshold so it stays meaningful if the schedule moves.
-function fuseMisses(n, guard) {
+function fuseMisses(n: number, guard: boolean) {
   let misses = 0;
   for (let i = 0; i < n; i++) {
     const r = run({ vent: true, sync: true, guard,
@@ -330,7 +344,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const nightArg = (process.argv.find(a => a.startsWith('--night=')) || '').split('=')[1];
   const night = nightArg ? +nightArg : 7;
   const lateArg = (process.argv.find(a => a.startsWith('--press-late-ms=')) || '').split('=')[1];
-  let deviceActuator = process.argv.includes('--device-actuator');
+  let deviceActuator: boolean | { lateMinMs: number, lateMaxMs: number } = process.argv.includes('--device-actuator');
   if (lateArg !== undefined) {
     if (!deviceActuator) throw new Error('--press-late-ms= does nothing without --device-actuator');
     const [lo, hi] = lateArg.split(',').map(Number);
@@ -340,7 +354,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   }
   const assert = process.argv.includes('--assert');
   const worst = process.argv.includes('--worst');
-  const fails = {};
+  const fails: Record<string, number> = {};
   let survived = 0, minBox = 1, minPower = Infinity, checks = 0, responses = 0, evictions = 0;
   // The Balloon Boy -> Foxy chain, which is what the vent check exists to
   // break: BB reaches the office, g96 and g301/303 take every light away, the
@@ -359,11 +373,12 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     minBox = Math.min(minBox, r.sim.box); minPower = Math.min(minPower, r.sim.power);
     if (r.sim.won) survived++;
     else {
-      const key = `${r.sim.death.reason}: ${r.sim.death.detail}`;
+      const death = r.sim.death as NonNullable<Sim['death']>; // a night that is not won ended in a death
+      const key = `${death.reason}: ${death.detail}`;
       fails[key] = (fails[key] || 0) + 1;
-      if (r.sim.death.reason === 'foxy') foxyDeaths++;
+      if (death.reason === 'foxy') foxyDeaths++;
       if (r.sim.bb.inside) bbInOffice++;
-      if (r.sim.bb.inside && r.sim.death.reason === 'foxy') chain++;
+      if (r.sim.bb.inside && death.reason === 'foxy') chain++;
     }
   }
   const mode = `${guard ? ' (forcedown guard)' : ''}${lateFlash ? ' (late flash)' : ''}${fastResponse ? ' (fast response)' : ''}${vent ? ' + vent check' : ' (blind, as shipped)'}${evict ? ' + eviction' : ''}${sync ? ' + monitor sync' : ''}${deviceActuator ? ' + device actuator' : ''}`;
@@ -400,7 +415,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     // collect a run because he did. Survival is deliberately NOT asserted --
     // the pilot still loses to the seven, and pretending otherwise is how the
     // last set of stale numbers got written.
-    const problems = [];
+    const problems: string[] = [];
     if (bbInOffice) problems.push(`${bbInOffice} nights let Balloon Boy into the office`);
     if (chain) problems.push(`${chain} Foxy deaths followed BB taking the lights`);
     if (problems.length) {

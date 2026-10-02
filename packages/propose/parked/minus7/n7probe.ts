@@ -32,26 +32,26 @@ import * as C from '@sixam/source/fnaf2';
 import { build, devicePlan, idleUntilMs } from '../../bin/plans/recipe.ts';
 import { modelGate } from '../../bin/plans/human-gate.ts';
 
-const arg = (k, d) => {
+const arg = (k: string, d: string) => {
   const m = process.argv.find(a => a.startsWith(`--${k}=`));
   return m ? m.split('=')[1] : d;
 };
 const RUNS = +arg('runs', '800');
 const NIGHTS = [5, 6, 7];
 
-function planText(night) {
+function planText(night: number) {
   const r = build({ night });
   const p = devicePlan(r, {});
   let t = `#night ${r.night}\n#idle-until ${idleUntilMs(r.night)}\n`;
   for (const [n, l] of Object.entries(p))
-    t += `#cycle ${n} ${r.cycles[n].lengthMs}\n${(l as any).join('\n')}\n`;
+    t += `#cycle ${n} ${r.cycles[n as keyof typeof r.cycles].lengthMs}\n${l.join('\n')}\n`; // devicePlan names its cycles after the recipe's
   return t;
 }
 
 // Run a scenario with a temporary Sim patch. `patch` returns a restore fn.
-function score(nights, patch) {
+function score(nights: readonly number[], patch: (() => () => void) | null) {
   const restore = patch ? patch() : () => {};
-  const out = {};
+  const out: Record<number, { pct: number, deaths: [string, number][] }> = {};
   try {
     for (const n of nights) {
       const g = modelGate(planText(n), { night: n, runs: RUNS, slackMs: 60, shape: 'correlated' });
@@ -60,16 +60,16 @@ function score(nights, patch) {
   } finally { restore(); }
   return out;
 }
-const row = (label, r) => console.log(
+const row = (label: string, r: ReturnType<typeof score>) => console.log(
   `  ${label.padEnd(34)} ` +
   NIGHTS.map(n => `n${n} ${String(r[n].pct).padStart(5)}`).join('  '));
 
 // --- patch factories -------------------------------------------------------
-const dormantDesc = Object.getOwnPropertyDescriptor(Sim.prototype, 'foxyDormant');
-const patchDormantUntil = sec => () => {
+const dormantDesc = Object.getOwnPropertyDescriptor(Sim.prototype, 'foxyDormant') as PropertyDescriptor; // a getter Sim defines
+const patchDormantUntil = (sec: number) => () => {
   Object.defineProperty(Sim.prototype, 'foxyDormant', {
     configurable: true,
-    get() {
+    get(this: Sim) {
       const n = this.opts.night;
       if (n === 1 || (n === 2 && this.frame < 2 * C.HOUR_FRAMES)) return true;
       return n === 7 && this.frame < sec * C.FPS;
@@ -81,7 +81,7 @@ const patchDormantUntil = sec => () => {
 const origTickFoxy = Sim.prototype.tickFoxy;
 // `phases` is a list of frame-mod-300 values at which to zero fx.D while Foxy
 // is in the hall on n7 -- a perfect reset at those cycle phases.
-const patchPerfectReset = phases => () => {
+const patchPerfectReset = (phases: readonly number[]) => () => {
   Sim.prototype.tickFoxy = function (f) {
     origTickFoxy.call(this, f);
     if (this.opts.night === 7 && this.foxy.loc === 'hall' &&
@@ -111,7 +111,7 @@ console.log('   -> n7 needs a reset ~every 2.5s; a third beyond that adds nothin
 console.log('\n3. the clear cycle\'s OWN two resets, made perfect (ph ~83, ~186):');
 const perfect2 = score(NIGHTS, patchPerfectReset([83, 186]));
 row('  perfect x2', perfect2);
-const off = perfect2[7].deaths.reduce((a, [k, v]) =>
+const off = perfect2[7].deaths.reduce((a: Record<string, number>, [k, v]) =>
   (a[k.split(':')[0]] = (a[k.split(':')[0]] || 0) + v, a), {});
 console.log(`   n7 remaining deaths: ${Object.entries(off).map(([k, v]) => `${k} ${v}`).join(', ')}`);
 console.log('   -> the schedule\'s two resets MISS under jitter; once perfect, every');

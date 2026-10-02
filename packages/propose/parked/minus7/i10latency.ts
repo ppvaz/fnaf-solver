@@ -41,7 +41,7 @@ import { makeSearchKnobs } from './hid-device-pilot.ts';
 import { build, devicePlan, replay, idleUntilMs } from '../../bin/plans/recipe.ts';
 import { jitterPlan } from '../../bin/plans/human-gate.ts';
 
-const arg = (k, d) => {
+const arg = (k: string, d: string) => {
   const m = process.argv.find(a => a.startsWith(`--${k}=`));
   return m ? m.split('=')[1] : d;
 };
@@ -49,11 +49,12 @@ const RUNS = +arg('runs', '800');
 const LATS = arg('latencies', '0,17,33,50,67,83,100').split(',').map(Number);
 const NIGHTS = [2, 5, 6, 7];
 
-function plan(night, knobs) {
+function plan(night: number, knobs: ReturnType<typeof makeSearchKnobs>) {
   const r = build({ night, knobs });
   return { p: devicePlan(r, {}), night: r.night, idle: idleUntilMs(r.night), aw: r.cycles.attack.lengthMs };
 }
-function score(night, opts, knobs) {
+function score(night: number, opts: { bangLatencyMs?: number, bbOnlyBang?: boolean },
+  knobs: ReturnType<typeof makeSearchKnobs>) {
   const { p, idle, aw } = plan(night, knobs);
   let won = 0;
   for (let seed = 1; seed <= RUNS; seed++) {
@@ -63,16 +64,16 @@ function score(night, opts, knobs) {
   }
   return +(100 * won / RUNS).toFixed(1);
 }
-const row = (label, fn) => console.log(`  ${label.padEnd(22)} ${NIGHTS.map(n => String(fn(n)).padStart(6)).join(' ')}`);
+const row = (label: string, fn: (night: number) => number) => console.log(`  ${label.padEnd(22)} ${NIGHTS.map(n => String(fn(n)).padStart(6)).join(' ')}`);
 
 console.log(`item 10 / bang-read latency budget  ${RUNS} seeds correlated   (n2 n5 n6 n7)\n`);
-const blind = {};
+const blind: Record<number, number> = {};
 const blindKnobs = makeSearchKnobs();
 row('blind (no item 10)', n => (blind[n] = score(n, {}, blindKnobs)));
 const gatedKnobs = makeSearchKnobs({ attackBangGateMs: 1 });
 let crossed = false;
 for (const lat of LATS) {
-  const s = {};
+  const s: Record<number, number> = {};
   NIGHTS.forEach(n => (s[n] = score(n, { bangLatencyMs: lat, bbOnlyBang: true }, gatedKnobs)));
   const netLoss = NIGHTS.slice(1, 3).every(n => s[n] <= blind[n]); // n5 & n6 both <= blind
   row(`gate1  latency ${lat}`, n => s[n]);

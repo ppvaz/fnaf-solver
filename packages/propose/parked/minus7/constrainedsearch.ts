@@ -17,24 +17,35 @@ import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { pool, closePool } from '../../bin/census/pool.ts';
 import { FLOORS } from './paramsearch.ts';
+import type { NightScore, Params } from './paramsearch.ts';
+import type { evaluateNight } from './constrained-worker.ts';
 
 const WORKER = new URL('./constrained-worker.ts', import.meta.url).href;
 const BASELINE = '803feb3';
 const DEFAULT_NIGHTS = [2, 3, 4, 5, 6, 7];
 
-const value = (name, fallback) => {
+const value = (name: string, fallback: string) => {
   const raw = process.argv.find(a => a.startsWith(`--${name}=`));
   return raw === undefined ? fallback : raw.slice(name.length + 3);
 };
-const integer = (name, fallback) => {
+const integer = (name: string, fallback: number) => {
   const n = Number(value(name, String(fallback)));
   if (!Number.isInteger(n) || n < 0) throw new Error(`--${name} must be a non-negative integer`);
   return n;
 };
-const csv = (name, fallback) => value(name, fallback.join(',')).split(',').map(Number);
+const csv = (name: string, fallback: readonly number[]) => value(name, fallback.join(',')).split(',').map(Number);
 
 const zeroParams = () => Object.fromEntries(Object.keys(FLOORS).map(k => [k, 0]));
-const product = (axes, i = 0, prefix = {}) => {
+/** One enumerated knob and the values it takes. */
+interface Axis { name: string, values: number[] }
+/** A candidate: its id and its assignment. */
+interface Candidate { id: string, params: Params }
+/** An evaluated candidate: its per-night scores, whether every night built, and the secondary shape's. */
+interface Scored extends Candidate {
+  nights: Record<number, NightScore>, ok: boolean, error?: string | null,
+  secondaryNights?: Record<number, NightScore>,
+}
+const product = (axes: readonly Axis[], i = 0, prefix: Params = {}): Params[] => {
   if (i === axes.length) return [prefix];
   const [{ name, values }] = axes.slice(i);
   return values.flatMap(v => product(axes, i + 1, { ...prefix, [name]: v }));
@@ -53,9 +64,9 @@ export function enumeratePackage4() {
     { name: 'preReadHallMs', values: [0, 400, 450, 500, 550, 600, 650, 700, 750, 800] },
     { name: 'bangAgeFrames', values: [0, 30, 37, 45, 60, 90, 120, 240, 500, 999] },
   ];
-  const seen = new Set();
+  const seen = new Set<string>();
   return product(axes).flatMap(part => {
-    const params = { ...base, ...part,
+    const params: Params = { ...base, ...part,
       // The in-read reset is coupled to the opening GF suppression.  No pulse
       // is the immutable baseline and does not pay that opening mechanism.
       openGfFlick: part.preReadHallMs ? 1 : 0,
@@ -69,15 +80,15 @@ export function enumeratePackage4() {
   });
 }
 
-function paramsLabel(params) {
+function paramsLabel(params: Params) {
   const d = Object.entries(params).filter(([, v]) => v !== 0);
   return d.length ? d.map(([k, v]) => `${k}=${v}`).join(', ') : 'baseline';
 }
-function survival(row) { return row.won / row.runs; }
-function minSurvival(result, nights) {
+function survival(row: NightScore) { return row.won / row.runs; }
+function minSurvival(result: { nights: Record<number, NightScore> }, nights: readonly number[]) {
   return Math.min(...nights.map(n => survival(result.nights[n])));
 }
-function objective(result, nights) {
+function objective(result: Scored, nights: readonly number[]) {
   return [minSurvival(result, nights),
     ...nights.map(n => survival(result.nights[n])),
     ...nights.map(n => result.nights[n].cvar)];
@@ -86,25 +97,25 @@ function objective(result, nights) {
 // improvement on Night 2.  Device costs are intentionally absent here because
 // package 4 is still below the primary survival bar; they must not buy a
 // survival trade until a candidate clears it.
-export function compareObjectives(a, b, nights) {
+export function compareObjectives(a: Scored, b: Scored, nights: readonly number[]) {
   const aa = objective(a, nights), bb = objective(b, nights);
   for (let i = 0; i < aa.length; i++) if (aa[i] !== bb[i]) return bb[i] - aa[i];
   return 0;
 }
-function dominates(a, b, nights) {
+function dominates(a: Scored, b: Scored, nights: readonly number[]) {
   const axes = nights.flatMap(n => [
     survival(a.nights[n]) - survival(b.nights[n]),
     a.nights[n].cvar - b.nights[n].cvar,
   ]);
   return axes.every(x => x >= 0) && axes.some(x => x > 0);
 }
-export function pareto(results, nights) {
+export function pareto(results: readonly Scored[], nights: readonly number[]) {
   const front = results.filter(x => !results.some(y => y !== x && dominates(y, x, nights)))
     .sort((a, b) => compareObjectives(a, b, nights));
   // The baseline is first in the input.  Retaining one representative for an
   // exactly equal result prevents a low-seed smoke run from printing hundreds
   // of indistinguishable rows while leaving the exhaustive gate set intact.
-  const seen = new Set();
+  const seen = new Set<string>();
   return front.filter(x => {
     const key = JSON.stringify(objective(x, nights));
     if (seen.has(key)) return false;
@@ -113,37 +124,39 @@ export function pareto(results, nights) {
   });
 }
 
-async function evaluate(candidates, { nights, runs, shape, seedStart }) {
+async function evaluate(candidates: readonly Candidate[], { nights, runs, shape, seedStart }: {
+  nights: readonly number[], runs: number, shape: string, seedStart: number,
+}) {
   const jobs = candidates.flatMap(c => nights.map(night => ({ candidateId: c.id,
     params: c.params, night, runs, shape, seedStart })));
   // A job is a candidate × night × seed batch.  One batch avoids IPC for each
   // seed but leaves work dynamically balanced across persistent workers.
-  const rows = await pool().map(WORKER, 'evaluateNight', jobs);
-  const byId = new Map(candidates.map(c => [c.id, { ...c, nights: {}, ok: true }]));
+  const rows = await pool().map(WORKER, 'evaluateNight', jobs) as ReturnType<typeof evaluateNight>[];
+  const byId = new Map(candidates.map((c): [string, Scored] => [c.id, { ...c, nights: {}, ok: true }]));
   for (const row of rows) {
-    const out: any = byId.get(row.candidateId);
+    const out = byId.get(row.candidateId) as Scored; // every job names a candidate of this batch
     out.ok &&= row.ok;
     if (!row.ok) out.error = row.error;
     else out.nights[row.night] = row.result;
   }
-  return [...byId.values()].filter((x: any) => x.ok);
+  return [...byId.values()].filter(x => x.ok);
 }
 
-function candidateFile(file) {
+function candidateFile(file: string): Candidate[] {
   const raw = JSON.parse(readFileSync(file, 'utf8'));
   if (!Array.isArray(raw)) throw new Error('--candidate-file must contain a JSON array');
   const base = zeroParams();
   return raw.map((item, i) => ({ id: item.id ?? `candidate-${i}`,
     params: { ...base, ...(item.params ?? item) } }));
 }
-function shard(candidates, spec) {
+function shard(candidates: Candidate[], spec: string | undefined) {
   if (!spec) return candidates;
   const [at, of] = spec.split('/').map(Number);
   if (!Number.isInteger(at) || !Number.isInteger(of) || at < 0 || at >= of)
     throw new Error('--shard must be INDEX/COUNT with 0 <= INDEX < COUNT');
   return candidates.filter((_, i) => i % of === at);
 }
-function printTable(title, results, nights, limit = 12) {
+function printTable(title: string, results: readonly Scored[], nights: readonly number[], limit = 12) {
   console.log(`\n${title} (${results.length})`);
   for (const r of results.slice(0, limit)) {
     const line = nights.map(n => `n${n} ${(100 * survival(r.nights[n])).toFixed(1)}`).join('  ');
@@ -156,7 +169,10 @@ function printTable(title, results, nights, limit = 12) {
 
 export async function runSearch({ mode = 'screen', nights = DEFAULT_NIGHTS,
   screenRuns = 300, gateRuns = 1200, shape = 'correlated', seedStart = 1,
-  secondaryShape = 'iid', candidateFile: file, shard: shardSpec }: any = {}) {
+  secondaryShape = 'iid', candidateFile: file, shard: shardSpec }: {
+  mode?: string, nights?: readonly number[], screenRuns?: number, gateRuns?: number, shape?: string,
+  seedStart?: number, secondaryShape?: string, candidateFile?: string, shard?: string,
+} = {}) {
   if (!['screen', 'exhaustive', 'validate'].includes(mode))
     throw new Error('--mode must be screen, exhaustive, or validate');
   let candidates = file ? candidateFile(file) : enumeratePackage4();
@@ -175,12 +191,12 @@ export async function runSearch({ mode = 'screen', nights = DEFAULT_NIGHTS,
   // the negative result, and a noisy 300-seed ranking cannot weaken it.
   const admitted = mode === 'screen' ? screenFrontier : screen;
   const gate = await evaluate(admitted, { nights, runs: gateRuns, shape, seedStart });
-  let secondary = [];
+  let secondary: Scored[] = [];
   if (secondaryShape && secondaryShape !== 'none' && secondaryShape !== shape) {
     secondary = await evaluate(admitted, { nights, runs: gateRuns,
       shape: secondaryShape, seedStart });
     const byId = new Map(secondary.map(r => [r.id, r.nights]));
-    for (const r of gate) (r as any).secondaryNights = byId.get((r as any).id);
+    for (const r of gate) r.secondaryNights = byId.get(r.id);
   }
   return { candidates, screen, screenFrontier, gate, secondary,
     frontier: pareto(gate, nights) };

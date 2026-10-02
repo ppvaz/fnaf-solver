@@ -11,7 +11,7 @@ import { build, devicePlan, idleUntilMs, replay } from '../../bin/plans/recipe.t
 import { modelGate } from '../../bin/plans/human-gate.ts';
 
 let fails = 0;
-const ok = (name, cond) => { console.log(`  ${cond ? 'ok  ' : 'FAIL'} ${name}`); if (!cond) fails++; };
+const ok = (name: string, cond: boolean) => { console.log(`  ${cond ? 'ok  ' : 'FAIL'} ${name}`); if (!cond) fails++; };
 
 // Search inputs are values owned by one run, never a mutable module singleton.
 const frozenKnobs = makeSearchKnobs({ attackBangGateMs: 1 });
@@ -67,7 +67,7 @@ catch { ok('unknown search knob is refused', true); }
       const sim = new Sim({ seed: 3, night: 6 });
       for (let i = 0; i < 400; i++) sim.tick();
       run(sim, ACTIONS[key](view(sim)));
-    } catch (e) { threw = `${key}: ${e.message}`; }
+    } catch (e) { threw = `${key}: ${(e as Error).message}`; }
   }
   ok(`all ${Object.keys(ACTIONS).length} semantic actions run` + (threw ? ` (${threw})` : ''), !threw);
 }
@@ -76,7 +76,7 @@ catch { ok('unknown search knob is refused', true); }
 //     within binomial noise, and its frontier is the single unmodified point.
 {
   const RUNS = 160;
-  const baseline = { 2: 66.3, 5: 62.0, 7: 26.0 };
+  const baseline: Record<number, number> = { 2: 66.3, 5: 62.0, 7: 26.0 };
   const lad = baselineLadder([2, 5, 7], RUNS, 'iid');
   let within = true;
   for (const n of [2, 5, 7]) {
@@ -117,15 +117,15 @@ catch { ok('unknown search knob is refused', true); }
 //     coverage collapses below the blind baseline. Default-off; this pins both
 //     halves so the search cannot rediscover the lat=0 number as a win.
 {
-  const pt = (night, knobs) => {
+  const pt = (night: number, knobs?: ReturnType<typeof makeSearchKnobs>) => {
     const r = build({ night, knobs });
     const p = devicePlan(r, {});
     let t = `#night ${r.night}\n#idle-until ${idleUntilMs(r.night)}\n`;
-    for (const [n, l] of Object.entries(p)) t += `#cycle ${n} ${r.cycles[n].lengthMs}\n${(l as any).join('\n')}\n`;
+    for (const [n, l] of Object.entries(p)) t += `#cycle ${n} ${r.cycles[n as keyof typeof r.cycles].lengthMs}\n${l.join('\n')}\n`; // devicePlan names its cycles after the recipe's
     return t;
   };
   const RUNS = 300;
-  const gate6 = (latMs, knobs?) => modelGate(pt(6, knobs), {
+  const gate6 = (latMs: number, knobs?: ReturnType<typeof makeSearchKnobs>) => modelGate(pt(6, knobs), {
     night: 6, runs: RUNS, slackMs: 60, shape: 'correlated',
     replayFn: (plan, o) => replay(plan, { ...o, bangLatencyMs: latMs }),
   }).survived;
@@ -152,18 +152,19 @@ catch { ok('unknown search knob is refused', true); }
     const r = build({ night: 7 });
     const p = devicePlan(r, {});
     let t = `#night 7\n#idle-until ${idleUntilMs(7)}\n`;
-    for (const [n, l] of Object.entries(p)) t += `#cycle ${n} ${r.cycles[n].lengthMs}\n${(l as any).join('\n')}\n`;
+    for (const [n, l] of Object.entries(p)) t += `#cycle ${n} ${r.cycles[n as keyof typeof r.cycles].lengthMs}\n${l.join('\n')}\n`; // devicePlan names its cycles after the recipe's
     return t;
   };
   const RUNS = 250;
-  const g = (opts?) => modelGate(pt7(), { night: 7, runs: RUNS, slackMs: 60, shape: 'correlated', ...opts }).survived;
+  const g = (opts?: Parameters<typeof modelGate>[1]) => modelGate(pt7(), { night: 7, runs: RUNS, slackMs: 60, shape: 'correlated', ...opts }).survived;
   const base = g();
 
-  const dormantDesc = Object.getOwnPropertyDescriptor(Sim.prototype, 'foxyDormant');
+  const dormantDesc = Object.getOwnPropertyDescriptor(Sim.prototype, 'foxyDormant') as
+    PropertyDescriptor & { get: (this: Sim) => boolean }; // foxyDormant is a getter on Sim.prototype
   let opener;
   Object.defineProperty(Sim.prototype, 'foxyDormant', {
     configurable: true,
-    get() { return this.opts.night === 7 ? this.frame < 20 * C.FPS : dormantDesc.get.call(this); },
+    get(this: Sim) { return this.opts.night === 7 ? this.frame < 20 * C.FPS : dormantDesc.get.call(this); },
   });
   try { opener = g(); } finally { Object.defineProperty(Sim.prototype, 'foxyDormant', dormantDesc); }
 

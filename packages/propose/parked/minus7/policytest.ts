@@ -16,14 +16,16 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import * as C from '@sixam/source/fnaf2';
 import { sweep, runPolicy } from './policy.ts';
+import type { Policy, SlackModel } from './policy.ts';
 import { POLICIES } from './policybaselines.ts';
 import { run as bbRun, DEFAULT_CYCLE, LEGACY_ANIMATION_INVALID_CYCLE } from './reactive-pilot.ts';
+import type { PlanRow } from './reactive-pilot.ts';
 import { genCycle, KNOBS0, MIN } from './cyclesearch.ts';
 import { formatRate } from '../../../review/src/stat.ts';
 
 const RUNS = +(process.env.POLICY_RUNS || 100);
 const SLACKS = [0, 20, 40, 60, 100];
-const MODELS = ['iid', 'correlated', 'common'];
+const MODELS: SlackModel[] = ['iid', 'correlated', 'common'];
 
 // The families reported side by side. `privilege` is not decoration: a truth
 // policy is an upper bound and must never be compared to a belief policy as
@@ -46,7 +48,7 @@ const CONTROLS = [
   ['shooter25-hoisted', 'C5 Shooter25 with the danger test hoisted out of Checking'],
 ];
 
-const pct = (r) => `${String(r.survived).padStart(3)}/${r.runs} ` +
+const pct = (r: { survived: number, runs: number }) => `${String(r.survived).padStart(3)}/${r.runs} ` +
   `(${formatRate(r.survived, r.runs, { label: 'survival' })})`;
 
 function nightsTable() {
@@ -105,26 +107,26 @@ function deathTable(night = 7) {
 }
 
 // ------------------------------------------------------------------- checks
-function assertSuite(recordPath = null) {
-  const problems = [];
-  const check = (name, cond, detail = '') => {
+function assertSuite(recordPath: string | null = null) {
+  const problems: string[] = [];
+  const check = (name: string, cond: boolean, detail = '') => {
     if (!cond) problems.push(`${name}${detail ? ` -- ${detail}` : ''}`);
   };
 
   // Source-driven input floor, not a seed fit: mask-off must wait for the
   // put-on animation. The old nine-frame hold remains an explicit negative.
   const maskRows = DEFAULT_CYCLE.filter(([, , action]) => action === 'mask');
-  const hallRow = DEFAULT_CYCLE.find(([, kind, action]) => kind === 'down' && action === 'light');
+  const hallRow = DEFAULT_CYCLE.find(([, kind, action]) => kind === 'down' && action === 'light') as PlanRow; // the cycle flashes the hall
   check('mask-off precedes the sourced put-on completion', maskRows[1][0] - maskRows[0][0] === C.MASK_ANIM_ON);
   check('hall flash lost its sourced take-off floor and one-frame margin', hallRow[0] - maskRows[1][0] === C.MASK_ANIM_OFF + 1);
   check('cycle search can propose animation-invalid mask holds', MIN.maskHold === C.MASK_ANIM_ON && KNOBS0.maskHold === C.MASK_ANIM_ON);
   check('cycle search default differs from the baseline', JSON.stringify(genCycle(KNOBS0)) === JSON.stringify(DEFAULT_CYCLE));
-  const inputControl = cycle => {
+  const inputControl = (cycle: readonly PlanRow[]) => {
     const s = new C.Sim({ night: 1, seed: 1, gfEnabled: false, bbEnabled: false,
       foxyEnabled: false, stalledEnabled: false, boxEnabled: false, powerEnabled: false });
     s.monitor = 'up'; s.viewing = 11;
     const maskStates = []; let hallLit = false, at = 0;
-    const end = cycle.find(([ , kind, action]) => kind === 'up' && action === 'light')[0];
+    const end = (cycle.find(([ , kind, action]) => kind === 'up' && action === 'light') as PlanRow)[0]; // both tables release a light
     while (s.frame <= end) {
       while (at < cycle.length && cycle[at][0] <= s.frame) {
         const [, kind, action] = cycle[at++];
@@ -144,7 +146,7 @@ function assertSuite(recordPath = null) {
     JSON.stringify(afterInput) === JSON.stringify({ maskStates: [true, false], hallLit: true }));
   const timingRows = Array.from({ length: 25 }, (_, i) => {
     const seed = (i * 2246822519) >>> 0;
-    const result = cycle => {
+    const result = (cycle: readonly PlanRow[]) => {
       const { sim } = bbRun({ seed, night: 1, cycle });
       return { won: sim.won, frame: sim.frame, death: sim.death?.reason ?? null };
     };
@@ -176,7 +178,7 @@ function assertSuite(recordPath = null) {
   //    pair at or past SEAM_SAFE_MS (test-actuator.ts makes the same claim
   //    for pilottest).
   {
-    const key = (r) => JSON.stringify([r.won, r.frame, r.reason]);
+    const key = (r: ReturnType<typeof runPolicy>) => JSON.stringify([r.won, r.frame, r.reason]);
     for (const name of ['minus7', 'shooter25', 'couraeel']) {
       const plain = key(runPolicy({ policy: POLICIES[name](7, 0), night: 7, seed: 7 }));
       for (const slackModel of MODELS)
@@ -204,7 +206,7 @@ function assertSuite(recordPath = null) {
   //    stage are the two that would silently make it an oracle.
   {
     let leaked = false;
-    const spy = { name: 'spy', version: 0, observation: 'belief',
+    const spy: Policy = { name: 'spy', version: 0, observation: 'belief',
       step(obs) { if (obs.foxyD !== -1 || obs.bbStage !== -1) leaked = true; } };
     runPolicy({ policy: spy, night: 7, seed: 1 });
     check('belief mode leaked a truth-only field', !leaked);
@@ -230,7 +232,7 @@ function assertSuite(recordPath = null) {
   //    first frame (minus7+gf did).
   for (const [key, make] of Object.entries(POLICIES)) {
     let error = null;
-    try { runPolicy({ policy: make(1, 0), night: 1, seed: 1 }); } catch (e) { error = e.message; }
+    try { runPolicy({ policy: make(1, 0), night: 1, seed: 1 }); } catch (e) { error = (e as Error).message; }
     check(`${key} cannot run a night`, error === null, error ?? '');
   }
 

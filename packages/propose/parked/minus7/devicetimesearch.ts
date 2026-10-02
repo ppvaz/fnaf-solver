@@ -39,7 +39,7 @@ import { build, devicePlan, replay } from '../../bin/plans/recipe.ts';
 import { jitterPlan } from '../../bin/plans/human-gate.ts';
 import { makeSearchKnobs } from './hid-device-pilot.ts';
 
-const arg = (k, d) => {
+const arg = (k: string, d: string) => {
   const m = process.argv.find(a => a.startsWith(`--${k}=`));
   return m ? m.split('=')[1] : d;
 };
@@ -48,12 +48,16 @@ const NIGHTS = arg('nights', '2,3,4,5,6,7').split(',').map(Number);
 
 // One config: the device-timing numbers, plus whether to add the (inert)
 // recovery Foxy-reset beat.
-function score(cfg, shape) {
+/** The device-timing numbers one row prices; each defaults to the shipped value. */
+interface DeviceConfig { readLatencyMs?: number, sweepSlotMs?: number, hallPulseMs?: number, recoveryReset?: boolean }
+/** Survival per night, or the error that stopped a build or replay. */
+interface NightCells { [night: number]: number, err?: string }
+function score(cfg: DeviceConfig, shape: string): NightCells {
   const { readLatencyMs = 550, sweepSlotMs = 120, hallPulseMs = 130,
     recoveryReset = false } = cfg;
   const spacing = Math.max(sweepSlotMs, sweepSlotMs + 13); // emitter only widens
   const knobs = makeSearchKnobs({ attackRstDeltaMs: recoveryReset ? 7400 : 0 });
-  const out = {};
+  const out: NightCells = {};
   try {
     for (const night of NIGHTS) {
       const recipe = build({ night, readLatencyMs, sweepSlotMs, hallPulseMs, knobs });
@@ -68,15 +72,15 @@ function score(cfg, shape) {
       }
       out[night] = +(100 * won / RUNS).toFixed(1);
     }
-  } catch (e) { return { err: e.message }; }
+  } catch (e) { return { err: (e as Error).message }; }
   return out;
 }
 
-function row(label, cfg) {
-  const c: any = score(cfg, 'correlated');
+function row(label: string, cfg: DeviceConfig) {
+  const c = score(cfg, 'correlated');
   const i = score(cfg, 'iid');
   if (c.err) { console.log(`  ${label.padEnd(42)} ERR ${c.err.slice(0, 60)}`); return; }
-  const fmt = r => NIGHTS.map(n => `n${n} ${String(r[n]).padStart(5)}`).join('  ');
+  const fmt = (r: NightCells) => NIGHTS.map(n => `n${n} ${String(r[n]).padStart(5)}`).join('  ');
   const minC = Math.min(...NIGHTS.map(n => c[n]));
   console.log(`  ${label.padEnd(42)} corr[min ${String(minC).padStart(5)}] ${fmt(c)}   iid ${fmt(i)}`);
 }

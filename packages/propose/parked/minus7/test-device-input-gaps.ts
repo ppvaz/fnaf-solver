@@ -67,7 +67,7 @@ const CONTACT_MS = MIN_CONTACT_MS;
 // Walk one cycle and report where the monitor ends up after each instruction.
 // A steady cycle is entered with the cams UP -- its anchor is the press that
 // lowers them -- while the opening starts in the office.
-function violations(name, lines) {
+function violations(name: string, lines: readonly string[]) {
   const ins = lines.map(line => {
     const [at, kind, ...rest] = line.split(' ');
     return { at: +at, kind, rest };
@@ -113,7 +113,7 @@ function violations(name, lines) {
   return found;
 }
 
-export function check(plan) {
+export function check(plan: Readonly<Record<string, readonly string[]>>) {
   return Object.entries(plan).flatMap(([name, lines]) => violations(name, lines));
 }
 

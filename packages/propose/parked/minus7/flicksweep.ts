@@ -6,9 +6,10 @@
 //   node packages/propose/parked/minus7/flicksweep.ts [nights]
 import { run } from './stock-device-pilot.ts';
 import * as C from '@sixam/source/fnaf2';
+import type { StockPilotOptions } from './stock-device-pilot.ts';
 
 const N = +(process.argv[2] || 200);
-const variants = [
+const variants: [string, StockPilotOptions][] = [
   ['flick, no BB response', {}],
   ['no flick, no BB response', { noFlick: true }],
   ['flick + BB response/4', { periodic: 4 }],
@@ -26,13 +27,14 @@ for (const [name, options] of variants) {
     const sim = result.sim;
     depth.push(sim.frame / C.FPS);
     if (sim.won) continue;
-    if (sim.death.reason.startsWith('golden')) golden++;
-    if (sim.death.reason === 'foxy') foxy++;
+    const death = sim.death as NonNullable<C.Sim['death']>; // a night that is not won ended in a death
+    if (death.reason.startsWith('golden')) golden++;
+    if (death.reason === 'foxy') foxy++;
     if (sim.bb.inside) bbIn++;
   }
   depth.sort((left, right) => left - right);
   console.log(
-    `${(name as any).padEnd(26)} ${String(golden).padStart(6)}   ${String(foxy).padStart(4)}   ` +
+    `${name.padEnd(26)} ${String(golden).padStart(6)}   ${String(foxy).padStart(4)}   ` +
     `${String(bbIn).padStart(12)}   ${depth[N >> 1].toFixed(0).padStart(5)}s   ` +
     `${depth[N - 1].toFixed(0).padStart(4)}s`
   );

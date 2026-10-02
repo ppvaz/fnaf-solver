@@ -58,7 +58,16 @@
 import { CYCLE as M7, runCycle } from './cycle.ts';
 import { CYCLE as MT, runMinusToys7 } from '../../bin/minus-toys/cycle.ts';
 
-const FAMILIES = {
+/** A frame-exact family: its published cycle, its runner, and the rows that are gaps rather than offsets. */
+interface Family {
+  cycle: Readonly<Record<string, number>>;
+  // A method: its parameters compare bivariantly, so each runner's literal cycle type admits a shifted one.
+  run(seed: number, opts?: { night?: number, cycle?: Readonly<Record<string, number>>, slackMs?: number,
+    shift?: (row: number, win: number) => number }): { won: boolean, death: { reason: string } | null };
+  relative: string[];
+}
+
+const FAMILIES: Readonly<Record<string, Family>> = {
   minus7: {
     cycle: M7, run: runCycle,
     // `sweepGap`/`windGap` are gaps measured from `raise`, so they ride along
@@ -72,7 +81,7 @@ const FAMILIES = {
   },
 };
 
-const option = (name, fallback) => {
+const option = (name: string, fallback: string) => {
   const found = process.argv.find(a => a.startsWith(`--${name}=`));
   return found ? found.slice(name.length + 3) : fallback;
 };
@@ -106,23 +115,23 @@ const MEAN_MS = Number(option('mean', '0'));
 // game's own LCG is deliberately NOT used: it carries 16 bits of state and a
 // period of 16384, which is faithful for reproducing the source's rolls and
 // wrong for generating statistics about them.
-const splitmix32 = (x) => {
+const splitmix32 = (x: number) => {
   x = (x + 0x9e3779b9) >>> 0;
   let z = x;
   z = Math.imul(z ^ (z >>> 16), 0x21f0aaad) >>> 0;
   z = Math.imul(z ^ (z >>> 15), 0x735a2d97) >>> 0;
   return ((z ^ (z >>> 15)) >>> 0) / 4294967296;
 };
-const gaussian = (seed, row, win) => {
+const gaussian = (seed: number, row: number, win: number) => {
   // Box-Muller from two independently hashed uniforms; u1 is nudged off zero.
   const u1 = Math.max(splitmix32(seed ^ Math.imul(row, 0x27d4eb2d) ^ Math.imul(win, 0x165667b1)), 1e-9);
   const u2 = splitmix32(seed ^ Math.imul(row, 0x85ebca6b) ^ Math.imul(win, 0xc2b2ae35) ^ 0x5bf03635);
   return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
 };
 const FPS = 60;
-const latencyShift = (seed, sigmaMs) => {
+const latencyShift = (seed: number, sigmaMs: number) => {
   const shifts = { n: 0, slipped: 0 };
-  const fn = (row, win) => {
+  const fn = (row: number, win: number) => {
     const ms = MEAN_MS + sigmaMs * gaussian(seed, row, win);
     const frames = Math.round((ms * FPS) / 1000);
     shifts.n++;
@@ -135,17 +144,20 @@ const latencyShift = (seed, sigmaMs) => {
 
 // The operator's own clock is what is offset, so every absolute row moves with
 // it -- including any guard the routine applies to its own decisions.
-const shifted = (k) => Object.fromEntries(Object.entries(family.cycle).map(
+const shifted = (k: number) => Object.fromEntries(Object.entries(family.cycle).map(
   ([key, value]) => [key, family.relative.includes(key) ? value : value + k]));
 
-const cell = (k, slackMs) => {
+const cell = (k: number, slackMs: number) => {
   const cycle = shifted(k);
   const deaths: Record<string, number> = {};
   let won = 0;
   for (let seed = 1; seed <= SEEDS; seed++) {
     const r = family.run(seed, { night: NIGHT, cycle, slackMs });
     if (r.won) won++;
-    else deaths[r.death.reason] = (deaths[r.death.reason] ?? 0) + 1;
+    else {
+      const { reason } = r.death as NonNullable<typeof r.death>; // a night that is not won ended in a death
+      deaths[reason] = (deaths[reason] ?? 0) + 1;
+    }
   }
   const top = Object.entries(deaths).sort((a, b) => b[1] - a[1])[0];
   return { won, top: top ? `${top[0]}:${top[1]}` : '-' };
@@ -164,7 +176,10 @@ if (SIGMAS.length) {
       const shift = latencyShift(seed, sigmaMs);
       const r = family.run(seed, { night: NIGHT, cycle: family.cycle, shift });
       if (r.won) won++;
-      else deaths[r.death.reason] = (deaths[r.death.reason] ?? 0) + 1;
+      else {
+        const { reason } = r.death as NonNullable<typeof r.death>; // a night that is not won ended in a death
+        deaths[reason] = (deaths[reason] ?? 0) + 1;
+      }
       rows += shift.stats.n; slipped += shift.stats.slipped;
     }
     const top = Object.entries(deaths).sort((a, b) => b[1] - a[1])[0];

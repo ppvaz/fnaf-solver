@@ -50,7 +50,7 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { canonicalJson } from '@sixam/kernel/contracts';
 
-const arg = (k, d) => {
+const arg = (k: string, d: string) => {
   const m = process.argv.find(a => a.startsWith(`--${k}=`));
   return m ? m.split('=')[1] : d;
 };
@@ -73,41 +73,47 @@ function configsArg(fallback = '50:66:33:33,50:60:33:33') {
   });
 }
 
+/** A sweep geometry: model slot, emitted spacing and sweep contact (0/0 = devicePlan's), and tap contact. */
+interface Geometry { slot: number, dev: number, con: number, tap?: number }
+/** A night -> survival percentage, or the error that stopped the build or replay. */
+type Ladder = Record<number, number | string>;
+
 // One geometry -> the emitted plan text for one night.
-function planText(night, { slot, dev, con, tap = 33 }) {
+function planText(night: number, { slot, dev, con, tap = 33 }: Geometry) {
   const recipe = build({ night, sweepSlotMs: slot });
   const plan = devicePlan(recipe, (dev || con) ? { deviceSpacingMs: dev, sweepContactMs: con,
     tapContactMs: tap } : {});
   let text = `#night ${recipe.night}\n#idle-until ${idleUntilMs(recipe.night)}\n`;
   for (const [name, lines] of Object.entries(plan))
-    text += `#cycle ${name} ${recipe.cycles[name].lengthMs}\n${(lines as any).join('\n')}\n`;
+    text += `#cycle ${name} ${recipe.cycles[name as keyof typeof recipe.cycles].lengthMs}\n${lines.join('\n')}\n`; // devicePlan names its cycles after the recipe's
   return text;
 }
 
 // The default con for a slot: the LIGHT_AFTER regime wants a sub-50 ms select,
 // and the table's rows sit near slot*0.55 (50->30, 40->25, 45->28).
-const conFor = slot => Math.min(45, Math.max(20, Math.round(slot * 0.55)));
+const conFor = (slot: number) => Math.min(45, Math.max(20, Math.round(slot * 0.55)));
 
-function ladder(geom, runs, shape, replayFn?) {
-  const cells = {};
+function ladder(geom: Geometry, runs: number, shape: string,
+  replayFn?: NonNullable<Parameters<typeof modelGate>[1]>['replayFn']) {
+  const cells: Ladder = {};
   for (const n of NIGHTS) {
     try {
       const g = modelGate(planText(n, geom), { night: n, runs, slackMs: SLACK, shape, replayFn });
       cells[n] = +(100 * g.survived / runs).toFixed(1);
-    } catch (e) { cells[n] = `ERR(${e.message.slice(0, 32)})`; }
+    } catch (e) { cells[n] = `ERR(${(e as Error).message.slice(0, 32)})`; }
   }
   return cells;
 }
-const minOf = (l, ns) => {
+const minOf = (l: Ladder, ns: readonly number[]) => {
   const v = ns.map(n => l[n]).filter(x => typeof x === 'number');
   return v.length === ns.length ? Math.min(...v) : NaN;
 };
-const fmt = l => NIGHTS.map(n => `${String(l[n]).padStart(5)}`).join(' ');
+const fmt = (l: Ladder) => NIGHTS.map(n => `${String(l[n]).padStart(5)}`).join(' ');
 
 // A rebuild+replay at the 480 ms lit-frame latch: the plan is BUILT at 480 too,
 // or the schedule and the replay diverge (devicetimesearch.ts).
-function ladder480(geom, runs, shape) {
-  const cells = {};
+function ladder480(geom: Geometry, runs: number, shape: string) {
+  const cells: Ladder = {};
   for (const n of NIGHTS) {
     try {
       const recipe = build({ night: n, sweepSlotMs: geom.slot, readLatencyMs: 480 });
@@ -121,7 +127,7 @@ function ladder480(geom, runs, shape) {
         if (sim.won) won++;
       }
       cells[n] = +(100 * won / runs).toFixed(1);
-    } catch (e) { cells[n] = `ERR(${e.message.slice(0, 32)})`; }
+    } catch (e) { cells[n] = `ERR(${(e as Error).message.slice(0, 32)})`; }
   }
   return cells;
 }
@@ -166,7 +172,7 @@ function grid() {
     const byNight = [];
     for (const shape of ['correlated', 'iid']) for (const night of NIGHTS) {
       const result = modelGate(planText(night, best.geom), { night, runs: admitRuns, slackMs: SLACK, shape });
-      byNight.push({ shape, night, ...result, outcomes: undefined });
+      byNight.push({ shape, ...result, outcomes: undefined });
     }
     const status = byNight.every(result => result.ok) ? 'PASS'
       : byNight.some(result => result.verdict === 'INCONCLUSIVE') ? 'INCONCLUSIVE' : 'FAIL';
@@ -196,7 +202,7 @@ function grid() {
 // and report the WORST corner alongside the centre -- if the worst corner
 // collapses, the centre number is a spike, not a basin (plan 16 pkg 3/4: a win
 // that games one latch model is not a strategy).
-function neighbourhood(geom, runs, shape) {
+function neighbourhood(geom: Geometry, runs: number, shape: string) {
   const pts = [];
   for (const ds of [-2, 0, 2])
     for (const dd of [-3, 0, 3]) {
@@ -240,13 +246,13 @@ function admit() {
 // call modelGate or jitterPlan: a winner here means the emitted plan itself
 // survived every requested simulator seed. Pinned-worst is scored as a second
 // cohort so an RNG-mode artifact cannot be hidden by the ordinary sequence.
-function exactCohort(geom, runs, worst) {
+function exactCohort(geom: Geometry, runs: number, worst: boolean) {
   const night = 6;
   const recipe = build({ night, sweepSlotMs: geom.slot });
   const plan = devicePlan(recipe, { deviceSpacingMs: geom.dev, sweepContactMs: geom.con,
     tapContactMs: geom.tap });
   let wins = 0;
-  const deaths = {};
+  const deaths: Record<string, number> = {};
   for (let seed = 1; seed <= runs; seed++) {
     const { sim } = replay(plan, { night, seed, worst,
       attackWindowMs: recipe.cycles.attack.lengthMs });

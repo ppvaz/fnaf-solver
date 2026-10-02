@@ -17,21 +17,22 @@
 import { execFileSync } from 'node:child_process';
 import { replay } from '../../bin/plans/recipe.ts';
 import { jitterPlan, parsePlanText } from '../../bin/plans/human-gate.ts';
+import type { PlanRows } from '../../bin/plans/human-gate.ts';
 import { Rng } from '@sixam/source/fnaf2';
 
-const arg = (k, d) => {
+const arg = (k: string, d: string) => {
   const m = process.argv.find(a => a.startsWith(`--${k}=`));
   return m ? m.split('=')[1] : d;
 };
-const FLAG = k => process.argv.includes(`--${k}`);
-const f2ms = fr => Math.round(fr * 1000 / 60);
+const FLAG = (k: string) => process.argv.includes(`--${k}`);
+const f2ms = (fr: number) => Math.round(fr * 1000 / 60);
 
 // Shift one named row (by its index within its cycle) by `deltaMs`, then apply
 // the normal iid jitter on top. Row order is (cycle, index).
-function shiftPlan(plan, shifts) {
-  const out = {};
+function shiftPlan(plan: PlanRows, shifts: Readonly<Record<string, number>>) {
+  const out: PlanRows = {};
   for (const [name, lines] of Object.entries(plan)) {
-    out[name] = (lines as any).map((line, i) => {
+    out[name] = lines.map((line, i) => {
       const sp = line.indexOf(' ');
       const d = shifts[`${name}:${i}`] || 0;
       return `${Math.max(0, +line.slice(0, sp) + d)}${line.slice(sp)}`;
@@ -40,7 +41,8 @@ function shiftPlan(plan, shifts) {
   return out;
 }
 
-function survival(plan, night, idleUntilMs, seeds, slackMs = 60, shifts = {}) {
+function survival(plan: PlanRows, night: number, idleUntilMs: number, seeds: number, slackMs = 60,
+  shifts: Readonly<Record<string, number>> = {}) {
   const shifted = shiftPlan(plan, shifts);
   let won = 0;
   for (let seed = 1; seed <= seeds; seed++) {
@@ -50,10 +52,10 @@ function survival(plan, night, idleUntilMs, seeds, slackMs = 60, shifts = {}) {
   return won;
 }
 
-function rowList(plan) {
-  const rows = [];
+function rowList(plan: PlanRows) {
+  const rows: { id: string, name: string, i: number, line: string }[] = [];
   for (const [name, lines] of Object.entries(plan))
-    (lines as any).forEach((line, i) => rows.push({ id: `${name}:${i}`, name, i, line }));
+    lines.forEach((line, i) => rows.push({ id: `${name}:${i}`, name, i, line }));
   return rows;
 }
 
@@ -76,7 +78,7 @@ function main() {
   const deltas = [];
   for (let d = -rangeFr; d <= rangeFr; d++) if (d) deltas.push(d);
 
-  const shifts = {};
+  const shifts: Record<string, number> = {};
   let cur = base;
   const rounds = FLAG('descend') ? 8 : 1;
   for (let round = 0; round < rounds; round++) {
@@ -104,7 +106,7 @@ function main() {
   if (Object.keys(shifts).length) {
     console.log('\nfinal shift vector (row -> frames):');
     for (const [id, d] of Object.entries(shifts)) {
-      const row = rows.find(r => r.id === id);
+      const row = rows.find(r => r.id === id) as (typeof rows)[number]; // every shifted id is a plan row's
       console.log(`  ${id.padEnd(14)} ${d > 0 ? '+' : ''}${d}fr  ${row.line}`);
     }
     console.log(`\n  iid +/-60 ms  ${base}/${seeds} -> ${cur}/${seeds}  (+${cur - base}, ${((cur - base) * 100 / seeds).toFixed(1)} pts)`);

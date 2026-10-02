@@ -16,7 +16,7 @@ import { Sim } from '@sixam/source/fnaf2';
 // ---------------------------------------------------------------- cloning
 // Verified: a JSON round-trip plus a prototype/RNG fix-up reproduces the
 // engine bit-for-bit across a further 600 ticks (see the tool's self-test).
-export function cloneSim(sim) {
+export function cloneSim(sim: Sim): Sim {
   const c = Object.assign(Object.create(Sim.prototype), JSON.parse(JSON.stringify(sim)));
   c.rng = Object.assign(Object.create(Object.getPrototypeOf(sim.rng)),
     { seed: sim.rng.seed, state: sim.rng.state, worst: sim.rng.worst });
@@ -26,8 +26,8 @@ export function cloneSim(sim) {
 // ---------------------------------------------------------------- state view
 // Only variables that can affect a future transition. Office pan, render-only
 // flicker, and object handles are deliberately absent.
-export function view(sim) {
-  const u = id => sim.units.find(x => x.id === id);
+export function view(sim: Sim) {
+  const u = (id: string) => sim.units.find(x => x.id === id);
   return {
     frame: sim.frame,
     hour: Math.floor(sim.frame / C.HOUR_FRAMES),
@@ -69,10 +69,16 @@ export function view(sim) {
 // refused while the monitor is up, a raise with Golden Freddy present kills)
 // are left to the engine -- an illegal action simply produces a bad outcome
 // the search prunes, exactly as it would on the phone.
+/** The sourced state a policy reads. */
+export type View = ReturnType<typeof view>;
+/** One step of an action: its frame offset from now, press or release, and the control. */
+type ActionStep = [number, 'press' | 'release', string];
+/** A compiled action: the frames it occupies and its steps. */
+export interface ActionPlan { frames: number; steps: ActionStep[] }
 const F = C.FPS;
-const camAct = n => `cam:${n}`;
+const camAct = (n: number) => `cam:${n}`;
 
-export const ACTIONS = {
+export const ACTIONS: Readonly<Record<string, (s: View) => ActionPlan>> = {
   // Do nothing for one decision window.
   WAIT: () => ({ frames: 15, steps: [] }),
 
@@ -134,12 +140,12 @@ export const ACTIONS = {
 };
 
 // Apply a compiled action against the engine, ticking frame by frame.
-export function run(sim, plan) {
+export function run(sim: Sim, plan: ActionPlan) {
   const { frames, steps } = plan;
-  const byFrame = new Map();
+  const byFrame = new Map<number, [ActionStep[1], string][]>();
   for (const [at, kind, act] of steps) {
     if (!byFrame.has(at)) byFrame.set(at, []);
-    byFrame.get(at).push([kind, act]);
+    (byFrame.get(at) as [ActionStep[1], string][]).push([kind, act]); // set just above when missing
   }
   for (let i = 0; i < frames && sim.alive && !sim.won; i++) {
     for (const [kind, act] of byFrame.get(i) || [])
