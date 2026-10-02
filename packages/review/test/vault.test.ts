@@ -5,6 +5,7 @@
  * so no assertion touches the real captures/ or artifacts/. No device.
  */
 import { execFileSync } from 'node:child_process';
+import type { SpawnSyncReturns } from 'node:child_process';
 import {
   chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync,
   statSync, writeFileSync,
@@ -13,7 +14,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const check = (condition, message) => { if (!condition) throw new Error(message); };
+const check = (condition: unknown, message: string) => { if (!condition) throw new Error(message); };
 const HERE = fileURLToPath(new URL('.', import.meta.url));
 const TOOL = join(HERE, '../src/vault.ts');
 
@@ -27,7 +28,7 @@ const vault = join(scratch, 'vault');
 // reinitialised the real repository as bare (core.bare=true), and its
 // `commit -m root` landed on the pushing worktree's branch.
 const gitEnv = Object.fromEntries(Object.entries(process.env).filter(([name]) => !name.startsWith('GIT_')));
-const run = args => execFileSync(process.execPath, [TOOL, ...args], {
+const run = (args: string[]) => execFileSync(process.execPath, [TOOL, ...args], {
   cwd: repo,
   encoding: 'utf8',
   // Expected refusals are assertions here, not output; keep them off the parent's stderr.
@@ -35,22 +36,23 @@ const run = args => execFileSync(process.execPath, [TOOL, ...args], {
   env: { ...gitEnv, FNAF2_REPO: repo, FNAF2_VAULT_DIR: vault },
 });
 
-function refused(args) {
+function refused(args: string[]) {
   try {
     run(args);
-  } catch (error) {
+  } catch (thrown) {
+    const error = thrown as Error & SpawnSyncReturns<string>; // execFileSync throws the child's result
     check(error.status === 1, `expected exit 1 from "${args.join(' ')}", got ${error.status}`);
     return error.stderr;
   }
   throw new Error(`expected a refusal from "vault ${args.join(' ')}"`);
 }
 
-const write = (relative, body) => {
+const write = (relative: string, body: string | Buffer) => {
   mkdirSync(dirname(join(repo, relative)), { recursive: true });
   writeFileSync(join(repo, relative), body);
 };
 
-const treeState = base => Object.fromEntries(readdirSync(base, { recursive: true })
+const treeState = (base: string) => Object.fromEntries((readdirSync(base, { recursive: true }) as string[]) // utf8 names, the default
   .filter(entry => statSync(join(base, entry)).isFile())
   .map(entry => [entry, readFileSync(join(base, entry)).toString('base64')]));
 
@@ -61,7 +63,7 @@ const packName = () => {
 };
 
 const objectCount = () => (existsSync(join(vault, 'objects'))
-  ? readdirSync(join(vault, 'objects'), { recursive: true })
+  ? (readdirSync(join(vault, 'objects'), { recursive: true }) as string[]) // utf8 names, the default
     .filter(entry => statSync(join(vault, 'objects', entry)).isFile()).length
   : 0);
 
@@ -93,12 +95,12 @@ try {
   check(!manifestText.includes(vault), 'manifest leaked the private vault location');
   check(!manifestText.includes(repo), 'manifest leaked an absolute repository path');
   check(!/"[^"]*":\s*"\//.test(manifestText), 'manifest recorded an absolute path');
-  const manifest = JSON.parse(manifestText);
+  const manifest: { schema: string, files: { path: string, class: { kind: string } }[] } = JSON.parse(manifestText);
   check(manifest.schema === 'capture-pack-v1', 'unexpected pack schema');
   check(manifest.files.every(file => !file.path.startsWith('/')), 'manifest path is not relative');
-  check(manifest.files.find(file => file.path === 'captures/run-a-video.mp4').class.kind === 'run-video',
+  check(manifest.files.find(file => file.path === 'captures/run-a-video.mp4')?.class.kind === 'run-video',
     'expected the corpus classifier to label the run video');
-  check(manifest.files.find(file => file.path === 'artifacts/run-a/result.json').class.kind === 'UNKNOWN',
+  check(manifest.files.find(file => file.path === 'artifacts/run-a/result.json')?.class.kind === 'UNKNOWN',
     'expected UNKNOWN rather than an invented class for an artifact path');
 
   // A second export of unchanged content stores nothing new.
@@ -106,7 +108,7 @@ try {
   check(/new=0 reused=/.test(again), `expected a fully deduplicated re-export:\n${again}`);
   const packsAfter = readdirSync(join(repo, 'docs', 'evidence', 'packs'));
   check(packsAfter.length === 2, 'expected the second export to write its own manifest');
-  rmSync(join(repo, 'docs', 'evidence', 'packs', packsAfter.find(name => !name.startsWith(pack))));
+  rmSync(join(repo, 'docs', 'evidence', 'packs', packsAfter.find(name => !name.startsWith(pack)) as string)); // the second of the two
 
   // Round trip: a deleted tree comes back byte-identical, empty files included.
   rmSync(join(repo, 'captures'), { recursive: true });
@@ -137,9 +139,9 @@ try {
 
   // A corrupt vault object is caught before anything lands.
   const objects = join(vault, 'objects');
-  const victim = readdirSync(objects, { recursive: true })
+  const victim = (readdirSync(objects, { recursive: true }) as string[]) // utf8 names, the default
     .map(entry => join(objects, entry))
-    .find(path => statSync(path).isFile() && statSync(path).size > 0);
+    .find(path => statSync(path).isFile() && statSync(path).size > 0) as string; // the export stored non-empty objects
   chmodSync(victim, 0o644);
   writeFileSync(victim, 'corrupted blob');
   const corrupt = refused(['import', pack, '--force']);
@@ -158,7 +160,7 @@ try {
   rmSync(join(repo, 'captures', 'run-a.hid'));
   const refs = refused(['refs']);
   check(refs.includes('references media that is not here'), `expected a refs refusal:\n${refs}`);
-  const report = (() => { try { run(['refs']); } catch (error) { return error.stdout; } })();
+  const report = (() => { try { run(['refs']); } catch (error) { return (error as SpawnSyncReturns<string>).stdout; } })() as string; // refs exits 1, refused above
   check(report.includes('captures/gone-input.pftrace'), `expected the dangling trace:\n${report}`);
   check(report.includes('in no pack manifest'), `expected the unrecoverable note:\n${report}`);
   check(new RegExp(`captures/run-a.hid\\n\\s+in pack ${pack}`).test(report),

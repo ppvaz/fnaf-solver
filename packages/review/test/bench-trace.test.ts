@@ -10,8 +10,14 @@ import {
   BENCH_TRACE_SCHEMA, BENCH_TRACE_SUMMARY_SCHEMA,
   makeBenchTrace, summarizeBenchTrace, validateBenchTrace,
 } from '@sixam/review/measure';
+import type { BenchTracePath } from '@sixam/kernel/contracts';
 
-const sample = (id, path, offset, resultState = 'OBSERVED') => ({
+/** A cloned trace the mutators below edit, by the fields they touch. */
+interface Stage { atMs: number, [key: string]: unknown }
+interface MutableSample { id: string, clock?: string, sourceEvent: Stage, fact: Stage, observedResult: Stage }
+interface MutableTrace { samples: readonly MutableSample[], continuation: Record<string, unknown> }
+
+const sample = (id: string, path: BenchTracePath, offset: number, resultState = 'OBSERVED') => ({
   id, path,
   sourceEvent: { atMs: offset, kind: path === 'visual' ? 'screen' : 'audio', signal: 'blackout' },
   fact: { atMs: offset + 10, type: 'blackout', state: 'OBSERVED' },
@@ -60,10 +66,10 @@ assert.deepEqual(summary.continuation, {
   replacementActionCount: 0,
 });
 
-const expectThrow = (mutate, message) => {
-  const changed = structuredClone(trace);
+const expectThrow = (mutate: (value: MutableTrace) => void, message: string) => {
+  const changed: MutableTrace = structuredClone(trace);
   mutate(changed);
-  assert.throws(() => validateBenchTrace(changed), undefined, message);
+  assert.throws(() => validateBenchTrace(changed), message);
 };
 
 expectThrow(value => { value.samples[1].clock = 'device-monotonic-ms'; },

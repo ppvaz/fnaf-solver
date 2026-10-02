@@ -13,16 +13,20 @@ import { ATTESTATION_FILE, ATTESTATION_SCHEMA, ATTESTATION_SCHEMA_V1, buildFnaf1
   packPromotionChecks, readPack, recoverFromRunLog, recoveryCheck, refuseFrames, resolvePackTargets, trackedWinners,
   writePack, WINNER_HASHES } from '../src/evidence-pack.ts';
 
-const sha256 = data => createHash('sha256').update(data).digest('hex');
+type CampaignTarget = Extract<ReturnType<typeof resolvePackTargets>[number], { campaignDir: string }>;
+type ErrorEntry = Extract<ReturnType<typeof packEntry>, { error: unknown }>;
+interface RegisterRow { file: string, sha256: string, compiledWinnerHash: string | null }
+
+const sha256 = (data: string | Buffer) => createHash('sha256').update(data).digest('hex');
 const root = mkdtempSync(join(tmpdir(), 'evidence-pack-test-'));
 const home = '/home/pack-tester'; // only ever a string to scrub; the root is usually beneath it
-const put = (path, content) => { mkdirSync(join(root, path, '..'), { recursive: true }); writeFileSync(join(root, path), content); };
+const put = (path: string, content: string | Buffer) => { mkdirSync(join(root, path, '..'), { recursive: true }); writeFileSync(join(root, path), content); };
 try {
   const winner = { schema: 'winner-v1', strategy: 'minus-toys', knobs: { hallOffsetMs: 7400 } };
   put('packages/propose/bindings/fnaf2/campaign-night5-test-winner.json', JSON.stringify(winner));
   // The generated register trackedWinners reads (tools/generate-catalog.ts): this synthetic
   // winner does not compile, so only its file hash identifies it.
-  const registerRows = [{ file: 'packages/propose/bindings/fnaf2/campaign-night5-test-winner.json', sha256: sha256(JSON.stringify(winner)), compiledWinnerHash: null }];
+  const registerRows: (RegisterRow | undefined)[] = [{ file: 'packages/propose/bindings/fnaf2/campaign-night5-test-winner.json', sha256: sha256(JSON.stringify(winner)), compiledWinnerHash: null }];
   const writeRegister = () => put(WINNER_HASHES, JSON.stringify({ schema: 'winner-hashes-v1', winners: registerRows }));
   writeRegister();
   put('artifacts/b1/manifest.json', JSON.stringify({ schema: 'device-bundle-v1', winnerHash: stableHash(winner) }));
@@ -55,7 +59,7 @@ try {
   put(`artifacts/runs/${label}/death-frames/f12.png`, Buffer.from([0x89, 0x50, 0x4e, 0x47]));
 
   // A night-run label and its campaign directory name the same pack.
-  const [target] = resolvePackTargets(root, label);
+  const [target] = resolvePackTargets(root, label) as CampaignTarget[]; // its campaign directory is on disk
   assert.equal(target.packId, label);
   assert.deepEqual(resolvePackTargets(root, campaign), [target], 'the campaign id resolves to its night-run label');
   assert.throws(() => resolvePackTargets(root, '../etc'), /safe RUN_ID/);
@@ -75,17 +79,17 @@ try {
   assert.equal(pack.withheld.length, 5, 'every file of the run is either packed or withheld');
 
   const events = texts.get('events.jsonl');
-  assert.ok(!events.includes(String(grid[179])) && events.includes('"redacted":"pixels"'), 'the 20x9 grid is replaced by its hash');
-  assert.ok(events.includes(sha256(JSON.stringify(grid))));
-  assert.ok(!events.includes(root) && events.includes(`"evidenceDirectory":"artifacts/${campaign}"`), 'machine paths become repository-relative');
-  assert.ok(texts.get('run/grade.log').includes('~/fnaf-apks/'), 'the home directory becomes ~');
-  const observation = JSON.parse(texts.get('observations.jsonl'));
+  assert.ok(!events?.includes(String(grid[179])) && events?.includes('"redacted":"pixels"'), 'the 20x9 grid is replaced by its hash');
+  assert.ok(events?.includes(sha256(JSON.stringify(grid))));
+  assert.ok(!events?.includes(root) && events?.includes(`"evidenceDirectory":"artifacts/${campaign}"`), 'machine paths become repository-relative');
+  assert.ok(texts.get('run/grade.log')?.includes('~/fnaf-apks/'), 'the home directory becomes ~');
+  const observation = JSON.parse(String(texts.get('observations.jsonl')));
   assert.deepEqual(observation.frame, { file: '00001-title-observe.py.png', sha256: sha256(frame), bytes: frame.length });
   const eventsEntry = pack.files.find(file => file.name === 'events.jsonl');
-  assert.deepEqual(eventsEntry.redactions, { paths: 1, pixelArrays: 1, frameRefs: 1 });
-  assert.equal(eventsEntry.source.sha256, sha256(readFileSync(join(root, 'artifacts', campaign, 'events.jsonl'))),
+  assert.deepEqual(eventsEntry?.redactions, { paths: 1, pixelArrays: 1, frameRefs: 1 });
+  assert.equal(eventsEntry?.source.sha256, sha256(readFileSync(join(root, 'artifacts', campaign, 'events.jsonl'))),
     'the pack still binds the original bytes');
-  assert.equal(pack.bundle.winnerHash, stableHash(winner));
+  assert.equal(pack.bundle?.winnerHash, stableHash(winner));
   assert.equal(pack.outcome, 'WIN');
   assert.equal(pack.claimLevel, 'DEVICE_MEASURED');
   assert.equal(packDigest(buildPack({ root, home, ...target }).pack), packDigest(pack), 'packing is deterministic');
@@ -114,7 +118,7 @@ try {
   // A v1 attestation (a person's name, the schema until 2026-09-27) is still read; v2, which an
   // agent may write under Pedro's delegation, is pinned in evidence-promotion.test.mjs.
   assert.equal(ATTESTATION_SCHEMA, 'plan12-attestation-v2');
-  const attest = packSha256 => writeFileSync(join(dir, ATTESTATION_FILE),
+  const attest = (packSha256: string) => writeFileSync(join(dir, ATTESTATION_FILE),
     JSON.stringify({ schema: ATTESTATION_SCHEMA_V1, status: 'PASS', packSha256, attestedBy: 'test' }));
   attest(loaded.digest);
   assert.equal(packPromotionChecks(readPack(dir), winners).plan12Attestation, true);
@@ -128,7 +132,7 @@ try {
   const night6 = readFileSync(new URL('../../../packages/propose/bindings/fnaf2/campaign-night6-winner.json', import.meta.url), 'utf8');
   put('packages/propose/bindings/fnaf2/campaign-night6-winner.json', night6);
   // Its compiled hash comes from the committed register, which must hold it.
-  const committed = JSON.parse(readFileSync(new URL(`../../../${WINNER_HASHES}`, import.meta.url), 'utf8'));
+  const committed: { winners: RegisterRow[] } = JSON.parse(readFileSync(new URL(`../../../${WINNER_HASHES}`, import.meta.url), 'utf8'));
   registerRows.push(committed.winners.find(row => row.file === 'packages/propose/bindings/fnaf2/campaign-night6-winner.json'));
   writeRegister();
   const withNight6 = trackedWinners(root);
@@ -161,7 +165,7 @@ try {
   assert.deepEqual(fnaf1Built.pack.files.map(file => file.name), ['events.jsonl', 'probe.json', 'replay.json'],
     'a winner replay\'s replay.json (the pinned commit it ran) is packed as text');
   assert.deepEqual(fnaf1Built.pack.withheld.map(item => item.name), ['0000-frame.png']);
-  assert.ok(fnaf1Built.texts.get('events.jsonl').includes('~/fnaf-apks/'), 'machine paths are portable here too');
+  assert.ok(fnaf1Built.texts.get('events.jsonl')?.includes('~/fnaf-apks/'), 'machine paths are portable here too');
   const fnaf1Dir = join(root, 'docs/evidence/runs', fnaf1);
   writePack(fnaf1Dir, fnaf1Built);
   const fnaf1Loaded = readPack(fnaf1Dir);
@@ -187,8 +191,8 @@ try {
     rows[1], 'python3 stderr: a line that is not an event', rows[2], resultText, other,
     JSON.stringify({ at: 1, type: 'hid.execute-entered' })].join('\n') + '\n';
   const recovered = recoverFromRunLog(logText, lostDir);
-  assert.equal(recovered.events, eventsText, 'the event rows come back byte for byte, numeric stamps included, and stop at the next campaign');
-  assert.equal(recovered.result, resultText, 'the printed result is the one the CLI wrote, not the preflight before it');
+  assert.equal(recovered?.events, eventsText, 'the event rows come back byte for byte, numeric stamps included, and stop at the next campaign');
+  assert.equal(recovered?.result, resultText, 'the printed result is the one the CLI wrote, not the preflight before it');
   assert.equal(recoverFromRunLog(logText, `${root}/artifacts/never`), null);
   assert.equal(recoverFromRunLog(logText, `artifacts/${lost}`)?.events, eventsText,
     'a verdict that names the directory relative to the repository still finds it');
@@ -197,7 +201,7 @@ try {
   put(`artifacts/runs/${lostRun}/video.sha256`, `${'c'.repeat(64)}  captures/${lostRun}.mp4\n`);
   put(`artifacts/runs/${lostRun}/run-report.json`, JSON.stringify({ night: { reached: true } }));
   put(`artifacts/runs/${lostRun}/campaign.log`, logText);
-  const [recoveredTarget] = resolvePackTargets(root, lostRun);
+  const [recoveredTarget] = resolvePackTargets(root, lostRun) as CampaignTarget[]; // a campaign recovered from its night-run log
   assert.equal(recoveredTarget.recoverFromLog, true, 'a campaign that is gone resolves to its night-run log');
   const timeline = join(root, 'artifacts/forensics/r01-timeline.json');
   put('artifacts/forensics/r01-timeline.json', JSON.stringify({ video: `captures/${lostRun}.mp4`,
@@ -205,8 +209,8 @@ try {
   const rebuilt = buildPack({ root, home, ...recoveredTarget, timeline });
   assert.deepEqual(rebuilt.pack.files.map(file => file.name),
     ['events.jsonl', 'result.json', 'run/run-report.json', 'run/timeline.json', 'run/verdict.txt', 'run/video.sha256']);
-  assert.equal(rebuilt.pack.files.find(file => file.name === 'result.json').source.sha256, sha256(resultText));
-  assert.ok(!rebuilt.texts.get('events.jsonl').includes(String(grid[179])), 'recovered events are redacted like any other');
+  assert.equal(rebuilt.pack.files.find(file => file.name === 'result.json')?.source.sha256, sha256(resultText));
+  assert.ok(rebuilt.texts.get('events.jsonl')?.includes(String(grid[179])) === false, 'recovered events are redacted like any other');
   assert.deepEqual(rebuilt.pack.custody, { kind: 'recovered-from-run-log', source: 'run/campaign.log',
     sourceSha256: sha256(logText), recovered: ['events.jsonl', 'result.json'],
     lost: ['observations.jsonl', 'observer frames', 'request.json'], validation: 'docs/evidence/custody-recovery-20260925.json' });
@@ -233,10 +237,10 @@ try {
     JSON.stringify({ at: '2026-09-18T03:21:22.200Z', type: 'evidence.started', evidenceDirectory: threwDir }),
     JSON.stringify({ at: '2026-09-18T03:22:08.286Z', type: 'campaign.abort.restart', reason: 'device: lifecycle left night state (static)' }),
     'error: device: lifecycle left night state (static)'].join('\n') + '\n');
-  const threwBuilt = buildPack({ root, home, ...resolvePackTargets(root, threw)[0] });
+  const threwBuilt = buildPack({ root, home, ...(resolvePackTargets(root, threw) as CampaignTarget[])[0] }); // its verdict names a campaign
   assert.equal(threwBuilt.pack.outcome, 'RESULT_LOST');
   assert.equal(threwBuilt.pack.claimLevel, 'UNKNOWN');
-  assert.deepEqual(threwBuilt.pack.custody.lost, ['observations.jsonl', 'observer frames', 'request.json', 'result.json']);
+  assert.deepEqual(threwBuilt.pack.custody?.lost, ['observations.jsonl', 'observer frames', 'request.json', 'result.json']);
   const threwDirPack = join(root, 'docs/evidence/runs', threw);
   writePack(threwDirPack, threwBuilt);
   const threwLoaded = readPack(threwDirPack);
@@ -251,14 +255,14 @@ try {
   put(`artifacts/${errorCampaign}/result.json`, JSON.stringify(errorWrapper));
   put(`artifacts/${errorCampaign}/request.json`, '{}');
   put(`artifacts/${errorCampaign}/events.jsonl`, '{"type":"campaign.abort.restart","reason":"device: lifecycle left night state (static)"}\n');
-  const errorBuilt = buildPack({ root, home, ...resolvePackTargets(root, errorCampaign)[0] });
+  const errorBuilt = buildPack({ root, home, ...(resolvePackTargets(root, errorCampaign) as CampaignTarget[])[0] }); // a campaign directory
   assert.equal(errorBuilt.pack.outcome, 'ERROR');
   assert.equal(errorBuilt.pack.claimLevel, 'UNKNOWN');
   const errorPack = join(root, 'docs/evidence/runs', errorCampaign);
   writePack(errorPack, errorBuilt);
   const errorLoaded = readPack(errorPack);
   assert.deepEqual(errorLoaded.wrapper, errorWrapper);
-  assert.equal((packEntry(errorCampaign, errorLoaded) as any).error, errorWrapper.error);
+  assert.equal((packEntry(errorCampaign, errorLoaded) as ErrorEntry).error, errorWrapper.error); // an ERROR wrapper's row
   assert.equal(packPromotionChecks(errorLoaded, winners).terminalPass, false);
 
   // A signalled campaign still has its native text and frames, but never
@@ -272,11 +276,11 @@ try {
   put(`artifacts/${interrupted}/observations.jsonl`, '{"label":"state=intro"}\n');
   put(`artifacts/${interrupted}/00001.png`, frame);
   put(`artifacts/runs/${interruptedRun}/campaign.log`, 'not JSON\n' + startRow + '\n');
-  const interruptedTarget = resolvePackTargets(root, interrupted)[0];
+  const interruptedTarget = (resolvePackTargets(root, interrupted) as CampaignTarget[])[0]; // an incomplete campaign directory
   assert.equal(interruptedTarget.packId, interruptedRun, 'the run identity survives without a final verdict');
   const interruptedBuilt = buildPack({ root, home, ...interruptedTarget });
-  assert.equal(interruptedBuilt.pack.custody.kind, 'incomplete-campaign');
-  assert.deepEqual(interruptedBuilt.pack.custody.lost, ['result.json']);
+  assert.equal(interruptedBuilt.pack.custody?.kind, 'incomplete-campaign');
+  assert.deepEqual(interruptedBuilt.pack.custody?.lost, ['result.json']);
   assert.ok(interruptedBuilt.texts.has('request.json') && interruptedBuilt.texts.has('observations.jsonl'));
   assert.ok(interruptedBuilt.pack.withheld.some(f => f.name === '00001.png' && f.sha256 === sha256(frame)));
   const interruptedDir = join(root, 'docs/evidence/runs', interruptedRun);
@@ -318,7 +322,7 @@ try {
   mkdirSync(join(root, 'docs/architecture/generated'), { recursive: true });
   const bytes = JSON.stringify({ schema: 'winner-v1', strategy: 'minus-toys' });
   writeFileSync(join(root, 'packages/propose/bindings/fnaf2/a-winner.json'), bytes);
-  const register = rows => writeFileSync(join(root, WINNER_HASHES), JSON.stringify({ schema: 'winner-hashes-v1', winners: rows }));
+  const register = (rows: readonly Record<string, unknown>[]) => writeFileSync(join(root, WINNER_HASHES), JSON.stringify({ schema: 'winner-hashes-v1', winners: rows }));
   const digest = createHash('sha256').update(bytes).digest('hex');
   try {
     register([{ file: 'packages/propose/bindings/fnaf2/a-winner.json', sha256: digest, compiledWinnerHash: 'fnv1a-00c0ffee' }]);

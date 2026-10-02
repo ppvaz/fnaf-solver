@@ -10,14 +10,15 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { isUnknown, validateGameRun } from '@sixam/kernel';
+import type { GameRun, Unknown } from '@sixam/kernel';
 import { PACKS_DIR } from '../src/evidence-pack.ts';
 import { liftPack, packIds, reportedFromTerminal } from '../src/pack-lift.ts';
 
 const ROOT = resolve(fileURLToPath(new URL('../../..', import.meta.url)));
 
-function treeDigest(dir) {
+function treeDigest(dir: string) {
   const hash = createHash('sha256');
-  const walk = path => {
+  const walk = (path: string) => {
     for (const name of readdirSync(path).sort()) {
       const file = join(path, name);
       if (statSync(file).isDirectory()) walk(file);
@@ -33,23 +34,24 @@ const ids = packIds(ROOT);
 assert.ok(ids.length >= 184, `${ids.length} committed packs; 184 were committed by 2026-09-29`);
 const lifted = new Map();
 for (const id of ids) {
-  let result;
+  let result = null as ReturnType<typeof liftPack> | null;
   assert.doesNotThrow(() => { result = liftPack(ROOT, id); }, `${id} lifts`);
-  assert.ok(result.runs.length >= 1, `${id} lifts to at least one GameRun`);
-  for (const run of result.runs) {
+  const { runs } = result as ReturnType<typeof liftPack>; // doesNotThrow returned, so its callback assigned it
+  assert.ok(runs.length >= 1, `${id} lifts to at least one GameRun`);
+  for (const run of runs) {
     validateGameRun(run);
     assert.ok(run.id === id || run.id.startsWith(`${id}#attempt`), `${run.id} names its pack`);
   }
-  lifted.set(id, result.runs);
+  lifted.set(id, runs);
 }
 assert.equal(treeDigest(join(ROOT, PACKS_DIR)), before, 'lifting wrote nothing under docs/evidence/runs');
 
-const one = id => {
+const one = (id: string) => {
   assert.ok(lifted.has(id), `${id} is a committed pack`);
   assert.equal(lifted.get(id).length, 1);
   return lifted.get(id)[0];
 };
-const json = (id, name) => JSON.parse(readFileSync(join(ROOT, PACKS_DIR, id, name), 'utf8'));
+const json = (id: string, name: string) => JSON.parse(readFileSync(join(ROOT, PACKS_DIR, id, name), 'utf8'));
 
 // An original pack: complete custody, a reported 6 AM, the night cut at the executor's own reads.
 const original = one('night1-ladder-n1e-20260927T055611Z');
@@ -106,9 +108,9 @@ assert.equal(fnaf1.night.at(-1).type, 'night-ended');
 assert.deepEqual(reportedFromTerminal({ night: 6, outcome: 'invalid', sixAm: false, why: 'phase-invalid: arm release lag' }),
   { kind: 'Invalid', why: 'phase-invalid: arm release lag' });
 assert.equal(reportedFromTerminal({ night: 6, outcome: 'invalid', sixAm: false }).kind, 'UNKNOWN');
-assert.match((reportedFromTerminal({ night: 6, outcome: 'invalid', sixAm: false }) as any).reason, /names no reason/);
+assert.match((reportedFromTerminal({ night: 6, outcome: 'invalid', sixAm: false }) as Unknown).reason, /names no reason/); // its kind read UNKNOWN above
 
-const count = key => [...lifted.values()].flat().reduce((sum, run) => ({ ...sum, [key(run)]: (sum[key(run)] ?? 0) + 1 }), {});
+const count = (key: (run: GameRun) => string) => [...lifted.values()].flat().reduce<Record<string, number>>((sum, run) => ({ ...sum, [key(run)]: (sum[key(run)] ?? 0) + 1 }), {});
 const outcomes = count(run => run.reportedOutcome.kind);
 const custody = count(run => (isUnknown(run.custody.class) ? 'UNKNOWN' : run.custody.class));
 console.log(`pack lift: ${ids.length} committed packs lift to ${[...lifted.values()].flat().length} GameRuns with no throw and no write ` +

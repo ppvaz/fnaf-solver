@@ -14,11 +14,13 @@ import { isRefusal, unknown, validateClaimEnvelope } from '@sixam/kernel';
 import { CAPABILITIES_SCHEMA, CHECKS, DIRECTIONAL_CONSTANTS, MISTAKE_ENTRIES, RULE_CITES, RULE_SOURCES, SEED_FLOOR,
   checkCapabilitiesFirst, checkDirectionalReuse, checkSeedFloor, checkUnknownAsNumber, numberKind } from '../src/refusals.ts';
 
+type CheckResult = ReturnType<typeof checkSeedFloor>;
+
 const ROOT = resolve(fileURLToPath(new URL('../../..', import.meta.url)));
 // Whitespace is folded, so a cited sentence that wraps across lines still matches.
-const read = path => readFileSync(join(ROOT, path), 'utf8').replace(/\s+/g, ' ');
+const read = (path: string) => readFileSync(join(ROOT, path), 'utf8').replace(/\s+/g, ' ');
 
-const refusedBy = (result, rule, what) => {
+const refusedBy = (result: CheckResult, rule: keyof typeof RULE_CITES, what: string) => {
   assert.ok(isRefusal(result), `${what} must be refused, got ${JSON.stringify(result)}`);
   validateClaimEnvelope(result);
   assert.equal(result.rule, rule, `${what}: refused by ${result.rule}, not ${rule}`);
@@ -26,14 +28,15 @@ const refusedBy = (result, rule, what) => {
   assert.ok(result.because.length > 10 && result.remedy.length > 10, `${what} says why and what to do`);
   return result;
 };
-const passes = (result, what) => {
+const passes = (result: CheckResult, what: string) => {
   assert.equal(result.refused, false, `${what} must pass, got ${JSON.stringify(result)}`);
   assert.ok(Array.isArray(result.notMeasured), `${what} names what passing does not establish`);
   return result;
 };
 
 // Every citation resolves: the file exists and still holds the text the rule rests on.
-for (const [rule, sources] of Object.entries(RULE_SOURCES)) {
+// RULE_SOURCES' own keys: indexing RULE_CITES with them type-checks only while both name the same rules.
+for (const [rule, sources] of Object.entries(RULE_SOURCES) as [keyof typeof RULE_SOURCES, readonly string[][]][]) {
   assert.ok(RULE_CITES[rule], `${rule} has citations`);
   for (const [path, text] of sources) assert.ok(read(path).includes(text), `${rule}: ${path} no longer holds "${text}"`);
   for (const cite of RULE_CITES[rule]) {

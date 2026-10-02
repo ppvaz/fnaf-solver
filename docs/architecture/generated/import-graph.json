@@ -4131,6 +4131,7 @@
     {
       "file": "packages/review/test/bench-trace.test.ts",
       "imports": [
+        "@sixam/kernel/contracts",
         "@sixam/review/measure",
         "node:assert/strict",
         "node:child_process",
@@ -4243,6 +4244,7 @@
       "file": "packages/review/test/run-audit.test.ts",
       "imports": [
         "../src/run-audit.ts",
+        "@sixam/kernel",
         "node:assert/strict",
         "node:fs",
         "node:os",

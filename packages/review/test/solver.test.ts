@@ -17,11 +17,31 @@ import { canonicalJson } from '@sixam/kernel/contracts';
 import { CONTROL_CATALOGS } from '@sixam/source';
 import { NO_LOCAL_DUMP, VAULT_ENV } from '@sixam/source/truth';
 import { isUnknown, validateClaimEnvelope } from '@sixam/kernel';
+import type { ClaimEnvelope, RefusalEnvelope, Unknown } from '@sixam/kernel';
 import { PACKS_DIR, trackedWinners } from '../src/evidence-pack.ts';
 import { GRAPH_FILE, PROMOTION_EDGE } from '../src/evidence-promotion.ts';
 import { queryPromotions } from '../src/promotions-query.ts';
 import { GAMES, catalogUnknowns, isNegative, readArchivedRoutes, readChronicle, readContracts } from '../src/registers.ts';
 import { INSTRUMENTS, VERBS, createSolver } from '../src/solver.ts';
+
+type Envelope = (ClaimEnvelope & { readonly refused?: undefined }) | RefusalEnvelope;
+/** A claim whose payload is read as C: the solver types every payload unknown. */
+type Claimed<C> = ClaimEnvelope & { readonly claim: C };
+/** A claim-evidence-v1 edge, by the fields this test reads. */
+interface GraphEdge { readonly from: string, readonly to: string, readonly type: string, readonly [field: string]: unknown }
+/** describe's claim, by the fields this test reads; the optional ones are absent from an UNKNOWN. */
+interface Described {
+  readonly controls: { readonly count: number };
+  readonly contracts: { readonly registered: number, readonly gameScoped: readonly { readonly id: string }[], readonly others: unknown };
+  readonly chronicle: { readonly entries?: number, readonly newest?: string };
+  readonly phone: { readonly promotedRuns?: number, readonly label?: string, readonly packs?: number,
+    readonly promotion?: { readonly promotedRuns: readonly string[], readonly promotedClaims: readonly string[] } | Unknown };
+  readonly refuted: readonly unknown[] | Unknown;
+  readonly gaps: readonly { readonly gap: number, readonly holds: boolean | 'partly', readonly localDump?: boolean,
+    readonly notMeasured?: readonly string[], readonly promotionEdges?: number }[];
+}
+/** A chronicle row as the queries answer it, by the fields this test reads. */
+interface ChronicleRow { readonly id: string, readonly date: string, readonly kind: string, readonly game: string, readonly sources: readonly unknown[] }
 
 const ROOT = resolve(fileURLToPath(new URL('../../..', import.meta.url)));
 const CLI = join(ROOT, 'packages/review/src/cli.ts');
@@ -29,7 +49,7 @@ const CLI = join(ROOT, 'packages/review/src/cli.ts');
 process.env[VAULT_ENV] = join(tmpdir(), `solver-test-no-vault-${process.pid}.json`);
 
 // The CLI's promotions envelope compiles every committed winner (~7 s): it runs beside the rest.
-const envelopeRun = new Promise<any>((done, fail) => {
+const envelopeRun = new Promise<{ status: number | null, stdout: string }>((done, fail) => {
   const child = spawn(process.execPath, [CLI, 'query', 'promotions', '--envelope'], { cwd: ROOT });
   let stdout = '';
   child.stdout.on('data', chunk => { stdout += chunk; });
@@ -37,9 +57,9 @@ const envelopeRun = new Promise<any>((done, fail) => {
   child.on('close', status => done({ status, stdout }));
 });
 
-const treeHash = dir => {
+const treeHash = (dir: string) => {
   const hash = createHash('sha256');
-  const walk = path => {
+  const walk = (path: string) => {
     for (const name of readdirSync(path).sort()) {
       const full = join(path, name);
       if (statSync(full).isDirectory()) walk(full);
@@ -53,34 +73,34 @@ const before = treeHash(join(ROOT, 'docs/evidence'));
 
 const winners = trackedWinners(ROOT);
 const solver = createSolver({ root: ROOT, winners: () => winners });
-const claim = (value, what) => {
+const claim = <C = unknown>(value: Envelope | null, what: string) => {
   validateClaimEnvelope(value);
-  assert.notEqual(value.refused, true, `${what} is a claim: ${JSON.stringify(value).slice(0, 300)}`);
-  return value;
+  assert.notEqual(value?.refused, true, `${what} is a claim: ${JSON.stringify(value).slice(0, 300)}`);
+  return value as Claimed<C>; // validated and not refused; C is the payload as the caller reads it
 };
-const refusal = (value, rule, what) => {
+const refusal = (value: Envelope | null, rule: string, what: string) => {
   validateClaimEnvelope(value);
-  assert.equal(value.refused, true, `${what} is refused`);
+  assert.equal(value?.refused, true, `${what} is refused`);
   assert.equal(value.rule, rule, `${what} is refused by ${rule}, not ${value.rule}`);
   return value;
 };
 assert.deepEqual([...VERBS], ['describe', 'query', 'review', 'promote', 'check', 'truth']);
 
 // --- describe: a join over the registers, for every registered game ---------------------------
-const graph = JSON.parse(readFileSync(join(ROOT, GRAPH_FILE), 'utf8'));
+const graph: { edges: GraphEdge[] } = JSON.parse(readFileSync(join(ROOT, GRAPH_FILE), 'utf8'));
 const graphEdges = graph.edges.filter(edge => edge.type === PROMOTION_EDGE);
 const chronicle = readChronicle(ROOT);
 const contracts = readContracts(ROOT).contracts;
 const packIds = readdirSync(join(ROOT, PACKS_DIR));
 for (const game of GAMES) {
-  const described: any = claim(solver.describe({ game: game.alias }), `describe ${game.alias}`);
+  const described = claim<Described>(solver.describe({ game: game.alias }), `describe ${game.alias}`);
   assert.deepEqual(described, solver.describe({ game: game.package }), 'a game by package or short name is the same answer');
-  assert.equal((described as any).target, game.package);
-  const { controls, contracts: bound, chronicle: story, phone, gaps } = (described as any).claim;
-  const catalog = CONTROL_CATALOGS[game.package];
+  assert.equal(described.target, game.package);
+  const { controls, contracts: bound, chronicle: story, phone, gaps } = described.claim;
+  const catalog = CONTROL_CATALOGS[game.package as keyof typeof CONTROL_CATALOGS]; // GAMES lists CONTROL_CATALOGS' own keys
   assert.equal(controls.count, catalog.controls.length);
   for (const item of catalogUnknowns(catalog))
-    assert.ok((described as any).notMeasured.includes(`control ${item.control} ${item.field}: ${item.value}`), `${game.alias}: ${item.control} ${item.field} is not measured`);
+    assert.ok(described.notMeasured.includes(`control ${item.control} ${item.field}: ${item.value}`), `${game.alias}: ${item.control} ${item.field} is not measured`);
   assert.equal(bound.registered, contracts.length);
   assert.deepEqual(bound.gameScoped.map(item => item.id), catalog.artifactActions ? ['semantic-control-v1', 'device-executor-v1'] : ['semantic-control-v1']);
   assert.ok(isUnknown(bound.others), 'the contract register has no game dimension, and says so');
@@ -88,23 +108,23 @@ for (const game of GAMES) {
     'Plan 28 gap 1 still holds (partly); gap 2 is closed by truth, gap 3 by describe itself');
   assert.equal(gaps[1].localDump, false);
   assert.deepEqual(gaps[1].notMeasured, [NO_LOCAL_DUMP], 'with no local dump the surface is there, and what it cannot read is said');
-  assert.ok((described as any).notMeasured.includes(NO_LOCAL_DUMP));
+  assert.ok(described.notMeasured.includes(NO_LOCAL_DUMP));
   // The chronicle attributes each entry to a game: v2 names it, v1 is read as FNaF 2.
   const own = chronicle.entries.filter(entry => entry.target === game.package);
   if (own.length) {
     assert.equal(story.entries, own.length);
     assert.equal(story.newest, own.map(entry => entry.date).sort().at(-1));
-    assert.equal((described as any).claim.refuted.length, own.filter(isNegative).length);
+    assert.equal((described.claim.refuted as readonly unknown[]).length, own.filter(isNegative).length); // its own entries: a list
   } else {
     assert.ok(isUnknown(story), `the chronicle attributes nothing to ${game.alias}`);
-    assert.ok(isUnknown((described as any).claim.refuted));
+    assert.ok(isUnknown(described.claim.refuted));
   }
   if (game.alias === 'fnaf2') {
     assert.equal(phone.promotedRuns, graphEdges.length, 'every PROMOTED_BY edge in the graph re-derives (the promotions query spans every game)');
     assert.equal(phone.label, 'DEVICE_MEASURED');
     assert.equal(gaps[3].promotionEdges, graphEdges.filter(edge => edge.from.startsWith('claim.fnaf2.')).length, 'gap 4 counts this game\'s own edges');
     assert.equal(gaps[3].holds, 'partly', 'promotion is no longer empty, and custody is not complete for every pack');
-    assert.ok((described as any).notMeasured.some(item => item.startsWith('reliability')), 'a promotion is one clear, and that is said');
+    assert.ok(described.notMeasured.some(item => item.startsWith('reliability')), 'a promotion is one clear, and that is said');
   }
   if (game.alias === 'fnaf3') assert.ok(isUnknown(phone), 'no pack is attributed to fnaf3');
   if (game.alias === 'fnaf4') {
@@ -113,9 +133,9 @@ for (const game of GAMES) {
     assert.ok(isUnknown(phone.promotion), 'no FNaF 4 pack is promoted');
   }
   if (game.alias === 'fnaf1') {
-    assert.ok(!isUnknown(phone.promotion) && phone.promotion.promotedRuns.includes('fnaf1-custom-grid420-420-a-20260925T024452598Z'),
+    assert.ok(!isUnknown(phone.promotion) && phone.promotion?.promotedRuns.includes('fnaf1-custom-grid420-420-a-20260925T024452598Z'),
       'the FNaF 1 4/20 run is promoted through Plan 12\'s checks read from its runner pack (fnaf1-promotion.ts)');
-    assert.deepEqual(phone.promotion.promotedClaims, ['claim.fnaf1.custom-night.20-20-20-20.device-6am']);
+    assert.deepEqual(phone.promotion?.promotedClaims, ['claim.fnaf1.custom-night.20-20-20-20.device-6am']);
   }
 }
 refusal(solver.describe({ game: 'fnaf5' }), 'invalid-argument', 'an unregistered game');
@@ -126,37 +146,39 @@ assert.match(noDump.remedy, /npm run review -- truth decode/);
 refusal(solver.truth({ op: 'object', game: 'fnaf4', name: 'x' }), 'no-local-dump', 'truth object with no dump');
 refusal(solver.truth({ op: 'grep' }), 'invalid-argument', 'a truth op that does not exist');
 validateClaimEnvelope(solver.readResource('fnaf://truth/fnaf2/frame/3/group/413'));
-assert.equal((solver.readResource('fnaf://truth/fnaf2/frame/3/group/413') as any).rule, 'no-local-dump', 'a cited group with no dump is a refusal');
+assert.equal((solver.readResource('fnaf://truth/fnaf2/frame/3/group/413') as RefusalEnvelope).rule, 'no-local-dump', // validated above
+  'a cited group with no dump is a refusal');
 
 // --- query ---------------------------------------------------------------------------------
-const packs = claim(solver.query({ what: 'packs' }), 'query packs');
+const packs = claim<{ readonly matched: number, readonly byGame: Readonly<Record<string, number>>, readonly promoted: number }>(
+  solver.query({ what: 'packs' }), 'query packs');
 assert.equal(packs.claim.matched, packIds.length);
 assert.equal(Object.values(packs.claim.byGame).reduce((sum, n) => sum + n, 0), packIds.length);
 assert.equal(packs.claim.promoted, graphEdges.length);
-assert.equal(claim(solver.query({ what: 'contracts' }), 'query contracts').claim.matched, contracts.length);
-assert.equal(claim(solver.query({ what: 'chronicle', negative: true }), 'query chronicle').claim.matched, chronicle.entries.filter(isNegative).length);
-const limited = claim(solver.query({ what: 'chronicle', limit: 2 }), 'query chronicle limit');
+assert.equal(claim<{ readonly matched: number }>(solver.query({ what: 'contracts' }), 'query contracts').claim.matched, contracts.length);
+assert.equal(claim<{ readonly matched: number }>(solver.query({ what: 'chronicle', negative: true }), 'query chronicle').claim.matched, chronicle.entries.filter(isNegative).length);
+const limited = claim<{ readonly entries: readonly ChronicleRow[] }>(solver.query({ what: 'chronicle', limit: 2 }), 'query chronicle limit');
 assert.equal(limited.claim.entries.length, 2);
 assert.ok(limited.notMeasured.some(item => item.includes('beyond the limit')));
-assert.equal(claim(solver.query({ what: 'chronicle', game: 'fnaf3' }), 'chronicle for FNaF 3').claim.matched,
+assert.equal(claim<{ readonly matched: number }>(solver.query({ what: 'chronicle', game: 'fnaf3' }), 'chronicle for FNaF 3').claim.matched,
   chronicle.entries.filter(entry => entry.target === 'com.scottgames.fnaf3').length);
 
 // --- the chronicle after 2026-09-09: chronicle-entries-v2 -------------------------------------
 // v2 entries reach the queries: "what has been refuted about Foxy?" returns cited negatives past
 // the v1 corpus's last day, and a v2 correction reads its target as superseded though the frozen
 // v1 file still says standing.
-const v1Newest = chronicle.entries.filter(entry => entry.schema === 'chronicle-entries-v1').map(entry => entry.date).sort().at(-1);
-const foxy = claim(solver.query({ what: 'chronicle', text: 'Foxy', negative: true }), 'refuted about Foxy');
+const v1Newest = chronicle.entries.filter(entry => entry.schema === 'chronicle-entries-v1').map(entry => entry.date).sort().at(-1) as string; // the v1 corpus is committed and frozen
+const foxy = claim<{ readonly entries: readonly ChronicleRow[] }>(solver.query({ what: 'chronicle', text: 'Foxy', negative: true }), 'refuted about Foxy');
 assert.ok(foxy.claim.entries.some(entry => entry.date > v1Newest && entry.kind === 'refutation'), 'a Foxy refutation after the v1 corpus');
 assert.ok(foxy.claim.entries.every(entry => entry.sources.length > 0 && JSON.stringify(entry).toLowerCase().includes('foxy')));
-const refutedNow = claim(solver.readResource('fnaf://refuted'), 'fnaf://refuted');
+const refutedNow = claim<{ readonly chronicle: readonly ChronicleRow[] }>(solver.readResource('fnaf://refuted'), 'fnaf://refuted');
 assert.ok(refutedNow.claim.chronicle.some(entry => entry.date > v1Newest), 'fnaf://refuted sees v2 negatives');
 assert.ok(refutedNow.claim.chronicle.some(entry => entry.game !== 'com.scottgames.fnaf2'), 'and attributes them to their game');
 for (const correction of chronicle.entries.filter(entry => entry.supersedes)) {
   const target = chronicle.entries.find(entry => entry.id === correction.supersedes);
-  assert.equal(target.supersededBy, correction.id, `${target.id} reads as superseded by ${correction.id}`);
-  assert.notEqual(target.status, 'standing');
-  assert.ok(refutedNow.claim.chronicle.some(entry => entry.id === target.id), `${target.id} is listed as refuted`);
+  assert.equal(target?.supersededBy, correction.id, `${target?.id} reads as superseded by ${correction.id}`);
+  assert.notEqual(target?.status, 'standing');
+  assert.ok(refutedNow.claim.chronicle.some(entry => entry.id === target?.id), `${target?.id} is listed as refuted`);
 }
 const promotions = claim(solver.query({ what: 'promotions' }), 'query promotions');
 assert.deepEqual(promotions.claim, queryPromotions(ROOT, { winners }), 'query promotions wraps exactly the promotions query');
@@ -165,7 +187,7 @@ assert.deepEqual(promotions.claim, queryPromotions(ROOT, { winners }), 'query pr
 const promotedIds = graphEdges.map(edge => edge.to.replace(/^run\./, ''));
 for (const instrument of INSTRUMENTS)
   claim(solver.review({ pack: promotedIds[0], instrument }), `review ${instrument}`);
-const checks = (solver.review({ pack: promotedIds[0], instrument: 'promotion-checks' }) as any).claim.checks;
+const checks = (solver.review({ pack: promotedIds[0], instrument: 'promotion-checks' }) as Claimed<{ readonly checks: Readonly<Record<string, unknown>> }>).claim.checks; // claim() read it above
 assert.ok(Object.values(checks).every(Boolean), 'a promoted pack passes every check');
 refusal(solver.review({ pack: promotedIds[0], instrument: 'grade' }), 'invalid-argument', 'an instrument that does not exist');
 refusal(solver.review({ pack: '../graph.json', instrument: 'custody' }), 'invalid-argument', 'a path outside the packs');
@@ -174,13 +196,13 @@ refusal(solver.review({ pack: '../graph.json', instrument: 'custody' }), 'invali
 const byRun = new Map(graphEdges.map(edge => [edge.to, edge]));
 let proposals = 0;
 for (const id of packIds) {
-  const answer: any = solver.promote({ pack: id });
+  const answer = solver.promote({ pack: id });
   validateClaimEnvelope(answer);
   const recorded = byRun.get(`run.${id}`);
   if (recorded) {
-    claim(answer, `promote ${id}`);
-    assert.equal(canonicalJson(answer.claim.edge), canonicalJson(recorded), `${id}: the proposal is the recorded edge`);
-    assert.equal(answer.claim.inGraph, 'ALREADY_RECORDED');
+    const proposal = claim<{ readonly edge: unknown, readonly inGraph: string }>(answer, `promote ${id}`);
+    assert.equal(canonicalJson(proposal.claim.edge), canonicalJson(recorded), `${id}: the proposal is the recorded edge`);
+    assert.equal(proposal.claim.inGraph, 'ALREADY_RECORDED');
     proposals += 1;
   } else refusal(answer, 'plan12-promotion', `promote ${id}`);
 }
@@ -192,10 +214,10 @@ assert.equal(solver.readResource('fnaf://nothing'), null);
 const archived = readArchivedRoutes(ROOT);
 assert.ok(archived.routes.length >= 4 && archived.routes.every(route => route.route && route.paths && /^\d{4}-\d{2}-\d{2}$/.test(route.lastCommit)),
   'every archived-route row is read with its paths and date');
-assert.deepEqual((solver.readResource('fnaf://refuted') as any).claim.archivedRoutes, archived.routes);
+assert.deepEqual((solver.readResource('fnaf://refuted') as Claimed<{ readonly archivedRoutes: unknown }>).claim.archivedRoutes, archived.routes); // a claim, read above
 
 // --- the CLI: the same envelopes, exit 1 on a refusal ----------------------------------------
-const run = (...args) => spawnSync(process.execPath, [CLI, ...args], { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 << 20 });
+const run = (...args: string[]) => spawnSync(process.execPath, [CLI, ...args], { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 << 20 });
 const fnaf4 = run('describe', 'fnaf4');
 assert.equal(fnaf4.status, 0, fnaf4.stderr);
 assert.deepEqual(JSON.parse(fnaf4.stdout), solver.describe({ game: 'fnaf4' }), 'the CLI prints what the verb returns');
@@ -214,7 +236,7 @@ assert.equal(JSON.parse(truthCli.stdout).rule, 'no-local-dump');
 assert.equal(run('truth', 'events', 'fnaf2', 'not json').status, 2, 'a truth query that is not JSON is a usage error');
 const wrapped = await envelopeRun;
 assert.equal(wrapped.status, 0);
-assert.deepEqual((validateClaimEnvelope(JSON.parse(wrapped.stdout)) as any).claim, queryPromotions(ROOT, { winners }),
+assert.deepEqual((validateClaimEnvelope(JSON.parse(wrapped.stdout)) as ClaimEnvelope).claim, queryPromotions(ROOT, { winners }), // it exited 0: a claim
   'query promotions --envelope wraps exactly the query');
 
 assert.equal(treeHash(join(ROOT, 'docs/evidence')), before, 'no verb wrote under docs/evidence');

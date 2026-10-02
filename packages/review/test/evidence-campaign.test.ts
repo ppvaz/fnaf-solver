@@ -4,9 +4,10 @@
 import assert from 'node:assert/strict';
 import { isCampaignResult, campaignEntry, campaignPromotionChecks, CAMPAIGN_RESULT_SCHEMA } from '../src/evidence-campaign.ts';
 
-const attempt = (over?) => ({ attempt: 1, mode: 'live', night: 5, status: 'WIN', proofHash: 'fnv1a-7990063c',
+const attempt = (over?: Record<string, unknown>) => ({ attempt: 1, mode: 'live', night: 5, status: 'WIN', proofHash: 'fnv1a-7990063c',
   terminal: { night: 5, outcome: 'sixam', sixAm: true }, ...over });
-const wrapper = ({ mode = 'live', attempts = [attempt()], plan12Gate }: any = {}) => ({
+const wrapper = ({ mode = 'live', attempts = [attempt()], plan12Gate }:
+  { mode?: string, attempts?: readonly Record<string, unknown>[], plan12Gate?: { status: string } } = {}) => ({
   mode, status: 'COMPLETE', ...(plan12Gate ? { plan12Gate } : {}),
   result: { schema: CAMPAIGN_RESULT_SCHEMA, version: 1, state: 'COMPLETE', specHash: 'fnv1a-spec',
     completedNights: [5], attempts, events: [] },

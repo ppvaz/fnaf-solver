@@ -199,7 +199,6 @@
       "debt:packages/play/test": 62,
       "debt:packages/propose/parked": 29,
       "debt:packages/propose/test": 30,
-      "debt:packages/review/test": 40,
       "debt:tools": 10
     }
   }

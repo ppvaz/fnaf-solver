@@ -17,10 +17,13 @@ import { PACKS_DIR, trackedWinners, winnerFiles } from '../src/evidence-pack.ts'
 import { GRAPH_FILE, PROMOTION_EDGE } from '../src/evidence-promotion.ts';
 import { compareEdges, promotionsRecord, queryPromotions } from '../src/promotions-query.ts';
 
+/** A claim-evidence-v1 edge, by the fields this test reads. */
+interface GraphEdge { readonly from: string, readonly to: string, readonly type: string, readonly [field: string]: unknown }
+
 const ROOT = resolve(fileURLToPath(new URL('../../..', import.meta.url)));
 
 // The CLI runs beside the in-process query: each compiles every committed winner (~8 s).
-const cliRun = new Promise<any>((done, fail) => {
+const cliRun = new Promise<{ status: number | null, stdout: string, stderr: string }>((done, fail) => {
   const child = spawn(process.execPath, [join(ROOT, 'packages/review/src/cli.ts'), 'query', 'promotions'], { cwd: ROOT });
   let stdout = '';
   let stderr = '';
@@ -32,18 +35,18 @@ const cliRun = new Promise<any>((done, fail) => {
 
 const winners = trackedWinners(ROOT);
 const result = queryPromotions(ROOT, { winners });
-const graph = JSON.parse(readFileSync(join(ROOT, GRAPH_FILE), 'utf8'));
+const graph: { edges: GraphEdge[] } = JSON.parse(readFileSync(join(ROOT, GRAPH_FILE), 'utf8'));
 const graphEdges = graph.edges.filter(edge => edge.type === PROMOTION_EDGE);
 
 // The query equals the graph's edges.
 assert.ok(graphEdges.length >= 47, `graph.json holds ${graphEdges.length} PROMOTED_BY edges; 47 by 2026-09-29`);
-const byRun = edges => [...edges].sort((a, b) => a.to.localeCompare(b.to)).map(edge => canonicalJson(edge));
+const byRun = (edges: readonly { readonly to: string }[]) => [...edges].sort((a, b) => a.to.localeCompare(b.to)).map(edge => canonicalJson(edge));
 assert.deepEqual(byRun(result.promoted.map(row => row.edge)), byRun(graphEdges),
   'the re-derived PROMOTED_BY edges are exactly the graph\'s, byte for byte in canonical JSON');
 assert.equal(result.edges.graph, graphEdges.length);
 assert.equal(result.edges.derived, graphEdges.length);
 assert.equal(result.edges.matched, graphEdges.length);
-for (const key of ['differing', 'notInGraph', 'onlyInGraph', 'refused', 'notSixAm']) assert.deepEqual(result.edges[key], [], key);
+for (const key of ['differing', 'notInGraph', 'onlyInGraph', 'refused', 'notSixAm'] as const) assert.deepEqual(result.edges[key], [], key);
 assert.equal(result.edges.duplicatedInGraph, 0);
 assert.equal(result.lift.failures.length, 0, 'every committed pack lifts');
 assert.equal(result.consistent, true);
@@ -53,7 +56,7 @@ for (const row of result.promoted) {
   assert.equal(row.graph, 'MATCHED', row.run);
   assert.equal(row.attestedBy, row.edge.attestedBy);
   assert.ok(typeof row.attestedBy === 'string' && row.attestedBy.length > 0, `${row.run} names its attester`);
-  assert.ok(CUSTODY_CLASSES.includes(row.custody.class), `${row.run} carries a kernel custody class`);
+  assert.ok((CUSTODY_CLASSES as readonly unknown[]).includes(row.custody.class), `${row.run} carries a kernel custody class`); // an UNKNOWN class is looked up too
   const pack = JSON.parse(readFileSync(join(ROOT, PACKS_DIR, row.run, 'pack.json'), 'utf8'));
   assert.equal(row.custody.class, pack.custody ? 'recovered' : 'complete');
   assert.deepEqual(row.custody.lost, pack.custody?.lost ?? []);
@@ -63,7 +66,7 @@ for (const row of result.promoted) {
   assert.equal(row.annotation.value, row.edge.from);
   assert.equal(row.annotation.inputs[0], row.edge.packSha256);
 }
-const sum = counts => Object.values(counts).reduce((a, b) => a + b, 0);
+const sum = (counts: Readonly<Record<string, number>>) => Object.values(counts).reduce((a, b) => a + b, 0);
 assert.equal(sum(result.edges.byAttester), graphEdges.length);
 assert.equal(sum(result.edges.byCustody), graphEdges.length);
 
@@ -82,12 +85,12 @@ assert.equal(compareEdges(derivedEdges, [...graphEdges, first]).agree, false, 'a
 assert.equal(compareEdges(derivedEdges, graphEdges).agree, true);
 
 // S1's open items are derived from the packs and the winners, not copied from prose.
-const packHashes = new Set();
+const packHashes = new Set<string>();
 for (const id of readdirSync(join(ROOT, PACKS_DIR))) {
   const hash = JSON.parse(readFileSync(join(ROOT, PACKS_DIR, id, 'pack.json'), 'utf8')).bundle?.winnerHash;
   if (hash) packHashes.add(hash);
 }
-const hashesOf = new Map();
+const hashesOf = new Map<string | undefined, string[]>();
 const pathOf = new Map(winnerFiles(ROOT).map(file => [basename(file), file]));
 for (const [hash, name] of winners) hashesOf.set(pathOf.get(name), [...(hashesOf.get(pathOf.get(name)) ?? []), hash]);
 const winnerV1 = winnerFiles(ROOT).filter(file => JSON.parse(readFileSync(join(ROOT, file), 'utf8')).schema === 'winner-v1');
@@ -95,7 +98,7 @@ const open = result.open.modelOnlyWinners;
 assert.equal(open.of, winnerV1.length);
 assert.equal(open.claimLevel, 'MODEL_ONLY');
 for (const file of winnerV1) {
-  const named = hashesOf.get(file).some(hash => packHashes.has(hash));
+  const named = (hashesOf.get(file) as string[]).some(hash => packHashes.has(hash)); // trackedWinners holds every committed winner's hash
   assert.equal(open.winners.some(item => item.file === file), !named, `${file} is listed exactly when no pack names its hash`);
 }
 assert.equal(open.count, open.winners.length);

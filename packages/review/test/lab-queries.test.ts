@@ -16,7 +16,7 @@ const ROOT = resolve(import.meta.dirname, '../../..');
 let checks = 0;
 
 // --- the classifier: planted docs-only, evidence and code changes ------------------------------
-const cases = [
+const cases: [string[], string, string][] = [
   [['docs/research/NOTE.md', 'plans/ROADMAP.md', 'README.md'], 'bookkeeping', 'docs and plans alone'],
   [['docs/evidence/README.md'], 'bookkeeping', "the evidence policy's own README is prose, not a record"],
   [['docs/architecture/generated/command-registry.json', 'package.json'], 'bookkeeping', 'generated catalogs and a manifest'],
@@ -52,13 +52,13 @@ checks += 1;
 
 // --- the mistake registers, read where CLAUDE.md writes them ----------------------------------
 const register = readMistakes(ROOT);
-assert.ok(['CLAUDE.md', 'docs/operations/MISTAKE-REGISTER.md'].includes(register.source));
+assert.ok((['CLAUDE.md', 'docs/operations/MISTAKE-REGISTER.md'] as readonly (string | null)[]).includes(register.source)); // a null source is looked up too
 const numbers = register.entries.map(entry => entry.n);
 assert.ok(numbers.length >= 13, `the registers hold ${numbers.length} entries; 13 on 2026-09-30`);
 assert.equal(new Set(numbers).size, numbers.length, 'each entry number once');
 for (const [n, lead] of Object.entries(MISTAKE_ENTRIES))
   assert.equal(register.entries.find(entry => entry.n === Number(n))?.lead, lead, `entry ${n}'s lead reads as refusals.mjs cites it`);
-assert.equal(register.entries.find(entry => entry.n === 7).lead,
+assert.equal(register.entries.find(entry => entry.n === 7)?.lead,
   'A floor is anchored to a measurement plus a named margin, never to the route it protects.', 'a lead that wraps a line is read whole');
 // Every entry has a tag row, and every row an entry: a new entry forces a row here.
 assert.deepEqual(Object.keys(MISTAKE_TAGS).map(Number).sort((a, b) => a - b), [...numbers].sort((a, b) => a - b),
@@ -71,7 +71,7 @@ for (const areas of Object.values(STEP_AREAS)) assert.ok(areas.every(area => MIS
 assert.deepEqual(Object.keys(STEP_AREAS), STEPS.map(step => step.id), 'every step names its areas');
 checks += 1;
 
-const matched = task => matchMistakes(register.entries, task).map(entry => entry.n);
+const matched = (task: Parameters<typeof matchMistakes>[1]) => matchMistakes(register.entries, task).map(entry => entry.n);
 assert.ok([3, 4, 6, 8].every(n => matched({ step: 'S4', text: 'a predeclared Night 7 cohort' }).includes(n)), 'live-device entries for S4');
 assert.ok(!matched({ step: 'S4', text: 'a predeclared Night 7 cohort' }).includes(11), 'analysis stays out of an S4 phone task');
 assert.ok(matched({ step: 'S1', text: 'a census of the corners' }).includes(11), 'a word in the artifact brings its entry up');
@@ -97,17 +97,17 @@ checks += 1;
 // --- the ROADMAP: headings and order lines, and the step states --------------------------------
 assert.deepEqual(roadmapDrift(ROOT), [], 'plans/ROADMAP.md still holds every heading and order line the step query quotes');
 const closes = closesWhen(ROOT);
-for (const step of STEPS) assert.ok(closes[step.id]?.length > 20, `${step.id} has its "Closes when" text`);
-assert.match(closes.S1, /graph\.json.*promotion edge/);
+for (const step of STEPS) assert.ok(Number(closes[step.id]?.length) > 20, `${step.id} has its "Closes when" text`);
+assert.match(closes.S1 as string, /graph\.json.*promotion edge/); // the loop above read S1's text
 assert.equal(ORDER.length, 6);
 assert.deepEqual(Object.keys(ORDER_OF).sort(), STEPS.map(step => step.id));
 const gates = mistakeGates(ROOT);
-for (const n of [5, 7, 9, 12, 13, 8, 10]) assert.ok(gates[n]?.length, `entry ${n} names a gate`);
+for (const n of [5, 7, 9, 12, 13, 8, 10]) assert.ok(gates?.[n]?.length, `entry ${n} names a gate`);
 const records = stepRecords(ROOT);
 assert.ok(records.S2.length >= 1 && records.S2.every(row => row.file.endsWith('.json')), 'records that name S2 are found');
 checks += 1;
 
-const promotions = ({ edges = 47, modelOnly = [], consistent = true } = {}) => ({
+const promotions = ({ edges = 47, modelOnly = [], consistent = true }: { edges?: number, modelOnly?: string[], consistent?: boolean } = {}) => ({
   consistent, lift: { packs: 3, gameRuns: 3 }, edges: { matched: edges, graph: edges, byAttester: {}, byCustody: {} },
   open: { modelOnlyWinners: { count: modelOnly.length, of: 26, winners: modelOnly.map(file => ({ file })) },
     untrackedWinnerDebt: { summary: '1 of 1', untracked: 1, entries: [{ hash: 'fnv1a-x', night: 6, committed: false }] } },
@@ -116,18 +116,18 @@ const packs = [
   { id: 'fnaf1-a', game: 'com.scottgames.fivenightsatfreddys', promoted: 'claim.fnaf1' },
   { id: 'fnaf3-a', game: 'com.scottgames.fnaf3', promoted: null },
 ];
-const byId = rows => Object.fromEntries(rows.map(row => [row.id, row]));
+const byId = (rows: ReturnType<typeof stepStatus>) => Object.fromEntries(rows.map(row => [row.id, row]));
 let rows = byId(stepStatus(ROOT, { promotions: promotions({ modelOnly: ['packages/propose/bindings/fnaf2/a-winner.json'] }), packs }));
 assert.equal(rows.S1.state, 'open');
 assert.deepEqual(rows.S1.unmet, ['packages/propose/bindings/fnaf2/a-winner.json stands MODEL_ONLY: no run pack names it']);
-assert.equal(rows.S1.alsoOpen.length, 1, 'the untracked-winner debt is kept beside the state');
+assert.equal(rows.S1.alsoOpen?.length, 1, 'the untracked-winner debt is kept beside the state');
 assert.ok(isUnknown(rows.S2.state), 'S2 has no registered closing record kind');
 assert.ok(isUnknown(rows.S3.state) && /needs S2/.test(rows.S3.state.reason));
 assert.ok(isUnknown(rows.S4.state) && /needs S3/.test(rows.S4.state.reason));
 assert.equal(rows.S6.state, 'open');
 assert.ok(rows.S6.met.some(item => item.startsWith('FNaF 1: 1 PROMOTED_BY')), 'a promoted FNaF 1 pack meets its game');
 assert.ok(rows.S6.unmet.some(item => item.startsWith('FNaF 3: 0 PROMOTED_BY edges over 1')));
-const bare = register.entries.map(entry => entry.n).filter(n => !gates[n]);
+const bare = register.entries.map(entry => entry.n).filter(n => !gates?.[n]);
 assert.equal(stateKey(rows.S7), bare.length ? 'open' : 'UNKNOWN');
 if (bare.length) assert.match(rows.S7.unmet[0], new RegExp(`^mistake entries ${bare.join(', ')} of`));
 rows = byId(stepStatus(ROOT, { promotions: promotions(), packs }));
