@@ -1,0 +1,567 @@
+{"atWallMs":1790315311434,"atMonotonicMs":171,"type":"audio-link","status":"audio-route=READY transport=bluealsa pcm=/org/bluealsa/hci0/dev_10_2B_1C_DA_18_2C/a2dpsnk/source mac=10:2B:1C:DA:18:2C"}
+{"atWallMs":1790315312592,"atMonotonicMs":1330,"type":"capture","name":"title-before","path":"~/fnaf-apks/fnaf4-device-runs/fnaf4-loop-n3c-teach-20260925T054831301Z/0000-title-before.png","sha256":"397fae95eaa691fef2b1c944e0f2a22afca47110e820fab0a5ea7114a151b8c0"}
+{"atWallMs":1790315315718,"atMonotonicMs":4456,"type":"input.requested","control":"continue","point":{"x":1230,"y":645},"kind":"press","durationMs":160,"hostMs":4455.576425}
+{"atWallMs":1790315315880,"atMonotonicMs":4617,"type":"input.released","control":"continue","hostMs":4617.15833}
+{"atWallMs":1790315322157,"atMonotonicMs":10895,"type":"input.requested","control":"leftDoor","point":{"x":560,"y":600},"kind":"double","gapMs":100,"hostMs":10894.70458}
+{"atWallMs":1790315322579,"atMonotonicMs":11316,"type":"input.released","control":"leftDoor","firstReleasedHostMs":11055.749554,"hostMs":11316.335725}
+{"atWallMs":1790315326361,"atMonotonicMs":15099,"type":"policy","atNightMs":4254,"m":"door L listen CLEAR","hops":10,"max":0.1921,"consistent":0}
+{"atWallMs":1790315326362,"atMonotonicMs":15100,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":350,"hostMs":15099.632654}
+{"atWallMs":1790315326713,"atMonotonicMs":15451,"type":"input.released","control":"flashlight","hostMs":15450.817649}
+{"atWallMs":1790315326759,"atMonotonicMs":15497,"type":"policy","atNightMs":4652,"m":"door L flash occupancy 0.0"}
+{"atWallMs":1790315326944,"atMonotonicMs":15682,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":15682.038776}
+{"atWallMs":1790315327105,"atMonotonicMs":15843,"type":"input.released","control":"back","hostMs":15842.504133}
+{"atWallMs":1790315328690,"atMonotonicMs":17427,"type":"input.requested","control":"panRight","point":{"x":2300,"y":540},"kind":"hold","durationMs":500,"hostMs":17427.425597}
+{"atWallMs":1790315329190,"atMonotonicMs":17927,"type":"input.released","control":"panRight","hostMs":17927.436804}
+{"atWallMs":1790315329191,"atMonotonicMs":17928,"type":"input.requested","control":"rightDoor","point":{"x":2100,"y":600},"kind":"double","gapMs":100,"hostMs":17928.433339}
+{"atWallMs":1790315329613,"atMonotonicMs":18350,"type":"input.released","control":"rightDoor","firstReleasedHostMs":18089.19109,"hostMs":18350.250677}
+{"atWallMs":1790315333374,"atMonotonicMs":22111,"type":"policy","atNightMs":11266,"m":"door R listen CLEAR","hops":10,"max":0.2,"consistent":0}
+{"atWallMs":1790315333374,"atMonotonicMs":22111,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":350,"hostMs":22111.340525}
+{"atWallMs":1790315333725,"atMonotonicMs":22463,"type":"input.released","control":"flashlight","hostMs":22462.613428}
+{"atWallMs":1790315333772,"atMonotonicMs":22510,"type":"policy","atNightMs":11665,"m":"door R flash occupancy 0.0"}
+{"atWallMs":1790315333958,"atMonotonicMs":22695,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":22695.317921}
+{"atWallMs":1790315334118,"atMonotonicMs":22856,"type":"input.released","control":"back","hostMs":22855.882213}
+{"atWallMs":1790315335683,"atMonotonicMs":24421,"type":"input.requested","control":"closet","point":{"x":1050,"y":600},"kind":"double","gapMs":100,"hostMs":24420.851589}
+{"atWallMs":1790315336105,"atMonotonicMs":24843,"type":"input.released","control":"closet","firstReleasedHostMs":24581.541887,"hostMs":24842.620089}
+{"atWallMs":1790315337934,"atMonotonicMs":26671,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":400,"hostMs":26671.474872}
+{"atWallMs":1790315338335,"atMonotonicMs":27073,"type":"input.released","control":"flashlight","hostMs":27073.072713}
+{"atWallMs":1790315338385,"atMonotonicMs":27122,"type":"policy","atNightMs":16278,"m":"closet occupancy 0.0"}
+{"atWallMs":1790315338386,"atMonotonicMs":27123,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":27123.148984}
+{"atWallMs":1790315338546,"atMonotonicMs":27284,"type":"input.released","control":"back","hostMs":27283.670509}
+{"atWallMs":1790315340145,"atMonotonicMs":28882,"type":"input.requested","control":"bed","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":28882.305516}
+{"atWallMs":1790315340308,"atMonotonicMs":29045,"type":"input.released","control":"bed","hostMs":29045.364156}
+{"atWallMs":1790315340453,"atMonotonicMs":29191,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":600,"hostMs":29190.54855}
+{"atWallMs":1790315341054,"atMonotonicMs":29792,"type":"input.released","control":"flashlight","hostMs":29791.597323}
+{"atWallMs":1790315341108,"atMonotonicMs":29846,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":600,"hostMs":29845.813151}
+{"atWallMs":1790315341709,"atMonotonicMs":30447,"type":"input.released","control":"flashlight","hostMs":30446.83253}
+{"atWallMs":1790315341756,"atMonotonicMs":30493,"type":"policy","atNightMs":19648,"m":"bed occupancy 0.0"}
+{"atWallMs":1790315341756,"atMonotonicMs":30494,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":30493.597715}
+{"atWallMs":1790315341916,"atMonotonicMs":30654,"type":"input.released","control":"back","hostMs":30653.907375}
+{"atWallMs":1790315342601,"atMonotonicMs":31338,"type":"input.requested","control":"panLeft","point":{"x":100,"y":540},"kind":"hold","durationMs":500,"hostMs":31338.44403}
+{"atWallMs":1790315343101,"atMonotonicMs":31839,"type":"input.released","control":"panLeft","hostMs":31838.509215}
+{"atWallMs":1790315343103,"atMonotonicMs":31841,"type":"input.requested","control":"leftDoor","point":{"x":560,"y":600},"kind":"double","gapMs":100,"hostMs":31840.686132}
+{"atWallMs":1790315343525,"atMonotonicMs":32262,"type":"input.released","control":"leftDoor","firstReleasedHostMs":32001.829037,"hostMs":32262.213353}
+{"atWallMs":1790315347336,"atMonotonicMs":36073,"type":"policy","atNightMs":25229,"m":"door L listen CLEAR","hops":11,"max":0.1538,"consistent":0}
+{"atWallMs":1790315347336,"atMonotonicMs":36074,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":350,"hostMs":36073.675663}
+{"atWallMs":1790315347687,"atMonotonicMs":36425,"type":"input.released","control":"flashlight","hostMs":36424.550499}
+{"atWallMs":1790315347729,"atMonotonicMs":36466,"type":"policy","atNightMs":25622,"m":"door L flash occupancy 0.0"}
+{"atWallMs":1790315347934,"atMonotonicMs":36671,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":36671.147429}
+{"atWallMs":1790315348094,"atMonotonicMs":36832,"type":"input.released","control":"back","hostMs":36831.681794}
+{"atWallMs":1790315349583,"atMonotonicMs":38320,"type":"input.requested","control":"panRight","point":{"x":2300,"y":540},"kind":"hold","durationMs":500,"hostMs":38320.384917}
+{"atWallMs":1790315350083,"atMonotonicMs":38821,"type":"input.released","control":"panRight","hostMs":38820.69643}
+{"atWallMs":1790315350084,"atMonotonicMs":38822,"type":"input.requested","control":"rightDoor","point":{"x":2100,"y":600},"kind":"double","gapMs":100,"hostMs":38821.939563}
+{"atWallMs":1790315350506,"atMonotonicMs":39243,"type":"input.released","control":"rightDoor","firstReleasedHostMs":38982.368157,"hostMs":39243.087037}
+{"atWallMs":1790315354328,"atMonotonicMs":43066,"type":"policy","atNightMs":32221,"m":"door R listen CLEAR","hops":11,"max":0.2442,"consistent":0}
+{"atWallMs":1790315354329,"atMonotonicMs":43066,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":350,"hostMs":43066.17945}
+{"atWallMs":1790315354680,"atMonotonicMs":43417,"type":"input.released","control":"flashlight","hostMs":43417.337485}
+{"atWallMs":1790315354720,"atMonotonicMs":43457,"type":"policy","atNightMs":32613,"m":"door R flash occupancy 0.0"}
+{"atWallMs":1790315354890,"atMonotonicMs":43627,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":43627.158683}
+{"atWallMs":1790315355050,"atMonotonicMs":43787,"type":"input.released","control":"back","hostMs":43787.268285}
+{"atWallMs":1790315356658,"atMonotonicMs":45396,"type":"input.requested","control":"closet","point":{"x":1050,"y":600},"kind":"double","gapMs":100,"hostMs":45395.558554}
+{"atWallMs":1790315357078,"atMonotonicMs":45816,"type":"input.released","control":"closet","firstReleasedHostMs":45556.371393,"hostMs":45816.049829}
+{"atWallMs":1790315359037,"atMonotonicMs":47774,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":400,"hostMs":47774.361484}
+{"atWallMs":1790315359442,"atMonotonicMs":48180,"type":"input.released","control":"flashlight","hostMs":48179.601886}
+{"atWallMs":1790315359479,"atMonotonicMs":48216,"type":"policy","atNightMs":37371,"m":"closet occupancy 0.0"}
+{"atWallMs":1790315359479,"atMonotonicMs":48217,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":48216.535339}
+{"atWallMs":1790315359639,"atMonotonicMs":48376,"type":"input.released","control":"back","hostMs":48376.249633}
+{"atWallMs":1790315361260,"atMonotonicMs":49997,"type":"input.requested","control":"bed","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":49997.190536}
+{"atWallMs":1790315361421,"atMonotonicMs":50158,"type":"input.released","control":"bed","hostMs":50158.099746}
+{"atWallMs":1790315361576,"atMonotonicMs":50314,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":600,"hostMs":50313.527481}
+{"atWallMs":1790315362179,"atMonotonicMs":50917,"type":"input.released","control":"flashlight","hostMs":50917.017662}
+{"atWallMs":1790315362220,"atMonotonicMs":50958,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":600,"hostMs":50957.962098}
+{"atWallMs":1790315362821,"atMonotonicMs":51559,"type":"input.released","control":"flashlight","hostMs":51558.639722}
+{"atWallMs":1790315362866,"atMonotonicMs":51604,"type":"policy","atNightMs":40759,"m":"bed occupancy 0.0"}
+{"atWallMs":1790315362867,"atMonotonicMs":51605,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":51604.620218}
+{"atWallMs":1790315363027,"atMonotonicMs":51765,"type":"input.released","control":"back","hostMs":51764.582442}
+{"atWallMs":1790315363677,"atMonotonicMs":52414,"type":"input.requested","control":"panLeft","point":{"x":100,"y":540},"kind":"hold","durationMs":500,"hostMs":52414.323531}
+{"atWallMs":1790315364178,"atMonotonicMs":52915,"type":"input.released","control":"panLeft","hostMs":52915.150185}
+{"atWallMs":1790315364325,"atMonotonicMs":53063,"type":"input.requested","control":"leftDoor","point":{"x":560,"y":600},"kind":"double","gapMs":100,"hostMs":53062.815519}
+{"atWallMs":1790315364747,"atMonotonicMs":53485,"type":"input.released","control":"leftDoor","firstReleasedHostMs":53223.75431,"hostMs":53485.058012}
+{"atWallMs":1790315368536,"atMonotonicMs":57274,"type":"policy","atNightMs":46429,"m":"door L listen CLEAR","hops":11,"max":0.2809,"consistent":0}
+{"atWallMs":1790315368537,"atMonotonicMs":57274,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":350,"hostMs":57274.305047}
+{"atWallMs":1790315368888,"atMonotonicMs":57626,"type":"input.released","control":"flashlight","hostMs":57625.700922}
+{"atWallMs":1790315368935,"atMonotonicMs":57672,"type":"policy","atNightMs":46828,"m":"door L flash occupancy 0.0"}
+{"atWallMs":1790315369123,"atMonotonicMs":57861,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":57861.010867}
+{"atWallMs":1790315369284,"atMonotonicMs":58021,"type":"input.released","control":"back","hostMs":58021.30854}
+{"atWallMs":1790315370831,"atMonotonicMs":59568,"type":"input.requested","control":"panRight","point":{"x":2300,"y":540},"kind":"hold","durationMs":500,"hostMs":59568.379304}
+{"atWallMs":1790315371331,"atMonotonicMs":60069,"type":"input.released","control":"panRight","hostMs":60068.895368}
+{"atWallMs":1790315371335,"atMonotonicMs":60073,"type":"input.requested","control":"rightDoor","point":{"x":2100,"y":600},"kind":"double","gapMs":100,"hostMs":60072.690262}
+{"atWallMs":1790315371756,"atMonotonicMs":60493,"type":"input.released","control":"rightDoor","firstReleasedHostMs":60233.325054,"hostMs":60493.389689}
+{"atWallMs":1790315375561,"atMonotonicMs":64298,"type":"policy","atNightMs":53454,"m":"door R listen CLEAR","hops":10,"max":0.2108,"consistent":0}
+{"atWallMs":1790315375561,"atMonotonicMs":64299,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":350,"hostMs":64298.585963}
+{"atWallMs":1790315375912,"atMonotonicMs":64650,"type":"input.released","control":"flashlight","hostMs":64649.831716}
+{"atWallMs":1790315375963,"atMonotonicMs":64701,"type":"policy","atNightMs":53856,"m":"door R flash occupancy 0.5"}
+{"atWallMs":1790315376474,"atMonotonicMs":65212,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":65211.57591}
+{"atWallMs":1790315376634,"atMonotonicMs":65371,"type":"input.released","control":"back","hostMs":65371.214436}
+{"atWallMs":1790315378279,"atMonotonicMs":67017,"type":"input.requested","control":"closet","point":{"x":1050,"y":600},"kind":"double","gapMs":100,"hostMs":67016.744806}
+{"atWallMs":1790315378701,"atMonotonicMs":67438,"type":"input.released","control":"closet","firstReleasedHostMs":67177.625283,"hostMs":67438.342161}
+{"atWallMs":1790315380563,"atMonotonicMs":69300,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":400,"hostMs":69300.14802}
+{"atWallMs":1790315380965,"atMonotonicMs":69702,"type":"input.released","control":"flashlight","hostMs":69702.130475}
+{"atWallMs":1790315381016,"atMonotonicMs":69754,"type":"policy","atNightMs":58909,"m":"closet occupancy 0.0"}
+{"atWallMs":1790315381016,"atMonotonicMs":69754,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":69753.995257}
+{"atWallMs":1790315381177,"atMonotonicMs":69915,"type":"input.released","control":"back","hostMs":69914.570568}
+{"atWallMs":1790315382722,"atMonotonicMs":71460,"type":"input.requested","control":"bed","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":71459.920216}
+{"atWallMs":1790315382884,"atMonotonicMs":71621,"type":"input.released","control":"bed","hostMs":71621.12181}
+{"atWallMs":1790315383140,"atMonotonicMs":71877,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":600,"hostMs":71877.367551}
+{"atWallMs":1790315383741,"atMonotonicMs":72479,"type":"input.released","control":"flashlight","hostMs":72479.053617}
+{"atWallMs":1790315383792,"atMonotonicMs":72529,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":600,"hostMs":72529.259016}
+{"atWallMs":1790315384394,"atMonotonicMs":73131,"type":"input.released","control":"flashlight","hostMs":73131.355061}
+{"atWallMs":1790315384442,"atMonotonicMs":73179,"type":"policy","atNightMs":62335,"m":"bed occupancy 0.0"}
+{"atWallMs":1790315384442,"atMonotonicMs":73180,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":73179.835201}
+{"atWallMs":1790315384604,"atMonotonicMs":73341,"type":"input.released","control":"back","hostMs":73341.080349}
+{"atWallMs":1790315385364,"atMonotonicMs":74102,"type":"input.requested","control":"panLeft","point":{"x":100,"y":540},"kind":"hold","durationMs":500,"hostMs":74102.049569}
+{"atWallMs":1790315385865,"atMonotonicMs":74603,"type":"input.released","control":"panLeft","hostMs":74602.560659}
+{"atWallMs":1790315385947,"atMonotonicMs":74685,"type":"input.requested","control":"leftDoor","point":{"x":560,"y":600},"kind":"double","gapMs":100,"hostMs":74684.542863}
+{"atWallMs":1790315386369,"atMonotonicMs":75107,"type":"input.released","control":"leftDoor","firstReleasedHostMs":74845.879431,"hostMs":75106.703147}
+{"atWallMs":1790315390148,"atMonotonicMs":78886,"type":"policy","atNightMs":68041,"m":"door L listen CLEAR","hops":10,"max":0.2629,"consistent":0}
+{"atWallMs":1790315390149,"atMonotonicMs":78886,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":350,"hostMs":78886.166999}
+{"atWallMs":1790315390500,"atMonotonicMs":79238,"type":"input.released","control":"flashlight","hostMs":79237.82791}
+{"atWallMs":1790315390549,"atMonotonicMs":79287,"type":"policy","atNightMs":68442,"m":"door L flash occupancy 0.0"}
+{"atWallMs":1790315390775,"atMonotonicMs":79513,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":79513.033479}
+{"atWallMs":1790315390937,"atMonotonicMs":79674,"type":"input.released","control":"back","hostMs":79674.132376}
+{"atWallMs":1790315392503,"atMonotonicMs":81240,"type":"input.requested","control":"panRight","point":{"x":2300,"y":540},"kind":"hold","durationMs":500,"hostMs":81240.440053}
+{"atWallMs":1790315393003,"atMonotonicMs":81741,"type":"input.released","control":"panRight","hostMs":81740.670344}
+{"atWallMs":1790315393004,"atMonotonicMs":81742,"type":"input.requested","control":"rightDoor","point":{"x":2100,"y":600},"kind":"double","gapMs":100,"hostMs":81741.974572}
+{"atWallMs":1790315393425,"atMonotonicMs":82163,"type":"input.released","control":"rightDoor","firstReleasedHostMs":81902.461593,"hostMs":82162.728893}
+{"atWallMs":1790315397232,"atMonotonicMs":85970,"type":"policy","atNightMs":75125,"m":"door R listen CLEAR","hops":10,"max":0.1635,"consistent":0}
+{"atWallMs":1790315397233,"atMonotonicMs":85970,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":350,"hostMs":85970.194812}
+{"atWallMs":1790315397584,"atMonotonicMs":86321,"type":"input.released","control":"flashlight","hostMs":86321.199833}
+{"atWallMs":1790315397634,"atMonotonicMs":86371,"type":"policy","atNightMs":75527,"m":"door R flash occupancy 0.0"}
+{"atWallMs":1790315397930,"atMonotonicMs":86668,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":86667.549621}
+{"atWallMs":1790315398091,"atMonotonicMs":86828,"type":"input.released","control":"back","hostMs":86828.140288}
+{"atWallMs":1790315399663,"atMonotonicMs":88401,"type":"input.requested","control":"closet","point":{"x":1050,"y":600},"kind":"double","gapMs":100,"hostMs":88400.612037}
+{"atWallMs":1790315400083,"atMonotonicMs":88821,"type":"input.released","control":"closet","firstReleasedHostMs":88560.204432,"hostMs":88820.756006}
+{"atWallMs":1790315401986,"atMonotonicMs":90724,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":400,"hostMs":90723.812927}
+{"atWallMs":1790315402387,"atMonotonicMs":91125,"type":"input.released","control":"flashlight","hostMs":91124.774818}
+{"atWallMs":1790315402435,"atMonotonicMs":91172,"type":"policy","atNightMs":80327,"m":"closet occupancy 0.0"}
+{"atWallMs":1790315402435,"atMonotonicMs":91172,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":91172.422679}
+{"atWallMs":1790315402595,"atMonotonicMs":91333,"type":"input.released","control":"back","hostMs":91332.863453}
+{"atWallMs":1790315404211,"atMonotonicMs":92949,"type":"input.requested","control":"bed","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":92949.033903}
+{"atWallMs":1790315404372,"atMonotonicMs":93110,"type":"input.released","control":"bed","hostMs":93109.683545}
+{"atWallMs":1790315404620,"atMonotonicMs":93358,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":600,"hostMs":93357.536583}
+{"atWallMs":1790315405221,"atMonotonicMs":93958,"type":"input.released","control":"flashlight","hostMs":93958.406082}
+{"atWallMs":1790315405265,"atMonotonicMs":94002,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":600,"hostMs":94002.169207}
+{"atWallMs":1790315405866,"atMonotonicMs":94604,"type":"input.released","control":"flashlight","hostMs":94603.882336}
+{"atWallMs":1790315405914,"atMonotonicMs":94652,"type":"policy","atNightMs":83807,"m":"bed occupancy 0.0"}
+{"atWallMs":1790315405914,"atMonotonicMs":94652,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":94652.052291}
+{"atWallMs":1790315406075,"atMonotonicMs":94813,"type":"input.released","control":"back","hostMs":94812.846115}
+{"atWallMs":1790315406798,"atMonotonicMs":95536,"type":"input.requested","control":"panLeft","point":{"x":100,"y":540},"kind":"hold","durationMs":500,"hostMs":95535.934128}
+{"atWallMs":1790315407299,"atMonotonicMs":96036,"type":"input.released","control":"panLeft","hostMs":96036.177636}
+{"atWallMs":1790315407395,"atMonotonicMs":96133,"type":"input.requested","control":"leftDoor","point":{"x":560,"y":600},"kind":"double","gapMs":100,"hostMs":96132.808693}
+{"atWallMs":1790315407817,"atMonotonicMs":96555,"type":"input.released","control":"leftDoor","firstReleasedHostMs":96293.736198,"hostMs":96554.896205}
+{"atWallMs":1790315411557,"atMonotonicMs":100295,"type":"policy","atNightMs":89450,"m":"door L listen CLEAR","hops":11,"max":0.1481,"consistent":0}
+{"atWallMs":1790315411557,"atMonotonicMs":100295,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":350,"hostMs":100294.932304}
+{"atWallMs":1790315411910,"atMonotonicMs":100647,"type":"input.released","control":"flashlight","hostMs":100647.137703}
+{"atWallMs":1790315411959,"atMonotonicMs":100697,"type":"policy","atNightMs":89852,"m":"door L flash occupancy 0.0"}
+{"atWallMs":1790315412306,"atMonotonicMs":101044,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":101043.834388}
+{"atWallMs":1790315412467,"atMonotonicMs":101205,"type":"input.released","control":"back","hostMs":101204.911993}
+{"atWallMs":1790315413990,"atMonotonicMs":102728,"type":"input.requested","control":"panRight","point":{"x":2300,"y":540},"kind":"hold","durationMs":500,"hostMs":102727.756566}
+{"atWallMs":1790315414490,"atMonotonicMs":103228,"type":"input.released","control":"panRight","hostMs":103227.550864}
+{"atWallMs":1790315414491,"atMonotonicMs":103229,"type":"input.requested","control":"rightDoor","point":{"x":2100,"y":600},"kind":"double","gapMs":100,"hostMs":103228.577285}
+{"atWallMs":1790315414914,"atMonotonicMs":103651,"type":"input.released","control":"rightDoor","firstReleasedHostMs":103389.113626,"hostMs":103651.127134}
+{"atWallMs":1790315418730,"atMonotonicMs":107467,"type":"policy","atNightMs":96622,"m":"door R listen BREATH","hops":10,"max":0.9583,"consistent":10}
+{"atWallMs":1790315418730,"atMonotonicMs":107468,"type":"input.requested","control":"closeDoor","point":{"x":1990,"y":900},"kind":"hold","durationMs":3400,"hostMs":107467.5632}
+{"atWallMs":1790315422131,"atMonotonicMs":110868,"type":"input.released","control":"closeDoor","hostMs":110868.111997}
+{"atWallMs":1790315423334,"atMonotonicMs":112072,"type":"policy","atNightMs":101227,"m":"door R after close CLEAR","hops":8,"max":0.2283,"consistent":0}
+{"atWallMs":1790315423334,"atMonotonicMs":112072,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":350,"hostMs":112072.004247}
+{"atWallMs":1790315423686,"atMonotonicMs":112424,"type":"input.released","control":"flashlight","hostMs":112423.754784}
+{"atWallMs":1790315423735,"atMonotonicMs":112473,"type":"policy","atNightMs":101628,"m":"door R flash occupancy 0.0"}
+{"atWallMs":1790315424001,"atMonotonicMs":112738,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":112738.220446}
+{"atWallMs":1790315424161,"atMonotonicMs":112899,"type":"input.released","control":"back","hostMs":112898.787079}
+{"atWallMs":1790315425797,"atMonotonicMs":114534,"type":"input.requested","control":"closet","point":{"x":1050,"y":600},"kind":"double","gapMs":100,"hostMs":114534.362059}
+{"atWallMs":1790315426217,"atMonotonicMs":114955,"type":"input.released","control":"closet","firstReleasedHostMs":114694.883312,"hostMs":114954.672997}
+{"atWallMs":1790315428077,"atMonotonicMs":116815,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":400,"hostMs":116814.655789}
+{"atWallMs":1790315428478,"atMonotonicMs":117215,"type":"input.released","control":"flashlight","hostMs":117215.435906}
+{"atWallMs":1790315428521,"atMonotonicMs":117258,"type":"policy","atNightMs":106414,"m":"closet occupancy 0.0"}
+{"atWallMs":1790315428521,"atMonotonicMs":117259,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":117258.575602}
+{"atWallMs":1790315428681,"atMonotonicMs":117419,"type":"input.released","control":"back","hostMs":117418.966165}
+{"atWallMs":1790315430323,"atMonotonicMs":119061,"type":"input.requested","control":"bed","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":119060.827336}
+{"atWallMs":1790315430484,"atMonotonicMs":119222,"type":"input.released","control":"bed","hostMs":119221.849029}
+{"atWallMs":1790315430646,"atMonotonicMs":119384,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":600,"hostMs":119383.628927}
+{"atWallMs":1790315431247,"atMonotonicMs":119985,"type":"input.released","control":"flashlight","hostMs":119984.660891}
+{"atWallMs":1790315431290,"atMonotonicMs":120027,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":600,"hostMs":120027.377076}
+{"atWallMs":1790315431891,"atMonotonicMs":120629,"type":"input.released","control":"flashlight","hostMs":120628.721159}
+{"atWallMs":1790315431948,"atMonotonicMs":120685,"type":"policy","atNightMs":109840,"m":"bed occupancy 0.0"}
+{"atWallMs":1790315431948,"atMonotonicMs":120685,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":120685.351}
+{"atWallMs":1790315432108,"atMonotonicMs":120846,"type":"input.released","control":"back","hostMs":120845.68589}
+{"atWallMs":1790315432823,"atMonotonicMs":121560,"type":"input.requested","control":"panLeft","point":{"x":100,"y":540},"kind":"hold","durationMs":500,"hostMs":121560.376134}
+{"atWallMs":1790315433323,"atMonotonicMs":122060,"type":"input.released","control":"panLeft","hostMs":122060.289935}
+{"atWallMs":1790315433445,"atMonotonicMs":122183,"type":"input.requested","control":"leftDoor","point":{"x":560,"y":600},"kind":"double","gapMs":100,"hostMs":122182.532713}
+{"atWallMs":1790315433866,"atMonotonicMs":122603,"type":"input.released","control":"leftDoor","firstReleasedHostMs":122342.629708,"hostMs":122603.144715}
+{"atWallMs":1790315437682,"atMonotonicMs":126420,"type":"policy","atNightMs":115575,"m":"door L listen CLEAR","hops":11,"max":0.1198,"consistent":0}
+{"atWallMs":1790315437683,"atMonotonicMs":126420,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":350,"hostMs":126420.14066}
+{"atWallMs":1790315438035,"atMonotonicMs":126772,"type":"input.released","control":"flashlight","hostMs":126772.254111}
+{"atWallMs":1790315438085,"atMonotonicMs":126823,"type":"policy","atNightMs":115978,"m":"door L flash occupancy 0.0"}
+{"atWallMs":1790315438307,"atMonotonicMs":127044,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":127044.448252}
+{"atWallMs":1790315438469,"atMonotonicMs":127206,"type":"input.released","control":"back","hostMs":127206.20647}
+{"atWallMs":1790315440076,"atMonotonicMs":128813,"type":"input.requested","control":"panRight","point":{"x":2300,"y":540},"kind":"hold","durationMs":500,"hostMs":128813.341026}
+{"atWallMs":1790315440576,"atMonotonicMs":129314,"type":"input.released","control":"panRight","hostMs":129313.585099}
+{"atWallMs":1790315440577,"atMonotonicMs":129315,"type":"input.requested","control":"rightDoor","point":{"x":2100,"y":600},"kind":"double","gapMs":100,"hostMs":129314.720501}
+{"atWallMs":1790315440997,"atMonotonicMs":129735,"type":"input.released","control":"rightDoor","firstReleasedHostMs":129474.262563,"hostMs":129734.564448}
+{"atWallMs":1790315444723,"atMonotonicMs":133460,"type":"policy","atNightMs":122616,"m":"door R listen CLEAR","hops":10,"max":0.2389,"consistent":0}
+{"atWallMs":1790315444723,"atMonotonicMs":133461,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":350,"hostMs":133461.006285}
+{"atWallMs":1790315445075,"atMonotonicMs":133813,"type":"input.released","control":"flashlight","hostMs":133812.589507}
+{"atWallMs":1790315445126,"atMonotonicMs":133864,"type":"policy","atNightMs":123019,"m":"door R flash occupancy 0.5"}
+{"atWallMs":1790315445662,"atMonotonicMs":134399,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":134399.183112}
+{"atWallMs":1790315445823,"atMonotonicMs":134560,"type":"input.released","control":"back","hostMs":134560.099}
+{"atWallMs":1790315447400,"atMonotonicMs":136138,"type":"input.requested","control":"closet","point":{"x":1050,"y":600},"kind":"double","gapMs":100,"hostMs":136137.816442}
+{"atWallMs":1790315447821,"atMonotonicMs":136559,"type":"input.released","control":"closet","firstReleasedHostMs":136298.379115,"hostMs":136558.870977}
+{"atWallMs":1790315449677,"atMonotonicMs":138415,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":400,"hostMs":138414.909463}
+{"atWallMs":1790315450083,"atMonotonicMs":138820,"type":"input.released","control":"flashlight","hostMs":138820.226978}
+{"atWallMs":1790315450128,"atMonotonicMs":138865,"type":"policy","atNightMs":128021,"m":"closet occupancy 0.0"}
+{"atWallMs":1790315450128,"atMonotonicMs":138866,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":138865.505043}
+{"atWallMs":1790315450288,"atMonotonicMs":139026,"type":"input.released","control":"back","hostMs":139025.824456}
+{"atWallMs":1790315451882,"atMonotonicMs":140619,"type":"input.requested","control":"bed","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":140619.147955}
+{"atWallMs":1790315452043,"atMonotonicMs":140780,"type":"input.released","control":"bed","hostMs":140780.108168}
+{"atWallMs":1790315452227,"atMonotonicMs":140965,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":600,"hostMs":140965.006768}
+{"atWallMs":1790315452829,"atMonotonicMs":141567,"type":"input.released","control":"flashlight","hostMs":141566.908047}
+{"atWallMs":1790315452875,"atMonotonicMs":141612,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":600,"hostMs":141612.221238}
+{"atWallMs":1790315453477,"atMonotonicMs":142215,"type":"input.released","control":"flashlight","hostMs":142214.535201}
+{"atWallMs":1790315453526,"atMonotonicMs":142264,"type":"policy","atNightMs":131419,"m":"bed occupancy 0.0"}
+{"atWallMs":1790315453526,"atMonotonicMs":142264,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":142263.920678}
+{"atWallMs":1790315453687,"atMonotonicMs":142424,"type":"input.released","control":"back","hostMs":142424.28411}
+{"atWallMs":1790315454441,"atMonotonicMs":143178,"type":"input.requested","control":"panLeft","point":{"x":100,"y":540},"kind":"hold","durationMs":500,"hostMs":143178.44229}
+{"atWallMs":1790315454941,"atMonotonicMs":143679,"type":"input.released","control":"panLeft","hostMs":143678.613786}
+{"atWallMs":1790315455010,"atMonotonicMs":143747,"type":"input.requested","control":"leftDoor","point":{"x":560,"y":600},"kind":"double","gapMs":100,"hostMs":143747.493436}
+{"atWallMs":1790315455433,"atMonotonicMs":144171,"type":"input.released","control":"leftDoor","firstReleasedHostMs":143909.015685,"hostMs":144170.805601}
+{"atWallMs":1790315459197,"atMonotonicMs":147934,"type":"policy","atNightMs":137090,"m":"door L listen BREATH","hops":11,"max":0.7418,"consistent":11}
+{"atWallMs":1790315459197,"atMonotonicMs":147935,"type":"input.requested","control":"closeDoor","point":{"x":1990,"y":900},"kind":"hold","durationMs":3400,"hostMs":147934.778853}
+{"atWallMs":1790315462599,"atMonotonicMs":151337,"type":"input.released","control":"closeDoor","hostMs":151336.805831}
+{"atWallMs":1790315463801,"atMonotonicMs":152539,"type":"policy","atNightMs":141694,"m":"door L after close CLEAR","hops":7,"max":0.2738,"consistent":0}
+{"atWallMs":1790315463804,"atMonotonicMs":152541,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":350,"hostMs":152541.310431}
+{"atWallMs":1790315464157,"atMonotonicMs":152895,"type":"input.released","control":"flashlight","hostMs":152894.500176}
+{"atWallMs":1790315464205,"atMonotonicMs":152943,"type":"policy","atNightMs":142098,"m":"door L flash occupancy 0.0"}
+{"atWallMs":1790315464343,"atMonotonicMs":153081,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":153080.631299}
+{"atWallMs":1790315464504,"atMonotonicMs":153242,"type":"input.released","control":"back","hostMs":153241.655098}
+{"atWallMs":1790315466005,"atMonotonicMs":154742,"type":"input.requested","control":"panRight","point":{"x":2300,"y":540},"kind":"hold","durationMs":500,"hostMs":154742.076629}
+{"atWallMs":1790315466505,"atMonotonicMs":155242,"type":"input.released","control":"panRight","hostMs":155242.23748}
+{"atWallMs":1790315466506,"atMonotonicMs":155243,"type":"input.requested","control":"rightDoor","point":{"x":2100,"y":600},"kind":"double","gapMs":100,"hostMs":155243.393278}
+{"atWallMs":1790315466928,"atMonotonicMs":155666,"type":"input.released","control":"rightDoor","firstReleasedHostMs":155404.842884,"hostMs":155665.585859}
+{"atWallMs":1790315470742,"atMonotonicMs":159480,"type":"policy","atNightMs":148635,"m":"door R listen CLEAR","hops":11,"max":0.2253,"consistent":0}
+{"atWallMs":1790315470743,"atMonotonicMs":159480,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":350,"hostMs":159480.337697}
+{"atWallMs":1790315471096,"atMonotonicMs":159833,"type":"input.released","control":"flashlight","hostMs":159833.209519}
+{"atWallMs":1790315471135,"atMonotonicMs":159873,"type":"policy","atNightMs":149028,"m":"door R flash occupancy 0.0"}
+{"atWallMs":1790315471343,"atMonotonicMs":160080,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":160080.096899}
+{"atWallMs":1790315471503,"atMonotonicMs":160240,"type":"input.released","control":"back","hostMs":160240.345949}
+{"atWallMs":1790315473069,"atMonotonicMs":161807,"type":"input.requested","control":"closet","point":{"x":1050,"y":600},"kind":"double","gapMs":100,"hostMs":161806.873355}
+{"atWallMs":1790315473490,"atMonotonicMs":162227,"type":"input.released","control":"closet","firstReleasedHostMs":161967.893531,"hostMs":162227.358103}
+{"atWallMs":1790315475444,"atMonotonicMs":164182,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":400,"hostMs":164182.039775}
+{"atWallMs":1790315475845,"atMonotonicMs":164582,"type":"input.released","control":"flashlight","hostMs":164582.411834}
+{"atWallMs":1790315475886,"atMonotonicMs":164624,"type":"policy","atNightMs":153779,"m":"closet occupancy 0.0"}
+{"atWallMs":1790315475887,"atMonotonicMs":164624,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":164624.118176}
+{"atWallMs":1790315476046,"atMonotonicMs":164784,"type":"input.released","control":"back","hostMs":164784.061361}
+{"atWallMs":1790315477688,"atMonotonicMs":166426,"type":"input.requested","control":"bed","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":166425.621574}
+{"atWallMs":1790315477849,"atMonotonicMs":166586,"type":"input.released","control":"bed","hostMs":166586.405821}
+{"atWallMs":1790315478051,"atMonotonicMs":166789,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":600,"hostMs":166788.734676}
+{"atWallMs":1790315478655,"atMonotonicMs":167393,"type":"input.released","control":"flashlight","hostMs":167392.756838}
+{"atWallMs":1790315478704,"atMonotonicMs":167442,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":600,"hostMs":167441.505946}
+{"atWallMs":1790315479305,"atMonotonicMs":168042,"type":"input.released","control":"flashlight","hostMs":168042.107186}
+{"atWallMs":1790315479361,"atMonotonicMs":168099,"type":"policy","atNightMs":157254,"m":"bed occupancy 1.4"}
+{"atWallMs":1790315479362,"atMonotonicMs":168099,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":168099.287554}
+{"atWallMs":1790315479522,"atMonotonicMs":168260,"type":"input.released","control":"back","hostMs":168259.583893}
+{"atWallMs":1790315480213,"atMonotonicMs":168950,"type":"input.requested","control":"panLeft","point":{"x":100,"y":540},"kind":"hold","durationMs":500,"hostMs":168950.176617}
+{"atWallMs":1790315480713,"atMonotonicMs":169451,"type":"input.released","control":"panLeft","hostMs":169450.509037}
+{"atWallMs":1790315480784,"atMonotonicMs":169522,"type":"input.requested","control":"leftDoor","point":{"x":560,"y":600},"kind":"double","gapMs":100,"hostMs":169521.89287}
+{"atWallMs":1790315481205,"atMonotonicMs":169942,"type":"input.released","control":"leftDoor","firstReleasedHostMs":169682.422887,"hostMs":169942.375378}
+{"atWallMs":1790315485075,"atMonotonicMs":173813,"type":"policy","atNightMs":162968,"m":"door L listen BREATH","hops":11,"max":0.629,"consistent":10}
+{"atWallMs":1790315485076,"atMonotonicMs":173814,"type":"input.requested","control":"closeDoor","point":{"x":1990,"y":900},"kind":"hold","durationMs":3400,"hostMs":173813.745282}
+{"atWallMs":1790315488477,"atMonotonicMs":177215,"type":"input.released","control":"closeDoor","hostMs":177214.732378}
+{"atWallMs":1790315489680,"atMonotonicMs":178417,"type":"policy","atNightMs":167573,"m":"door L after close CLEAR","hops":7,"max":0.2443,"consistent":0}
+{"atWallMs":1790315489681,"atMonotonicMs":178418,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":350,"hostMs":178418.233112}
+{"atWallMs":1790315490032,"atMonotonicMs":178770,"type":"input.released","control":"flashlight","hostMs":178769.625272}
+{"atWallMs":1790315490077,"atMonotonicMs":178815,"type":"policy","atNightMs":167970,"m":"door L flash occupancy 0.0"}
+{"atWallMs":1790315490233,"atMonotonicMs":178970,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":178970.243202}
+{"atWallMs":1790315490394,"atMonotonicMs":179131,"type":"input.released","control":"back","hostMs":179131.217009}
+{"atWallMs":1790315491932,"atMonotonicMs":180670,"type":"input.requested","control":"panRight","point":{"x":2300,"y":540},"kind":"hold","durationMs":500,"hostMs":180669.716465}
+{"atWallMs":1790315492433,"atMonotonicMs":181170,"type":"input.released","control":"panRight","hostMs":181170.407711}
+{"atWallMs":1790315492436,"atMonotonicMs":181173,"type":"input.requested","control":"rightDoor","point":{"x":2100,"y":600},"kind":"double","gapMs":100,"hostMs":181173.257413}
+{"atWallMs":1790315492856,"atMonotonicMs":181593,"type":"input.released","control":"rightDoor","firstReleasedHostMs":181333.42863,"hostMs":181593.342182}
+{"atWallMs":1790315496636,"atMonotonicMs":185374,"type":"policy","atNightMs":174529,"m":"door R listen CLEAR","hops":11,"max":0.2178,"consistent":0}
+{"atWallMs":1790315496637,"atMonotonicMs":185374,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":350,"hostMs":185374.384085}
+{"atWallMs":1790315496989,"atMonotonicMs":185727,"type":"input.released","control":"flashlight","hostMs":185727.061925}
+{"atWallMs":1790315497032,"atMonotonicMs":185769,"type":"policy","atNightMs":174925,"m":"door R flash occupancy 0.0"}
+{"atWallMs":1790315497290,"atMonotonicMs":186027,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":186027.447161}
+{"atWallMs":1790315497450,"atMonotonicMs":186187,"type":"input.released","control":"back","hostMs":186187.276782}
+{"atWallMs":1790315498969,"atMonotonicMs":187706,"type":"input.requested","control":"closet","point":{"x":1050,"y":600},"kind":"double","gapMs":100,"hostMs":187706.088979}
+{"atWallMs":1790315499391,"atMonotonicMs":188128,"type":"input.released","control":"closet","firstReleasedHostMs":187868.532538,"hostMs":188128.299916}
+{"atWallMs":1790315501195,"atMonotonicMs":189932,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":400,"hostMs":189932.085425}
+{"atWallMs":1790315501597,"atMonotonicMs":190334,"type":"input.released","control":"flashlight","hostMs":190334.131699}
+{"atWallMs":1790315501650,"atMonotonicMs":190388,"type":"policy","atNightMs":179543,"m":"closet occupancy 0.0"}
+{"atWallMs":1790315501650,"atMonotonicMs":190388,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":190387.897661}
+{"atWallMs":1790315501811,"atMonotonicMs":190549,"type":"input.released","control":"back","hostMs":190548.98206}
+{"atWallMs":1790315503393,"atMonotonicMs":192131,"type":"input.requested","control":"bed","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":192130.970063}
+{"atWallMs":1790315503554,"atMonotonicMs":192292,"type":"input.released","control":"bed","hostMs":192291.936761}
+{"atWallMs":1790315503720,"atMonotonicMs":192458,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":600,"hostMs":192458.030184}
+{"atWallMs":1790315504323,"atMonotonicMs":193060,"type":"input.released","control":"flashlight","hostMs":193060.197548}
+{"atWallMs":1790315504364,"atMonotonicMs":193102,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":600,"hostMs":193102.031355}
+{"atWallMs":1790315504967,"atMonotonicMs":193704,"type":"input.released","control":"flashlight","hostMs":193704.138538}
+{"atWallMs":1790315505016,"atMonotonicMs":193753,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":600,"hostMs":193753.291833}
+{"atWallMs":1790315505618,"atMonotonicMs":194355,"type":"input.released","control":"flashlight","hostMs":194355.234443}
+{"atWallMs":1790315505659,"atMonotonicMs":194396,"type":"policy","atNightMs":183551,"m":"bed occupancy 0.0"}
+{"atWallMs":1790315505659,"atMonotonicMs":194397,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":194396.634926}
+{"atWallMs":1790315505820,"atMonotonicMs":194557,"type":"input.released","control":"back","hostMs":194557.391319}
+{"atWallMs":1790315506577,"atMonotonicMs":195314,"type":"input.requested","control":"panLeft","point":{"x":100,"y":540},"kind":"hold","durationMs":500,"hostMs":195314.157225}
+{"atWallMs":1790315507078,"atMonotonicMs":195816,"type":"input.released","control":"panLeft","hostMs":195815.586057}
+{"atWallMs":1790315507145,"atMonotonicMs":195882,"type":"input.requested","control":"leftDoor","point":{"x":560,"y":600},"kind":"double","gapMs":100,"hostMs":195882.376634}
+{"atWallMs":1790315507566,"atMonotonicMs":196304,"type":"input.released","control":"leftDoor","firstReleasedHostMs":196042.63713,"hostMs":196303.546023}
+{"atWallMs":1790315511370,"atMonotonicMs":200107,"type":"policy","atNightMs":189263,"m":"door L listen BREATH","hops":11,"max":0.8825,"consistent":5}
+{"atWallMs":1790315511370,"atMonotonicMs":200108,"type":"input.requested","control":"closeDoor","point":{"x":1990,"y":900},"kind":"hold","durationMs":3400,"hostMs":200107.804625}
+{"atWallMs":1790315514771,"atMonotonicMs":203508,"type":"input.released","control":"closeDoor","hostMs":203508.317054}
+{"atWallMs":1790315515972,"atMonotonicMs":204710,"type":"policy","atNightMs":193865,"m":"door L after close BREATH","hops":7,"max":0.9183,"consistent":5}
+{"atWallMs":1790315515973,"atMonotonicMs":204710,"type":"input.requested","control":"closeDoor","point":{"x":1990,"y":900},"kind":"hold","durationMs":3400,"hostMs":204710.254955}
+{"atWallMs":1790315519373,"atMonotonicMs":208111,"type":"input.released","control":"closeDoor","hostMs":208110.772767}
+{"atWallMs":1790315520575,"atMonotonicMs":209313,"type":"policy","atNightMs":198468,"m":"door L after close CLEAR","hops":7,"max":0.296,"consistent":0}
+{"atWallMs":1790315520576,"atMonotonicMs":209313,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":350,"hostMs":209313.254367}
+{"atWallMs":1790315520928,"atMonotonicMs":209666,"type":"input.released","control":"flashlight","hostMs":209665.835812}
+{"atWallMs":1790315520983,"atMonotonicMs":209720,"type":"policy","atNightMs":198875,"m":"door L flash occupancy 0.0"}
+{"atWallMs":1790315521184,"atMonotonicMs":209921,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":209921.348069}
+{"atWallMs":1790315521344,"atMonotonicMs":210082,"type":"input.released","control":"back","hostMs":210081.60363}
+{"atWallMs":1790315522838,"atMonotonicMs":211575,"type":"input.requested","control":"panRight","point":{"x":2300,"y":540},"kind":"hold","durationMs":500,"hostMs":211575.304641}
+{"atWallMs":1790315523338,"atMonotonicMs":212076,"type":"input.released","control":"panRight","hostMs":212075.634399}
+{"atWallMs":1790315523341,"atMonotonicMs":212078,"type":"input.requested","control":"rightDoor","point":{"x":2100,"y":600},"kind":"double","gapMs":100,"hostMs":212078.322008}
+{"atWallMs":1790315523761,"atMonotonicMs":212499,"type":"input.released","control":"rightDoor","firstReleasedHostMs":212238.688961,"hostMs":212498.553243}
+{"atWallMs":1790315527588,"atMonotonicMs":216325,"type":"policy","atNightMs":205480,"m":"door R listen CLEAR","hops":11,"max":0.2176,"consistent":0}
+{"atWallMs":1790315527588,"atMonotonicMs":216326,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":350,"hostMs":216325.952311}
+{"atWallMs":1790315527939,"atMonotonicMs":216677,"type":"input.released","control":"flashlight","hostMs":216677.008935}
+{"atWallMs":1790315527979,"atMonotonicMs":216716,"type":"policy","atNightMs":205872,"m":"door R flash occupancy 0.5"}
+{"atWallMs":1790315528221,"atMonotonicMs":216959,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":216958.544826}
+{"atWallMs":1790315528382,"atMonotonicMs":217120,"type":"input.released","control":"back","hostMs":217119.80638}
+{"atWallMs":1790315529886,"atMonotonicMs":218623,"type":"input.requested","control":"closet","point":{"x":1050,"y":600},"kind":"double","gapMs":100,"hostMs":218623.231363}
+{"atWallMs":1790315530306,"atMonotonicMs":219044,"type":"input.released","control":"closet","firstReleasedHostMs":218783.750931,"hostMs":219043.586261}
+{"atWallMs":1790315532115,"atMonotonicMs":220852,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":400,"hostMs":220852.187862}
+{"atWallMs":1790315532516,"atMonotonicMs":221254,"type":"input.released","control":"flashlight","hostMs":221253.658135}
+{"atWallMs":1790315532565,"atMonotonicMs":221302,"type":"policy","atNightMs":210458,"m":"closet occupancy 0.0"}
+{"atWallMs":1790315532565,"atMonotonicMs":221303,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":221302.81522}
+{"atWallMs":1790315532725,"atMonotonicMs":221462,"type":"input.released","control":"back","hostMs":221462.418962}
+{"atWallMs":1790315534472,"atMonotonicMs":223209,"type":"input.requested","control":"bed","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":223209.415322}
+{"atWallMs":1790315534632,"atMonotonicMs":223369,"type":"input.released","control":"bed","hostMs":223369.209033}
+{"atWallMs":1790315534795,"atMonotonicMs":223532,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":600,"hostMs":223532.10009}
+{"atWallMs":1790315535397,"atMonotonicMs":224135,"type":"input.released","control":"flashlight","hostMs":224134.519416}
+{"atWallMs":1790315535436,"atMonotonicMs":224174,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":600,"hostMs":224173.861692}
+{"atWallMs":1790315536039,"atMonotonicMs":224777,"type":"input.released","control":"flashlight","hostMs":224776.603788}
+{"atWallMs":1790315536084,"atMonotonicMs":224822,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":600,"hostMs":224821.657508}
+{"atWallMs":1790315536685,"atMonotonicMs":225422,"type":"input.released","control":"flashlight","hostMs":225422.14886}
+{"atWallMs":1790315536731,"atMonotonicMs":225468,"type":"policy","atNightMs":214624,"m":"bed occupancy 0.0"}
+{"atWallMs":1790315536731,"atMonotonicMs":225469,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":225468.725964}
+{"atWallMs":1790315536893,"atMonotonicMs":225630,"type":"input.released","control":"back","hostMs":225630.27867}
+{"atWallMs":1790315537563,"atMonotonicMs":226301,"type":"input.requested","control":"panLeft","point":{"x":100,"y":540},"kind":"hold","durationMs":500,"hostMs":226301.071034}
+{"atWallMs":1790315538065,"atMonotonicMs":226803,"type":"input.released","control":"panLeft","hostMs":226802.573156}
+{"atWallMs":1790315538099,"atMonotonicMs":226836,"type":"input.requested","control":"leftDoor","point":{"x":560,"y":600},"kind":"double","gapMs":100,"hostMs":226836.259848}
+{"atWallMs":1790315538520,"atMonotonicMs":227258,"type":"input.released","control":"leftDoor","firstReleasedHostMs":226997.186891,"hostMs":227257.919201}
+{"atWallMs":1790315542363,"atMonotonicMs":231101,"type":"policy","atNightMs":220256,"m":"door L listen CLEAR","hops":12,"max":0.2021,"consistent":0}
+{"atWallMs":1790315542364,"atMonotonicMs":231101,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":350,"hostMs":231101.199541}
+{"atWallMs":1790315542717,"atMonotonicMs":231455,"type":"input.released","control":"flashlight","hostMs":231454.544143}
+{"atWallMs":1790315542767,"atMonotonicMs":231505,"type":"policy","atNightMs":220660,"m":"door L flash occupancy 0.0"}
+{"atWallMs":1790315543203,"atMonotonicMs":231941,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":231940.841987}
+{"atWallMs":1790315543364,"atMonotonicMs":232102,"type":"input.released","control":"back","hostMs":232102.033598}
+{"atWallMs":1790315544956,"atMonotonicMs":233693,"type":"input.requested","control":"panRight","point":{"x":2300,"y":540},"kind":"hold","durationMs":500,"hostMs":233693.396538}
+{"atWallMs":1790315545456,"atMonotonicMs":234194,"type":"input.released","control":"panRight","hostMs":234193.974594}
+{"atWallMs":1790315545458,"atMonotonicMs":234196,"type":"input.requested","control":"rightDoor","point":{"x":2100,"y":600},"kind":"double","gapMs":100,"hostMs":234196.003198}
+{"atWallMs":1790315545880,"atMonotonicMs":234618,"type":"input.released","control":"rightDoor","firstReleasedHostMs":234357.003206,"hostMs":234617.874518}
+{"atWallMs":1790315549595,"atMonotonicMs":238333,"type":"policy","atNightMs":227488,"m":"door R listen CLEAR","hops":11,"max":0.1531,"consistent":0}
+{"atWallMs":1790315549595,"atMonotonicMs":238333,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":350,"hostMs":238332.889728}
+{"atWallMs":1790315549946,"atMonotonicMs":238684,"type":"input.released","control":"flashlight","hostMs":238683.808088}
+{"atWallMs":1790315549998,"atMonotonicMs":238736,"type":"policy","atNightMs":227891,"m":"door R flash occupancy 0.0"}
+{"atWallMs":1790315550173,"atMonotonicMs":238910,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":238910.240669}
+{"atWallMs":1790315550333,"atMonotonicMs":239071,"type":"input.released","control":"back","hostMs":239070.564313}
+{"atWallMs":1790315551950,"atMonotonicMs":240688,"type":"input.requested","control":"closet","point":{"x":1050,"y":600},"kind":"double","gapMs":100,"hostMs":240687.992046}
+{"atWallMs":1790315552371,"atMonotonicMs":241108,"type":"input.released","control":"closet","firstReleasedHostMs":240848.635281,"hostMs":241108.478524}
+{"atWallMs":1790315554262,"atMonotonicMs":242999,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":400,"hostMs":242999.278746}
+{"atWallMs":1790315554663,"atMonotonicMs":243401,"type":"input.released","control":"flashlight","hostMs":243400.75684}
+{"atWallMs":1790315554709,"atMonotonicMs":243446,"type":"policy","atNightMs":232601,"m":"closet occupancy 0.0"}
+{"atWallMs":1790315554709,"atMonotonicMs":243447,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":243446.613759}
+{"atWallMs":1790315554869,"atMonotonicMs":243606,"type":"input.released","control":"back","hostMs":243606.176953}
+{"atWallMs":1790315556468,"atMonotonicMs":245206,"type":"input.requested","control":"bed","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":245206.033608}
+{"atWallMs":1790315556629,"atMonotonicMs":245367,"type":"input.released","control":"bed","hostMs":245366.595635}
+{"atWallMs":1790315556843,"atMonotonicMs":245580,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":600,"hostMs":245580.093681}
+{"atWallMs":1790315557445,"atMonotonicMs":246182,"type":"input.released","control":"flashlight","hostMs":246182.35106}
+{"atWallMs":1790315557490,"atMonotonicMs":246228,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":600,"hostMs":246227.774154}
+{"atWallMs":1790315558094,"atMonotonicMs":246831,"type":"input.released","control":"flashlight","hostMs":246831.366905}
+{"atWallMs":1790315558142,"atMonotonicMs":246880,"type":"policy","atNightMs":236035,"m":"bed occupancy 0.0"}
+{"atWallMs":1790315558142,"atMonotonicMs":246880,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":246880.049575}
+{"atWallMs":1790315558303,"atMonotonicMs":247041,"type":"input.released","control":"back","hostMs":247040.604864}
+{"atWallMs":1790315559028,"atMonotonicMs":247766,"type":"input.requested","control":"panLeft","point":{"x":100,"y":540},"kind":"hold","durationMs":500,"hostMs":247766.052117}
+{"atWallMs":1790315559534,"atMonotonicMs":248272,"type":"input.released","control":"panLeft","hostMs":248271.578988}
+{"atWallMs":1790315559604,"atMonotonicMs":248341,"type":"input.requested","control":"leftDoor","point":{"x":560,"y":600},"kind":"double","gapMs":100,"hostMs":248341.38807}
+{"atWallMs":1790315560024,"atMonotonicMs":248762,"type":"input.released","control":"leftDoor","firstReleasedHostMs":248501.638395,"hostMs":248761.590093}
+{"atWallMs":1790315563814,"atMonotonicMs":252552,"type":"policy","atNightMs":241707,"m":"door L listen BREATH","hops":11,"max":0.5708,"consistent":7}
+{"atWallMs":1790315563815,"atMonotonicMs":252552,"type":"input.requested","control":"closeDoor","point":{"x":1990,"y":900},"kind":"hold","durationMs":3400,"hostMs":252552.351824}
+{"atWallMs":1790315567216,"atMonotonicMs":255953,"type":"input.released","control":"closeDoor","hostMs":255953.337148}
+{"atWallMs":1790315568420,"atMonotonicMs":257158,"type":"policy","atNightMs":246313,"m":"door L after close CLEAR","hops":7,"max":0.1705,"consistent":0}
+{"atWallMs":1790315568421,"atMonotonicMs":257158,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":350,"hostMs":257158.339882}
+{"atWallMs":1790315568772,"atMonotonicMs":257509,"type":"input.released","control":"flashlight","hostMs":257509.393949}
+{"atWallMs":1790315568822,"atMonotonicMs":257560,"type":"policy","atNightMs":246715,"m":"door L flash occupancy 0.0"}
+{"atWallMs":1790315569087,"atMonotonicMs":257825,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":257824.824813}
+{"atWallMs":1790315569248,"atMonotonicMs":257986,"type":"input.released","control":"back","hostMs":257985.8137}
+{"atWallMs":1790315571087,"atMonotonicMs":259824,"type":"input.requested","control":"panRight","point":{"x":2300,"y":540},"kind":"hold","durationMs":500,"hostMs":259824.200096}
+{"atWallMs":1790315571588,"atMonotonicMs":260325,"type":"input.released","control":"panRight","hostMs":260325.195701}
+{"atWallMs":1790315571589,"atMonotonicMs":260326,"type":"input.requested","control":"rightDoor","point":{"x":2100,"y":600},"kind":"double","gapMs":100,"hostMs":260326.298049}
+{"atWallMs":1790315572009,"atMonotonicMs":260746,"type":"input.released","control":"rightDoor","firstReleasedHostMs":260486.738336,"hostMs":260746.219017}
+{"atWallMs":1790315575724,"atMonotonicMs":264461,"type":"policy","atNightMs":253617,"m":"door R listen CLEAR","hops":11,"max":0.1885,"consistent":0}
+{"atWallMs":1790315575724,"atMonotonicMs":264462,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":350,"hostMs":264461.585328}
+{"atWallMs":1790315576077,"atMonotonicMs":264814,"type":"input.released","control":"flashlight","hostMs":264814.402616}
+{"atWallMs":1790315576117,"atMonotonicMs":264855,"type":"policy","atNightMs":254010,"m":"door R flash occupancy 0.5"}
+{"atWallMs":1790315576666,"atMonotonicMs":265403,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":265403.41793}
+{"atWallMs":1790315576826,"atMonotonicMs":265563,"type":"input.released","control":"back","hostMs":265563.341713}
+{"atWallMs":1790315578399,"atMonotonicMs":267137,"type":"input.requested","control":"closet","point":{"x":1050,"y":600},"kind":"double","gapMs":100,"hostMs":267136.596462}
+{"atWallMs":1790315578820,"atMonotonicMs":267557,"type":"input.released","control":"closet","firstReleasedHostMs":267297.54886,"hostMs":267557.364702}
+{"atWallMs":1790315580755,"atMonotonicMs":269493,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":400,"hostMs":269492.608829}
+{"atWallMs":1790315581157,"atMonotonicMs":269895,"type":"input.released","control":"flashlight","hostMs":269894.526298}
+{"atWallMs":1790315581205,"atMonotonicMs":269943,"type":"policy","atNightMs":259098,"m":"closet occupancy 16.0"}
+{"atWallMs":1790315581206,"atMonotonicMs":269943,"type":"input.requested","control":"closeDoor","point":{"x":1990,"y":900},"kind":"hold","durationMs":6000,"hostMs":269943.377678}
+{"atWallMs":1790315587207,"atMonotonicMs":275945,"type":"input.released","control":"closeDoor","hostMs":275944.72765}
+{"atWallMs":1790315587208,"atMonotonicMs":275945,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":400,"hostMs":275945.213846}
+{"atWallMs":1790315587609,"atMonotonicMs":276346,"type":"input.released","control":"flashlight","hostMs":276346.224569}
+{"atWallMs":1790315587651,"atMonotonicMs":276388,"type":"policy","atNightMs":265544,"m":"closet after hold occupancy undefined"}
+{"atWallMs":1790315587651,"atMonotonicMs":276389,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":276388.972575}
+{"atWallMs":1790315587812,"atMonotonicMs":276550,"type":"input.released","control":"back","hostMs":276549.809074}
+{"atWallMs":1790315589430,"atMonotonicMs":278167,"type":"input.requested","control":"bed","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":278167.10696}
+{"atWallMs":1790315589590,"atMonotonicMs":278327,"type":"input.released","control":"bed","hostMs":278327.42498}
+{"atWallMs":1790315589802,"atMonotonicMs":278539,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":600,"hostMs":278539.158168}
+{"atWallMs":1790315590403,"atMonotonicMs":279140,"type":"input.released","control":"flashlight","hostMs":279140.196562}
+{"atWallMs":1790315590456,"atMonotonicMs":279193,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":600,"hostMs":279193.235554}
+{"atWallMs":1790315591059,"atMonotonicMs":279796,"type":"input.released","control":"flashlight","hostMs":279796.350232}
+{"atWallMs":1790315591101,"atMonotonicMs":279838,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":600,"hostMs":279838.429979}
+{"atWallMs":1790315591704,"atMonotonicMs":280441,"type":"input.released","control":"flashlight","hostMs":280441.258241}
+{"atWallMs":1790315591756,"atMonotonicMs":280493,"type":"policy","atNightMs":269648,"m":"bed occupancy 0.0"}
+{"atWallMs":1790315591756,"atMonotonicMs":280494,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":280493.525416}
+{"atWallMs":1790315591916,"atMonotonicMs":280654,"type":"input.released","control":"back","hostMs":280654.025417}
+{"atWallMs":1790315592589,"atMonotonicMs":281327,"type":"input.requested","control":"panLeft","point":{"x":100,"y":540},"kind":"hold","durationMs":500,"hostMs":281326.652431}
+{"atWallMs":1790315593092,"atMonotonicMs":281830,"type":"input.released","control":"panLeft","hostMs":281829.748537}
+{"atWallMs":1790315593129,"atMonotonicMs":281867,"type":"input.requested","control":"leftDoor","point":{"x":560,"y":600},"kind":"double","gapMs":100,"hostMs":281866.822636}
+{"atWallMs":1790315593554,"atMonotonicMs":282292,"type":"input.released","control":"leftDoor","firstReleasedHostMs":282029.039628,"hostMs":282292.061962}
+{"atWallMs":1790315597358,"atMonotonicMs":286095,"type":"policy","atNightMs":275251,"m":"door L listen CLEAR","hops":11,"max":0.2474,"consistent":0}
+{"atWallMs":1790315597359,"atMonotonicMs":286096,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":350,"hostMs":286096.181483}
+{"atWallMs":1790315597712,"atMonotonicMs":286449,"type":"input.released","control":"flashlight","hostMs":286449.269474}
+{"atWallMs":1790315597757,"atMonotonicMs":286494,"type":"policy","atNightMs":275649,"m":"door L flash occupancy 0.0"}
+{"atWallMs":1790315598147,"atMonotonicMs":286884,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":286884.098812}
+{"atWallMs":1790315598308,"atMonotonicMs":287045,"type":"input.released","control":"back","hostMs":287045.156292}
+{"atWallMs":1790315599901,"atMonotonicMs":288638,"type":"input.requested","control":"panRight","point":{"x":2300,"y":540},"kind":"hold","durationMs":500,"hostMs":288638.234281}
+{"atWallMs":1790315600401,"atMonotonicMs":289138,"type":"input.released","control":"panRight","hostMs":289138.355337}
+{"atWallMs":1790315600402,"atMonotonicMs":289140,"type":"input.requested","control":"rightDoor","point":{"x":2100,"y":600},"kind":"double","gapMs":100,"hostMs":289139.843178}
+{"atWallMs":1790315600823,"atMonotonicMs":289561,"type":"input.released","control":"rightDoor","firstReleasedHostMs":289300.616972,"hostMs":289560.997964}
+{"atWallMs":1790315604565,"atMonotonicMs":293303,"type":"policy","atNightMs":282458,"m":"door R listen CLEAR","hops":11,"max":0.1556,"consistent":0}
+{"atWallMs":1790315604565,"atMonotonicMs":293303,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":350,"hostMs":293303.026442}
+{"atWallMs":1790315604917,"atMonotonicMs":293654,"type":"input.released","control":"flashlight","hostMs":293654.148222}
+{"atWallMs":1790315604969,"atMonotonicMs":293706,"type":"policy","atNightMs":282862,"m":"door R flash occupancy 0.0"}
+{"atWallMs":1790315605233,"atMonotonicMs":293970,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":293970.348804}
+{"atWallMs":1790315605394,"atMonotonicMs":294131,"type":"input.released","control":"back","hostMs":294131.154468}
+{"atWallMs":1790315606985,"atMonotonicMs":295722,"type":"input.requested","control":"closet","point":{"x":1050,"y":600},"kind":"double","gapMs":100,"hostMs":295722.315635}
+{"atWallMs":1790315607406,"atMonotonicMs":296144,"type":"input.released","control":"closet","firstReleasedHostMs":295883.126017,"hostMs":296143.81745}
+{"atWallMs":1790315609273,"atMonotonicMs":298011,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":400,"hostMs":298010.644661}
+{"atWallMs":1790315609675,"atMonotonicMs":298412,"type":"input.released","control":"flashlight","hostMs":298412.12717}
+{"atWallMs":1790315609723,"atMonotonicMs":298461,"type":"policy","atNightMs":287616,"m":"closet occupancy 9.1"}
+{"atWallMs":1790315609724,"atMonotonicMs":298461,"type":"input.requested","control":"closeDoor","point":{"x":1990,"y":900},"kind":"hold","durationMs":6000,"hostMs":298461.214003}
+{"atWallMs":1790315615724,"atMonotonicMs":304461,"type":"input.released","control":"closeDoor","hostMs":304461.232688}
+{"atWallMs":1790315615724,"atMonotonicMs":304462,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":400,"hostMs":304461.806876}
+{"atWallMs":1790315616125,"atMonotonicMs":304862,"type":"input.released","control":"flashlight","hostMs":304862.43375}
+{"atWallMs":1790315616173,"atMonotonicMs":304910,"type":"policy","atNightMs":294065,"m":"closet after hold occupancy 5.1"}
+{"atWallMs":1790315616173,"atMonotonicMs":304910,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":304910.402339}
+{"atWallMs":1790315616333,"atMonotonicMs":305071,"type":"input.released","control":"back","hostMs":305070.790217}
+{"atWallMs":1790315617971,"atMonotonicMs":306708,"type":"input.requested","control":"bed","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":306708.265358}
+{"atWallMs":1790315618131,"atMonotonicMs":306869,"type":"input.released","control":"bed","hostMs":306868.774387}
+{"atWallMs":1790315618306,"atMonotonicMs":307043,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":600,"hostMs":307043.343288}
+{"atWallMs":1790315618908,"atMonotonicMs":307646,"type":"input.released","control":"flashlight","hostMs":307645.935773}
+{"atWallMs":1790315618951,"atMonotonicMs":307688,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":600,"hostMs":307688.352647}
+{"atWallMs":1790315619552,"atMonotonicMs":308289,"type":"input.released","control":"flashlight","hostMs":308289.212742}
+{"atWallMs":1790315619591,"atMonotonicMs":308328,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":600,"hostMs":308328.414484}
+{"atWallMs":1790315620193,"atMonotonicMs":308931,"type":"input.released","control":"flashlight","hostMs":308930.975647}
+{"atWallMs":1790315620237,"atMonotonicMs":308974,"type":"policy","atNightMs":298129,"m":"bed occupancy 0.0"}
+{"atWallMs":1790315620237,"atMonotonicMs":308974,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":308974.341163}
+{"atWallMs":1790315620397,"atMonotonicMs":309135,"type":"input.released","control":"back","hostMs":309134.983505}
+{"atWallMs":1790315621086,"atMonotonicMs":309823,"type":"input.requested","control":"panLeft","point":{"x":100,"y":540},"kind":"hold","durationMs":500,"hostMs":309823.465052}
+{"atWallMs":1790315621587,"atMonotonicMs":310324,"type":"input.released","control":"panLeft","hostMs":310324.107957}
+{"atWallMs":1790315621588,"atMonotonicMs":310325,"type":"input.requested","control":"leftDoor","point":{"x":560,"y":600},"kind":"double","gapMs":100,"hostMs":310325.182715}
+{"atWallMs":1790315622008,"atMonotonicMs":310745,"type":"input.released","control":"leftDoor","firstReleasedHostMs":310485.453448,"hostMs":310745.377782}
+{"atWallMs":1790315625821,"atMonotonicMs":314558,"type":"policy","atNightMs":303714,"m":"door L listen CLEAR","hops":12,"max":0.1796,"consistent":0}
+{"atWallMs":1790315625821,"atMonotonicMs":314559,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":350,"hostMs":314558.692782}
+{"atWallMs":1790315626172,"atMonotonicMs":314909,"type":"input.released","control":"flashlight","hostMs":314909.304915}
+{"atWallMs":1790315626223,"atMonotonicMs":314961,"type":"policy","atNightMs":304116,"m":"door L flash occupancy 0.0"}
+{"atWallMs":1790315626411,"atMonotonicMs":315149,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":315148.690402}
+{"atWallMs":1790315626572,"atMonotonicMs":315310,"type":"input.released","control":"back","hostMs":315309.694858}
+{"atWallMs":1790315628061,"atMonotonicMs":316798,"type":"input.requested","control":"panRight","point":{"x":2300,"y":540},"kind":"hold","durationMs":500,"hostMs":316798.174542}
+{"atWallMs":1790315628562,"atMonotonicMs":317299,"type":"input.released","control":"panRight","hostMs":317299.126872}
+{"atWallMs":1790315628563,"atMonotonicMs":317300,"type":"input.requested","control":"rightDoor","point":{"x":2100,"y":600},"kind":"double","gapMs":100,"hostMs":317300.116905}
+{"atWallMs":1790315628983,"atMonotonicMs":317721,"type":"input.released","control":"rightDoor","firstReleasedHostMs":317460.378548,"hostMs":317720.907675}
+{"atWallMs":1790315632719,"atMonotonicMs":321456,"type":"policy","atNightMs":310611,"m":"door R listen BREATH","hops":12,"max":0.9544,"consistent":11}
+{"atWallMs":1790315632719,"atMonotonicMs":321457,"type":"input.requested","control":"closeDoor","point":{"x":1990,"y":900},"kind":"hold","durationMs":3400,"hostMs":321456.507517}
+{"atWallMs":1790315636119,"atMonotonicMs":324857,"type":"input.released","control":"closeDoor","hostMs":324856.721293}
+{"atWallMs":1790315637322,"atMonotonicMs":326059,"type":"policy","atNightMs":315214,"m":"door R after close CLEAR","hops":8,"max":0.1931,"consistent":0}
+{"atWallMs":1790315637322,"atMonotonicMs":326060,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":350,"hostMs":326059.579053}
+{"atWallMs":1790315637675,"atMonotonicMs":326413,"type":"input.released","control":"flashlight","hostMs":326412.541778}
+{"atWallMs":1790315637721,"atMonotonicMs":326459,"type":"policy","atNightMs":315614,"m":"door R flash occupancy 0.0"}
+{"atWallMs":1790315637892,"atMonotonicMs":326629,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":326629.468525}
+{"atWallMs":1790315638052,"atMonotonicMs":326790,"type":"input.released","control":"back","hostMs":326789.660208}
+{"atWallMs":1790315639663,"atMonotonicMs":328400,"type":"input.requested","control":"closet","point":{"x":1050,"y":600},"kind":"double","gapMs":100,"hostMs":328400.194759}
+{"atWallMs":1790315640083,"atMonotonicMs":328821,"type":"input.released","control":"closet","firstReleasedHostMs":328560.782976,"hostMs":328820.517875}
+{"atWallMs":1790315641993,"atMonotonicMs":330730,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":400,"hostMs":330730.335244}
+{"atWallMs":1790315642394,"atMonotonicMs":331131,"type":"input.released","control":"flashlight","hostMs":331131.236664}
+{"atWallMs":1790315642441,"atMonotonicMs":331179,"type":"policy","atNightMs":320334,"m":"closet occupancy 9.1"}
+{"atWallMs":1790315642441,"atMonotonicMs":331179,"type":"input.requested","control":"closeDoor","point":{"x":1990,"y":900},"kind":"hold","durationMs":6000,"hostMs":331178.970854}
+{"atWallMs":1790315648442,"atMonotonicMs":337179,"type":"input.released","control":"closeDoor","hostMs":337179.487685}
+{"atWallMs":1790315648442,"atMonotonicMs":337180,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":400,"hostMs":337179.804675}
+{"atWallMs":1790315648844,"atMonotonicMs":337581,"type":"input.released","control":"flashlight","hostMs":337581.128584}
+{"atWallMs":1790315648894,"atMonotonicMs":337632,"type":"policy","atNightMs":326787,"m":"closet after hold occupancy 5.1"}
+{"atWallMs":1790315648895,"atMonotonicMs":337632,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":337632.157644}
+{"atWallMs":1790315649055,"atMonotonicMs":337793,"type":"input.released","control":"back","hostMs":337792.905203}
+{"atWallMs":1790315650678,"atMonotonicMs":339416,"type":"input.requested","control":"bed","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":339415.953399}
+{"atWallMs":1790315650839,"atMonotonicMs":339577,"type":"input.released","control":"bed","hostMs":339576.771604}
+{"atWallMs":1790315650983,"atMonotonicMs":339720,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":600,"hostMs":339720.398686}
+{"atWallMs":1790315651585,"atMonotonicMs":340322,"type":"input.released","control":"flashlight","hostMs":340322.424996}
+{"atWallMs":1790315651629,"atMonotonicMs":340367,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":600,"hostMs":340366.899912}
+{"atWallMs":1790315652230,"atMonotonicMs":340967,"type":"input.released","control":"flashlight","hostMs":340967.278396}
+{"atWallMs":1790315652274,"atMonotonicMs":341012,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":600,"hostMs":341011.639735}
+{"atWallMs":1790315652875,"atMonotonicMs":341613,"type":"input.released","control":"flashlight","hostMs":341613.058819}
+{"atWallMs":1790315652931,"atMonotonicMs":341669,"type":"policy","atNightMs":330824,"m":"bed occupancy 0.0"}
+{"atWallMs":1790315652932,"atMonotonicMs":341669,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":341669.100853}
+{"atWallMs":1790315653092,"atMonotonicMs":341829,"type":"input.released","control":"back","hostMs":341829.475468}
+{"atWallMs":1790315653814,"atMonotonicMs":342552,"type":"input.requested","control":"panLeft","point":{"x":100,"y":540},"kind":"hold","durationMs":500,"hostMs":342551.839295}
+{"atWallMs":1790315654317,"atMonotonicMs":343054,"type":"input.released","control":"panLeft","hostMs":343054.430143}
+{"atWallMs":1790315654357,"atMonotonicMs":343094,"type":"input.requested","control":"leftDoor","point":{"x":560,"y":600},"kind":"double","gapMs":100,"hostMs":343094.319471}
+{"atWallMs":1790315654778,"atMonotonicMs":343516,"type":"input.released","control":"leftDoor","firstReleasedHostMs":343255.451148,"hostMs":343515.535225}
+{"atWallMs":1790315658577,"atMonotonicMs":347314,"type":"policy","atNightMs":336470,"m":"door L listen CLEAR","hops":11,"max":0.1371,"consistent":0}
+{"atWallMs":1790315658577,"atMonotonicMs":347315,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":350,"hostMs":347314.754431}
+{"atWallMs":1790315658929,"atMonotonicMs":347667,"type":"input.released","control":"flashlight","hostMs":347666.871466}
+{"atWallMs":1790315658976,"atMonotonicMs":347713,"type":"policy","atNightMs":336869,"m":"door L flash occupancy 0.0"}
+{"atWallMs":1790315659146,"atMonotonicMs":347884,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":347883.695359}
+{"atWallMs":1790315659307,"atMonotonicMs":348045,"type":"input.released","control":"back","hostMs":348044.903027}
+{"atWallMs":1790315660853,"atMonotonicMs":349590,"type":"input.requested","control":"panRight","point":{"x":2300,"y":540},"kind":"hold","durationMs":500,"hostMs":349590.471006}
+{"atWallMs":1790315661354,"atMonotonicMs":350091,"type":"input.released","control":"panRight","hostMs":350091.115202}
+{"atWallMs":1790315661355,"atMonotonicMs":350093,"type":"input.requested","control":"rightDoor","point":{"x":2100,"y":600},"kind":"double","gapMs":100,"hostMs":350092.864944}
+{"atWallMs":1790315661777,"atMonotonicMs":350515,"type":"input.released","control":"rightDoor","firstReleasedHostMs":350254.174623,"hostMs":350514.718656}
+{"atWallMs":1790315665650,"atMonotonicMs":354388,"type":"policy","atNightMs":343543,"m":"door R listen CLEAR","hops":11,"max":0.2349,"consistent":0}
+{"atWallMs":1790315665651,"atMonotonicMs":354388,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":350,"hostMs":354388.348668}
+{"atWallMs":1790315666003,"atMonotonicMs":354740,"type":"input.released","control":"flashlight","hostMs":354740.305757}
+{"atWallMs":1790315666048,"atMonotonicMs":354785,"type":"policy","atNightMs":343941,"m":"door R flash occupancy 0.4"}
+{"atWallMs":1790315666519,"atMonotonicMs":355257,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":355257.062482}
+{"atWallMs":1790315666680,"atMonotonicMs":355417,"type":"input.released","control":"back","hostMs":355417.264055}
+{"atWallMs":1790315668282,"atMonotonicMs":357020,"type":"input.requested","control":"closet","point":{"x":1050,"y":600},"kind":"double","gapMs":100,"hostMs":357019.790946}
+{"atWallMs":1790315668704,"atMonotonicMs":357442,"type":"input.released","control":"closet","firstReleasedHostMs":357181.118132,"hostMs":357441.722919}
+{"atWallMs":1790315670538,"atMonotonicMs":359276,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":400,"hostMs":359275.731448}
+{"atWallMs":1790315670943,"atMonotonicMs":359681,"type":"input.released","control":"flashlight","hostMs":359680.735017}
+{"atWallMs":1790315670991,"atMonotonicMs":359729,"type":"policy","atNightMs":348884,"m":"closet occupancy 9.1"}
+{"atWallMs":1790315670992,"atMonotonicMs":359729,"type":"input.requested","control":"closeDoor","point":{"x":1990,"y":900},"kind":"hold","durationMs":6000,"hostMs":359729.085887}
+{"atWallMs":1790315676992,"atMonotonicMs":365730,"type":"input.released","control":"closeDoor","hostMs":365729.522212}
+{"atWallMs":1790315676992,"atMonotonicMs":365730,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":400,"hostMs":365729.90088}
+{"atWallMs":1790315677393,"atMonotonicMs":366131,"type":"input.released","control":"flashlight","hostMs":366130.665045}
+{"atWallMs":1790315677449,"atMonotonicMs":366186,"type":"policy","atNightMs":355341,"m":"closet after hold occupancy 5.1"}
+{"atWallMs":1790315677449,"atMonotonicMs":366187,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":366186.582569}
+{"atWallMs":1790315677610,"atMonotonicMs":366348,"type":"input.released","control":"back","hostMs":366347.999944}
+{"atWallMs":1790315679291,"atMonotonicMs":368029,"type":"input.requested","control":"bed","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":368028.680833}
+{"atWallMs":1790315679452,"atMonotonicMs":368189,"type":"input.released","control":"bed","hostMs":368189.189492}
+{"atWallMs":1790315679638,"atMonotonicMs":368375,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":600,"hostMs":368375.454996}
+{"atWallMs":1790315680242,"atMonotonicMs":368980,"type":"input.released","control":"flashlight","hostMs":368979.873457}
+{"atWallMs":1790315680288,"atMonotonicMs":369025,"type":"input.requested","control":"flashlight","point":{"x":400,"y":900},"kind":"hold","durationMs":600,"hostMs":369025.297972}
+{"atWallMs":1790315680889,"atMonotonicMs":369627,"type":"input.released","control":"flashlight","hostMs":369627.028553}
+{"atWallMs":1790315680944,"atMonotonicMs":369682,"type":"policy","atNightMs":358837,"m":"bed occupancy 1.4"}
+{"atWallMs":1790315680945,"atMonotonicMs":369682,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":369682.377879}
+{"atWallMs":1790315681105,"atMonotonicMs":369843,"type":"input.released","control":"back","hostMs":369843.06892}
+{"atWallMs":1790315683956,"atMonotonicMs":372693,"type":"policy","atNightMs":361848,"m":"back: no hub/roomL/roomR (see doorR 5.7)"}
+{"atWallMs":1790315683956,"atMonotonicMs":372693,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":372693.356883}
+{"atWallMs":1790315684116,"atMonotonicMs":372853,"type":"input.released","control":"back","hostMs":372853.21498}
+{"atWallMs":1790315686970,"atMonotonicMs":375708,"type":"policy","atNightMs":364863,"m":"back: no hub/roomL/roomR (see doorR 0.8)"}
+{"atWallMs":1790315686971,"atMonotonicMs":375709,"type":"policy","atNightMs":364864,"m":"loop ended","cycles":13,"closes":7,"flashes":79,"occupiedHall":0,"closetHolds":4,"lost":1}
+{"atWallMs":1790315687769,"atMonotonicMs":376506,"type":"capture","name":"after-night-0","path":"~/fnaf-apks/fnaf4-device-runs/fnaf4-loop-n3c-teach-20260925T054831301Z/0001-after-night-0.png","sha256":"b6944b3771dac0f36e7902217089b56aa4566710f3991bc7c19b76b309622139"}
+{"atWallMs":1790315690850,"atMonotonicMs":379587,"type":"capture","name":"after-night-1","path":"~/fnaf-apks/fnaf4-device-runs/fnaf4-loop-n3c-teach-20260925T054831301Z/0002-after-night-1.png","sha256":"385bb969c2f5ea235cafa6bd0dfc3bc95fea7c8d4bcdd76f354500106142274a"}
+{"atWallMs":1790315693944,"atMonotonicMs":382682,"type":"capture","name":"after-night-2","path":"~/fnaf-apks/fnaf4-device-runs/fnaf4-loop-n3c-teach-20260925T054831301Z/0003-after-night-2.png","sha256":"45abed7d97dd3bf2db10287626d8fc9b9ac86700fc4401623061672c86e8a769"}
+{"atWallMs":1790315697170,"atMonotonicMs":385908,"type":"capture","name":"end","path":"~/fnaf-apks/fnaf4-device-runs/fnaf4-loop-n3c-teach-20260925T054831301Z/0004-end.png","sha256":"e0f444de965687b86e9b7b8eff4f0803f1c3129116c8bcd7043b81a2d8a3f5ad"}
+{"atWallMs":1790315712597,"atMonotonicMs":401335,"type":"capture","name":"title-after","path":"~/fnaf-apks/fnaf4-device-runs/fnaf4-loop-n3c-teach-20260925T054831301Z/0005-title-after.png","sha256":"3af46eada7db0e0b82e8a2a2de89ab9891219bd037ec89580930680410724497"}

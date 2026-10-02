@@ -2440,6 +2440,17 @@
       ]
     },
     {
+      "file": "packages/propose/bin/recompile/fnaf4-run-seed.ts",
+      "imports": [
+        "../../../play/games/fnaf4/fnaf4-run.ts",
+        "./sweep-common.ts",
+        "node:child_process",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "packages/propose/bin/recompile/hour-grid-fit.ts",
       "imports": [
         "./phone-encounter-replay.ts",
@@ -2624,6 +2635,7 @@
     {
       "file": "packages/propose/bin/recompile/pilot/batch.ts",
       "imports": [
+        "./pilot.ts",
         "node:child_process",
         "node:crypto",
         "node:fs",
@@ -2641,6 +2653,7 @@
     {
       "file": "packages/propose/bin/recompile/pilot/fnaf4.ts",
       "imports": [
+        "./pilot.ts",
         "node:fs",
         "node:path"
       ]
@@ -2658,6 +2671,7 @@
     {
       "file": "packages/propose/bin/recompile/pilot/record.ts",
       "imports": [
+        "./pilot.ts",
         "@sixam/review/renamed-path",
         "node:crypto",
         "node:fs",
@@ -2680,6 +2694,7 @@
     {
       "file": "packages/propose/bin/recompile/pilot/search.ts",
       "imports": [
+        "./pilot.ts",
         "./replay.ts",
         "node:child_process",
         "node:crypto",
@@ -2692,8 +2707,10 @@
       "file": "packages/propose/bin/recompile/pilot/test-pilot.ts",
       "imports": [
         "../../../../source/src/games/fnaf3/sim-fnaf3.ts",
+        "./batch.ts",
         "./fnaf3.ts",
         "./fnaf4.ts",
+        "./pilot.ts",
         "./record.ts",
         "./search.ts",
         "@sixam/review/renamed-path",
@@ -2746,6 +2763,17 @@
       "file": "packages/propose/bin/recompile/test-calib-replay.ts",
       "imports": [
         "./calib-replay.ts"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/recompile/test-fnaf4-run-seed.ts",
+      "imports": [
+        "./fnaf4-run-seed.ts",
+        "./sweep-common.ts",
+        "node:assert/strict",
+        "node:fs",
+        "node:path",
+        "node:url"
       ]
     },
     {
@@ -5005,6 +5033,7 @@
       "imports": [
         "node:assert/strict",
         "node:child_process",
+        "node:fs",
         "node:path",
         "node:url"
       ]

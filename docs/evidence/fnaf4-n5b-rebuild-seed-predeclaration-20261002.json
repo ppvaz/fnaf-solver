@@ -1,0 +1,456 @@
+{
+ "schema": "experiment-spec-v2",
+ "id": "fnaf4-n5b-rebuild-seed",
+ "kind": "confirm",
+ "purpose": "pre-registered test of whether the rebuilt FNaF 4, given a phone night's own touches, plays that night as the phone did at some seed",
+ "claimLevel": "MODEL_ONLY rebuild replays (rebuilt-runtime) of a DEVICE_MEASURED night",
+ "date": "2026-10-02",
+ "step": "ROADMAP S6: the rebuild against the phone (FNaF 4's counterpart of S2's seed scan)",
+ "question": "Given n5b's own touches, does the rebuilt FNaF 4 (pinned 57b48ac1-615f2ea0) play Night 5 as the phone did -- Fredbear landing R at 6 s, L at 9 s, R at 15 s and R at 21 s of level time, no landing on the other roll ticks to 36 s, and the black onset at level 39.25 s -- at some seed, and at exactly one?",
+ "hypothesis": {
+  "statement": "E-reproduce: some seed's replay matches every heard roll tick and blacks out inside the death window.",
+  "alternatives": [
+   "E-mapping: no seed matches -- the rebuild, or this night's touch mapping (landing latencies borrowed from FNaF 2, the level origin, the window transform), does not play n5b as the phone did (NOT_REPRODUCED).",
+   "E-underdetermined: several seeds match (REPRODUCED_MULTIPLE): the rebuild can play the night, and these observations do not pick its seed."
+  ]
+ },
+ "run": {
+  "dir": "docs/evidence/runs/fnaf4-loop-n5b-teach-20260927T230102385Z",
+  "pack": "docs/evidence/runs/fnaf4-loop-n5b-teach-20260927T230102385Z/pack.json",
+  "runJsonSha256": "307e925016c7895c91367af9694dec63c5e36cd64a729cce2ee20e65172222b2",
+  "eventsSha256": "704664eabe68d719d7e423e03a452c8415423dbe21b7fecf34f6ced0e38e82b1",
+  "originalSha256": {
+   "runJson": "f18c8d4fb1c501afa0d3606d0202d4d727421bec6af2145e4a7ef9bc49d9a7fb",
+   "events": "35bcf0356aa58e4540feffe8f1ed1b88658235ab28aca0ccab724e190637bcbb"
+  },
+  "custody": "packed 2026-10-02 from artifacts/runs (the bytes the record names); the pack redacts home paths only, and the rows are byte-identical from either"
+ },
+ "phone": {
+  "source": "docs/evidence/fnaf4-night5-n5b-20260927.json",
+  "sha256": "a0fd175e4a082d6c12dbaeadc163474eb80583490a6dbd74d64856eb69ae224b",
+  "read": "derived['n5b-replay'].hearing: stereo replay of the night's A2DP mix; accepted landings R@6s L@9s R@15s R@21s, every other side tick to 36 s silent (<= 0.137 against a 0.19 floor); timeline: all black from night 38.73 s, the level's t = 0 is 0.52 s before night 0 (LEVEL_ORIGIN_MS), so level 39.25 s = update 2355"
+ },
+ "mapping": {
+  "pressMs": 82,
+  "releaseMs": 20,
+  "source": "docs/evidence/phone-release-latency-20261001.json (phone-release-latency-4dd971d24ad952a1): FNaF 2 on the same handset and HID transport; FNaF 4's own landing latency is not measured",
+  "levelOrigin": "run.json night.epochHostMs + LEVEL_ORIGIN_MS (-520, fnaf4-run.ts), 60 updates a second",
+  "window": "packages/play/profiles/fnaf4/moto-g56/controls-fnaf4-moto-g56-v204.json view.mapping: window = screen / (2400/1024, 1080/768)",
+  "gestures": "a press from its request to its release; a double's two contacts from the request to firstReleasedHostMs and from that plus gapMs to the release (night-kit Actor.double); Continue is the title's own button (window 512, 460) at update 301"
+ },
+ "rows": {
+  "sha256": "7632e1e3178acd7252d87a787e2bf212581c2f50792e8953392771a7241d531a",
+  "count": 34
+ },
+ "binary": {
+  "dir": "~/fnaf-apks/recompile-fnaf4-20260927/pinned/57b48ac1-615f2ea0",
+  "binarySha256": "57b48ac1596879f8c8e8b121679f02314737107bacdcbe1af3258fe93121cd21",
+  "assetsSha256": "615f2ea01b9546709e8d9bc2b15cd9616aeda403a317c4db4bcde9f4d87f0049"
+ },
+ "save": {
+  "path": "packages/source/recompile/fixtures/fnaf4-night8-before.ini",
+  "sha256": "a58acc2d42e40653a3797dc783d54daef47f6f726140eccc36a905b261e95231",
+  "night": 5,
+  "why": "its night key is 5: Continue plays Night 5 (the still runs logged Night 5, shadow 0)"
+ },
+ "drawRule": {
+  "text": "In an update holding a 3000 ms roll, g229's four draws come first; his direction is the fourth (Random(2), 1 = right) and the roll (g286: Random(20) + 1 <= 12) the fifth, or the eighth when the 5000 ms group's three draws share the update (update % 300 = 0). A pass lands him on that side from the centre or a side, or walks him into that side's hall (HR/HL); in the hall, closet or bed the roll is drawn and he does not move.",
+  "development": [
+   {
+    "seed": 24850,
+    "touches": "none",
+    "ticks": [
+     [
+      180,
+      10,
+      false,
+      "R"
+     ],
+     [
+      360,
+      27,
+      false,
+      "-"
+     ],
+     [
+      540,
+      42,
+      false,
+      "R"
+     ],
+     [
+      720,
+      61,
+      false,
+      "L"
+     ],
+     [
+      900,
+      76,
+      true,
+      "-"
+     ],
+     [
+      1080,
+      93,
+      false,
+      "L"
+     ],
+     [
+      1260,
+      113,
+      false,
+      "L"
+     ],
+     [
+      1440,
+      127,
+      false,
+      "-"
+     ]
+    ]
+   },
+   {
+    "seed": 1234,
+    "touches": "none",
+    "ticks": [
+     [
+      180,
+      10,
+      false,
+      "-"
+     ],
+     [
+      360,
+      27,
+      false,
+      "L"
+     ],
+     [
+      540,
+      42,
+      false,
+      "R"
+     ],
+     [
+      720,
+      61,
+      false,
+      "-"
+     ],
+     [
+      900,
+      76,
+      true,
+      "R"
+     ],
+     [
+      1080,
+      93,
+      false,
+      "-"
+     ],
+     [
+      1260,
+      113,
+      false,
+      "R"
+     ],
+     [
+      1440,
+      127,
+      false,
+      "HR"
+     ]
+    ]
+   },
+   {
+    "seed": 40000,
+    "touches": "none",
+    "ticks": [
+     [
+      180,
+      10,
+      false,
+      "-"
+     ],
+     [
+      360,
+      27,
+      false,
+      "-"
+     ],
+     [
+      540,
+      42,
+      false,
+      "-"
+     ],
+     [
+      720,
+      61,
+      false,
+      "R"
+     ],
+     [
+      900,
+      76,
+      true,
+      "R"
+     ],
+     [
+      1080,
+      93,
+      false,
+      "-"
+     ],
+     [
+      1260,
+      113,
+      false,
+      "-"
+     ],
+     [
+      1440,
+      127,
+      false,
+      "R"
+     ]
+    ]
+   },
+   {
+    "seed": 777,
+    "touches": "none",
+    "ticks": [
+     [
+      180,
+      10,
+      false,
+      "L"
+     ],
+     [
+      360,
+      27,
+      false,
+      "L"
+     ],
+     [
+      540,
+      42,
+      false,
+      "R"
+     ],
+     [
+      720,
+      61,
+      false,
+      "R"
+     ],
+     [
+      900,
+      76,
+      true,
+      "L"
+     ],
+     [
+      1080,
+      93,
+      false,
+      "R"
+     ],
+     [
+      1260,
+      113,
+      false,
+      "-"
+     ],
+     [
+      1440,
+      127,
+      false,
+      "R"
+     ]
+    ]
+   },
+   {
+    "seed": 24850,
+    "touches": "n5b rows (press 82 ms, release 20 ms)",
+    "ticks": [
+     [
+      180,
+      12,
+      false,
+      "-"
+     ],
+     [
+      360,
+      29,
+      false,
+      "R"
+     ],
+     [
+      540,
+      44,
+      false,
+      "R"
+     ],
+     [
+      720,
+      64,
+      false,
+      "R"
+     ],
+     [
+      900,
+      80,
+      true,
+      "R"
+     ],
+     [
+      1080,
+      100,
+      false,
+      "R"
+     ],
+     [
+      1260,
+      123,
+      false,
+      "-"
+     ],
+     [
+      1440,
+      137,
+      false,
+      "R"
+     ],
+     [
+      1620,
+      155,
+      false,
+      "L"
+     ],
+     [
+      1800,
+      170,
+      true,
+      "-"
+     ],
+     [
+      1980,
+      192,
+      false,
+      "R"
+     ],
+     [
+      2160,
+      212,
+      false,
+      "L"
+     ],
+     [
+      2340,
+      228,
+      false,
+      "R"
+     ]
+    ]
+   }
+  ],
+  "developmentText": "Found and checked on these 45 roll ticks (four seeds with no touch, one with n5b's rows, all on the pinned binary); none of the ticks below is part of the test."
+ },
+ "prefix": [
+  {
+   "update": 180,
+   "before": 12,
+   "withFive": false,
+   "heard": "-"
+  },
+  {
+   "update": 360,
+   "before": 29,
+   "withFive": false,
+   "heard": "R"
+  },
+  {
+   "update": 540,
+   "before": 44,
+   "withFive": false,
+   "heard": "L"
+  }
+ ],
+ "prefixText": "Under n5b's rows the draw schedule is the same on seeds 24850 and 1234 until update 600 (the 10 s group then varies by state), with two walk draws before update 180, so the first three rolls are read off the generator alone. At 3 s he is at the centre, where every pass in the development lands, so the silent tick is a failed roll.",
+ "rollTicks": [
+  180,
+  360,
+  540,
+  720,
+  900,
+  1080,
+  1260,
+  1440,
+  1620,
+  1800,
+  1980,
+  2160
+ ],
+ "maxTicks": 3200,
+ "validity": {
+  "seeds": [
+   0,
+   3271,
+   6542,
+   9813,
+   13084,
+   16355,
+   19626,
+   22897,
+   26168,
+   29439,
+   32710,
+   35981,
+   39252,
+   45794,
+   49065,
+   55607,
+   58878,
+   62149,
+   65420,
+   3155
+  ],
+  "text": "20 seeds stage 1 drops, replayed too: each row records whether the seed's own trace has the prefix's draw counts (prefixOk). Any prefixOk false among them or the kept seeds voids stage 1 and the verdict is UNINFORMATIVE."
+ },
+ "decisionRule": {
+  "ticks": "-RL-R-R-----",
+  "deathWindow": [
+   2295,
+   2415
+  ],
+  "text": "A kept seed matches when its replay's roll-tick string (L/R a fresh living-room landing that update, '-' anything else, for 3 s..36 s) equals the heard string and `gameover` turns 1 within update 2355 +- 60 (one second; the fuse's deaths fall on the 3 s roll grid, so no neighbouring roll's death is inside it). REPRODUCED_UNIQUE: exactly one seed matches. REPRODUCED_MULTIPLE: more than one. NOT_REPRODUCED: none. UNINFORMATIVE: a prefixOk false, or more than 1% of stage-2 rows errored. Seeds matching the landings alone are reported, not tested."
+ },
+ "stoppingRule": {
+  "kind": "fixed-sample",
+  "text": "Every kept seed and the 20 validity seeds, once. Nothing in the mapping, the rule or the window changes after the scan; another mapping is a new predeclaration."
+ },
+ "tool": {
+  "path": "packages/propose/bin/recompile/fnaf4-run-seed.ts",
+  "sha256": "f4a571b209d074747c51948d1ea368a7a4e0e71538361c93c8085a48ef25af00"
+ },
+ "sources": [
+  {
+   "path": "packages/propose/bin/recompile/pilot/pilot.ts",
+   "sha256": "cec113a4d08d22d9d3143050494790c1617e26de5bf7984911ab6a522d743bd9"
+  },
+  {
+   "path": "packages/propose/bin/recompile/pilot/fnaf4.ts",
+   "sha256": "613b00b45782d90dbd850662a4602fae2a54f6d308e7f99e9388c342052deb8e"
+  }
+ ],
+ "command": "systemd-run --user --scope -p MemoryMax=2500M -p MemorySwapMax=0 -p CPUWeight=10 -- nice -n 19 node packages/propose/bin/recompile/fnaf4-run-seed.ts scan --predeclaration <this file> --binary <pinned>/Chowdren --assets <pinned>/Assets.dat --out <outside the repository> --jobs 3; then decide --results <out>/results.jsonl",
+ "resultRecord": "docs/evidence/fnaf4-n5b-rebuild-seed-20261002.json",
+ "rung": "None. REPRODUCED says the rebuild can play a phone night's encounters from its touches (a seed measurement for FNaF 4 if UNIQUE); it promotes nothing and claims nothing about the model.",
+ "stage1": {
+  "kept": 2399,
+  "text": "the seeds prefilter() keeps over all 65,536 under the prefix: counted before the scan, re-counted by the gate"
+ }
+}

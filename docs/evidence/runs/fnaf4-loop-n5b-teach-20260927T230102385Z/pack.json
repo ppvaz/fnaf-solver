@@ -1,0 +1,47 @@
+{
+  "schema": "run-pack-v1",
+  "version": 1,
+  "kind": "fnaf1-run",
+  "id": "fnaf4-loop-n5b-teach-20260927T230102385Z",
+  "campaign": null,
+  "run": "fnaf4-loop-n5b-teach-20260927T230102385Z",
+  "outcome": null,
+  "status": "COMPLETE",
+  "claimLevel": "DEVICE_MEASURED",
+  "target": {
+    "package": "com.scottgames.fnaf4"
+  },
+  "titleAfter": null,
+  "files": [
+    {
+      "name": "events.jsonl",
+      "sha256": "704664eabe68d719d7e423e03a452c8415423dbe21b7fecf34f6ced0e38e82b1",
+      "bytes": 6953,
+      "source": {
+        "sha256": "35bcf0356aa58e4540feffe8f1ed1b88658235ab28aca0ccab724e190637bcbb",
+        "bytes": 7013
+      },
+      "redactions": {
+        "paths": 6,
+        "pixelArrays": 0,
+        "frameRefs": 0
+      }
+    },
+    {
+      "name": "run.json",
+      "sha256": "307e925016c7895c91367af9694dec63c5e36cd64a729cce2ee20e65172222b2",
+      "bytes": 4089,
+      "source": {
+        "sha256": "f18c8d4fb1c501afa0d3606d0202d4d727421bec6af2145e4a7ef9bc49d9a7fb",
+        "bytes": 4209
+      },
+      "redactions": {
+        "paths": 12,
+        "pixelArrays": 0,
+        "frameRefs": 0
+      }
+    }
+  ],
+  "withheld": [],
+  "packer": "tools/evidence-pack.mjs"
+}

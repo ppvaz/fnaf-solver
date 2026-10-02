@@ -4,6 +4,7 @@
 // win, 10 extras, 15 nightmare jumpscare).
 import { appendFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { readRows } from './pilot.ts';
 
 export const SAVE_NAME = 'fn4';
 export const TITLE = 1;
@@ -27,7 +28,7 @@ export const CHALLENGES = ['btnMain08_Challenges.Active', 'btnChallenge01_Blind.
   'btnChallenge02_MadFreddy_Checkmark.Active', 'btnChallenge03_InstaFoxy_Checkmark.Active',
   'btnChallenge04_AllNightmare_Checkmark.Active'];
 export const WATCH = [
-  'btnMain04_Extra.Active', 'btnMain06_Nightmare.Active', 'btnNightmare_Start.Active', 'selection', ...CHALLENGES,
+  'btnMain02_Continue.Active', 'btnMain04_Extra.Active', 'btnMain06_Nightmare.Active', 'btnNightmare_Start.Active', 'selection', ...CHALLENGES,
   'beat 6', 'beat 7', 'beat 8', 'Multiple Touch', 'follow', 'black flash', 'Active_room',
   ...MARKERS, ...ACTORS, ...HUD, ...COUNTERS,
 ];
@@ -105,6 +106,53 @@ export function menuNight8() {
     const out = [];
     queue = queue.filter((q) => (q.at <= 0 ? (out.push(q.cmd), false) : (q.at -= 1, true)));
     return out;
+  };
+}
+
+/** The story path: Continue on the title plays the save's own night (its `night` key). */
+export function menuContinue() {
+  let queue = [];
+  return (s, v) => {
+    if (s.f === TITLE && s.t === 300) {
+      const o = v.one('btnMain02_Continue.Active');
+      if (o && inWindow(o.c)) queue.push({ at: 0, cmd: `down 0 ${o.c[0]} ${o.c[1]}` }, { at: 3, cmd: 'up 0' });
+    }
+    const out = [];
+    queue = queue.filter((q) => (q.at <= 0 ? (out.push(q.cmd), false) : (q.at -= 1, true)));
+    return out;
+  };
+}
+
+/**
+ * still: the save's story night with no touch in the level -- or, given
+ * `knobs.input` (CHOWDREN_INPUT rows), exactly those level rows -- with
+ * Fredbear's place and the station counters logged on change. What the stream
+ * does on its own or under a recorded night's touches, for reading the level's
+ * random draws per update from the trace beside where he lands.
+ */
+function still({ run, knobs }) {
+  const out = join(run, 'still.jsonl');
+  writeFileSync(out, '');
+  const log = (o) => appendFileSync(out, JSON.stringify(o) + '\n');
+  const menu = menuContinue();
+  // The harness applies a reply's touches on the next update: a row at (LEVEL, t) answers state t - 1.
+  const rows = knobs?.input ? readRows(knobs.input).filter((r) => r.f === LEVEL) : [];
+  let next = 0, last = null;
+  return {
+    step(s) {
+      const v = view(s);
+      if (s.f !== LEVEL) {
+        if (s.f === 4 || s.f === 15) { log({ t: s.t, f: s.f, dead: true }); this.done = true; }
+        return menu(s, v);
+      }
+      const rec = { at: places(v), listening: v.cv('listening mode'), leftShut: v.cv('left door shut'),
+        rightShut: v.cv('right door shut'), gameover: v.cv('gameover') };
+      const key = JSON.stringify(rec);
+      if (key !== last) { log({ t: s.t, ...rec }); last = key; }
+      const cmds = [];
+      while (next < rows.length && rows[next].t <= s.t + 1) cmds.push(rows[next++].cmd);
+      return cmds;
+    },
   };
 }
 
@@ -575,4 +623,4 @@ function warden({ run, knobs }, rev = 1) {
   };
 }
 
-export const POLICIES = { nav, survey, survey2, warden, warden2: (o) => warden(o, 2), warden3: (o) => warden(o, 3) };
+export const POLICIES = { nav, survey, survey2, still, warden, warden2: (o) => warden(o, 2), warden3: (o) => warden(o, 3) };

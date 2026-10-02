@@ -1,0 +1,113 @@
+{
+  "schema": "fnaf4-run-v1",
+  "id": "fnaf4-loop-n5b-teach-20260927T230102385Z",
+  "startedAt": "2026-09-27T23:01:02.386Z",
+  "claimLevel": "DEVICE_MEASURED helper native frames and regions, A2DP audio; no detector or route is promoted by this record",
+  "target": {
+    "package": "com.scottgames.fnaf4"
+  },
+  "options": {
+    "live": true,
+    "confirmLive": true,
+    "dryRun": false,
+    "mode": "loop",
+    "label": "n5b-teach",
+    "detectors": "~/fnaf-apks/fnaf4-detectors/cal0.json",
+    "stopAfterMs": 380000,
+    "teach": true,
+    "video": true,
+    "night": 5
+  },
+  "bindings": {
+    "controls": {
+      "path": "tools/device/models/controls-fnaf4-moto-g56-v204.json",
+      "sha256": "1862a318786cf07f4fc1b6cdc5131b65830e629055cd2e628708eb5692670676"
+    },
+    "regions": {
+      "path": "tools/device/models/regions-fnaf4-moto-g56-v204.json",
+      "sha256": "6a88b6044cb173c0e2c90d2eb4150adf799aadab5d34bc197eeeb910d9aa8a5d"
+    },
+    "cues": {
+      "path": "tools/cue/fnaf4-cues.py",
+      "sha256": "68e3980e80e2f33f61eb208eeb4a6988f3460e70eabed1ad75f704df97670618"
+    }
+  },
+  "capture": {
+    "sensor": "cue-helper-mediaprojection-2400x1080 + a2dp-bluealsa",
+    "directory": "~/fnaf-apks/fnaf4-device-runs/fnaf4-loop-n5b-teach-20260927T230102385Z",
+    "frames": [
+      {
+        "name": "title-before",
+        "path": "~/fnaf-apks/fnaf4-device-runs/fnaf4-loop-n5b-teach-20260927T230102385Z/0000-title-before.png",
+        "sha256": "b1689214f2b933fd131744bcfc476b19e4f0027e49f71b7d0f2efe0977a83112",
+        "atWallMs": 1790550063642
+      },
+      {
+        "name": "after-night-0",
+        "path": "~/fnaf-apks/fnaf4-device-runs/fnaf4-loop-n5b-teach-20260927T230102385Z/0001-after-night-0.png",
+        "sha256": "8b09a2b0b4e74f4d915baf413eda2fdd23922f78f1761ddf0f61dea1d7fc6302",
+        "atWallMs": 1790550129837
+      },
+      {
+        "name": "after-night-1",
+        "path": "~/fnaf-apks/fnaf4-device-runs/fnaf4-loop-n5b-teach-20260927T230102385Z/0002-after-night-1.png",
+        "sha256": "063a506c51bef1df76e08dacf6429b91088edb8ad5f457484bcd235c77ed1c64",
+        "atWallMs": 1790550133396
+      },
+      {
+        "name": "after-night-2",
+        "path": "~/fnaf-apks/fnaf4-device-runs/fnaf4-loop-n5b-teach-20260927T230102385Z/0003-after-night-2.png",
+        "sha256": "d37eff83671c6d354cb0c745b19d132cb3b1c2c5aaec4825c67b74bbf67b72b0",
+        "atWallMs": 1790550137057
+      },
+      {
+        "name": "end",
+        "path": "~/fnaf-apks/fnaf4-device-runs/fnaf4-loop-n5b-teach-20260927T230102385Z/0004-end.png",
+        "sha256": "616e8e6d87fdb4eed9aa4d52b33a25a3d4df1fcc0347e151552eadfe67ed4492",
+        "atWallMs": 1790550140688
+      },
+      {
+        "name": "title-after",
+        "path": "~/fnaf-apks/fnaf4-device-runs/fnaf4-loop-n5b-teach-20260927T230102385Z/0005-title-after.png",
+        "sha256": "09c33cb2df173cbd1a7d3fb523495fd1f652144382bdab986f81d80202a83a9a",
+        "atWallMs": 1790550153939
+      }
+    ]
+  },
+  "inputsSent": 50,
+  "status": "COMPLETE",
+  "updatedAt": "2026-09-27T23:02:33.943Z",
+  "continueHostMs": 5606.445489,
+  "detectors": {
+    "path": "~/fnaf-apks/fnaf4-detectors/cal0.json",
+    "sha256": "6a89c93c870cf7062cc5e4a9dc3d436c64793add413780d540b61b6808b5d9c2",
+    "source": "fnaf4-calibrate-cal0-20260925T050559824Z"
+  },
+  "night": {
+    "firstRoomAfterContinueMs": 6283.024705011927,
+    "epochHostMs": 11889.470194011927,
+    "endedAtNightMs": 54446.33980598807
+  },
+  "teach": true,
+  "loop": {
+    "cycles": 0,
+    "closes": 0,
+    "flashes": 0,
+    "occupiedHall": 0,
+    "closetHolds": 0,
+    "lost": 0
+  },
+  "regions": {
+    "frames": 802,
+    "errors": 0,
+    "path": "~/fnaf-apks/fnaf4-device-runs/fnaf4-loop-n5b-teach-20260927T230102385Z/regions.ndjson.gz"
+  },
+  "audio": {
+    "events": 723,
+    "onsets": 28,
+    "stderrTail": [],
+    "path": "~/fnaf-apks/fnaf4-device-runs/fnaf4-loop-n5b-teach-20260927T230102385Z/cues.jsonl"
+  },
+  "video": "~/fnaf-apks/fnaf4-videos/fnaf4-loop-n5b-teach-20260927T230102385Z.mp4",
+  "recovery": "RELAUNCHED_TO_TITLE (snap retained, read by a person)"
+}

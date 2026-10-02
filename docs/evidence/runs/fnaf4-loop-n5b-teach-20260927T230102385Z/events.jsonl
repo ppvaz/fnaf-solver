@@ -1,0 +1,42 @@
+{"atWallMs":1790550062492,"atMonotonicMs":155,"type":"audio-link","status":"audio-route=READY transport=bluealsa pcm=/org/bluealsa/hci0/dev_10_2B_1C_DA_18_2C/a2dpsnk/source mac=10:2B:1C:DA:18:2C"}
+{"atWallMs":1790550063642,"atMonotonicMs":1305,"type":"capture","name":"title-before","path":"~/fnaf-apks/fnaf4-device-runs/fnaf4-loop-n5b-teach-20260927T230102385Z/0000-title-before.png","sha256":"b1689214f2b933fd131744bcfc476b19e4f0027e49f71b7d0f2efe0977a83112"}
+{"atWallMs":1790550067783,"atMonotonicMs":5446,"type":"input.requested","control":"continue","point":{"x":1230,"y":645},"kind":"press","durationMs":160,"hostMs":5445.485947}
+{"atWallMs":1790550067943,"atMonotonicMs":5606,"type":"input.released","control":"continue","hostMs":5606.104879}
+{"atWallMs":1790550074266,"atMonotonicMs":11929,"type":"input.requested","control":"leftDoor","point":{"x":560,"y":600},"kind":"double","gapMs":100,"hostMs":11929.208577}
+{"atWallMs":1790550074687,"atMonotonicMs":12350,"type":"input.released","control":"leftDoor","firstReleasedHostMs":12090.232563,"hostMs":12350.030898}
+{"atWallMs":1790550074688,"atMonotonicMs":12351,"type":"input.requested","control":"closeDoor","point":{"x":1990,"y":900},"kind":"hold-while","maxMs":11500,"hostMs":12350.498853}
+{"atWallMs":1790550086189,"atMonotonicMs":23852,"type":"input.released","control":"closeDoor","hostMs":23851.854188,"why":"max"}
+{"atWallMs":1790550086189,"atMonotonicMs":23852,"type":"policy","atNightMs":11963,"m":"fredbear held L 11502 ms: max","side":"L","fredSide":null}
+{"atWallMs":1790550086190,"atMonotonicMs":23853,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":23852.845197}
+{"atWallMs":1790550086350,"atMonotonicMs":24013,"type":"input.released","control":"back","hostMs":24013.10758}
+{"atWallMs":1790550089193,"atMonotonicMs":26856,"type":"policy","atNightMs":14966,"m":"back: no hub/roomL/roomR (see doorL 0.0)"}
+{"atWallMs":1790550089193,"atMonotonicMs":26856,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":26855.965052}
+{"atWallMs":1790550089354,"atMonotonicMs":27017,"type":"input.released","control":"back","hostMs":27016.569407}
+{"atWallMs":1790550090907,"atMonotonicMs":28570,"type":"input.requested","control":"panLeft","point":{"x":100,"y":540},"kind":"hold","durationMs":500,"hostMs":28570.356264}
+{"atWallMs":1790550091409,"atMonotonicMs":29072,"type":"input.released","control":"panLeft","hostMs":29071.522756}
+{"atWallMs":1790550091458,"atMonotonicMs":29121,"type":"input.requested","control":"leftDoor","point":{"x":560,"y":600},"kind":"double","gapMs":100,"hostMs":29121.274783}
+{"atWallMs":1790550091879,"atMonotonicMs":29542,"type":"input.released","control":"leftDoor","firstReleasedHostMs":29281.853568,"hostMs":29542.364696}
+{"atWallMs":1790550091880,"atMonotonicMs":29543,"type":"input.requested","control":"closeDoor","point":{"x":1990,"y":900},"kind":"hold-while","maxMs":11500,"hostMs":29542.630954}
+{"atWallMs":1790550103382,"atMonotonicMs":41045,"type":"input.released","control":"closeDoor","hostMs":41045.111491,"why":"max"}
+{"atWallMs":1790550103382,"atMonotonicMs":41045,"type":"policy","atNightMs":29156,"m":"fredbear held L 11503 ms: max","side":"L","fredSide":null}
+{"atWallMs":1790550103383,"atMonotonicMs":41046,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":41045.644638}
+{"atWallMs":1790550103544,"atMonotonicMs":41207,"type":"input.released","control":"back","hostMs":41206.553597}
+{"atWallMs":1790550106399,"atMonotonicMs":44062,"type":"policy","atNightMs":32172,"m":"back: no hub/roomL/roomR (see doorL 0.0)"}
+{"atWallMs":1790550106399,"atMonotonicMs":44062,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":44061.954003}
+{"atWallMs":1790550106560,"atMonotonicMs":44223,"type":"input.released","control":"back","hostMs":44222.84007}
+{"atWallMs":1790550108146,"atMonotonicMs":45809,"type":"input.requested","control":"panLeft","point":{"x":100,"y":540},"kind":"hold","durationMs":500,"hostMs":45808.87549}
+{"atWallMs":1790550108649,"atMonotonicMs":46312,"type":"input.released","control":"panLeft","hostMs":46311.649053}
+{"atWallMs":1790550108686,"atMonotonicMs":46349,"type":"input.requested","control":"leftDoor","point":{"x":560,"y":600},"kind":"double","gapMs":100,"hostMs":46348.824488}
+{"atWallMs":1790550109110,"atMonotonicMs":46773,"type":"input.released","control":"leftDoor","firstReleasedHostMs":46511.254916,"hostMs":46772.813245}
+{"atWallMs":1790550109114,"atMonotonicMs":46777,"type":"input.requested","control":"closeDoor","point":{"x":1990,"y":900},"kind":"hold-while","maxMs":11500,"hostMs":46776.894729}
+{"atWallMs":1790550120615,"atMonotonicMs":58278,"type":"input.released","control":"closeDoor","hostMs":58278.016499,"why":"max"}
+{"atWallMs":1790550120615,"atMonotonicMs":58278,"type":"policy","atNightMs":46389,"m":"fredbear held L 11501 ms: max","side":"L","fredSide":null}
+{"atWallMs":1790550120615,"atMonotonicMs":58278,"type":"input.requested","control":"back","point":{"x":1200,"y":950},"kind":"press","durationMs":160,"hostMs":58278.447487}
+{"atWallMs":1790550120776,"atMonotonicMs":58439,"type":"input.released","control":"back","hostMs":58438.76538}
+{"atWallMs":1790550123622,"atMonotonicMs":61285,"type":"policy","atNightMs":49395,"m":"back: no hub/roomL/roomR (see doorR 15.1)"}
+{"atWallMs":1790550128658,"atMonotonicMs":66321,"type":"policy","atNightMs":54432,"m":"loop ended","cycles":0,"closes":0,"flashes":0,"occupiedHall":0,"closetHolds":0,"lost":0}
+{"atWallMs":1790550129837,"atMonotonicMs":67500,"type":"capture","name":"after-night-0","path":"~/fnaf-apks/fnaf4-device-runs/fnaf4-loop-n5b-teach-20260927T230102385Z/0001-after-night-0.png","sha256":"8b09a2b0b4e74f4d915baf413eda2fdd23922f78f1761ddf0f61dea1d7fc6302"}
+{"atWallMs":1790550133396,"atMonotonicMs":71059,"type":"capture","name":"after-night-1","path":"~/fnaf-apks/fnaf4-device-runs/fnaf4-loop-n5b-teach-20260927T230102385Z/0002-after-night-1.png","sha256":"063a506c51bef1df76e08dacf6429b91088edb8ad5f457484bcd235c77ed1c64"}
+{"atWallMs":1790550137057,"atMonotonicMs":74720,"type":"capture","name":"after-night-2","path":"~/fnaf-apks/fnaf4-device-runs/fnaf4-loop-n5b-teach-20260927T230102385Z/0003-after-night-2.png","sha256":"d37eff83671c6d354cb0c745b19d132cb3b1c2c5aaec4825c67b74bbf67b72b0"}
+{"atWallMs":1790550140688,"atMonotonicMs":78351,"type":"capture","name":"end","path":"~/fnaf-apks/fnaf4-device-runs/fnaf4-loop-n5b-teach-20260927T230102385Z/0004-end.png","sha256":"616e8e6d87fdb4eed9aa4d52b33a25a3d4df1fcc0347e151552eadfe67ed4492"}
+{"atWallMs":1790550153939,"atMonotonicMs":91602,"type":"capture","name":"title-after","path":"~/fnaf-apks/fnaf4-device-runs/fnaf4-loop-n5b-teach-20260927T230102385Z/0005-title-after.png","sha256":"09c33cb2df173cbd1a7d3fb523495fd1f652144382bdab986f81d80202a83a9a"}

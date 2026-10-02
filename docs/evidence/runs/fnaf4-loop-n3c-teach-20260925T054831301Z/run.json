@@ -1,0 +1,112 @@
+{
+  "schema": "fnaf4-run-v1",
+  "id": "fnaf4-loop-n3c-teach-20260925T054831301Z",
+  "startedAt": "2026-09-25T05:48:31.302Z",
+  "claimLevel": "DEVICE_MEASURED helper native frames and regions, A2DP audio; no detector or route is promoted by this record",
+  "target": {
+    "package": "com.scottgames.fnaf4"
+  },
+  "options": {
+    "live": true,
+    "confirmLive": true,
+    "dryRun": false,
+    "mode": "loop",
+    "label": "n3c-teach",
+    "detectors": "~/fnaf-apks/fnaf4-detectors/cal0.json",
+    "stopAfterMs": 380000,
+    "teach": true,
+    "video": true
+  },
+  "bindings": {
+    "controls": {
+      "path": "tools/device/models/controls-fnaf4-moto-g56-v204.json",
+      "sha256": "1862a318786cf07f4fc1b6cdc5131b65830e629055cd2e628708eb5692670676"
+    },
+    "regions": {
+      "path": "tools/device/models/regions-fnaf4-moto-g56-v204.json",
+      "sha256": "6a88b6044cb173c0e2c90d2eb4150adf799aadab5d34bc197eeeb910d9aa8a5d"
+    },
+    "cues": {
+      "path": "tools/cue/fnaf4-cues.py",
+      "sha256": "b7b7ea0f6090ffb48fb3493e9106f61b7ee94743748f3b473cb57a08a840d706"
+    }
+  },
+  "capture": {
+    "sensor": "cue-helper-mediaprojection-2400x1080 + a2dp-bluealsa",
+    "directory": "~/fnaf-apks/fnaf4-device-runs/fnaf4-loop-n3c-teach-20260925T054831301Z",
+    "frames": [
+      {
+        "name": "title-before",
+        "path": "~/fnaf-apks/fnaf4-device-runs/fnaf4-loop-n3c-teach-20260925T054831301Z/0000-title-before.png",
+        "sha256": "397fae95eaa691fef2b1c944e0f2a22afca47110e820fab0a5ea7114a151b8c0",
+        "atWallMs": 1790315312592
+      },
+      {
+        "name": "after-night-0",
+        "path": "~/fnaf-apks/fnaf4-device-runs/fnaf4-loop-n3c-teach-20260925T054831301Z/0001-after-night-0.png",
+        "sha256": "b6944b3771dac0f36e7902217089b56aa4566710f3991bc7c19b76b309622139",
+        "atWallMs": 1790315687769
+      },
+      {
+        "name": "after-night-1",
+        "path": "~/fnaf-apks/fnaf4-device-runs/fnaf4-loop-n3c-teach-20260925T054831301Z/0002-after-night-1.png",
+        "sha256": "385bb969c2f5ea235cafa6bd0dfc3bc95fea7c8d4bcdd76f354500106142274a",
+        "atWallMs": 1790315690850
+      },
+      {
+        "name": "after-night-2",
+        "path": "~/fnaf-apks/fnaf4-device-runs/fnaf4-loop-n3c-teach-20260925T054831301Z/0003-after-night-2.png",
+        "sha256": "45abed7d97dd3bf2db10287626d8fc9b9ac86700fc4401623061672c86e8a769",
+        "atWallMs": 1790315693944
+      },
+      {
+        "name": "end",
+        "path": "~/fnaf-apks/fnaf4-device-runs/fnaf4-loop-n3c-teach-20260925T054831301Z/0004-end.png",
+        "sha256": "e0f444de965687b86e9b7b8eff4f0803f1c3129116c8bcd7043b81a2d8a3f5ad",
+        "atWallMs": 1790315697170
+      },
+      {
+        "name": "title-after",
+        "path": "~/fnaf-apks/fnaf4-device-runs/fnaf4-loop-n3c-teach-20260925T054831301Z/0005-title-after.png",
+        "sha256": "3af46eada7db0e0b82e8a2a2de89ab9891219bd037ec89580930680410724497",
+        "atWallMs": 1790315712597
+      }
+    ]
+  },
+  "inputsSent": 273,
+  "status": "COMPLETE",
+  "updatedAt": "2026-09-25T05:55:12.597Z",
+  "continueHostMs": 4617.801256,
+  "detectors": {
+    "path": "~/fnaf-apks/fnaf4-detectors/cal0.json",
+    "sha256": "6a89c93c870cf7062cc5e4a9dc3d436c64793add413780d540b61b6808b5d9c2",
+    "source": "fnaf4-calibrate-cal0-20260925T050559824Z"
+  },
+  "night": {
+    "firstRoomAfterContinueMs": 6226.893185996515,
+    "epochHostMs": 10844.694441996515,
+    "endedAtNightMs": 364885.4532260035
+  },
+  "teach": true,
+  "loop": {
+    "cycles": 13,
+    "closes": 7,
+    "flashes": 79,
+    "occupiedHall": 0,
+    "closetHolds": 4,
+    "lost": 1
+  },
+  "regions": {
+    "frames": 3826,
+    "errors": 0,
+    "path": "~/fnaf-apks/fnaf4-device-runs/fnaf4-loop-n3c-teach-20260925T054831301Z/regions.ndjson.gz"
+  },
+  "audio": {
+    "events": 3923,
+    "onsets": 100,
+    "stderrTail": [],
+    "path": "~/fnaf-apks/fnaf4-device-runs/fnaf4-loop-n3c-teach-20260925T054831301Z/cues.jsonl"
+  },
+  "video": "~/fnaf-apks/fnaf4-videos/fnaf4-loop-n3c-teach-20260925T054831301Z.mp4",
+  "recovery": "RELAUNCHED_TO_TITLE (snap retained, read by a person)"
+}
