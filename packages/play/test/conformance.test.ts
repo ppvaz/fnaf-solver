@@ -11,13 +11,15 @@ assert.deepEqual(report([{ flags: 3, point: { x: 350, y: 615 } }]).slice(0, 7),
 assert.equal(HID_DESCRIPTOR.length, 124, 'HID descriptor must declare both contact identifiers');
 assert.equal(report([{ flags: 0, point: { x: 350, y: 615 } }])[7], 4,
   'single-contact release must consume the inactive second contact record');
-const lines = [];
+const lines: { command: string, report?: number[] }[] = [];
 const hid = new HidWireTransport({ write: async line => lines.push(JSON.parse(line)), ready: async () => {}, sleep: async () => {} });
-await hid.send({ command: { action: { kind: 'press', control: 'cameraFeedLight', durationMs: 17 }, source: { controller: 'test' } }, point: { x: 900, y: 540 } });
+// The transport's command type does not name the control; the action still carries it.
+const action = { kind: 'press', control: 'cameraFeedLight', durationMs: 17 };
+await hid.send({ command: { action, source: { controller: 'test' } }, point: { x: 900, y: 540 } });
 assert.equal(lines[0].command, 'register');
-assert.deepEqual(lines.filter(line => line.command === 'report').map(line => line.report[2]), [3, 0]);
+assert.deepEqual(lines.filter(line => line.command === 'report').map(line => line.report?.[2]), [3, 0]);
 await hid.abort();
-assert.equal(lines.at(-1).report[1], 2, 'abort must emit a two-contact release');
+assert.equal(lines.at(-1)?.report?.[1], 2, 'abort must emit a two-contact release');
 assert.deepEqual(parseCueResponse('OK snapshotNs=3 ageUs=17 monitorUp=true'),
   { snapshotNs: '3', ageUs: '17', monitorUp: 'true' });
 const cue = new CompanionControlTransport({ token: '0123456789abcdef0123456789abcdef', request: request =>
@@ -53,7 +55,7 @@ assert.equal(oneRead.screen, 'FNAF2_NIGHT');
 // The retired GRID verb, the camera-selection and battery facts left the
 // transport with the device fields they read (Companion 0.2.0).
 for (const retired of ['grid', 'cameraMeasurement', 'cameraHighlightsMeasurement', 'batteryMeasurement'])
-  assert.equal(typeof framed[retired], 'undefined', `${retired} is retired`);
+  assert.equal(typeof Reflect.get(framed, retired), 'undefined', `${retired} is retired`);
 for (const bad of [
   'OK snapshotNs=3 seq=42 grid=20x9 cells=deadbeef',
   'OK snapshotNs=3 seq=42 cells=' + runBody,

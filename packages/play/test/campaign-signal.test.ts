@@ -2,12 +2,15 @@ import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
 import { installCampaignSignalHandlers } from '../src/campaign/campaign-signal.ts';
 
-const processObject: any = new EventEmitter();
-let cleanupReason = null;
-const exits = [];
-const reports = [];
+type SignalProcess = NonNullable<NonNullable<Parameters<typeof installCampaignSignalHandlers>[0]>['processObject']>;
+
+const processObject: EventEmitter & { exitCode?: number | string | null } = new EventEmitter();
+let cleanupReason = null as Error | null;
+const exits: number[] = [];
+const reports: unknown[] = [];
 const guard = installCampaignSignalHandlers({
-  processObject,
+  // A fake process without exit(): the exit port below stands in for it.
+  processObject: processObject as unknown as SignalProcess,
   cleanup: async reason => { cleanupReason = reason; },
   exit: code => exits.push(code),
   report: error => reports.push(error),

@@ -4,13 +4,13 @@
 import assert from 'node:assert/strict';
 import { fitClockMap, mapClockInterval } from '@sixam/play';
 
-const exact = (fromMs, toMs, count, spanMs) => Array.from({ length: count }, (_, index) => {
+const exact = (fromMs: number, toMs: (sourceMs: number) => number, count: number, spanMs: number) => Array.from({ length: count }, (_, index) => {
   const sourceMs = fromMs + Math.round(spanMs * index / (count - 1));
   return { sourceMs, targetBeforeMs: toMs(sourceMs), targetAfterMs: toMs(sourceMs) };
 });
 const base = { sourceClock: 'device-monotonic-ms', targetClock: 'host-monotonic-ms',
   sourceSession: 'boot-a', targetSession: 'host-a', id: 'map-fit', evidenceId: 'map-fit-evidence' };
-const map = mapping => value => mapClockInterval({ clock: 'device-monotonic-ms', value }, {
+const map = (mapping: unknown) => (value: number) => mapClockInterval({ clock: 'device-monotonic-ms', value }, {
   targetClock: 'host-monotonic-ms', targetSession: 'host-a', sourceSession: 'boot-a',
   uncertaintyMs: 0, mapping,
 });
@@ -37,7 +37,7 @@ assert.equal(drifting.rateErrorPpm, 0);
 // Bracketed anchors: every pairwise interval must contain the true rate, so
 // the intersection bound stays inside the budget and the mapped interval
 // still brackets the truth the samples were generated from.
-const truth = value => 2000 + value * 1.00005;
+const truth = (value: number) => 2000 + value * 1.00005;
 const bracketed = exact(50000, s => s, 6, 30000).map(sample => {
   const center = truth(sample.sourceMs);
   return { ...sample, targetBeforeMs: center - 10, targetAfterMs: center + 10 };
@@ -76,6 +76,8 @@ assert.throws(() => fitClockMap({ ...base, samples: bracketed, sourceUncertainty
   maxRateErrorPpm: 10 }), /rate error/);
 assert.throws(() => fitClockMap({ ...base, samples: bracketed, sourceUncertaintyMs: 6,
   maxErrorMs: 10 }), /offset error/);
-assert.throws(() => fitClockMap({ ...base }), /invalid fit request/);
+// Widened to take the request without samples its type requires: the refusal is what is tested.
+assert.throws(() => (fitClockMap as (input: Omit<Parameters<typeof fitClockMap>[0], 'samples'>) => unknown)({ ...base }),
+  /invalid fit request/);
 
 console.log('clock map: interval-arithmetic fit, budgets, and refusal gates pass');

@@ -9,6 +9,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { bindQualificationVenue } from '@sixam/kernel/contracts';
+import type { VenueBound, VenueCheck, VenueIdentity } from '@sixam/kernel';
 import { AdbDeviceBridge, preflightVenue } from '../src/campaign/adb-bridge.ts';
 import { CampaignStateMachine, campaignVenue, makeCampaignSpec } from '../src/campaign/campaign.ts';
 import { evaluateCampaignPreflight } from '../src/campaign/campaign-preflight.ts';
@@ -23,8 +24,8 @@ const FINGERPRINT = 'motorola/fake/fake:15/V1FAKE.1/abc:user/release-keys';
 /** A phone whose venue answers can be changed between preflights. */
 function phone(overrides = {}) {
   const state = { serial: SERIAL, dumpsys: DUMPSYS, fingerprint: FINGERPRINT, patch: '2026-08-01', patchFails: false, ...overrides };
-  const run = async args => {
-    const ok = stdout => ({ ok: true, stdout, stderr: '' });
+  const run = async (args: readonly string[]) => {
+    const ok = (stdout: string) => ({ ok: true, stdout, stderr: '' });
     if (args[0] === 'devices') return ok(`List of devices attached\n${state.serial}\tdevice usb:1-1\n`);
     if (args.at(-1) === 'get-state') return ok('device\n');
     if (args.includes('pm')) return ok('package:/data/app/com.scottgames.fnaf2/base.apk\n');
@@ -45,11 +46,13 @@ function phone(overrides = {}) {
   };
   return new AdbDeviceBridge({ serial: state.serial, run });
 }
-const preflight = (bridge, venueBindings = []) => bridge.preflight({ targetBuild: TARGET, venueBindings });
+const preflight = (bridge: AdbDeviceBridge, venueBindings: readonly VenueBound[] = []) => bridge.preflight({ targetBuild: TARGET, venueBindings });
 // A live run's preflight: the campaign CLI and the modern ports both require a binding.
-const livePreflight = (bridge, venueBindings = []) => bridge.preflight({ targetBuild: TARGET, venueBindings,
+const livePreflight = (bridge: AdbDeviceBridge, venueBindings: readonly VenueBound[] = []) => bridge.preflight({ targetBuild: TARGET, venueBindings,
   requireVenueBinding: true, profileId: 'hid-mediaprojection' });
-const venueCheck = record => record.checks.find(item => item.id === 'venue-identity');
+// Every preflight here reaches the venue check, and its detail is text.
+const venueCheck = (record: Awaited<ReturnType<typeof preflight>>) =>
+  record.checks.find(item => item.id === 'venue-identity') as { status: string, detail: string };
 
 // 1. Unbound (every committed profile today): the identity is recorded and
 // the run is not refused.
@@ -72,10 +75,10 @@ assert.equal(venueCheck(unboundLive).status, 'FAIL');
 assert.match(venueCheck(unboundLive).detail, /drift is UNKNOWN, so a live run refuses\. Remedy: /);
 assert.match(venueCheck(unboundLive).detail,
   /`npm run device:preflight -- --profile hid-mediaprojection --bind-venue FILE --by NAME`.*`--venue-binding FILE`/);
-const seen = unbound.venue.observed;
+const seen = unbound.venue.observed as VenueIdentity; // the fake phone answered every read
 assert.deepEqual([seen.versionCode, seen.lastUpdateTime, seen.firstInstallTime, seen.buildFingerprint, seen.securityPatch, seen.companionVersion],
   ['26', '2026-09-27 01:34:10', '2026-08-20 11:02:13', FINGERPRINT, '2026-08-01', '0.2.0+16']);
-assert.match(seen.handsetHash, /^sha256-[0-9a-f]{16}$/);
+assert.match(seen.handsetHash ?? '', /^sha256-[0-9a-f]{16}$/);
 assert.ok(!JSON.stringify(unbound.venue).includes(SERIAL), 'the venue never carries the raw serial');
 assert.equal(preflightVenue(unbound), unbound.venue);
 assert.equal(preflightVenue({ schema: 'device-preflight-v1', version: 1, status: 'READY', checks: [] }), null,
@@ -111,12 +114,12 @@ assert.match(venueCheck(upgraded).detail, /venue drifted from qualification qual
 assert.match(venueCheck(upgraded).detail, /Remedy: re-qualify on the observed venue .* or roll the game back/);
 assert.deepEqual(upgraded.venue.drift.map(item => item.field), ['versionCode']);
 // target-build reads the same dumpsys and refuses 27 on its own, as before.
-assert.equal(upgraded.checks.find(item => item.id === 'target-build').status, 'FAIL');
+assert.equal(upgraded.checks.find(item => item.id === 'target-build')?.status, 'FAIL');
 
 // 4. The 09-27 case: same build reinstalled, only lastUpdateTime moved.
 // target-build passes (2.0.7+26 either way); the venue alone refuses.
 const reinstalled = await preflight(phone({ dumpsys: DUMPSYS.replace('lastUpdateTime=2026-09-27 01:34:10', 'lastUpdateTime=2026-09-28 01:34:10') }), bindings);
-assert.equal(reinstalled.checks.find(item => item.id === 'target-build').status, 'PASS');
+assert.equal(reinstalled.checks.find(item => item.id === 'target-build')?.status, 'PASS');
 assert.equal(reinstalled.status, 'FAIL');
 assert.deepEqual(reinstalled.venue.drift.map(item => [item.field, item.from, item.to]),
   [['lastUpdateTime', '2026-09-27 01:34:10', '2026-09-28 01:34:10']]);
@@ -139,22 +142,27 @@ assert.match(venueCheck(unreadable).detail, /securityPatch unread \(getprop ro\.
 const fixtureProfile = JSON.parse(readFileSync(fileURLToPath(new URL('../../../packages/play/profiles/fnaf2/moto-g56/fixture-hid-screencap.json', import.meta.url)), 'utf8'));
 const liveProfile = { ...fixtureProfile, limits: { ...fixtureProfile.limits, dryRunOnly: false } };
 const spec = makeCampaignSpec({ profile: liveProfile.id, targetBuild: liveProfile.targetBuild, nights: [2] });
-const campaign = (device, qualification) => evaluateCampaignPreflight({ spec, device, profile: liveProfile, qualification,
-  executor: { terminal: true, save: true, portsReady: true, deviceLocal: true } });
-const standing = result => result.checks.find(item => item.id === 'qualification-venue');
+const campaign = (device: NonNullable<Parameters<typeof evaluateCampaignPreflight>[0]>['device'], qualification: unknown) =>
+  evaluateCampaignPreflight({ spec, device, profile: liveProfile, qualification,
+    executor: { terminal: true, save: true, portsReady: true, deviceLocal: true } });
+// Every campaign here is given a qualification, so it carries the qualification-venue check.
+const standing = (result: ReturnType<typeof campaign>) =>
+  result.checks.find(item => item.id === 'qualification-venue') as { status: string, detail: unknown };
+/** That check's detail when the venue drifted or is unread; otherwise it is the standing's message. */
+interface Demotion { lifecycle: string, demotedFrom: string, message: string, drift: readonly { field: string }[], remedy: string }
 const unboundCampaign = campaign(unboundLive, v1);
 assert.equal(unboundCampaign.status, 'FAIL', 'a live campaign refuses an unbound venue even with a passing qualification-v1');
-assert.equal(unboundCampaign.checks.find(item => item.id === 'venue-identity').status, 'FAIL');
+assert.equal(unboundCampaign.checks.find(item => item.id === 'venue-identity')?.status, 'FAIL');
 const demotedPreflight = campaign(reinstalled, v2);
 assert.equal(demotedPreflight.status, 'FAIL');
-assert.equal(demotedPreflight.checks.find(item => item.id === 'venue-identity').status, 'FAIL',
+assert.equal(demotedPreflight.checks.find(item => item.id === 'venue-identity')?.status, 'FAIL',
   'the device venue check is carried into the campaign preflight');
 assert.equal(standing(demotedPreflight).status, 'FAIL');
-assert.equal(standing(demotedPreflight).detail.lifecycle, 'CANDIDATE');
-assert.equal(standing(demotedPreflight).detail.demotedFrom, 'QUALIFIED');
-assert.match(standing(demotedPreflight).detail.message, /^demoted QUALIFIED -> CANDIDATE: /);
+assert.equal((standing(demotedPreflight).detail as Demotion).lifecycle, 'CANDIDATE');
+assert.equal((standing(demotedPreflight).detail as Demotion).demotedFrom, 'QUALIFIED');
+assert.match((standing(demotedPreflight).detail as Demotion).message, /^demoted QUALIFIED -> CANDIDATE: /);
 assert.equal(standing(campaign(same, v2)).status, 'PASS');
-assert.match(standing(campaign(same, v2)).detail, /^venue matches qualification qualification-fixture/);
+assert.match(standing(campaign(same, v2)).detail as string, /^venue matches qualification qualification-fixture/);
 // The qualification binds the handset and the build: a qualification-v2
 // measured on another handset, or on another OS build, refuses, and is
 // demoted, even when every game field matches.
@@ -165,18 +173,18 @@ assert.deepEqual(otherHandset.venue.drift.map(item => item.field), ['handsetHash
 const otherHandsetCampaign = campaign(otherHandset, v2);
 assert.equal(otherHandsetCampaign.status, 'FAIL');
 assert.equal(standing(otherHandsetCampaign).status, 'FAIL');
-assert.equal(standing(otherHandsetCampaign).detail.lifecycle, 'CANDIDATE');
-assert.deepEqual(standing(otherHandsetCampaign).detail.drift.map(item => item.field), ['handsetHash']);
-assert.match(standing(otherHandsetCampaign).detail.remedy, /a different handset/);
+assert.equal((standing(otherHandsetCampaign).detail as Demotion).lifecycle, 'CANDIDATE');
+assert.deepEqual((standing(otherHandsetCampaign).detail as Demotion).drift.map(item => item.field), ['handsetHash']);
+assert.match((standing(otherHandsetCampaign).detail as Demotion).remedy, /a different handset/);
 const otherBuild = campaign(await livePreflight(phone({ fingerprint: 'motorola/fake/fake:15/V1FAKE.2/def:user/release-keys' }), bindings), v2);
 assert.equal(otherBuild.status, 'FAIL');
-assert.deepEqual(standing(otherBuild).detail.drift.map(item => item.field), ['buildFingerprint']);
-assert.match(standing(otherBuild).detail.remedy, /cannot be rolled back/);
+assert.deepEqual((standing(otherBuild).detail as Demotion).drift.map(item => item.field), ['buildFingerprint']);
+assert.match((standing(otherBuild).detail as Demotion).remedy, /cannot be rolled back/);
 // A qualification-v1 is still read: unbound, recorded, not refused.
 const v1Preflight = campaign(unbound, v1);
 assert.equal(standing(v1Preflight).status, 'PASS');
-assert.match(standing(v1Preflight).detail, /^qualification-v1 binds no venue identity: unbound/);
-assert.equal(v1Preflight.checks.find(item => item.id === 'qualified-live-profile').status, 'PASS');
+assert.match(standing(v1Preflight).detail as string, /^qualification-v1 binds no venue identity: unbound/);
+assert.equal(v1Preflight.checks.find(item => item.id === 'qualified-live-profile')?.status, 'PASS');
 // A v1 device record carries no venue: a v2 qualification cannot be cleared.
 const oldDevice = { schema: 'device-preflight-v1', version: 1, status: 'READY', serial: SERIAL,
   checks: unbound.checks.filter(item => item.id !== 'venue-identity') };
@@ -187,14 +195,15 @@ const machine = new CampaignStateMachine({ spec, now: () => 0 });
 machine.startPreflight();
 machine.acceptPreflight(same);
 assert.equal(machine.state, 'MENU');
-assert.equal(campaignVenue(machine.result()).status, 'MATCH');
-assert.equal(campaignVenue(machine.result()).observed.lastUpdateTime, '2026-09-27 01:34:10');
+// campaignVenue hands back the venue-check-v1 the preflight event recorded, untyped.
+assert.equal((campaignVenue(machine.result()) as VenueCheck | null)?.status, 'MATCH');
+assert.equal((campaignVenue(machine.result()) as VenueCheck | null)?.observed?.lastUpdateTime, '2026-09-27 01:34:10');
 const refused = new CampaignStateMachine({ spec, now: () => 0 });
 refused.startPreflight();
 refused.acceptPreflight(reinstalled);
 assert.equal(refused.state, 'HOLD');
-assert.equal(refused.result().events.at(-1).data.reason, 'venue-identity-drift');
-assert.equal(campaignVenue(refused.result()).status, 'DRIFT');
+assert.equal(refused.result().events.at(-1)?.data.reason, 'venue-identity-drift');
+assert.equal((campaignVenue(refused.result()) as VenueCheck | null)?.status, 'DRIFT');
 const older = new CampaignStateMachine({ spec, now: () => 0 });
 older.startPreflight();
 older.acceptPreflight(oldDevice);

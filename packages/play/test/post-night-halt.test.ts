@@ -20,6 +20,10 @@ import {
   AdbDeviceLocalArtifactExecutor, OBSERVER_INTERVAL_BOUND_MS, POST_NIGHT_STATIC_HALT, STATIC_TERMINAL_WAIT_MS,
 } from '../src/campaign/adb-device-local-executor.ts';
 import { SHARED_HID_RELEASE, compileDeviceLocalHidSchedule } from '../src/campaign/hid-schedule.ts';
+import type { HidSchedule } from '../src/campaign/hid-schedule.ts';
+import type { NightTiming } from '../src/campaign/campaign.ts';
+
+type ExecutorEvent = Parameters<NonNullable<NonNullable<ConstructorParameters<typeof AdbDeviceLocalArtifactExecutor>[0]>['onEvent']>>[0];
 
 const RECORD_PATH = 'docs/evidence/post-night-static-halt-20260927.json';
 const record = JSON.parse(await readFile(new URL(`../../../${RECORD_PATH}`, import.meta.url), 'utf8'));
@@ -46,15 +50,15 @@ for (const episode of record.episodes.endedAtSixam)
 // Every night read after a static was a single misread (p1b's death minigame),
 // which is why the halt is latched.
 assert.ok(record.episodes.withNightReadAfter.length > 0 &&
-  record.episodes.withNightReadAfter.every(item => item.consecutiveNightReadsAfter < 2));
+  record.episodes.withNightReadAfter.every((item: { consecutiveNightReadsAfter: number }) => item.consecutiveNightReadsAfter < 2));
 // The classifier misreads live nights, but never as static.
 assert.equal(record.everyRead.liveNightMisreads['state=static'].liveNight, 0);
 assert.ok(record.everyRead.liveNightMisreads['state=static'].reads > 0);
 assert.ok(record.everyRead.liveNightMisreads['state=newspaper'].liveNight > 0,
   'the record must show the misreads a live night does produce, which is why other screens keep three votes');
 // The numbers the executor's comment cites.
-const perfetto = record.episodes.endedAtSixam.find(item => item.run.startsWith('night5-perfetto1'));
-const r02 = record.everyRead.byEpisode.find(item => item.run.startsWith('night7-corner2-bbfoxy-r02'));
+const perfetto = record.episodes.endedAtSixam.find((item: { run: string }) => item.run.startsWith('night5-perfetto1'));
+const r02 = record.everyRead.byEpisode.find((item: { run: string }) => item.run.startsWith('night7-corner2-bbfoxy-r02'));
 const cited = {
   episodes: record.episodes.n, packs: record.packs.scanned, gameover: record.episodes.byEnd.gameover,
   aborts: record.episodes.byEnd.intro, everyReadPacks: record.everyRead.packs, nightReads: record.everyRead.nightReads,
@@ -75,10 +79,10 @@ assert.ok(r02.secondReadMs > OBSERVER_INTERVAL_BOUND_MS && r02.gapBeforeMs > OBS
 
 // --- Fixtures ---------------------------------------------------------------
 const profile = JSON.parse(await readFile(new URL('../../../packages/play/profiles/fnaf2/moto-g56/hid-mediaprojection.json', import.meta.url), 'utf8'));
-const action = (id, kind, control, atMs, extra = {}) => ({ schema: 'artifact-action-v1', id, cycle: 'toys', atMs,
+const action = (id: string, kind: string, control: string, atMs: number, extra = {}) => ({ schema: 'artifact-action-v1', id, cycle: 'toys', atMs,
   kind, control, ...extra });
-const block = (id, atMs, actions) => ({ schema: 'artifact-action-block-v1', id, cycle: 'toys', night: 6, atMs, actions });
-const artifact = (timing, extra = {}) => ({ winnerHash: 'a'.repeat(64), engineHash: 'b'.repeat(64),
+const block = (id: string, atMs: number, actions: ReturnType<typeof action>[]) => ({ schema: 'artifact-action-block-v1', id, cycle: 'toys', night: 6, atMs, actions });
+const artifact = (timing: NightTiming, extra = {}) => ({ winnerHash: 'a'.repeat(64), engineHash: 'b'.repeat(64),
   profileHash: 'c'.repeat(64), profileStableHash: stableHash(profile),
   plans: [{ night: 6, sha256: 'd'.repeat(64), timing, ...extra }] });
 // Ungated: the whole body is written at the release.
@@ -112,8 +116,10 @@ const gatedRequest = {
 };
 const gateTiming = { pollMs: 1, armSettleMs: 0, armObservationWindowMs: 500, gateRetryGapMs: 0, maskSettleMs: 0,
   gateMinSlackMs: 10, gateBudgetMinMs: 10, gateBudgetMaxMs: 20, gateBudgetReserveMs: 40 };
+// An observe-once arm compiles to a gated schedule.
 const gatedSchedule = compileDeviceLocalHidSchedule(gatedRequest, { readyDelayMs: 1,
-  gateTiming: { minSlackMs: 10, budgetMinMs: 10, budgetMaxMs: 20, budgetReserveMs: 40 } });
+  gateTiming: { minSlackMs: 10, budgetMinMs: 10, budgetMaxMs: 20, budgetReserveMs: 40 } }) as
+  HidSchedule & { gated: NonNullable<HidSchedule['gated']> };
 assert.equal(gatedSchedule.gated.gates.length, 19, 'the gated fixture must keep writing through the night');
 
 const fakeRoot = mkdtempSync(join(tmpdir(), 'fnaf2-post-night-halt-'));
@@ -132,11 +138,14 @@ chmodSync(loggingAdb, 0o755);
  * One ordered log of writes, closes and events, so "nothing after the halt"
  * is a question about positions in it.
  */
+/** One entry of the log: a line written, the shared process closed, or an executor event. */
+type LogEntry = { kind: 'write', line: string, at: number } | { kind: 'close', at: number }
+  | { kind: 'event', event: ExecutorEvent, at: number };
 const harness = () => {
-  const log = [];
+  const log: LogEntry[] = [];
   let closed = false;
   const hid = {
-    write: async value => {
+    write: async (value: string) => {
       if (closed) throw new Error('write after close');
       log.push({ kind: 'write', line: value, at: Date.now() });
     },
@@ -144,13 +153,13 @@ const harness = () => {
   return {
     log, hid,
     close: async () => { closed = true; log.push({ kind: 'close', at: Date.now() }); },
-    onEvent: event => log.push({ kind: 'event', event, at: Date.now() }),
+    onEvent: (event: ExecutorEvent) => log.push({ kind: 'event', event, at: Date.now() }),
     events: () => log.filter(item => item.kind === 'event').map(item => item.event),
     writes: () => log.filter(item => item.kind === 'write'),
-    indexOfEvent: type => log.findIndex(item => item.kind === 'event' && item.event.type === type),
+    indexOfEvent: (type: string) => log.findIndex(item => item.kind === 'event' && item.event.type === type),
   };
 };
-const sleep = ms => new Promise<any>(resolve => setTimeout(resolve, ms));
+const sleep = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
 
 try {
   // 1. Presses stop at the halt; the observer still reads the Game Over.
@@ -181,9 +190,9 @@ try {
     assert.ok(readsAfterHalt.length >= 4, 'the lifecycle observer must keep reading after the halt');
     const events = h.events();
     const halt = events.find(event => event.type === 'lifecycle.actuation-halted');
-    assert.equal(halt.reason, POST_NIGHT_STATIC_HALT);
-    assert.equal(halt.state, 'static');
-    assert.equal(halt.shared, true);
+    assert.equal(halt?.reason, POST_NIGHT_STATIC_HALT);
+    assert.equal(halt?.state, 'static');
+    assert.equal(halt?.shared, true);
     assert.equal(events.find(event => event.type === 'lifecycle.actuation-stopped')?.method, 'hid-closed',
       'the owner must close the shared process: that is what kills its buffered stream');
     const haltAt = h.indexOfEvent('lifecycle.actuation-halted');
@@ -292,17 +301,17 @@ try {
     const events = h.events();
     const halt = events.find(event => event.type === 'lifecycle.actuation-halted');
     const expired = events.find(event => event.type === 'lifecycle.static-hold.expired');
-    assert.ok(halted && expired && expired.heldMs >= waitMs && expired.at - halt.at === expired.heldMs,
+    assert.ok(halted && expired && Number(expired.heldMs) >= waitMs && Number(expired.at) - Number(halt?.at) === expired.heldMs,
       'the window is measured from the static read that halted actuation');
     const haltIndex = h.indexOfEvent('lifecycle.actuation-halted');
     assert.deepEqual(h.log.slice(haltIndex + 1).filter(item => item.kind === 'write').map(item => item.line),
       [SHARED_HID_RELEASE], 'nothing but the release is written after the halt');
     const gaps = events.filter(event => event.type === 'lifecycle.observe-gap');
     assert.ok(gaps.length >= 2, 'the post-night gaps over the bound must be evented');
-    assert.ok(gaps.every(event => event.gapMs > boundMs && event.boundMs === boundMs && event.at >= halt.at),
+    assert.ok(gaps.every(event => Number(event.gapMs) > boundMs && event.boundMs === boundMs && Number(event.at) >= Number(halt?.at)),
       'only gaps from the halting read on are evented, never a slow read inside the live night');
     assert.equal(gaps[0].state, 'static', 'the gap that ends at the halting read is the first one evented');
-    assert.equal(halt.gapMs, gaps[0].gapMs, 'the halt carries how long before it the previous read returned');
+    assert.equal(halt?.gapMs, gaps[0].gapMs, 'the halt carries how long before it the previous read returned');
   }
 
   // 5. p1b's shape: two statics, a death minigame read as unknown, and one
@@ -335,7 +344,7 @@ try {
     assert.equal(events.filter(event => event.type === 'lifecycle.actuation-halted').length, 1);
     assert.equal(events.filter(event => event.type === 'lifecycle.static-hold').length, 1);
     const expired = events.find(event => event.type === 'lifecycle.static-hold.expired');
-    assert.ok(expired.at - nightAfterHaltAt < waitMs,
+    assert.ok(Number(expired?.at) - Number(nightAfterHaltAt) < waitMs,
       'the window must still run from the first static, not restart at the night misread');
     const haltIndex = h.indexOfEvent('lifecycle.actuation-halted');
     assert.deepEqual(h.log.slice(haltIndex + 1).filter(item => item.kind === 'write').map(item => item.line),
@@ -363,7 +372,7 @@ try {
   {
     const h = harness();
     let reads = 0;
-    let executor = null;
+    let executor = null as AdbDeviceLocalArtifactExecutor | null;
     executor = new AdbDeviceLocalArtifactExecutor({ serial: 'fixture-device', adb: fakeAdb, readyDelayMs: 1,
       pollMs: 250, timing: { pollMs: 1 }, sharedHid: () => h.hid, closeSharedHid: h.close,
       nightReleaseOwner: 'port',
@@ -376,7 +385,8 @@ try {
       },
       onEvent: event => {
         h.onEvent(event);
-        if (event.type === 'lifecycle.actuation-halted') setTimeout(() => executor.releaseNight(), 0);
+        // executor is assigned before execute() emits any event.
+        if (event.type === 'lifecycle.actuation-halted') setTimeout(() => (executor as AdbDeviceLocalArtifactExecutor).releaseNight(), 0);
       } });
     const result = await executor.execute(request);
     assert.equal(result.terminal, 'gameover');

@@ -12,20 +12,23 @@ import {
 } from '../src/venues/phone/companion-status.ts';
 
 const vector = readFileSync(new URL('../../../packages/play/test/testdata/companion-status-v1.txt', import.meta.url), 'utf8');
-const cases = [];
+/** One vector case: its name, the status line the writer emits, and the fields it decodes to. */
+interface VectorCase { name: string, line: string, expect: Readonly<Record<string, unknown>> }
+const cases: VectorCase[] = [];
 let endpoint = null;
 let endpointExpect = null;
+// The vector file gives each case's line: and expect: right after its case:.
 for (const line of vector.split('\n')) {
-  if (line.startsWith('case: ')) cases.push({ name: line.slice(6).trim() });
-  else if (line.startsWith('line: ')) cases.at(-1).line = line.slice(6);
-  else if (line.startsWith('expect: ')) cases.at(-1).expect = JSON.parse(line.slice(8));
+  if (line.startsWith('case: ')) cases.push({ name: line.slice(6).trim() } as VectorCase);
+  else if (line.startsWith('line: ')) (cases.at(-1) as VectorCase).line = line.slice(6);
+  else if (line.startsWith('expect: ')) (cases.at(-1) as VectorCase).expect = JSON.parse(line.slice(8));
   else if (line.startsWith('endpoint: ')) endpoint = line.slice(10).replaceAll('\\n', '\n');
   else if (line.startsWith('endpoint-expect: ')) endpointExpect = JSON.parse(line.slice(17));
 }
 assert.equal(cases.length, 4, 'the vector file carries four status cases');
 
 for (const { name, line, expect } of cases) {
-  const parsed = parseCompanionStatus(`OK ${line}`);
+  const parsed: Readonly<Record<string, unknown>> = parseCompanionStatus(`OK ${line}`);
   const decoded = Object.fromEntries(Object.keys(expect).map(key => [key,
     key === 'snapshotNs' ? String(parsed[key]) : parsed[key]]));
   assert.deepEqual(decoded, expect, `case ${name} decodes to its expect`);
@@ -48,7 +51,7 @@ for (const [bad, pattern] of [
   [cases[1].line.replace('battery=64', 'battery=140'), /battery is 140/],
   [`${cases[0].line} capture=ON`, /capture is repeated/],
   [cases[0].line.replace('frames=0', 'frames=zero'), /frames is not an integer/],
-]) assert.throws(() => parseCompanionStatus(bad), pattern);
+] as const) assert.throws(() => parseCompanionStatus(bad), pattern);
 
 assert.ok(endpoint && endpointExpect, 'the vector file carries the endpoint handshake');
 assert.deepEqual({ ...parseCompanionEndpoint(endpoint) }, endpointExpect, 'the endpoint file decodes');
@@ -60,6 +63,6 @@ for (const [bad, pattern] of [
   [endpoint.replace('port=49707', 'port=70000'), /port/],
   [endpoint.replace('socket=com.fnaf2.cuehelper.control.3', 'socket=evil'), /socket/],
   [endpoint.replace('schema=companion-endpoint-v1', 'schema=other'), /schema/],
-]) assert.throws(() => parseCompanionEndpoint(bad), pattern);
+] as const) assert.throws(() => parseCompanionEndpoint(bad), pattern);
 
 console.log('companion status: every v1 vector decodes, extra fields survive, malformed lines and endpoints are refused');

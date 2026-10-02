@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
+import type { VenueIdentity } from '@sixam/kernel';
 import { terminalFromExecution } from '../src/campaign/modern-campaign-ports.ts';
 
 const target = { night: 5, mode: 'story' };
@@ -51,8 +52,8 @@ test('nothing else short-circuits observation', () => {
 test('the resolved terminal carries the night and mode the machine checks', () => {
   const resolved = terminalFromExecution({
     target: { night: 6, mode: 'sixth' }, execution: { terminal: 'sixam' } });
-  assert.equal(resolved.night, 6);
-  assert.equal(resolved.identity, 'sixth');
+  assert.equal(resolved?.night, 6);
+  assert.equal(resolved?.identity, 'sixth');
 });
 
 // Pedro, 2026-09-30: a late handoff or arm release, a camera pair that never
@@ -63,11 +64,11 @@ test('the resolved terminal carries the night and mode the machine checks', () =
 test('an Invalid execution is an Invalid terminal with its why', () => {
   const resolved = terminalFromExecution({ target, execution: { status: 'INVALID', why: 'late-night-handoff',
     detail: 'night handoff was 480ms late (budget 250ms)' } });
-  assert.equal(resolved.outcome, 'invalid');
-  assert.equal(resolved.why, 'late-night-handoff');
-  assert.equal(resolved.sixAm, false);
-  assert.equal(resolved.positive, false);
-  assert.equal(resolved.night, 5, 'the machine checks the night before it reads the outcome');
+  assert.equal(resolved?.outcome, 'invalid');
+  assert.equal(resolved?.why, 'late-night-handoff');
+  assert.equal(resolved?.sixAm, false);
+  assert.equal(resolved?.positive, false);
+  assert.equal(resolved?.night, 5, 'the machine checks the night before it reads the outcome');
   // campaign.test.ts holds what the state machine does with it: a retry that
   // spends no attempt, and a hold after the second in a row.
 });
@@ -77,18 +78,22 @@ test('a venue that moved during the night makes the run Invalid, whatever it sho
   const sixAm = { night: 7, identity: 'custom', outcome: 'sixam', sixAm: true, positive: true, state: 'sixam' };
   const drift = [{ field: 'versionCode', from: '26', to: '27' }];
   const checked = venueCheckedTerminal(sixAm, drift);
+  // Only a drifted terminal carries the outcome it observed and the why.
+  const drifted = checked as { observedOutcome?: string, why?: string };
   assert.equal(checked.outcome, 'invalid');
-  assert.equal(checked.observedOutcome, 'sixam');
+  assert.equal(drifted.observedOutcome, 'sixam');
   assert.equal(checked.sixAm, false);
   assert.equal(checked.positive, false);
-  assert.equal(checked.why, 'venue-drift: versionCode 26 -> 27');
+  assert.equal(drifted.why, 'venue-drift: versionCode 26 -> 27');
   assert.equal(venueCheckedTerminal(sixAm, []), sixAm, 'no drift leaves the terminal as observed');
   const invalid = { ...sixAm, outcome: 'invalid', why: 'late-arm-release' };
   assert.equal(venueCheckedTerminal(invalid, drift), invalid, 'an Invalid terminal keeps its first why');
 });
 
 test('venue drift during a run counts only drift fields both readings know', async () => {
-  const { venueDriftDuringRun } = await import('../src/campaign/venue.ts');
+  const { venueDriftDuringRun: driftOf } = await import('../src/campaign/venue.ts');
+  // It reads only the drift fields, so it is handed partial identities.
+  const venueDriftDuringRun = driftOf as (before: Partial<VenueIdentity> | null, after: Partial<VenueIdentity>) => ReturnType<typeof driftOf>;
   const { VENUE_DRIFT_FIELDS } = await import('@sixam/kernel/contracts');
   const [first, second] = VENUE_DRIFT_FIELDS;
   const before = { [first]: 'a', [second]: 'b', timeZone: 'America/Sao_Paulo', companionVersion: '1' };

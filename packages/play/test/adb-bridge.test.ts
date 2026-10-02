@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import type { ExecFileOptions } from 'node:child_process';
 import { AdbDeviceBridge, parseAdbDevices } from '../src/campaign/adb-bridge.ts';
 import { restartCompanionCapture } from '../src/campaign/companion-capture.ts';
 import { AdbCompanionPort, parseCompanionLogEndpoint } from '../src/campaign/physical-ports.ts';
@@ -81,7 +82,7 @@ assert.deepEqual(noAdbRecord, {
 assert.equal(noAdbVenue.status, 'UNBOUND', 'no device and no binding: unbound, nothing observed');
 assert.equal(noAdbVenue.observed, null);
 
-const run = async (args, options: any = {}) => {
+const run = async (args: readonly string[], options: { maxBuffer?: number } = {}) => {
   if (args.includes('exec-out')) {
     assert.equal(options.maxBuffer, 16 * 1024 * 1024,
       'full-resolution PNG capture must have a bounded buffer above 2 MB');
@@ -91,8 +92,9 @@ const run = async (args, options: any = {}) => {
   if (args.at(-1) === 'get-state') return { ok: true, stdout: 'device\n', stderr: '' };
   if (args.includes('pm')) return { ok: true, stdout: 'package:/data/app/com.scottgames.fnaf2/base.apk\n', stderr: '' };
   if (args.includes('dumpsys') && args.includes('package')) return { ok: true, stdout: 'versionCode=26 versionName=2.0.7\n', stderr: '' };
+  // getprop's last argument is the property it reads.
   if (args.includes('getprop')) return { ok: true, stdout: ({ 'ro.build.fingerprint': 'motorola/fake/fake:15/V1FAKE.1/abc:user/release-keys',
-    'ro.build.version.security_patch': '2026-08-01', 'persist.sys.timezone': 'America/Sao_Paulo' })[args.at(-1)] + '\n', stderr: '' };
+    'ro.build.version.security_patch': '2026-08-01', 'persist.sys.timezone': 'America/Sao_Paulo' } as Readonly<Record<string, string>>)[args.at(-1) as string] + '\n', stderr: '' };
   if (args.includes('power')) return { ok: true, stdout: 'mWakefulness=Awake\n', stderr: '' };
   if (args.includes('window')) return { ok: true, stdout: 'mCurrentFocus=Window{ com.scottgames.fnaf2/.MainActivity }\nisKeyguardShowing=false\nmInputRestricted=false\n', stderr: '' };
   if (args.includes('wm')) return { ok: true, stdout: 'Physical size: 1080x2400\n', stderr: '' };
@@ -110,11 +112,13 @@ assert.equal(ready.serial, 'usb-1');
 assert.ok(ready.checks.every(item => item.status === 'PASS'));
 assert.equal(ready.schema, 'device-preflight-v2');
 assert.equal(ready.venue.status, 'UNBOUND', 'every committed profile is unbound: recorded, not refused');
-assert.equal(ready.venue.observed.versionCode, '26');
+assert.equal(ready.venue.observed?.versionCode, '26');
 
 let captureRestart;
 const restartedPreflightBridge = new AdbDeviceBridge({ serial: 'usb-1', run,
-  captureRestart: async options => { captureRestart = options; return { status: 'READY', output: 'CAPTURE started' }; } });
+  // A fake restart: the bridge reads only its status and output.
+  captureRestart: async options => { captureRestart = options;
+    return { status: 'READY', output: 'CAPTURE started' } as Awaited<ReturnType<typeof restartCompanionCapture>>; } });
 const restartedPreflight = await restartedPreflightBridge.preflight({
   targetBuild: 'com.scottgames.fnaf2:2.0.7+26', restartCapture: true });
 assert.equal(restartedPreflight.status, 'READY');
@@ -123,18 +127,19 @@ assert.deepEqual(restartedPreflight.checks.find(item => item.id === 'cue-helper-
   id: 'cue-helper-capture-restart', status: 'PASS', detail: 'CAPTURE started',
 });
 
-let setupCall;
+let setupCall = undefined as [file: string, args: readonly string[], options: ExecFileOptions] | undefined;
 await assert.rejects(() => restartCompanionCapture({ serial: 'usb-1', adb: '/mock/adb',
   run: async () => ({ exitCode: 0, stdout: '', stderr: '' }) }), /explicit target game/,
   'a capture restart without a named target is refused: setup has no default game');
 const captureResult = await restartCompanionCapture({ serial: 'usb-1', adb: '/mock/adb', target: 'fnaf4',
   run: async (...args) => { setupCall = args; return { exitCode: 0, stdout: 'CAPTURE started\n', stderr: '' }; } });
 assert.equal(captureResult.status, 'READY');
-assert.deepEqual(setupCall[1], ['--restart-capture', '--target', 'fnaf4', '--screen', 'menu', '--wait', '30']);
-assert.equal(setupCall[2].env.ANDROID_SERIAL, 'usb-1');
-assert.equal(setupCall[2].env.ADB_BIN, '/mock/adb');
+assert.deepEqual(setupCall?.[1], ['--restart-capture', '--target', 'fnaf4', '--screen', 'menu', '--wait', '30']);
+assert.equal(setupCall?.[2].env?.ANDROID_SERIAL, 'usb-1');
+assert.equal(setupCall?.[2].env?.ADB_BIN, '/mock/adb');
 
-const clock = await bridge.clockSample();
+// The fake adb answers date, so this is the READY sample with its device reading.
+const clock = await bridge.clockSample() as Extract<Awaited<ReturnType<typeof bridge.clockSample>>, { status: 'READY' }>;
 assert.equal(clock.status, 'READY');
 assert.equal(clock.serial, 'usb-1');
 assert.equal(clock.deviceMs, 1760000000123);
@@ -165,7 +170,7 @@ assert.equal(held.reason, 'adb-unavailable');
 const captured = await bridge.capturePng('usb-1');
 assert.deepEqual(captured, Buffer.from('png'));
 
-const restartCalls = [];
+const restartCalls: (readonly string[])[] = [];
 const restartBridge = new AdbDeviceBridge({ serial: 'usb-1', run: async args => {
   restartCalls.push(args);
   if (args.includes('resolve-activity'))

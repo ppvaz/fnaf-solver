@@ -2,15 +2,17 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { makeCampaignSpec } from '../src/campaign/campaign.ts';
+import type { CampaignTarget } from '../src/campaign/campaign.ts';
 import { configureCustomNight, makeCustomNightConfig, selectCustomNightPreset,
   validateCustomNightCalibration, validateCustomNightModel } from '../src/campaign/custom-night.ts';
+import type { Tap } from '../src/campaign/custom-night.ts';
 import { evaluateCampaignPreflight } from '../src/campaign/campaign-preflight.ts';
 import { validateCampaignBundle, makeCampaignExecutionRequest } from '../src/campaign/campaign-bundle.ts';
 import { DeviceLocalArtifactExecutor, expandNightBlocks } from '../src/campaign/device-local-executor.ts';
 
 const profile = JSON.parse(await readFile(fileURLToPath(new URL('../../../packages/play/profiles/fnaf2/moto-g56/fixture-hid-screencap.json', import.meta.url)), 'utf8'));
 const spec = makeCampaignSpec({ profile: profile.id, targetBuild: profile.targetBuild, nights: [6, 7] });
-const block = (id, cycle, atMs) => ({ schema: 'artifact-action-block-v1', id, cycle, atMs,
+const block = (id: string, cycle: string, atMs: number) => ({ schema: 'artifact-action-block-v1', id, cycle, atMs,
   actions: [{ schema: 'artifact-action-v1', id: `${id}-action`, cycle, atMs,
     kind: 'press', control: 'mask', requiresMonitorUp: false, durationMs: 33 }] });
 const plans = spec.nights.map(target => ({ night: target.night, timing: target.timing,
@@ -41,22 +43,24 @@ const calibration = { schema: 'custom-night-calibration-v1', version: 1, build: 
   }])),
   titleModel: 'title-model-v1', configModel: 'custom-night-model-v1' };
 assert.doesNotThrow(() => validateCustomNightCalibration(calibration, { targetBuild: profile.targetBuild }));
-const dialTaps = [];
-const configured = await configureCustomNight({ target: spec.nights[1], calibration,
+// makeCampaignSpec makes Night 7 the Custom Night, with its dials.
+const night7 = spec.nights[1] as Extract<CampaignTarget, { mode: 'custom' }>;
+const dialTaps: Parameters<Tap>[0][] = [];
+const configured = await configureCustomNight({ target: night7, calibration,
   targetBuild: profile.targetBuild, tap: async value => dialTaps.push(value),
   readback: async ({ phase }) => phase === 'before'
-    ? { status: 'PASS', dials: Object.fromEntries(Object.keys(spec.nights[1].dials).map(dial => [dial, 0])) }
-    : { status: 'PASS', dials: spec.nights[1].dials, puppet: 15 } });
+    ? { status: 'PASS', dials: Object.fromEntries(Object.keys(night7.dials).map(dial => [dial, 0])) }
+    : { status: 'PASS', dials: night7.dials, puppet: 15 } });
 assert.equal(configured.steps, 200);
 assert.equal(dialTaps.length, 200);
 assert.equal(dialTaps[0].holdMs, 17, 'Custom Night defaults to the measured one-frame contact');
 const cyclicCalibration = { ...calibration, dialWrap: 'cyclic' };
-const cyclicTaps = [];
-const cyclicConfigured = await configureCustomNight({ target: spec.nights[1], calibration: cyclicCalibration,
+const cyclicTaps: Parameters<Tap>[0][] = [];
+const cyclicConfigured = await configureCustomNight({ target: night7, calibration: cyclicCalibration,
   targetBuild: profile.targetBuild, tap: async value => cyclicTaps.push(value),
   readback: async ({ phase }) => phase === 'before'
-    ? { status: 'PASS', dials: Object.fromEntries(Object.keys(spec.nights[1].dials).map(dial => [dial, 0])) }
-    : { status: 'PASS', dials: spec.nights[1].dials, puppet: 15 } });
+    ? { status: 'PASS', dials: Object.fromEntries(Object.keys(night7.dials).map(dial => [dial, 0])) }
+    : { status: 'PASS', dials: night7.dials, puppet: 15 } });
 assert.equal(cyclicConfigured.steps, 10, 'cyclic dials use one decrement from 0 to 20');
 assert.equal(cyclicTaps.length, 10);
 assert.ok(cyclicTaps.every(value => value.point.x === 4), 'cyclic 0-to-20 uses each dial decrement');
@@ -65,7 +69,7 @@ const screenModel = JSON.parse(await readFile(fileURLToPath(new URL('../../../pa
 assert.doesNotThrow(() => validateCustomNightModel(screenModel));
 assert.equal(screenModel.presets.length, 10, 'the measured cycle contains ten presets');
 let presetIndex = 0;
-const presetTaps = [];
+const presetTaps: Parameters<Tap>[0][] = [];
 const selectedPreset = await selectCustomNightPreset({ preset: 'golden-freddy', model: screenModel,
   tap: async value => {
     presetTaps.push(value);

@@ -4,13 +4,16 @@ import {
 } from '@sixam/play/player';
 import { initialBelief, observed, unknown } from '@sixam/play/player';
 
-const check = (condition, message) => { if (!condition) throw new Error(message); };
-const O = (value, extra: any = {}) => observed(value, {
+/** The provenance a test fact overrides; the rest is the video mock's. */
+interface FactExtra { source?: string, profile?: string | null, observedAtMs?: number, receivedAtMs?: number, confidence?: number }
+
+const check = (condition: unknown, message: string) => { if (!condition) throw new Error(message); };
+const O = (value: unknown, extra: FactExtra = {}) => observed(value, {
   source: extra.source ?? 'video-mock', calibrationProfile: extra.profile ?? null,
   observedAtMs: extra.observedAtMs ?? null, receivedAtMs: extra.receivedAtMs ?? null,
   confidence: extra.confidence ?? 1,
 });
-const U = (reason, extra: any = {}) => unknown(reason, {
+const U = (reason: string, extra: FactExtra = {}) => unknown(reason, {
   source: extra.source ?? 'video-mock', calibrationProfile: extra.profile ?? null,
   observedAtMs: extra.observedAtMs ?? null, receivedAtMs: extra.receivedAtMs ?? null,
 });
@@ -23,7 +26,7 @@ e = update(e, { nowMs: 1250, facts: {
   bbVent: O('opening', { source: 'a2dp', observedAtMs: 1000, receivedAtMs: 1250 }),
 }});
 check(e.belief.routes.bb === 'opening', 'delayed audio did not update BB route risk');
-check((e.latest as any).bbVent.observedAtMs === 1000 && (e.latest as any).bbVent.receivedAtMs === 1250,
+check(e.latest.bbVent.observedAtMs === 1000 && e.latest.bbVent.receivedAtMs === 1250,
   'delayed audio timing was collapsed to receipt time');
 check(e.trace.some(x => x.type === 'fact-accepted' && x.delayedMs === 250),
   'delayed audio was not logged with its transport delay');

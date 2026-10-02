@@ -6,12 +6,20 @@ import { anchorNightRelease, phoneWallOnset } from '../src/campaign/night-anchor
 // (its 500 ms hold), then the onset.
 const OFFSET_MS = 5000;
 const ONSET_HOST_MS = 10000;
-const ns = hostMs => String(Math.round((hostMs - OFFSET_MS) * 1e6));
+const ns = (hostMs: number) => String(Math.round((hostMs - OFFSET_MS) * 1e6));
+
+/** What a harness varies: when authorization lands, when the latch reads, and how the helper answers. */
+interface HarnessOptions { startMs?: number, authorizeAt: number, latchAt?: number, onsetHostMs?: number, field?: string,
+  readError?: Error | null, failUntil?: number | null, uncertaintyMs?: number, staleUntil?: number | null }
+/** An origin.anchor event, with the fields the checks below read. */
+interface AnchorEvent { type: string, status?: string, candidates?: readonly { k: number }[], releasedAimMs?: number,
+  authorizedAfterOnsetMs?: number, failures?: number, latchedOnsetDeviceMs?: number | null, onsetPhoneWallMs?: number,
+  phoneWallMinusMonoMs?: number }
 
 function harness({ startMs = 8000, authorizeAt, latchAt = ONSET_HOST_MS + 500, onsetHostMs = ONSET_HOST_MS,
-  field = 'present', readError = null, failUntil = null, uncertaintyMs = 3, staleUntil = null }: any = {}) {
-  const state = { t: startMs, releases: [], events: [], reads: 0 };
-  const fields = () => {
+  field = 'present', readError = null, failUntil = null, uncertaintyMs = 3, staleUntil = null }: HarnessOptions) {
+  const state = { t: startMs, releases: [] as number[], events: [] as AnchorEvent[], reads: 0 };
+  const fields = (): Record<string, string> => {
     if (field === 'absent') return {};
     if (field === 'malformed') return { nightOnsetImageNs: 'nope' };
     // An earlier night's onset: a real (positive) device time from before the intro began.
@@ -22,9 +30,9 @@ function harness({ startMs = 8000, authorizeAt, latchAt = ONSET_HOST_MS + 500, o
   const options = {
     now: () => state.t,
     wallNow: () => 1_700_000_000_000 + state.t,
-    sleep: async ms => { state.t += Math.max(1, ms); },
+    sleep: async (ms: number) => { state.t += Math.max(1, ms); },
     release: () => state.releases.push(state.t),
-    onEvent: event => state.events.push(event),
+    onEvent: (event: AnchorEvent) => state.events.push(event),
     clock: {
       read: async () => {
         state.reads += 1; state.t += 10;
@@ -46,22 +54,22 @@ function harness({ startMs = 8000, authorizeAt, latchAt = ONSET_HOST_MS + 500, o
   };
   return { state, options };
 }
-const released = state => state.events.find(event => event.status === 'released');
+const released = (state: { events: AnchorEvent[] }) => state.events.find(event => event.status === 'released');
 
 // The measured case: latch at +500 ms, authorization at +1953 ms. The plan is
 // made from the latch; k=0 (+233) and k=1 (+1233) pass unauthorized; k=2 fires.
 {
   const { state, options } = harness({ authorizeAt: ONSET_HOST_MS + 1953 });
-  const result: any = await anchorNightRelease(options);
+  const result = await anchorNightRelease(options);
   assert.equal(result.status, 'released');
   assert.equal(result.k, 2);
   assert.deepEqual(state.releases, [ONSET_HOST_MS + 2233]);
-  assert.equal(released(state).releasedAimMs, 233);
+  assert.equal(released(state)?.releasedAimMs, 233);
   assert.equal(state.events.filter(event => event.status === 'skipped').length, 1,
     'k=0 is already behind the latch read at +510 ms, so only k=1 is skipped');
   const scheduled = state.events.find(event => event.status === 'scheduled');
-  assert.deepEqual(scheduled.candidates.map(candidate => candidate.k), [1, 2]);
-  assert.equal(released(state).authorizedAfterOnsetMs, 1953, 'the fired k must say when authorization resolved');
+  assert.deepEqual(scheduled?.candidates?.map(candidate => candidate.k), [1, 2]);
+  assert.equal(released(state)?.authorizedAfterOnsetMs, 1953, 'the fired k must say when authorization resolved');
   // The teach panel's origin: the helper's latch on its own clock, plus the
   // whole release interval (k seconds included, not the mod-period aim).
   assert.equal(result.onsetDeviceMs, ONSET_HOST_MS - OFFSET_MS);
@@ -71,26 +79,26 @@ const released = state => state.events.find(event => event.status === 'released'
 // A quick authorization takes the earliest clean second.
 {
   const { state, options } = harness({ authorizeAt: ONSET_HOST_MS + 900 });
-  const result: any = await anchorNightRelease(options);
-  assert.equal(result.k, 1);
+  const result = await anchorNightRelease(options);
+  assert.equal((result as { k?: number }).k, 1); // only a released result carries its k
   assert.deepEqual(state.releases, [ONSET_HOST_MS + 1233]);
 }
 
 // Authorization after the last clean candidate: release at authorization, unanchored.
 {
   const { state, options } = harness({ authorizeAt: ONSET_HOST_MS + 2500 });
-  const result: any = await anchorNightRelease(options);
+  const result = await anchorNightRelease(options);
   assert.equal(result.status, 'unavailable');
   assert.equal(result.reason, 'authorization-late');
   assert.deepEqual(state.releases, [ONSET_HOST_MS + 2500]);
-  assert.equal(state.events.at(-1).status, 'released-unanchored');
+  assert.equal(state.events.at(-1)?.status, 'released-unanchored');
 }
 
 // A stale onset from an earlier night is not this night's: keep polling for the fresh one.
 {
   const { state, options } = harness({ authorizeAt: ONSET_HOST_MS + 1953, staleUntil: ONSET_HOST_MS + 400 });
-  const result: any = await anchorNightRelease(options);
-  assert.equal(result.k, 2);
+  const result = await anchorNightRelease(options);
+  assert.equal((result as { k?: number }).k, 2);
   assert.deepEqual(state.releases, [ONSET_HOST_MS + 2233]);
 }
 
@@ -98,15 +106,15 @@ const released = state => state.events.find(event => event.status === 'released'
 // the intro. Transient failures must not refuse the anchor.
 {
   const { state, options } = harness({ authorizeAt: ONSET_HOST_MS + 1953, failUntil: ONSET_HOST_MS - 500 });
-  const result: any = await anchorNightRelease(options);
+  const result = await anchorNightRelease(options);
   assert.equal(result.status, 'released', 'timeouts before the onset must not cost the anchor');
   assert.equal(result.k, 2);
   assert.deepEqual(state.releases, [ONSET_HOST_MS + 2233]);
-  assert.ok(state.events.find(event => event.status === 'scheduled').failures >= 1, 'the failures must be counted');
+  assert.ok(Number(state.events.find(event => event.status === 'scheduled')?.failures) >= 1, 'the failures must be counted');
 }
 
 // Every refusal releases exactly once, and never before authorization.
-const refusals = [
+const refusals: [string, Omit<HarnessOptions, 'authorizeAt'>][] = [
   ['onset-not-latched', { latchAt: Infinity }],
   ['helper-has-no-onset', { field: 'absent' }],
   ['onset-malformed', { field: 'malformed' }],
@@ -120,12 +128,12 @@ const refusals = [
 for (const [reason, extra] of refusals) {
   const authorizeAt = ONSET_HOST_MS + 1953;
   const { state, options } = harness({ authorizeAt, ...extra });
-  const result: any = await anchorNightRelease(options);
+  const result = await anchorNightRelease(options);
   assert.equal(result.status, 'unavailable', reason);
   assert.equal(result.reason, reason, reason);
   assert.equal(state.releases.length, 1, `${reason} must still release the night once`);
   assert.ok(state.releases[0] >= authorizeAt, `${reason} must never release before authorization`);
-  const refusal = state.events.find(event => event.status === 'unavailable');
+  const refusal = state.events.find(event => event.status === 'unavailable') as AnchorEvent; // every refusal logs one
   assert.ok('latchedOnsetDeviceMs' in refusal, `${reason} must log the latch it last read, even when null`);
   if (reason === 'offset-uncertain' || reason === 'k-unreachable' || reason === 'onset-in-future')
     assert.equal(typeof refusal.latchedOnsetDeviceMs, 'number', `${reason} read a latched onset and must log it`);
@@ -137,7 +145,7 @@ for (const [reason, extra] of refusals) {
 for (let authorizeOffset = 0; authorizeOffset <= 4000; authorizeOffset += 137) {
   const authorizeAt = ONSET_HOST_MS + authorizeOffset;
   const { state, options } = harness({ authorizeAt });
-  const result: any = await anchorNightRelease(options);
+  const result = await anchorNightRelease(options);
   assert.equal(state.releases.length, 1);
   assert.ok(state.releases[0] >= authorizeAt, `authorization at +${authorizeOffset} released early`);
   if (result.status === 'released') {
@@ -150,15 +158,15 @@ for (let authorizeOffset = 0; authorizeOffset <= 4000; authorizeOffset += 137) {
 // second, k steps by the period, and the released aim is quoted mod the period.
 {
   const { state, options } = harness({ authorizeAt: ONSET_HOST_MS + 2400 });
-  const result: any = await anchorNightRelease({ ...options, aimMs: 3600, maxK: 0, periodMs: 5000 });
+  const result = await anchorNightRelease({ ...options, aimMs: 3600, maxK: 0, periodMs: 5000 });
   assert.equal(result.status, 'released');
   assert.equal(result.k, 0);
   assert.deepEqual(state.releases, [ONSET_HOST_MS + 3600]);
-  assert.equal(released(state).releasedAimMs, 3600);
+  assert.equal(released(state)?.releasedAimMs, 3600);
 }
 {
   const { state, options } = harness({ authorizeAt: ONSET_HOST_MS + 4200 });
-  const result: any = await anchorNightRelease({ ...options, aimMs: 3600, maxK: 1, periodMs: 5000 });
+  const result = await anchorNightRelease({ ...options, aimMs: 3600, maxK: 1, periodMs: 5000 });
   assert.equal(result.status, 'released');
   assert.equal(result.k, 1, 'a late authorization steps one PERIOD, not one second');
   assert.deepEqual(state.releases, [ONSET_HOST_MS + 8600]);
@@ -176,7 +184,7 @@ await assert.rejects(() => anchorNightRelease({ ...harness({ authorizeAt: 0 }).o
 // hold; the classifier's authorization (here at +4200) is not waited for.
 {
   const { state, options } = harness({ authorizeAt: ONSET_HOST_MS + 4200 });
-  const result: any = await anchorNightRelease({ ...options, aimMs: 2510, maxK: 0, periodMs: 5000, strict: true, authorizeOnLatch: true });
+  const result = await anchorNightRelease({ ...options, aimMs: 2510, maxK: 0, periodMs: 5000, strict: true, authorizeOnLatch: true });
   assert.equal(result.status, 'released');
   assert.equal(result.k, 0);
   assert.deepEqual(state.releases, [ONSET_HOST_MS + 2510]);
@@ -200,7 +208,9 @@ await assert.rejects(() => anchorNightRelease({ ...harness({ authorizeAt: 0 }).o
 }
 
 await assert.rejects(() => anchorNightRelease({ ...harness({ authorizeAt: 0 }).options, aimMs: 1000 }), RangeError);
-await assert.rejects(() => anchorNightRelease({ ...harness({ authorizeAt: 0 }).options, maxK: undefined }), /maxK/);
+// Widened to take the absent maxK its type requires: the refusal is what is tested.
+await assert.rejects(() => (anchorNightRelease as (options: Omit<Parameters<typeof anchorNightRelease>[0], 'maxK'> & { maxK?: number }) =>
+  Promise<unknown>)({ ...harness({ authorizeAt: 0 }).options, maxK: undefined }), /maxK/);
 
 console.log('night anchor: plans from the latch, fires only once authorized, k cap, and every refusal releases once');
 
@@ -219,12 +229,12 @@ console.log('night anchor: plans from the latch, fires only once authorized, k c
   // The scheduled event carries the phone wall onset when the helper reports wallMs.
   const { state, options } = harness({ authorizeAt: ONSET_HOST_MS + 1953 });
   const read = options.clock.read, probe = options.clock.probe;
-  const withWall = s => ({ ...s, fields: { ...s.fields, wallMs: String(1_700_000_000_000 + Math.round(state.t) - OFFSET_MS), snapshotNs: ns(state.t) } });
+  const withWall = (s: Awaited<ReturnType<typeof read>>) => ({ ...s, fields: { ...s.fields, wallMs: String(1_700_000_000_000 + Math.round(state.t) - OFFSET_MS), snapshotNs: ns(state.t) } });
   options.clock.read = async () => withWall(await read());
   options.clock.probe = async () => withWall(await probe());
   await anchorNightRelease(options);
   const scheduled = state.events.find(event => event.status === 'scheduled');
-  assert.equal(typeof scheduled.onsetPhoneWallMs, 'number', 'the scheduled event must carry onsetPhoneWallMs');
-  assert.ok(Math.abs(scheduled.phoneWallMinusMonoMs - 1_700_000_000_000) < 20, `wall - mono ${scheduled.phoneWallMinusMonoMs}`);
+  assert.equal(typeof scheduled?.onsetPhoneWallMs, 'number', 'the scheduled event must carry onsetPhoneWallMs');
+  assert.ok(Math.abs(Number(scheduled?.phoneWallMinusMonoMs) - 1_700_000_000_000) < 20, `wall - mono ${scheduled?.phoneWallMinusMonoMs}`);
 }
 console.log('night anchor: phone wall onset carried when the helper reports wallMs');

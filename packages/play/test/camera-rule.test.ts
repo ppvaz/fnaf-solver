@@ -65,7 +65,7 @@ for (const [what, mutate] of [
   ['band over margin', a => ({ ...a, adapter: { ...a.adapter,
     buttons: [buttons[0], { ...buttons[1], rule: { ...buttons[1].rule, refuse_band: 9 } }] } })],
   ['invented unknown reason', a => ({ ...a, fact: { ...a.fact, unknown_reasons: ['looks-fine'] } })],
-]) {
+] satisfies [string, (a: typeof artifact) => unknown][]) {
   assert.throws(() => parseCameraRule(mutate(artifact)), /camera-rule-v1/, what);
 }
 
@@ -75,10 +75,10 @@ assert.deepEqual(measureCameraSelected({ cam01_button: 194, cam02_button: -19 },
   'the camera fact is meaningless while the monitor is down');
 assert.deepEqual(measureCameraSelected({ cam01_button: 194 }, rule, up),
   { signal: 'cameraSelected', state: 'UNKNOWN', reason: 'read-unavailable' });
-assert.deepEqual((measureCameraSelected({ cam01_button: 194, cam02_button: 'UNKNOWN' }, rule, up) as any).reason,
+assert.deepEqual((measureCameraSelected({ cam01_button: 194, cam02_button: 'UNKNOWN' }, rule, up) as { reason?: string }).reason,
   'read-unavailable', 'an UNKNOWN watch value refuses instead of voting');
 
-const reads = (a, b) => ({ cam01_button: a, cam02_button: b });
+const reads = (a: number, b: number) => ({ cam01_button: a, cam02_button: b });
 assert.deepEqual(measureCameraSelected(reads(194, -19), rule, up),
   { signal: 'cameraSelected', state: 'OBSERVED', value: 'cam:1', confidence: 1 });
 assert.deepEqual(measureCameraSelected(reads(-19, 194), rule, up),
@@ -86,11 +86,11 @@ assert.deepEqual(measureCameraSelected(reads(-19, 194), rule, up),
 assert.deepEqual(measureCameraSelected(reads(96, -19), rule, up),
   { signal: 'cameraSelected', state: 'OBSERVED', value: 'cam:1', confidence: 1 },
   'the dimmed wind-state selected value still names the camera');
-assert.deepEqual((measureCameraSelected(reads(-19, -9), rule, up) as any).reason, 'no-camera-highlight',
+assert.deepEqual((measureCameraSelected(reads(-19, -9), rule, up) as { reason?: string }).reason, 'no-camera-highlight',
   'the unlit band edge names no camera and must stay UNKNOWN');
-assert.deepEqual((measureCameraSelected(reads(194, 194), rule, up) as any).reason, 'multiple-camera-highlight',
+assert.deepEqual((measureCameraSelected(reads(194, 194), rule, up) as { reason?: string }).reason, 'multiple-camera-highlight',
   'two lit buttons are the transition/double-camera-glitch signature, never a guess');
-assert.deepEqual((measureCameraSelected(reads(90, -19), rule, up) as any).reason, 'ambiguous-threshold',
+assert.deepEqual((measureCameraSelected(reads(90, -19), rule, up) as { reason?: string }).reason, 'ambiguous-threshold',
   'a value between the bands refuses');
 
 console.log('camera rule artifact: parse refusal, digest binding, and strict verdicts pass');

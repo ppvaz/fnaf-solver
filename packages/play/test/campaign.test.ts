@@ -3,6 +3,7 @@ import { AI_10_20, AI_DIALS, PUPPET_AI } from '@sixam/source/fnaf2';
 import {
   CAMPAIGN_STATES, CampaignStateMachine, makeCampaignSpec, validateCampaignSpec,
 } from '../src/campaign/campaign.ts';
+import type { CampaignTarget } from '../src/campaign/campaign.ts';
 import { makeAttemptProof } from '../src/campaign/campaign-proof.ts';
 
 const defaultSpec = makeCampaignSpec({ profile: 'hid-mediaprojection', targetBuild: 'com.scottgames.fnaf2:2.0.7+26' });
@@ -11,11 +12,13 @@ assert.deepEqual(defaultSpec.nights.map(target => target.menuTarget),
   ['newGame', 'continue', 'continue', 'continue', 'continue', 'sixthNight', 'customNight']);
 const spec = makeCampaignSpec({ profile: 'hid-mediaprojection', targetBuild: 'com.scottgames.fnaf2:2.0.7+26', nights: [6, 7] });
 assert.deepEqual(spec.nights.map(target => target.night), [6, 7]);
-assert.deepEqual(Object.values(spec.nights[1].dials), AI_DIALS.map(() => AI_10_20));
-assert.equal(spec.nights[1].puppet, PUPPET_AI);
+// makeCampaignSpec makes Night 7 the Custom Night, with its dials and Puppet.
+const night7 = spec.nights[1] as Extract<CampaignTarget, { mode: 'custom' }>;
+assert.deepEqual(Object.values(night7.dials), AI_DIALS.map(() => AI_10_20));
+assert.equal(night7.puppet, PUPPET_AI);
 assert.doesNotThrow(() => validateCampaignSpec(spec));
 assert.throws(() => validateCampaignSpec({ ...spec, nights: [{ ...spec.nights[0], menuTarget: 'customNight' }] }), /Night 6/);
-assert.throws(() => validateCampaignSpec({ ...spec, nights: [{ ...spec.nights[1], dials: { ...spec.nights[1].dials, foxy: 21 } }] }), /foxy/);
+assert.throws(() => validateCampaignSpec({ ...spec, nights: [{ ...spec.nights[1], dials: { ...night7.dials, foxy: 21 } }] }), /foxy/);
 
 const trace = [];
 const machine = new CampaignStateMachine({ spec, now: () => 10, onEvent: record => trace.push(record) });
@@ -30,8 +33,9 @@ machine.acceptTerminalVerification({ sixAm: true, positive: true });
 machine.acceptSave({ customNightVisible: true, observed: true });
 assert.equal(machine.snapshot().state, 'MENU');
 machine.acceptMenu({ target: 'customNight', visible: true, selected: true });
-machine.acceptCustomConfiguration({ status: 'PASS', dials: spec.nights[1].dials, puppet: PUPPET_AI,
-  readback: { status: 'PASS', dials: spec.nights[1].dials, puppet: PUPPET_AI } });
+// The readback's status is more than acceptCustomConfiguration's type names.
+const readback = { status: 'PASS', dials: night7.dials, puppet: PUPPET_AI };
+machine.acceptCustomConfiguration({ status: 'PASS', dials: night7.dials, puppet: PUPPET_AI, readback });
 machine.acceptIntro({ night: 7, identity: 'custom', observed: true });
 machine.beginAttempt();
 machine.acceptTerminal({ night: 7, outcome: 'sixam', sixAm: true });
@@ -115,7 +119,7 @@ chain.acceptTerminal({ night: 1, outcome: 'sixam', sixAm: true });
 chain.acceptTerminalVerification({ sixAm: true, positive: true });
 chain.acceptSave({ observed: true, nextNightStarted: true });
 assert.equal(chain.snapshot().state, 'MENU');
-assert.equal(chain.target.night, 2);
+assert.equal(chain.target?.night, 2);
 for (const night of [2, 3, 4]) {
   chain.acceptMenu({ target: 'continue', visible: false, selected: true, rolledThrough: true });
   chain.acceptIntro({ night, identity: 'story', observed: true });
@@ -124,7 +128,7 @@ for (const night of [2, 3, 4]) {
   chain.acceptTerminalVerification({ sixAm: true, positive: true });
   chain.acceptSave({ observed: true, nextNightStarted: true });
   assert.equal(chain.snapshot().state, 'MENU');
-  assert.equal(chain.target.night, night + 1);
+  assert.equal(chain.target?.night, night + 1);
 }
 // Night 5 never rolls: its 6 AM ends in the paycheck and the title, so the
 // roll-through payload must be refused there and only the measured title
@@ -153,14 +157,14 @@ assert.deepEqual(proven5.result().completedNights, [5]);
 // ADR 0002, decision 3: an Invalid run does not spend a campaign attempt, and
 // the campaign holds after two consecutive Invalid runs.
 const why = 'phase-invalid: arm release lag 1320ms exceeds budget 200ms';
-const oneNight = budget => ({ ...spec, nights: [spec.nights[0]], retry: { maxAttempts: budget } });
-const started = budget => {
+const oneNight = (budget: number) => ({ ...spec, nights: [spec.nights[0]], retry: { maxAttempts: budget } });
+const started = (budget: number) => {
   const machine = new CampaignStateMachine({ spec: oneNight(budget) });
   machine.startPreflight();
   machine.acceptPreflight({ status: 'READY' });
   return machine;
 };
-const play = machine => {
+const play = (machine: CampaignStateMachine) => {
   machine.acceptMenu({ target: 'sixthNight', visible: true, selected: true });
   machine.acceptIntro({ night: 6, identity: 'story', observed: true });
   machine.beginAttempt();
@@ -173,8 +177,8 @@ const refunded = started(1);
 play(refunded);
 refunded.acceptTerminal({ night: 6, outcome: 'invalid', why });
 assert.equal(refunded.state, 'RETRY_VERIFY');
-assert.equal(refunded.events.at(-1).data.reason, 'attempt-invalid');
-assert.equal(refunded.events.at(-1).data.why, why);
+assert.equal(refunded.events.at(-1)?.data.reason, 'attempt-invalid');
+assert.equal(refunded.events.at(-1)?.data.why, why);
 assert.equal(refunded.snapshot().invalidRuns, 1);
 refunded.acceptRetry({ menuReady: true });
 assert.equal(refunded.state, 'MENU', 'the Invalid run did not spend the only attempt');
@@ -194,7 +198,7 @@ play(spent);
 spent.acceptTerminal({ night: 6, outcome: 'death' });
 spent.acceptRetry({ menuReady: true });
 assert.equal(spent.state, 'ABORTED');
-assert.equal(spent.events.at(-1).data.reason, 'attempt-budget-exhausted');
+assert.equal(spent.events.at(-1)?.data.reason, 'attempt-budget-exhausted');
 
 // Two consecutive Invalid runs hold the campaign, with the budget untouched.
 const twice = started(3);
@@ -204,7 +208,7 @@ twice.acceptRetry({ menuReady: true });
 play(twice);
 twice.acceptTerminal({ night: 6, outcome: 'invalid', why: 'night identity read as Night 5' });
 assert.equal(twice.state, 'HOLD');
-assert.deepEqual(twice.events.at(-1).data, { previous: 'ACTIVE', reason: 'consecutive-invalid-runs', night: 6,
+assert.deepEqual(twice.events.at(-1)?.data, { previous: 'ACTIVE', reason: 'consecutive-invalid-runs', night: 6,
   why: 'night identity read as Night 5', consecutive: 2 });
 assert.deepEqual(twice.result().attempts.map(item => item.status), ['INVALID', 'INVALID']);
 // A resume is the operator's decision: the count starts again, the budget stands.
@@ -239,7 +243,7 @@ const bare = started(3);
 play(bare);
 bare.acceptTerminal({ night: 6, outcome: 'invalid' });
 assert.equal(bare.state, 'HOLD');
-assert.equal(bare.events.at(-1).data.reason, 'terminal-invalid-without-reason');
+assert.equal(bare.events.at(-1)?.data.reason, 'terminal-invalid-without-reason');
 // Pedro, 2026-09-30: a RunSpec's constraints travel with the bundle. The spec
 // carries the mechanics the bundle's strategy requires and the ones the build
 // and the run forbid, its hash covers them, a spec that forbids what it

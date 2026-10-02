@@ -82,11 +82,11 @@ for (const [what, mutate] of [
       { ...a.adapter.anchors[2], cell: 180 }] } })],
   ['unguarded rule', a => ({ ...a, adapter: { ...a.adapter, guard: { ...a.adapter.guard, kind: 'none' } } })],
   ['invented unknown reason', a => ({ ...a, fact: { ...a.fact, unknown_reasons: ['looks-fine'] } })],
-]) {
+] satisfies [string, (a: typeof artifact) => unknown][]) {
   assert.throws(() => parseMonitorRule(mutate(artifact)), /monitor-rule-v1/, what);
 }
 
-const upCells = [];
+const upCells: number[] = [];
 for (let index = 0; index < 180; index += 1) upCells.push(0x1e1e1e);
 upCells[132] = 0xa9a9a9;   // luma 169 = the worst calibration up frame, edge-inclusive
 upCells[151] = 0x353535;   // luma 53 >= 35.5 + 17.5 -> up side
@@ -97,11 +97,11 @@ const downCells = upCells.map((cell, index) => {
   if (index === 167) return 0xbbbbbb;   // 187 >= 187 -> not-up (office visible)
   return cell;
 });
-const snapshot = (cells, { seq = 7, gridSeq = seq, ageUs = '17',
-  screen = 'FNAF2_NIGHT' } = {}) => ({
+const snapshot = (cells: number[], { seq = 7, gridSeq = seq, ageUs = '17',
+  screen = 'FNAF2_NIGHT' }: { seq?: number, gridSeq?: number, ageUs?: string, screen?: string } = {}) => ({
   ageUs, screen, seq, gridSeq, cells,
 });
-const grey = cells => Math.round(
+const grey = (cells: number[]) => Math.round(
   cells.reduce((total, cell) => total + ((77 * ((cell >> 16) & 0xff)
     + 150 * ((cell >> 8) & 0xff) + 29 * (cell & 0xff)) >> 8), 0) / cells.length);
 
@@ -110,18 +110,18 @@ assert.deepEqual(measureMonitorUp({ ageUs: '17' }, null),
 assert.deepEqual(measureMonitorUp({ ageUs: '17', monitorUp: 'true' }, rule),
   { signal: 'monitorUp', state: 'OBSERVED', value: true, confidence: 1 },
   'a fresh explicit helper field wins over the derived rule');
-assert.equal((measureMonitorUp({ ageUs: '17', monitorUp: 'UNKNOWN', monitorReason: 'helper-reason' }, rule) as any).reason,
+assert.equal((measureMonitorUp({ ageUs: '17', monitorUp: 'UNKNOWN', monitorReason: 'helper-reason' }, rule) as { reason?: string }).reason,
   'monitor-state-unavailable', 'foreign helper reasons stay in vocabulary');
-assert.deepEqual((measureMonitorUp({}, rule) as any).reason, 'frame-pending');
-assert.deepEqual((measureMonitorUp({ ageUs: '-1' }, rule) as any).reason, 'frame-pending');
-assert.deepEqual((measureMonitorUp({ ageUs: '900000' }, rule) as any).reason, 'frame-stale');
-assert.deepEqual((measureMonitorUp({ ageUs: '17' }, rule) as any).reason, 'screen-identity');
-assert.deepEqual((measureMonitorUp({ ...snapshot(upCells), screen: 'FNAF2_MENU' }, rule) as any).reason, 'screen-identity');
-assert.deepEqual((measureMonitorUp(snapshot(Array.from({ length: 180 }, () => 0x000000)), rule) as any).reason,
+assert.deepEqual((measureMonitorUp({}, rule) as { reason?: string }).reason, 'frame-pending');
+assert.deepEqual((measureMonitorUp({ ageUs: '-1' }, rule) as { reason?: string }).reason, 'frame-pending');
+assert.deepEqual((measureMonitorUp({ ageUs: '900000' }, rule) as { reason?: string }).reason, 'frame-stale');
+assert.deepEqual((measureMonitorUp({ ageUs: '17' }, rule) as { reason?: string }).reason, 'screen-identity');
+assert.deepEqual((measureMonitorUp({ ...snapshot(upCells), screen: 'FNAF2_MENU' }, rule) as { reason?: string }).reason, 'screen-identity');
+assert.deepEqual((measureMonitorUp(snapshot(Array.from({ length: 180 }, () => 0x000000)), rule) as { reason?: string }).reason,
   'frame-dark', 'a blackout-dark frame refuses on the guard before anchors vote');
-assert.deepEqual((measureMonitorUp({ ageUs: '17', screen: 'FNAF2_NIGHT', seq: 7, gridSeq: 7 }, rule) as any).reason,
+assert.deepEqual((measureMonitorUp({ ageUs: '17', screen: 'FNAF2_NIGHT', seq: 7, gridSeq: 7 }, rule) as { reason?: string }).reason,
   'grid-unavailable', 'a snapshot without grid cells cannot vote');
-assert.deepEqual((measureMonitorUp(snapshot(upCells, { seq: 7, gridSeq: 8 }), rule) as any).reason, 'grid-seq-mismatch',
+assert.deepEqual((measureMonitorUp(snapshot(upCells, { seq: 7, gridSeq: 8 }), rule) as { reason?: string }).reason, 'grid-seq-mismatch',
   'the grid must be the same frame as the snapshot');
 
 const mixed = [...upCells];
@@ -131,7 +131,7 @@ assert.deepEqual(measureMonitorUp(snapshot(mixed), rule),
   'mixed anchor evidence must refuse, never vote');
 const inBand = [...upCells];
 inBand[132] = 0x606060;  // luma 96: exactly at the threshold, between the bands
-assert.equal((measureMonitorUp(snapshot(inBand), rule) as any).reason, 'ambiguous-threshold');
+assert.equal((measureMonitorUp(snapshot(inBand), rule) as { reason?: string }).reason, 'ambiguous-threshold');
 const edgeDown = [...downCells];
 edgeDown[132] = 0x180000;  // luma 24: exactly the worst calibration not-up frame
 assert.deepEqual(measureMonitorUp(snapshot(edgeDown), rule),

@@ -14,13 +14,14 @@ const RATES = ['dropRate', 'audioDropRate', 'audioFalseNegativeRate', 'audioFals
 // defaults to its audio rate, so setting an audio rate names both).
 for (const rate of RATES)
   assert.throws(() => new Observer({ [rate]: 0.25 }),
-    (error: any) => new RegExp(`\\b${rate}\\b`).test(error.message) && /above zero needs a seeded rng/.test(error.message), rate);
-assert.throws(() => new Observer({ dropRate: 0.25, rng: {} }), /needs a seeded rng/, 'an rng without next()');
+    (error: Error) => new RegExp(`\\b${rate}\\b`).test(error.message) && /above zero needs a seeded rng/.test(error.message), rate);
+// The rng lacks the next() its type requires: the refusal is what is tested.
+assert.throws(() => new Observer({ dropRate: 0.25, rng: {} as { next(): number } }), /needs a seeded rng/, 'an rng without next()');
 
 // With Math.random() stubbed to throw around the frames the observer reads. (A
 // Sim is built outside the stub: defaultSimOptions draws its natural seed even
 // when a seed is passed, which is Source's tolerated draw, not the observer's.)
-const withoutAmbient = (frames) => {
+const withoutAmbient = <T>(frames: () => T): T => {
   const random = Math.random;
   Math.random = () => { throw new Error('ambient draw'); };
   try { return frames(); } finally { Math.random = random; }
@@ -34,12 +35,12 @@ const withoutAmbient = (frames) => {
 }
 
 // A noisy observer replays: the same seeded stream gives the same facts, frame for frame.
-const noisyNight = (seed) => {
+const noisyNight = (seed: number) => {
   const observer = new Observer({ interval: 1, dropRate: 0.3, audioDropRate: 0.2, audioFalseNegativeRate: 0.2,
     audioFalsePositiveRate: 0.05, rng: new Rng(seed ^ 0x9e3779b9) });
   const night = new Sim({ seed, night: 5 });
   return withoutAmbient(() => {
-    const facts = [];
+    const facts: string[] = [];
     for (let f = 0; f < 1200; f += 1) { night.tick(); facts.push(JSON.stringify(observer.read(night))); }
     return facts;
   });

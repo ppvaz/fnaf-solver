@@ -1,17 +1,21 @@
 import assert from 'node:assert/strict';
 import { DeviceCampaignRunner } from '../src/campaign/campaign-runner.ts';
+import type { CampaignPorts } from '../src/campaign/campaign-runner.ts';
 import { makeCampaignSpec } from '../src/campaign/campaign.ts';
+import type { CampaignTarget } from '../src/campaign/campaign.ts';
+import type { Dials } from '../src/campaign/custom-night.ts';
 
 const full = makeCampaignSpec({
   profile: 'fixture-hid-screencap',
   targetBuild: 'com.scottgames.fnaf2:2.0.7+26',
   nights: [6, 7],
 });
-const calls = [];
-const ports = {
+const calls: string[] = [];
+const ports: CampaignPorts = {
   preflight: async () => ({ status: 'READY', serial: 'fixture' }),
   menu: async ({ target }) => { calls.push(`menu:${target.night}`); return { target: target.menuTarget, visible: true, selected: true }; },
-  customNight: async ({ target }) => ({ status: 'PASS', dials: target.dials, puppet: target.puppet,
+  // Only a custom target carries dials and a puppet, and only a custom target is asked for them.
+  customNight: async ({ target }: { target: CampaignTarget & { dials?: Dials, puppet?: number } }) => ({ status: 'PASS', dials: target.dials, puppet: target.puppet,
     readback: { status: 'PASS', dials: target.dials, puppet: target.puppet } }),
   intro: async ({ target }) => ({ night: target.night, identity: target.mode, observed: true }),
   executeAttempt: async ({ target, attempt }) => { calls.push(`attempt:${target.night}:${attempt}`); return { id: `${target.night}-${attempt}` }; },
@@ -54,7 +58,8 @@ const retryRunner = new DeviceCampaignRunner({ spec: { ...full, nights: [full.ni
     terminalStops += 1;
     assert.ok(['terminal-retry', 'terminal-proof'].includes(reason));
   },
-  terminal: async ({ target, execution }) => execution.attempt === 1
+  // executeAttempt above returns the attempt it played.
+  terminal: async ({ target, execution }) => (execution as { attempt: number }).attempt === 1
     ? { night: target.night, outcome: 'death', sixAm: false }
     : { night: target.night, identity: target.mode, outcome: 'sixam', sixAm: true },
   save: async () => ({ customNightVisible: true, observed: true }),
@@ -65,20 +70,20 @@ assert.equal(attempts, 2);
 assert.equal(terminalStops, 2, 'each terminal must stop the actuator before retryReady or save proof');
 assert.equal(retried.attempts[0].status, 'DEATH');
 assert.equal(retried.attempts[1].status, 'WIN');
-assert.match(retried.attempts[1].proofHash, /^fnv1a-/);
+assert.match(retried.attempts[1].proofHash ?? '', /^fnv1a-/);
 console.log('device campaign runner: bounded death retry and per-attempt result record pass');
 
 // An Invalid run (ADR 0002, decision 3) is stopped like a death and played
 // again without spending the attempt; two in a row hold before a third.
 const single = { ...full, nights: [full.nights[0]], retry: { maxAttempts: 1 } };
-const invalidRun = async (outcomes) => {
-  const stops = [];
+const invalidRun = async (outcomes: string[]) => {
+  const stops: string[] = [];
   let played = 0;
   const runner = new DeviceCampaignRunner({ spec: single, ports: {
     ...ports,
     executeAttempt: async ({ attempt }) => { played += 1; return { attempt }; },
     stopAttempt: async ({ reason }) => { stops.push(reason); },
-    terminal: async ({ target, execution }) => outcomes[execution.attempt - 1] === 'invalid'
+    terminal: async ({ target, execution }) => outcomes[(execution as { attempt: number }).attempt - 1] === 'invalid'
       ? { night: target.night, outcome: 'invalid', why: 'fixture: the delivered phase left its budget' }
       : { night: target.night, identity: target.mode, outcome: 'sixam', sixAm: true },
     save: async () => ({ customNightVisible: true, observed: true }),

@@ -5,6 +5,7 @@
 // lost that mask-on press on about half of a Night 1 minus7 run's cycles.
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { isList } from '@sixam/kernel';
 import { stableHash } from '@sixam/kernel/contracts';
 import { compileDeviceLocalHidSchedule } from '../src/campaign/hid-schedule.ts';
 
@@ -22,9 +23,9 @@ const request = {
     actions: [{ schema: 'artifact-action-v1', id: 'clear-1', cycle: 'clear', atMs: 3000, kind: 'hold',
       control: 'wind', requiresMonitorUp: false, durationMs: 100 }] }],
 };
-const schedule: any = compileDeviceLocalHidSchedule(request, { readyDelayMs: 6000 });
+const schedule: Readonly<Record<string, unknown>> = compileDeviceLocalHidSchedule(request, { readyDelayMs: 6000 });
 const body = schedule.events ?? schedule.lines ?? schedule.script;
-const text = Array.isArray(body) ? body.join('\n') : String(body ?? JSON.stringify(schedule));
+const text = isList(body) ? body.join('\n') : String(body ?? JSON.stringify(schedule));
 // The report sequence: vent down, 600 ms, vent up, the 40 ms gap, mask down, 33 ms, mask up.
 const delays = [...text.matchAll(/delay[^0-9]*(\d+)/g)].map((m) => Number(m[1]));
 const i = delays.indexOf(600);

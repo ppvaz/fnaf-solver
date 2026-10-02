@@ -8,18 +8,29 @@ import { AdbDeviceLocalArtifactExecutor } from '../src/campaign/adb-device-local
 import { compileDeviceLocalHidSchedule, sharedScheduleBody } from '../src/campaign/hid-schedule.ts';
 import { renderDeviceLocalScript } from '../src/campaign/device-shell.ts';
 import { expandNightBlocks } from '../src/campaign/device-local-executor.ts';
+import type { HidSchedule } from '../src/campaign/hid-schedule.ts';
+
+type ExecutorEvent = Parameters<NonNullable<NonNullable<ConstructorParameters<typeof AdbDeviceLocalArtifactExecutor>[0]>['onEvent']>>[0];
+/** A plan's timing, as the clones below rewrite it. */
+interface Timing { periodMs: number, loopStartMs: number, stopAtMs: number, observeUntilMs: number, idleUntilMs: number, phaseOffsetMs?: number }
+/** The camera arm a plan may declare. */
+interface ArmVerification { cameras: string[], viewing: string, untilMs: number, mode?: string }
+/** A plan reference: the base request declares no arm; the clones below add one. */
+interface PlanRef { night: number, sha256: string, timing: Timing, armVerification?: ArmVerification }
+/** A thrown run failure: an Invalid run names why. */
+type RunError = Error & { invalid?: string };
 
 const profile = JSON.parse(await readFile(new URL('../../../packages/play/profiles/fnaf2/moto-g56/hid-mediaprojection.json', import.meta.url), 'utf8'));
-const timing = { periodMs: 1000, loopStartMs: 0, stopAtMs: 3000, observeUntilMs: 3000, idleUntilMs: 0 };
-const action = (id, kind, control, atMs, extra = {}) => ({
+const timing: Timing = { periodMs: 1000, loopStartMs: 0, stopAtMs: 3000, observeUntilMs: 3000, idleUntilMs: 0 };
+const action = (id: string, kind: string, control: string, atMs: number, extra = {}) => ({
   schema: 'artifact-action-v1', id, cycle: 'toys', atMs, kind, control, ...extra,
 });
-const block = (id, atMs, actions) => ({ schema: 'artifact-action-block-v1', id,
+const block = (id: string, atMs: number, actions: ReturnType<typeof action>[]) => ({ schema: 'artifact-action-block-v1', id,
   cycle: 'toys', night: 6, atMs, actions });
 const request = {
   schema: 'device-executor-v1', version: 1, mode: 'live',
   artifact: { winnerHash: 'a'.repeat(64), engineHash: 'b'.repeat(64), profileHash: 'c'.repeat(64),
-    profileStableHash: stableHash(profile), plans: [{ night: 6, sha256: 'd'.repeat(64), timing }] },
+    profileStableHash: stableHash(profile), plans: [{ night: 6, sha256: 'd'.repeat(64), timing }] as PlanRef[] },
   profile, limits: { maxActions: 64, maxDurationMs: 15000 },
   blocks: [
     { schema: 'artifact-action-block-v1', id: 'opening-block', cycle: 'opening', night: 6, atMs: 0,
@@ -79,7 +90,7 @@ const shiftedBlocks = expandNightBlocks(shiftedRequest, 6);
 assert.equal(shiftedBlocks[0].cycle, 'opening');
 assert.equal(shiftedBlocks[0].scheduleAtMs, 0,
   'opening must remain on the authored night timeline when loopStartMs is non-zero');
-assert.equal(shiftedBlocks.find(block => block.cycle === 'toys').scheduleAtMs, 2100,
+assert.equal(shiftedBlocks.find(block => block.cycle === 'toys')?.scheduleAtMs, 2100,
   'steady blocks must begin at loopStartMs plus their authored offset');
 assert.ok(events.every(event => event.command === 'register' || event.command === 'report' || event.command === 'delay'),
   'compiled stream must stay within the closed hid vocabulary');
@@ -96,7 +107,7 @@ assert.ok(remote.indexOf('/system/bin/hid - < "$stream"') < remote.lastIndexOf('
 const armRequest = structuredClone(request);
 armRequest.blocks = [armRequest.blocks[0],
   block('toy-tail', 2500, [action('toy-tail-action', 'hold', 'wind', 2500, { durationMs: 33 })])];
-(armRequest.artifact.plans[0] as any).armVerification = {
+armRequest.artifact.plans[0].armVerification = {
   cameras: ['cam:8', 'cam:11'], viewing: 'cam:11', untilMs: 2000,
 };
 armRequest.blocks[0].actions.push(
@@ -115,12 +126,12 @@ const armSchedule = compileDeviceLocalHidSchedule(armRequest, { readyDelayMs: 60
 const armEvents = armSchedule.lines.map(line => JSON.parse(line));
 assert.ok(armEvents.some(event => event.command === 'report' && event.report.includes(0)),
   'the CAM08 arm request must compile into the same device-local HID stream');
-assert.equal(armSchedule.gated.firstWindAtMs, 2200,
+assert.equal(armSchedule.gated?.firstWindAtMs, 2200,
   'the gated schedule must identify the opening wind boundary');
-assert.equal(armSchedule.gated.phaseBudgetMs, 2000,
+assert.equal(armSchedule.gated?.phaseBudgetMs, 2000,
   'the gated schedule must carry the arm phase budget');
 const observeOnceRequest = structuredClone(armRequest);
-(observeOnceRequest.artifact.plans[0] as any).armVerification.mode = 'observe-once';
+(observeOnceRequest.artifact.plans[0].armVerification as ArmVerification).mode = 'observe-once';
 const observeOnceSchedule = compileDeviceLocalHidSchedule(observeOnceRequest, { readyDelayMs: 6000 });
 // Observe-once scopes to the ARM ONLY (Pedro, 2026-09-12). It must not park
 // the stream -- and it must still compile the per-cycle state gates, which the
@@ -129,11 +140,11 @@ const observeOnceSchedule = compileDeviceLocalHidSchedule(observeOnceRequest, { 
 // edge, and nothing left that could repair it.
 assert.ok(observeOnceSchedule.gated,
   'observe-once must still compile the per-cycle state gates');
-assert.deepEqual(observeOnceSchedule.gated.gates, armSchedule.gated.gates,
+assert.deepEqual(observeOnceSchedule.gated.gates, armSchedule.gated?.gates,
   'observe-once must compile exactly the cycle gates blocking mode compiles');
-assert.deepEqual(observeOnceSchedule.gated.maskCorrection, armSchedule.gated.maskCorrection,
+assert.deepEqual(observeOnceSchedule.gated.maskCorrection, armSchedule.gated?.maskCorrection,
   'observe-once must retain the same authored mask correction');
-assert.deepEqual(observeOnceSchedule.gated.remainderSegments, armSchedule.gated.remainderSegments,
+assert.deepEqual(observeOnceSchedule.gated.remainderSegments, armSchedule.gated?.remainderSegments,
   'the two arm modes must differ only in the handover, never in the schedule');
 {
   const parked = sharedScheduleBody(observeOnceSchedule, { armObserveOnce: false });
@@ -147,9 +158,9 @@ assert.deepEqual(observeOnceSchedule.gated.remainderSegments, armSchedule.gated.
   assert.ok(unparked.length > parked.length,
     'the observe-once handover must be strictly longer than the parked one');
 }
-assert.equal(observeOnceSchedule.armObservation.firstWindAtMs, 2200,
+assert.equal(observeOnceSchedule.armObservation?.firstWindAtMs, 2200,
   'observe-once verification must retain the authored first-wind boundary');
-assert.equal(observeOnceSchedule.armObservation.armReadyAtMs, armSchedule.gated.armReadyAtMs,
+assert.equal(observeOnceSchedule.armObservation?.armReadyAtMs, armSchedule.gated?.armReadyAtMs,
   'observe-once verification must use the same physical arm prefix timing');
 // Runtime executor tests use the same arm shape at a compressed authored
 // timeline. The physical production constants remain unchanged; the shorter
@@ -159,7 +170,7 @@ const runtimeArmRequest = structuredClone(armRequest);
 runtimeArmRequest.artifact.plans[0].timing = {
   periodMs: 300, loopStartMs: 0, stopAtMs: 300, observeUntilMs: 400, idleUntilMs: 0,
 };
-(runtimeArmRequest.artifact.plans[0] as any).armVerification.untilMs = 100;
+(runtimeArmRequest.artifact.plans[0].armVerification as ArmVerification).untilMs = 100;
 runtimeArmRequest.blocks[0].actions = [
   action('runtime-cam11', 'tap', 'cam:11', 0,
     { cycle: 'opening', requiresMonitorUp: true, durationMs: 33 }),
@@ -176,7 +187,7 @@ runtimeArmRequest.blocks = [runtimeArmRequest.blocks[0],
   block('runtime-toy-tail', 240, [action('runtime-toy-wind', 'hold', 'wind', 240,
     { durationMs: 33 })])];
 const runtimeObserveOnceRequest = structuredClone(runtimeArmRequest);
-(runtimeObserveOnceRequest.artifact.plans[0] as any).armVerification.mode = 'observe-once';
+(runtimeObserveOnceRequest.artifact.plans[0].armVerification as ArmVerification).mode = 'observe-once';
 // The same night with a second planned camera window: the monitor down at 600 and up again at 800.
 const twoWindowObserveOnceRequest = structuredClone(runtimeObserveOnceRequest);
 Object.assign(twoWindowObserveOnceRequest.artifact.plans[0].timing, { stopAtMs: 1200, observeUntilMs: 1400 });
@@ -185,12 +196,12 @@ twoWindowObserveOnceRequest.blocks = [...twoWindowObserveOnceRequest.blocks,
     action('runtime-monitor-down-later', 'ensure', 'monitor', 600, { targetMonitorUp: false, durationMs: 33 }),
     action('runtime-monitor-up-again', 'ensure', 'monitor', 800, { targetMonitorUp: true, durationMs: 33 })])];
 const lateRuntimeArmRequest = structuredClone(runtimeArmRequest);
-(lateRuntimeArmRequest.artifact.plans[0] as any).armVerification.untilMs = 100;
+(lateRuntimeArmRequest.artifact.plans[0].armVerification as ArmVerification).untilMs = 100;
 const fastGateRequest = structuredClone(runtimeArmRequest);
 fastGateRequest.artifact.plans[0].timing.periodMs = 400;
 fastGateRequest.artifact.plans[0].timing.stopAtMs = 400;
 fastGateRequest.artifact.plans[0].timing.observeUntilMs = 500;
-(fastGateRequest.artifact.plans[0] as any).armVerification.untilMs = 100;
+(fastGateRequest.artifact.plans[0].armVerification as ArmVerification).untilMs = 100;
 fastGateRequest.blocks = [fastGateRequest.blocks[0],
   block('runtime-mask', 200, [action('runtime-mask-on', 'press', 'mask', 200,
     { cycle: 'toys', targetMaskOn: true, durationMs: 33 })]),
@@ -219,7 +230,9 @@ gateRequest.blocks = [gateRequest.blocks[0],
     { targetMaskOn: true, durationMs: 33 })]),
   block('toy-wind', 3000, [action('toy-wind-action', 'hold', 'wind', 3000,
     { durationMs: 33, requiresMonitorUp: true })])];
-const gateSchedule = compileDeviceLocalHidSchedule(gateRequest, { readyDelayMs: 6000 });
+// An arm verification compiles to a gated schedule.
+const gateSchedule = compileDeviceLocalHidSchedule(gateRequest, { readyDelayMs: 6000 }) as
+  HidSchedule & { gated: NonNullable<HidSchedule['gated']> };
 const gates = gateSchedule.gated.gates;
 assert.ok(gates.length >= 2, 'each idle cycle boundary must offer a gate');
 // The budget is spent out of the idle each gate actually has, never added to
@@ -233,7 +246,7 @@ assert.ok(gates.every(entry => entry.believedMaskOn === true),
   "a gate must carry the plan's own mask belief at that instant");
 assert.equal(gateSchedule.gated.remainderSegments.length, gates.length + 1,
   'the stream must be split into one more segment than it has gates');
-assert.ok(gateSchedule.gated.maskCorrection.length > 0,
+assert.ok(Number(gateSchedule.gated.maskCorrection?.length) > 0,
   'the corrective contact must be compiled from the authored mask press');
 // The gate is carved out of existing idle: it never displaces a contact.
 for (const entry of gates)
@@ -245,7 +258,7 @@ for (const entry of gates)
 // authored contact must still land on the instant the plan authored it.
 {
   let cursor = gateSchedule.gated.armReadyAtMs;
-  const contacts = [];
+  const contacts: number[] = [];
   gateSchedule.gated.remainderSegments.forEach((segment, index) => {
     for (const raw of segment) {
       const item = JSON.parse(raw);
@@ -277,7 +290,7 @@ delayedArmRequest.artifact.plans[0].timing = {
   periodMs: 5000, loopStartMs: 140000, stopAtMs: 360000,
   observeUntilMs: 420000, idleUntilMs: 0,
 };
-(delayedArmRequest.artifact.plans[0] as any).armVerification = {
+delayedArmRequest.artifact.plans[0].armVerification = {
   cameras: ['cam:8', 'cam:11'], viewing: 'cam:11', untilMs: 140250,
 };
 delayedArmRequest.blocks[0].actions = delayedArmRequest.blocks[0].actions
@@ -286,9 +299,9 @@ delayedArmRequest.blocks = [delayedArmRequest.blocks[0],
   block('toy-delayed-wind', 300, [action('toy-delayed-wind-action',
     'hold', 'wind', 300, { durationMs: 33, requiresMonitorUp: true })])];
 const delayedSchedule = compileDeviceLocalHidSchedule(delayedArmRequest, { readyDelayMs: 6000 });
-assert.equal(delayedSchedule.gated.firstWindAtMs, 140300,
+assert.equal(delayedSchedule.gated?.firstWindAtMs, 140300,
   'minimal Night 1 must place its first wind on the expanded repeat timeline');
-assert.equal(delayedSchedule.gated.armReadyAtMs, 1633,
+assert.equal(delayedSchedule.gated?.armReadyAtMs, 1633,
   'minimal Night 1 must verify after the opening raise, not after the 140 s idle');
 
 // The effect ledger retains semantic targets in both directions. In
@@ -331,11 +344,11 @@ chmodSync(gateAdb, 0o755);
 const effectAdb = join(fakeRoot, 'effect-adb');
 writeFileSync(effectAdb, '#!/bin/sh\ncase "$*" in *" logcat "*) echo "I am_anr : [0,1,com.scottgames.fnaf2,0,Input dispatching timed out]"; exit 0;; *" test -e "*|*" touch "*) exit 0;; esac\ncat >/dev/null\nexec tail -f /dev/null\n');
 chmodSync(effectAdb, 0o755);
-const finishAfter = (events, predicate) => {
+const finishAfter = (events: ExecutorEvent[], predicate: (event: ExecutorEvent) => boolean) => {
   let finished = false;
   return {
     observe: async () => finished ? 'gameover' : 'night',
-    onEvent: event => {
+    onEvent: (event: ExecutorEvent) => {
       events.push(event);
       if (predicate(event)) finished = true;
     },
@@ -363,9 +376,9 @@ try {
   // A title HID is already registered and InputReader-ready. The gameplay
   // handoff must append only the authored body to that process: a second
   // register/ready prefix would recreate the opening delay this path removes.
-  const sharedWrites = [];
-  const sharedEvents = [];
-  const sharedHid = { write: async value => { sharedWrites.push(JSON.parse(value)); } };
+  const sharedWrites: { command: string, duration?: number }[] = [];
+  const sharedEvents: ExecutorEvent[] = [];
+  const sharedHid = { write: async (value: string) => { sharedWrites.push(JSON.parse(value)); } };
   let sharedObservations = 0;
   const shared = new AdbDeviceLocalArtifactExecutor({ serial: 'fixture-device', adb: fakeAdb,
     readyDelayMs: 1, pollMs: 250, timing: { pollMs: 1 }, sharedHid: () => sharedHid,
@@ -384,21 +397,21 @@ try {
     'the executor must release a shared HID on its own first authoritative night frame');
   const sharedHandoff = sharedEvents.find(event => event.type === 'hid.handoff');
   assert.ok(sharedHandoff, 'shared HID handoff must measure the first delivered action');
-  assert.ok(sharedHandoff.delayMs <= sharedHandoff.budgetMs,
+  assert.ok(Number(sharedHandoff.delayMs) <= Number(sharedHandoff.budgetMs),
     'an on-time handoff must remain inside the fail-fast budget');
 
   // A port-owned release: the office frame authorizes, and nothing is written
   // until the composition calls releaseNight() at its placed instant.
-  const portEvents = [];
-  const portWrites = [];
-  let portReleasedAt = null;
-  const portHid = { write: async value => { portWrites.push({ at: Date.now(), value: JSON.parse(value) }); } };
+  const portEvents: ExecutorEvent[] = [];
+  const portWrites: { at: number, value: unknown }[] = [];
+  let portReleasedAt = null as number | null;
+  const portHid = { write: async (value: string) => { portWrites.push({ at: Date.now(), value: JSON.parse(value) }); } };
   const portOwned = new AdbDeviceLocalArtifactExecutor({ serial: 'fixture-device', adb: fakeAdb,
     readyDelayMs: 1, pollMs: 250, timing: { pollMs: 1 }, sharedHid: () => portHid, nightReleaseOwner: 'port',
     observe: async () => portReleasedAt === null || Date.now() - portReleasedAt < 40 ? 'night' : 'gameover',
     onEvent: event => portEvents.push(event) });
   // The port places its release from the executor's own authorization edge.
-  let portAuthorizedAt = null;
+  let portAuthorizedAt = null as number | null;
   const portAuthorized = portOwned.whenNightAuthorized().then(at => {
     portAuthorizedAt = at;
     return new Promise<void>(resolve => setTimeout(() => { portReleasedAt = Date.now(); portOwned.releaseNight(); resolve(); }, 30));
@@ -406,10 +419,10 @@ try {
   const portResult = await portOwned.execute(request);
   await portAuthorized;
   assert.equal(typeof portAuthorizedAt, 'number', 'the authorization edge must resolve with its return time');
-  assert.ok(portReleasedAt >= portAuthorizedAt, 'the release follows the authorization it was placed from');
+  assert.ok(Number(portReleasedAt) >= Number(portAuthorizedAt), 'the release follows the authorization it was placed from');
   const authorizedEvent = portEvents.find(event => event.type === 'hid.night-authorized');
-  assert.equal(authorizedEvent.authorizedAt, portAuthorizedAt, 'the event must carry when the gate opened');
-  assert.ok(authorizedEvent.sampleStartedAt <= authorizedEvent.authorizedAt, 'the sample starts before it returns');
+  assert.equal(authorizedEvent?.authorizedAt, portAuthorizedAt, 'the event must carry when the gate opened');
+  assert.ok(Number(authorizedEvent?.sampleStartedAt) <= Number(authorizedEvent?.authorizedAt), 'the sample starts before it returns');
   assert.equal(await portOwned.whenNightAuthorized(), portAuthorizedAt,
     'a late subscriber to an already-authorized execution must resolve at once');
   assert.equal(portResult.terminal, 'gameover', 'a port-owned release must keep terminal handling');
@@ -417,17 +430,17 @@ try {
     'the office frame must be recorded as an authorization');
   assert.equal(portEvents.find(event => event.type === 'hid.night-go')?.source, 'intro-handoff',
     'a port-owned night must take its origin from the placed release, not the classifier');
-  assert.ok(portWrites.length > 0 && portWrites[0].at >= portReleasedAt,
+  assert.ok(portWrites.length > 0 && portWrites[0].at >= Number(portReleasedAt),
     'nothing may reach the HID before the port releases the night');
   assert.throws(() => new AdbDeviceLocalArtifactExecutor({ serial: 'fixture-device', nightReleaseOwner: 'host' }),
     /nightReleaseOwner must be observer or port/);
 
-  const lateEvents = [];
+  const lateEvents: ExecutorEvent[] = [];
   let lateWrites = 0;
-  const lateHid = { write: async value => {
+  const lateHid = { write: async (value: string) => {
     if (lateWrites === 0) {
       lateWrites += 1;
-      await new Promise<any>(resolve => setTimeout(resolve, 125));
+      await new Promise<void>(resolve => setTimeout(resolve, 125));
     }
     lateWrites += 1;
     JSON.parse(value);
@@ -437,11 +450,11 @@ try {
     onEvent: event => lateEvents.push(event) });
   const lateRelease = setTimeout(() => late.releaseNight(), 10);
   await assert.rejects(() => late.execute(request),
-    (error: any) => /night handoff was \d+ms late/.test(error.message) && error.invalid === 'late-night-handoff',
+    (error: RunError) => /night handoff was \d+ms late/.test(error.message) && error.invalid === 'late-night-handoff',
     'a delayed first HID action must invalidate the run: an Invalid run, not a campaign failure (Pedro, 2026-09-30)');
   clearTimeout(lateRelease);
   const lateHandoff = lateEvents.find(event => event.type === 'hid.handoff');
-  assert.ok(lateHandoff && lateHandoff.delayMs > lateHandoff.budgetMs,
+  assert.ok(lateHandoff && Number(lateHandoff.delayMs) > Number(lateHandoff.budgetMs),
     'the delayed handoff must be measured outside its budget');
   assert.ok(lateEvents.some(event => event.type === 'hid.handoff.abort'),
     'a late handoff must leave an explicit abort event');
@@ -481,7 +494,7 @@ try {
     'one bad lifecycle frame must not abort an otherwise live schedule');
 
   let controlSequence = 0;
-  const effectLog = [];
+  const effectLog: ExecutorEvent[] = [];
   const effectLifecycle = finishAfter(effectLog,
     event => event.type === 'control.effect.result' && event.actionId === 'effect-mask-down');
   const effects = new AdbDeviceLocalArtifactExecutor({ serial: 'fixture-device', adb: effectAdb,
@@ -503,24 +516,25 @@ try {
     'a confirmed mask-off must acknowledge the mask-off target');
   assert.equal(effectResults['effect-mask-down']?.evidence, 'fixture',
     'mask effect results must retain their evidence qualification');
-  const passLatency = effectResults['effect-monitor-up'].latency;
+  // A PASS carries its latency bracket, both ends measured.
+  const passLatency = effectResults['effect-monitor-up'].latency as { lowerMs: number, upperMs: number, atFirstFrame: boolean };
   assert.ok(passLatency.lowerMs <= passLatency.upperMs,
     'a measured effect latency must be a bracket, not a point');
   assert.equal(passLatency.atFirstFrame, true,
     'a target already held on the first observed frame must be marked as indistinguishable');
   assert.equal(effectResults['effect-monitor-down'].latency, null,
     'a missing effect must not report a latency it never observed');
-  assert.ok(effectResults['effect-monitor-down'].sampleCount <= 6,
+  assert.ok(Number(effectResults['effect-monitor-down'].sampleCount) <= 6,
     'a missing effect must not spend more than its read budget');
   // The observation window is derived from the plan: the next authored
   // transition of the same signal, never a settle constant.
   const monitorDownExpected = effectLog.find(event => event.type === 'control.effect.expected' &&
     event.actionId === 'effect-monitor-down');
-  assert.equal(monitorDownExpected.windowEndAt - monitorDownExpected.contactAt, 80,
+  assert.equal(Number(monitorDownExpected?.windowEndAt) - Number(monitorDownExpected?.contactAt), 80,
     'a monitor window must end at the next authored monitor transition');
 
   // A capture whose sequence never advances cannot confirm or refute anything.
-  const stalledLog = [];
+  const stalledLog: ExecutorEvent[] = [];
   const stalledLifecycle = finishAfter(stalledLog,
     event => event.type === 'control.effect.result' && event.actionId === 'effect-mask-down');
   const stalled = new AdbDeviceLocalArtifactExecutor({ serial: 'fixture-device', adb: effectAdb,
@@ -531,13 +545,13 @@ try {
   await stalled.execute(effectRequest);
   const stalledResult = stalledLog.find(event => event.type === 'control.effect.result' &&
     event.actionId === 'effect-monitor-up');
-  assert.equal(stalledResult.status, 'UNKNOWN',
+  assert.equal(stalledResult?.status, 'UNKNOWN',
     'a stalled helper capture must refuse, not confirm a target from one frame');
-  assert.equal(stalledResult.reason, 'insufficient-frames');
+  assert.equal(stalledResult?.reason, 'insufficient-frames');
 
   // Which detector answered travels with the observation: the camera panel
   // and the office HUD see opposite halves of the monitor state.
-  const sourcedLog = [];
+  const sourcedLog: ExecutorEvent[] = [];
   let sourcedSequence = 0;
   const sourcedLifecycle = finishAfter(sourcedLog,
     event => event.type === 'control.effect.result' && event.actionId === 'effect-mask-down');
@@ -550,18 +564,20 @@ try {
   await sourced.execute(effectRequest);
   const sourcedResult = sourcedLog.find(event => event.type === 'control.effect.result' &&
     event.actionId === 'effect-monitor-up');
-  assert.equal(sourcedResult.status, 'PASS',
+  assert.equal(sourcedResult?.status, 'PASS',
     'a camera panel observation must be able to acknowledge a monitor-up target');
-  assert.equal(sourcedResult.samples[0].monitorSource, 'camera-panel',
+  // An effect result keeps the frames it decided from.
+  const sourcedSamples = sourcedResult?.samples as { monitorSource: string, panelSequence: number, sequence: number }[] | undefined;
+  assert.equal(sourcedSamples?.[0].monitorSource, 'camera-panel',
     'the deciding detector must be retained in the sample');
-  assert.equal(sourcedResult.samples[0].panelSequence, 900 + sourcedResult.samples[0].sequence,
+  assert.equal(sourcedSamples?.[0].panelSequence, 900 + Number(sourcedSamples?.[0].sequence),
     'the camera read sequence must be retained beside the frame sequence it was paired with');
 
   // A frame the fitted rule refuses still refutes mask-on when the grid is far
   // too bright for an opaque mask, so the gate corrects rather than ending the
   // night. Darkness is never allowed to assert mask-on: a blackout reads the
   // same, which is why only this direction is inferred.
-  const refuteLog = [];
+  const refuteLog: ExecutorEvent[] = [];
   const refuteLifecycle = finishAfter(refuteLog, event => event.type === 'control.gate');
   let refuteSequence = 0;
   const refuted = new AdbDeviceLocalArtifactExecutor({ serial: 'fixture-device', adb: gateAdb,
@@ -600,7 +616,7 @@ try {
   // The fixture above cannot see this because it sets maskSettleMs to 0 -- it
   // zeroes the exact constant that caused the defect. This one makes the settle
   // enormous: if the release is still anchored to it, the delay is unmissable.
-  const settleLog = [];
+  const settleLog: ExecutorEvent[] = [];
   const settleLifecycle = finishAfter(settleLog, event => event.type === 'control.gate');
   let settleSequence = 0;
   const settled = new AdbDeviceLocalArtifactExecutor({ serial: 'fixture-device', adb: gateAdb,
@@ -619,7 +635,7 @@ try {
   assert.ok(settledGates.length > 0, 'the settle fixture must reach a gate');
   const correctedGate = settledGates.find(event => event.status === 'CORRECTED');
   assert.ok(correctedGate, 'the settle fixture must produce a correction to measure');
-  assert.ok(correctedGate.releaseAt - correctedGate.reachedAt < 4000,
+  assert.ok(Number(correctedGate.releaseAt) - Number(correctedGate.reachedAt) < 4000,
     'a correction must not anchor the release to the mask settle: the schedule ' +
     'tolerates ~200 ms of shift and the settle is measured in seconds');
 
@@ -634,7 +650,7 @@ try {
   // asserted is that it was not paid for on the critical path, above.
 
   // Darkness stays unknown: mask-on and a blacked-out office read alike.
-  const darkLog = [];
+  const darkLog: ExecutorEvent[] = [];
   const darkLifecycle = finishAfter(darkLog, event => event.type === 'control.gate.abort');
   let darkSequence = 0;
   const dark = new AdbDeviceLocalArtifactExecutor({ serial: 'fixture-device', adb: gateAdb,
@@ -653,13 +669,13 @@ try {
 
   const anrEvent = sourcedLog.find(event => event.type === 'device.anr');
   assert.ok(anrEvent, 'every run must record its ANR query, hit or not');
-  assert.equal(anrEvent.count, anrEvent.lines.length);
+  assert.equal(anrEvent.count, (anrEvent.lines as string[]).length); // a device.anr event lists its logcat lines
 
   let armSequence = 0;
-  const armLog = [];
+  const armLog: ExecutorEvent[] = [];
   let armLifecycleCalls = 0;
-  let releaseArmLifecycle;
-  const armLifecycle = new Promise<any>(resolve => { releaseArmLifecycle = resolve; });
+  let releaseArmLifecycle: (value: void) => void;
+  const armLifecycle = new Promise<void>(resolve => { releaseArmLifecycle = resolve; });
   const armPass = new AdbDeviceLocalArtifactExecutor({ serial: 'fixture-device', adb: fakeAdb,
     readyDelayMs: 1, pollMs: 250,
     timing: { pollMs: 1, armSettleMs: 0, armObservationWindowMs: 2000, gateRetryGapMs: 0, maskSettleMs: 0 },
@@ -678,18 +694,18 @@ try {
         : sequence < 4 ? null : ['cam:8', 'cam:11'], viewing: null };
     } });
   const armed = await armPass.execute(runtimeArmRequest);
-  assert.equal(armed.armVerification.status, 'PASS',
+  assert.equal(armed.armVerification?.status, 'PASS',
     'an exact CAM08 + CAM11 observation must arm before the schedule continues');
   assert.ok(armSequence >= 5, 'arming requires fresh confirming samples');
   assert.equal(armLog.filter(event => event.type === 'arm.retry').length, 0,
     'UNKNOWN and a single wrong frame must not cause a destructive re-arm');
-  assert.ok(armLog.find(event => event.type === 'arm.verified').elapsedMs < 7000,
+  assert.ok(Number(armLog.find(event => event.type === 'arm.verified')?.elapsedMs) < 7000,
     'a slow lifecycle observer must not starve the native arm verifier after the night gate');
 
   // The one-shot mode starts the full authored stream immediately. A clear
   // exact pair is telemetry, while a clear wrong pair is a positive arm
   // failure and aborts without a retry or a phase re-anchor.
-  const observeOnceLog = [];
+  const observeOnceLog: ExecutorEvent[] = [];
   const observeOnceLifecycle = finishAfter(observeOnceLog, event => event.type === 'arm.verified');
   const observeOncePass = new AdbDeviceLocalArtifactExecutor({ serial: 'fixture-device', adb: fakeAdb,
     readyDelayMs: 1, pollMs: 250,
@@ -698,16 +714,17 @@ try {
     onEvent: observeOnceLifecycle.onEvent,
     observeArm: async () => ({ sequence: 1, highlights: ['cam:8', 'cam:11'], viewing: null }) });
   const observeOnceResult = await observeOncePass.execute(runtimeObserveOnceRequest);
-  assert.equal(observeOnceResult.armVerification.status, 'PASS',
+  assert.equal(observeOnceResult.armVerification?.status, 'PASS',
     'one-shot arm verification must record a clear exact pair');
   assert.equal(observeOnceLog.filter(event => event.type === 'arm.sample').length, 1,
     'one-shot arm verification must read exactly once');
   assert.equal(observeOnceLog.filter(event => event.type === 'arm.retry').length, 0,
     'one-shot arm verification must never re-arm');
-  assert.ok(!observeOnceLog.find(event => event.type === 'arm.verified').armGoAt,
+  // The run above finished on its arm.verified event.
+  assert.ok(!(observeOnceLog.find(event => event.type === 'arm.verified') as ExecutorEvent).armGoAt,
     'one-shot arm verification must not create a delayed arm release');
 
-  const observeOnceFailLog = [];
+  const observeOnceFailLog: ExecutorEvent[] = [];
   const observeOnceFail = new AdbDeviceLocalArtifactExecutor({ serial: 'fixture-device', adb: fakeAdb,
     readyDelayMs: 1, pollMs: 250,
     timing: { pollMs: 1, armSettleMs: 0, armObservationWindowMs: 0, gateRetryGapMs: 0, maskSettleMs: 0 },
@@ -715,7 +732,7 @@ try {
     onEvent: event => observeOnceFailLog.push(event),
     observeArm: async () => ({ sequence: 1, highlights: ['cam:9'], viewing: null }) });
   await assert.rejects(() => observeOnceFail.execute(runtimeObserveOnceRequest),
-    (error: any) => /identified a mismatch/.test(error.message) && error.invalid === 'camera-pair-mismatch',
+    (error: RunError) => /identified a mismatch/.test(error.message) && error.invalid === 'camera-pair-mismatch',
     'one-shot arm verification must abort on a definitive wrong pair, as an Invalid run');
   assert.ok(observeOnceFailLog.some(event => event.type === 'arm.failed'),
     'a definitive wrong pair must leave an arm.failed event');
@@ -724,7 +741,7 @@ try {
   assert.equal(observeOnceFailLog.filter(event => event.type === 'arm.retry').length, 0,
     'a definitive wrong pair must abort instead of replaying the arm');
 
-  const observeOnceUnknownLog = [];
+  const observeOnceUnknownLog: ExecutorEvent[] = [];
   const observeOnceUnknownLifecycle = finishAfter(observeOnceUnknownLog,
     event => event.type === 'arm.unresolved');
   const observeOnceUnknown = new AdbDeviceLocalArtifactExecutor({ serial: 'fixture-device', adb: fakeAdb,
@@ -734,7 +751,7 @@ try {
     onEvent: observeOnceUnknownLifecycle.onEvent,
     observeArm: async () => ({ sequence: 1, highlights: null, reason: 'ambiguous-threshold' }) });
   const observeOnceUnknownResult = await observeOnceUnknown.execute(runtimeObserveOnceRequest);
-  assert.equal(observeOnceUnknownResult.armVerification.status, 'UNRESOLVED',
+  assert.equal(observeOnceUnknownResult.armVerification?.status, 'UNRESOLVED',
     'an unavailable one-shot frame must leave the run alone and remain unverified');
   assert.ok(observeOnceUnknownLog.some(event => event.type === 'arm.unresolved'),
     'an unavailable one-shot frame must be recorded as unresolved');
@@ -744,7 +761,7 @@ try {
   // because their one read fell after the opening camdrop, on the office.
   assert.ok(observeOnceUnknownLog.filter(event => event.type === 'arm.sample').every(event => Number.isFinite(event.planAtMs)),
     'every one-shot read names the planned camera window it was taken in');
-  const laterWindowLog = [];
+  const laterWindowLog: ExecutorEvent[] = [];
   let laterWindowReads = 0;
   const laterWindowLifecycle = finishAfter(laterWindowLog, event => event.type === 'arm.verified' || event.type === 'arm.unresolved');
   const laterWindow = new AdbDeviceLocalArtifactExecutor({ serial: 'fixture-device', adb: fakeAdb,
@@ -757,15 +774,15 @@ try {
       : { sequence: 2, highlights: ['cam:8', 'cam:11'], viewing: null }) });
   const laterWindowResult = await laterWindow.execute(twoWindowObserveOnceRequest);
   const laterSamples = laterWindowLog.filter(event => event.type === 'arm.sample');
-  assert.equal(laterWindowResult.armVerification.status, 'PASS',
+  assert.equal(laterWindowResult.armVerification?.status, 'PASS',
     'an indeterminate first read must be resolved by the next planned camera window');
   assert.equal(laterSamples.length, 2, 'one read per window, stopping at the first definitive one');
-  assert.ok(laterSamples[1].planAtMs > laterSamples[0].planAtMs, 'the second read is in a later window');
+  assert.ok(Number(laterSamples[1].planAtMs) > Number(laterSamples[0].planAtMs), 'the second read is in a later window');
 
   // A fresh helper sequence can still be indeterminate for the whole first
   // camera window while the panel settles. That window must spend a bounded
   // physical re-arm, then accept only two fresh matching frames.
-  const unknownRetryLog = [];
+  const unknownRetryLog: ExecutorEvent[] = [];
   let unknownRetrySequence = 0;
   let unknownRetryStarted = false;
   const unknownThenPass = new AdbDeviceLocalArtifactExecutor({ serial: 'fixture-device', adb: fakeAdb,
@@ -782,7 +799,7 @@ try {
         : { sequence, highlights: null, viewing: null, reason: 'ambiguous-threshold' };
     } });
   await assert.rejects(() => unknownThenPass.execute(lateRuntimeArmRequest),
-    (error: any) => /phase-invalid/.test(error.message) && error.invalid === 'late-arm-release',
+    (error: RunError) => /phase-invalid/.test(error.message) && error.invalid === 'late-arm-release',
     'an indeterminate arm window must refuse a late phase release, as an Invalid run');
   const unknownRetry = unknownRetryLog.filter(event => event.type === 'arm.retry');
   assert.equal(unknownRetry.length, 1,
@@ -790,7 +807,7 @@ try {
   assert.equal(unknownRetry[0].reason, 'camera-observation-unavailable',
     'the retry reason must distinguish unavailable camera evidence from a wrong pair');
   const phaseInvalid = unknownRetryLog.find(event => event.type === 'phase.invalid');
-  assert.ok(phaseInvalid && phaseInvalid.phaseLagMs > phaseInvalid.phaseBudgetMs,
+  assert.ok(phaseInvalid && Number(phaseInvalid.phaseLagMs) > Number(phaseInvalid.phaseBudgetMs),
     'a recovered arm must be refused when its release is outside the phase budget');
 
   const armFail = new AdbDeviceLocalArtifactExecutor({ serial: 'fixture-device', adb: fakeAdb,
@@ -799,7 +816,7 @@ try {
     observe: async () => 'night',
     observeArm: async () => ({ sequence: ++armSequence, highlights: ['cam:9', 'cam:11'], viewing: null }) });
   await assert.rejects(() => armFail.execute(runtimeArmRequest),
-    (error: any) => /camera arm verification missed/.test(error.message) && error.invalid === 'camera-pair-mismatch',
+    (error: RunError) => /camera arm verification missed/.test(error.message) && error.invalid === 'camera-pair-mismatch',
     'a CAM09 + CAM11 observation must never be accepted for a CAM08 arm; every attempt a wrong pair is an Invalid run');
 } finally {
   rmSync(fakeRoot, { recursive: true, force: true });

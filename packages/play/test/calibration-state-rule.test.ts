@@ -6,7 +6,7 @@ import { calibrationStateRuleDigest, maskRuleDigest, parseMaskRule,
   parseCalibrationStateRule, measureCalibrationState, measureMaskOn } from '@sixam/play';
 import { monitorRuleDigest } from '@sixam/play';
 
-const cell = (red, green, blue) => (red << 16) | (green << 8) | blue;
+const cell = (red: number, green: number, blue: number) => (red << 16) | (green << 8) | blue;
 const grid = new Array(180).fill(cell(40, 40, 40));
 // Monitor UP: cell 10 shows the map (present anchor high), cell 20 is the
 // covered office (absent anchor reads its low/up side).
@@ -44,11 +44,15 @@ assert.equal(calibrationStateRuleDigest(parsed), calibrationStateRuleDigest(stat
 assert.equal(parsed.monitor.digest, monitorRuleDigest(monitorRule));
 
 const snapshot = { screen: 'FNAF2_NIGHT', ageUs: 1000, seq: 7, gridSeq: 7, cells: grid };
-const observed: any = measureCalibrationState(snapshot, parsed);
+// parseCalibrationStateRule has checked the bound mask rule with parseMaskRule.
+const boundMask = parsed.mask.rule as Parameters<typeof measureMaskOn>[1];
+
+// A reading carries its value only when OBSERVED and its reason only when UNKNOWN.
+const observed = measureCalibrationState(snapshot, parsed);
 assert.equal(observed.signal, 'calibrationState');
 assert.equal(observed.state, 'OBSERVED');
 assert.deepEqual(observed.value, { screen: 'NIGHT', monitor: 'UP', mask: 'OFF' });
-assert.deepEqual(measureMaskOn(snapshot, parsed.mask.rule),
+assert.deepEqual(measureMaskOn(snapshot, boundMask),
   { signal: 'maskOn', state: 'OBSERVED', value: false, confidence: 1 },
   'one atomic FRAME can expose a fitted mask-off measurement for diagnostic ACKs');
 
@@ -58,24 +62,24 @@ maskOnGrid[10] = cell(10, 10, 10);
 maskOnGrid[20] = cell(200, 200, 120);
 maskOnGrid[30] = cell(210, 170, 120);
 maskOnGrid[40] = cell(15, 15, 15);
-const masked: any = measureCalibrationState({ ...snapshot, cells: maskOnGrid }, parsed);
-assert.deepEqual(masked.value, { screen: 'NIGHT', monitor: 'DOWN', mask: 'ON' });
-assert.deepEqual(measureMaskOn({ ...snapshot, cells: maskOnGrid }, parsed.mask.rule),
+const masked = measureCalibrationState({ ...snapshot, cells: maskOnGrid }, parsed);
+assert.deepEqual((masked as { value?: unknown }).value, { screen: 'NIGHT', monitor: 'DOWN', mask: 'ON' });
+assert.deepEqual(measureMaskOn({ ...snapshot, cells: maskOnGrid }, boundMask),
   { signal: 'maskOn', state: 'OBSERVED', value: true, confidence: 1 },
   'the same fitted mask rule exposes a mask-on measurement');
-assert.equal((measureMaskOn({ ...snapshot, screen: 'FNAF2_MENU' }, parsed.mask.rule) as any).reason,
+assert.equal((measureMaskOn({ ...snapshot, screen: 'FNAF2_MENU' }, boundMask) as { reason?: string }).reason,
   'screen-identity', 'an explicit menu frame cannot acknowledge a mask transition');
 
 // The opaque mask removes both nightScore inputs, so a real masked FRAME can
 // be UNKNOWN and the helper's own monitor detector can be UNKNOWN as well.
 // A positive bound mask is the secondary night proof for that exact case;
 // the bound monitor rule must then read the same atomic grid.
-const maskedUnknown: any = measureCalibrationState({ ...snapshot, screen: 'UNKNOWN',
+const maskedUnknown = measureCalibrationState({ ...snapshot, screen: 'UNKNOWN',
   monitorUp: 'UNKNOWN', monitorReason: 'screen-identity', cells: maskOnGrid }, parsed);
-assert.deepEqual(maskedUnknown.value, { screen: 'NIGHT', monitor: 'DOWN', mask: 'ON' });
-assert.equal((measureCalibrationState({ ...snapshot, screen: 'FNAF2_MENU', cells: maskOnGrid }, parsed) as any).reason,
+assert.deepEqual((maskedUnknown as { value?: unknown }).value, { screen: 'NIGHT', monitor: 'DOWN', mask: 'ON' });
+assert.equal((measureCalibrationState({ ...snapshot, screen: 'FNAF2_MENU', cells: maskOnGrid }, parsed) as { reason?: string }).reason,
   'screen-identity', 'an explicit menu identity cannot use the mask fallback');
-assert.equal((measureCalibrationState({ ...snapshot, screen: 'UNKNOWN', cells: grid }, parsed) as any).reason,
+assert.equal((measureCalibrationState({ ...snapshot, screen: 'UNKNOWN', cells: grid }, parsed) as { reason?: string }).reason,
   'screen-identity', 'an unknown frame still needs a positive mask proof');
 
 // Any UNKNOWN refuses the whole state; both sub-rules must resolve.
@@ -83,9 +87,9 @@ assert.equal(measureCalibrationState({ ...snapshot, screen: 'FNAF2_MENU' }, pars
 assert.equal(measureCalibrationState({ ...snapshot, ageUs: 900000 }, parsed).state, 'UNKNOWN');
 const ambiguous = [...grid];
 ambiguous[30] = cell(160, 160, 130); // yellowness 30: inside the refuse band
-assert.equal((measureCalibrationState({ ...snapshot, cells: ambiguous }, parsed) as any).reason, 'ambiguous-threshold');
-assert.equal((measureCalibrationState({ ...snapshot, gridSeq: 6 }, parsed) as any).reason, 'grid-seq-mismatch');
-assert.equal((measureCalibrationState(snapshot, null) as any).reason, 'calibration-refused');
+assert.equal((measureCalibrationState({ ...snapshot, cells: ambiguous }, parsed) as { reason?: string }).reason, 'ambiguous-threshold');
+assert.equal((measureCalibrationState({ ...snapshot, gridSeq: 6 }, parsed) as { reason?: string }).reason, 'grid-seq-mismatch');
+assert.equal((measureCalibrationState(snapshot, null) as { reason?: string }).reason, 'calibration-refused');
 
 // Refused artifacts are evidence, never rules.
 for (const patch of [

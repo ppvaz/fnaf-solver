@@ -31,6 +31,8 @@ assert.deepEqual(reconcileExclusiveControls({ monitorUp: true, maskOn: true }), 
   contradiction: true, reason: 'mask-monitor-contradiction',
 });
 
-assert.throws(() => reconcileExclusiveControls({ monitorUp: 'true' }), /boolean or null/);
+// Widened to take the string its type forbids: the refusal is what is tested.
+assert.throws(() => (reconcileExclusiveControls as (facts: { monitorUp: unknown }) => unknown)({ monitorUp: 'true' }),
+  /boolean or null/);
 
 console.log('control exclusion: safe complements, non-inference, and contradiction refusal pass');

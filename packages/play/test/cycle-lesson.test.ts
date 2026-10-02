@@ -17,9 +17,9 @@ const vector = readFileSync(`${ROOT}packages/play/test/testdata/teach-lesson-nig
   for (const line of vector) assert.match(line, LESSON_LINE);
   assert.equal(lesson.header.viewCamera, 11, 'the arm check names the viewed camera');
   assert.equal(lesson.header.markerCamera, 9, 'and the other highlighted camera is the marker');
-  assert.equal(lesson.rows.filter((row: any) => row.cycle === 'steady').length, 7);
-  const camdrop: any = lesson.rows.find((row: any) => row.cycle === 'steady' && row.verb === 'camdrop');
-  assert.deepEqual([camdrop.durationMs, camdrop.leadMs, camdrop.tailMs], [200, 150, 200]);
+  assert.equal(lesson.rows.filter(row => row.cycle === 'steady').length, 7);
+  const camdrop = lesson.rows.find(row => row.cycle === 'steady' && row.verb === 'camdrop');
+  assert.deepEqual([camdrop?.durationMs, camdrop?.leadMs, camdrop?.tailMs], [200, 150, 200]);
 }
 
 // The campaign port reads the plan the way the executor's request does: from
@@ -82,7 +82,9 @@ const vector = readFileSync(`${ROOT}packages/play/test/testdata/teach-lesson-nig
   assert.equal(lessonOriginLine(TOKEN, { onsetDeviceMs: 30347981.447577, afterOnsetMs: 2433.93 }),
     `LESSON ${TOKEN} origin 30347981447577 2433930`);
   assert.match(lessonOriginLine(TOKEN, { onsetDeviceMs: 1, afterOnsetMs: 0 }), LESSON_LINE);
-  assert.throws(() => lessonOriginLine(TOKEN, { onsetDeviceMs: null, afterOnsetMs: 2433 }), /no latched onset/);
+  // Widened to take the null onset its type forbids: the refusal is what is tested.
+  assert.throws(() => (lessonOriginLine as (token: string, release: { onsetDeviceMs: number | null, afterOnsetMs: number }) => string)(
+    TOKEN, { onsetDeviceMs: null, afterOnsetMs: 2433 }), /no latched onset/);
   assert.throws(() => lessonOriginLine(TOKEN, { onsetDeviceMs: 5, afterOnsetMs: 60000 }), /not a schedule origin/);
   assert.throws(() => lessonOriginLine('nothex', { onsetDeviceMs: 5, afterOnsetMs: 1 }), /token/);
 }

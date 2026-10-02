@@ -17,6 +17,9 @@ import {
 } from '../src/campaign/adb-device-local-executor.ts';
 import { SHARED_HID_RELEASE } from '../src/campaign/hid-schedule.ts';
 
+type ExecutorOptions = NonNullable<ConstructorParameters<typeof AdbDeviceLocalArtifactExecutor>[0]>;
+type ExecutorEvent = Parameters<NonNullable<ExecutorOptions['onEvent']>>[0];
+
 const RECORD_PATH = 'docs/evidence/static-terminal-window-20260927.json';
 const record = JSON.parse(await readFile(new URL(`../../../${RECORD_PATH}`, import.meta.url), 'utf8'));
 const executorSource = await readFile(new URL('../src/campaign/adb-device-local-executor.ts', import.meta.url), 'utf8');
@@ -37,8 +40,9 @@ assert.equal(STATIC_TERMINAL_WAIT_MS, record.window.waitMs,
 // Every terminal the packs read after a first static stands a full margin
 // inside the window -- including the 6 AM read after a static abort.
 const measuredDelays = [
-  ...record.runs.staticToTerminal.map(item => item.delayMs),
-  ...record.runs.staticAbort.filter(item => item.terminalAfterAbort).map(item => item.terminalAfterAbort.delayMs),
+  ...record.runs.staticToTerminal.map((item: { delayMs: number }) => item.delayMs),
+  ...record.runs.staticAbort.filter((item: { terminalAfterAbort?: object }) => item.terminalAfterAbort)
+    .map((item: { terminalAfterAbort: { delayMs: number } }) => item.terminalAfterAbort.delayMs),
 ];
 assert.ok(measuredDelays.length >= 32, 'the record must carry the measured terminal reads, not only their maximum');
 for (const delayMs of measuredDelays)
@@ -50,7 +54,7 @@ assert.ok(record.observerIntervalDirect.n > 0 &&
 // Every old static exit happened inside the new window: each of these nights
 // would now have withheld its third static read.
 assert.ok(record.staticAbort.maxMs < STATIC_TERMINAL_WAIT_MS);
-assert.ok(record.runs.staticAbort.some(item => item.run === 'night7-corner-bbfoxy-r01-20260927T072310Z'),
+assert.ok(record.runs.staticAbort.some((item: { run: string }) => item.run === 'night7-corner-bbfoxy-r01-20260927T072310Z'),
   'the record must include the run that motivated the window');
 // The citation beside the constant names this record and its evidence id.
 assert.ok(executorSource.includes(RECORD_PATH) && executorSource.includes(record.evidenceId),
@@ -78,19 +82,19 @@ writeFileSync(fakeAdb, '#!/bin/sh\ncase "$*" in *" logcat "*|*" test -e "*|*" to
 chmodSync(fakeAdb, 0o755);
 
 /** Replays `states`, then repeats the last one; records when each read returned. */
-const scripted = (states, { readMs = 0 } = {}) => {
-  const reads = [];
+const scripted = (states: string[], { readMs = 0 }: { readMs?: number } = {}) => {
+  const reads: { state: string, at: number }[] = [];
   return {
     reads,
     observe: async () => {
-      if (readMs > 0) await new Promise<any>(resolve => setTimeout(resolve, readMs));
+      if (readMs > 0) await new Promise<void>(resolve => setTimeout(resolve, readMs));
       const state = states[Math.min(reads.length, states.length - 1)];
       reads.push({ state, at: Date.now() });
       return state;
     },
   };
 };
-const executorFor = (observer, events, extra: any = {}) => new AdbDeviceLocalArtifactExecutor({
+const executorFor = (observer: ReturnType<typeof scripted>, events: ExecutorEvent[], extra: ExecutorOptions = {}) => new AdbDeviceLocalArtifactExecutor({
   serial: 'fixture-device', adb: fakeAdb, readyDelayMs: 1, pollMs: 250,
   observe: observer.observe, onEvent: event => events.push(event), ...extra,
   timing: { pollMs: 1, ...(extra.timing ?? {}) } });
@@ -99,7 +103,7 @@ try {
   // 1. The r01 shape at the measured window: three static reads no longer end
   // the night, and the Game Over that follows is the night's terminal.
   {
-    const events = [];
+    const events: ExecutorEvent[] = [];
     const observer = scripted(['night', 'static', 'static', 'static', 'gameover']);
     const result = await executorFor(observer, events).execute(request);
     assert.equal(result.status, 'COMPLETED', 'a death read after its static must complete the attempt');
@@ -115,7 +119,7 @@ try {
   // 2. A static misread inside a live night that ends at 6 AM (night5-perfetto1
   // read static, then 6 AM 5.76 s later): the 6 AM ends the night normally.
   {
-    const events = [];
+    const events: ExecutorEvent[] = [];
     const observer = scripted(['night', 'static', 'static', 'static', 'static', 'static', 'sixam']);
     const result = await executorFor(observer, events).execute(request);
     assert.equal(result.terminal, 'sixam', 'a 6 AM read inside the window must end the night as a 6 AM');
@@ -126,7 +130,7 @@ try {
   // statics resumes nothing and does not restart the window -- p1b read
   // `state=night` once from inside its death minigame. One hold, one halt.
   {
-    const events = [];
+    const events: ExecutorEvent[] = [];
     const observer = scripted(['night', 'static', 'static', 'night', 'static', 'static', 'static', 'gameover']);
     const result = await executorFor(observer, events).execute(request);
     assert.equal(result.terminal, 'gameover');
@@ -140,7 +144,7 @@ try {
   // the window: with actuation halted, the first read past the window ends it
   // (it no longer waits for three post-window votes -- nothing is pressing).
   {
-    const events = [];
+    const events: ExecutorEvent[] = [];
     const waitMs = 120;
     const observer = scripted(['night', 'static'], { readMs: 10 });
     await assert.rejects(() => executorFor(observer, events, { timing: { staticTerminalWaitMs: waitMs } }).execute(request),
@@ -152,7 +156,7 @@ try {
     assert.ok(statics.length > 3, 'static reads inside the window must not have ended the night');
     assert.ok(pastWindow.length <= 1, 'the first read past the window ends the night');
     const expired = events.find(event => event.type === 'lifecycle.static-hold.expired');
-    assert.ok(expired && expired.heldMs >= waitMs, 'the expiry must be recorded with how long the hold lasted');
+    assert.ok(expired && Number(expired.heldMs) >= waitMs, 'the expiry must be recorded with how long the hold lasted');
   }
 
   // 5. The first static releases the HID (the halt); a stop from elsewhere
@@ -160,11 +164,11 @@ try {
   // still hands the terminal to the campaign's own read instead of ending the
   // attempt as "lifecycle left night state (static)", and writes nothing more.
   {
-    const events = [];
-    const writes = [];
-    const sharedHid = { write: async value => { writes.push(value); } };
-    let executor = null;
-    let stoppedAfter = null;
+    const events: ExecutorEvent[] = [];
+    const writes: string[] = [];
+    const sharedHid = { write: async (value: string) => { writes.push(value); } };
+    let executor = null as AdbDeviceLocalArtifactExecutor | null;
+    let stoppedAfter = null as number | null;
     const states = ['night', 'static', 'static', 'static', 'static'];
     let index = 0;
     const observe = async () => {
@@ -172,7 +176,8 @@ try {
       index += 1;
       if (index === states.length && stoppedAfter === null) {
         stoppedAfter = writes.length;
-        setTimeout(() => { void executor.releaseAll(); }, 5);
+        // Assigned below, before execute() ever calls observe.
+        setTimeout(() => { void (executor as AdbDeviceLocalArtifactExecutor).releaseAll(); }, 5);
       }
       return state;
     };
@@ -182,10 +187,10 @@ try {
     const result = await executor.execute(request);
     assert.equal(result.status, 'COMPLETED', 'a stop inside the static window must not become a lifecycle ERROR');
     assert.equal(result.terminal, undefined, 'the executor publishes no terminal it did not read');
-    assert.ok(stoppedAfter > 1, 'the schedule must have been written before the statics');
-    assert.equal(writes.indexOf(SHARED_HID_RELEASE), stoppedAfter - 1,
+    assert.ok(Number(stoppedAfter) > 1, 'the schedule must have been written before the statics');
+    assert.equal(writes.indexOf(SHARED_HID_RELEASE), Number(stoppedAfter) - 1,
       'the first static read releases the HID, and nothing is written after that release');
-    assert.equal(writes.slice(stoppedAfter).length, 0, 'the external stop after the halt writes nothing more');
+    assert.equal(writes.slice(Number(stoppedAfter)).length, 0, 'the external stop after the halt writes nothing more');
   }
 } finally {
   rmSync(fakeRoot, { recursive: true, force: true });

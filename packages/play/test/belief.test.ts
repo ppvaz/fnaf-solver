@@ -5,7 +5,7 @@ import {
 } from '@sixam/play/player';
 
 let failures = 0;
-const check = (name, condition) => {
+const check = (name: string, condition: unknown) => {
   if (!condition) { failures++; console.error(`FAIL ${name}`); }
   else console.log(`ok   ${name}`);
 };
@@ -55,12 +55,12 @@ check('a singular camera observation updates the viewed-camera control fact',
 belief = reduceBelief(belief, { type: 'action-sent', nowMs: 220,
   action: 'maskOn', expected: false, token: 'm1' });
 check('sent actions enter lockout before verification',
-  belief.pendingAction.action === 'mask' && belief.control.actionLockout);
+  belief.pendingAction?.action === 'mask' && belief.control.actionLockout);
 belief = reduceBelief(belief, { type: 'action-verified', nowMs: 240,
   token: 'm1', value: true });
 check('a contradictory verification is an incident, not an execution',
-  belief.pendingAction.action === 'mask' &&
-  belief.incidents.at(-1).type === 'action-verification-mismatch');
+  belief.pendingAction?.action === 'mask' &&
+  belief.incidents.at(-1)?.type === 'action-verification-mismatch');
 
 const mismatched = reduceBelief(start, { type: 'observation', nowMs: 10,
   facts: { maskOn: observed(true, { source: 'other-capture',
@@ -69,7 +69,7 @@ check('a sensor-profile mismatch becomes UNKNOWN with an incident',
   mismatched.facts.maskOn.state === 'UNKNOWN' &&
   mismatched.incidents[0].type === 'sensor-mismatch');
 
-const events = [
+const events: Parameters<typeof replayBelief>[1] = [
   { type: 'time', nowMs: 5 },
   { type: 'observation', nowMs: 10,
     facts: { blackout: observed(true, { source: 'video', receivedAtMs: 10 }) } },

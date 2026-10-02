@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { makeCampaignSpec } from '../src/campaign/campaign.ts';
 import { validateCampaignBundle } from '../src/campaign/campaign-bundle.ts';
 import { composeCampaignPorts } from '../src/campaign/campaign-composition.ts';
+import type { ExecutorRequest } from '../src/campaign/artifact-executor.ts';
 
 const profile = JSON.parse(await readFile(fileURLToPath(new URL('../../../packages/play/profiles/fnaf2/moto-g56/fixture-hid-screencap.json', import.meta.url)), 'utf8'));
 const full = makeCampaignSpec({ profile: profile.id, targetBuild: profile.targetBuild, nights: [6, 7] });
@@ -13,7 +14,7 @@ const block = { schema: 'artifact-action-block-v1', id: 'opening', cycle: 'openi
     kind: 'press', control: 'mask', requiresMonitorUp: false, durationMs: 33 }] };
 const bundle = validateCampaignBundle({ spec, plans: [{ night: 6, timing: spec.nights[0].timing,
   cycles: { opening: { blocks: [block] }, toys: { blocks: [block] } } }] });
-let request;
+let request = undefined as ExecutorRequest | undefined;
 let executorAborts = 0;
 let executorReleases = 0;
 let restarts = 0;
@@ -27,7 +28,7 @@ const composed = composeCampaignPorts({ spec, bundle, profile,
   retryReady: async () => ({ menuReady: true }),
   restartAfterAbort: async reason => {
     restarts += 1;
-    assert.equal(reason.message, 'late handoff');
+    assert.equal((reason as Error).message, 'late handoff'); // the cleanup below hands it an Error
   },
   localExecutor: { execute: async value => { request = value; return { status: 'COMPLETED', outcome: 'UNVERIFIED' }; },
     abort: async () => { executorAborts += 1; },
@@ -36,9 +37,9 @@ const composed = composeCampaignPorts({ spec, bundle, profile,
 const result = await composed.runner.run();
 assert.equal(result.state, 'COMPLETE');
 assert.deepEqual(result.completedNights, [6]);
-assert.equal(result.attempts[0].save.cursorNight, 7);
-assert.equal(request.artifact.plans[0].timing.stopAtMs, 420000);
-assert.equal(request.mode, 'live');
+assert.equal(result.attempts[0].save?.cursorNight, 7);
+assert.equal(request?.artifact.plans[0].timing.stopAtMs, 420000);
+assert.equal(request?.mode, 'live');
 assert.equal(executorAborts, 0);
 assert.equal(executorReleases, 1, 'a completed campaign still releases the executor once');
 await composed.ports.cleanup(new Error('late handoff'));

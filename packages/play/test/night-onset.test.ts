@@ -4,23 +4,23 @@ import {
   nightOnsetFromFrames, latchedNightOnsetMs, anchoredReleaseAt,
 } from '@sixam/play/phone/night-onset';
 
-const frames = (startMs, count, identity, stepMs = 1000 / 60) =>
+const frames = (startMs: number, count: number, identity: number, stepMs = 1000 / 60) =>
   Array.from({ length: count }, (_, i) => ({ imageMs: startMs + i * stepMs, screenIdentity: identity }));
 
 // A held run latches its first frame; the hold is image time, not frame count.
 const held = [...frames(0, 20, 0), ...frames(20 * 1000 / 60, 40, SCREEN_FNAF2_NIGHT)];
 const onset = nightOnsetFromFrames(held);
-assert.equal(onset.index, 20);
-assert.equal(onset.imageMs, held[20].imageMs);
-assert.equal(onset.priorIdentity, 0);
-assert.ok(Math.abs(onset.resolutionMs - 1000 / 60) < 1e-9);
+assert.equal(onset?.index, 20);
+assert.equal(onset?.imageMs, held[20].imageMs);
+assert.equal(onset?.priorIdentity, 0);
+assert.ok(Math.abs(Number(onset?.resolutionMs) - 1000 / 60) < 1e-9);
 
 // Shorter than the hold: no onset.
 assert.equal(nightOnsetFromFrames(frames(0, 29, SCREEN_FNAF2_NIGHT)), null);
 
 // A one-frame flicker is never the onset.
 const flicker = [...frames(0, 5, 0), ...frames(100, 1, 2), ...frames(120, 2, 0), ...frames(160, 40, 2)];
-assert.equal(nightOnsetFromFrames(flicker).imageMs, 160);
+assert.equal(nightOnsetFromFrames(flicker)?.imageMs, 160);
 
 // The helper's field: absent or -1 is "not latched", anything else must be a positive integer.
 assert.equal(latchedNightOnsetMs({}), null);

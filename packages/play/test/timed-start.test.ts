@@ -45,10 +45,10 @@ console.log('timed start: phone wall mapping, residue planning with the lead rol
     'so is one 1.9 s after it');
   const early = timedStartHeld({ plannedPhoneWallMs: planned, seedPhoneWallMs: planned - 15410 });
   assert.equal(early.held, false, 'a seed before the planned press cannot be its night');
-  assert.match(early.reason, /sooner than any office load/);
+  assert.match(early.reason ?? '', /sooner than any office load/);
   const late = timedStartHeld({ plannedPhoneWallMs: planned, seedPhoneWallMs: planned + 12000 });
   assert.equal(late.held, false, 'a seed 12 s later belongs to some other press');
-  assert.match(late.reason, /too late to be its night/);
+  assert.match(late.reason ?? '', /too late to be its night/);
   assert.equal(timedStartHeld({ plannedPhoneWallMs: null, seedPhoneWallMs: planned }).held, false,
     'an untimed run holds nothing');
   assert.ok(PRESS_TO_OFFICE_MS[0] < PRESS_TO_OFFICE_MS[1], 'the measured window is a range');
@@ -60,12 +60,12 @@ console.log('timed start: phone wall mapping, residue plan, host wait, and the s
 // Night 6 card until +3457 ms, then a dark office load. A FOCUSING press leaves the title up. A
 // lifecycle read captures the screen when it starts and returns after readMs.
 {
-  const screen = ({ activates }) => t => (!activates || t < 262) ? 'title' : t < 3457 ? 'intro' : null;
-  const rig = (show, readMs) => {
-    let t = 0; const starts = [];
+  const screen = ({ activates }: { activates: boolean }) => (t: number) => (!activates || t < 262) ? 'title' : t < 3457 ? 'intro' : null;
+  const rig = (show: (t: number) => string | null, readMs: number) => {
+    let t = 0; const starts: number[] = [];
     return {
       now: () => t,
-      pause: async ms => { t += ms; },
+      pause: async (ms: number) => { t += ms; },
       read: async () => { starts.push(t); const seen = show(t); t += readMs; return seen; },
       starts,
     };

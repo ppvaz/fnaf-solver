@@ -10,7 +10,7 @@ const fixture = join(here, 'testdata', 'hid-multitouch-smoke.json');
 const text = readFileSync(fixture, 'utf8').replace(/^\s*\/\/.*$/gm, '');
 const events = [...text.matchAll(/\{[^{}]*\}/gs)].map(match => JSON.parse(match[0]));
 
-function check(ok, message) {
+function check(ok: unknown, message: string) {
   if (!ok) throw new Error(message);
 }
 

@@ -4,7 +4,7 @@ import { EstimatedPhaseClock, LatencyCalibrator, PhaseClockEstimator,
 import { messageToFact } from '@sixam/kernel/time';
 
 let failures = 0;
-const check = (name, condition) => {
+const check = (name: string, condition: unknown) => {
   if (!condition) { failures++; console.error(`FAIL ${name}`); }
   else console.log(`ok   ${name}`);
 };
@@ -22,11 +22,11 @@ let state;
 for (let i = 0; i < 8; i++)
   state = estimator.observe(1210 + i * 500 + (i % 2 ? 3 : -2));
 check('six-plus consistent ticks acquire a lock',
-  state.state === PHASE_STATES.LOCKED && state.locked);
+  state?.state === PHASE_STATES.LOCKED && state.locked);
 check('period and drift are estimated from the tick train',
-  Math.abs(state.periodMs - 500) < 2 && Math.abs(state.driftPpm) < 4000);
+  Math.abs(Number(state?.periodMs) - 500) < 2 && Math.abs(Number(state?.driftPpm)) < 4000);
 check('independent latency calibration unlocks game-phase claims',
-  state.latencyCalibrated && state.gamePhaseKnown && state.uncertaintyMs < 10);
+  state?.latencyCalibrated && state.gamePhaseKnown && state.uncertaintyMs < 10);
 
 estimator.setParity(1, 'controlled-visual-anchor');
 state = estimator.status();

@@ -10,7 +10,7 @@ import { compileDeviceLocalHidSchedule, SECOND_CONTACT_UNDER_MS } from '../src/c
 
 const profile = JSON.parse(await readFile(new URL('../../../packages/play/profiles/fnaf2/moto-g56/hid-mediaprojection.json', import.meta.url), 'utf8'));
 const timing = { periodMs: 5000, loopStartMs: 0, stopAtMs: 5000, observeUntilMs: 5000, idleUntilMs: 0 };
-const act = (id, atMs, kind, control, extra = {}) => ({ schema: 'artifact-action-v1', id, cycle: 'opening', atMs, kind, control,
+const act = (id: string, atMs: number, kind: string, control: string, extra = {}) => ({ schema: 'artifact-action-v1', id, cycle: 'opening', atMs, kind, control,
   requiresMonitorUp: false, durationMs: 33, ...extra });
 const request = {
   schema: 'device-executor-v1', version: 1, mode: 'live',

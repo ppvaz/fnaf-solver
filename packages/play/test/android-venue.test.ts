@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { handsetHash, parseDumpsysPackage, parseGetprop, readVenueIdentity } from '../src/phone/android-venue.ts';
 import { validateVenueIdentity } from '@sixam/kernel/contracts';
 
-const fixture = name => readFileSync(fileURLToPath(new URL(`./fixtures/${name}`, import.meta.url)), 'utf8');
+const fixture = (name: string) => readFileSync(fileURLToPath(new URL(`./fixtures/${name}`, import.meta.url)), 'utf8');
 const GAME = 'com.scottgames.fnaf2';
 
 // Current Android: the queried package's block, not the hidden system copy
@@ -40,7 +40,7 @@ assert.equal(handsetHash(SERIAL), `sha256-${createHash('sha256').update(SERIAL).
 assert.match(handsetHash(SERIAL), /^sha256-[0-9a-f]{16}$/);
 assert.throws(() => handsetHash(''), /needs a serial/);
 
-const ok = stdout => ({ ok: true, stdout, stderr: '' });
+const ok = (stdout: string) => ({ ok: true, stdout, stderr: '' });
 const reads = {
   packageName: GAME, serial: SERIAL, game: ok(fixture('dumpsys-package-android15.txt')),
   fingerprint: ok('motorola/fake/fake:15/V1FAKE.1/abc:user/release-keys\n'),
@@ -60,13 +60,13 @@ assert.ok(!JSON.stringify(identity).includes(SERIAL), 'the raw serial never reac
 // Unreadable: each unread field is null with its reason.
 const unread = readVenueIdentity({ ...reads, game: { ok: false, stdout: '', stderr: 'device offline' },
   securityPatch: ok('\n'), fingerprint: ok('not a fingerprint\n'), companion: null, serial: null });
-for (const field of ['versionName', 'versionCode', 'firstInstallTime', 'lastUpdateTime'])
-  assert.match(unread.unknown[field], /dumpsys package com\.scottgames\.fnaf2 failed: device offline/);
+for (const field of ['versionName', 'versionCode', 'firstInstallTime', 'lastUpdateTime'] as const)
+  assert.match(unread.unknown?.[field] ?? '', /dumpsys package com\.scottgames\.fnaf2 failed: device offline/);
 assert.equal(unread.securityPatch, null);
-assert.match(unread.unknown.securityPatch, /getprop ro\.build\.version\.security_patch is empty/);
+assert.match(unread.unknown?.securityPatch ?? '', /getprop ro\.build\.version\.security_patch is empty/);
 assert.equal(unread.buildFingerprint, null, 'a reading in an unknown shape is recorded as unread');
-assert.match(unread.unknown.buildFingerprint, /unrecognised buildFingerprint text/);
-assert.match(unread.unknown.companionVersion, /not queried/);
-assert.match(unread.unknown.handsetHash, /no device serial/);
+assert.match(unread.unknown?.buildFingerprint ?? '', /unrecognised buildFingerprint text/);
+assert.match(unread.unknown?.companionVersion ?? '', /not queried/);
+assert.match(unread.unknown?.handsetHash ?? '', /no device serial/);
 
 console.log('android venue: dumpsys package (current and Android 10 shapes), getprop, handset hash and unread reasons pass');

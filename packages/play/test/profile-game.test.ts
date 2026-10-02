@@ -10,7 +10,7 @@ import { validateExecutorRequest } from '../src/campaign/artifact-executor.ts';
 import { compileDeviceLocalHidSchedule } from '../src/campaign/hid-schedule.ts';
 
 const PROFILES = fileURLToPath(new URL('../../../packages/play/profiles/fnaf2/moto-g56/', import.meta.url));
-const read = name => JSON.parse(readFileSync(`${PROFILES}${name}`, 'utf8'));
+const read = (name: string) => JSON.parse(readFileSync(`${PROFILES}${name}`, 'utf8'));
 
 // -- every committed profile still loads, unchanged: resolution derives the
 //    game from targetBuild and adds no field, because a profile's bytes are
@@ -32,9 +32,11 @@ for (const name of names) {
 // -- a minimal FNaF 2 request, then one change at a time.
 const profile = read('hid-mediaprojection.json');
 const timing = { periodMs: 1000, loopStartMs: 0, stopAtMs: 3000, observeUntilMs: 3000, idleUntilMs: 0 };
-const action = (id, kind, control, atMs, extra = {}) => ({
+const action = (id: string, kind: string, control: string, atMs: number, extra = {}) => ({
   schema: 'artifact-action-v1', id, cycle: 'toys', atMs, kind, control, ...extra });
-const requestWith = (actions, { requestProfile = profile, armVerification }: any = {}) => ({
+/** What a request varies from the minimal one: its profile, and the arm its plan declares. */
+interface RequestOptions { requestProfile?: unknown, armVerification?: { cameras: string[], viewing: string, untilMs: number } }
+const requestWith = (actions: ReturnType<typeof action>[], { requestProfile = profile, armVerification }: RequestOptions = {}) => ({
   schema: 'device-executor-v1', version: 1, mode: 'live',
   artifact: { winnerHash: 'a'.repeat(64), engineHash: 'b'.repeat(64), profileHash: 'c'.repeat(64),
     profileStableHash: stableHash(requestProfile),
@@ -55,7 +57,7 @@ assert.throws(() => validateExecutorRequest(requestWith(ok.blocks[0].actions, { 
   /request profile: .*<package>:<version>/);
 
 // The FNaF 2 rules that moved into the cartridge still refuse, with the same words.
-const refuses = (actions, pattern, options?) =>
+const refuses = (actions: ReturnType<typeof action>[], pattern: RegExp, options?: RequestOptions) =>
   assert.throws(() => validateExecutorRequest(requestWith(actions, options)), pattern);
 refuses([action('c', 'compound', 'hallLight', 0, { compound: 'camdrop', requiresMonitorUp: true })],
   /\.camdrop control must be cameraFeedLight/);
