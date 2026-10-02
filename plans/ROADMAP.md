@@ -229,7 +229,13 @@ Details:
     logic are one program, and both still part from the phone at window 6, so
     that divergence lies in the inputs (seed, clock, landings), not in a rule
     ([rebuild](../docs/evidence/rebuild-release20-full06-20261001.json),
-    `rebuild-release20-a9847b473591a6fe`).
+    `rebuild-release20-a9847b473591a6fe`). Not general: on full-04 the phone
+    died about 104 s in and the rebuild with 20 ms releases survives to 6 AM
+    (with press-latency releases it died at 36.8 s), and tw-12 is unchanged;
+    on every night the encounters part early (windows 3, 6, 9) under either
+    mapping
+    ([three nights](../docs/evidence/rebuild-release20-three-nights-20261001.json),
+    `rebuild-release20-3nights-14895ce02ba0b25e`).
   - **The phone's office random stream is read state by state (2026-10-01,
     pre-registered, SUPPORTED).** On a k3 Night 7 with every Custom Night dial
     at 0, the Companion 16 native static readout (no frame trace) identified

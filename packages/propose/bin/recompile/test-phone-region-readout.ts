@@ -151,6 +151,18 @@ assert.equal(identifySeed(seedRule, []).verdict, 'UNIDENTIFIED', 'no seed scored
   assert.equal(id, `rebuild-release20-${sha(canon(body)).slice(0, 16)}`, 'rebuild release record id');
 }
 
+// --- the three traced nights (docs/evidence/rebuild-release20-three-nights-20261001.json): the committed result rechecked;
+// only full-06's outcome moves to the phone's
+{
+  const rec = JSON.parse(readFileSync(join(ROOT, 'docs/evidence/rebuild-release20-three-nights-20261001.json'), 'utf8'));
+  assert.equal(rec.result.sha256, sha(readFileSync(join(ROOT, rec.result.path))), 'the three-night result is the committed one');
+  checkEncounters(JSON.parse(readFileSync(join(ROOT, rec.result.path), 'utf8')));
+  const agrees = rec.nights.filter((n: { variants: Record<string, { derived: { rebuiltOutcome: { agrees: boolean | null } } }> }) => n.variants['landed-r20'].derived.rebuiltOutcome.agrees === true).map((n: { name: string }) => n.name);
+  assert.deepEqual(agrees, ['full-06'], 'with releases at 20 ms only full-06\'s outcome agrees with the phone');
+  const { id, ...body } = rec;
+  assert.equal(id, `rebuild-release20-3nights-${sha(canon(body)).slice(0, 16)}`, 'three-night record id');
+}
+
 // --- the records
 const records = readdirSync(join(ROOT, 'docs/evidence')).filter((f) => /^s2-region-readout.*\.json$/.test(f) && !f.includes('-predeclaration-'));
 for (const file of records) {

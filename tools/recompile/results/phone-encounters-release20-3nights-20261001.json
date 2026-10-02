@@ -1,0 +1,3233 @@
+{
+ "schema": "recompile-phone-encounters-v1",
+ "claimLevel": "MODEL_ONLY",
+ "fidelity": "rebuilt-runtime",
+ "comparedWith": "DEVICE_MEASURED phone reads and terminals, reused from the records each night names; no new phone run",
+ "question": "On phone nights whose seed is established, replayed into the rebuilt runtime at that seed on the phone's own frame clock: does each mask window hold the same occupant as on the phone, and does the night end the same way?",
+ "status": "DIVERGENT",
+ "method": {
+  "config": "../../fnaf-apks/fnaf2-recompile-20260927/agent-release4/config.json",
+  "configSha256": "da396542a8dff74f487fd7e494dc243cb088955e6e42f90d8ccde48a8859465e",
+  "variants": {
+   "landed": {
+    "clock": "trace-catchup",
+    "presses": "landed",
+    "what": "the phone's frame trace with Fusion's catch-up; each press on the pass that drew the frame it landed in: send plus the night's measured landing latency"
+   },
+   "sched": {
+    "clock": "trace-catchup",
+    "presses": "sched",
+    "what": "the same clock; each press on the frame of its send (no landing latency)"
+   },
+   "cum": {
+    "clock": "trace-catchup",
+    "presses": "cum",
+    "what": "the same clock; presses by the model encounter records' rule (t after the seed on the update clock, mid-update)"
+   },
+   "raw": {
+    "clock": "trace-raw",
+    "presses": "landed",
+    "what": "one update per captured frame, no catch-up; presses landed"
+   },
+   "const60": {
+    "clock": "constant-60hz",
+    "presses": "cum",
+    "what": "a constant 60 Hz clock, as a night with no trace runs; presses by the cum rule on it"
+   },
+   "landed-r20": {
+    "clock": "trace-catchup",
+    "presses": "landed",
+    "what": "landed presses; releases 20 ms after their send",
+    "releaseLatencyMs": 20
+   }
+  },
+  "windowMs": 1500,
+  "watch": {
+   "counters": [
+    "being attacked by",
+    "in danger",
+    "got you stage",
+    "viewing",
+    "viewing hall light"
+   ],
+   "overlapZone": "in office",
+   "overlap": [
+    "old bonnie",
+    "old chica",
+    "old freddy",
+    "new freddy",
+    "new bonnie",
+    "new chica",
+    "new foxy",
+    "balloon boy",
+    "Active 19",
+    "chicalookatyou"
+   ],
+   "object": "mask:0"
+  },
+  "officeFrame": 3,
+  "modelOptions": "tools/recompile/sourced-rebuild-model-options.json",
+  "modelOptionsSha256": "cd70e32798006c48b4ecbc5a13e0fc5b82b9bedb211a0b984b4c58767ab64834",
+  "binary": {
+   "sha256": "7ab9a755efa80383467a53f1914a7c23232341f39e6abda68b491a41a79c1737",
+   "assetsSha256": "7163d6283de2a10e2cd2842a1402ea6e724b52abc7b5efcb0fc227abe9ef78a8",
+   "pinned": "pinned/7ab9a755-7163d628 in the external recompile directory",
+   "note": "8eb41219 plus CHOWDREN_FRAME_TIMES/_FRAME and CHOWDREN_WATCH_OVERLAP; with neither set it replays grid-screen n6-h's frame/tick/draw/state projection exactly (25,822 updates)"
+  },
+  "harness": {
+   "container": "fnaf2-chowdren:buster",
+   "runner": "tools/recompile/run-harness.sh (CHOWDREN_BINARY = the pinned binary), CHOWDREN_HARNESS=1, CHOWDREN_NO_DRAW=1",
+   "env": "the RUNDIR/env lines emit writes: seed, stop at 06-next day, 40000 total updates, the three watches, and the measured clock"
+  },
+  "windowRule": "window k = the k-th schedule mask-on press; its code is the first occupant in its first 1500 ms of the update clock",
+  "scoring": "agree = same code on a window both sides read (\"*\" never agrees on the character); hits = agreeing occupied phone windows; occupancyAgree = both empty or both occupied"
+ },
+ "provenance": {
+  "toolSha256": "d0e1e047ccac30b2026f9e54ecd2fc44b328ed1b1e952b44339efe59223da461",
+  "patchSha256": "64064abaa9d984f299108f35f0884c68416049e2b139561a57464874e71af4d0",
+  "modelSourceSha256": {
+   "packages/source/src/games/fnaf2/plant-model.ts": "5559626beb70aa35129b1a85d98d957bdc85478ebffd096b09a6a901c250e3a4",
+   "packages/source/src/games/fnaf2/config.ts": "e10ad9b97126abacbf234067a41aeccf6351b558ab598e713975ce9c5b9dbc49",
+   "packages/source/src/games/fnaf2/rng.ts": "6904b329d5fa16a3263430bf0d15798087db8172aaecad0bd7b6cd37e17d8a7f",
+   "packages/source/src/games/fnaf2/attack-animation.ts": "24395e91ca3591dfe6411e0f3ae7175d7129c17229b3f5f7ab2f91dd40d217e1",
+   "packages/source/src/games/fnaf2/blackout-clock.ts": "cc0afa0ebe8720a7e8295ded2c0aa28746a38e431c90771eb6d6b8ff94414c43",
+   "packages/source/src/games/fnaf2/contact-input.ts": "e4a2848b35183e869267b758359ae7f49beaba5d3040021dd4155e9f6eca3e89",
+   "packages/source/src/games/fnaf2/movement-clock.ts": "1fe53bd164464e7f9776a460b917c588a306f8afb3d20b75a92c53835c3cdaf0",
+   "packages/source/src/games/fnaf2/plant-constants.ts": "9d4b593b6b55665c1311950e12b52357724b8206744df1e9ccb7d3d393423160",
+   "packages/source/src/games/fnaf2/plant-hall.ts": "0f7bd4cf41adbc9fca1fc5ce7def68493a4b79b029c2152e6dbd1bce8a26265f",
+   "packages/source/src/games/fnaf2/plant-office.ts": "061ca131fb09f40b3392095cdc408a2c69c252b90a60807f5077ee3ada28ab09",
+   "packages/source/src/games/fnaf2/plant-options.ts": "21352a2a8e53add009ede86cbfff59a67ecab619d50f04cfe873c9027a5b56d8",
+   "packages/source/src/games/fnaf2/plant-puppet.ts": "258cbc1c40bfbf6234018ea3b9ca39a05d40eb52e62bbb5c10e1fe0485f60dd9",
+   "packages/source/src/games/fnaf2/plant-sheet.ts": "6dbf76b81790da95a2ae2a8cf1ea587d9261e97542c7f15cfd81702930bbfa59",
+   "packages/source/src/games/fnaf2/plant-units.ts": "7da1b7dbe92a3dc73efeccc34d773871539e0c07352a1719c43bec664afd0d6a"
+  }
+ },
+ "nights": [
+  {
+   "name": "tw-12",
+   "run": "night6-tw-12-20260918T022134Z",
+   "night": 6,
+   "seed": 24850,
+   "seedEvidence": "docs/evidence/night6-twin-nights-proven-20260918.json: seed stamp 1789698138386, one candidate, low16 24850, pinned by the device clock pin",
+   "winner": "tools/device/campaign-night6-h-winner.json",
+   "winnerSha256": "b466b7a81b71e08845e475258463ec13cfd583a5c6f2b090395ca64d3def645c",
+   "originMs": 4963.6,
+   "presses": {
+    "path": "artifacts/forensics/frametrace-night6-20260918/tw12-true-presses.json",
+    "sha256": "f1e6dde47e39048e8a3405e83d2e0b2166365472f98eb23216c964576ce6cc06"
+   },
+   "trace": {
+    "path": "captures/frame-traces/night6-tw-12-20260918T022134Z-981774675134937.tsv",
+    "sha256": "697aa2ec4dfde466c016425299ad8585bbc8ad7db34813a1ffc57bc56c633cda",
+    "first": 1624,
+    "releaseAfterFirstNightFrameMs": 4875.6,
+    "source": "artifacts/forensics/frametrace-night6-20260918/first-frame-origins.json (sha256 06a983ae71f660213bb9f4748b59f337ff1da3efadad7e16cbc2fc8a2cb116a2) and tw-12-align.json (firstNightFrameIndex 1624; sha256 bd6d85a56305e4a648127861663d77f4b52cad255d9241d770564c0552aa0b5a). The pinned night's seed stamp is displaced by the pin, so its release is measured from the first office frame."
+   },
+   "customNight": null,
+   "phone": {
+    "windows": "?...........C?????????????????????????????",
+    "source": "docs/evidence/model-encounter-fidelity-20260927.json nights[tw-12].phoneWindows (twin-compare.py right-eyehole reads; retained DEVICE_MEASURED)",
+    "terminal": {
+     "result": "UNKNOWN",
+     "seedClockMs": null,
+     "source": "docs/evidence/runs/night6-tw-12-20260918T022134Z/run/verdict.txt: stop reason operator-interrupt (SIGINT) after 11 cycle gates; no terminal"
+    }
+   },
+   "modelRecord": {
+    "path": "docs/evidence/model-encounter-fidelity-20260927.json",
+    "pointer": "nights[name=tw-12].baseline[seed=24850].windows",
+    "windows": ".......B.C.BF...CB...BC...CB..C..BC.B.CB.C",
+    "outcome": "6am"
+   },
+   "primaryVariant": "landed",
+   "variants": [
+    {
+     "variant": "landed",
+     "clock": "trace-catchup",
+     "presses": "landed",
+     "landingLatency": {
+      "raises": 12,
+      "officeViewLuma": 117,
+      "medianMs": 74.8,
+      "p10Ms": 53.9,
+      "p90Ms": 77.4,
+      "minMs": 43.1,
+      "maxMs": 78.6
+     },
+     "input": {
+      "officeRows": 692,
+      "officeRowsSha256": "1d8ba5443ef8574398d9fea501a05bb2bd93a1d2840eaf2164d81b134ebf809f",
+      "stretchedContacts": 1,
+      "sameTickEdgeSets": 1,
+      "firstPressTick": 300,
+      "measuredUpdates": 6732,
+      "frameTimesSha256": "913f3167e5127d9de30bf93b2a99a419f71b82be0a598f06b88d907b79e6594e",
+      "inputSha256": "226a7fa182c390c5a1f0832f81e0c251edca06e396a2375be50002c83ad41e72",
+      "modelInputMode": "explicit-contact-duration",
+      "modelContactsSha256": "1bc337fa8009038a7f8797f0a9baa15ccefbae5a70bcb14a1a566c70ad7f09c4"
+     },
+     "runtime": {
+      "traceSha256": "9cb2fe3bf91f75efabf63b7a8160fc48e8706b5146745fca39d871302b43605a",
+      "drawTraceSha256": "f6a4ea613e72fe22912286a3d799bbc832b3b5d2c822834d06c174e059c1d0d8",
+      "officeUpdates": 21040
+     },
+     "windows": {
+      "rebuilt": ".........BC.....BF.BC..CB.C.CBFC..?????????",
+      "model": ".........BC.....BF.BC..CB.C.CBFC..?????????",
+      "rows": [
+       {
+        "index": 0,
+        "tick": 578,
+        "ms": 9580.7,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 1,
+        "tick": 1158,
+        "ms": 19214.5,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 2,
+        "tick": 1760,
+        "ms": 29201.7,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 3,
+        "tick": 2366,
+        "ms": 39214.9,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 4,
+        "tick": 2963,
+        "ms": 49207.6,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 5,
+        "tick": 3565,
+        "ms": 59204.5,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 6,
+        "tick": 4164,
+        "ms": 69194.4,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 7,
+        "tick": 4766,
+        "ms": 79201.9,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 8,
+        "tick": 5366,
+        "ms": 89201.3,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 9,
+        "tick": 5966,
+        "ms": 99202,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 5966,
+        "rebuiltArrivalMs": -3933.9,
+        "model": "B"
+       },
+       {
+        "index": 10,
+        "tick": 6568,
+        "ms": 109201.9,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 6568,
+        "rebuiltArrivalMs": -3931.9,
+        "model": "C"
+       },
+       {
+        "index": 11,
+        "tick": 7169,
+        "ms": 119207.7,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 12,
+        "tick": 7769,
+        "ms": 129207.7,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 13,
+        "tick": 8369,
+        "ms": 139207.7,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 14,
+        "tick": 8969,
+        "ms": 149207.7,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 15,
+        "tick": 9569,
+        "ms": 159207.7,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 16,
+        "tick": 10169,
+        "ms": 169207.7,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 10169,
+        "rebuiltArrivalMs": -3950,
+        "model": "B"
+       },
+       {
+        "index": 17,
+        "tick": 10769,
+        "ms": 179207.7,
+        "rebuilt": "F",
+        "rebuiltOccupantTick": 10769,
+        "rebuiltArrivalMs": -3533.3,
+        "model": "F"
+       },
+       {
+        "index": 18,
+        "tick": 11369,
+        "ms": 189207.7,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 19,
+        "tick": 11969,
+        "ms": 199207.7,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 11969,
+        "rebuiltArrivalMs": -3950,
+        "model": "B"
+       },
+       {
+        "index": 20,
+        "tick": 12569,
+        "ms": 209207.7,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 12569,
+        "rebuiltArrivalMs": -3950,
+        "model": "C"
+       },
+       {
+        "index": 21,
+        "tick": 13169,
+        "ms": 219207.7,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 22,
+        "tick": 13769,
+        "ms": 229207.7,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 23,
+        "tick": 14369,
+        "ms": 239207.7,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 14369,
+        "rebuiltArrivalMs": -3950,
+        "model": "C"
+       },
+       {
+        "index": 24,
+        "tick": 14969,
+        "ms": 249207.7,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 14969,
+        "rebuiltArrivalMs": -3950,
+        "model": "B"
+       },
+       {
+        "index": 25,
+        "tick": 15569,
+        "ms": 259207.7,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 26,
+        "tick": 16169,
+        "ms": 269207.7,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 16169,
+        "rebuiltArrivalMs": -3950,
+        "model": "C"
+       },
+       {
+        "index": 27,
+        "tick": 16769,
+        "ms": 279207.7,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 28,
+        "tick": 17369,
+        "ms": 289207.7,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 17369,
+        "rebuiltArrivalMs": -3950,
+        "model": "C"
+       },
+       {
+        "index": 29,
+        "tick": 17969,
+        "ms": 299207.7,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 17969,
+        "rebuiltArrivalMs": -3950,
+        "model": "B"
+       },
+       {
+        "index": 30,
+        "tick": 18569,
+        "ms": 309207.7,
+        "rebuilt": "F",
+        "rebuiltOccupantTick": 18569,
+        "rebuiltArrivalMs": -3533.3,
+        "model": "F"
+       },
+       {
+        "index": 31,
+        "tick": 19169,
+        "ms": 319207.7,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 19169,
+        "rebuiltArrivalMs": -3950,
+        "model": "C"
+       },
+       {
+        "index": 32,
+        "tick": 19769,
+        "ms": 329207.7,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 33,
+        "tick": 20369,
+        "ms": 339207.7,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 34,
+        "tick": 20969,
+        "ms": 349207.7,
+        "rebuilt": "?",
+        "rebuiltWhy": "night ended inside the window",
+        "model": "?",
+        "modelWhy": "night ended inside the window"
+       },
+       {
+        "index": 35,
+        "tick": 21569,
+        "ms": 359207.7,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 36,
+        "tick": 22169,
+        "ms": 369207.7,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 37,
+        "tick": 22769,
+        "ms": 379207.7,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 38,
+        "tick": 23369,
+        "ms": 389207.7,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 39,
+        "tick": 23969,
+        "ms": 399207.7,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 40,
+        "tick": 24569,
+        "ms": 409207.7,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 41,
+        "tick": 25169,
+        "ms": 419207.7,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 42,
+        "tick": 25769,
+        "ms": 429207.7,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       }
+      ]
+     },
+     "outcome": {
+      "rebuilt": {
+       "result": "death",
+       "reason": "Withered Foxy",
+       "officeUpdates": 21040,
+       "endMs": 350391.1,
+       "attackSetTick": 21017,
+       "attackSetMs": 350007.7
+      },
+      "model": {
+       "result": "death",
+       "reason": "foxy",
+       "frame": 21018,
+       "endMs": 350024.4
+      }
+     },
+     "drawStream": {
+      "status": "MATCHED_TO_TERMINAL_LOOP",
+      "firstMismatch": {
+       "tick": 21017,
+       "modelFrame": 21018,
+       "rebuilt": {
+        "draws": 12307,
+        "state": 6919
+       },
+       "model": {
+        "draws": 12302,
+        "state": 15354
+       }
+      },
+      "firstMismatchMs": 350007.7,
+      "mismatchRuns": 1,
+      "mismatchedUpdates": 1,
+      "firstPersistent": {
+       "start": 21017,
+       "length": 1,
+       "rejoined": false,
+       "ms": 350007.7
+      },
+      "compared": 21018
+     },
+     "maskLedger": {
+      "compared": 21018,
+      "mismatches": 0,
+      "paired": 138,
+      "rebuiltChanges": 138,
+      "modelChanges": 138,
+      "offsets": {
+       "0>1 +0": 35,
+       "1>2 +0": 35,
+       "2>3 +0": 34,
+       "3>0 +0": 34
+      }
+     },
+     "heldTapDrops": []
+    },
+    {
+     "variant": "landed-r20",
+     "clock": "trace-catchup",
+     "presses": "landed",
+     "landingLatency": {
+      "raises": 12,
+      "officeViewLuma": 117,
+      "medianMs": 74.8,
+      "p10Ms": 53.9,
+      "p90Ms": 77.4,
+      "minMs": 43.1,
+      "maxMs": 78.6
+     },
+     "input": {
+      "officeRows": 692,
+      "officeRowsSha256": "d469d215ff0f3d03018f20bc60f69fbf3846bc92f037493eceef4c1b890ef94f",
+      "stretchedContacts": 48,
+      "sameTickEdgeSets": 0,
+      "firstPressTick": 300,
+      "measuredUpdates": 6732,
+      "frameTimesSha256": "438371b01c0628515e9c8a61b9381915dcaa79f37610005ae1ab530f457a1b57",
+      "inputSha256": "94da7a64e067428338d634de29e799529475d58aaba679c171f8268d4f1c705d",
+      "modelInputMode": "explicit-contact-duration",
+      "modelContactsSha256": "3440d179ab5ef6b8720301438d86d3037c4a290c70465c89c5cc22f66dd6c717"
+     },
+     "runtime": {
+      "traceSha256": "78b4e037235f9aa265d42ade23d60570f45bc238bb6939b9771949a3ea4642d6",
+      "drawTraceSha256": "f6a4ea613e72fe22912286a3d799bbc832b3b5d2c822834d06c174e059c1d0d8",
+      "officeUpdates": 21040
+     },
+     "windows": {
+      "rebuilt": ".........BC.....BF.BC..CB.C.CBFC..?????????",
+      "model": ".........BC.....BF.BC..CB.C.CBFC..?????????",
+      "rows": [
+       {
+        "index": 0,
+        "tick": 578,
+        "ms": 9580.7,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 1,
+        "tick": 1158,
+        "ms": 19214.5,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 2,
+        "tick": 1760,
+        "ms": 29201.7,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 3,
+        "tick": 2366,
+        "ms": 39214.9,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 4,
+        "tick": 2963,
+        "ms": 49207.6,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 5,
+        "tick": 3565,
+        "ms": 59204.5,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 6,
+        "tick": 4164,
+        "ms": 69194.4,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 7,
+        "tick": 4766,
+        "ms": 79201.9,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 8,
+        "tick": 5366,
+        "ms": 89201.3,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 9,
+        "tick": 5966,
+        "ms": 99202,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 5966,
+        "rebuiltArrivalMs": -3933.9,
+        "model": "B"
+       },
+       {
+        "index": 10,
+        "tick": 6568,
+        "ms": 109201.9,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 6568,
+        "rebuiltArrivalMs": -3931.9,
+        "model": "C"
+       },
+       {
+        "index": 11,
+        "tick": 7169,
+        "ms": 119207.7,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 12,
+        "tick": 7769,
+        "ms": 129207.7,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 13,
+        "tick": 8369,
+        "ms": 139207.7,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 14,
+        "tick": 8969,
+        "ms": 149207.7,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 15,
+        "tick": 9569,
+        "ms": 159207.7,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 16,
+        "tick": 10169,
+        "ms": 169207.7,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 10169,
+        "rebuiltArrivalMs": -3950,
+        "model": "B"
+       },
+       {
+        "index": 17,
+        "tick": 10769,
+        "ms": 179207.7,
+        "rebuilt": "F",
+        "rebuiltOccupantTick": 10769,
+        "rebuiltArrivalMs": -3533.3,
+        "model": "F"
+       },
+       {
+        "index": 18,
+        "tick": 11369,
+        "ms": 189207.7,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 19,
+        "tick": 11969,
+        "ms": 199207.7,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 11969,
+        "rebuiltArrivalMs": -3950,
+        "model": "B"
+       },
+       {
+        "index": 20,
+        "tick": 12569,
+        "ms": 209207.7,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 12569,
+        "rebuiltArrivalMs": -3950,
+        "model": "C"
+       },
+       {
+        "index": 21,
+        "tick": 13169,
+        "ms": 219207.7,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 22,
+        "tick": 13769,
+        "ms": 229207.7,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 23,
+        "tick": 14369,
+        "ms": 239207.7,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 14369,
+        "rebuiltArrivalMs": -3950,
+        "model": "C"
+       },
+       {
+        "index": 24,
+        "tick": 14969,
+        "ms": 249207.7,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 14969,
+        "rebuiltArrivalMs": -3950,
+        "model": "B"
+       },
+       {
+        "index": 25,
+        "tick": 15569,
+        "ms": 259207.7,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 26,
+        "tick": 16169,
+        "ms": 269207.7,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 16169,
+        "rebuiltArrivalMs": -3950,
+        "model": "C"
+       },
+       {
+        "index": 27,
+        "tick": 16769,
+        "ms": 279207.7,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 28,
+        "tick": 17369,
+        "ms": 289207.7,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 17369,
+        "rebuiltArrivalMs": -3950,
+        "model": "C"
+       },
+       {
+        "index": 29,
+        "tick": 17969,
+        "ms": 299207.7,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 17969,
+        "rebuiltArrivalMs": -3950,
+        "model": "B"
+       },
+       {
+        "index": 30,
+        "tick": 18569,
+        "ms": 309207.7,
+        "rebuilt": "F",
+        "rebuiltOccupantTick": 18569,
+        "rebuiltArrivalMs": -3533.3,
+        "model": "F"
+       },
+       {
+        "index": 31,
+        "tick": 19169,
+        "ms": 319207.7,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 19169,
+        "rebuiltArrivalMs": -3950,
+        "model": "C"
+       },
+       {
+        "index": 32,
+        "tick": 19769,
+        "ms": 329207.7,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 33,
+        "tick": 20369,
+        "ms": 339207.7,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 34,
+        "tick": 20969,
+        "ms": 349207.7,
+        "rebuilt": "?",
+        "rebuiltWhy": "night ended inside the window",
+        "model": "?",
+        "modelWhy": "night ended inside the window"
+       },
+       {
+        "index": 35,
+        "tick": 21569,
+        "ms": 359207.7,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 36,
+        "tick": 22169,
+        "ms": 369207.7,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 37,
+        "tick": 22769,
+        "ms": 379207.7,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 38,
+        "tick": 23369,
+        "ms": 389207.7,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 39,
+        "tick": 23969,
+        "ms": 399207.7,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 40,
+        "tick": 24569,
+        "ms": 409207.7,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 41,
+        "tick": 25169,
+        "ms": 419207.7,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 42,
+        "tick": 25769,
+        "ms": 429207.7,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       }
+      ]
+     },
+     "outcome": {
+      "rebuilt": {
+       "result": "death",
+       "reason": "Withered Foxy",
+       "officeUpdates": 21040,
+       "endMs": 350391.1,
+       "attackSetTick": 21017,
+       "attackSetMs": 350007.7
+      },
+      "model": {
+       "result": "death",
+       "reason": "foxy",
+       "frame": 21018,
+       "endMs": 350024.4
+      }
+     },
+     "drawStream": {
+      "status": "MATCHED_TO_TERMINAL_LOOP",
+      "firstMismatch": {
+       "tick": 21017,
+       "modelFrame": 21018,
+       "rebuilt": {
+        "draws": 12307,
+        "state": 6919
+       },
+       "model": {
+        "draws": 12302,
+        "state": 15354
+       }
+      },
+      "firstMismatchMs": 350007.7,
+      "mismatchRuns": 1,
+      "mismatchedUpdates": 1,
+      "firstPersistent": {
+       "start": 21017,
+       "length": 1,
+       "rejoined": false,
+       "ms": 350007.7
+      },
+      "compared": 21018
+     },
+     "maskLedger": {
+      "compared": 21018,
+      "mismatches": 0,
+      "paired": 138,
+      "rebuiltChanges": 138,
+      "modelChanges": 138,
+      "offsets": {
+       "0>1 +0": 35,
+       "1>2 +0": 35,
+       "2>3 +0": 34,
+       "3>0 +0": 34
+      }
+     },
+     "heldTapDrops": []
+    }
+   ],
+   "derived": {
+    "landed": {
+     "rebuiltVsPhone": {
+      "read": 12,
+      "occupied": 1,
+      "compared": 12,
+      "agree": 9,
+      "hits": 0,
+      "occupancyAgree": 9,
+      "unplayed": 0,
+      "firstDisagreement": {
+       "window": 9,
+       "phone": ".",
+       "side": "B"
+      }
+     },
+     "modelVsPhone": {
+      "read": 12,
+      "occupied": 1,
+      "compared": 12,
+      "agree": 9,
+      "hits": 0,
+      "occupancyAgree": 9,
+      "unplayed": 0,
+      "firstDisagreement": {
+       "window": 9,
+       "phone": ".",
+       "side": "B"
+      }
+     },
+     "rebuiltVsModel": {
+      "compared": 34,
+      "agree": 34,
+      "firstDisagreement": null
+     },
+     "rebuiltOutcome": {
+      "sameResult": null,
+      "deltaMs": null,
+      "agrees": null
+     },
+     "modelOutcome": {
+      "sameResult": null,
+      "deltaMs": null,
+      "agrees": null
+     }
+    },
+    "landed-r20": {
+     "rebuiltVsPhone": {
+      "read": 12,
+      "occupied": 1,
+      "compared": 12,
+      "agree": 9,
+      "hits": 0,
+      "occupancyAgree": 9,
+      "unplayed": 0,
+      "firstDisagreement": {
+       "window": 9,
+       "phone": ".",
+       "side": "B"
+      }
+     },
+     "modelVsPhone": {
+      "read": 12,
+      "occupied": 1,
+      "compared": 12,
+      "agree": 9,
+      "hits": 0,
+      "occupancyAgree": 9,
+      "unplayed": 0,
+      "firstDisagreement": {
+       "window": 9,
+       "phone": ".",
+       "side": "B"
+      }
+     },
+     "rebuiltVsModel": {
+      "compared": 34,
+      "agree": 34,
+      "firstDisagreement": null
+     },
+     "rebuiltOutcome": {
+      "sameResult": null,
+      "deltaMs": null,
+      "agrees": null
+     },
+     "modelOutcome": {
+      "sameResult": null,
+      "deltaMs": null,
+      "agrees": null
+     }
+    },
+    "modelRecordVsPhone": {
+     "read": 12,
+     "occupied": 1,
+     "compared": 12,
+     "agree": 8,
+     "hits": 0,
+     "occupancyAgree": 9,
+     "unplayed": 0,
+     "firstDisagreement": {
+      "window": 7,
+      "phone": ".",
+      "side": "B"
+     }
+    },
+    "atFirstDisagreement": {
+     "window": 9,
+     "phone": ".",
+     "rebuilt": {
+      "landed": "B",
+      "landed-r20": "B"
+     },
+     "model": {
+      "landed": "B",
+      "landed-r20": "B"
+     },
+     "modelRecord": "C"
+    }
+   },
+   "verdict": "DIVERGENT"
+  },
+  {
+   "name": "full-04",
+   "run": "night7-night7-k3-full-04-20260915T051327Z",
+   "night": 7,
+   "seed": 34043,
+   "seedEvidence": "docs/evidence/night6-h-seedlock-census-20260916.json reDerived: k3 full-04 20260915 13 -> 1: 34043 (the seed read between the last line before initRunLoop and the first inside it)",
+   "winner": "tools/device/campaign-night7-k3-winner.json",
+   "winnerSha256": "7d45d04cffdb353af3127f375f755a6b66a3eb597fb22e6fc993350ee7bf2d78",
+   "originMs": 2521.4,
+   "presses": {
+    "path": "artifacts/forensics/frametrace-night6-20260918/full-04-k3-presses.json",
+    "sha256": "77d8ad22f279bf1b6018f1afd23f86b51384a4a3a167ce0aa25fdc7be46fa715"
+   },
+   "trace": {
+    "path": "artifacts/forensics/k3-frametrace-nights-20260915/ft2-full-04-844533048365184.tsv",
+    "sha256": "1dd475ded11300436efcf8226f6b56aaf4a0917ffc89818ad5ca5ba1262721bc",
+    "first": 203,
+    "releaseAfterFirstNightFrameMs": 2436,
+    "source": "artifacts/forensics/frametrace-night6-20260918/k3-night7-origins.json (sha256 a9083bda1c3860d47ca369e6b14d1475a4ebf89f9c0d733196ddfff26be4e4ab): origin 2521.4 ms after the seed less seedToFirstFrameMs 85.4, first 203"
+   },
+   "customNight": "tools/recompile/fixtures/night7-dials20.json",
+   "phone": {
+    "windows": "...*C.CBC.????????????????????????????????",
+    "source": "artifacts/forensics/k3-frametrace-nights-20260915/eyehole-full-04.json (sha256 f2af0fa9d29be207e441af5786214fec0669681ffd7b446c89ab7b1f84c095a1; eyehole-read.py right-eyehole reads, retained DEVICE_MEASURED): empty '.', WitheredBonnie/Chica/Freddy B/C/F, unlabelled occupant '*', no-mask-frame '?'; read c is window c (seedlock-obs.mjs's cycle binning)",
+    "terminal": {
+     "result": "death",
+     "seedClockMs": 103952,
+     "killer": "UNKNOWN",
+     "source": "docs/evidence/runs/night7-night7-k3-full-04-20260915T051327Z/events.jsonl: state=static at 2026-09-15T05:15:47.249Z (host wall, a poll: an upper bound), skew 1445.6 ms (k3-night7-origins.json), seed stamp 1789449241851 (the one ms of the bracket whose low16 is 34043); docs/evidence/night7-k3-frametrace-nights-20260915.json: death cause not identified"
+    }
+   },
+   "modelRecord": {
+    "path": "docs/evidence/model-encounter-fidelity-20260927.json",
+    "pointer": "night7Reproduction.rows[name=full-04-k3].windows",
+    "windows": "..CBCFBCfBCfBCbFB",
+    "outcome": "death"
+   },
+   "primaryVariant": "landed",
+   "variants": [
+    {
+     "variant": "landed",
+     "clock": "trace-catchup",
+     "presses": "landed",
+     "landingLatency": {
+      "raises": 6,
+      "officeViewLuma": 117,
+      "medianMs": 64.7,
+      "p10Ms": 38.6,
+      "p90Ms": 79.3,
+      "minMs": 38.6,
+      "maxMs": 81.9
+     },
+     "input": {
+      "officeRows": 692,
+      "officeRowsSha256": "2589a7f2523fc4ec1698c99553f1a9149e9266966722620cfa280f601b35b34a",
+      "stretchedContacts": 0,
+      "sameTickEdgeSets": 1,
+      "firstPressTick": 149,
+      "measuredUpdates": 6512,
+      "frameTimesSha256": "562c5da8e3a65f93e6745dca256e3f57f9746d5e50142a8a04f562f7720179d6",
+      "inputSha256": "a77fa574450674dd9cdb5b33087d70652a82c1bf2da5a84e209c7d646b32a645",
+      "modelInputMode": "explicit-contact-duration",
+      "modelContactsSha256": "9a76a49b829d41c0ad3198c37b924155b2d4d6eb675b9943eb8b93914040cfb2"
+     },
+     "runtime": {
+      "traceSha256": "4c15ac91c583cbebe703fea1ff5f35e6d083d4e60991ca57563894a4ec3260a6",
+      "drawTraceSha256": "e22a69ad84f84caa3922dcb704c20b90c7b7b52819aa6ed8ce79932765566143",
+      "officeUpdates": 2215
+     },
+     "windows": {
+      "rebuilt": "...B???????????????????????????????????????",
+      "model": "...B???????????????????????????????????????",
+      "rows": [
+       {
+        "index": 0,
+        "tick": 325,
+        "ms": 5419,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 1,
+        "tick": 856,
+        "ms": 14266.2,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 2,
+        "tick": 1458,
+        "ms": 24265.9,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 3,
+        "tick": 2061,
+        "ms": 34266,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 2061,
+        "rebuiltArrivalMs": -3972.7,
+        "model": "B"
+       },
+       {
+        "index": 4,
+        "tick": 2662,
+        "ms": 44252.8,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 5,
+        "tick": 3268,
+        "ms": 54248.9,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 6,
+        "tick": 3869,
+        "ms": 64256.6,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 7,
+        "tick": 4471,
+        "ms": 74261.4,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 8,
+        "tick": 5072,
+        "ms": 84256.2,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 9,
+        "tick": 5677,
+        "ms": 94255.1,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 10,
+        "tick": 6276,
+        "ms": 104251.2,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 11,
+        "tick": 6877,
+        "ms": 114266,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 12,
+        "tick": 7477,
+        "ms": 124266,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 13,
+        "tick": 8077,
+        "ms": 134266,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 14,
+        "tick": 8677,
+        "ms": 144266,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 15,
+        "tick": 9277,
+        "ms": 154266,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 16,
+        "tick": 9877,
+        "ms": 164266,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 17,
+        "tick": 10477,
+        "ms": 174266,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 18,
+        "tick": 11077,
+        "ms": 184266,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 19,
+        "tick": 11677,
+        "ms": 194266,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 20,
+        "tick": 12277,
+        "ms": 204266,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 21,
+        "tick": 12877,
+        "ms": 214266,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 22,
+        "tick": 13477,
+        "ms": 224266,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 23,
+        "tick": 14077,
+        "ms": 234266,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 24,
+        "tick": 14677,
+        "ms": 244266,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 25,
+        "tick": 15277,
+        "ms": 254266,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 26,
+        "tick": 15877,
+        "ms": 264266,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 27,
+        "tick": 16477,
+        "ms": 274266,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 28,
+        "tick": 17077,
+        "ms": 284266,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 29,
+        "tick": 17677,
+        "ms": 294266,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 30,
+        "tick": 18277,
+        "ms": 304266,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 31,
+        "tick": 18877,
+        "ms": 314266,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 32,
+        "tick": 19477,
+        "ms": 324266,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 33,
+        "tick": 20077,
+        "ms": 334266,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 34,
+        "tick": 20677,
+        "ms": 344266,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 35,
+        "tick": 21277,
+        "ms": 354266,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 36,
+        "tick": 21877,
+        "ms": 364266,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 37,
+        "tick": 22477,
+        "ms": 374266,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 38,
+        "tick": 23077,
+        "ms": 384266,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 39,
+        "tick": 23677,
+        "ms": 394266,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 40,
+        "tick": 24277,
+        "ms": 404266,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 41,
+        "tick": 24877,
+        "ms": 414266,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 42,
+        "tick": 25477,
+        "ms": 424266,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       }
+      ]
+     },
+     "outcome": {
+      "rebuilt": {
+       "result": "death",
+       "reason": "Withered Bonnie",
+       "officeUpdates": 2215,
+       "endMs": 36832.2,
+       "attackSetTick": 2183,
+       "attackSetMs": 36298.3
+      },
+      "model": {
+       "result": "death",
+       "reason": "inside-office",
+       "frame": 2215,
+       "endMs": 36832.2
+      }
+     },
+     "drawStream": {
+      "status": "MATCHED_PREFIX",
+      "firstMismatch": null,
+      "firstMismatchMs": null,
+      "mismatchRuns": 0,
+      "mismatchedUpdates": 0,
+      "firstPersistent": null,
+      "compared": 2215
+     },
+     "maskLedger": {
+      "compared": 2215,
+      "mismatches": 0,
+      "paired": 15,
+      "rebuiltChanges": 15,
+      "modelChanges": 15,
+      "offsets": {
+       "0>1 +0": 4,
+       "1>2 +0": 4,
+       "2>3 +0": 4,
+       "3>0 +0": 3
+      }
+     },
+     "heldTapDrops": [
+      {
+       "tick": 1822,
+       "ms": 30307,
+       "downTick": 1809,
+       "upTick": 1822,
+       "holdUpdates": 13,
+       "upAtTick": 1821
+      }
+     ]
+    },
+    {
+     "variant": "landed-r20",
+     "clock": "trace-catchup",
+     "presses": "landed",
+     "landingLatency": {
+      "raises": 6,
+      "officeViewLuma": 117,
+      "medianMs": 64.7,
+      "p10Ms": 38.6,
+      "p90Ms": 79.3,
+      "minMs": 38.6,
+      "maxMs": 81.9
+     },
+     "input": {
+      "officeRows": 692,
+      "officeRowsSha256": "d930e15df17d79d446d1b63d7ee828e740a51f112b10a58fe1da239f27fbe19e",
+      "stretchedContacts": 49,
+      "sameTickEdgeSets": 0,
+      "firstPressTick": 149,
+      "measuredUpdates": 6512,
+      "frameTimesSha256": "430f165a20610538c289c748b310fa826233b432f80d4168bdbc47000f20bac4",
+      "inputSha256": "c179f8181d4128cb5980b4ff820ff0d2d8aefe8e1f1f1ba14bbcc3a3a3518e18",
+      "modelInputMode": "explicit-contact-duration",
+      "modelContactsSha256": "4962720c9e1afe9fb4c2f608113205391817bc13c9ce4a89d7cb5f405e1f3918"
+     },
+     "runtime": {
+      "traceSha256": "db25b857223118080826499659c83d2b9c3cc1b8cfbf9fa8d834243d015edb88",
+      "drawTraceSha256": "eff6a164fbca0c4cb0fc82049a0d7b7c53e36ce270962fcc2e50270200983d7d",
+      "officeUpdates": 25223
+     },
+     "windows": {
+      "rebuilt": "...BC.BC.BC.BC.BC.CBFC.B.C.CBC.CBC.BC.BC..?",
+      "model": "...BC.BC.BC.BC.BC.CBFC.B.C.CBC.CBC.BC.BC..?",
+      "rows": [
+       {
+        "index": 0,
+        "tick": 325,
+        "ms": 5419,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 1,
+        "tick": 856,
+        "ms": 14266.2,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 2,
+        "tick": 1458,
+        "ms": 24265.9,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 3,
+        "tick": 2061,
+        "ms": 34266,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 2061,
+        "rebuiltArrivalMs": -3972.7,
+        "model": "B"
+       },
+       {
+        "index": 4,
+        "tick": 2662,
+        "ms": 44252.8,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 2662,
+        "rebuiltArrivalMs": -3923.1,
+        "model": "C"
+       },
+       {
+        "index": 5,
+        "tick": 3268,
+        "ms": 54248.9,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 6,
+        "tick": 3869,
+        "ms": 64256.6,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 3869,
+        "rebuiltArrivalMs": -3937.3,
+        "model": "B"
+       },
+       {
+        "index": 7,
+        "tick": 4471,
+        "ms": 74261.4,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 4471,
+        "rebuiltArrivalMs": -3930.1,
+        "model": "C"
+       },
+       {
+        "index": 8,
+        "tick": 5072,
+        "ms": 84256.2,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 9,
+        "tick": 5677,
+        "ms": 94255.1,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 5677,
+        "rebuiltArrivalMs": -3948.7,
+        "model": "B"
+       },
+       {
+        "index": 10,
+        "tick": 6276,
+        "ms": 104251.2,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 6276,
+        "rebuiltArrivalMs": -3927.3,
+        "model": "C"
+       },
+       {
+        "index": 11,
+        "tick": 6877,
+        "ms": 114266,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 12,
+        "tick": 7477,
+        "ms": 124266,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 7477,
+        "rebuiltArrivalMs": -3950,
+        "model": "B"
+       },
+       {
+        "index": 13,
+        "tick": 8077,
+        "ms": 134266,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 8077,
+        "rebuiltArrivalMs": -3950,
+        "model": "C"
+       },
+       {
+        "index": 14,
+        "tick": 8677,
+        "ms": 144266,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 15,
+        "tick": 9277,
+        "ms": 154266,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 9277,
+        "rebuiltArrivalMs": -3950,
+        "model": "B"
+       },
+       {
+        "index": 16,
+        "tick": 9877,
+        "ms": 164266,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 9877,
+        "rebuiltArrivalMs": -3950,
+        "model": "C"
+       },
+       {
+        "index": 17,
+        "tick": 10477,
+        "ms": 174266,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 18,
+        "tick": 11077,
+        "ms": 184266,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 11077,
+        "rebuiltArrivalMs": -3950,
+        "model": "C"
+       },
+       {
+        "index": 19,
+        "tick": 11677,
+        "ms": 194266,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 11677,
+        "rebuiltArrivalMs": -3950,
+        "model": "B"
+       },
+       {
+        "index": 20,
+        "tick": 12277,
+        "ms": 204266,
+        "rebuilt": "F",
+        "rebuiltOccupantTick": 12277,
+        "rebuiltArrivalMs": -3583.3,
+        "model": "F"
+       },
+       {
+        "index": 21,
+        "tick": 12877,
+        "ms": 214266,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 12877,
+        "rebuiltArrivalMs": -3950,
+        "model": "C"
+       },
+       {
+        "index": 22,
+        "tick": 13477,
+        "ms": 224266,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 23,
+        "tick": 14077,
+        "ms": 234266,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 14077,
+        "rebuiltArrivalMs": -3950,
+        "model": "B"
+       },
+       {
+        "index": 24,
+        "tick": 14677,
+        "ms": 244266,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 25,
+        "tick": 15277,
+        "ms": 254266,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 15277,
+        "rebuiltArrivalMs": -3950,
+        "model": "C"
+       },
+       {
+        "index": 26,
+        "tick": 15877,
+        "ms": 264266,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 27,
+        "tick": 16477,
+        "ms": 274266,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 16477,
+        "rebuiltArrivalMs": -3950,
+        "model": "C"
+       },
+       {
+        "index": 28,
+        "tick": 17077,
+        "ms": 284266,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 17077,
+        "rebuiltArrivalMs": -3950,
+        "model": "B"
+       },
+       {
+        "index": 29,
+        "tick": 17677,
+        "ms": 294266,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 17677,
+        "rebuiltArrivalMs": -3950,
+        "model": "C"
+       },
+       {
+        "index": 30,
+        "tick": 18277,
+        "ms": 304266,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 31,
+        "tick": 18877,
+        "ms": 314266,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 18877,
+        "rebuiltArrivalMs": -3950,
+        "model": "C"
+       },
+       {
+        "index": 32,
+        "tick": 19477,
+        "ms": 324266,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 19477,
+        "rebuiltArrivalMs": -3950,
+        "model": "B"
+       },
+       {
+        "index": 33,
+        "tick": 20077,
+        "ms": 334266,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 20077,
+        "rebuiltArrivalMs": -3950,
+        "model": "C"
+       },
+       {
+        "index": 34,
+        "tick": 20677,
+        "ms": 344266,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 35,
+        "tick": 21277,
+        "ms": 354266,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 21277,
+        "rebuiltArrivalMs": -3950,
+        "model": "B"
+       },
+       {
+        "index": 36,
+        "tick": 21877,
+        "ms": 364266,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 21877,
+        "rebuiltArrivalMs": -3950,
+        "model": "C"
+       },
+       {
+        "index": 37,
+        "tick": 22477,
+        "ms": 374266,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 38,
+        "tick": 23077,
+        "ms": 384266,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 23077,
+        "rebuiltArrivalMs": -3950,
+        "model": "B"
+       },
+       {
+        "index": 39,
+        "tick": 23677,
+        "ms": 394266,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 23677,
+        "rebuiltArrivalMs": -3950,
+        "model": "C"
+       },
+       {
+        "index": 40,
+        "tick": 24277,
+        "ms": 404266,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 41,
+        "tick": 24877,
+        "ms": 414266,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 42,
+        "tick": 25477,
+        "ms": 424266,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       }
+      ]
+     },
+     "outcome": {
+      "rebuilt": {
+       "result": "6am",
+       "reason": null,
+       "officeUpdates": 25223,
+       "endMs": 420032.7
+      },
+      "model": {
+       "result": "6am",
+       "reason": null,
+       "frame": 25223,
+       "endMs": 420032.7
+      }
+     },
+     "drawStream": {
+      "status": "MATCHED_PREFIX",
+      "firstMismatch": null,
+      "firstMismatchMs": null,
+      "mismatchRuns": 0,
+      "mismatchedUpdates": 0,
+      "firstPersistent": null,
+      "compared": 25223
+     },
+     "maskLedger": {
+      "compared": 25223,
+      "mismatches": 0,
+      "paired": 168,
+      "rebuiltChanges": 168,
+      "modelChanges": 168,
+      "offsets": {
+       "0>1 +0": 42,
+       "1>2 +0": 42,
+       "2>3 +0": 42,
+       "3>0 +0": 42
+      }
+     },
+     "heldTapDrops": []
+    }
+   ],
+   "derived": {
+    "landed": {
+     "rebuiltVsPhone": {
+      "read": 10,
+      "occupied": 5,
+      "compared": 4,
+      "agree": 3,
+      "hits": 0,
+      "occupancyAgree": 4,
+      "unplayed": 6,
+      "firstDisagreement": {
+       "window": 3,
+       "phone": "*",
+       "side": "B"
+      }
+     },
+     "modelVsPhone": {
+      "read": 10,
+      "occupied": 5,
+      "compared": 4,
+      "agree": 3,
+      "hits": 0,
+      "occupancyAgree": 4,
+      "unplayed": 6,
+      "firstDisagreement": {
+       "window": 3,
+       "phone": "*",
+       "side": "B"
+      }
+     },
+     "rebuiltVsModel": {
+      "compared": 4,
+      "agree": 4,
+      "firstDisagreement": null
+     },
+     "rebuiltOutcome": {
+      "sameResult": true,
+      "deltaMs": -67119.8,
+      "agrees": false
+     },
+     "modelOutcome": {
+      "sameResult": true,
+      "deltaMs": -67119.8,
+      "agrees": false
+     }
+    },
+    "landed-r20": {
+     "rebuiltVsPhone": {
+      "read": 10,
+      "occupied": 5,
+      "compared": 10,
+      "agree": 5,
+      "hits": 1,
+      "occupancyAgree": 8,
+      "unplayed": 0,
+      "firstDisagreement": {
+       "window": 3,
+       "phone": "*",
+       "side": "B"
+      }
+     },
+     "modelVsPhone": {
+      "read": 10,
+      "occupied": 5,
+      "compared": 10,
+      "agree": 5,
+      "hits": 1,
+      "occupancyAgree": 8,
+      "unplayed": 0,
+      "firstDisagreement": {
+       "window": 3,
+       "phone": "*",
+       "side": "B"
+      }
+     },
+     "rebuiltVsModel": {
+      "compared": 42,
+      "agree": 42,
+      "firstDisagreement": null
+     },
+     "rebuiltOutcome": {
+      "sameResult": false,
+      "deltaMs": 316080.7,
+      "agrees": false
+     },
+     "modelOutcome": {
+      "sameResult": false,
+      "deltaMs": 316080.7,
+      "agrees": false
+     }
+    },
+    "modelRecordVsPhone": {
+     "read": 10,
+     "occupied": 5,
+     "compared": 10,
+     "agree": 3,
+     "hits": 1,
+     "occupancyAgree": 7,
+     "unplayed": 0,
+     "firstDisagreement": {
+      "window": 2,
+      "phone": ".",
+      "side": "C"
+     }
+    },
+    "atFirstDisagreement": {
+     "window": 3,
+     "phone": "*",
+     "rebuilt": {
+      "landed": "B",
+      "landed-r20": "B"
+     },
+     "model": {
+      "landed": "B",
+      "landed-r20": "B"
+     },
+     "modelRecord": "B"
+    }
+   },
+   "verdict": "DIVERGENT"
+  },
+  {
+   "name": "full-06",
+   "run": "night7-night7-k3-full-06-20260915T225056Z",
+   "night": 7,
+   "seed": 47593,
+   "seedEvidence": "docs/evidence/night6-h-seedlock-census-20260916.json reDerived: k3 full-06 20260915 14 -> 1: 47593",
+   "winner": "tools/device/campaign-night7-k3-winner.json",
+   "winnerSha256": "7d45d04cffdb353af3127f375f755a6b66a3eb597fb22e6fc993350ee7bf2d78",
+   "originMs": 2516.8,
+   "presses": {
+    "path": "artifacts/forensics/frametrace-night6-20260918/full-06-k3-presses.json",
+    "sha256": "be2066875caec6a65be6e149e973223addc231f6068dbf6ec7436b4ec21a4cde"
+   },
+   "trace": {
+    "path": "artifacts/forensics/k3-frametrace-nights-20260915/ft2-full-06-875229878053244.tsv",
+    "sha256": "3fe9587c06708a991e5a2c983ebc1feaf9be89cda9c7c787999a2ac6052dd261",
+    "first": 201,
+    "releaseAfterFirstNightFrameMs": 2435.8,
+    "source": "artifacts/forensics/frametrace-night6-20260918/k3-night7-origins.json: origin 2516.8 ms after the seed less seedToFirstFrameMs 81.0, first 201"
+   },
+   "customNight": "tools/recompile/fixtures/night7-dials20.json",
+   "phone": {
+    "windows": "...BC..BC.BC.BC..BC.BCF.BCFBC.B.CBC.BC.CBC",
+    "source": "artifacts/forensics/k3-frametrace-nights-20260915/eyehole-full-06.json (sha256 e43aeeb820166b368e3b747df09185a5d736d8078233682cfeeb427d7036daf7; eyehole-read.py right-eyehole reads, retained DEVICE_MEASURED); read c is window c",
+    "terminal": {
+     "result": "6am",
+     "seedClockMs": 422706,
+     "killer": null,
+     "source": "docs/evidence/runs/night7-night7-k3-full-06-20260915T225056Z/events.jsonl: state=sixam at 2026-09-15T22:58:38.357Z (host wall, a poll), skew 1402.2 ms, seed stamp 1789512694249; executor terminal sixam, 42/42 gates agreed"
+    }
+   },
+   "modelRecord": {
+    "path": "docs/evidence/model-encounter-fidelity-20260927.json",
+    "pointer": "night7Reproduction.rows[name=full-06-k3].windows",
+    "windows": "..CBC.FBC..BC..BC.BC.fCbBC.BC",
+    "outcome": "death"
+   },
+   "primaryVariant": "landed",
+   "variants": [
+    {
+     "variant": "landed",
+     "clock": "trace-catchup",
+     "presses": "landed",
+     "landingLatency": {
+      "raises": 17,
+      "officeViewLuma": 117,
+      "medianMs": 81.6,
+      "p10Ms": 52.3,
+      "p90Ms": 99.8,
+      "minMs": 48.8,
+      "maxMs": 106.7
+     },
+     "input": {
+      "officeRows": 692,
+      "officeRowsSha256": "07f841ef3532526eaf8c666f4de2273a1497832c1cb155c7c37f5bdee4af7013",
+      "stretchedContacts": 0,
+      "sameTickEdgeSets": 1,
+      "firstPressTick": 152,
+      "measuredUpdates": 25435,
+      "frameTimesSha256": "383d25c80bb3648e9199589ebce7b6782a510eacee4409df3c90e940869541cf",
+      "inputSha256": "cac3d1e7055825725e5a0859532d48e9945ef9d7bd6cf90ce957bf2acc010cc9",
+      "modelInputMode": "explicit-contact-duration",
+      "modelContactsSha256": "c4ca5d3320b8a65c3522d3a3a072a79c7a10251447f5112a61a903d45da6c67f"
+     },
+     "runtime": {
+      "traceSha256": "6174a65a11c37d70e59b2b6d0c3fd76f8ba96fd17a396c873d0612fc23d9a0df",
+      "drawTraceSha256": "3c38fd087850b62099c1e5275abb6979b0429714049d8f48f6e034d548c68a74",
+      "officeUpdates": 22698
+     },
+     "windows": {
+      "rebuilt": "...BC.BC.BC.BC.C..BC.BC.BC.BC.BC..BC.B?????",
+      "model": "...BC.BC.BC.BC.C..BC.BC.BC.BC.BC..BC.B?????",
+      "rows": [
+       {
+        "index": 0,
+        "tick": 325,
+        "ms": 5433.7,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 1,
+        "tick": 859,
+        "ms": 14267.3,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 2,
+        "tick": 1460,
+        "ms": 24265.4,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 3,
+        "tick": 2057,
+        "ms": 34270.2,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 2057,
+        "rebuiltArrivalMs": -3936.7,
+        "model": "B"
+       },
+       {
+        "index": 4,
+        "tick": 2660,
+        "ms": 44266.8,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 2660,
+        "rebuiltArrivalMs": -3931.4,
+        "model": "C"
+       },
+       {
+        "index": 5,
+        "tick": 3262,
+        "ms": 54266.5,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 6,
+        "tick": 3866,
+        "ms": 64267.6,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 3866,
+        "rebuiltArrivalMs": -3930.3,
+        "model": "B"
+       },
+       {
+        "index": 7,
+        "tick": 4467,
+        "ms": 74271.2,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 4467,
+        "rebuiltArrivalMs": -3952.8,
+        "model": "C"
+       },
+       {
+        "index": 8,
+        "tick": 5069,
+        "ms": 84271.8,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 9,
+        "tick": 5669,
+        "ms": 94276.4,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 5669,
+        "rebuiltArrivalMs": -3941.4,
+        "model": "B"
+       },
+       {
+        "index": 10,
+        "tick": 6269,
+        "ms": 104268.8,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 6269,
+        "rebuiltArrivalMs": -3932.8,
+        "model": "C"
+       },
+       {
+        "index": 11,
+        "tick": 6870,
+        "ms": 114268.1,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 12,
+        "tick": 7469,
+        "ms": 124275.5,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 7469,
+        "rebuiltArrivalMs": -3938.4,
+        "model": "B"
+       },
+       {
+        "index": 13,
+        "tick": 8077,
+        "ms": 134268.4,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 8077,
+        "rebuiltArrivalMs": -3935.4,
+        "model": "C"
+       },
+       {
+        "index": 14,
+        "tick": 8677,
+        "ms": 144271.7,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 15,
+        "tick": 9279,
+        "ms": 154278.7,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 9279,
+        "rebuiltArrivalMs": -3939.5,
+        "model": "C"
+       },
+       {
+        "index": 16,
+        "tick": 9877,
+        "ms": 164270.8,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 17,
+        "tick": 10479,
+        "ms": 174274,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 18,
+        "tick": 11080,
+        "ms": 184272.4,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 11080,
+        "rebuiltArrivalMs": -3948.7,
+        "model": "B"
+       },
+       {
+        "index": 19,
+        "tick": 11682,
+        "ms": 194270.7,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 11682,
+        "rebuiltArrivalMs": -3917.4,
+        "model": "C"
+       },
+       {
+        "index": 20,
+        "tick": 12281,
+        "ms": 204272.8,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 21,
+        "tick": 12881,
+        "ms": 214271.7,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 12881,
+        "rebuiltArrivalMs": -3949.4,
+        "model": "B"
+       },
+       {
+        "index": 22,
+        "tick": 13480,
+        "ms": 224273.3,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 13480,
+        "rebuiltArrivalMs": -3933.6,
+        "model": "C"
+       },
+       {
+        "index": 23,
+        "tick": 14081,
+        "ms": 234279.1,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 24,
+        "tick": 14683,
+        "ms": 244276.3,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 14683,
+        "rebuiltArrivalMs": -3934.9,
+        "model": "B"
+       },
+       {
+        "index": 25,
+        "tick": 15283,
+        "ms": 254272,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 15283,
+        "rebuiltArrivalMs": -3944.2,
+        "model": "C"
+       },
+       {
+        "index": 26,
+        "tick": 15886,
+        "ms": 264274.8,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 27,
+        "tick": 16488,
+        "ms": 274275.7,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 16488,
+        "rebuiltArrivalMs": -3927.5,
+        "model": "B"
+       },
+       {
+        "index": 28,
+        "tick": 17087,
+        "ms": 284274.1,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 17087,
+        "rebuiltArrivalMs": -3950.3,
+        "model": "C"
+       },
+       {
+        "index": 29,
+        "tick": 17684,
+        "ms": 294277.4,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 30,
+        "tick": 18282,
+        "ms": 304275.6,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 18282,
+        "rebuiltArrivalMs": -3950.6,
+        "model": "B"
+       },
+       {
+        "index": 31,
+        "tick": 18883,
+        "ms": 314276.1,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 18883,
+        "rebuiltArrivalMs": -3935.1,
+        "model": "C"
+       },
+       {
+        "index": 32,
+        "tick": 19484,
+        "ms": 324280.5,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 33,
+        "tick": 20081,
+        "ms": 334280,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 34,
+        "tick": 20683,
+        "ms": 344275,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 20683,
+        "rebuiltArrivalMs": -3933.3,
+        "model": "B"
+       },
+       {
+        "index": 35,
+        "tick": 21282,
+        "ms": 354271.5,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 21282,
+        "rebuiltArrivalMs": -3930.1,
+        "model": "C"
+       },
+       {
+        "index": 36,
+        "tick": 21882,
+        "ms": 364276.1,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 37,
+        "tick": 22482,
+        "ms": 374267.6,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 22482,
+        "rebuiltArrivalMs": -3963.5,
+        "model": "B"
+       },
+       {
+        "index": 38,
+        "tick": 23085,
+        "ms": 384278.7,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 39,
+        "tick": 23684,
+        "ms": 394277.2,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 40,
+        "tick": 24289,
+        "ms": 404262.9,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 41,
+        "tick": 24890,
+        "ms": 414276,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       },
+       {
+        "index": 42,
+        "tick": 25488,
+        "ms": 424276,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       }
+      ]
+     },
+     "outcome": {
+      "rebuilt": {
+       "result": "death",
+       "reason": "Withered Bonnie",
+       "officeUpdates": 22698,
+       "endMs": 377842.7,
+       "attackSetTick": 22666,
+       "attackSetMs": 377310.3
+      },
+      "model": {
+       "result": "death",
+       "reason": "inside-office",
+       "frame": 22698,
+       "endMs": 377842.7
+      }
+     },
+     "drawStream": {
+      "status": "MATCHED_PREFIX",
+      "firstMismatch": null,
+      "firstMismatchMs": null,
+      "mismatchRuns": 0,
+      "mismatchedUpdates": 0,
+      "firstPersistent": null,
+      "compared": 22698
+     },
+     "maskLedger": {
+      "compared": 22698,
+      "mismatches": 0,
+      "paired": 151,
+      "rebuiltChanges": 151,
+      "modelChanges": 151,
+      "offsets": {
+       "0>1 +0": 38,
+       "1>2 +0": 38,
+       "2>3 +0": 38,
+       "3>0 +0": 37
+      }
+     },
+     "heldTapDrops": [
+      {
+       "tick": 22244,
+       "ms": 370321.9,
+       "downTick": 22231,
+       "upTick": 22244,
+       "holdUpdates": 13,
+       "upAtTick": 22243
+      }
+     ]
+    },
+    {
+     "variant": "landed-r20",
+     "clock": "trace-catchup",
+     "presses": "landed",
+     "landingLatency": {
+      "raises": 17,
+      "officeViewLuma": 117,
+      "medianMs": 81.6,
+      "p10Ms": 52.3,
+      "p90Ms": 99.8,
+      "minMs": 48.8,
+      "maxMs": 106.7
+     },
+     "input": {
+      "officeRows": 692,
+      "officeRowsSha256": "c21c55866408b604e851fb7ad31e65416abc59f965d0df39519b3d16a579b993",
+      "stretchedContacts": 49,
+      "sameTickEdgeSets": 0,
+      "firstPressTick": 152,
+      "measuredUpdates": 25435,
+      "frameTimesSha256": "44ac91701dbb09918678581ceb953d2b596ce59ed43e8fdd68e184b193962aa2",
+      "inputSha256": "b1606a3caa3d4a0b2d5ca24d4460ecaee8200dfc5b555d2fa65c345e8b3aa6d2",
+      "modelInputMode": "explicit-contact-duration",
+      "modelContactsSha256": "f1aea45b4d7c51e5e3a44450ae5050adf1d4354eb1a42fe26b116d749895d101"
+     },
+     "runtime": {
+      "traceSha256": "d2e4818691efae2b15eb7ddf7336ee4fe306211ddcb0d1fa750410fd66666bc0",
+      "drawTraceSha256": "c38fb79755ff5ed0dd3b1d1f1a221dc34314166e42aa8509e3728b73d7053c5f",
+      "officeUpdates": 25235
+     },
+     "windows": {
+      "rebuilt": "...BC.BC.BC.BC.C..BC.BC.BC.BC.BC..BC.BC.BC?",
+      "model": "...BC.BC.BC.BC.C..BC.BC.BC.BC.BC..BC.BC.BC?",
+      "rows": [
+       {
+        "index": 0,
+        "tick": 325,
+        "ms": 5433.7,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 1,
+        "tick": 859,
+        "ms": 14267.3,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 2,
+        "tick": 1460,
+        "ms": 24265.4,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 3,
+        "tick": 2057,
+        "ms": 34270.2,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 2057,
+        "rebuiltArrivalMs": -3936.7,
+        "model": "B"
+       },
+       {
+        "index": 4,
+        "tick": 2660,
+        "ms": 44266.8,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 2660,
+        "rebuiltArrivalMs": -3931.4,
+        "model": "C"
+       },
+       {
+        "index": 5,
+        "tick": 3262,
+        "ms": 54266.5,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 6,
+        "tick": 3866,
+        "ms": 64267.6,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 3866,
+        "rebuiltArrivalMs": -3930.3,
+        "model": "B"
+       },
+       {
+        "index": 7,
+        "tick": 4467,
+        "ms": 74271.2,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 4467,
+        "rebuiltArrivalMs": -3952.8,
+        "model": "C"
+       },
+       {
+        "index": 8,
+        "tick": 5069,
+        "ms": 84271.8,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 9,
+        "tick": 5669,
+        "ms": 94276.4,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 5669,
+        "rebuiltArrivalMs": -3941.4,
+        "model": "B"
+       },
+       {
+        "index": 10,
+        "tick": 6269,
+        "ms": 104268.8,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 6269,
+        "rebuiltArrivalMs": -3932.8,
+        "model": "C"
+       },
+       {
+        "index": 11,
+        "tick": 6870,
+        "ms": 114268.1,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 12,
+        "tick": 7469,
+        "ms": 124275.5,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 7469,
+        "rebuiltArrivalMs": -3938.4,
+        "model": "B"
+       },
+       {
+        "index": 13,
+        "tick": 8077,
+        "ms": 134268.4,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 8077,
+        "rebuiltArrivalMs": -3935.4,
+        "model": "C"
+       },
+       {
+        "index": 14,
+        "tick": 8677,
+        "ms": 144271.7,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 15,
+        "tick": 9279,
+        "ms": 154278.7,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 9279,
+        "rebuiltArrivalMs": -3939.5,
+        "model": "C"
+       },
+       {
+        "index": 16,
+        "tick": 9877,
+        "ms": 164270.8,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 17,
+        "tick": 10479,
+        "ms": 174274,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 18,
+        "tick": 11080,
+        "ms": 184272.4,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 11080,
+        "rebuiltArrivalMs": -3948.7,
+        "model": "B"
+       },
+       {
+        "index": 19,
+        "tick": 11682,
+        "ms": 194270.7,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 11682,
+        "rebuiltArrivalMs": -3917.4,
+        "model": "C"
+       },
+       {
+        "index": 20,
+        "tick": 12281,
+        "ms": 204272.8,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 21,
+        "tick": 12881,
+        "ms": 214271.7,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 12881,
+        "rebuiltArrivalMs": -3949.4,
+        "model": "B"
+       },
+       {
+        "index": 22,
+        "tick": 13480,
+        "ms": 224273.3,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 13480,
+        "rebuiltArrivalMs": -3933.6,
+        "model": "C"
+       },
+       {
+        "index": 23,
+        "tick": 14081,
+        "ms": 234279.1,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 24,
+        "tick": 14683,
+        "ms": 244276.3,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 14683,
+        "rebuiltArrivalMs": -3934.9,
+        "model": "B"
+       },
+       {
+        "index": 25,
+        "tick": 15283,
+        "ms": 254272,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 15283,
+        "rebuiltArrivalMs": -3944.2,
+        "model": "C"
+       },
+       {
+        "index": 26,
+        "tick": 15886,
+        "ms": 264274.8,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 27,
+        "tick": 16488,
+        "ms": 274275.7,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 16488,
+        "rebuiltArrivalMs": -3927.5,
+        "model": "B"
+       },
+       {
+        "index": 28,
+        "tick": 17087,
+        "ms": 284274.1,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 17087,
+        "rebuiltArrivalMs": -3950.3,
+        "model": "C"
+       },
+       {
+        "index": 29,
+        "tick": 17684,
+        "ms": 294277.4,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 30,
+        "tick": 18282,
+        "ms": 304275.6,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 18282,
+        "rebuiltArrivalMs": -3950.6,
+        "model": "B"
+       },
+       {
+        "index": 31,
+        "tick": 18883,
+        "ms": 314276.1,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 18883,
+        "rebuiltArrivalMs": -3935.1,
+        "model": "C"
+       },
+       {
+        "index": 32,
+        "tick": 19484,
+        "ms": 324280.5,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 33,
+        "tick": 20081,
+        "ms": 334280,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 34,
+        "tick": 20683,
+        "ms": 344275,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 20683,
+        "rebuiltArrivalMs": -3933.3,
+        "model": "B"
+       },
+       {
+        "index": 35,
+        "tick": 21282,
+        "ms": 354271.5,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 21282,
+        "rebuiltArrivalMs": -3930.1,
+        "model": "C"
+       },
+       {
+        "index": 36,
+        "tick": 21882,
+        "ms": 364276.1,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 37,
+        "tick": 22482,
+        "ms": 374267.6,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 22482,
+        "rebuiltArrivalMs": -3963.5,
+        "model": "B"
+       },
+       {
+        "index": 38,
+        "tick": 23085,
+        "ms": 384278.7,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 23085,
+        "rebuiltArrivalMs": -3949.7,
+        "model": "C"
+       },
+       {
+        "index": 39,
+        "tick": 23684,
+        "ms": 394277.2,
+        "rebuilt": ".",
+        "model": "."
+       },
+       {
+        "index": 40,
+        "tick": 24289,
+        "ms": 404262.9,
+        "rebuilt": "B",
+        "rebuiltOccupantTick": 24289,
+        "rebuiltArrivalMs": -3913.6,
+        "model": "B"
+       },
+       {
+        "index": 41,
+        "tick": 24890,
+        "ms": 414276,
+        "rebuilt": "C",
+        "rebuiltOccupantTick": 24890,
+        "rebuiltArrivalMs": -3962.4,
+        "model": "C"
+       },
+       {
+        "index": 42,
+        "tick": 25488,
+        "ms": 424276,
+        "rebuilt": "?",
+        "rebuiltWhy": "unplayed",
+        "model": "?",
+        "modelWhy": "unplayed"
+       }
+      ]
+     },
+     "outcome": {
+      "rebuilt": {
+       "result": "6am",
+       "reason": null,
+       "officeUpdates": 25235,
+       "endMs": 420012.9
+      },
+      "model": {
+       "result": "6am",
+       "reason": null,
+       "frame": 25235,
+       "endMs": 420012.9
+      }
+     },
+     "drawStream": {
+      "status": "MATCHED_PREFIX",
+      "firstMismatch": null,
+      "firstMismatchMs": null,
+      "mismatchRuns": 0,
+      "mismatchedUpdates": 0,
+      "firstPersistent": null,
+      "compared": 25235
+     },
+     "maskLedger": {
+      "compared": 25235,
+      "mismatches": 0,
+      "paired": 168,
+      "rebuiltChanges": 168,
+      "modelChanges": 168,
+      "offsets": {
+       "0>1 +0": 42,
+       "1>2 +0": 42,
+       "2>3 +0": 42,
+       "3>0 +0": 42
+      }
+     },
+     "heldTapDrops": []
+    }
+   ],
+   "derived": {
+    "landed": {
+     "rebuiltVsPhone": {
+      "read": 42,
+      "occupied": 27,
+      "compared": 38,
+      "agree": 14,
+      "hits": 7,
+      "occupancyAgree": 22,
+      "unplayed": 4,
+      "firstDisagreement": {
+       "window": 6,
+       "phone": ".",
+       "side": "B"
+      }
+     },
+     "modelVsPhone": {
+      "read": 42,
+      "occupied": 27,
+      "compared": 38,
+      "agree": 14,
+      "hits": 7,
+      "occupancyAgree": 22,
+      "unplayed": 4,
+      "firstDisagreement": {
+       "window": 6,
+       "phone": ".",
+       "side": "B"
+      }
+     },
+     "rebuiltVsModel": {
+      "compared": 38,
+      "agree": 38,
+      "firstDisagreement": null
+     },
+     "rebuiltOutcome": {
+      "sameResult": false,
+      "deltaMs": -44863.3,
+      "agrees": false
+     },
+     "modelOutcome": {
+      "sameResult": false,
+      "deltaMs": -44863.3,
+      "agrees": false
+     }
+    },
+    "landed-r20": {
+     "rebuiltVsPhone": {
+      "read": 42,
+      "occupied": 27,
+      "compared": 42,
+      "agree": 16,
+      "hits": 9,
+      "occupancyAgree": 24,
+      "unplayed": 0,
+      "firstDisagreement": {
+       "window": 6,
+       "phone": ".",
+       "side": "B"
+      }
+     },
+     "modelVsPhone": {
+      "read": 42,
+      "occupied": 27,
+      "compared": 42,
+      "agree": 16,
+      "hits": 9,
+      "occupancyAgree": 24,
+      "unplayed": 0,
+      "firstDisagreement": {
+       "window": 6,
+       "phone": ".",
+       "side": "B"
+      }
+     },
+     "rebuiltVsModel": {
+      "compared": 42,
+      "agree": 42,
+      "firstDisagreement": null
+     },
+     "rebuiltOutcome": {
+      "sameResult": true,
+      "deltaMs": -2693.1,
+      "agrees": true
+     },
+     "modelOutcome": {
+      "sameResult": true,
+      "deltaMs": -2693.1,
+      "agrees": true
+     }
+    },
+    "modelRecordVsPhone": {
+     "read": 42,
+     "occupied": 27,
+     "compared": 29,
+     "agree": 12,
+     "hits": 8,
+     "occupancyAgree": 16,
+     "unplayed": 13,
+     "firstDisagreement": {
+      "window": 2,
+      "phone": ".",
+      "side": "C"
+     }
+    },
+    "atFirstDisagreement": {
+     "window": 6,
+     "phone": ".",
+     "rebuilt": {
+      "landed": "B",
+      "landed-r20": "B"
+     },
+     "model": {
+      "landed": "B",
+      "landed-r20": "B"
+     },
+     "modelRecord": "F"
+    }
+   },
+   "verdict": "DIVERGENT"
+  }
+ ],
+ "limitations": [
+  "The rebuild and the model are host programs; neither result is a phone observation and neither promotes anything.",
+  "Phone windows are the retained right-eyehole readers' codes (B/C/F, \".\" empty); they cannot see Balloon Boy or the vent Toys.",
+  "Visible responses are not input dispatch: the press-to-update rule and action-specific response lag remain assumptions. Each variant names its mapping.",
+  "Frame traces time the displayed frames; the runtime's loops, its catch-up rule and its integer-ms timer are inferred from them.",
+  "The harness raises one new-touch trigger per update; same-tick edges are counted per replay."
+ ],
+ "evidenceId": "recompile-phone-encounters-345f3672deb8dbc7"
+}

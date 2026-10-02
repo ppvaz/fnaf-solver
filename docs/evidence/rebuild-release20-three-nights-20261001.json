@@ -1,0 +1,400 @@
+{
+ "schema": "evidence-record-v1",
+ "date": "2026-10-01",
+ "step": "ROADMAP S2b",
+ "claimLevel": "MODEL_ONLY (the rebuilt runtime against DEVICE_MEASURED phone reads)",
+ "question": "On every traced phone night, does landing releases 20 ms after their send (instead of at the press latency) bring the recompiled game's outcome and windows to the phone's?",
+ "exploratory": "Follows docs/evidence/rebuild-release20-full06-20261001.json, which covered full-06 alone; no predeclared rule.",
+ "result": {
+  "path": "tools/recompile/results/phone-encounters-release20-3nights-20261001.json",
+  "sha256": "58caf6849613d8cdc532bbb5f05bedac68e18c4aadc6203c5e3b532f7c5c0fcf",
+  "evidenceId": "recompile-phone-encounters-345f3672deb8dbc7"
+ },
+ "config": {
+  "path": "tools/recompile/results/phone-encounter-nights-release20-3nights-20261001.json",
+  "sha256": "da396542a8dff74f487fd7e494dc243cb088955e6e42f90d8ccde48a8859465e"
+ },
+ "nights": [
+  {
+   "name": "tw-12",
+   "seed": 24850,
+   "phone": {
+    "windows": "?...........C?????????????????????????????",
+    "terminal": "UNKNOWN"
+   },
+   "variants": {
+    "landed": {
+     "rebuilt": {
+      "windows": ".........BC.....BF.BC..CB.C.CBFC..????????",
+      "outcome": {
+       "result": "death",
+       "reason": "Withered Foxy",
+       "officeUpdates": 21040,
+       "endMs": 350391.1,
+       "attackSetTick": 21017,
+       "attackSetMs": 350007.7
+      }
+     },
+     "derived": {
+      "rebuiltVsPhone": {
+       "read": 12,
+       "occupied": 1,
+       "compared": 12,
+       "agree": 9,
+       "hits": 0,
+       "occupancyAgree": 9,
+       "unplayed": 0,
+       "firstDisagreement": {
+        "window": 9,
+        "phone": ".",
+        "side": "B"
+       }
+      },
+      "modelVsPhone": {
+       "read": 12,
+       "occupied": 1,
+       "compared": 12,
+       "agree": 9,
+       "hits": 0,
+       "occupancyAgree": 9,
+       "unplayed": 0,
+       "firstDisagreement": {
+        "window": 9,
+        "phone": ".",
+        "side": "B"
+       }
+      },
+      "rebuiltVsModel": {
+       "compared": 34,
+       "agree": 34,
+       "firstDisagreement": null
+      },
+      "rebuiltOutcome": {
+       "sameResult": null,
+       "deltaMs": null,
+       "agrees": null
+      },
+      "modelOutcome": {
+       "sameResult": null,
+       "deltaMs": null,
+       "agrees": null
+      }
+     }
+    },
+    "landed-r20": {
+     "rebuilt": {
+      "windows": ".........BC.....BF.BC..CB.C.CBFC..????????",
+      "outcome": {
+       "result": "death",
+       "reason": "Withered Foxy",
+       "officeUpdates": 21040,
+       "endMs": 350391.1,
+       "attackSetTick": 21017,
+       "attackSetMs": 350007.7
+      }
+     },
+     "derived": {
+      "rebuiltVsPhone": {
+       "read": 12,
+       "occupied": 1,
+       "compared": 12,
+       "agree": 9,
+       "hits": 0,
+       "occupancyAgree": 9,
+       "unplayed": 0,
+       "firstDisagreement": {
+        "window": 9,
+        "phone": ".",
+        "side": "B"
+       }
+      },
+      "modelVsPhone": {
+       "read": 12,
+       "occupied": 1,
+       "compared": 12,
+       "agree": 9,
+       "hits": 0,
+       "occupancyAgree": 9,
+       "unplayed": 0,
+       "firstDisagreement": {
+        "window": 9,
+        "phone": ".",
+        "side": "B"
+       }
+      },
+      "rebuiltVsModel": {
+       "compared": 34,
+       "agree": 34,
+       "firstDisagreement": null
+      },
+      "rebuiltOutcome": {
+       "sameResult": null,
+       "deltaMs": null,
+       "agrees": null
+      },
+      "modelOutcome": {
+       "sameResult": null,
+       "deltaMs": null,
+       "agrees": null
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "full-04",
+   "seed": 34043,
+   "phone": {
+    "windows": "...*C.CBC.????????????????????????????????",
+    "terminal": "death"
+   },
+   "variants": {
+    "landed": {
+     "rebuilt": {
+      "windows": "...B??????????????????????????????????????",
+      "outcome": {
+       "result": "death",
+       "reason": "Withered Bonnie",
+       "officeUpdates": 2215,
+       "endMs": 36832.2,
+       "attackSetTick": 2183,
+       "attackSetMs": 36298.3
+      }
+     },
+     "derived": {
+      "rebuiltVsPhone": {
+       "read": 10,
+       "occupied": 5,
+       "compared": 4,
+       "agree": 3,
+       "hits": 0,
+       "occupancyAgree": 4,
+       "unplayed": 6,
+       "firstDisagreement": {
+        "window": 3,
+        "phone": "*",
+        "side": "B"
+       }
+      },
+      "modelVsPhone": {
+       "read": 10,
+       "occupied": 5,
+       "compared": 4,
+       "agree": 3,
+       "hits": 0,
+       "occupancyAgree": 4,
+       "unplayed": 6,
+       "firstDisagreement": {
+        "window": 3,
+        "phone": "*",
+        "side": "B"
+       }
+      },
+      "rebuiltVsModel": {
+       "compared": 4,
+       "agree": 4,
+       "firstDisagreement": null
+      },
+      "rebuiltOutcome": {
+       "sameResult": true,
+       "deltaMs": -67119.8,
+       "agrees": false
+      },
+      "modelOutcome": {
+       "sameResult": true,
+       "deltaMs": -67119.8,
+       "agrees": false
+      }
+     }
+    },
+    "landed-r20": {
+     "rebuilt": {
+      "windows": "...BC.BC.BC.BC.BC.CBFC.B.C.CBC.CBC.BC.BC..",
+      "outcome": {
+       "result": "6am",
+       "reason": null,
+       "officeUpdates": 25223,
+       "endMs": 420032.7
+      }
+     },
+     "derived": {
+      "rebuiltVsPhone": {
+       "read": 10,
+       "occupied": 5,
+       "compared": 10,
+       "agree": 5,
+       "hits": 1,
+       "occupancyAgree": 8,
+       "unplayed": 0,
+       "firstDisagreement": {
+        "window": 3,
+        "phone": "*",
+        "side": "B"
+       }
+      },
+      "modelVsPhone": {
+       "read": 10,
+       "occupied": 5,
+       "compared": 10,
+       "agree": 5,
+       "hits": 1,
+       "occupancyAgree": 8,
+       "unplayed": 0,
+       "firstDisagreement": {
+        "window": 3,
+        "phone": "*",
+        "side": "B"
+       }
+      },
+      "rebuiltVsModel": {
+       "compared": 42,
+       "agree": 42,
+       "firstDisagreement": null
+      },
+      "rebuiltOutcome": {
+       "sameResult": false,
+       "deltaMs": 316080.7,
+       "agrees": false
+      },
+      "modelOutcome": {
+       "sameResult": false,
+       "deltaMs": 316080.7,
+       "agrees": false
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "full-06",
+   "seed": 47593,
+   "phone": {
+    "windows": "...BC..BC.BC.BC..BC.BCF.BCFBC.B.CBC.BC.CBC",
+    "terminal": "6am"
+   },
+   "variants": {
+    "landed": {
+     "rebuilt": {
+      "windows": "...BC.BC.BC.BC.C..BC.BC.BC.BC.BC..BC.B????",
+      "outcome": {
+       "result": "death",
+       "reason": "Withered Bonnie",
+       "officeUpdates": 22698,
+       "endMs": 377842.7,
+       "attackSetTick": 22666,
+       "attackSetMs": 377310.3
+      }
+     },
+     "derived": {
+      "rebuiltVsPhone": {
+       "read": 42,
+       "occupied": 27,
+       "compared": 38,
+       "agree": 14,
+       "hits": 7,
+       "occupancyAgree": 22,
+       "unplayed": 4,
+       "firstDisagreement": {
+        "window": 6,
+        "phone": ".",
+        "side": "B"
+       }
+      },
+      "modelVsPhone": {
+       "read": 42,
+       "occupied": 27,
+       "compared": 38,
+       "agree": 14,
+       "hits": 7,
+       "occupancyAgree": 22,
+       "unplayed": 4,
+       "firstDisagreement": {
+        "window": 6,
+        "phone": ".",
+        "side": "B"
+       }
+      },
+      "rebuiltVsModel": {
+       "compared": 38,
+       "agree": 38,
+       "firstDisagreement": null
+      },
+      "rebuiltOutcome": {
+       "sameResult": false,
+       "deltaMs": -44863.3,
+       "agrees": false
+      },
+      "modelOutcome": {
+       "sameResult": false,
+       "deltaMs": -44863.3,
+       "agrees": false
+      }
+     }
+    },
+    "landed-r20": {
+     "rebuilt": {
+      "windows": "...BC.BC.BC.BC.C..BC.BC.BC.BC.BC..BC.BC.BC",
+      "outcome": {
+       "result": "6am",
+       "reason": null,
+       "officeUpdates": 25235,
+       "endMs": 420012.9
+      }
+     },
+     "derived": {
+      "rebuiltVsPhone": {
+       "read": 42,
+       "occupied": 27,
+       "compared": 42,
+       "agree": 16,
+       "hits": 9,
+       "occupancyAgree": 24,
+       "unplayed": 0,
+       "firstDisagreement": {
+        "window": 6,
+        "phone": ".",
+        "side": "B"
+       }
+      },
+      "modelVsPhone": {
+       "read": 42,
+       "occupied": 27,
+       "compared": 42,
+       "agree": 16,
+       "hits": 9,
+       "occupancyAgree": 24,
+       "unplayed": 0,
+       "firstDisagreement": {
+        "window": 6,
+        "phone": ".",
+        "side": "B"
+       }
+      },
+      "rebuiltVsModel": {
+       "compared": 42,
+       "agree": 42,
+       "firstDisagreement": null
+      },
+      "rebuiltOutcome": {
+       "sameResult": true,
+       "deltaMs": -2693.1,
+       "agrees": true
+      },
+      "modelOutcome": {
+       "sameResult": true,
+       "deltaMs": -2693.1,
+       "agrees": true
+      }
+     }
+    }
+   }
+  }
+ ],
+ "reading": {
+  "full06": "Releases at 20 ms turn the rebuild's death at 377.8 s into the phone's 6 AM; windows 16 of 42 either way, first disagreement at window 6.",
+  "full04": "The phone died about 104 s in. With press-latency releases the rebuild died at 36.8 s (Withered Bonnie); with releases at 20 ms it survives to 6 AM. Neither matches the phone, whose windows part from the rebuild's at window 3.",
+  "tw12": "Unchanged by the release: the rebuild dies to Withered Foxy at 350.4 s either way; the phone's outcome is unknown and its windows agree on 9 of 12 read.",
+  "overall": "The release mapping decides outcomes (it is why the model and the rebuild lost full-06), but it is not what separates the programs from the phone: on every night the encounters part early (windows 3, 6, 9) under either mapping, so the divergence lies in the inputs the replays are given. The read seed (the pre-registered 10/20 readout night) is the next measurement of those inputs."
+ },
+ "id": "rebuild-release20-3nights-14895ce02ba0b25e"
+}
