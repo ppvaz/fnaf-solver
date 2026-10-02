@@ -225,6 +225,15 @@ function assertSuite(recordPath = null) {
     check(`${key} cannot clear night 1`, r.survived >= 22, pct(r));
   }
 
+  // 7. Every policy the census can name runs a night. A wrapper that drops
+  //    the api its reset is handed breaks a policy that keeps it, on the
+  //    first frame (minus7+gf did).
+  for (const [key, make] of Object.entries(POLICIES)) {
+    let error = null;
+    try { runPolicy({ policy: make(1, 0), night: 1, seed: 1 }); } catch (e) { error = e.message; }
+    check(`${key} cannot run a night`, error === null, error ?? '');
+  }
+
   if (recordPath) {
     const sourceFiles = ['packages/propose/parked/minus7/reactive-pilot.ts', 'packages/propose/parked/minus7/cyclesearch.ts', 'packages/propose/parked/minus7/policytest.ts',
       'packages/propose/parked/minus7/policy.ts', 'packages/propose/parked/minus7/policybaselines.ts', 'packages/source/src/games/fnaf2/plant-model.ts',

@@ -538,7 +538,7 @@ export function goldenGuard(inner, { observation = null } = {}) {
     name: `${inner.name}+gf`,
     version: 1,
     observation: observation ?? inner.observation,
-    reset() { if (inner.reset) inner.reset(); holdUntil = -1e9; },
+    reset(api) { if (inner.reset) inner.reset(api); holdUntil = -1e9; },
     step(obs, api) {
       const f = api.frame;
       if (obs.gfPresent && !obs.maskFullyOn) {
