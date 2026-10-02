@@ -76,8 +76,9 @@ function main(argv) {
     if (k > 0) s.rng.state = lcg(seed & 0xffff, k);
     // ledgers
     const hops = [];
-    const origAdvance = s.advance.bind(s);
-    s.advance = u => { const from = u.path[u.idx]; origAdvance(u); hops.push([s.frame, u.id, from, u.path[u.idx]]); };
+    // The Sim moves a unit through advanceUnit (its old name, advance, is PlantModel's clock since 2026-09-30).
+    const origAdvance = s.advanceUnit.bind(s);
+    s.advanceUnit = u => { const from = u.path[u.idx]; origAdvance(u); hops.push([s.frame, u.id, from, u.path[u.idx]]); };
     const maxFrames = cfg.maxFrames ?? 30000, windowMs = cfg.windowMs ?? 1500;
     let i = 0, cum = 0; const cumAt = [0];
     const windows = []; let open = null;

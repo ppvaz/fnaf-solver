@@ -3722,8 +3722,11 @@
         "@sixam/review/renamed-path",
         "@sixam/source/fnaf2",
         "node:assert/strict",
+        "node:child_process",
         "node:crypto",
         "node:fs",
+        "node:os",
+        "node:path",
         "node:url"
       ]
     },

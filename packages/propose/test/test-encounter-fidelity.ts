@@ -1,8 +1,11 @@
 #!/usr/bin/env node
 // Scientific scoring and the default-off census option are part of the green lane.
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { score, windowCode } from '../../review/venue-grid/encounter-replay.ts';
 import { Sim } from '@sixam/source/fnaf2';
 import { applySimOpts } from '../bin/census/winner-census.ts';
@@ -24,6 +27,22 @@ assert.equal(score('.', '?').unknownModel, 1, 'an unclassified model character i
 assert.equal(windowCode(null, 1500, 1499), '?', 'a terminally truncated empty window is UNKNOWN');
 assert.equal(windowCode(null, 1500, 1500), '.', 'a fully observed empty window is empty');
 assert.equal(windowCode('withchica', 1500, 1499), 'C', 'a positive occupant read survives terminal truncation');
+
+// The replay tool plays a night and keeps every unit's hop, by wrapping the Sim's own unit move.
+{
+  const dir = mkdtempSync(join(tmpdir(), 'encounter-replay-'));
+  const presses = join(dir, 'presses.json');
+  writeFileSync(presses, JSON.stringify({ actions: [[1000, 'press', 'monitor'], [1100, 'release', 'monitor']] }));
+  const cfg = join(dir, 'cfg.json');
+  writeFileSync(cfg, JSON.stringify({ night: 6, maxFrames: 3600, quiet: true, nights: [{ name: 'hops', presses, seeds: [24850] }] }));
+  const out = join(dir, 'out.json');
+  const run = spawnSync(process.execPath, [fileURLToPath(new URL('../../review/venue-grid/encounter-replay.ts', import.meta.url)), cfg, out],
+    { encoding: 'utf8' });
+  assert.equal(run.status, 0, `encounter-replay.ts fails on a night: ${run.stderr.split('\n').find((l) => /Error/.test(l))}`);
+  const row = JSON.parse(readFileSync(out, 'utf8')).out[0].rows[0];
+  assert.ok(row.hops.length > 0 && Object.keys(row.hopCount).length > 0, 'the replay records no unit hop in a minute of Night 6');
+  rmSync(dir, { recursive: true, force: true });
+}
 
 const record = JSON.parse(readFileSync(new URL('../../../docs/evidence/model-encounter-fidelity-20260927.json', import.meta.url)));
 assert.equal(record.id, 'model-encounter-fidelity-20260927');
