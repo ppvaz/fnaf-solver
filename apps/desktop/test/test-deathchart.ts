@@ -11,10 +11,11 @@
 //      on the next and two panels cannot be compared.
 //   3. A long label runs into the count column, which is what the first
 //      render did ("...at a 5s check)99").
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
+import ts from 'typescript';
 import { census, chart, clock, median, renderPng, REASON_ORDER } from '../bin/deathchart.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -25,17 +26,47 @@ const check = (name: string, cond: unknown, detail = '') => {
 
 // ------------------------------------------- every engine death has a slice
 // Read off the engine rather than a list kept here: a list kept here is a
-// second copy that goes stale the day someone adds a cause. The engine is
-// plant-model.js and the mechanism modules it imports, and kill() is called
-// from several of them.
+// second copy that goes stale the day someone adds a cause. kill() is called
+// across the FNaF 2 Source, so every module there is parsed and every kill()
+// call read, whatever its receiver or quotes. A reason carried in a field
+// (attack-animation.ts's `a.reason`) is read from the `reason:` literals the
+// same module assigns; a reason the chart cannot read fails here.
 const MODEL = join(HERE, '../../../packages/source/src/games/fnaf2');
-const entry = readFileSync(join(MODEL, 'plant-model.ts'), 'utf8');
-const parts = [...entry.matchAll(/^import .* from '\.\/(plant-[\w-]+\.ts)';$/gm)].map(m => m[1]);
-check('the engine\'s mechanism modules are read', parts.length >= 5, parts.join());
-const engine = [entry, ...parts.map(name => readFileSync(join(MODEL, name), 'utf8'))].join('\n');
-const emitted = [...engine.matchAll(/this\.kill\(\s*'([^']+)'/g)].map(m => m[1]);
-check('the engine emits death reasons at all', emitted.length >= 6, `${emitted.length}`);
-for (const r of new Set(emitted))
+/** The string literals an expression can evaluate to, or null when it is not only literals. */
+const literals = (node: ts.Expression): string[] | null => {
+  if (ts.isStringLiteralLike(node)) return [node.text];
+  if (ts.isParenthesizedExpression(node)) return literals(node.expression);
+  if (!ts.isConditionalExpression(node)) return null;
+  const [yes, no] = [literals(node.whenTrue), literals(node.whenFalse)];
+  return yes && no ? [...yes, ...no] : null;
+};
+const emitted = new Set<string>();
+const unread: string[] = [];
+const modules = readdirSync(MODEL).filter(name => name.endsWith('.ts'));
+for (const name of modules) {
+  const source = ts.createSourceFile(name, readFileSync(join(MODEL, name), 'utf8'), ts.ScriptTarget.Latest, true);
+  const calls: ts.CallExpression[] = [];
+  const fields: ts.Expression[] = [];
+  const visit = (node: ts.Node): void => {
+    if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression) && node.expression.name.text === 'kill') calls.push(node);
+    if (ts.isPropertyAssignment(node) && ts.isIdentifier(node.name) && node.name.text === 'reason') fields.push(node.initializer);
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+  const where = (node: ts.Node) => `${name}:${source.getLineAndCharacterOfPosition(node.getStart()).line + 1}`;
+  for (const call of calls) {
+    const [reason] = call.arguments;
+    const direct = reason ? literals(reason) : null;
+    const viaField = reason && ts.isPropertyAccessExpression(reason) && reason.name.text === 'reason' && fields.length
+      ? fields.map(literals) : null;
+    if (direct) direct.forEach(item => emitted.add(item));
+    else if (viaField && viaField.every(Boolean)) viaField.forEach(items => items?.forEach(item => emitted.add(item)));
+    else unread.push(`${where(call)} kill(${reason?.getText() ?? ''})`);
+  }
+}
+check('every engine kill() names a reason the chart can read', unread.length === 0, unread.join('; '));
+check('the engine emits death reasons at all', emitted.size >= 6, [...emitted].join());
+for (const r of emitted)
   check(`"${r}" has a slice`, REASON_ORDER.includes(r),
     'add it to REASON_ORDER and re-run the palette validator for the new adjacency');
 

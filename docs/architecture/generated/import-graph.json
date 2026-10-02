@@ -219,11 +219,11 @@
       "file": "apps/desktop/test/test-deathchart.ts",
       "imports": [
         "../bin/deathchart.ts",
-        "\\.\\/(plant-[\\w-]+\\.ts)",
         "node:fs",
         "node:os",
         "node:path",
-        "node:url"
+        "node:url",
+        "typescript"
       ]
     },
     {
