@@ -36,6 +36,16 @@ for (const args of [['clockmap', '--live'], ['clockmap', '--count', '3'], ['cloc
   assert.doesNotMatch(result.stdout, /result=|evidence=/);
 }
 
+// `grade RUN_ID` takes its id; every other command takes none, and a misspelt flag is refused.
+const graded = run(['grade', 'no-such-run']);
+assert.equal(graded.status, 2);
+assert.match(graded.stderr, /no retained result at artifacts\/no-such-run\/result\.json/);
+assert.match(run(['grade']).stderr, /grade requires RUN_ID/);
+assert.match(run(['campaign', 'k3']).stderr, /campaign takes no argument k3/);
+assert.match(run(['campaign', '--profle', 'fixture-hid-screencap']).stderr, /--profle/);
+assert.match(run(['campaign', '--nights=6', '--max-attempts=1', '--profile=fixture-hid-screencap', '--json']).stdout, /"maxAttempts": 1/,
+  'the --flag=value form still reads');
+
 const oneAttempt = run(['campaign', '--profile', 'fixture-hid-screencap', '--nights', '6',
   '--max-attempts', '1', '--json']);
 assert.equal(oneAttempt.status, 0, oneAttempt.stderr);

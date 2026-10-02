@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 /** CLI composition root for the campaign executor: nothing here touches a phone without --live --confirm-live. */
+import { existsSync } from 'node:fs';
 import { readFile, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { parseArgs } from 'node:util';
 import { AdbDeviceBridge } from '@sixam/play/campaign/adb-bridge';
 import { CampaignStateMachine, DEFAULT_CAMPAIGN_NIGHTS, makeCampaignSpec } from '@sixam/play/campaign/campaign';
 import { type CampaignPorts, DeviceCampaignRunner } from '@sixam/play/campaign/campaign-runner';
@@ -14,7 +16,7 @@ import { installCampaignSignalHandlers } from '@sixam/play/campaign/campaign-sig
 import { bindVenueFromPreflight, dryRunVenue, loadVenueBindings, renderVenueCheck } from '@sixam/play/campaign/venue';
 import { fitClockMap, CompanionControlTransport } from '@sixam/play';
 import { resolveDeviceProfile } from '@sixam/source';
-import { isRecord } from '@sixam/kernel';
+import { isOneOf, isRecord } from '@sixam/kernel';
 import { stableHash } from '@sixam/kernel/contracts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
@@ -76,9 +78,27 @@ Options:
   --out FILE    retain the clock-map-v1 artifact at this path`);
 }
 
+/** The commands. Only `campaign` touches a phone; tools/architecture-test.ts reads this list. */
+const COMMANDS = ['help', 'grade', 'preflight', 'campaign', 'clockmap'] as const;
+/** Every option; a value-taking one reads `--name VALUE` and `--name=VALUE`. */
+const FLAGS = {
+  help: { type: 'boolean', short: 'h' }, 'dry-run': { type: 'boolean' }, live: { type: 'boolean' }, 'confirm-live': { type: 'boolean' },
+  json: { type: 'boolean' }, guided: { type: 'boolean' }, 'machine-only': { type: 'boolean' },
+  'arm-observe-once': { type: 'boolean' }, 'arm-none': { type: 'boolean' }, 'night7-dials': { type: 'string' },
+  'allow-save-reset': { type: 'boolean' }, 'night-anchor-aim-ms': { type: 'string' }, 'night-anchor-max-k': { type: 'string' },
+  'night-anchor-period-ms': { type: 'string' }, 'night-anchor-strict': { type: 'boolean' },
+  'night-anchor-authorize-on-latch': { type: 'boolean' }, 'teach-overlay': { type: 'boolean' },
+  'no-helper': { type: 'boolean' }, 'no-hid': { type: 'boolean' }, serial: { type: 'string' }, nights: { type: 'string' },
+  'max-attempts': { type: 'string' }, 'story-start': { type: 'string' }, 'save-cursor': { type: 'string' },
+  profile: { type: 'string' }, calibration: { type: 'string' }, bundle: { type: 'string' }, qualification: { type: 'string' },
+  'venue-binding': { type: 'string', multiple: true }, 'forbid-mechanic': { type: 'string', multiple: true },
+  'bind-venue': { type: 'string' }, by: { type: 'string' }, count: { type: 'string' }, 'span-ms': { type: 'string' },
+  source: { type: 'string' }, out: { type: 'string' }, ports: { type: 'string' },
+} as const;
+
 /** The command line, as parse() reads it. */
 interface Options {
-  command: 'help' | 'grade' | 'preflight' | 'campaign' | 'clockmap', profile: string, live: boolean, confirmLive: boolean, json: boolean, serial: string | undefined, nights: number[],
+  command: (typeof COMMANDS)[number], run: string | undefined, profile: string, live: boolean, confirmLive: boolean, json: boolean, serial: string | undefined, nights: number[],
   maxAttempts: number, storyStart: string | undefined, saveCursor: number | undefined, requireHelper: boolean, requireHid: boolean,
   guided: boolean, machineOnly: boolean, armMode: 'blocking' | 'observe-once' | 'none', allowSaveReset: boolean,
   nightAnchorAimMs: number | null, nightAnchorMaxK: number | null, nightAnchorPeriodMs: number, nightAnchorStrict: boolean,
@@ -88,106 +108,45 @@ interface Options {
   night7Dials?: unknown,
 }
 
-function parse(argv: string[]): Options | { command: 'help', help: true } {
-  const [first = 'help', ...tail] = argv;
-  const knownCommands = new Set(['help', 'grade', 'preflight', 'campaign', 'clockmap']);
-  if (first === '--help' || first === '-h') return { command: 'help', help: true };
+function parse(argv: string[]): Options {
+  const [first = 'help'] = argv;
   // The fixture dry-run that used to be the default left with the service path
   // on 2026-09-25; options without a command are refused rather than guessed.
-  if (first.startsWith('-')) throw new Error(`a command is required before ${first}; see --help`);
-  const command = first;
-  const rest = tail;
-  if (!knownCommands.has(command)) throw new Error(`unknown command: ${first}`);
-  // knownCommands holds command, or parse threw above.
-  const options: Options = { command: command as Options['command'], profile: 'hid-mediaprojection', live: false, confirmLive: false,
-    json: false, serial: undefined, nights: [...DEFAULT_CAMPAIGN_NIGHTS], maxAttempts: 3, storyStart: undefined, saveCursor: undefined,
-    requireHelper: true, requireHid: true,
-    guided: false, machineOnly: false, armMode: 'blocking', allowSaveReset: false, nightAnchorAimMs: null, nightAnchorMaxK: null, nightAnchorPeriodMs: 1000, nightAnchorStrict: false, nightAnchorAuthorizeOnLatch: false, teachOverlay: false, calibration: undefined, bundle: undefined,
-    qualification: undefined, venueBindings: [], bindVenue: undefined, by: undefined, ports: undefined,
-    forbidMechanics: [],
-    count: 12, spanMs: 30000, out: undefined, source: 'uptime' };
-  for (let index = 0; index < rest.length; index += 1) {
-    const item = rest[index];
-    if (item === '--help' || item === '-h') options.command = 'help';
-    else if (item === '--dry-run') options.live = false;
-    else if (item === '--live') options.live = true;
-    else if (item === '--confirm-live') options.confirmLive = true;
-    else if (item === '--json') options.json = true;
-    else if (item === '--guided') options.guided = true;
-    else if (item === '--machine-only') options.machineOnly = true;
-    else if (item === '--arm-observe-once') options.armMode = 'observe-once';
-    else if (item === '--arm-none') options.armMode = 'none';
-    else if (item === '--night7-dials') {
-      const raw = rest[++index];
-      if (!raw || raw.startsWith('--')) throw new Error('--night7-dials requires a JSON object');
-      try { options.night7Dials = JSON.parse(raw); }
-      catch { throw new Error('--night7-dials must be valid JSON'); }
-    }
-    else if (item === '--allow-save-reset') options.allowSaveReset = true;
-    else if (item === '--night-anchor-aim-ms') options.nightAnchorAimMs = Number(rest[++index]);
-    else if (item === '--night-anchor-max-k') options.nightAnchorMaxK = Number(rest[++index]);
-    else if (item === '--night-anchor-period-ms') options.nightAnchorPeriodMs = Number(rest[++index]);
-    else if (item === '--night-anchor-strict') options.nightAnchorStrict = true;
-    else if (item === '--night-anchor-authorize-on-latch') options.nightAnchorAuthorizeOnLatch = true;
-    else if (item === '--teach-overlay') options.teachOverlay = true;
-    else if (item === '--no-helper') options.requireHelper = false;
-    else if (item === '--no-hid') options.requireHid = false;
-    else if (item === '--serial') options.serial = rest[++index];
-    else if (item.startsWith('--serial=')) options.serial = item.slice('--serial='.length);
-    else if (item === '--nights') options.nights = rest[++index].split(',').map(Number);
-    else if (item.startsWith('--nights=')) options.nights = item.slice('--nights='.length).split(',').map(Number);
-    else if (item === '--max-attempts') options.maxAttempts = Number(rest[++index]);
-    else if (item.startsWith('--max-attempts=')) options.maxAttempts = Number(item.slice('--max-attempts='.length));
-    else if (item === '--story-start') options.storyStart = rest[++index];
-    else if (item.startsWith('--story-start=')) options.storyStart = item.slice('--story-start='.length);
-    else if (item === '--save-cursor') options.saveCursor = Number(rest[++index]);
-    else if (item.startsWith('--save-cursor=')) options.saveCursor = Number(item.slice('--save-cursor='.length));
-    else if (item === '--profile') options.profile = rest[++index];
-    else if (item.startsWith('--profile=')) options.profile = item.slice('--profile='.length);
-    else if (item === '--calibration') options.calibration = rest[++index];
-    else if (item.startsWith('--calibration=')) options.calibration = item.slice('--calibration='.length);
-    else if (item === '--bundle') options.bundle = rest[++index];
-    else if (item.startsWith('--bundle=')) options.bundle = item.slice('--bundle='.length);
-    else if (item === '--qualification') options.qualification = rest[++index];
-    else if (item.startsWith('--qualification=')) options.qualification = item.slice('--qualification='.length);
-    else if (item === '--venue-binding') {
-      const path = rest[++index];
-      if (!path || path.startsWith('--')) throw new Error('--venue-binding requires a file');
-      options.venueBindings.push(path);
-    }
-    else if (item.startsWith('--venue-binding=')) options.venueBindings.push(item.slice('--venue-binding='.length));
-    else if (item === '--forbid-mechanic') {
-      const id = rest[++index];
-      if (!id || id.startsWith('--')) throw new Error('--forbid-mechanic requires a mechanic id');
-      options.forbidMechanics.push(id);
-    }
-    else if (item.startsWith('--forbid-mechanic=')) options.forbidMechanics.push(item.slice('--forbid-mechanic='.length));
-    else if (item === '--bind-venue') {
-      options.bindVenue = rest[++index];
-      if (!options.bindVenue || options.bindVenue.startsWith('--')) throw new Error('--bind-venue requires a file');
-    }
-    else if (item === '--by') {
-      options.by = rest[++index];
-      if (!options.by || options.by.startsWith('--')) throw new Error('--by requires a name');
-    }
-    else if (item === '--count') options.count = Number(rest[++index]);
-    else if (item.startsWith('--count=')) options.count = Number(item.slice('--count='.length));
-    else if (item === '--span-ms') options.spanMs = Number(rest[++index]);
-    else if (item.startsWith('--span-ms=')) options.spanMs = Number(item.slice('--span-ms='.length));
-    else if (item === '--source') options.source = rest[++index];
-    else if (item.startsWith('--source=')) options.source = item.slice('--source='.length);
-    else if (item === '--out') {
-      options.out = rest[++index];
-      if (!options.out || options.out.startsWith('--')) throw new Error('--out requires a file');
-    }
-    else if (item.startsWith('--out=')) {
-      options.out = item.slice('--out='.length);
-      if (!options.out) throw new Error('--out requires a file');
-    }
-    else if (item === '--ports') options.ports = rest[++index];
-    else if (item.startsWith('--ports=')) options.ports = item.slice('--ports='.length);
-    else throw new Error(`unknown option: ${item}`);
+  if (first.startsWith('-') && first !== '--help' && first !== '-h') throw new Error(`a command is required before ${first}; see --help`);
+  const { values, positionals } = parseArgs({ args: argv, options: FLAGS, allowPositionals: true, strict: true });
+  const [named = 'help', ...rest] = positionals;
+  if (!isOneOf(COMMANDS, named)) throw new Error(`unknown command: ${named}`);
+  const command = values.help ? 'help' : named;
+  if (rest.length > (command === 'grade' ? 1 : 0)) throw new Error(`${command} takes no argument ${rest.join(' ')}`);
+  const text = (name: keyof typeof FLAGS, value: string | undefined) => {
+    if (value === '') throw new Error(`--${name} requires a value`);
+    return value;
+  };
+  const number = (value: string | undefined, absent: number) => (value === undefined ? absent : Number(value));
+  let night7Dials: unknown;
+  if (values['night7-dials'] !== undefined) {
+    try { night7Dials = JSON.parse(values['night7-dials']); } catch { throw new Error('--night7-dials must be valid JSON'); }
   }
+  const options: Options = { command, run: rest[0], profile: values.profile ?? 'hid-mediaprojection',
+    // Dry unless --live, and --dry-run wins over it wherever it stands.
+    live: values.live === true && values['dry-run'] !== true, confirmLive: values['confirm-live'] === true,
+    json: values.json === true, serial: values.serial,
+    nights: values.nights === undefined ? [...DEFAULT_CAMPAIGN_NIGHTS] : values.nights.split(',').map(Number),
+    maxAttempts: number(values['max-attempts'], 3), storyStart: values['story-start'],
+    saveCursor: values['save-cursor'] === undefined ? undefined : Number(values['save-cursor']),
+    requireHelper: values['no-helper'] !== true, requireHid: values['no-hid'] !== true,
+    guided: values.guided === true, machineOnly: values['machine-only'] === true,
+    armMode: values['arm-none'] ? 'none' : values['arm-observe-once'] ? 'observe-once' : 'blocking',
+    allowSaveReset: values['allow-save-reset'] === true,
+    nightAnchorAimMs: values['night-anchor-aim-ms'] === undefined ? null : Number(values['night-anchor-aim-ms']),
+    nightAnchorMaxK: values['night-anchor-max-k'] === undefined ? null : Number(values['night-anchor-max-k']),
+    nightAnchorPeriodMs: number(values['night-anchor-period-ms'], 1000), nightAnchorStrict: values['night-anchor-strict'] === true,
+    nightAnchorAuthorizeOnLatch: values['night-anchor-authorize-on-latch'] === true, teachOverlay: values['teach-overlay'] === true,
+    calibration: values.calibration, bundle: values.bundle, qualification: values.qualification,
+    venueBindings: values['venue-binding'] ?? [], bindVenue: text('bind-venue', values['bind-venue']), by: text('by', values.by),
+    ports: values.ports, forbidMechanics: values['forbid-mechanic'] ?? [], count: number(values.count, 12),
+    spanMs: number(values['span-ms'], 30000), out: text('out', values.out), source: values.source ?? 'uptime',
+    ...(night7Dials === undefined ? {} : { night7Dials }) };
   // Refused before any phone is queried: a binding names who made it.
   if (options.bindVenue !== undefined && options.command !== 'preflight')
     throw new Error('--bind-venue belongs to preflight');
@@ -269,8 +228,10 @@ async function main(argv = process.argv.slice(2)) {
   const options = parse(argv);
   if (options.command === 'help') return help();
   if (options.command === 'grade') {
-    const run = argv[1]; if (!run) throw new Error('grade requires RUN_ID');
-    console.log(await readFile(join(ROOT, 'artifacts', run, 'result.json'), 'utf8')); return;
+    if (!options.run) throw new Error('grade requires RUN_ID');
+    const path = join('artifacts', options.run, 'result.json');
+    if (!existsSync(join(ROOT, path))) throw new Error(`no retained result at ${path}`);
+    console.log(await readFile(join(ROOT, path), 'utf8')); return;
   }
   if (options.command === 'clockmap') {
     if (options.live) throw new Error('clockmap is a read-only measurement; --live does not apply');

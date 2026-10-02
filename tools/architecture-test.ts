@@ -599,7 +599,7 @@ assert.match(cli, /if \(!options\.confirmLive\) throw new Error\('live campaign 
 // No second way onto the phone: the generic `live` command and the fixture
 // service behind it were retired on 2026-09-25, and must not come back as a
 // path around the campaign's gates.
-const commands = cli.match(/const knownCommands = new Set\(\[([^\]]*)\]\)/)?.[1] ?? '';
+const commands = cli.match(/const COMMANDS = \[([^\]]*)\] as const;/)?.[1] ?? '';
 assert.ok(commands && !/'(live|dry-run|calibrate)'/.test(commands),
   'device CLI must not regain a live command outside the campaign');
 console.log(`architecture: ${hostFree.length} host-free core, source, kernel and propose modules and ${production.length} package modules obey boundary checks ` +

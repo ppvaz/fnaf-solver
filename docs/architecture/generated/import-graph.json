@@ -77,9 +77,11 @@
         "@sixam/play/campaign/physical-ports",
         "@sixam/play/campaign/venue",
         "@sixam/source",
+        "node:fs",
         "node:fs/promises",
         "node:path",
-        "node:url"
+        "node:url",
+        "node:util"
       ]
     },
     {
