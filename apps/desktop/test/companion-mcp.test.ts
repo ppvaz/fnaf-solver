@@ -19,7 +19,7 @@ import { createInterface } from 'node:readline';
 import { spawn } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { isUnknown, validateClaimEnvelope } from '@sixam/kernel';
+import { isList, isRecord, isUnknown, validateClaimEnvelope } from '@sixam/kernel';
 import { CACHE_ENV, NO_LOCAL_DUMP, VAULT_ENV } from '@sixam/source/truth';
 import { syntheticDump } from '../../../packages/source/test/fixtures/truth-dump.ts';
 
@@ -38,27 +38,62 @@ const child = spawn(process.execPath, [join(root, 'apps/desktop/src/companion-mc
 });
 /** A JSON-RPC request this test sends. */
 interface RpcRequest { readonly jsonrpc: '2.0', readonly id: number, readonly method: string, readonly params?: object }
+/** A JSON-RPC reply: its id, and a result object or an error code. */
+interface RpcReply { readonly id: unknown, readonly result: Readonly<Record<string, unknown>>, readonly error: { readonly code: number } | null }
 /** A tool as tools/list describes it, in the fields this test reads. */
-interface Tool {
-  readonly name: string, readonly inputSchema: { readonly properties?: object, readonly additionalProperties?: boolean },
-  readonly annotations: { readonly readOnlyHint?: boolean },
+interface Tool { readonly name: string, readonly properties: readonly string[], readonly additionalProperties: unknown, readonly readOnly: unknown }
+
+/** One reply line, checked to be a JSON-RPC reply. */
+function parseReply(line: string): RpcReply {
+  const value: unknown = JSON.parse(line);
+  assert.ok(isRecord(value), `not a JSON-RPC reply: ${line.slice(0, 200)}`);
+  if (value.error !== undefined) {
+    assert.ok(isRecord(value.error) && typeof value.error.code === 'number', `a reply error has a numeric code: ${line.slice(0, 200)}`);
+    return { id: value.id, result: {}, error: { code: value.error.code } };
+  }
+  assert.ok(isRecord(value.result), `a reply has a result or an error: ${line.slice(0, 200)}`);
+  return { id: value.id, result: value.result, error: null };
 }
-/** A JSON-RPC reply, in the fields this test reads: each reply carries the ones its method answers with. */
-interface RpcReply {
-  readonly id: number;
-  readonly result: {
-    readonly isError?: boolean, readonly content: readonly { readonly text: string }[],
-    readonly serverInfo: { readonly name: string }, readonly capabilities: { readonly resources?: object },
-    readonly tools: readonly Tool[], readonly resources: readonly { readonly uri: string }[],
-    readonly resourceTemplates: readonly { readonly uriTemplate: string }[],
-    readonly contents: readonly { readonly uri: string, readonly text: string }[],
-  };
-  readonly error: { readonly code: number };
+/** A result field that is a list of records. */
+function records(reply: RpcReply, key: string) {
+  const items = reply.result[key];
+  assert.ok(isList(items) && items.every(isRecord), `result.${key} is a list of records`);
+  return items;
 }
+/** A record's text field. */
+function text(item: Readonly<Record<string, unknown>>, field: string) {
+  const value = item[field];
+  assert.ok(typeof value === 'string', `${field} is text`);
+  return value;
+}
+/** The JSON a tool or resource reply carries in its first content item. */
+const payload = (reply: RpcReply, key: 'content' | 'contents' = 'content') => JSON.parse(text(records(reply, key)[0], 'text'));
+const toolsOf = (reply: RpcReply): Tool[] => records(reply, 'tools').map(tool => {
+  const { inputSchema: schema, annotations } = tool;
+  assert.ok(isRecord(schema) && isRecord(annotations), `${String(tool.name)} has an input schema and annotations`);
+  return { name: text(tool, 'name'), properties: isRecord(schema.properties) ? Object.keys(schema.properties) : [],
+    additionalProperties: schema.additionalProperties, readOnly: annotations.readOnlyHint };
+});
+
+/** How long one reply may take: the slowest verb (lab.doctor, describe) answers in seconds. */
+const REPLY_TIMEOUT_MS = 120_000;
 const lines = createInterface({ input: child.stdout });
 const next = async (): Promise<RpcReply> => {
-  const [line] = await once(lines, 'line');
-  return JSON.parse(line);
+  const done = new AbortController();
+  const deadline = AbortSignal.timeout(REPLY_TIMEOUT_MS);
+  const signal = AbortSignal.any([done.signal, deadline]);
+  try {
+    const [line] = await Promise.race([
+      once(lines, 'line', { signal }),
+      once(lines, 'close', { signal }).then(() => assert.fail('the server closed its output before replying')),
+    ]);
+    return parseReply(line);
+  } catch (error) {
+    if (deadline.aborted) assert.fail(`no reply within ${REPLY_TIMEOUT_MS} ms`);
+    throw error;
+  } finally {
+    done.abort();
+  }
 };
 const send = (request: RpcRequest) => child.stdin.write(`${JSON.stringify(request)}\n`);
 let id = 100;
@@ -66,7 +101,7 @@ const call = async (name: string, args: object) => {
   send({ jsonrpc: '2.0', id: ++id, method: 'tools/call', params: { name, arguments: args } });
   const response = await next();
   assert.equal(response.id, id);
-  return { isError: response.result.isError, value: JSON.parse(response.result.content[0].text) };
+  return { isError: response.result.isError, value: payload(response) };
 };
 
 // Every reproducer is a command the generated registry knows: `npm run <script>` or a registered tool.
@@ -117,13 +152,14 @@ const DEATH = 'night5-anchor1-20260912T202654Z';
 
 try {
   send({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2024-11-05' } });
-  const initialized = await next();
-  assert.equal(initialized.result.serverInfo.name, 'fnaf-solver');
-  assert.ok(initialized.result.capabilities.resources, 'the server offers resources');
+  const { serverInfo, capabilities } = (await next()).result;
+  assert.ok(isRecord(serverInfo) && isRecord(capabilities), 'initialize answers with serverInfo and capabilities');
+  assert.equal(serverInfo.name, 'fnaf-solver');
+  assert.ok(capabilities.resources, 'the server offers resources');
 
   send({ jsonrpc: '2.0', id: 2, method: 'tools/list' });
-  const listed = await next();
-  const names = listed.result.tools.map(tool => tool.name);
+  const listed = toolsOf(await next());
+  const names = listed.map(tool => tool.name);
   assert.deepEqual(names.slice(0, 4), ['cue.setup', 'cue.queue.enqueue', 'cue.queue.list', 'cue.queue.run'],
     'every existing tool name still answers, first and in order');
   assert.deepEqual(names.slice(4), ['describe', 'query', 'review', 'promote', 'check', 'jobs', 'truth',
@@ -131,13 +167,12 @@ try {
   assert.equal(names.length, 14, 'fourteen tools: the four cue.*, the six solver verbs, jobs and the three lab tools');
   assert.ok(names.length <= 15, 'Plan 28: agents degrade past about fifteen tools');
   for (const name of names) assert.doesNotMatch(name, /shell|exec|tap|coord|hid|touch|rebuild|build|attest/i, `${name} is not an actuator`);
-  for (const tool of listed.result.tools) {
-    const properties = Object.keys(tool.inputSchema.properties ?? {});
-    for (const key of properties) assert.doesNotMatch(key, /^(x|y|coords?|command|shell|argv|script|tap)$/i, `${tool.name}.${key}`);
-    assert.equal(tool.inputSchema.additionalProperties, false, `${tool.name} refuses arguments it does not name`);
+  for (const tool of listed) {
+    for (const key of tool.properties) assert.doesNotMatch(key, /^(x|y|coords?|command|shell|argv|script|tap)$/i, `${tool.name}.${key}`);
+    assert.equal(tool.additionalProperties, false, `${tool.name} refuses arguments it does not name`);
   }
   for (const name of ['describe', 'query', 'review', 'promote', 'check', 'lab.status', 'lab.next', 'lab.doctor'])
-    assert.equal(listed.result.tools.find(tool => tool.name === name)?.annotations.readOnlyHint, true, `${name} is read-only`);
+    assert.equal(listed.find(tool => tool.name === name)?.readOnly, true, `${name} is read-only`);
   for (const name of ['start', 'commit', 'end', 'morning'])
     assert.ok(!names.includes(`lab.${name}`), `lab ${name} is not served over MCP: only status, next and doctor are`);
 
@@ -146,7 +181,7 @@ try {
     name: 'cue.queue.enqueue', arguments: { kind: 'menu-check' },
   } });
   const queued = await next();
-  const queuedValue = JSON.parse(queued.result.content[0].text);
+  const queuedValue = payload(queued);
   assert.equal(queuedValue.status, 'QUEUED');
 
   send({ jsonrpc: '2.0', id: 4, method: 'tools/call', params: {
@@ -154,7 +189,7 @@ try {
       kind: 'menu-check', idempotencyKey: 'mcp-retry-menu-check',
     },
   } });
-  const keyed = JSON.parse((await next()).result.content[0].text);
+  const keyed = payload(await next());
   assert.equal(keyed.status, 'QUEUED');
 
   send({ jsonrpc: '2.0', id: 5, method: 'tools/call', params: {
@@ -162,7 +197,7 @@ try {
       kind: 'menu-check', idempotencyKey: 'mcp-retry-menu-check',
     },
   } });
-  const keyedAgain = JSON.parse((await next()).result.content[0].text);
+  const keyedAgain = payload(await next());
   assert.equal(keyedAgain.status, 'EXISTING');
   assert.equal(keyedAgain.job.id, keyed.job.id);
 
@@ -172,7 +207,7 @@ try {
       kind: 'night', game: 'fnaf2', winner: 'packages/propose/bindings/fnaf2/campaign-night7-k3-winner.json', night: 7,
     },
   } });
-  const night = JSON.parse((await next()).result.content[0].text);
+  const night = payload(await next());
   assert.equal(night.status, 'QUEUED');
   assert.equal(night.job.kind, 'night');
   assert.match(night.job.planSha256, /^[0-9a-f]{64}$/);
@@ -188,14 +223,14 @@ try {
   }
 
   send({ jsonrpc: '2.0', id: 6, method: 'tools/call', params: { name: 'cue.queue.list', arguments: {} } });
-  const listedJobs = JSON.parse((await next()).result.content[0].text);
+  const listedJobs = payload(await next());
   assert.equal(listedJobs.jobs.length, 3);
   assert.equal(listedJobs.jobs[0].state, 'PENDING');
 
   send({ jsonrpc: '2.0', id: 7, method: 'tools/call', params: {
     name: 'cue.queue.run', arguments: { waitSeconds: 0 },
   } });
-  const held = JSON.parse((await next()).result.content[0].text);
+  const held = payload(await next());
   assert.equal(held.status, 'HOLD');
   assert.equal(held.ok, true);
 
@@ -334,28 +369,28 @@ try {
 
   // --- resources -----------------------------------------------------------------------------
   send({ jsonrpc: '2.0', id: 8, method: 'resources/list' });
-  const resources = (await next()).result.resources.map(item => item.uri);
+  const resources = records(await next(), 'resources').map(item => text(item, 'uri'));
   for (const uri of ['fnaf://chronicle', 'fnaf://evidence/graph', 'fnaf://contracts', 'fnaf://refuted',
     'fnaf://game/com.scottgames.fnaf2/controls']) assert.ok(resources.includes(uri), `${uri} is listed`);
   send({ jsonrpc: '2.0', id: 9, method: 'resources/templates/list' });
-  assert.deepEqual((await next()).result.resourceTemplates.map(item => item.uriTemplate),
+  assert.deepEqual(records(await next(), 'resourceTemplates').map(item => text(item, 'uriTemplate')),
     ['fnaf://game/{pkg}/controls', 'fnaf://truth/{game}/frame/{frame}/group/{group}']);
   send({ jsonrpc: '2.0', id: 12, method: 'resources/read', params: { uri: 'fnaf://truth/fnaf2/frame/1/group/2' } });
-  const citedGroup = envelope(JSON.parse((await next()).result.contents[0].text), 'a cited truth group');
+  const citedGroup = envelope(payload(await next(), 'contents'), 'a cited truth group');
   assert.deepEqual(citedGroup.claim.matches.map((match: { group: string }) => match.group), ['g2'], 'a truth citation reads back as its group');
   for (const [index, uri] of resources.entries()) {
     send({ jsonrpc: '2.0', id: 1000 + index, method: 'resources/read', params: { uri } });
     const read = await next();
-    assert.equal(read.result.contents[0].uri, uri);
-    const value = envelope(JSON.parse(read.result.contents[0].text), uri);
+    assert.equal(text(records(read, 'contents')[0], 'uri'), uri);
+    const value = envelope(payload(read, 'contents'), uri);
     assert.notEqual(value.refused, true, `${uri} answers with a claim`);
   }
   send({ jsonrpc: '2.0', id: 10, method: 'resources/read', params: { uri: 'fnaf://refuted' } });
-  const refutedResource = JSON.parse((await next()).result.contents[0].text);
+  const refutedResource = payload(await next(), 'contents');
   assert.ok(refutedResource.claim.chronicle.length >= 24 && refutedResource.claim.archivedRoutes.length >= 1);
   assert.ok(refutedResource.claim.archivedRoutes.every((route: { status: string }) => ['parked', 'refuted'].includes(route.status)));
   send({ jsonrpc: '2.0', id: 11, method: 'resources/read', params: { uri: 'fnaf://truth/fnaf2/group/1' } });
-  assert.equal((await next()).error.code, -32002, 'an unknown resource is not found');
+  assert.equal((await next()).error?.code, -32002, 'an unknown resource is not found');
 
   assert.equal(treeHash(join(root, 'docs/evidence')), evidenceBefore, 'no verb wrote under docs/evidence');
 } finally {
