@@ -205,8 +205,8 @@ export const standing = (block) => (block.wins === block.n ? 'won' : block.wins 
 export function selectPolicy(spec, bindings) {
   const order = spec.family.grid.tieOrder;
   const score = (b) => ({ min: Math.min(...b.classes.map((c) => c.development.wins / c.development.n)),
-    mean: b.classes.reduce((s, c) => s + c.epochsMs.length * c.development.wins / c.development.n, 0) /
-      b.classes.reduce((s, c) => s + c.epochsMs.length, 0) });
+    mean: b.classes.reduce((s, c) => s + c.epochsMs.count * c.development.wins / c.development.n, 0) /
+      b.classes.reduce((s, c) => s + c.epochsMs.count, 0) });
   return bindings.map((b) => ({ name: b.name, ...score(b) }))
     .sort((x, y) => y.min - x.min || y.mean - x.mean || order.indexOf(x.name) - order.indexOf(y.name))[0].name;
 }

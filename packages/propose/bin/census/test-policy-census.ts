@@ -78,6 +78,13 @@ for (const binding of record.bindings)
   }
 const selectedName = selectPolicy(spec, record.bindings);
 assert.equal(selectedName, record.selection.selected, `${name}: the development block selects another policy`);
+// The rule's second key: policies with the same worst class are ranked by their member-weighted mean,
+// each class weighted by its epoch count, which a class row states as epochsMs.count.
+{
+  const cls = (count, wins) => ({ epochsMs: { lo: 0, hi: count - 1, count }, development: { wins, n: 10 } });
+  const tied = [{ name: 'k3', classes: [cls(1, 8), cls(9, 8)] }, { name: 'k2', classes: [cls(1, 8), cls(9, 10)] }];
+  assert.equal(selectPolicy(spec, tied), 'k2', 'a tie on the worst class is broken by the member-weighted mean, not the tie order');
+}
 const selected = record.bindings.find((binding) => binding.name === selectedName);
 const observations = observe(selected);
 assert.deepEqual(observations, record.result.observations.values, `${name}: the observation does not re-derive`);
