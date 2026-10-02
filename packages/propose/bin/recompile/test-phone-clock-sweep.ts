@@ -3,8 +3,12 @@
 // summaries and the verdict), then the committed sweep result's own arithmetic, re-derived from
 // its rows and the retained control without the model or any private input. In `npm run test:unit`.
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { bestCell, cellMatches, cellScore, check, deriveNight, deriveVerdict, droppedClock, scaledDeltas, SCHEMA } from './phone-clock-sweep.ts';
 import { officeClock, traceTick } from './phone-encounter-replay.ts';
 
@@ -179,4 +183,16 @@ const cleaningMap = (cells) => cells.map((c) => c.deltaMs).sort((a, b) => a - b)
   }
 }
 
-console.log('phone-clock-sweep: clock-origin fixtures and four retained results rechecked');
+// --- the sweep runs from this checkout: its config's paths are where those files stood (records keep their
+// paths), and every private input is read under --inputs-root. None is here, so the sweep stops at the first.
+{
+  const dir = mkdtempSync(join(tmpdir(), 'clock-sweep-'));
+  const nowhere = join(dir, 'inputs');
+  const run = spawnSync(process.execPath, [fileURLToPath(new URL('./phone-clock-sweep.ts', import.meta.url)), 'sweep',
+    '--out', join(dir, 'out.json'), '--inputs-root', nowhere], { encoding: 'utf8' });
+  const error = run.stderr.split('\n').find((l) => /Error/.test(l)) ?? '';
+  assert.ok(run.status !== 0 && error.includes(`'${nowhere}/`), `the sweep must read its first private input under --inputs-root: ${error}`);
+  rmSync(dir, { recursive: true, force: true });
+}
+
+console.log('phone-clock-sweep: clock-origin fixtures and four retained results rechecked; the sweep reads its inputs under --inputs-root');

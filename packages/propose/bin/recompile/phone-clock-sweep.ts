@@ -211,7 +211,7 @@ export function check(result) {
 // ---------------------------------------------------------------- the sweep
 
 function nightInputs(sweepCfg, nightCfg, inputsRoot, modelOptions) {
-  const winner = JSON.parse(readFileSync(resolve(ROOT, nightCfg.winner), 'utf8'));
+  const winner = JSON.parse(readFileSync(resolve(ROOT, current(nightCfg.winner)), 'utf8'));
   const sched = phoneSchedule(winner, nightCfg.night, nightCfg.originMs);
   const pressCount = checkPressFile(sched.queueMs, JSON.parse(privateText(inputsRoot, nightCfg.presses)));
   let clock = null;
@@ -221,7 +221,7 @@ function nightInputs(sweepCfg, nightCfg, inputsRoot, modelOptions) {
     clock = officeClock(columns.image_ns, nightCfg.trace.first, { catchUp: true });
     deltas = clock.deltas.map((d) => Number(d.toFixed(6)));        // the harness's six decimals; the model's clock
   }
-  const customNight = nightCfg.customNight ? JSON.parse(readFileSync(resolve(ROOT, nightCfg.customNight), 'utf8')) : null;
+  const customNight = nightCfg.customNight ? JSON.parse(readFileSync(resolve(ROOT, current(nightCfg.customNight)), 'utf8')) : null;
   return { sched, pressCount, clock, deltas, customNight, modelOptions };
 }
 
@@ -234,11 +234,11 @@ function runCell(inputs, nightCfg, deltaMs, timerRate, dropMs = 0) {
 }
 
 function sweep(sweepCfg, cfgPath, inputsRoot, only) {
-  const nightsCfg = loadConfig(resolve(ROOT, sweepCfg.nights));
-  const reference = JSON.parse(readFileSync(resolve(ROOT, sweepCfg.control.reference.path), 'utf8'));
-  if (sha256(readFileSync(resolve(ROOT, sweepCfg.control.reference.path))) !== sweepCfg.control.reference.sha256)
+  const nightsCfg = loadConfig(resolve(ROOT, current(sweepCfg.nights)));
+  const reference = JSON.parse(readFileSync(resolve(ROOT, current(sweepCfg.control.reference.path)), 'utf8'));
+  if (sha256(readFileSync(resolve(ROOT, current(sweepCfg.control.reference.path)))) !== sweepCfg.control.reference.sha256)
     throw new Error('the retained control result hash differs');
-  const modelOptions = JSON.parse(readFileSync(resolve(ROOT, sweepCfg.modelOptions ?? nightsCfg.modelOptions), 'utf8'));
+  const modelOptions = JSON.parse(readFileSync(resolve(ROOT, current(sweepCfg.modelOptions ?? nightsCfg.modelOptions)), 'utf8'));
   const baseGrid = sweepCfg.grid;
   const refineCells = (best) => {
     const out = [];
@@ -324,9 +324,9 @@ function sweep(sweepCfg, cfgPath, inputsRoot, only) {
       question: 'Does the measured clock-origin and schedule-phase correction, alone or together, make the model agree with the phone window by window?',
     method: {
       sweepConfig: relative(ROOT, cfgPath), sweepConfigSha256: sha256(readFileSync(cfgPath)),
-      nightsConfig: sweepCfg.nights, nightsConfigSha256: sha256(readFileSync(resolve(ROOT, sweepCfg.nights))),
+      nightsConfig: sweepCfg.nights, nightsConfigSha256: sha256(readFileSync(resolve(ROOT, current(sweepCfg.nights)))),
       modelOptions: sweepCfg.modelOptions ?? nightsCfg.modelOptions,
-      modelOptionsSha256: sha256(readFileSync(resolve(ROOT, sweepCfg.modelOptions ?? nightsCfg.modelOptions))),
+      modelOptionsSha256: sha256(readFileSync(resolve(ROOT, current(sweepCfg.modelOptions ?? nightsCfg.modelOptions)))),
       toolSha256: sha256(readFileSync(new URL(import.meta.url))),
       modelSourceSha256: Object.fromEntries(MODEL_SOURCES.map((path) => [path.slice(ROOT.length + 1), sha256(readFileSync(path))])),
       frames: MODEL_FRAMES,
@@ -369,7 +369,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const cfgPath = resolve(args.config ?? join(ROOT, 'packages/propose/bin/recompile/phone-clock-sweep.json'));
   const sweepCfg = JSON.parse(readFileSync(cfgPath, 'utf8'));
   if (sweepCfg.schema !== 'phone-clock-sweep-v1') throw new Error('sweep config schema must be phone-clock-sweep-v1');
-  const inputsRoot = resolve(args.inputsRoot ?? ROOT);
+  const inputsRoot = resolve(args['inputs-root'] ?? ROOT);
   const result: any = sweep(sweepCfg, cfgPath, inputsRoot, args.night ?? null);
   writeFileSync(args.out, `${JSON.stringify(result, null, 1)}\n`);
   console.log(`${result.evidenceId}: ${result.verdict.status} (MODEL_ONLY model-side sweep vs retained phone reads)`);
