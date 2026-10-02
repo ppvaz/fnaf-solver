@@ -178,7 +178,9 @@ longer rebuilds.
   counted per area by `tools/test-python-types.ts` against `pythonTypes`. A
   Python 2 source stops mypy for its whole directory (its count was 1 while six
   Python 3 scripts beside it went unchecked), so each file that runs under 2.7
-  is named in `python_types.py`'s `PYTHON2` with what runs it.
+  is named in `python_types.py`'s `PYTHON2` with what runs it, and the driver
+  refuses any other error that stops mypy (exit 2) rather than count the
+  directory. An unstaged deletion did the same, so it checks only files on disk.
 - Types never name `HidWireTransport` outside the device runners
   `tools/architecture-test.ts` lists, not even in `import type`: that gate
   counts the identifier. Type a contact port by the methods it calls.

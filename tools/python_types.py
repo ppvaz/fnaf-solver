@@ -51,14 +51,21 @@ def area_of(path: str) -> str:
 
 def tracked() -> list[str]:
     out = subprocess.run(['git', 'ls-files', '-z', '--', '*.py'], cwd=ROOT, capture_output=True, text=True, check=True)
-    return sorted(path for path in out.stdout.split('\0') if path and path not in PYTHON2)
+    # A tracked file deleted from the working tree is not Python to check, and mypy cannot read it.
+    return sorted(path for path in out.stdout.split('\0') if path and path not in PYTHON2 and (ROOT / path).is_file())
 
 
 def check(directory: str, files: list[str]) -> list[str]:
-    """mypy's error lines for one directory's files, with paths relative to the repository."""
+    """mypy's error lines for one directory's files, with paths relative to the repository.
+
+    A blocking error (a file mypy cannot parse or read) stops mypy before the rest of the directory, which would
+    then count as clean: that exits instead, naming the directory.
+    """
     path = os.pathsep.join([directory, *(shared for shared in SHARED if shared != directory)])
     os.environ['MYPYPATH'] = path
-    stdout, _, _ = api.run([*FLAGS, *files])
+    stdout, stderr, status = api.run([*FLAGS, *files])
+    if status == 2:
+        sys.exit(f'python_types.py: mypy stopped in {directory} before checking it (exit 2):\n{stdout}{stderr}')
     return [line for line in stdout.splitlines() if ': error: ' in line]
 
 

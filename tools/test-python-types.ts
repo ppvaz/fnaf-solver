@@ -40,10 +40,34 @@ function check(root: string): { areas: Record<string, number>, errors: string[] 
       + 'def pin() -> None:\n    os.sched_setaffinity(0, {0})\n');
     writeFileSync(join(repo, 'packages/demo/bin/loose/tool.py'),
       'from typing import Any\n\ndef double(value):\n    return value * 2\n\ndef widen(value: Any) -> Any:\n    return value\n');
+    // A tracked file deleted from the working tree is not Python to check: mypy cannot read it, and a file it
+    // cannot read stopped it before the rest of the directory, whose one error then went uncounted.
+    mkdirSync(join(repo, 'packages/demo/bin/gone'), { recursive: true });
+    writeFileSync(join(repo, 'packages/demo/bin/gone/kept.py'), 'def double(value):\n    return value * 2\n');
+    writeFileSync(join(repo, 'packages/demo/bin/gone/deleted.py'), 'VALUE = 1\n');
     git('add', '.');
+    rmSync(join(repo, 'packages/demo/bin/gone/deleted.py'));
     const { areas, errors } = check(repo);
-    assert.deepEqual(areas, { 'packages/demo/bin': 2 }, `an untyped def and a signature with explicit Any are counted:\n${errors.join('\n')}`);
-    assert.ok(errors.every(line => line.startsWith('packages/demo/bin/loose/tool.py:')), 'the typed file is clean');
+    assert.deepEqual(areas, { 'packages/demo/bin': 3 },
+      `an untyped def and a signature with explicit Any are counted, beside a deleted file too:\n${errors.join('\n')}`);
+    assert.ok(errors.every(line => /^packages\/demo\/bin\/(?:loose\/tool|gone\/kept)\.py:/.test(line)), 'the typed file is clean');
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+}
+
+// Any other error that stops mypy (here Python 2 syntax not named in PYTHON2) is refused, naming the directory,
+// rather than counted as a directory with one error and none behind it.
+{
+  const repo = realpathSync(mkdtempSync(join(tmpdir(), 'python-types-')));
+  try {
+    const git = (...args: string[]) => execFileSync('git', args, { cwd: repo, encoding: 'utf8' });
+    git('init', '-q');
+    mkdirSync(join(repo, 'packages/demo/bin/stopped'), { recursive: true });
+    writeFileSync(join(repo, 'packages/demo/bin/stopped/a.py'), 'def double(value):\n    return value * 2\n');
+    writeFileSync(join(repo, 'packages/demo/bin/stopped/b.py'), 'print "python 2"\n');
+    git('add', '.');
+    assert.throws(() => check(repo), /mypy stopped in packages\/demo\/bin\/stopped/, 'a blocking error is refused, not counted');
   } finally {
     rmSync(repo, { recursive: true, force: true });
   }
