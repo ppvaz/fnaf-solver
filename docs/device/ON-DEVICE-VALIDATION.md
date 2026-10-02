@@ -150,7 +150,7 @@ reason is unchanged.
 - `screenstate.py` — classifies live screenshots as `night`, `gameover`, or
   `other`. The game-over signature was checked against all three retained
   W. Foxy captures; jumpscare/static frames remain `other`.
-- `find-events.py <mp4>` — frame-diff event locator (stdlib only): prints
+- `find-events.ts <mp4>` — frame-diff event locator: prints
   timestamp ranges with sharp visual change (overlays, flips, jumpscares) so
   clears can be timed without scrubbing video.
 - `camtrace.py [--expected N] <mp4>` — post-run selected-camera trace from

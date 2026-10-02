@@ -52,7 +52,7 @@ assets.
 | Compare policy families under execution error | `packages/propose/parked/minus7/policytest.ts` |
 | Explore a strategy or cycle | `packages/propose/parked/minus7/cyclesearch.ts` |
 | Run a night on the phone | `npm run night -- fnaf2\|fnaf1\|fnaf1-custom\|fnaf1-winner ... --live --confirm-live` (`apps/desktop/src/night.ts`), which runs that game's runner -- for FNaF 2 [`packages/play/bin/phone/night-run.sh`](../packages/play/README.md#running-a-night): records, runs the campaign, grades, packs the evidence, resets the game -- and packs FNaF 1 runs when they end. Without `--live --confirm-live` every runner is a dry run (ADR 0002). The handset serial comes from `FNAF_SERIAL` or the untracked local profile: `node packages/play/bin/phone/local-profile.ts set <serial>` once per host |
-| Analyze a recorded phone trial | `grade-minus7.py`, `camtrace.py`, `windpct.py`, `find-events.py` |
+| Analyze a recorded phone trial | `grade-minus7.py`, `camtrace.py`, `windpct.py`, `find-events.ts` |
 | Inspect the Android event-sheet dump | [`packages/source/decompile/readdump.py`, `packages/source/decompile/coverage.py`](../packages/source/decompile/README.md) |
 
 Paths in the tables are relative to the repository root.

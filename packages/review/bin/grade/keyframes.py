@@ -7,7 +7,7 @@ obvious at a glance: a restart card, the death static and the "Take cake to the
 children" minigame, sitting inside an interval that had been reported as 163
 seconds of survival. Everything needed to catch that was on disk for hours.
 
-This is deliberately not `find-events.py`. That locates *moments of change* --
+This is deliberately not `find-events.ts`. That locates *moments of change* --
 overlays, flips, jumpscares -- and answers "when did something happen". This
 answers "what did this run contain", which is a different question: it picks a
 small set of frames that are maximally unlike each other, so a screen that

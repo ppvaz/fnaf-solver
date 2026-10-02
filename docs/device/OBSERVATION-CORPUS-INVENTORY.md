@@ -90,7 +90,7 @@ one field named `timestamp` would incorrectly imply interchangeability.
 | Primary content | 1280×576 H.264 visual record; current night recording does not contain helper playback PCM |
 | Clock | Media PTS relative to recording start |
 | Labels | Night configuration and run status are inferred from invocation/name; post-run tools derive HUD, camera, mask, wind, death, and other state |
-| Consumers | `grade-run.sh`, `grade-night.py`, `clocktrace.mjs`, `camtrace.py`, `sweepcheck.py`, `keyframes.py`, `windpct.py`, `grade-minus7.py`, `desync-scan.py`, `find-events.py`, `death-census.py` |
+| Consumers | `grade-run.sh`, `grade-night.py`, `clocktrace.mjs`, `camtrace.py`, `sweepcheck.py`, `keyframes.py`, `windpct.py`, `grade-minus7.py`, `desync-scan.py`, `find-events.ts`, `death-census.py` |
 | Gaps | No manifest records package/build, device/viewport, exact command/environment, commit/dirty state, model hashes, helper session, start clock, or terminal verdict; success and forced-stop completion can both yield a normal filename |
 | Retention | Copyrighted game imagery, ignored/local; existing docs advise deleting failed large runs, while promoted evidence will need an explicit selected-run retention policy |
 

@@ -665,6 +665,7 @@
         "./game-run.ts",
         "./labels.ts",
         "./outcome.ts",
+        "./pyfmt.ts",
         "./seed.ts",
         "./time/interval.ts",
         "./types.ts"
@@ -745,6 +746,13 @@
       "file": "packages/kernel/test/kernel.test.ts",
       "imports": [
         "../src/index.ts",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/kernel/test/pyfmt.test.ts",
+      "imports": [
+        "../src/pyfmt.ts",
         "node:assert/strict"
       ]
     },
@@ -3935,6 +3943,13 @@
       "imports": [
         "@sixam/review/measure",
         "node:fs/promises"
+      ]
+    },
+    {
+      "file": "packages/review/bin/report/find-events.ts",
+      "imports": [
+        "@sixam/kernel",
+        "node:child_process"
       ]
     },
     {

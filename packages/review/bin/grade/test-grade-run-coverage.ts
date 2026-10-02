@@ -199,7 +199,7 @@ const SIBLING_EXCLUDED = new Map([
   ['bench-trace.ts', 'a read-only report over a retained Plan 20 bench trace, not a run: it summarizes a trace the bench wrote and upgrades no claim level'],
   ['tickphase.py', 'reads the retained Bluetooth audio (night-run.sh --bt-audio) after a run: roll-witness onsets and WinD folds. Run by hand while its thresholds and the clock-rate correction are being calibrated (2026-09-13); it joins grade-run.sh once a fold-based phase read survives a second run'],
   ['death-census.py', 'cross-run census -- answers "what keeps happening", not "what happened in this run"'],
-  ['find-events.py', 'mask-camp trial scrubber, not a night-run grader'],
+  ['find-events.ts', 'mask-camp trial scrubber, not a night-run grader'],
   // packages/review/bin/legacy
   ['index-observations.py', 'read-only corpus inventory; indexes artifacts rather than grading one run'],
   ['session-manifest.py', 'the manifest producer -- grade-run.sh consumes its output through validate-session.py; gated by test-session-manifest.sh'],
