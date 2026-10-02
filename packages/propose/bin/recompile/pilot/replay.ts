@@ -36,8 +36,18 @@ const ROOT = resolve(HERE, '../../../../..');
 const IMAGE = 'fnaf2-chowdren:buster';
 const MOUNT = '/home/pedro/fnaf-apks';
 
-function parseArgs(argv) {
-  const o: any = { seed: 24850, maxTicks: 30000, docker: false };
+/** What a replay plays into a fresh run: the rows and the save before them, on which binary and assets, at which seed. */
+export interface ReplayRun {
+  run: string, binary: string, assets: string, seed: number, maxTicks: number, docker: boolean, input: string, saveBefore: string;
+}
+
+/** A replay, and where its rows, save and expected trace come from. */
+interface ReplayOptions extends ReplayRun {
+  game: string, from?: string, record?: string, expect?: { rows: number, sha256: string };
+}
+
+function parseArgs(argv: string[]) {
+  const o: Partial<ReplayOptions> & Pick<ReplayOptions, 'seed' | 'maxTicks' | 'docker'> = { seed: 24850, maxTicks: 30000, docker: false };
   for (let i = 0; i < argv.length; i += 1) {
     const a = argv[i];
     const v = () => argv[++i];
@@ -68,18 +78,20 @@ function parseArgs(argv) {
   } else if (o.from) {
     Object.assign(o, { input: join(o.from, 'pilot.input'), saveBefore: join(o.from, 'save-before.ini') });
   }
-  for (const k of ['game', 'run', 'binary', 'assets']) if (!o[k]) throw new Error(`replay: --${k} is required`);
-  if (o.run.startsWith(ROOT)) throw new Error('replay: --run must be outside the repository');
-  if (o.docker && !o.run.startsWith(MOUNT + '/')) throw new Error(`replay: --run must sit under ${MOUNT} (the container mount)`);
-  return o;
+  for (const k of ['game', 'run', 'binary', 'assets'] as const) if (!o[k]) throw new Error(`replay: --${k} is required`);
+  // Each required option was checked just above, and every mode set the rows and the save.
+  const checked = o as ReplayOptions;
+  if (checked.run.startsWith(ROOT)) throw new Error('replay: --run must be outside the repository');
+  if (checked.docker && !checked.run.startsWith(MOUNT + '/')) throw new Error(`replay: --run must sit under ${MOUNT} (the container mount)`);
+  return checked;
 }
 
-const sha256 = (path) => createHash('sha256').update(readFileSync(path)).digest('hex');
+const sha256 = (path: string) => createHash('sha256').update(readFileSync(path)).digest('hex');
 
 /** Hash of the trace's update rows and the frame visits it records. */
-export async function traceDigest(path) {
+export async function traceDigest(path: string) {
   const h = createHash('sha256');
-  const visits = [];
+  const visits: { frame: number, updates: number }[] = [];
   let rows = 0;
   const rl = createInterface({ input: createReadStream(path), crlfDelay: Infinity });
   for await (const line of rl) {
@@ -93,7 +105,7 @@ export async function traceDigest(path) {
   return { rows, sha256: h.digest('hex'), visits };
 }
 
-export function runReplay(o, game) {
+export function runReplay(o: ReplayRun, game: { readonly SAVE_NAME: string }) {
   mkdirSync(o.run, { recursive: true });
   for (const f of ['trace', 'run.log', game.SAVE_NAME, 'Assets.dat', 'run.input', 'save-before.ini'])
     rmSync(join(o.run, f), { force: true });
@@ -123,7 +135,7 @@ export function runReplay(o, game) {
 }
 
 async function main() {
-  const o: any = parseArgs(process.argv.slice(2));
+  const o = parseArgs(process.argv.slice(2));
   const game = await loadGame(o.game);
   const exit = runReplay(o, game);
   const replay = await traceDigest(join(o.run, 'trace'));

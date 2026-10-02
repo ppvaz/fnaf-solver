@@ -10,10 +10,12 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SCHEMA, check, evidenceId, iniKeys, verdict } from './record.ts';
+import type { PilotNightRecord } from './record.ts';
 import { SEAL_FOR, LURE_TO, proxyOf, whereIs, playsLeft, whatDayRare, doomStart } from './fnaf3.ts';
 import { branchPoints, parseSeeds, progress, withoutStrays, LEAD, BACKOFF, SOURCES as SEARCH_SOURCES } from './search.ts';
 import { SOURCES as BATCH_SOURCES } from './batch.ts';
-import { GAMES, gameModulePath, loadGame } from './pilot.ts';
+import { GAMES, gameModulePath, loadGame, view } from './pilot.ts';
+import type { PilotObject, PilotState } from './pilot.ts';
 import { MARKERS, ACTORS, WATCH as WATCH4, places, doomStart as doomStart4 } from './fnaf4.ts';
 import { GRAPH, LURE_FROM } from '../../../../source/src/games/fnaf3/sim-fnaf3.ts';
 import { currentPath } from '@sixam/review/renamed-path';
@@ -22,7 +24,7 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '../../../../..');
 const RESULTS = join(ROOT, 'tools/recompile/results');
 let passed = 0;
-const ok = (name) => { passed += 1; console.log(`ok ${passed} - ${name}`); };
+const ok = (name: string) => { passed += 1; console.log(`ok ${passed} - ${name}`); };
 
 // 1. Every committed record re-derives, and every touch is in the window.
 const records = readdirSync(RESULTS).filter((f) => f.endsWith('.json'))
@@ -44,7 +46,7 @@ for (const path of records) {
 }
 
 // 2. Negative controls: each must change the verdict or fail the check.
-const base = JSON.parse(readFileSync(records[0], 'utf8'));
+const base: PilotNightRecord = JSON.parse(readFileSync(records[0], 'utf8'));
 const diverged = { ...base, replay: { ...base.replay, traceEqual: false } };
 assert.equal(verdict(diverged).status, 'REPLAY_DIVERGED');
 ok('a replay whose trace differs from the pilot run is not a win');
@@ -78,14 +80,14 @@ for (const [where, cam] of Object.entries(LURE_TO)) {
 ok('LURE_TO uses only pulls the core lure table allows (g319-g341)');
 
 // 4. The state readers over a synthetic pilot line.
-const box = (x, y) => ({ box: [x, y, x + 10, y + 10], c: [x + 5, y + 5], fx: x * 1000 + y, v: 1 });
-const s = { f: 3, t: 0, o: {
+const box = (x: number, y: number): PilotObject => ({ x, y, fl: 0, box: [x, y, x + 10, y + 10], c: [x + 5, y + 5], fx: x * 1000 + y, v: 1 });
+const s: PilotState = { f: 3, t: 0, d: 0, g: 0, off: [0, 0], gv: [], o: {
   dhfgh: [box(100, 100)], 'cam 10': [box(98, 98)], 'cam 09': [box(300, 300)],
   'olivier_cameraHitboxA.Active': [{ ...box(90, 90), al: [98 * 1000 + 98] }, { ...box(2000, 90), al: [300 * 1000 + 300] }],
 } };
-const v = { s, all: (n) => s.o[n] ?? [], one: (n) => (s.o[n] ?? [])[0] ?? null, frame: 3, tick: 0 };
+const v = view(s);
 assert.equal(whereIs(v), 'cam 10');
-assert.equal(proxyOf(v, 'olivier_cameraHitboxA.Active', 'cam 10').index, 0);
+assert.equal(proxyOf(v, 'olivier_cameraHitboxA.Active', 'cam 10')?.index, 0);
 assert.equal(proxyOf(v, 'olivier_cameraHitboxA.Active', 'cam 09'), null, 'an off-window proxy is refused');
 ok('whereIs reads the radar dot; proxyOf matches FixedValue and refuses off-window proxies');
 
@@ -124,9 +126,8 @@ ok('withoutStrays drops the frame-change stray and keeps a revisit\'s touches');
 // 5. FNaF 4's map reader: every marker and actor it reads is watched, and an
 // actor is placed on the marker its box overlaps.
 for (const n of [...MARKERS, ...ACTORS, 'follow', 'Freddy counter', 'in closet']) assert.ok(WATCH4.includes(n), `fnaf4 WATCH lacks ${n}`);
-const s4 = { f: 3, t: 0, o: { 'left hall near': [box(788, 130)], 'kitchen': [box(954, 20)], Bonnie: [box(790, 132)], Chica: [box(2000, 2000)] } };
-const v4 = { s: s4, all: (n) => s4.o[n] ?? [], one: (n) => (s4.o[n] ?? [])[0] ?? null };
-assert.deepEqual(places(v4), { foxy: null, Bonnie: 'left hall near', Chica: 'away', Fredbear: null });
+const s4: PilotState = { f: 3, t: 0, d: 0, g: 0, off: [0, 0], gv: [], o: { 'left hall near': [box(788, 130)], 'kitchen': [box(954, 20)], Bonnie: [box(790, 132)], Chica: [box(2000, 2000)] } };
+assert.deepEqual(places(view(s4)), { foxy: null, Bonnie: 'left hall near', Chica: 'away', Fredbear: null });
 ok('fnaf4 places() reads the hidden map markers; WATCH covers them');
 // FNaF 4's lost chain: Freddy past 53 (the bed then kills on arrival,
 // g427/g428), Foxy's got-you (g282), or the black flash counting (g468).

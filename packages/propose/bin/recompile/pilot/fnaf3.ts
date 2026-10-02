@@ -4,6 +4,7 @@
 import { appendFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { controllerLog, view } from './pilot.ts';
+import type { PilotObject, PilotPolicy, PolicyOptions, View } from './pilot.ts';
 
 export const SAVE_NAME = 'freddy3';
 export const TITLE = 1;
@@ -29,12 +30,16 @@ export const WATCH = [
   'Multiple Touch', 'olivier_touchDect4.Active', 'olivier_touchDect5.Active', 'olivier_MuteHitbox.Active', 'nose honk',
 ];
 
+/** A step of a task: the touch rows for one update, and what the task returns when it ends. */
+type Task<R = void> = Generator<string[], R, void>;
+/** What a running task reads and logs: the current update's view, and the policy's log. */
+interface Ctx { v: View, log(record: object): void }
 
-const overlaps = (a, b) => a && b && a.box && b.box &&
+const overlaps = (a: PilotObject | null, b: PilotObject | null) => a && b && a.box && b.box &&
   a.box[0] < b.box[2] && b.box[0] < a.box[2] && a.box[1] < b.box[3] && b.box[1] < a.box[3];
 
 /** Where the radar dot `dhfgh` stands: the cam/vent marker or attack stage it overlaps. */
-export function whereIs(v) {
+export function whereIs(v: View) {
   const dot = v.one('dhfgh');
   if (!dot) return null;
   for (const n of [...STAGES, ...CAMS]) if (overlaps(dot, v.one(n))) return n;
@@ -43,25 +48,25 @@ export function whereIs(v) {
 
 /** A tap queue: `tap` schedules a down now and an up `hold` updates later. */
 class Hands {
-  declare queue: any[];
+  declare queue: { due: number, cmd: string }[];
   declare clock: number;
   constructor() { this.queue = []; this.clock = 0; }
-  at(delay, cmd) { this.queue.push({ due: this.clock + delay, cmd }); }
-  tapObj(name, index = 0, hold = 3) { this.at(0, `downobj 0 ${index} ${name}`); this.at(hold, 'up 0'); }
-  tapXY(x, y, hold = 3) { this.at(0, `down 0 ${x} ${y}`); this.at(hold, 'up 0'); }
-  holdXY(x, y, hold) { this.at(0, `down 0 ${x} ${y}`); this.at(hold, 'up 0'); }
+  at(delay: number, cmd: string) { this.queue.push({ due: this.clock + delay, cmd }); }
+  tapObj(name: string, index = 0, hold = 3) { this.at(0, `downobj 0 ${index} ${name}`); this.at(hold, 'up 0'); }
+  tapXY(x: number, y: number, hold = 3) { this.at(0, `down 0 ${x} ${y}`); this.at(hold, 'up 0'); }
+  holdXY(x: number, y: number, hold: number) { this.at(0, `down 0 ${x} ${y}`); this.at(hold, 'up 0'); }
   busy() { return this.queue.length > 0; }
   drain() {
-    const out = [];
+    const out: string[] = [];
     this.queue = this.queue.filter((q) => (q.due <= this.clock ? (out.push(q.cmd), false) : true));
     this.clock += 1;
     return out;
   }
 }
 
-function compact(v) {
-  const pick = (n) => { const o = v.one(n); return o ? { v: o.v, c: o.c, al: o.al, cv: o.cv, an: o.an, af: o.af } : null; };
-  const rec: any = { f: v.frame, t: v.tick, off: v.s.off, where: whereIs(v) };
+function compact(v: View) {
+  const pick = (n: string) => { const o = v.one(n); return o ? { v: o.v, c: o.c, al: o.al, cv: o.cv, an: o.an, af: o.af } : null; };
+  const rec: Record<string, unknown> = { f: v.frame, t: v.tick, off: v.s.off, where: whereIs(v) };
   for (const n of ['viewing', 'viewing a screen', 'viewing 2', 'you in', 'mon in', 'what vent is closed',
     'going to seal', 'rebooting', 'time of night', 'AI', 'move counter', 'aggresive?', 'play counter',
     'toggle button', 'flip it out', 'screen two flipper', 'scroll', 'audio text', 'camera text',
@@ -75,12 +80,12 @@ function compact(v) {
  * survey: 6th Night from the title, then a scripted sequence of office
  * touches, logging the watched state every 10 updates and around each touch.
  */
-function survey({ run }) {
+function survey({ run }: PolicyOptions): PilotPolicy {
   const hands = new Hands();
   const out = join(run, 'survey.jsonl');
   writeFileSync(out, '');
   let officeTicks = 0;
-  const script = [
+  const script: [number, string, (h: Hands) => void][] = [
     [120, 'pan right', (h) => h.holdXY(1000, 384, 90)],
     [260, 'monitor tab', (h) => h.tapObj('olivier_FlipHitbox.Active', 1)],
     [400, 'cam 10', (h) => h.tapObj('cam 10')],
@@ -96,7 +101,7 @@ function survey({ run }) {
     [1700, 'reboot vent', (h) => h.tapObj('ventilation text')],
   ];
   let next = 0;
-  let lastWhere = null;
+  let lastWhere = null as string | null;
   return {
     step(s) {
       const v = view(s);
@@ -121,7 +126,9 @@ function survey({ run }) {
 }
 
 /** probe: one held touch in the office; every update's pan state. */
-function probe({ run, knobs }) {
+function probe({ run, knobs: options }: PolicyOptions): PilotPolicy {
+  // --knobs, as this policy reads it.
+  const knobs = options as { readonly at?: readonly [number, number], readonly from?: number, readonly hold?: number };
   const hands = new Hands();
   const out = join(run, 'probe.jsonl');
   writeFileSync(out, '');
@@ -142,25 +149,26 @@ function probe({ run, knobs }) {
   };
 }
 
-const inWindow = (c) => c && c[0] >= 0 && c[0] < WINDOW.w && c[1] >= 0 && c[1] < WINDOW.h;
+const inWindow = (c: readonly number[] | undefined): c is readonly [number, number] => c !== undefined && c[0] >= 0 && c[0] < WINDOW.w && c[1] >= 0 && c[1] < WINDOW.h;
 
 /** The instance of `hitbox` whose value 0 is `target`'s FixedValue (the port's proxy for it). */
-export function proxyOf(v, hitbox, target) {
+export function proxyOf(v: View, hitbox: string, target: string) {
   const t = v.one(target);
   if (!t) return null;
   const list = v.all(hitbox);
   const i = list.findIndex((h) => h.al?.[0] === t.fx && inWindow(h.c));
-  return i < 0 ? null : { index: i, c: list[i].c };
+  // inWindow read this instance's centre.
+  return i < 0 ? null : { index: i, c: list[i].c as readonly [number, number] };
 }
 
 /** A tap at a proxy's centre, refused (null) when the centre is off the window. */
-function tapProxy(hands, v, hitbox, target, hold = 3) {
+function tapProxy(hands: Hands, v: View, hitbox: string, target: string, hold = 3) {
   const p = proxyOf(v, hitbox, target);
   if (!p) return false;
   hands.tapXY(p.c[0], p.c[1], hold);
   return true;
 }
-function tapVisible(hands, v, name, hold = 3) {
+function tapVisible(hands: Hands, v: View, name: string, hold = 3) {
   const o = v.one(name);
   if (!o || !inWindow(o.c)) return false;
   hands.tapXY(o.c[0], o.c[1], hold);
@@ -168,12 +176,12 @@ function tapVisible(hands, v, name, hold = 3) {
 }
 
 /** survey2: the office's controls, each through its in-window proxy. */
-function survey2({ run }) {
+function survey2({ run }: PolicyOptions): PilotPolicy {
   const hands = new Hands();
   const out = join(run, 'survey.jsonl');
   writeFileSync(out, '');
-  const note = (o) => appendFileSync(out, JSON.stringify(o) + '\n');
-  const script = [
+  const note = (o: object) => appendFileSync(out, JSON.stringify(o) + '\n');
+  const script: [number, string, (v: View) => boolean][] = [
     [60, 'pan right', (v) => (hands.holdXY(1000, 384, 70), true)],
     [150, 'monitor up', (v) => tapProxy(hands, v, 'olivier_FlipHitbox.Active', 'flip it out')],
     [220, 'cam 10', (v) => tapProxy(hands, v, 'olivier_cameraHitboxA.Active', 'cam 10')],
@@ -202,7 +210,7 @@ function survey2({ run }) {
           next += 1;
         }
         if (s.t % 5 === 0) {
-          const rec: any = { t: s.t, off: s.off, where: whereIs(v), scroll: v.al('scroll', 0) };
+          const rec: Record<string, unknown> = { t: s.t, off: s.off, where: whereIs(v), scroll: v.al('scroll', 0) };
           for (const n of ['viewing', 'viewing a screen', 'you in', 'mon in', 'what vent is closed', 'going to seal',
             'rebooting', 'time of night', 'play counter', 'drop it']) rec[n] = v.cv(n);
           for (const n of ['toggle button', 'seal vent button', 'screen two flipper', 'flip it out', 'audio text',
@@ -228,19 +236,19 @@ function survey2({ run }) {
 // The vent each place can enter on `action selected` 4 (g228, g231, g237,
 // g243, g247), in the order a seal protects: 14 and 15 kill outright, 11 and
 // 12 enter the attack chain at stage 3, 13 at stage 1.
-export const SEAL_FOR = { 'cam 10': 14, 'cam 02': 15, 'cam 09': 11, 'cam 07': 12, 'cam 05': 13 };
+export const SEAL_FOR: Readonly<Record<string, number>> = { 'cam 10': 14, 'cam 02': 15, 'cam 09': 11, 'cam 07': 12, 'cam 05': 13 };
 // Where a lure pulls him outward from each place (g319-g341's pairs, read as
 // `lure on X pulls from Y`): stage 1 has one exit, CAM 02's lure, and g275
 // advances stage 1 to stage 2 on any roll above 2 while a screen is up.
-export const LURE_TO = { 'attack stage 1': 2, 'cam 03': 2, 'cam 04': 2, 'cam 02': 5, 'cam 05': 8, 'cam 07': 8, 'cam 08': 9, 'cam 09': 10 };
-const DANGER = new Set(['attack stage 1', 'cam 03', 'cam 04', 'cam 02', 'cam 05']);
-const CALM = new Set(['cam 10', 'cam 09']);
+export const LURE_TO: Readonly<Record<string, number>> = { 'attack stage 1': 2, 'cam 03': 2, 'cam 04': 2, 'cam 02': 5, 'cam 05': 8, 'cam 07': 8, 'cam 08': 9, 'cam 09': 10 };
+const DANGER = new Set<string | null>(['attack stage 1', 'cam 03', 'cam 04', 'cam 02', 'cam 05']);
+const CALM = new Set<string | null>(['cam 10', 'cam 09']);
 const LETHAL = new Set([14, 15]);
 // Inside a vent he resolves on his next move: back to the camera he came from
 // if that vent is sealed then, on toward the office if not (g604-g613).
-const IN_VENT = { 'cam 11': 11, 'cam 12': 12, 'cam 13': 13, 'cam 14': 14, 'cam 15': 15 };
+const IN_VENT: Readonly<Record<string, number>> = { 'cam 11': 11, 'cam 12': 12, 'cam 13': 13, 'cam 14': 14, 'cam 15': 15 };
 // A camera whose selection a phantom can use (g670-g681, g717, g726, g727).
-function phantomSafe(v, cam) {
+function phantomSafe(v: View, cam: number) {
   if (cam === 4 && v.cv('mangle') === 2) return false;
   if (cam === 7 && v.cv('chica') === 2) return false;
   if (cam === 8 && v.cv('puppet') === 2) return false;
@@ -248,30 +256,30 @@ function phantomSafe(v, cam) {
   return true;
 }
 
-function* hold(ticks) { for (let i = 0; i < ticks; i += 1) yield []; }
-function* until(ctx, pred, max) { for (let i = 0; i < max && !pred(ctx.v); i += 1) yield []; }
-function* tapAt(c, ticks = 3) { yield [`down 0 ${c[0]} ${c[1]}`]; yield* hold(ticks - 1); yield ['up 0']; }
-function* tapProxyTask(ctx, hitbox, target) {
+function* hold(ticks: number): Task { for (let i = 0; i < ticks; i += 1) yield []; }
+function* until(ctx: Ctx, pred: (v: View) => boolean, max: number): Task { for (let i = 0; i < max && !pred(ctx.v); i += 1) yield []; }
+function* tapAt(c: readonly [number, number], ticks = 3): Task { yield [`down 0 ${c[0]} ${c[1]}`]; yield* hold(ticks - 1); yield ['up 0']; }
+function* tapProxyTask(ctx: Ctx, hitbox: string, target: string): Task<boolean> {
   const p = proxyOf(ctx.v, hitbox, target);
   if (!p) { ctx.log({ miss: target }); return false; }
   yield* tapAt(p.c);
   return true;
 }
-function* tapNamed(ctx, name) {
+function* tapNamed(ctx: Ctx, name: string): Task<boolean> {
   const o = ctx.v.one(name);
   if (!o || !inWindow(o.c)) { ctx.log({ miss: name }); return false; }
   yield* tapAt(o.c);
   return true;
 }
-function* panTo(ctx, right) {
-  const done = (v) => (right ? v.al('scroll', 0) >= 1488 : v.al('scroll', 0) <= 512);
+function* panTo(ctx: Ctx, right: boolean): Task {
+  const done = (v: View) => (right ? v.al('scroll', 0) >= 1488 : v.al('scroll', 0) <= 512);
   if (done(ctx.v)) return;
   yield [`down 0 ${right ? 1000 : 20} 384`];
   yield* until(ctx, done, 120);
   yield ['up 0'];
 }
 
-const facts = (v) => ({
+const facts = (v: View) => ({
   where: whereIs(v), sealed: v.cv('what vent is closed'), going: v.cv('going to seal'),
   charge: v.al('seal vent button', 19), viewing: v.cv('viewing'), screen: v.cv('viewing a screen'),
   toggle: v.al('toggle button', 0), toggleAnim: v.al('toggle button', 1), youIn: v.cv('you in'),
@@ -291,7 +299,7 @@ const facts = (v) => ({
  * range >> 16) from the frame's seed. The harness seeds every visit with the
  * one seed, so such a seed never reaches the office (batch.ts: NO_NIGHT).
  */
-export function whatDayRare(seed) {
+export function whatDayRare(seed: number) {
   const g = (((seed & 0xFFFF) * 31415) + 1) & 0xFFFF;
   return ((g * 1000) >>> 16) === 0;
 }
@@ -302,25 +310,26 @@ export function whatDayRare(seed) {
  * or 15, whose far ends kill outright (g611, g613). A branch after it is
  * already lost. `records` are the policy log's lines, parsed.
  */
-export function doomStart(records) {
+export function doomStart(records: readonly Readonly<Record<string, unknown>>[]) {
   const r = records.find((x) => typeof x.where === 'string'
     && (/^attack stage|^GOT YOU/.test(x.where) || x.where === 'cam 14' || x.where === 'cam 15'));
-  return r ? r.t : null;
+  // Every record the policy logs carries its update.
+  return r ? r.t as number : null;
 }
 
 // guard2's zones. From CAM 04 and CAM 03 two moves in three go toward the
 // office (g249, g251), and a roll above 2 at stage 1 marks him for stage 2
 // (g252/g275), so those three are lured back to CAM 02 at once. CAM 08-10 are
 // three or more moves from stage 1, the only places a 10 s reboot is spent.
-const NEAR = new Set(['cam 04', 'cam 03', 'attack stage 1']);
-const FAR = new Set(['cam 08', 'cam 09', 'cam 10']);
+const NEAR = new Set<string | null>(['cam 04', 'cam 03', 'attack stage 1']);
+const FAR = new Set<string | null>(['cam 08', 'cam 09', 'cam 10']);
 
 /**
  * Plays left before audio errors: a play needs `audio text` > -10 and takes
  * AI from it (g301/g308), so from 0 at AI 7 there are two and the second
  * breaks audio.
  */
-export function playsLeft(audio, ai) {
+export function playsLeft(audio: number, ai: number) {
   if (!(audio > -10) || !(ai > 0)) return 0;
   return Math.floor((audio + 9) / ai) + 1;
 }
@@ -343,54 +352,58 @@ export function playsLeft(audio, ai) {
  * chain (g486, g487, g256, g259, g262, g483, g661), and aggression is on all
  * night on Nightmare anyway (g220/g662 with AI 7).
  */
-function guard({ run, knobs }, rev = 1) {
+function guard({ run, knobs: options }: PolicyOptions, rev = 1): PilotPolicy {
+  // --knobs, as this policy reads it.
+  const knobs = options as { readonly quiet?: boolean, readonly rebootAt?: number, readonly herd?: boolean };
   const { write, flush } = controllerLog(join(run, 'guard.jsonl'), knobs.quiet);
-  const ctx = { v: null, log: (o) => write(JSON.stringify({ t: ctx.v?.tick, ...o })) };
-  let task = null, taskName = null, last = null, outcome = null;
+  // ctx.v is the office update's view, set before any task runs; until then only log reads it.
+  const ctx: Ctx = { v: null as unknown as View, log: (o) => write(JSON.stringify({ t: ctx.v?.tick, ...o })) };
+  let task = null as Task<unknown> | null, taskName = null as string | null, last = null as string | null,
+    outcome = null as string | null;
   // Every play-frame update a task started on, for search.ts: the quiet log
   // keeps only its last 200 records.
-  const starts = [];
+  const starts: number[] = [];
   const rebootAt = knobs.rebootAt ?? -10;
 
-  function* raise() {
+  function* raise(): Task {
     yield* panTo(ctx, true);
     if (ctx.v.cv('viewing') === 0) {
       yield* tapProxyTask(ctx, 'olivier_FlipHitbox.Active', 'flip it out');
-      yield* until(ctx, (v) => v.cv('viewing') >= 2, 60);
+      yield* until(ctx, (v) => Number(v.cv('viewing')) >= 2, 60);
     }
   }
-  function* toVents() {
+  function* toVents(): Task {
     if (ctx.v.al('toggle button', 0) === 1) return;
     yield* until(ctx, (v) => v.al('toggle button', 1) === 0, 30);
     yield* tapNamed(ctx, 'toggle button');
     yield* until(ctx, (v) => v.al('toggle button', 0) === 1 && v.al('toggle button', 1) === 0, 40);
   }
-  function* toCams() {
+  function* toCams(): Task {
     if (ctx.v.al('toggle button', 0) === 0) return;
     yield* until(ctx, (v) => v.al('toggle button', 1) === 0, 30);
     yield* tapNamed(ctx, 'toggle button');
     yield* until(ctx, (v) => v.al('toggle button', 0) === 0 && v.al('toggle button', 1) === 0, 40);
   }
-  function* seal(vent) {
+  function* seal(vent: number): Task {
     const target = `cam ${vent}`;
     yield* toVents();
     yield* tapProxyTask(ctx, 'olivier_cameraHitboxB.Active', target);
     yield* hold(6);
     yield* tapProxyTask(ctx, 'olivier_cameraHitboxB.Active', target);
-    yield* until(ctx, (v) => v.cv('going to seal') > 0, 10);
+    yield* until(ctx, (v) => Number(v.cv('going to seal')) > 0, 10);
     yield* until(ctx, (v) => v.cv('going to seal') === 0, 260);
   }
-  function* watch(cam) {
+  function* watch(cam: number): Task {
     yield* toCams();
     yield* tapProxyTask(ctx, 'olivier_cameraHitboxA.Active', `cam ${String(cam).padStart(2, '0')}`);
     yield* until(ctx, (v) => v.cv('you in') === cam, 10);
   }
-  function* rest() {
+  function* rest(): Task {
     yield* toVents();
     const back = ctx.v.cv('what vent is closed') || 14;
-    if (ctx.v.cv('you in') < 11) yield* tapProxyTask(ctx, 'olivier_cameraHitboxB.Active', `cam ${back}`);
+    if (Number(ctx.v.cv('you in')) < 11) yield* tapProxyTask(ctx, 'olivier_cameraHitboxB.Active', `cam ${back}`);
   }
-  function* lure(cam) {
+  function* lure(cam: number): Task {
     const name = `cam ${String(cam).padStart(2, '0')}`;
     yield* toCams();
     yield* tapProxyTask(ctx, 'olivier_cameraHitboxA.Active', name);
@@ -398,7 +411,7 @@ function guard({ run, knobs }, rev = 1) {
     yield* tapNamed(ctx, 'play button');
     yield* until(ctx, (v) => v.cv('play counter') !== 7, 10);
   }
-  function* reboot(system = 'ventilation text', abort = () => false) {
+  function* reboot(system = 'ventilation text', abort: (v: View) => boolean = () => false): Task {
     yield* tapProxyTask(ctx, 'olivier_FlipHitbox.Active', 'flip it out');
     yield* until(ctx, (v) => v.cv('viewing') === 0, 60);
     yield* panTo(ctx, false);
@@ -413,9 +426,13 @@ function guard({ run, knobs }, rev = 1) {
   }
 
   // A reboot is abandoned once he reaches CAM 05 or nearer, or a vent.
-  const closeIn = (v) => { const w = whereIs(v); return NEAR.has(w) || w === 'cam 05' || w === 'cam 02' || Boolean(IN_VENT[w]); };
+  // IN_VENT read by null names no vent, as it always has.
+  const closeIn = (v: View) => { const w = whereIs(v); return NEAR.has(w) || w === 'cam 05' || w === 'cam 02' || Boolean(IN_VENT[w as string]); };
 
-  function decide2() {
+  /** The task to start now, by name, or none. */
+  type Decision = [name: string, task: Task<unknown>] | null;
+
+  function decide2(): Decision {
     const f = facts(ctx.v);
     const ai = ctx.v.cv('AI') ?? 7;
     const ready = ctx.v.cv('play counter') === 7;
@@ -435,7 +452,7 @@ function guard({ run, knobs }, rev = 1) {
       // Waiting out the play counter (g299): with `pic random` at 1, watch his
       // own camera so it stays 1 for when the lure lands him on CAM 02
       // (g246/g247, g459); at 0, stay off it so the 10 s tick can re-roll it.
-      if (pic === 1 && cam >= 1 && cam <= 10 && phantomSafe(ctx.v, cam)) {
+      if (pic === 1 && cam !== null && cam >= 1 && cam <= 10 && phantomSafe(ctx.v, cam)) {
         if (f.toggle !== 0 || f.youIn !== cam) return [`hold coin ${cam}`, watch(cam)];
         return null;
       }
@@ -443,11 +460,11 @@ function guard({ run, knobs }, rev = 1) {
       return null;
     }
     // 2. Inside a vent: seal it and he goes back the way he came (g604-g613).
-    const inVent = IN_VENT[where];
+    const inVent = IN_VENT[where as string];
     const canSeal = f.going === 0 && f.charge === 0;
     if (inVent && f.sealed !== inVent && canSeal) return [`seal ${inVent}`, seal(inVent)];
     // 3. The vent beside him.
-    const want = SEAL_FOR[where];
+    const want = SEAL_FOR[where as string];
     if (want && f.sealed !== want && canSeal) return [`seal ${want}`, seal(want)];
     if (!canSeal) return null;
     // 4. No play left: reboot audio now, from anywhere short of CAM 04.
@@ -467,31 +484,31 @@ function guard({ run, knobs }, rev = 1) {
         return null;
       }
       if (ready && plays >= 2) return ['lure 5 from cam 02', lure(5)];
-      if (f.toggle !== 1 || f.youIn < 11) return ['rest', rest()];
+      if (f.toggle !== 1 || Number(f.youIn) < 11) return ['rest', rest()];
       return null;
     }
     // 7. Otherwise as rev 1: hold `pic random` at 1 by watching his camera
     // when that is phantom-safe, or rest on the vent map.
-    if (pic === 1 && !inVent && cam >= 1 && cam <= 10 && phantomSafe(ctx.v, cam)) {
+    if (pic === 1 && !inVent && cam !== null && cam >= 1 && cam <= 10 && phantomSafe(ctx.v, cam)) {
       if (f.toggle !== 0 || f.youIn !== cam) return [`watch ${cam}`, watch(cam)];
       return null;
     }
-    if (f.toggle !== 1 || f.youIn < 11) return ['rest', rest()];
+    if (f.toggle !== 1 || Number(f.youIn) < 11) return ['rest', rest()];
     return null;
   }
 
-  function decide() {
+  function decide(): Decision {
     if (rev >= 2) return decide2();
     const f = facts(ctx.v);
     const pic = ctx.v.cv('pic random');
     if (f.maint !== 0 && f.rebooting === 0) return ['exit', (function* () { yield* tapNamed(ctx, 'exit text'); yield* hold(20); })()];
     if (f.vent <= rebootAt && f.rebooting === 0) return ['reboot', reboot()];
     if (f.viewing === 0) return ['raise', raise()];
-    const inVent = IN_VENT[f.where];
-    const want = inVent ?? SEAL_FOR[f.where];
+    const inVent = IN_VENT[f.where as string];
+    const want = inVent ?? SEAL_FOR[f.where as string];
     const sealNow = want && f.sealed !== want && f.going === 0 && f.charge === 0;
     if (sealNow && (inVent || LETHAL.has(want))) return [`seal ${want}`, seal(want)];
-    const lureCam = LURE_TO[f.where];
+    const lureCam = LURE_TO[f.where as string];
     const canLure = ctx.v.cv('play counter') === 7 && f.audio > -10;
     if (lureCam && canLure && (DANGER.has(f.where) || knobs.herd)) return [`lure ${lureCam} from ${f.where}`, lure(lureCam)];
     if (sealNow) return [`seal ${want}`, seal(want)];
@@ -500,11 +517,11 @@ function guard({ run, knobs }, rev = 1) {
     // Watching his camera freezes `pic random` (g459); keep it at 1, the
     // coin that turns his action-4 move at CAM 02/05 into a sealed vent.
     const cam = ctx.v.cv('mon in');
-    if (pic === 1 && !inVent && cam >= 1 && cam <= 10 && phantomSafe(ctx.v, cam)) {
+    if (pic === 1 && !inVent && cam !== null && cam >= 1 && cam <= 10 && phantomSafe(ctx.v, cam)) {
       if (f.toggle !== 0 || f.youIn !== cam) return [`watch ${cam}`, watch(cam)];
       return null;
     }
-    if (f.toggle !== 1 || f.youIn < 11) return ['rest', rest()];
+    if (f.toggle !== 1 || Number(f.youIn) < 11) return ['rest', rest()];
     return null;
   }
 
@@ -524,11 +541,12 @@ function guard({ run, knobs }, rev = 1) {
       }
       if (!task) return [];
       const r = task.next();
-      if (r.done) { task = null; taskName = null; return r.value === true || r.value === false ? [] : (r.value ?? []); }
+      // A task that ends returns nothing or whether its tap landed, and sends no rows of its own.
+      if (r.done) { task = null; taskName = null; return r.value === true || r.value === false ? [] : ((r.value as string[] | undefined) ?? []); }
       return r.value ?? [];
     },
     summary: () => { flush(); return { outcome, starts }; },
   };
 }
 
-export const POLICIES = { survey, survey2, probe, guard, guard2: (o) => guard(o, 2) };
+export const POLICIES = { survey, survey2, probe, guard, guard2: (o: PolicyOptions) => guard(o, 2) };

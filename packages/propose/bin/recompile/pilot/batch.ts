@@ -30,12 +30,25 @@ import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync } from 'nod
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gameModulePath, loadGame } from './pilot.ts';
+import type { PilotSummary } from './pilot.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '../../../../..');
 
-function parseArgs(argv) {
-  const o: any = { jobs: 6, knobs: {}, winKeys: [] };
+/** A batch: the policy over a block of seeds, where it runs and from what, and the keys a win writes. */
+interface BatchOptions {
+  game: string, policy: string, binary: string, assets: string, save: string, seeds: number[], out: string;
+  jobs: number, knobs: Readonly<Record<string, unknown>>, winKeys: string[], policySha256?: string;
+}
+
+/** One seed's row in results.jsonl. */
+interface SeedRow {
+  seed: number, verdict: 'WON' | 'NO_NIGHT' | 'LOST', policySha256: string | undefined, outcome: unknown, updates: number | null;
+  inputSha256: string | null, missing?: string[], error?: string, tail?: string[];
+}
+
+function parseArgs(argv: string[]): BatchOptions {
+  const o: Partial<BatchOptions> & Pick<BatchOptions, 'jobs' | 'knobs' | 'winKeys'> = { jobs: 6, knobs: {}, winKeys: [] };
   for (let i = 0; i < argv.length; i += 1) {
     const a = argv[i];
     const v = () => argv[++i];
@@ -57,15 +70,17 @@ function parseArgs(argv) {
     else if (a === '--win-key') o.winKeys.push(v());
     else throw new Error(`batch: unknown argument ${a}`);
   }
-  for (const k of ['game', 'policy', 'binary', 'assets', 'save', 'seeds', 'out']) if (!o[k]) throw new Error(`batch: --${k} is required`);
+  for (const k of ['game', 'policy', 'binary', 'assets', 'save', 'seeds', 'out'] as const) if (!o[k]) throw new Error(`batch: --${k} is required`);
   if (!o.winKeys.length) throw new Error('batch: at least one --win-key');
-  if (o.out.startsWith(ROOT)) throw new Error('batch: --out must be outside the repository');
-  return o;
+  // Each required option was checked just above.
+  const checked = o as BatchOptions;
+  if (checked.out.startsWith(ROOT)) throw new Error('batch: --out must be outside the repository');
+  return checked;
 }
 
-function iniKeys(text) {
-  const out = {};
-  let section = null;
+function iniKeys(text: string) {
+  const out: Record<string, string> = {};
+  let section = null as string | null;
   for (const raw of text.split(/\r?\n/)) {
     const line = raw.trim();
     const sec = /^\[(.+)\]$/.exec(line);
@@ -76,19 +91,19 @@ function iniKeys(text) {
   return out;
 }
 
-export const SOURCES = (game) => [join(HERE, 'pilot.ts'), gameModulePath(game)];
-const sourcesSha256 = (game) => {
+export const SOURCES = (game: string) => [join(HERE, 'pilot.ts'), gameModulePath(game)];
+const sourcesSha256 = (game: string) => {
   const h = createHash('sha256');
   for (const f of SOURCES(game)) h.update(readFileSync(f));
   return h.digest('hex');
 };
 
-function runSeed(o, saveName, seed) {
+function runSeed(o: BatchOptions, saveName: string, seed: number) {
   const dir = join(o.out, `s${seed}`);
   const args = [join(HERE, 'pilot.ts'), '--game', o.game, '--run', dir, '--binary', o.binary, '--assets', o.assets,
     '--save', o.save, '--policy', o.policy, '--seed', String(seed), '--max-ticks', '30000',
     '--stop-frame', '5', '--no-trace', '--kill-on-loss', '--knobs', JSON.stringify({ ...o.knobs, quiet: true })];
-  return new Promise<any>((res) => {
+  return new Promise<SeedRow>((res) => {
     const child = spawn(process.execPath, args, { stdio: ['ignore', 'pipe', 'pipe'] });
     let out = '', err = '';
     child.stdout.on('data', (d) => { out += d; });
@@ -97,8 +112,9 @@ function runSeed(o, saveName, seed) {
     // exit event, and a summary that lists every task start is long enough to
     // be cut off (seed 50005, 2026-09-30, read as a night that never started).
     child.on('close', (code) => {
-      let summary = null;
-      try { summary = JSON.parse(out.trim().split('\n').pop()); } catch { /* reported below */ }
+      let summary = null as PilotSummary | null;
+      // split always returns a last line.
+      try { summary = JSON.parse(out.trim().split('\n').pop() as string); } catch { /* reported below */ }
       const save = existsSync(join(dir, saveName)) ? iniKeys(readFileSync(join(dir, saveName), 'utf8')) : {};
       const missing = o.winKeys.filter((k) => save[k.split('=')[0]] !== k.split('=')[1]);
       const input = existsSync(join(dir, 'pilot.input')) ? readFileSync(join(dir, 'pilot.input')) : null;
@@ -106,7 +122,7 @@ function runSeed(o, saveName, seed) {
       const logText = existsSync(join(dir, logName)) ? readFileSync(join(dir, logName), 'utf8').trim() : '';
       const verdict = code === 0 && summary && !missing.length ? 'WON'
         : code === 0 && summary && summary.outcome === null && logText === '' ? 'NO_NIGHT' : 'LOST';
-      const row: any = { seed, verdict, policySha256: o.policySha256,
+      const row: SeedRow = { seed, verdict, policySha256: o.policySha256,
         outcome: summary?.outcome ?? null, updates: summary?.updates ?? null,
         inputSha256: input ? createHash('sha256').update(input).digest('hex') : null };
       if (row.verdict !== 'WON') {
@@ -122,20 +138,21 @@ function runSeed(o, saveName, seed) {
 }
 
 async function main() {
-  const o: any = parseArgs(process.argv.slice(2));
+  const o = parseArgs(process.argv.slice(2));
   const game = await loadGame(o.game);
   o.policySha256 = sourcesSha256(o.game);
   mkdirSync(o.out, { recursive: true });
   const resultsPath = join(o.out, 'results.jsonl');
-  const done = new Set();
+  const done = new Set<number>();
   if (existsSync(resultsPath)) for (const l of readFileSync(resultsPath, 'utf8').split('\n')) if (l) done.add(JSON.parse(l).seed);
-  const queue = [];
+  const queue: number[] = [];
   for (const s of o.seeds) if (!done.has(s)) queue.push(s);
   let won = 0, lost = 0, noNight = 0;
   const started = Date.now();
   async function worker() {
     while (queue.length) {
-      const seed = queue.shift();
+      // The loop checked the queue's length.
+      const seed = queue.shift() as number;
       const row = await runSeed(o, game.SAVE_NAME, seed);
       if (sourcesSha256(o.game) !== o.policySha256) {
         queue.length = 0;

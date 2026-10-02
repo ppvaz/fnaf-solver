@@ -35,6 +35,44 @@ import { appendFileSync, closeSync, copyFileSync, mkdirSync, openSync, readFileS
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+/**
+ * One watched instance as the harness writes it: position, visibility and
+ * flags, fixed value, and where present its centre and box, animation,
+ * counter value and alterable values (with the alterable flags' 32 bits).
+ */
+export interface PilotObject {
+  readonly x: number, readonly y: number, readonly v: number, readonly fl: number, readonly fx: number;
+  readonly c?: readonly [number, number], readonly box?: readonly [number, number, number, number];
+  readonly an?: number, readonly af?: number, readonly ad?: number, readonly cv?: number;
+  readonly al?: readonly number[], readonly af32?: number;
+}
+/**
+ * One update's state line: the frame and its update, the draw counters, the
+ * pan offset, the global values, and the watched objects by name -- whole, or
+ * only those that changed when `delta` is set.
+ */
+export interface PilotState {
+  readonly f: number, readonly t: number, readonly d: number, readonly g: number;
+  readonly off: readonly [number, number], readonly gv: readonly number[];
+  readonly full?: 1, readonly delta?: 1;
+  o: Record<string, readonly PilotObject[]>;
+}
+/** A game's policy: the touch rows it answers each state with, whether the night is over for it, and its summary. */
+export interface PilotPolicy {
+  step(state: PilotState): string[] | null | undefined;
+  done?: boolean;
+  summary?(): Readonly<Record<string, unknown>> & { readonly outcome?: unknown };
+}
+/** What a policy is built from: the run's knobs (--knobs, JSON) and its directory. */
+export interface PolicyOptions { readonly knobs: Readonly<Record<string, unknown>>, readonly run: string }
+/** A rebuilt game's policy module (`./<game>.ts`): its policies, save name, play frame and watched objects. */
+export interface PilotGame {
+  readonly POLICIES: Readonly<Record<string, (options: PolicyOptions) => PilotPolicy>>;
+  readonly SAVE_NAME: string, readonly OFFICE?: number, readonly LEVEL?: number;
+  readonly WATCH: readonly string[], readonly MAX_INSTANCES?: number;
+  readonly doomStart?: (records: readonly Readonly<Record<string, unknown>>[]) => number | null;
+}
+
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '../../../../..');
 const IMAGE = 'fnaf2-chowdren:buster';
@@ -45,15 +83,33 @@ const MOUNT = '/home/pedro/fnaf-apks';
 /** The rebuilt games the pilot drives, each a policy module beside this file. */
 export const GAMES = ['fnaf3', 'fnaf4'];
 /** A game's policy module (`./<game>.ts`), the one file pilot, replay, batch and search load and hash for it. */
-export function gameModulePath(game) {
+export function gameModulePath(game: string) {
   if (!GAMES.includes(game)) throw new Error(`pilot: --game must be one of ${GAMES.join(', ')}, not ${game}`);
   return join(HERE, `${game}.ts`);
 }
-export const loadGame = (game) => import(pathToFileURL(gameModulePath(game)).href);
+export const loadGame = (game: string): Promise<PilotGame> => import(pathToFileURL(gameModulePath(game)).href);
 export const NATIVE_ENV = { SDL_VIDEODRIVER: 'offscreen', EGL_PLATFORM: 'surfaceless', ALSOFT_DRIVERS: 'null' };
 
-export function parseArgs(argv) {
-  const o: any = { seed: 24850, maxTicks: 60000, knobs: {}, docker: false, stopFrame: null, trace: true, killOnLoss: false,
+/**
+ * A pilot run's summary, as pilot-summary.json and the last line it prints
+ * carry it: the harness's exit, updates and last update in the play frame,
+ * then the policy's own summary (its outcome, the updates it started tasks on).
+ */
+export interface PilotSummary {
+  readonly exit: number | string | null, readonly updates: number, readonly runtime: string;
+  readonly lastPlayTick: number | null, readonly outcome?: unknown, readonly starts?: unknown;
+}
+
+/** A pilot run: the game and policy, where it runs and from what, and the run's limits and branch point. */
+export interface PilotOptions {
+  game: string, run: string, binary: string, assets: string, save: string, policy: string;
+  seed: number, maxTicks: number, knobs: Readonly<Record<string, unknown>>, docker: boolean, stopFrame: number | null;
+  trace: boolean, killOnLoss: boolean, prefix: string | null, branch: number | null, hold: number;
+}
+
+export function parseArgs(argv: string[]): PilotOptions {
+  const o: Partial<PilotOptions> & Omit<PilotOptions, 'game' | 'run' | 'binary' | 'assets' | 'save' | 'policy'> = {
+    seed: 24850, maxTicks: 60000, knobs: {}, docker: false, stopFrame: null, trace: true, killOnLoss: false,
     prefix: null, branch: null, hold: 0 };
   for (let i = 0; i < argv.length; i += 1) {
     const a = argv[i];
@@ -76,33 +132,37 @@ export function parseArgs(argv) {
     else if (a === '--hold') o.hold = Number(v());
     else throw new Error(`pilot: unknown argument ${a}`);
   }
-  for (const k of ['game', 'run', 'binary', 'assets', 'save', 'policy'])
+  for (const k of ['game', 'run', 'binary', 'assets', 'save', 'policy'] as const)
     if (!o[k]) throw new Error(`pilot: --${k} is required`);
-  if (o.docker && !o.run.startsWith(MOUNT + '/')) throw new Error(`pilot: --run must sit under ${MOUNT} (the container mount)`);
-  if (o.run.startsWith(ROOT)) throw new Error('pilot: --run must be outside the repository');
-  if ((o.prefix === null) !== (o.branch === null)) throw new Error('pilot: --prefix and --branch go together');
-  return o;
+  // Each required option was checked just above.
+  const checked = o as PilotOptions;
+  if (checked.docker && !checked.run.startsWith(MOUNT + '/')) throw new Error(`pilot: --run must sit under ${MOUNT} (the container mount)`);
+  if (checked.run.startsWith(ROOT)) throw new Error('pilot: --run must be outside the repository');
+  if ((checked.prefix === null) !== (checked.branch === null)) throw new Error('pilot: --prefix and --branch go together');
+  return checked;
 }
 
 /** Accessors over one pilot state line. */
-export function view(s) {
-  const all = (n) => s.o[n] ?? [];
-  const one = (n) => all(n)[0] ?? null;
-  const al = (n, i) => one(n)?.al?.[i] ?? 0;
-  const cv = (n) => one(n)?.cv ?? null;
+export function view(s: PilotState) {
+  const all = (n: string) => s.o[n] ?? [];
+  const one = (n: string) => all(n)[0] ?? null;
+  const al = (n: string, i: number) => one(n)?.al?.[i] ?? 0;
+  const cv = (n: string) => one(n)?.cv ?? null;
   return { s, all, one, al, cv, frame: s.f, tick: s.t };
 }
+/** The accessors over one state line. */
+export type View = ReturnType<typeof view>;
 
 /**
  * A controller's log, `out` emptied first: each line appended as it is
  * written, or with `quiet` only the last 200 kept in memory and written by
  * flush when the night ends, for batch runs over many seeds.
  */
-export function controllerLog(out, quiet) {
+export function controllerLog(out: string, quiet: boolean | undefined) {
   writeFileSync(out, '');
-  const ring = [];
+  const ring: string[] = [];
   return {
-    write: (line) => {
+    write: (line: string) => {
       if (!quiet) appendFileSync(out, line + '\n');
       else { ring.push(line); if (ring.length > 200) ring.shift(); }
     },
@@ -111,7 +171,7 @@ export function controllerLog(out, quiet) {
 }
 
 /** A pilot.input as rows: { f, t, cmd } in the order the harness applied them. */
-export function readRows(path) {
+export function readRows(path: string) {
   return readFileSync(path, 'utf8').split('\n').filter((l) => l && !l.startsWith('#')).map((l) => {
     const m = /^(-?\d+) (\d+) (.+)$/.exec(l);
     if (!m) throw new Error(`pilot: bad input row ${l}`);
@@ -119,7 +179,7 @@ export function readRows(path) {
   });
 }
 
-export async function run(o) {
+export async function run(o: PilotOptions) {
   const game = await loadGame(o.game);
   const policyFactory = game.POLICIES[o.policy];
   if (!policyFactory) throw new Error(`pilot: ${o.game} has no policy ${o.policy} (${Object.keys(game.POLICIES).join(', ')})`);
@@ -135,12 +195,12 @@ export async function run(o) {
   const policy = policyFactory({ knobs: o.knobs, run: o.run });
   let updates = 0;
   let quit = false;
-  let failure = null;
-  let child = null;
-  let objects = {};
+  let failure = null as unknown;
+  let child = null as ReturnType<typeof spawn> | null;
+  let objects: PilotState['o'] = {};
   // The play frame is the one a policy plays the night in.
   const PLAY = game.OFFICE ?? game.LEVEL;
-  let lastPlayTick = null;
+  let lastPlayTick = null as number | null;
   // --prefix: rows replayed as they were applied. The harness applies a
   // reply's touches on the update after the state it answers, so a row
   // logged at (f, t) is sent in reply to state (f, t - 1).
@@ -149,29 +209,30 @@ export async function run(o) {
   let replaying = o.prefix !== null;
   let holdLeft = o.hold;
   const server = createServer();
-  const served = new Promise<any>((res) => {
+  const served = new Promise<unknown>((res) => {
     server.on('connection', (sock) => {
       server.close();
       sock.setNoDelay(true);
       let acc = '';
       sock.on('data', (chunk) => {
         acc += chunk.toString('utf8');
-        let nl;
+        let nl: number;
         let reply = '';
         while ((nl = acc.indexOf('\n')) >= 0) {
           const line = acc.slice(0, nl);
           acc = acc.slice(nl + 1);
           updates += 1;
-          let cmds = [];
+          let cmds: string[] = [];
           if (!quit && !failure) {
             try {
               // CHOWDREN_PILOT_DELTA: a delta line carries only the objects
               // that changed; merge it into the last full picture.
-              const state = JSON.parse(line);
+              const state: PilotState = JSON.parse(line);
               if (state.delta) state.o = Object.assign(objects, state.o);
               else objects = state.o;
               if (state.f === PLAY) lastPlayTick = state.t;
-              if (replaying && state.f === PLAY && state.t + 1 > o.branch) replaying = false;
+              // A prefix run has its branch (parseArgs).
+              if (replaying && state.f === PLAY && state.t + 1 > (o.branch as number)) replaying = false;
               if (replaying) {
                 while (next < rows.length && rows[next].f === state.f && rows[next].t === state.t + 1) cmds.push(rows[next++].cmd);
               } else if (holdLeft > 0) {
@@ -194,9 +255,10 @@ export async function run(o) {
       sock.on('error', res);
     });
   });
-  await new Promise<any>((res) => server.listen(0, o.docker ? '0.0.0.0' : '127.0.0.1', res));
-  const port = (server.address() as any).port;
-  const env: any = {
+  await new Promise<void>((res) => server.listen(0, o.docker ? '0.0.0.0' : '127.0.0.1', res));
+  // A listening TCP server has an address with a port.
+  const port = (server.address() as import('node:net').AddressInfo).port;
+  const env: Record<string, string> = {
     CHOWDREN_HARNESS: '1', CHOWDREN_NO_DRAW: '1', CHOWDREN_SEED: String(o.seed),
     CHOWDREN_MAX_TOTAL_TICKS: String(o.maxTicks), CHOWDREN_TIMEOUT_SECONDS: '1200',
     CHOWDREN_PILOT_CONNECT: `${o.docker ? 'host.docker.internal' : '127.0.0.1'}:${port}`,
@@ -217,9 +279,10 @@ export async function run(o) {
     child = spawn(o.binary, [], { cwd: o.run, stdio: ['ignore', logFd, logFd],
       env: { ...process.env, ...env, ...NATIVE_ENV } });
   }
-  const code = await new Promise<any>((res) => child.on('exit', (c, sig) => res(c ?? sig)));
+  const spawned = child;
+  const code = await new Promise<number | string | null>((res) => spawned.on('exit', (c, sig) => res(c ?? sig)));
   server.close();
-  await Promise.race([served, new Promise<any>((res) => setTimeout(res, 2000))]);
+  await Promise.race([served, new Promise<void>((res) => setTimeout(res, 2000))]);
   closeSync(logFd);
   if (failure) throw failure;
   const summary = { exit: code, updates, runtime: o.docker ? 'docker' : 'native', lastPlayTick,

@@ -5,6 +5,7 @@
 import { appendFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { controllerLog, readRows, view } from './pilot.ts';
+import type { PilotObject, PilotPolicy, PilotState, PolicyOptions, View } from './pilot.ts';
 
 export const SAVE_NAME = 'fn4';
 export const TITLE = 1;
@@ -33,16 +34,20 @@ export const WATCH = [
   ...MARKERS, ...ACTORS, ...HUD, ...COUNTERS,
 ];
 
-const inWindow = (c) => c && c[0] >= 0 && c[0] < WINDOW.w && c[1] >= 0 && c[1] < WINDOW.h;
+/** Touch rows to send after a number of updates. */
+type Queued = { at: number, cmd: string };
+/** A menu driver: the rows for a title or extras update. */
+type Menu = (s: PilotState, v: View) => string[];
+const inWindow = (c: readonly number[] | undefined): c is readonly [number, number] => c !== undefined && c[0] >= 0 && c[0] < WINDOW.w && c[1] >= 0 && c[1] < WINDOW.h;
 
 /** nav: title -> Extras -> Nightmare x8 -> Start, logging each frame's watched state. */
-function nav({ run }) {
+function nav({ run }: PolicyOptions): PilotPolicy {
   const out = join(run, 'nav.jsonl');
   writeFileSync(out, '');
-  const log = (o) => appendFileSync(out, JSON.stringify(o) + '\n');
-  let queue = [];
-  let lastFrame = null, frameStart = 0, taps = 0;
-  const tap = (v, name, delay = 0) => {
+  const log = (o: object) => appendFileSync(out, JSON.stringify(o) + '\n');
+  let queue: Queued[] = [];
+  let lastFrame = null as number | null, frameStart = 0, taps = 0;
+  const tap = (v: View, name: string, delay = 0) => {
     const o = v.one(name);
     if (!o || !inWindow(o.c)) { log({ t: v.tick, f: v.frame, miss: name, c: o?.c }); return; }
     queue.push({ at: delay, cmd: `down 0 ${o.c[0]} ${o.c[1]}` }, { at: delay + 3, cmd: 'up 0' });
@@ -62,18 +67,18 @@ function nav({ run }) {
           b7: v.cv('beat 7'), b8: v.cv('beat 8') });
       }
       if (s.f === LEVEL && s.t === 5) { log({ t: s.t, f: s.f, night: v.cv('Night'), shadow: v.cv('shadow'), cheats: v.cv('any cheats?') }); this.done = true; }
-      const out2 = [];
+      const out2: string[] = [];
       queue = queue.filter((q) => (q.at <= 0 ? (out2.push(q.cmd), false) : (q.at -= 1, true)));
       return out2;
     },
   };
 }
 
-const overlaps = (a, b) => a && b && a.box && b.box &&
+const overlaps = (a: PilotObject | null, b: PilotObject | null) => a && b && a.box && b.box &&
   a.box[0] < b.box[2] && b.box[0] < a.box[2] && a.box[1] < b.box[3] && b.box[1] < a.box[3];
 /** Which map marker each actor stands on. */
-export function places(v) {
-  const out = {};
+export function places(v: View) {
+  const out: Record<string, string | null> = {};
   for (const a of ACTORS) {
     const o = v.one(a);
     out[a] = o ? (MARKERS.find((m) => overlaps(o, v.one(m))) ?? 'away') : null;
@@ -82,9 +87,9 @@ export function places(v) {
 }
 
 /** The Night 8 menu path as a reusable driver: returns commands for title/extras frames, null elsewhere. */
-export function menuNight8() {
-  let queue = [];
-  const tap = (v, name, delay = 0) => {
+export function menuNight8(): Menu {
+  let queue: Queued[] = [];
+  const tap = (v: View, name: string, delay = 0) => {
     const o = v.one(name);
     if (!o || !inWindow(o.c)) return;
     queue.push({ at: delay, cmd: `down 0 ${o.c[0]} ${o.c[1]}` }, { at: delay + 3, cmd: 'up 0' });
@@ -96,21 +101,21 @@ export function menuNight8() {
       if (s.t >= 260 && s.t < 260 + 20 * 9 && (s.t - 260) % 20 === 0) tap(v, 'btnMain06_Nightmare.Active');
       if (s.t === 500) tap(v, 'btnNightmare_Start.Active');
     }
-    const out = [];
+    const out: string[] = [];
     queue = queue.filter((q) => (q.at <= 0 ? (out.push(q.cmd), false) : (q.at -= 1, true)));
     return out;
   };
 }
 
 /** The story path: Continue on the title plays the save's own night (its `night` key). */
-export function menuContinue() {
-  let queue = [];
+export function menuContinue(): Menu {
+  let queue: Queued[] = [];
   return (s, v) => {
     if (s.f === TITLE && s.t === 300) {
       const o = v.one('btnMain02_Continue.Active');
       if (o && inWindow(o.c)) queue.push({ at: 0, cmd: `down 0 ${o.c[0]} ${o.c[1]}` }, { at: 3, cmd: 'up 0' });
     }
-    const out = [];
+    const out: string[] = [];
     queue = queue.filter((q) => (q.at <= 0 ? (out.push(q.cmd), false) : (q.at -= 1, true)));
     return out;
   };
@@ -123,14 +128,16 @@ export function menuContinue() {
  * does on its own or under a recorded night's touches, for reading the level's
  * random draws per update from the trace beside where he lands.
  */
-function still({ run, knobs }) {
+function still({ run, knobs: options }: PolicyOptions): PilotPolicy {
+  // --knobs, as this policy reads it.
+  const knobs = options as { readonly input?: string };
   const out = join(run, 'still.jsonl');
   writeFileSync(out, '');
-  const log = (o) => appendFileSync(out, JSON.stringify(o) + '\n');
+  const log = (o: object) => appendFileSync(out, JSON.stringify(o) + '\n');
   const menu = menuContinue();
   // The harness applies a reply's touches on the next update: a row at (LEVEL, t) answers state t - 1.
   const rows = knobs?.input ? readRows(knobs.input).filter((r) => r.f === LEVEL) : [];
-  let next = 0, last = null;
+  let next = 0, last = null as string | null;
   return {
     step(s) {
       const v = view(s);
@@ -142,7 +149,7 @@ function still({ run, knobs }) {
         rightShut: v.cv('right door shut'), gameover: v.cv('gameover') };
       const key = JSON.stringify(rec);
       if (key !== last) { log({ t: s.t, ...rec }); last = key; }
-      const cmds = [];
+      const cmds: string[] = [];
       while (next < rows.length && rows[next].t <= s.t + 1) cmds.push(rows[next++].cmd);
       return cmds;
     },
@@ -155,9 +162,9 @@ function still({ run, knobs }) {
  * g207) -> Nightmare -> Start. With `beat 8` = 1 the 20/20/20/20 arming
  * (groups 104/105) is closed, so Start plays Night 7 (`shadow` 1).
  */
-export function menuChallenges(names) {
-  let queue = [];
-  const tap = (v, name, delay = 0) => {
+export function menuChallenges(names: readonly string[]): Menu {
+  let queue: Queued[] = [];
+  const tap = (v: View, name: string, delay = 0) => {
     const o = v.one(name);
     if (!o || !inWindow(o.c)) return;
     queue.push({ at: delay, cmd: `down 0 ${o.c[0]} ${o.c[1]}` }, { at: delay + 3, cmd: 'up 0' });
@@ -170,25 +177,25 @@ export function menuChallenges(names) {
       if (s.t === 460) tap(v, 'btnMain06_Nightmare.Active');
       if (s.t === 520) tap(v, 'btnNightmare_Start.Active');
     }
-    const out = [];
+    const out: string[] = [];
     queue = queue.filter((q) => (q.at <= 0 ? (out.push(q.cmd), false) : (q.at -= 1, true)));
     return out;
   };
 }
 
 /** survey: in the level, each station and control in turn; state logged on change. */
-function survey({ run }) {
+function survey({ run }: PolicyOptions): PilotPolicy {
   const out = join(run, 'survey.jsonl');
   writeFileSync(out, '');
-  const log = (o) => appendFileSync(out, JSON.stringify(o) + '\n');
+  const log = (o: object) => appendFileSync(out, JSON.stringify(o) + '\n');
   const menu = menuNight8();
-  let queue = [];
-  const press = (v, name, holdTicks = 3, delay = 0) => {
+  let queue: Queued[] = [];
+  const press = (v: View, name: string, holdTicks = 3, delay = 0) => {
     const o = v.one(name);
     if (!o || !inWindow(o.c)) { log({ t: v.tick, miss: name, c: o?.c }); return; }
     queue.push({ at: delay, cmd: `down 0 ${o.c[0]} ${o.c[1]}` }, { at: delay + holdTicks, cmd: 'up 0' });
   };
-  const script = [
+  const script: [number, string, (v: View) => void][] = [
     [60, 'left door', (v) => press(v, 'HUDDoorLeftHitzone.Active')],
     [260, 'light 60', (v) => press(v, 'HUDFlashlightHitzone.Active', 60)],
     [360, 'close 120', (v) => press(v, 'HUDCloseDoorHitzone.Active', 120)],
@@ -205,7 +212,7 @@ function survey({ run }) {
     [2000, 'close 60', (v) => press(v, 'HUDCloseDoorHitzone.Active', 60)],
     [2100, 'back', (v) => press(v, 'HUDGoBackHitzone.Active')],
   ];
-  let next = 0, last = null;
+  let next = 0, last = null as string | null;
   return {
     step(s) {
       const v = view(s);
@@ -218,14 +225,14 @@ function survey({ run }) {
         script[next][2](v);
         next += 1;
       }
-      const c = {};
+      const c: Record<string, number | null> = {};
       for (const n of COUNTERS) c[n] = v.cv(n);
-      const rec = { follow: v.al('follow', 0), followX: v.one('follow')?.x, at: places(v), freddy: Math.round(c['Freddy counter']),
+      const rec = { follow: v.al('follow', 0), followX: v.one('follow')?.x, at: places(v), freddy: Math.round(Number(c['Freddy counter'])),
         ...Object.fromEntries(Object.entries(c).filter(([k]) => k !== 'Freddy counter')) };
       const key = JSON.stringify(rec);
       if (key !== last || s.t % 300 === 0) { log({ t: s.t, ...rec, hud: s.t === 30 || s.t === 300 ? Object.fromEntries(HUD.map((h) => [h, v.one(h)?.c])) : undefined }); last = key; }
       if (s.t > 2400) this.done = true;
-      const cmds = [];
+      const cmds: string[] = [];
       queue = queue.filter((q) => (q.at <= 0 ? (cmds.push(q.cmd), false) : (q.at -= 1, true)));
       return cmds;
     },
@@ -233,20 +240,20 @@ function survey({ run }) {
 }
 
 /** survey2: the double-tap walks and the station controls, HUD centres logged at each facing. */
-function survey2({ run }) {
+function survey2({ run }: PolicyOptions): PilotPolicy {
   const out = join(run, 'survey.jsonl');
   writeFileSync(out, '');
-  const log = (o) => appendFileSync(out, JSON.stringify(o) + '\n');
+  const log = (o: object) => appendFileSync(out, JSON.stringify(o) + '\n');
   const menu = menuNight8();
-  let queue = [];
-  const at = (delay, cmd) => queue.push({ at: delay, cmd });
-  const press = (v, name, holdTicks = 3, delay = 0) => {
+  let queue: Queued[] = [];
+  const at = (delay: number, cmd: string) => queue.push({ at: delay, cmd });
+  const press = (v: View, name: string, holdTicks = 3, delay = 0) => {
     const o = v.one(name);
     if (!o || !inWindow(o.c)) { log({ t: v.tick, miss: name, c: o?.c }); return; }
     at(delay, `down 0 ${o.c[0]} ${o.c[1]}`); at(delay + holdTicks, 'up 0');
   };
-  const double = (v, name) => { press(v, name, 3, 0); press(v, name, 3, 8); };
-  const script = [
+  const double = (v: View, name: string) => { press(v, name, 3, 0); press(v, name, 3, 8); };
+  const script: [number, string, (v: View) => void][] = [
     [60, 'walk left door', (v) => double(v, 'HUDDoorLeftHitzone.Active')],
     [300, 'light 30', (v) => press(v, 'HUDFlashlightHitzone.Active', 30)],
     [360, 'close 100', (v) => press(v, 'HUDCloseDoorHitzone.Active', 100)],
@@ -264,7 +271,7 @@ function survey2({ run }) {
     [2140, 'light bed 100', (v) => press(v, 'HUDFlashlightHitzone.Active', 100)],
     [2260, 'back', (v) => press(v, 'HUDGoBackHitzone.Active')],
   ];
-  let next = 0, last = null, lastFollow = null;
+  let next = 0, last = null as string | null, lastFollow = null as number | null;
   return {
     step(s) {
       const v = view(s);
@@ -282,13 +289,13 @@ function survey2({ run }) {
         log({ t: s.t, follow, x: v.one('follow')?.x, hud: Object.fromEntries(HUD.map((h) => [h, v.one(h)?.c])) });
         lastFollow = follow;
       }
-      const rec = { at: places(v), freddy: Math.round(v.cv('Freddy counter')), lds: v.cv('left door shut'), rds: v.cv('right door shut'),
+      const rec = { at: places(v), freddy: Math.round(Number(v.cv('Freddy counter'))), lds: v.cv('left door shut'), rds: v.cv('right door shut'),
         vlh: v.cv('viewing left hall'), vrh: v.cv('viewing right hall'), vb: v.cv('viewing bed'), vc: v.cv('viewing closet'),
         listen: v.cv('listening mode'), gameover: v.cv('gameover'), foxyAV2: v.one('foxy')?.al?.[2] ?? 0 };
       const key = JSON.stringify(rec);
       if (key !== last) { log({ t: s.t, ...rec }); last = key; }
       if (s.t > 2500) this.done = true;
-      const cmds = [];
+      const cmds: string[] = [];
       queue = queue.filter((q) => (q.at <= 0 ? (cmds.push(q.cmd), false) : (q.at -= 1, true)));
       return cmds;
     },
@@ -301,16 +308,22 @@ const LEFT_DOOR = 10, RIGHT_DOOR = 17, CLOSET = 29, BED = 43;
 const HUB = new Set([0, 2, 5]);
 const FLASH = 'HUDFlashlightHitzone.Active', CLOSE = 'HUDCloseDoorHitzone.Active', BACK = 'HUDGoBackHitzone.Active';
 
-function* hold(n) { for (let i = 0; i < n; i += 1) yield []; }
-function* until(ctx, pred, max) { for (let i = 0; i < max && !pred(ctx.v); i += 1) yield []; }
-const centre = (v, name) => { const o = v.one(name); return o && inWindow(o.c) ? o.c : null; };
-function* tapName(ctx, name, ticks = 3) {
+/** A step of a task: the touch rows for one update, and what the task returns when it ends. */
+type Task<R = void> = Generator<string[], R, void>;
+/** What a running task reads and logs: the current update's view, and the warden's log. */
+interface Ctx { v: View, log(record: object): void, probeN?: number }
+type Side = 'left' | 'right';
+
+function* hold(n: number): Task { for (let i = 0; i < n; i += 1) yield []; }
+function* until(ctx: Ctx, pred: (v: View) => boolean, max: number): Task { for (let i = 0; i < max && !pred(ctx.v); i += 1) yield []; }
+const centre = (v: View, name: string) => { const o = v.one(name); return o && inWindow(o.c) ? o.c : null; };
+function* tapName(ctx: Ctx, name: string, ticks = 3): Task<boolean> {
   const c = centre(ctx.v, name);
   if (!c) { ctx.log({ miss: name }); return false; }
   yield [`down 0 ${c[0]} ${c[1]}`]; yield* hold(ticks - 1); yield ['up 0'];
   return true;
 }
-function* doubleTap(ctx, name) {
+function* doubleTap(ctx: Ctx, name: string): Task<boolean> {
   const c = centre(ctx.v, name);
   if (!c) { ctx.log({ miss: name }); return false; }
   yield [`down 0 ${c[0]} ${c[1]}`]; yield* hold(2); yield ['up 0']; yield* hold(4);
@@ -319,7 +332,7 @@ function* doubleTap(ctx, name) {
   return true;
 }
 /** Hold a HUD zone while `keep` holds, up to `max` updates. */
-function* holdZone(ctx, name, keep, max) {
+function* holdZone(ctx: Ctx, name: string, keep: (v: View) => boolean, max: number): Task {
   const c = centre(ctx.v, name);
   if (!c) { ctx.log({ miss: name }); return; }
   yield [`down 0 ${c[0]} ${c[1]}`];
@@ -335,14 +348,16 @@ function* holdZone(ctx, name, keep, max) {
  * Foxy's got-you set (g282), or with the black flash counting (g468).
  * `records` are the warden log's lines, parsed.
  */
-export function doomStart(records) {
-  const r = records.find((x) => x.at && (x.freddy > 53 || x.foxyGot === 1 || x.flash > 0));
+export function doomStart(records: readonly Readonly<Record<string, unknown>>[]) {
+  // A line the warden logs with `at` is its facts line, which carries these counters.
+  const r = (records as readonly WardenLine[]).find((x) => x.at && (x.freddy > 53 || x.foxyGot === 1 || x.flash > 0));
   return r ? r.t : null;
 }
+type WardenLine = { readonly t: number, readonly at?: object, readonly freddy: number, readonly foxyGot: number | null, readonly flash: number };
 
-export function facts4(v) {
+export function facts4(v: View) {
   const at = places(v);
-  const al = (n, i) => v.one(n)?.al?.[i] ?? 0;
+  const al = (n: string, i: number) => v.one(n)?.al?.[i] ?? 0;
   return {
     at, follow: v.al('follow', 0), freddy: v.cv('Freddy counter') ?? 0, hour: v.cv('hour'),
     fredbearAI: v.cv('Fredbear AI') ?? 0, interlock: al('in closet', 5),
@@ -374,20 +389,28 @@ export function facts4(v) {
  * hall whenever her dwell stands and Fredbear is not on the bed, in the closet
  * or in the right hall (g481).
  */
-function warden({ run, knobs }, rev = 1) {
+function warden({ run, knobs: options }: PolicyOptions, rev = 1): PilotPolicy {
+  // --knobs, as this policy reads it.
+  const knobs = options as {
+    readonly quiet?: boolean, readonly challenges?: readonly string[], readonly probe?: boolean,
+    readonly bedAt?: number, readonly foxyAt?: number, readonly foxyTo?: number, readonly bedUrgent?: number,
+    readonly foxyUrgent?: number, readonly fbWalkAt?: number,
+  };
   const { write, flush } = controllerLog(join(run, 'warden.jsonl'), knobs.quiet);
-  const ctx: any = { v: null, log: (o) => write(JSON.stringify({ t: ctx.v?.tick, ...o })) };
+  // ctx.v is the level update's view, set before any task runs; until then only log reads it.
+  const ctx: Ctx = { v: null as unknown as View, log: (o) => write(JSON.stringify({ t: ctx.v?.tick, ...o })) };
   const menu = knobs.challenges ? menuChallenges(knobs.challenges) : menuNight8();
   let loggedLevel = false;
-  let task = null, taskName = null, last = null, outcome = null;
+  let task = null as Task<unknown> | null, taskName = null as string | null, last = null as string | null,
+    outcome = null as string | null;
   // Every play-frame update a task started on, for search.ts: the quiet log
   // keeps only its last 200 records.
-  const starts = [];
+  const starts: number[] = [];
   // rev 3 takes the knobs rev 2's development block chose (bedAt 24, foxyTo 3).
   const bedAt = knobs.bedAt ?? (rev >= 3 ? 24 : 32), foxyAt = knobs.foxyAt ?? 6;
 
   const STATIONS = [LEFT_DOOR, RIGHT_DOOR, CLOSET, BED];
-  function* toHub() {
+  function* toHub(): Task {
     // Let a station action (door close 20-25, flash 35-41, closet 32-34)
     // finish first: only a station or the hub takes the next control.
     yield* until(ctx, (v) => HUB.has(v.al('follow', 0)) || STATIONS.includes(v.al('follow', 0)), 90);
@@ -396,11 +419,11 @@ function warden({ run, knobs }, rev = 1) {
       yield* until(ctx, (v) => HUB.has(v.al('follow', 0)), 150);
     }
   }
-  function* face(side) {
+  function* face(side: Side): Task {
     yield* toHub();
     const want = side === 'left' ? 2 : 5;
     const endX = side === 'left' ? 512 : 788;
-    const done = (v) => v.al('follow', 0) === want && v.one('follow')?.x === endX;
+    const done = (v: View) => v.al('follow', 0) === want && v.one('follow')?.x === endX;
     if (done(ctx.v)) return;
     // A held touch pans the hub view only while it is held (g21-g25: x < 205
     // at -12, x > 819 at +12 a frame, clamped to 512..788); y 120 is above
@@ -411,7 +434,7 @@ function warden({ run, knobs }, rev = 1) {
     yield ['up 0'];
     yield* until(ctx, done, 40);
   }
-  function* door(side) {
+  function* door(side: Side): Task {
     const target = side === 'left' ? LEFT_DOOR : RIGHT_DOOR;
     if (ctx.v.al('follow', 0) === target) return;
     for (let attempt = 0; attempt < 3 && ctx.v.al('follow', 0) !== target; attempt += 1) {
@@ -422,7 +445,7 @@ function warden({ run, knobs }, rev = 1) {
       yield* until(ctx, (v) => v.al('follow', 0) === target, 240);
     }
   }
-  function* closet() {
+  function* closet(): Task {
     if (ctx.v.al('follow', 0) === CLOSET) return;
     yield* toHub();
     if (ctx.v.al('follow', 0) !== 0) {
@@ -436,62 +459,65 @@ function warden({ run, knobs }, rev = 1) {
     yield* doubleTap(ctx, 'HUDDoorClosetHitzone.Active');
     yield* until(ctx, (v) => v.al('follow', 0) === CLOSET, 240);
   }
-  function* bed() {
+  function* bed(): Task {
     if (ctx.v.al('follow', 0) === BED) return;
     yield* toHub();
     yield* tapName(ctx, BACK);
     yield* until(ctx, (v) => v.al('follow', 0) === BED, 90);
   }
 
-  function* flashAt(side) {
+  function* flashAt(side: Side): Task {
     yield* door(side);
     const hallFar = side === 'left' ? 'left hall far' : 'right hall far';
     const near = side === 'left' ? 'left hall near' : 'right hall near';
-    const occupantNear = (v) => Object.values(places(v)).includes(near);
+    const occupantNear = (v: View) => Object.values(places(v)).includes(near);
     if (occupantNear(ctx.v)) return;
     yield* holdZone(ctx, FLASH, (v) => Object.values(places(v)).includes(hallFar) && !occupantNear(v), 20);
   }
-  function* dismiss(side) {
+  function* dismiss(side: Side): Task {
     yield* door(side);
     const who = side === 'left' ? 'Bonnie' : 'Chica';
     const near = side === 'left' ? 'left hall near' : 'right hall near';
     yield* holdZone(ctx, CLOSE, (v) => places(v)[who] === near, 400);
   }
-  function* drainFreddy() {
+  function* drainFreddy(): Task {
     yield* bed();
     yield* holdZone(ctx, FLASH, (v) => (v.cv('Freddy counter') ?? 0) > 1 && facts4(v).bDwell <= 11 && facts4(v).cDwell <= 10, 240);
   }
-  function* serviceCloset() {
+  function* serviceCloset(): Task {
     yield* closet();
-    yield* holdZone(ctx, CLOSE, (v) => (v.one('foxy')?.al?.[2] ?? 0) > (knobs.foxyTo ?? (rev >= 3 ? 3 : 1)) && (places(v) as any).foxy === 'in closet'
+    yield* holdZone(ctx, CLOSE, (v) => (v.one('foxy')?.al?.[2] ?? 0) > (knobs.foxyTo ?? (rev >= 3 ? 3 : 1)) && places(v).foxy === 'in closet'
       && (v.cv('Freddy counter') ?? 0) < (knobs.bedUrgent ?? 42) + 2, 600);
   }
-  function* listen(side) { yield* door(side); yield* hold(10); }
+  function* listen(side: Side): Task { yield* door(side); yield* hold(10); }
   // View a hall whose occupant has left while its dwell stands (g481/g485
   // zero it while the hall is viewed); a near occupant ends the hold, since
   // a light on a near occupant is a jumpscare (g345/g346).
-  function* clearHall(side) {
+  function* clearHall(side: Side): Task {
     yield* door(side);
     const who = side === 'left' ? 'Bonnie' : 'Chica';
     const near = side === 'left' ? 'left hall near' : 'right hall near';
-    const dwell = (v) => (side === 'left' ? facts4(v).bDwell : facts4(v).cDwell);
+    const dwell = (v: View) => (side === 'left' ? facts4(v).bDwell : facts4(v).cDwell);
     yield* holdZone(ctx, FLASH, (v) => dwell(v) > 0 && places(v)[who] !== near && !Object.values(places(v)).includes(near), 12);
   }
 
-  function decide() {
+  /** The task to start now, by name, or none. */
+  type Decision = [name: string, task: Task<unknown>] | null;
+
+  function decide(): Decision {
     const f = facts4(ctx.v);
     if (knobs.probe) {
       const n = (ctx.probeN = (ctx.probeN ?? 0) + 1);
       return n % 2 ? [`probe left ${n}`, door('left')] : [`probe right ${n}`, door('right')];
     }
-    const at: any = f.at;
+    const at = f.at;
     if (f.fredbearAI > 0) return decideFredbear(f);
     const here = f.follow === LEFT_DOOR ? 'left' : f.follow === RIGHT_DOOR ? 'right' : null;
-    const other = (side) => (side === 'left' ? 'right' : 'left');
+    const other = (side: Side): Side => (side === 'left' ? 'right' : 'left');
     const bedSafe = f.bDwell <= 10 && f.cDwell <= 9;
-    const nearOK = (side) => (side === 'left' ? f.bTag : f.cTag) === 2 && f.interlock === 0;
+    const nearOK = (side: Side) => (side === 'left' ? f.bTag : f.cTag) === 2 && f.interlock === 0;
     const who = { left: 'Bonnie', right: 'Chica' };
-    const threat = (side) => {
+    const threat = (side: Side) => {
       const p = at[who[side]];
       if (p === `${side} hall near`) return 3;
       if (p === `${side} hall far` || at.foxy === `${side} hall far`) return 2;
@@ -545,22 +571,22 @@ function warden({ run, knobs }, rev = 1) {
     return [`go ${target}`, door(target)];
   }
 
-  function decideFredbear(f) {
+  function decideFredbear(f: ReturnType<typeof facts4>): Decision {
     const at = f.at.Fredbear;
-    const sideOf = (p) => (p && p.includes('left') ? 'left' : p && p.includes('right') ? 'right' : null);
+    const sideOf = (p: string | null) => (p && p.includes('left') ? 'left' : p && p.includes('right') ? 'right' : null);
     // On the bed: look at him until he leaves (g525-g527, AV7 > 1).
     if (at === 'on bed') return ['fredbear bed', (function* () {
-      yield* bed(); yield* holdZone(ctx, FLASH, (v) => (places(v) as any).Fredbear === 'on bed', 300); })()];
+      yield* bed(); yield* holdZone(ctx, FLASH, (v) => places(v).Fredbear === 'on bed', 300); })()];
     // In the closet: hold its door until the 3 s tick walks him out (g522/g523).
     if (at === 'in closet') return ['fredbear closet', (function* () {
-      yield* closet(); yield* holdZone(ctx, CLOSE, (v) => (places(v) as any).Fredbear === 'in closet', 400); })()];
+      yield* closet(); yield* holdZone(ctx, CLOSE, (v) => places(v).Fredbear === 'in closet', 400); })()];
     const side = sideOf(at);
     const far = at === 'left hall far' ? 'left' : at === 'right hall far' ? 'right' : null;
     // At a far hall: shut that door; the 3 s tick pushes him off (g502/g503)
     // inside the 8 s hall fuse (g646-g648).
     if (far) return [`fredbear ${far}`, (function* () {
       yield* door(far);
-      yield* holdZone(ctx, CLOSE, (v) => (places(v) as any).Fredbear === `${far} hall far`, 600);
+      yield* holdZone(ctx, CLOSE, (v) => places(v).Fredbear === `${far} hall far`, 600);
     })()];
     // rev 3: with Fredbear not on the bed, in the closet or at a far hall,
     // clear a Chica dwell that outlived her (g478/g481) before the bed is needed.
@@ -607,4 +633,4 @@ function warden({ run, knobs }, rev = 1) {
   };
 }
 
-export const POLICIES = { nav, survey, survey2, still, warden, warden2: (o) => warden(o, 2), warden3: (o) => warden(o, 3) };
+export const POLICIES = { nav, survey, survey2, still, warden, warden2: (o: PolicyOptions) => warden(o, 2), warden3: (o: PolicyOptions) => warden(o, 3) };

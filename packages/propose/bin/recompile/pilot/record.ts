@@ -21,37 +21,54 @@
  * committed input fixture.
  */
 import { createHash } from 'node:crypto';
+import type { BinaryLike } from 'node:crypto';
 import { copyFileSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { isList } from '@sixam/kernel';
 import { currentPath } from '@sixam/review/renamed-path';
 import { gameModulePath } from './pilot.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '../../../../..');
 // A path a committed record names, where it lives now (records keep the paths they were written with).
-const current = (path) => currentPath(ROOT, path) ?? path;
+const current = (path: string) => currentPath(ROOT, path) ?? path;
 export const SCHEMA = 'recompile-pilot-night-v1';
 
-const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
+/** A recompile-pilot-night-v1 record. */
+export interface PilotNightRecord {
+  schema: string, evidenceId: string | null, claimLevel: string, fidelity: string, game: string, night: string;
+  recordedAt: string, question: string;
+  controller: {
+    policy: string, knobs: Readonly<Record<string, unknown>>, source: string, reads: string, acts: string, pilotOutcome: unknown,
+  };
+  binarySha256: string, assetsSha256: string, seed: number;
+  saveBefore: { sha256: string, keys: Readonly<Record<string, string>> };
+  input: { fixture: string, sha256: string, rows: number };
+  pilotTrace: { rows: number, sha256: string };
+  replay: { rows: number, sha256: string, traceEqual: boolean | null, visits: readonly { frame: number, updates: number }[] };
+  saveAfter: Readonly<Record<string, string>>, winKeys: readonly string[], status: string | null;
+}
 
-function canonical(value) {
-  if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
+const sha256 = (bytes: BinaryLike) => createHash('sha256').update(bytes).digest('hex');
+
+function canonical(value: unknown): string {
+  if (isList(value)) return `[${value.map(canonical).join(',')}]`;
   if (value && typeof value === 'object')
-    return `{${Object.keys(value).sort().map((k) => `${JSON.stringify(k)}:${canonical(value[k])}`).join(',')}}`;
+    return `{${Object.keys(value).sort().map((k) => `${JSON.stringify(k)}:${canonical((value as Readonly<Record<string, unknown>>)[k])}`).join(',')}}`;
   return JSON.stringify(value);
 }
 
-export function evidenceId(record) {
-  const body = { ...record };
+export function evidenceId(record: PilotNightRecord) {
+  const body: Partial<PilotNightRecord> = { ...record };
   delete body.evidenceId;
   return `recompile-pilot-night-${sha256(canonical(body)).slice(0, 16)}`;
 }
 
 /** `key=value` lines of an INI section, as the game wrote them. */
-export function iniKeys(text) {
-  const out = {};
-  let section = null;
+export function iniKeys(text: string) {
+  const out: Record<string, string> = {};
+  let section = null as string | null;
   for (const raw of text.split(/\r?\n/)) {
     const line = raw.trim();
     const sec = /^\[(.+)\]$/.exec(line);
@@ -63,7 +80,7 @@ export function iniKeys(text) {
 }
 
 /** The verdict a record's own fields support. */
-export function verdict(r) {
+export function verdict(r: Pick<PilotNightRecord, 'winKeys' | 'saveAfter' | 'saveBefore' | 'replay'>) {
   // A win key proves the win only if the game wrote it: absent (or other)
   // before the night, present after.
   const missing = r.winKeys.filter((k) => {
@@ -75,8 +92,14 @@ export function verdict(r) {
   return { status: 'WON', missing };
 }
 
-function parseArgs(argv) {
-  const o: any = { winKeys: [], knobs: {} };
+/** What `record` writes from: the runs, where the fixture and record go, and what the record names. */
+interface RecordOptions {
+  game: string, pilot: string, replay: string, inputOut: string, out: string, night: string, policy: string;
+  knobs: Readonly<Record<string, unknown>>, winKeys: string[];
+}
+
+function parseArgs(argv: string[]) {
+  const o: Partial<RecordOptions> & Pick<RecordOptions, 'winKeys' | 'knobs'> = { winKeys: [], knobs: {} };
   for (let i = 0; i < argv.length; i += 1) {
     const a = argv[i];
     const v = () => argv[++i];
@@ -91,16 +114,17 @@ function parseArgs(argv) {
     else if (a === '--win-key') o.winKeys.push(v());
     else throw new Error(`record: unknown argument ${a}`);
   }
-  return o;
+  // Nothing checks them here: record() reads each, and one left out fails there.
+  return o as RecordOptions;
 }
 
-function record(o) {
+function record(o: RecordOptions) {
   const rs = JSON.parse(readFileSync(join(o.replay, 'replay-summary.json'), 'utf8'));
   const ps = JSON.parse(readFileSync(join(o.pilot, 'pilot-summary.json'), 'utf8'));
   const input = readFileSync(join(o.replay, 'run.input'));
   copyFileSync(join(o.replay, 'run.input'), o.inputOut);
   const saveBefore = readFileSync(join(o.replay, 'save-before.ini'), 'utf8');
-  const rec = {
+  const rec: PilotNightRecord = {
     schema: SCHEMA,
     evidenceId: null,
     claimLevel: 'MODEL_ONLY',
@@ -117,7 +141,8 @@ function record(o) {
     },
     binarySha256: rs.binarySha256,
     assetsSha256: rs.assetsSha256,
-    seed: Number(readFileSync(join(o.replay, 'env'), 'utf8').match(/CHOWDREN_SEED=(\d+)/)[1]),
+    // The run's env names the seed it was given.
+    seed: Number((readFileSync(join(o.replay, 'env'), 'utf8').match(/CHOWDREN_SEED=(\d+)/) as RegExpMatchArray)[1]),
     saveBefore: { sha256: rs.saveBeforeSha256, keys: iniKeys(saveBefore) },
     input: { fixture: relative(ROOT, o.inputOut), sha256: sha256(input),
       rows: input.toString().split('\n').filter((l) => l && !l.startsWith('#')).length },
@@ -134,8 +159,8 @@ function record(o) {
   console.log(`${rec.evidenceId}: ${o.game} ${rec.status} (${rec.input.rows} rows, trace ${rec.replay.traceEqual ? 'equal' : 'DIVERGED'})`);
 }
 
-export function check(path) {
-  const r = JSON.parse(readFileSync(path, 'utf8'));
+export function check(path: string) {
+  const r: PilotNightRecord = JSON.parse(readFileSync(path, 'utf8'));
   if (r.schema !== SCHEMA) throw new Error(`${path}: schema ${r.schema}`);
   const input = readFileSync(join(ROOT, current(r.input.fixture)));
   if (sha256(input) !== r.input.sha256) throw new Error(`${path}: ${r.input.fixture} sha256 differs from the record`);
@@ -153,5 +178,5 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     if (cmd === 'record') record(parseArgs(rest));
     else if (cmd === 'check') for (const p of rest) { const r = check(p); console.log(`${r.evidenceId}: ${r.game} ${r.status} OK`); }
     else throw new Error('usage: record.ts record ... | check RESULT.json ...');
-  } catch (e) { console.error(e.message); process.exit(1); }
+  } catch (e) { console.error((e as Error).message); process.exit(1); }
 }

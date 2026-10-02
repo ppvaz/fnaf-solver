@@ -45,7 +45,9 @@ import { createHash } from 'node:crypto';
 import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { isList } from '@sixam/kernel';
 import { gameModulePath, loadGame } from './pilot.ts';
+import type { PilotGame, PilotSummary } from './pilot.ts';
 import { runReplay } from './replay.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -61,15 +63,39 @@ export const HOLDS = [1, 2, 3, 5, 8, 13, 21];
 export const LEAD = 60;
 export const GAIN = 120;
 
-export const SOURCES = (game) => [join(HERE, 'pilot.ts'), gameModulePath(game), join(HERE, 'search.ts'), join(HERE, 'replay.ts')];
-export function sourcesSha256(game) {
+export const SOURCES = (game: string) => [join(HERE, 'pilot.ts'), gameModulePath(game), join(HERE, 'search.ts'), join(HERE, 'replay.ts')];
+export function sourcesSha256(game: string) {
   const h = createHash('sha256');
   for (const f of SOURCES(game)) h.update(readFileSync(f));
   return h.digest('hex');
 }
 
-function parseArgs(argv) {
-  const o: any = { jobs: 2, knobs: {}, winKeys: [], budget: 24 };
+/** A search: the policy over a block of seeds, where it runs and from what, its budget and the keys a win writes. */
+interface SearchOptions {
+  game: string, policy: string, binary: string, assets: string, save: string, seeds: number[], out: string;
+  jobs: number, budget: number, knobs: Readonly<Record<string, unknown>>, winKeys: string[], sourcesSha256?: string;
+}
+
+/** One attempt at a seed: whether it won, where it died and its chain began, and the updates its policy started tasks on. */
+interface Attempt {
+  won: boolean | null, outcome: unknown, death: number | null, starts: readonly number[], doom: number | null;
+  error: string | undefined;
+}
+
+/** An attempt as the seed's row lists it. */
+interface Try {
+  n: number, from: number | null, branch?: number, hold?: number;
+  outcome: unknown, death: number | null, doom: number | null, won: boolean | null, error?: string;
+}
+
+/** One seed's row in search.jsonl. */
+interface SearchRow {
+  seed: number, verdict: 'WON' | 'EXHAUSTED' | 'NO_NIGHT' | 'ERROR', sourcesSha256: string | undefined, budget: number;
+  attempts?: number, tries: Try[], straysDropped?: number, winInputSha256?: string, replayWon?: boolean;
+}
+
+function parseArgs(argv: string[]): SearchOptions {
+  const o: Partial<SearchOptions> & Pick<SearchOptions, 'jobs' | 'knobs' | 'winKeys' | 'budget'> = { jobs: 2, knobs: {}, winKeys: [], budget: 24 };
   for (let i = 0; i < argv.length; i += 1) {
     const a = argv[i];
     const v = () => argv[++i];
@@ -86,13 +112,15 @@ function parseArgs(argv) {
     else if (a === '--win-key') o.winKeys.push(v());
     else throw new Error(`search: unknown argument ${a}`);
   }
-  for (const k of ['game', 'policy', 'binary', 'assets', 'save', 'seeds', 'out']) if (!o[k]) throw new Error(`search: --${k} is required`);
+  for (const k of ['game', 'policy', 'binary', 'assets', 'save', 'seeds', 'out'] as const) if (!o[k]) throw new Error(`search: --${k} is required`);
   if (!o.winKeys.length) throw new Error('search: at least one --win-key');
-  if (o.out.startsWith(ROOT)) throw new Error('search: --out must be outside the repository');
-  return o;
+  // Each required option was checked just above.
+  const checked = o as SearchOptions;
+  if (checked.out.startsWith(ROOT)) throw new Error('search: --out must be outside the repository');
+  return checked;
 }
 
-export function parseSeeds(text) {
+export function parseSeeds(text: string) {
   return text.split(',').flatMap((part) => {
     const [x, y] = part.split('-').map(Number);
     if (!Number.isInteger(x) || !Number.isInteger(y ?? x) || (y ?? x) < x) throw new Error(`bad seed range ${part}`);
@@ -100,9 +128,9 @@ export function parseSeeds(text) {
   });
 }
 
-function iniKeys(text) {
-  const out = {};
-  let section = null;
+function iniKeys(text: string) {
+  const out: Record<string, string> = {};
+  let section = null as string | null;
   for (const raw of text.split(/\r?\n/)) {
     const line = raw.trim();
     const sec = /^\[(.+)\]$/.exec(line);
@@ -117,7 +145,7 @@ function iniKeys(text) {
  * The update at which the night was lost: the last update pilot.ts saw in
  * the play frame (`lastPlayTick`), which every game's summary carries.
  */
-export function deathUpdate(summary) {
+export function deathUpdate(summary: PilotSummary | null) {
   if (!summary || summary.outcome === '6AM' || summary.outcome === null) return null;
   return Number.isInteger(summary.lastPlayTick) ? summary.lastPlayTick : null;
 }
@@ -129,8 +157,8 @@ export function deathUpdate(summary) {
  * branch) are skipped, since the prefix up to there is fixed, and so are
  * points within 30 updates of the death.
  */
-export function branchPoints(death, starts = [], floor = 0, doom = null) {
-  const last = Math.min(death - 30, doom === null ? Infinity : doom - LEAD);
+export function branchPoints(death: number | null, starts: readonly number[] = [], floor = 0, doom: number | null = null) {
+  const last = Math.min(Number(death) - 30, doom === null ? Infinity : doom - LEAD);
   const pts = [...starts.filter((t) => t < last), ...BACKOFF.map((b) => last - b)]
     .filter((t) => t > floor);
   return [...new Set(pts)].sort((a, b) => b - a);
@@ -144,9 +172,9 @@ export function branchPoints(death, starts = [], floor = 0, doom = null) {
  * a row fires at the old frame's own update 0, the start of the night. It is
  * an update-0 row after rows of the same frame index; it is dropped.
  */
-export function withoutStrays(text) {
-  const out = [];
-  let prev = null, dropped = 0;
+export function withoutStrays(text: string) {
+  const out: string[] = [];
+  let prev = null as { f: number, t: number } | null, dropped = 0;
   for (const line of text.split('\n')) {
     const m = /^(-?\d+) (\d+) /.exec(line);
     if (m) {
@@ -162,13 +190,13 @@ export function withoutStrays(text) {
 }
 
 /** How far a lost attempt got: where its chain began, else its death. */
-export const progress = (r) => r.doom ?? r.death;
+export const progress = (r: { readonly doom: number | null, readonly death: number | null }) => r.doom ?? r.death;
 
 /** The policy log's records, parsed. */
-function logRecords(dir, game) {
+function logRecords(dir: string, game: string) {
   const log = join(dir, game === 'fnaf3' ? 'guard.jsonl' : 'warden.jsonl');
   if (!existsSync(log)) return [];
-  const out = [];
+  const out: Readonly<Record<string, unknown>>[] = [];
   for (const line of readFileSync(log, 'utf8').split('\n')) {
     if (!line) continue;
     try { out.push(JSON.parse(line)); } catch { /* a torn last line */ }
@@ -176,12 +204,12 @@ function logRecords(dir, game) {
   return out;
 }
 
-function attempt(o, gameModule, seed, dir, extra) {
+function attempt(o: SearchOptions, gameModule: PilotGame, seed: number, dir: string, extra: readonly string[]) {
   const saveName = gameModule.SAVE_NAME;
   const args = [join(HERE, 'pilot.ts'), '--game', o.game, '--run', dir, '--binary', o.binary, '--assets', o.assets,
     '--save', o.save, '--policy', o.policy, '--seed', String(seed), '--max-ticks', '30000',
     '--stop-frame', '5', '--no-trace', '--kill-on-loss', '--knobs', JSON.stringify({ ...o.knobs, quiet: true }), ...extra];
-  return new Promise<any>((res) => {
+  return new Promise<Attempt>((res) => {
     const child = spawn(process.execPath, args, { stdio: ['ignore', 'pipe', 'pipe'] });
     let out = '', err = '';
     child.stdout.on('data', (d) => { out += d; });
@@ -190,27 +218,29 @@ function attempt(o, gameModule, seed, dir, extra) {
     // exit event, and a summary that lists every task start is long enough to
     // be cut off (seed 50005, 2026-09-30, read as a night that never started).
     child.on('close', (code) => {
-      let summary = null;
-      try { summary = JSON.parse(out.trim().split('\n').pop()); } catch { /* reported below */ }
+      let summary = null as PilotSummary | null;
+      // split always returns a last line.
+      try { summary = JSON.parse(out.trim().split('\n').pop() as string); } catch { /* reported below */ }
       const save = existsSync(join(dir, saveName)) ? iniKeys(readFileSync(join(dir, saveName), 'utf8')) : {};
       const won = code === 0 && summary && o.winKeys.every((k) => save[k.split('=')[0]] === k.split('=')[1]);
       const records = logRecords(dir, o.game);
       // A policy that reports every task start in its summary gives the whole
       // night; else the log's `start` records, as far back as the log goes.
-      const logged = records.filter((r) => r.start && Number.isInteger(r.t)).map((r) => r.t);
+      // Number.isInteger read each logged update; a policy's summary lists its starts as updates.
+      const logged = records.filter((r) => r.start && Number.isInteger(r.t)).map((r) => r.t as number);
       res({ won, outcome: summary?.outcome ?? null, death: deathUpdate(summary),
-        starts: Array.isArray(summary?.starts) ? summary.starts : logged,
+        starts: isList(summary?.starts) ? summary.starts as readonly number[] : logged,
         doom: gameModule.doomStart ? gameModule.doomStart(records) : null,
         error: code === 0 ? undefined : err.trim().split('\n').slice(-2).join(' | ') });
     });
   });
 }
 
-async function searchSeed(o, gameModule, seed) {
+async function searchSeed(o: SearchOptions, gameModule: PilotGame, seed: number): Promise<SearchRow> {
   const root = join(o.out, `s${seed}`);
   mkdirSync(root, { recursive: true });
-  const tries = [];
-  const run = async (n, extra, meta) => {
+  const tries: Try[] = [];
+  const run = async (n: number, extra: readonly string[], meta: Pick<Try, 'from' | 'branch' | 'hold'>) => {
     const dir = join(root, `a${n}`);
     rmSync(dir, { recursive: true, force: true });
     const r = await attempt(o, gameModule, seed, dir, extra);
@@ -225,11 +255,12 @@ async function searchSeed(o, gameModule, seed) {
   // Depth first: a branch whose chain begins later becomes the base, and
   // when a base's branch points are used up the search returns to the one it
   // came from and goes on with that one's.
-  const stack = base.won ? [] : [{ base, baseN: 0, points: branchPoints(base.death, base.starts, 0, base.doom) }];
+  const stack: { base: typeof base, baseN: number, points: number[] }[] = base.won ? [] : [{ base, baseN: 0, points: branchPoints(base.death, base.starts, 0, base.doom) }];
   search: while (stack.length && n <= o.budget) {
     const top = stack[stack.length - 1];
     if (!top.points.length) { stack.pop(); continue; }
-    const at = top.points.shift();
+    // The loop checked the points' length.
+    const at = top.points.shift() as number;
     for (const hold of HOLDS) {
       if (n > o.budget) break search;
       const r = await run(n, ['--prefix', join(top.base.dir, 'pilot.input'), '--branch', String(at), '--hold', String(hold)],
@@ -237,15 +268,15 @@ async function searchSeed(o, gameModule, seed) {
       const thisN = n;
       n += 1;
       if (r.won) { base = r; break search; }
-      if (progress(r) !== null && progress(r) > progress(top.base) + GAIN) {
+      if (progress(r) !== null && Number(progress(r)) > Number(progress(top.base)) + GAIN) {
         stack.push({ base: r, baseN: thisN, points: branchPoints(r.death, r.starts, at, r.doom) });
         continue search;
       }
       // The same chain on the first hold: this point is inside the lost chain.
-      if (hold === HOLDS[0] && Math.abs(progress(r) - progress(top.base)) <= HOLDS[0]) break;
+      if (hold === HOLDS[0] && Math.abs(Number(progress(r)) - Number(progress(top.base))) <= HOLDS[0]) break;
     }
   }
-  const row: any = { seed, verdict: base.won ? 'WON' : 'EXHAUSTED', sourcesSha256: o.sourcesSha256, budget: o.budget,
+  const row: SearchRow = { seed, verdict: base.won ? 'WON' : 'EXHAUSTED', sourcesSha256: o.sourcesSha256, budget: o.budget,
     attempts: tries.length, tries };
   if (base.won) {
     const clean = withoutStrays(readFileSync(join(base.dir, 'pilot.input'), 'utf8'));
@@ -266,18 +297,19 @@ async function searchSeed(o, gameModule, seed) {
 }
 
 async function main() {
-  const o: any = parseArgs(process.argv.slice(2));
+  const o = parseArgs(process.argv.slice(2));
   const game = await loadGame(o.game);
   o.sourcesSha256 = sourcesSha256(o.game);
   mkdirSync(o.out, { recursive: true });
   const path = join(o.out, 'search.jsonl');
-  const done = new Set();
+  const done = new Set<number>();
   if (existsSync(path)) for (const l of readFileSync(path, 'utf8').split('\n')) if (l) done.add(JSON.parse(l).seed);
   const queue = o.seeds.filter((s) => !done.has(s));
-  const tally = {};
+  const tally: Record<string, number> = {};
   async function worker() {
     while (queue.length) {
-      const seed = queue.shift();
+      // The loop checked the queue's length.
+      const seed = queue.shift() as number;
       const row = await searchSeed(o, game, seed);
       if (sourcesSha256(o.game) !== o.sourcesSha256) {
         queue.length = 0;

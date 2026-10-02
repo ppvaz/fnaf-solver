@@ -2676,6 +2676,7 @@
       "file": "packages/propose/bin/recompile/pilot/record.ts",
       "imports": [
         "./pilot.ts",
+        "@sixam/kernel",
         "@sixam/review/renamed-path",
         "node:crypto",
         "node:fs",
@@ -2700,6 +2701,7 @@
       "imports": [
         "./pilot.ts",
         "./replay.ts",
+        "@sixam/kernel",
         "node:child_process",
         "node:crypto",
         "node:fs",
