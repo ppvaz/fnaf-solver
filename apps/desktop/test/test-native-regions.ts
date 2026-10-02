@@ -15,7 +15,8 @@ import { parseRegionRead, regionSetLine } from '../../../packages/play/src/venue
 import { loadRegionSet, pngFromRegion, recordFrames } from '../../../packages/play/bin/phone/native-regions.ts';
 import { makeClassifier } from '../../../packages/play/games/fnaf1/fnaf1-detectors.ts';
 import type { Detectors, RegionRead } from '../../../packages/play/games/fnaf1/fnaf1-detectors.ts';
-import { parseArgs } from '../bin/fnaf1-custom-run.ts';
+import { INPUT } from '@sixam/source/fnaf1';
+import { LEFT_OFFICE_FRAMES, parseArgs, routeStatus } from '../bin/fnaf1-custom-run.ts';
 
 const failures = [];
 let checks = 0;
@@ -70,6 +71,8 @@ const read = (regions: RegionRead['regions']) => ({ regions: { cam_label: fill(N
   ok('a raised CAM 4B reads up on 42', up.monitor === 'up' && up.cam === 42);
   const moving = classify({ regions: { left_panel: fill(N, 0x123456), left_doorway: fill(N, 0), cam_label: fill(N, 0x000000) } }, 0);
   ok('neither room nor camera is flipping, and acts on nothing', moving.monitor === 'flipping' && moving.left === 'hidden');
+  ok(`a monitor flip (${INPUT.monitorFlipFrames} frames) reads flipping and does not end the night (${LEFT_OFFICE_FRAMES})`,
+    LEFT_OFFICE_FRAMES > INPUT.monitorFlipFrames);
   const chica = classify(read({ right_panel: fill(N, panels['shut/on']), right_window: fill(N, 0xd0c040), right_doorway: fill(N, 0x505050) }), 600);
   ok('someone in the lit window behind a shut door is occupied', chica.right === 'occupied' && chica.rightDoor === 2);
 }
@@ -109,6 +112,9 @@ throws('--route takes only tree', () => parseArgs(['--live', '--confirm-live', '
   '--detectors', 'x', '--route', 'winner']));
 throws('--winner and --route tree are exclusive', () => parseArgs(['--live', '--confirm-live', '--dials', '20,20,20,20',
   '--mode', 'grid420', '--detectors', 'x', '--winner', 'w.json', '--route', 'tree']));
+const unnamed = routeStatus({ mode: 'grid420', dials: null, winner: 'nowhere-winner.json', route: null }, { winners: [] });
+ok('an uncommitted --winner is refused, naming where winners are committed',
+  unnamed?.refusal?.includes('packages/propose/bindings/fnaf1') === true);
 
 // --- 4. the recorder through the three ways a night took it (2026-10-01) --------------------------------------
 // A simulated helper on a fake clock: a session copies frame k at 33 ms intervals from `firstAt`, or nothing while the

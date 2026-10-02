@@ -31,7 +31,7 @@
  */
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile } from 'node:fs/promises';
 import { homedir, tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -39,8 +39,10 @@ import { performance } from 'node:perf_hooks';
 import { AdbDeviceBridge } from '../../../packages/play/src/campaign/adb-bridge.ts';
 import { AdbCompanionPort, AdbHidProcess } from '../../../packages/play/src/campaign/physical-ports.ts';
 import { HidWireTransport } from '../../../packages/play/src/venues/phone/hid.ts';
+import { BINDINGS_DIR } from '@sixam/kernel';
+import { INPUT } from '@sixam/source/fnaf1';
 import { ProbeRecord, ensureTitle, titleRead, titleConsensus, settleCustomNight, setDials, restartToTitle,
-  DIALS, PACKAGE, BUILD, LEAVE_WAIT_MS } from '../../../packages/play/games/fnaf1/fnaf1-menu-probe.ts';
+  DIALS, LEAVE_WAIT_MS } from '../../../packages/play/games/fnaf1/fnaf1-menu-probe.ts';
 import { loadRegionSet, registerSet } from '../../../packages/play/bin/phone/native-regions.ts';
 import { RegionRecorder, startVideo } from '../../../packages/play/bin/phone/night-kit.ts';
 import { loadDetectors, makeClassifier } from '../../../packages/play/games/fnaf1/fnaf1-detectors.ts';
@@ -61,6 +63,13 @@ const CONTACT_MS = 160;
 const MODES = Object.freeze(['calibrate-empty', 'grid420']);
 const NIGHT_MS = 535000;                 // 90 s + 5 x 89 s (fnaf1.js CLOCK)
 const STALE_FRAME_MS = 400;              // frame age p95 82 ms, max 111 ms measured; 400 is a stall
+/**
+ * Consecutive distinct region frames that read neither the office nor a camera before the night
+ * counts as left (a jumpscare, a blackout, the 6 AM screen). A monitor flip reads that way for
+ * INPUT.monitorFlipFrames (23, sourced) and must not end a night; past it the margin is unmeasured,
+ * set at 150 (about 2.5 s at the helper's 60 fps) with the first 6 AM (3aaf02cd).
+ */
+export const LEFT_OFFICE_FRAMES = 150;
 
 const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
 const stamp = () => new Date().toISOString().replace(/[-:.]/g, '');
@@ -140,6 +149,14 @@ const ROUTE_FILES = Object.freeze(['packages/propose/bin/census/fnaf1-device-lan
   'packages/play/profiles/fnaf1/moto-g56/regions-fnaf1-moto-g56-v207.json', 'packages/play/profiles/fnaf1/moto-g56/controls-fnaf1-moto-g56-v207.json',
   'packages/play/profiles/fnaf1/moto-g56/custom-night-fnaf1-moto-g56-v207.json']);
 
+/** The route a grid420 night runs: each file's hash, the winner that names the night and whether the tree holds its route, and any refusal. */
+interface RouteStatus {
+  files: Record<string, string | null>;
+  winner: { path: string, id: string, commit: string, matches: boolean, differs: string[] } | null;
+  route: string | null;
+  refusal: string | null;
+}
+
 /**
  * Which route a grid420 night executes from this tree, and whether it is a
  * committed winner's. A night whose mode and dials a committed FNaF 1 winner
@@ -151,14 +168,6 @@ const ROUTE_FILES = Object.freeze(['packages/propose/bin/census/fnaf1-device-lan
  * without the second way. The files are hashed as they stand; the result goes
  * into the run record, so every grid420 night names the route it ran.
  */
-/** The route a grid420 night runs: each file's hash, the winner that names the night and whether the tree holds its route, and any refusal. */
-interface RouteStatus {
-  files: Record<string, string | null>;
-  winner: { path: string, id: string, commit: string, matches: boolean, differs: string[] } | null;
-  route: string | null;
-  refusal: string | null;
-}
-
 export function routeStatus(options: Pick<ReturnType<typeof parseArgs>, 'mode' | 'dials' | 'winner' | 'route'>,
   { root = ROOT, winners = listWinners(root) } = {}): RouteStatus | null {
   if (options.mode !== 'grid420') return null;
@@ -173,7 +182,7 @@ export function routeStatus(options: Pick<ReturnType<typeof parseArgs>, 'mode' |
   const files = Object.fromEntries((match ? Object.keys(match.winner.sources) : ROUTE_FILES).map((p) => [p, hash(p)]));
   const status: RouteStatus = { files, winner: null, route: options.route, refusal: null };
   if (options.winner && !named) {
-    status.refusal = `--winner ${options.winner} is not a committed fnaf1-route-winner-v1 under tools/device`;
+    status.refusal = `--winner ${options.winner} is not a committed fnaf1-route-winner-v1 under ${BINDINGS_DIR}/fnaf1`;
     return status;
   }
   if (!match) return status;
@@ -232,7 +241,7 @@ async function hold(hid: Hid, record: ProbeRecord, control: string, point: Point
 
 /** The 0/0/0/0 choreography: every route control, open-loop, timestamped. */
 async function calibrateEmpty({ hid, record, controls, snapTo }: {
-  hid: Hid, record: ProbeRecord, bridge: HelperFrameBridge, controls: Controls, snapTo: (name: string) => Promise<void>,
+  hid: Hid, record: ProbeRecord, controls: Controls, snapTo: (name: string) => Promise<void>,
 }) {
   const c = controls.controlMap;
   const pt = (name: string) => ({ x: c[name].x, y: c[name].y });
@@ -297,12 +306,6 @@ async function waitForOffice(recorder: RegionRecorder, classify: Classify, bound
 }
 
 /**
- * Drive a device-lane policy (packages/propose/bin/census/fnaf1-device-lane.ts) on the phone: the
- * same generator, its actions performed by the HID and its reads answered by
- * the newest native-region frame, classified. Time is the night's own: 0 is
- * the origin placed from the first office frame.
- */
-/**
  * The Companion's FNaF 1 teach panel, fed from the route: the step each
  * policy task names, and each side's door and last lit reading when they
  * change. Words are the panel's own vocabulary (Fnaf1Lesson.java); lines are
@@ -337,6 +340,12 @@ function teachFeed(port: AdbCompanionPort, record: ProbeRecord) {
   };
 }
 
+/**
+ * Drive a device-lane policy (packages/propose/bin/census/fnaf1-device-lane.ts) on the phone: the
+ * same generator, its actions performed by the HID and its reads answered by
+ * the newest native-region frame, classified. Time is the night's own: 0 is
+ * the origin placed from the first office frame.
+ */
 async function runPolicy({ policy, options, hid, record, controls, recorder, classify, epochHostMs, stopAfterMs, teach = null }: {
   policy: DevicePolicy, options: Readonly<Record<string, unknown>>, hid: Hid, record: ProbeRecord, controls: Controls,
   recorder: RegionRecorder, classify: Classify, epochHostMs: number, stopAfterMs: number, teach?: ReturnType<typeof teachFeed> | null,
@@ -375,7 +384,7 @@ async function runPolicy({ policy, options, hid, record, controls, recorder, cla
       // A room that stops being the office (a jumpscare, a blackout, the
       // 6 AM screen) is the end of the night, not a state to act on.
       if (r.seq !== lastSeq) { lastSeq = r.seq; stale = f.monitor === 'flipping' ? stale + 1 : 0; }
-      if (stale > 150) { await record.event('night-left-office', { atMs: ctx.now() }); return 'LEFT_OFFICE'; }
+      if (stale > LEFT_OFFICE_FRAMES) { await record.event('night-left-office', { atMs: ctx.now() }); return 'LEFT_OFFICE'; }
       teach?.frame(f, pan);
       // The policy reads the classifier's frame where the model hands it a rendered one.
       send = f as unknown as Frame;
@@ -478,7 +487,7 @@ async function main(argv: string[]) {
     await record.save('NIGHT');
     if (options.mode === 'calibrate-empty') {
       await sleep(12000);
-      await calibrateEmpty({ hid, record, bridge, controls, snapTo });
+      await calibrateEmpty({ hid, record, controls, snapTo });
       // Hold through 1 AM (90 s after the office) so the hour change is recorded.
       const until = readyHostMs + 110000;
       while (performance.now() < until) await sleep(500);

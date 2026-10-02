@@ -26,6 +26,8 @@
         "../../../packages/play/src/campaign/physical-ports.ts",
         "../../../packages/play/src/venues/phone/hid.ts",
         "../../../packages/propose/bin/census/fnaf1-device-lane.ts",
+        "@sixam/kernel",
+        "@sixam/source/fnaf1",
         "node:crypto",
         "node:fs",
         "node:fs/promises",
@@ -258,6 +260,7 @@
         "../../../packages/play/games/fnaf1/fnaf1-detectors.ts",
         "../../../packages/play/src/venues/phone/companion.ts",
         "../bin/fnaf1-custom-run.ts",
+        "@sixam/source/fnaf1",
         "node:fs"
       ]
     },
