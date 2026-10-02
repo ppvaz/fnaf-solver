@@ -236,6 +236,17 @@ Details:
     mapping
     ([three nights](../docs/evidence/rebuild-release20-three-nights-20261001.json),
     `rebuild-release20-3nights-14895ce02ba0b25e`).
+  - **The full-06 stream census again, releases at 20 ms: INCONCLUSIVE
+    (2026-10-01, pre-registered).** The release did not hide the start
+    state: the stage-1 prefix histogram over 65,536 states is identical to
+    the first census's, and the leading state is again 58176 at 23 windows
+    with margin 0 (the measured seed 47593 still parts at window 6). Only the
+    tail moves: all 3,654 stage-2 states now reach 6 AM, the leaders agree on
+    35-37 of 42 windows. So the early divergence lies in the clock or the
+    press landings, which the 10/20 readout night measures
+    ([census](../docs/evidence/full06-stream-census-release20-20261001.json),
+    `s2-stream-census-release20-c1f98630224034bc`;
+    [pre-registration](../docs/evidence/full06-stream-census-release20-predeclaration-20261001.json)).
   - **The mask-window occupant, natively: placement found, classes not yet
     (2026-10-01, exploratory).** On 375 retained mask-view frames (a dark top
     band and no camera bar tell the view from the office) the right

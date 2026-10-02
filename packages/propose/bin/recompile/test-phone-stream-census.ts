@@ -65,6 +65,24 @@ const canon = (v) => Array.isArray(v) ? `[${v.map(canon).join(',')}]`
   : v && typeof v === 'object' ? `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${canon(v[k])}`).join(',')}}` : JSON.stringify(v);
 assert.equal(id, `s2-stream-census-${sha256(canon(body)).slice(0, 16)}`, 'record id: sha256 of the body, keys sorted, compact');
 
+// --- the census repeated with releases at 20 ms (docs/evidence/full06-stream-census-release20-20261001.json)
+{
+  const r20 = json('docs/evidence/full06-stream-census-release20-20261001.json');
+  const pre20 = json(r20.predeclaration.path);
+  assert.equal(r20.predeclaration.sha256, sha256(read(r20.predeclaration.path)), 'the release-20 predeclaration is the committed one');
+  assert.deepEqual(r20.inputs, pre20.inputs, 'the release-20 census ran on its predeclared inputs');
+  assert.deepEqual(r20.variantPatch, pre20.variantPatch, 'and with its predeclared variant patch');
+  const rows20 = r20.stage2.rows.split(' ').map((r) => { const [state, prefix, agree, compared] = r.split(',').map(Number); return { state, prefix, agree, compared }; });
+  assert.equal(rows20.length, r20.stage2.states);
+  assert.equal(Object.values(r20.stage1.prefixHistogram).reduce((a: number, b: number) => a + b, 0), 65536);
+  const d20 = decide(pre20.decisionRule, r20.measuredSeed, rows20);
+  assert.deepEqual(d20, r20.decision);
+  assert.equal(r20.verdict, d20.verdict);
+  assert.deepEqual(r20.stage1.prefixHistogram, rec.stage1.prefixHistogram, 'the release changes no stage-1 prefix');
+  const { id: id20, ...body20 } = r20;
+  assert.equal(id20, `s2-stream-census-release20-${sha256(canon(body20)).slice(0, 16)}`, 'release-20 record id');
+}
+
 // --- the occupancy-rate correction of this record's exploratory reading
 const occ = json('docs/evidence/full06-occupancy-rates-20261001.json');
 assert.equal(occ.corrects.id, rec.id);
@@ -82,4 +100,4 @@ const best40 = [...rows].sort((a, b) => b.agree - a.agree || a.state - b.state).
 assert.deepEqual(missExpectation(best40, rec.phoneWindows, occ.model, occ.played).filter((m) => m && [22, 26, 31, 32].includes(m.window)), occ.censusBest40.windows);
 const { id: occId, ...occBody } = occ;
 assert.equal(occId, `s2-occupancy-rates-${sha256(canon(occBody)).slice(0, 16)}`, 'occupancy record id');
-console.log(`phone-stream-census: decision rule fixtures, and ${id} (${decision.verdict}) re-derived from its rows, and its occupancy-rate correction rechecked`);
+console.log(`phone-stream-census: decision rule fixtures, and ${id} (${decision.verdict}) re-derived from its rows, its release-20 repeat re-derived, and its occupancy-rate correction rechecked`);
