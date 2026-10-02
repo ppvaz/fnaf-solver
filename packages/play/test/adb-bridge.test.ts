@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import type { ExecFileOptions } from 'node:child_process';
 import { AdbDeviceBridge, parseAdbDevices } from '../src/campaign/adb-bridge.ts';
 import { restartCompanionCapture } from '../src/campaign/companion-capture.ts';
-import { AdbCompanionPort, parseCompanionLogEndpoint } from '../src/campaign/physical-ports.ts';
+import { AdbCompanionPort, AdbHidProcess, parseCompanionLogEndpoint } from '../src/campaign/physical-ports.ts';
 
 assert.deepEqual(parseAdbDevices('List of devices attached\nusb-1\tdevice product/foo transport_id:1\noffline\toffline\n'), [
   { serial: 'usb-1', status: 'device', details: ['product/foo', 'transport_id:1'] },
@@ -187,5 +187,30 @@ assert.deepEqual(restartCalls, [
   ['-s', 'usb-1', 'shell', 'cmd', 'package', 'resolve-activity', '--brief', 'com.scottgames.fnaf2'],
   ['-s', 'usb-1', 'shell', 'am', 'start', '-n', 'com.scottgames.fnaf2/.Main'],
 ]);
+
+// Closing the HID stream must end the process that holds it. An adb that
+// ignores SIGTERM is killed, and close() resolves only once it has exited.
+const stubborn = mkdtempSync(join(tmpdir(), 'hid-close-'));
+let stubbornPid: number | undefined;
+try {
+  const adb = join(stubborn, 'adb.cjs');
+  writeFileSync(adb, `#!/usr/bin/env node
+process.on('SIGTERM', () => {});
+process.stdin.resume();
+setInterval(() => {}, 1000);
+process.stderr.write('ready\\n');
+`, { mode: 0o755 });
+  const hid = new AdbHidProcess({ serial: 'usb-1', adb, closeGraceMs: 200 });
+  hid.ensureStarted();
+  const pid = hid.child?.pid;
+  stubbornPid = pid;
+  assert.equal(typeof pid, 'number');
+  await new Promise<void>(resolve => hid.child?.stderr.once('data', () => resolve()));
+  await hid.close();
+  assert.throws(() => process.kill(Number(pid), 0), /ESRCH/, 'a HID process that ignores SIGTERM is killed by close()');
+} finally {
+  try { if (stubbornPid !== undefined) process.kill(stubbornPid, 'SIGKILL'); } catch { /* already gone */ }
+  rmSync(stubborn, { recursive: true, force: true });
+}
 
 console.log('adb bridge: closed command set, selection, build, lock, focus, HID, helper and venue record gates pass');

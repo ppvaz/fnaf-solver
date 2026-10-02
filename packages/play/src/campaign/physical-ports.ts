@@ -444,13 +444,15 @@ export class AdbHidProcess {
   declare serial: string;
   declare adb: string;
   declare readyTimeoutMs: number;
+  declare closeGraceMs: number;
   declare child: ChildProcessByStdio<Writable, null, Readable> | null;
   declare failed: Error | null;
   declare closed: boolean;
-  constructor(options: {serial: string, adb?: string, readyTimeoutMs?: number}) {
-    const { serial, adb = 'adb', readyTimeoutMs = 12000 } = options ?? {};
+  /** @param options.closeGraceMs how long close() waits after SIGTERM, and again after SIGKILL */
+  constructor(options: {serial: string, adb?: string, readyTimeoutMs?: number, closeGraceMs?: number}) {
+    const { serial, adb = 'adb', readyTimeoutMs = 12000, closeGraceMs = 1000 } = options ?? {};
     if (typeof serial !== 'string' || serial.length === 0) throw new TypeError('HID port requires an ADB serial');
-    this.serial = serial; this.adb = adb; this.readyTimeoutMs = readyTimeoutMs;
+    this.serial = serial; this.adb = adb; this.readyTimeoutMs = readyTimeoutMs; this.closeGraceMs = closeGraceMs;
     this.child = null; this.failed = null; this.closed = false;
   }
 
@@ -494,17 +496,25 @@ export class AdbHidProcess {
     throw new Error('InputReader did not expose the registered HID device before the deadline');
   }
 
+  /**
+   * End the stream and the process that holds it. A process that outlives
+   * SIGTERM is killed; close() resolves only once it has exited and throws if
+   * it has not, so a halt never records a stream as closed while it still runs.
+   */
   async close() {
     this.closed = true;
     const child = this.child;
     this.child = null;
-    if (!child) return;
+    if (!child || child.exitCode !== null || child.signalCode !== null) return;
+    const exited = new Promise<void>(resolve => child.once('exit', () => resolve()));
+    const within = (ms: number) => Promise.race([exited.then(() => true),
+      new Promise<boolean>(resolve => setTimeout(() => resolve(false), ms).unref())]);
     child.stdin?.end();
-    await new Promise<void>(resolve => {
-      const timer = setTimeout(resolve, 1000);
-      child.once('close', () => { clearTimeout(timer); resolve(); });
-      child.kill('SIGTERM');
-    });
+    child.kill('SIGTERM');
+    if (await within(this.closeGraceMs)) return;
+    child.kill('SIGKILL');
+    if (await within(this.closeGraceMs)) return;
+    throw new Error(`ADB HID process ${child.pid} did not exit after SIGKILL`);
   }
 }
 
