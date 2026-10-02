@@ -20,6 +20,8 @@
 // cost dominated by copying a diagnostic buffer is spent where the deadline is
 // tightest.
 
+import { isList } from '@sixam/kernel';
+
 function fail(what: string): never {
   throw new TypeError(`plain-clone: ${what} is not plain data`);
 }
@@ -41,8 +43,8 @@ function copy(value: unknown): unknown {
       fail(`a ${type}`);
     return value;
   }
-  if (Array.isArray(value)) {
-    const items: readonly unknown[] = value;
+  if (isList(value)) {
+    const items = value;
     const out = new Array<unknown>(items.length);
     for (let i = 0; i < items.length; i++) out[i] = copy(items[i]);
     return out;

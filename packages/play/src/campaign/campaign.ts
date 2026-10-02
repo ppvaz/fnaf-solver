@@ -200,7 +200,7 @@ export function makeCampaignSpec({ profile, targetBuild, maxAttempts = 3,
     for (const key of Object.keys(night7Dials)) if (!AI_DIALS.includes(key))
       fail(`night7Dials has unknown dial ${key}`);
   }
-  if (!Array.isArray(nights) || nights.length < 1 || nights.length > 7 ||
+  if (!isList(nights) || nights.length < 1 || nights.length > 7 ||
       nights.some(night => !Number.isInteger(night) || night < 1 || night > 7) ||
       new Set(nights).size !== nights.length)
     fail('nights must be a unique set of nights in 1..7');

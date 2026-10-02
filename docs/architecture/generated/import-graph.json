@@ -1529,6 +1529,12 @@
       ]
     },
     {
+      "file": "packages/play/src/phone/night-onset.ts",
+      "imports": [
+        "@sixam/kernel"
+      ]
+    },
+    {
       "file": "packages/play/src/player/belief-state.ts",
       "imports": [
         "./plain-clone.ts",
@@ -1548,6 +1554,12 @@
       "imports": [
         "./belief-state.ts",
         "./estimator.ts"
+      ]
+    },
+    {
+      "file": "packages/play/src/player/plain-clone.ts",
+      "imports": [
+        "@sixam/kernel"
       ]
     },
     {

@@ -23,7 +23,7 @@ import type { ArmSample } from './adb-device-local-executor.ts';
 import type { CameraRule } from '@sixam/play';
 import type { ResolvedDeviceProfile } from '@sixam/kernel/contracts';
 import type { VenueBound, VenueIdentity } from '@sixam/kernel';
-import { isRecord } from '@sixam/kernel';
+import { isList, isRecord } from '@sixam/kernel';
 import { composeCampaignPorts } from './campaign-composition.ts';
 import { AdbDeviceLocalArtifactExecutor } from './adb-device-local-executor.ts';
 import { makeCampaignExecutionRequest } from './campaign-bundle.ts';
@@ -246,7 +246,7 @@ function point(value: unknown, label: string): Point {
 }
 
 function modelPoint(value: unknown, label: string) {
-  if (!Array.isArray(value) || value.length !== 2)
+  if (!isList(value) || value.length !== 2)
     throw new TypeError(`${label} must be a two-element model point`);
   return point({ x: value[0], y: value[1] }, label);
 }
@@ -345,7 +345,7 @@ export async function createCampaignPorts(options: CampaignPortOptions) {
   if (typeof teachOverlay !== 'boolean') throw new TypeError('teachOverlay must be boolean');
   // The runner's own preflight compares the venue against the same bindings
   // the CLI's did, so the retained result records the same verdict.
-  if (!Array.isArray(venueBindings)) throw new TypeError('venueBindings must be an array');
+  if (!isList(venueBindings)) throw new TypeError('venueBindings must be an array');
   // The teach panel narrates from the anchor's release; an unanchored night
   // has no origin on the helper's clock to narrate from.
   if (teachOverlay && nightAnchorAimMs === null) throw new TypeError('teachOverlay requires a night anchor');

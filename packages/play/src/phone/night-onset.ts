@@ -21,6 +21,8 @@
 // names the opposite band.
 
 /** ScreenIdentity.java: UNKNOWN 0, CUE_HELPER 1, FNAF2_NIGHT 2, FNAF2_MENU 3. */
+import { isList } from '@sixam/kernel';
+
 export const SCREEN_FNAF2_NIGHT = 2;
 /** Image time a FNAF2_NIGHT run must span to count as the night (~30 frames at 60 Hz). */
 export const NIGHT_ONSET_HOLD_MS = 500;
@@ -39,7 +41,7 @@ const finite = (value: unknown): value is number => typeof value === 'number' &&
  * @param rows capture order
  */
 export function nightOnsetFromFrames(rows: {imageMs: number, screenIdentity: number}[], { holdMs = NIGHT_ONSET_HOLD_MS } = {}): {imageMs: number, index: number, resolutionMs: number|null, priorIdentity: number|null}|null {
-  if (!Array.isArray(rows)) throw new TypeError('night onset needs an array of frames');
+  if (!isList(rows)) throw new TypeError('night onset needs an array of frames');
   if (!finite(holdMs) || holdMs <= 0) throw new TypeError('night onset hold must be a positive duration');
   let candidate = -1;
   for (let index = 0; index < rows.length; index += 1) {
