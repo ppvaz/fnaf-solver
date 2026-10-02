@@ -213,4 +213,23 @@ process.stderr.write('ready\\n');
   rmSync(stubborn, { recursive: true, force: true });
 }
 
+// Every channel that opens a forward refuses one that names no host port,
+// rather than connecting to port NaN.
+const noForward = mkdtempSync(join(tmpdir(), 'no-forward-'));
+try {
+  const adb = join(noForward, 'adb.cjs');
+  writeFileSync(adb, `#!/usr/bin/env node
+if (process.argv.includes('forward')) process.stdout.write('\\n');
+`, { mode: 0o755 });
+  const port = new AdbCompanionPort({ serial: 'usb-1', adb });
+  port.endpoint = Object.freeze({ port: 49707, token: '0123456789abcdef0123456789abcdef' });
+  await assert.rejects(() => port.snap('title', join(noForward, 'title.png')), /Companion snap: adb forward returned no host port/);
+  await assert.rejects(() => port.status(), /Companion: adb forward returned no host port/);
+  assert.throws(() => port.openClock(), /Companion clock: adb forward returned no host port/);
+  assert.throws(() => port.openRegions(), /Companion regions: adb forward returned no host port/);
+  assert.throws(() => port.openLesson({ lessonLine: /^LESSON / }), /Companion lesson: adb forward returned no host port/);
+} finally {
+  rmSync(noForward, { recursive: true, force: true });
+}
+
 console.log('adb bridge: closed command set, selection, build, lock, focus, HID, helper and venue record gates pass');

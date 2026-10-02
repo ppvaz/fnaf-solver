@@ -202,20 +202,30 @@ export class AdbCompanionPort {
     return { ...this.endpoint };
   }
 
+  /** An adb forward from a free host port to the helper's control port; the caller removes it. */
+  #forward(endpoint: CompanionEndpoint, channel: string) {
+    const forwarded = runSync(this.adb, ['-s', this.serial, 'forward', 'tcp:0', `tcp:${endpoint.port}`]).trim().split(/\s+/).at(-1);
+    if (!/^\d+$/.test(forwarded ?? '')) throw new Error(`${channel}: adb forward returned no host port`);
+    return Number(forwarded);
+  }
+
+  #unforward(port: number) {
+    try { runSync(this.adb, ['-s', this.serial, 'forward', '--remove', `tcp:${port}`]); } catch { /* the forward dies with adb */ }
+  }
+
   /**
    * One request line over a short-lived forward, for the game-agnostic verbs
    * (STATUS, TARGET, LEASE). Returns the reply text; an ERROR reply rejects.
    */
   async #exchangeOnce(line: string, { timeoutMs = 2000 }: {timeoutMs?: number} = {}) {
     const endpoint = this.endpoint ?? this.discover();
-    const forwarded = runSync(this.adb, ['-s', this.serial, 'forward', 'tcp:0', `tcp:${endpoint.port}`]).trim().split(/\s+/).at(-1);
-    if (!/^\d+$/.test(forwarded ?? '')) throw new Error('Companion: adb forward returned no host port');
+    const forwarded = this.#forward(endpoint, 'Companion');
     try {
-      const reply = await lineExchange(Number(forwarded), line.replace('<token>', endpoint.token), timeoutMs, 8192);
+      const reply = await lineExchange(forwarded, line.replace('<token>', endpoint.token), timeoutMs, 8192);
       if (!reply.startsWith('OK')) throw new Error(`Companion ${line.split(' ')[0]}: ${reply}`);
       return reply;
     } finally {
-      try { runSync(this.adb, ['-s', this.serial, 'forward', '--remove', `tcp:${forwarded}`]); } catch { /* the forward dies with adb */ }
+      this.#unforward(forwarded);
     }
   }
 
@@ -303,12 +313,11 @@ export class AdbCompanionPort {
    */
   openClock({ timeoutMs = 1000 }: {timeoutMs?: number} = {}) {
     const endpoint = this.endpoint ?? this.discover();
-    const forwarded = runSync(this.adb, ['-s', this.serial, 'forward', 'tcp:0', `tcp:${endpoint.port}`]).trim().split(/\s+/).at(-1);
-    if (!/^\d+$/.test(forwarded ?? '')) throw new Error('Companion clock: adb forward returned no host port');
+    const forwarded = this.#forward(endpoint, 'Companion clock');
     let closed = false;
     const exchange = async () => {
       if (closed) throw new Error('Companion clock is closed');
-      const sample = await timedExchange(Number(forwarded), `GET ${endpoint.token}`, timeoutMs);
+      const sample = await timedExchange(forwarded, `GET ${endpoint.token}`, timeoutMs);
       return { ...sample, uncertaintyMs: sample.rttMs / 2, hostClock: 'performance-now-ms' };
     };
     return {
@@ -328,7 +337,7 @@ export class AdbCompanionPort {
       close: () => {
         if (closed) return;
         closed = true;
-        try { runSync(this.adb, ['-s', this.serial, 'forward', '--remove', `tcp:${forwarded}`]); } catch { /* the forward dies with adb */ }
+        this.#unforward(forwarded);
       },
     };
   }
@@ -342,22 +351,21 @@ export class AdbCompanionPort {
   openLesson({ timeoutMs = 1000, lessonLine }: {timeoutMs?: number, lessonLine?: RegExp} = {}) {
     if (!(lessonLine instanceof RegExp)) throw new TypeError('lesson channel needs the LESSON line grammar');
     const endpoint = this.endpoint ?? this.discover();
-    const forwarded = runSync(this.adb, ['-s', this.serial, 'forward', 'tcp:0', `tcp:${endpoint.port}`]).trim().split(/\s+/).at(-1);
-    if (!/^\d+$/.test(forwarded ?? '')) throw new Error('Companion lesson: adb forward returned no host port');
+    const forwarded = this.#forward(endpoint, 'Companion lesson');
     let closed = false;
     return {
       send: async (line: string) => {
         if (closed) throw new Error('Companion lesson channel is closed');
         if (typeof line !== 'string' || !lessonLine.test(line))
           throw new TypeError('Companion lesson line is outside the LESSON vocabulary');
-        const reply = await lineExchange(Number(forwarded), line, timeoutMs);
+        const reply = await lineExchange(forwarded, line, timeoutMs);
         if (!reply.startsWith('OK')) throw new Error(`Companion lesson: ${reply}`);
         return reply;
       },
       close: () => {
         if (closed) return;
         closed = true;
-        try { runSync(this.adb, ['-s', this.serial, 'forward', '--remove', `tcp:${forwarded}`]); } catch { /* the forward dies with adb */ }
+        this.#unforward(forwarded);
       },
     };
   }
@@ -371,13 +379,12 @@ export class AdbCompanionPort {
    */
   openRegions({ timeoutMs = 1000 }: {timeoutMs?: number} = {}) {
     const endpoint = this.endpoint ?? this.discover();
-    const forwarded = runSync(this.adb, ['-s', this.serial, 'forward', 'tcp:0', `tcp:${endpoint.port}`]).trim().split(/\s+/).at(-1);
-    if (!/^\d+$/.test(forwarded ?? '')) throw new Error('Companion regions: adb forward returned no host port');
+    const forwarded = this.#forward(endpoint, 'Companion regions');
     let closed = false;
     const exchange = async (line: string) => {
       if (closed) throw new Error('Companion region channel is closed');
       const sentAt = performance.now();
-      const reply = await lineExchange(Number(forwarded), line, timeoutMs, REGION_LIMITS.lineChars);
+      const reply = await lineExchange(forwarded, line, timeoutMs, REGION_LIMITS.lineChars);
       return { reply, sentAt, receivedAt: performance.now() };
     };
     return {
@@ -402,7 +409,7 @@ export class AdbCompanionPort {
       close: () => {
         if (closed) return;
         closed = true;
-        try { runSync(this.adb, ['-s', this.serial, 'forward', '--remove', `tcp:${forwarded}`]); } catch { /* the forward dies with adb */ }
+        this.#unforward(forwarded);
       },
     };
   }
@@ -416,9 +423,9 @@ export class AdbCompanionPort {
   async snap(label: string, target: string, { timeoutMs = 5000 }: {timeoutMs?: number} = {}) {
     if (!/^[A-Za-z0-9._-]{1,48}$/.test(label)) throw new TypeError('snap label must be 1..48 of [A-Za-z0-9._-]');
     const endpoint = this.endpoint ?? this.discover();
-    const forwarded = runSync(this.adb, ['-s', this.serial, 'forward', 'tcp:0', `tcp:${endpoint.port}`]).trim().split(/\s+/).at(-1);
+    const forwarded = this.#forward(endpoint, 'Companion snap');
     try {
-      const reply = await lineExchange(Number(forwarded), `SNAP ${endpoint.token} ${label}`, timeoutMs);
+      const reply = await lineExchange(forwarded, `SNAP ${endpoint.token} ${label}`, timeoutMs);
       const fields = parseCueResponse(reply);
       if (fields.path !== `files/frames/${label}.png`) throw new Error(`Companion snap wrote an unexpected path: ${reply}`);
       const bytes = runSyncBytes(this.adb, ['-s', this.serial, 'exec-out', 'run-as', HELPER_PACKAGE, 'cat', fields.path],
@@ -428,7 +435,7 @@ export class AdbCompanionPort {
       try { runSync(this.adb, ['-s', this.serial, 'shell', 'run-as', HELPER_PACKAGE, 'rm', '-f', fields.path]); } catch { /* next snap overwrites */ }
       return { path: target, imageNs: BigInt(fields.imageNs), snapshotNs: BigInt(fields.snapshotNs), bytes: bytes.length };
     } finally {
-      try { runSync(this.adb, ['-s', this.serial, 'forward', '--remove', `tcp:${forwarded}`]); } catch { /* the forward dies with adb */ }
+      this.#unforward(forwarded);
     }
   }
 
