@@ -34,10 +34,15 @@ const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const current = (path) => currentPath(ROOT, path);
 
 /** Everything a worker needs to replay one start state, derived once from the config and its hashed inputs. */
-export function inputs(nightName) {
+/**
+ * The night's model inputs from its primary variant; `variantPatch` (a predeclaration's, e.g. { releaseLatencyMs: 20 })
+ * is merged into that variant in memory, the committed config untouched (it is pinned by hash).
+ */
+export function inputs(nightName, variantPatch = null) {
   const cfg = loadConfig(join(ROOT, CONFIG));
   const night = cfg.nights.find((n) => n.name === nightName);
   if (!night) throw new Error(`no night ${nightName} in ${CONFIG}`);
+  if (variantPatch) cfg.variants[night.primaryVariant] = { ...cfg.variants[night.primaryVariant], ...variantPatch };
   const p = prepare(cfg, night, night.primaryVariant, ROOT);
   const modelOptions = JSON.parse(readFileSync(resolve(ROOT, current(cfg.modelOptions)), 'utf8'));
   const customNight = night.customNight ? JSON.parse(readFileSync(resolve(ROOT, current(night.customNight)), 'utf8')) : null;
@@ -68,10 +73,10 @@ export function playState(inp, state, windows = null) {
     outcome: run.won ? '6am' : run.death ? `death:${run.death.reason}@${run.death.t ?? '?'}` : 'alive' };
 }
 
-function pool(nightName, states, windows, workers) {
+function pool(nightName, states, windows, workers, variantPatch = null) {
   const chunks = Array.from({ length: workers }, (_, w) => states.filter((_, k) => k % workers === w));
   return Promise.all(chunks.filter((c) => c.length).map((chunk) => new Promise<any>((done, fail) => {
-    const worker = new Worker(fileURLToPath(import.meta.url), { workerData: { tool: SCHEMA, nightName, states: chunk, windows } });
+    const worker = new Worker(fileURLToPath(import.meta.url), { workerData: { tool: SCHEMA, nightName, states: chunk, windows, variantPatch } });
     worker.on('message', done); worker.on('error', fail);
     worker.on('exit', (code) => { if (code) fail(new Error(`census worker exited ${code}`)); });
   }))).then((parts) => parts.flat().sort((a, b) => a.state - b.state));
@@ -108,21 +113,22 @@ async function main(argv) {
   const rule = pre.decisionRule;
   if (pre.night !== args.night || !Number.isInteger(rule?.stage1Windows) || !Number.isInteger(rule?.stage2MinPrefix))
     throw new Error('the predeclaration must name this night and its stage1Windows / stage2MinPrefix rule');
-  const inp = inputs(args.night);
+  const variantPatch = pre.variantPatch ?? null;
+  const inp = inputs(args.night, variantPatch);
   for (const [k, v] of Object.entries(pre.inputs ?? {})) if (inp.hashes[k] !== v) throw new Error(`input ${k} changed since the predeclaration`);
   const workers = Number(args.workers ?? Math.max(1, Math.min(6, cpus().length - 2)));
   const all = Array.from({ length: STATES }, (_, s) => s);
   const t0 = Date.now();
-  const stage1 = await pool(args.night, all, rule.stage1Windows, workers);
+  const stage1 = await pool(args.night, all, rule.stage1Windows, workers, variantPatch);
   const survivors = stage1.filter((r) => r.prefix >= rule.stage2MinPrefix).map((r) => r.state);
   if (!survivors.includes(inp.measuredSeed)) survivors.push(inp.measuredSeed);
-  const stage2 = await pool(args.night, survivors, null, workers);
+  const stage2 = await pool(args.night, survivors, null, workers, variantPatch);
   const decision = decide(rule, inp.measuredSeed, stage2);
   const measured1 = stage1.find((r) => r.state === inp.measuredSeed);
   const result = {
     schema: SCHEMA, claimLevel: 'MODEL_ONLY', night: args.night, variant: inp.variant, measuredSeed: inp.measuredSeed,
     predeclaration: { path: args.predeclaration, sha256: sha256(preBytes), id: pre.id },
-    inputs: inp.hashes, phoneWindows: inp.phone,
+    inputs: inp.hashes, ...(variantPatch ? { variantPatch } : {}), phoneWindows: inp.phone,
     stage1: { windows: rule.stage1Windows, states: stage1.length, prefixHistogram: histogram(stage1),
       measuredSeed: measured1, atLeastMeasured: stage1.filter((r) => r.prefix >= measured1.prefix).length },
     stage2: { minPrefix: rule.stage2MinPrefix, states: stage2.length,
@@ -140,7 +146,7 @@ async function main(argv) {
 // Only this tool's own workers replay states here; another tool's worker may import this module for inputs().
 if (!isMainThread && workerData?.tool === SCHEMA) {
   const { nightName, states, windows } = workerData;
-  const inp = inputs(nightName);
+  const inp = inputs(nightName, workerData.variantPatch ?? null);
   parentPort.postMessage(states.map((s) => playState(inp, s, windows)));
 } else if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   await main(process.argv.slice(2));
