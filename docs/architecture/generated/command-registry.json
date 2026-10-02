@@ -2543,6 +2543,12 @@
       "lifecycle": "supported"
     },
     {
+      "id": "packages/propose/bin/recompile/phone-seed-scan.ts",
+      "invocation": "packages/propose/bin/recompile/phone-seed-scan.ts --night-inputs INPUTS --spec SPEC [--workers N] [--from S --to S] [--out FILE]",
+      "kind": "sweep (exploratory until a predeclaration names it; MODEL_ONLY replays over DEVICE_MEASURED frames and clock)",
+      "lifecycle": "supported"
+    },
+    {
       "id": "packages/propose/bin/recompile/test-phone-encounter-replay.ts",
       "invocation": "packages/propose/bin/recompile/test-phone-encounter-replay.ts",
       "kind": "FIXTURE for the clock, press rules, landing latency, native response attribution/UNKNOWN/readiness/brackets, occupant, window codes and scoring; then the retained phone comparison and `results/full06-responses-20260928.json` re-derived from their rows, including the reproduced control, coverage, focused conclusion and generated evidence record. In `npm run test:unit`; no private inputs or binary required.",

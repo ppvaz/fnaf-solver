@@ -9,7 +9,7 @@ import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, 
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { deriveInputs, identifyReading, measuredNight, readoutStrength, regionImages, updateOf } from './phone-region-readout.ts';
+import { deriveInputs, identifyReading, measuredNight, periodValue, readoutStrength, regionImages, updateOf } from './phone-region-readout.ts';
 import { anchorIndex, back, seedCandidates } from './phone-seed-readout.ts';
 
 const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '../../../..');
@@ -20,6 +20,12 @@ const along = (s: number, n: number) => { let x = s; for (let i = 0; i < n; i +=
 // --- frames to updates
 assert.equal(updateOf(0, 81), 4, 'the onset frame is update floor(81 / 16.67)');
 assert.equal(updateOf(1000 - 81, 81), 60, 'one second after the run start is update 60');
+
+// --- a period's value: the mean, or robustly the median of the frames between the flash and black
+assert.equal(periodValue([10, 20, 30]), 20);
+const robust = { above: 250, below: 5, statistic: 'median' };
+assert.equal(periodValue([40, 41, 255, 42], robust), 41, 'the camera-switch flash (255) is dropped and the median taken');
+assert.equal(periodValue([0, 255], robust), null, 'a period of flash and black frames only has no value');
 
 // --- the reading: aliases a few generator steps away are the same reading, not rivals
 const rule = { minR: 0.85, minMargin: 0.08, aliasSteps: 5 };
@@ -92,9 +98,20 @@ assert.equal(anchorIndex([{ differ: 0 }, { differ: 99 }, { differ: 0 }], 10), nu
   assert.deepEqual(rows.filter((r) => r.c === 5).map((r) => r.x), [63], 'the lead: x = 63 ms with c = 5, and no other x in the bracket');
 }
 
-// --- the records
 const canon = (v: unknown): string => Array.isArray(v) ? `[${v.map(canon).join(',')}]`
   : v && typeof v === 'object' ? `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${canon((v as Record<string, unknown>)[k])}`).join(',')}}` : JSON.stringify(v);
+// --- the whole-seed scan agrees with the injection analysis (docs/evidence/s2-seed-scan-night7-0of20-20261001.json)
+{
+  const scan = JSON.parse(readFileSync(join(ROOT, 'docs/evidence/s2-seed-scan-night7-0of20-20261001.json'), 'utf8'));
+  const rs = scan.top20.map((s: { r: number }) => s.r);
+  assert.deepEqual(rs, [...rs].sort((a: number, b: number) => b - a), 'the scan ranks by mean r');
+  assert.ok(scan.top20.every((s: { r: number, perWindow: number[] }) => Math.abs(s.r - s.perWindow.reduce((a, b) => a + b, 0) / s.perWindow.length) < 1e-12), 'a seed scores its windows\' mean r');
+  assert.equal(scan.top20[0].seed, back(57136, 284), 'the scanned seed is wind-1\'s read state stepped back by the model\'s draws');
+  const { id, ...body } = scan;
+  assert.equal(id, `s2-seed-scan-night7-0of20-${sha(canon(body)).slice(0, 16)}`, 'seed scan record id');
+}
+
+// --- the records
 const records = readdirSync(join(ROOT, 'docs/evidence')).filter((f) => /^s2-region-readout.*\.json$/.test(f) && !f.includes('-predeclaration-'));
 for (const file of records) {
   const rec = JSON.parse(readFileSync(join(ROOT, 'docs/evidence', file), 'utf8'));

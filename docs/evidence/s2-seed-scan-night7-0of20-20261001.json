@@ -1,0 +1,208 @@
+{
+ "schema": "evidence-record-v1",
+ "date": "2026-10-01",
+ "step": "ROADMAP S2a (the seed read in-night) and S4 (seed-aware control)",
+ "claimLevel": "MODEL_ONLY replays over DEVICE_MEASURED frames and clock",
+ "exploratory": "Not pre-registered: a method check on the 0/20 night already analysed under its own predeclaration; it sets the identification bar the 10/20 predeclaration will use.",
+ "question": "Replaying every office seed from the night's first update on its measured clock, with the static readout's frames mapped through the shared image clock, does exactly one seed reproduce the static in the first two winding windows?",
+ "tool": {
+  "path": "packages/propose/bin/recompile/phone-seed-scan.ts",
+  "sha256": "f7c6f2dfd9309205f7496204288b0ff72ceac8a5cd1da5ea800b5f49288bcb80"
+ },
+ "spec": {
+  "path": "docs/evidence/s2-seed-scan-night7-0of20-spec-20261001.json",
+  "sha256": "27d3d859fd23a8cd871e0c43488487e95e321be7150d600ab9bfa513aa12e62b"
+ },
+ "nightInputs": {
+  "path": "docs/evidence/s2-region-readout-night7-0of20-inputs-20261001.json",
+  "sha256": "c0090634d6c97a4f42ea026d5c5ec1d4a3007fe15f5ba60c38129fe63212ff82"
+ },
+ "run": "night7-k3-0of20-sr01-20261001T221003Z",
+ "firstNightFrameRow": 1078,
+ "landingLatency": {
+  "raises": 44,
+  "officeViewLuma": 117,
+  "medianMs": 85.5,
+  "p10Ms": 64.6,
+  "p90Ms": 107.9,
+  "minMs": 30.5,
+  "maxMs": 370
+ },
+ "frames": 382,
+ "endFrame": 1426,
+ "seeds": 65536,
+ "top20": [
+  {
+   "seed": 23712,
+   "r": 0.9726699896121449,
+   "perWindow": [
+    0.981287557442339,
+    0.9640524217819509
+   ]
+  },
+  {
+   "seed": 13488,
+   "r": 0.585478780947367,
+   "perWindow": [
+    0.5832929286900833,
+    0.5876646332046508
+   ]
+  },
+  {
+   "seed": 12252,
+   "r": 0.5823297166479179,
+   "perWindow": [
+    0.6505602851363576,
+    0.5140991481594782
+   ]
+  },
+  {
+   "seed": 34441,
+   "r": 0.5625368443973165,
+   "perWindow": [
+    0.4974007075966076,
+    0.6276729811980255
+   ]
+  },
+  {
+   "seed": 59345,
+   "r": 0.5516498354362217,
+   "perWindow": [
+    0.6223119890439561,
+    0.48098768182848733
+   ]
+  },
+  {
+   "seed": 59452,
+   "r": 0.541266734647365,
+   "perWindow": [
+    0.48927592296989275,
+    0.5932575463248373
+   ]
+  },
+  {
+   "seed": 15027,
+   "r": 0.5410624522642729,
+   "perWindow": [
+    0.46053899025303163,
+    0.6215859142755141
+   ]
+  },
+  {
+   "seed": 46001,
+   "r": 0.5303093989779524,
+   "perWindow": [
+    0.598326487494923,
+    0.4622923104609816
+   ]
+  },
+  {
+   "seed": 48309,
+   "r": 0.5294186473230295,
+   "perWindow": [
+    0.6349528460671198,
+    0.42388444857893914
+   ]
+  },
+  {
+   "seed": 65321,
+   "r": 0.5282725332890658,
+   "perWindow": [
+    0.5484781339651321,
+    0.5080669326129994
+   ]
+  },
+  {
+   "seed": 60598,
+   "r": 0.5188062166007601,
+   "perWindow": [
+    0.5542140267207702,
+    0.48339840648075
+   ]
+  },
+  {
+   "seed": 28608,
+   "r": 0.5184036941642127,
+   "perWindow": [
+    0.5810797373777199,
+    0.45572765095070555
+   ]
+  },
+  {
+   "seed": 14950,
+   "r": 0.5155295520213796,
+   "perWindow": [
+    0.510878731411518,
+    0.5201803726312412
+   ]
+  },
+  {
+   "seed": 32610,
+   "r": 0.5146235726879324,
+   "perWindow": [
+    0.5133836131617746,
+    0.5158635322140901
+   ]
+  },
+  {
+   "seed": 29440,
+   "r": 0.5121604935045805,
+   "perWindow": [
+    0.6333386577340474,
+    0.39098232927511345
+   ]
+  },
+  {
+   "seed": 26592,
+   "r": 0.5119654863997686,
+   "perWindow": [
+    0.48184499360246075,
+    0.5420859791970765
+   ]
+  },
+  {
+   "seed": 30728,
+   "r": 0.5107572841491692,
+   "perWindow": [
+    0.3551747192118896,
+    0.6663398490864487
+   ]
+  },
+  {
+   "seed": 53193,
+   "r": 0.5091304211589981,
+   "perWindow": [
+    0.5011964402549846,
+    0.5170644020630116
+   ]
+  },
+  {
+   "seed": 8278,
+   "r": 0.5084544191118253,
+   "perWindow": [
+    0.5362913289432627,
+    0.4806175092803879
+   ]
+  },
+  {
+   "seed": 29031,
+   "r": 0.5073469428442954,
+   "perWindow": [
+    0.5071549375921303,
+    0.5075389480964606
+   ]
+  }
+ ],
+ "quantiles": {
+  "p50": -0.00022766453436489503,
+  "p999": 0.4694969949154853
+ },
+ "elapsedMs": 79994,
+ "reading": {
+  "identified": "Seed 23712 scores mean r 0.973 over wind-1 and wind-2 (0.981, 0.964); the next seed 0.585, the 99.9th percentile 0.469. One seed of 65,536, from about 7 s of static, in 1.3 minutes on 8 workers.",
+  "crossCheck": "The same seed the injection analysis implies: wind-1's read state 57136 stepped back by the model's 284 draws is 23712 (docs/evidence/s2-region-readout-night7-0of20-20261001.json). Two methods, one on a 60 Hz clock with injected states, one on the measured clock replaying whole seeds, agree.",
+  "meaning": "23712 is the model-equivalent seed: the seed whose model replay reproduces the phone's stream. Whether the phone's own seed is the wall clock 5 draws earlier is the separate pre-registered test (docs/evidence/s2-seed-readout-night7-0of20-predeclaration-20261001.json).",
+  "next": "At 10/20 a window's draws depend on game state, so per-window injection does not apply and this whole-seed replay is the method; the bar it sets: top mean r 0.97 against 0.59, a gap of 0.39."
+ },
+ "id": "s2-seed-scan-night7-0of20-8ef41c1bd314c880"
+}

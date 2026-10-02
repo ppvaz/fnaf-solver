@@ -115,7 +115,19 @@ export function windowRunner(base, injectAt) {
 }
 
 /** Period means of a window's frames against a state's predicted coefficient, best over the offsets: { r, o, blocks }. */
-export function scoreSeries(per, injectAt, images, win, offsets, seedToFirstFrameMs, minFrames = 2) {
+/**
+ * A period's value from its frames' luma: the mean, or with `robust` ({ above, below, statistic }) the median or
+ * mean of the frames inside (below, above), dropping the camera-switch flash (luma 255) and black frames that the
+ * 0/20 night showed spill into a window's periods. null when no frame is left.
+ */
+export function periodValue(ys, robust = null) {
+  const kept = robust ? ys.filter((y) => y < robust.above && y > robust.below) : ys;
+  if (!kept.length) return null;
+  if (robust?.statistic === 'median') { const s = [...kept].sort((a, b) => a - b); return (s[(s.length - 1) >> 1] + s[s.length >> 1]) / 2; }
+  return kept.reduce((a, b) => a + b, 0) / kept.length;
+}
+
+export function scoreSeries(per, injectAt, images, win, offsets, seedToFirstFrameMs, minFrames = 2, robust = null) {
   let best = { r: null, o: null, blocks: 0 };
   for (const o of offsets) {
     const groups = new Map();
@@ -126,8 +138,9 @@ export function scoreSeries(per, injectAt, images, win, offsets, seedToFirstFram
       if (!groups.has(p.block)) groups.set(p.block, { alpha: p.alpha, ys: [] });
       groups.get(p.block).ys.push(im.luma);
     }
-    const b = [...groups.entries()].sort((x, y) => x[0] - y[0]).slice(1, -1).map(([, g]) => g).filter((g) => g.ys.length >= minFrames);
-    const r = pearson(detrend(b.map((g) => 1 - g.alpha / 255), win.detrendK), detrend(b.map((g) => g.ys.reduce((s, y) => s + y, 0) / g.ys.length), win.detrendK));
+    const b = [...groups.entries()].sort((x, y) => x[0] - y[0]).slice(1, -1).map(([, g]) => ({ alpha: g.alpha, value: periodValue(g.ys, robust), n: g.ys.length }))
+      .filter((g) => g.n >= minFrames && g.value !== null);
+    const r = pearson(detrend(b.map((g) => 1 - g.alpha / 255), win.detrendK), detrend(b.map((g) => g.value), win.detrendK));
     if (r !== null && (best.r === null || r > best.r)) best = { r, o, blocks: b.length };
   }
   return best;
@@ -339,7 +352,7 @@ if (!isMainThread && workerData?.tool === SCHEMA) {
   const base = nightInputs(pre.night);
   const { injectAt, endFrame } = windowUpdates(win, pre.method);
   const run = windowRunner(base, injectAt);
-  parentPort.postMessage(chunk.map((state) => ({ state, ...scoreSeries(run(state, endFrame), injectAt, images, win, pre.method.offsets, pre.method.seedToFirstFrameMs) })));
+  parentPort.postMessage(chunk.map((state) => ({ state, ...scoreSeries(run(state, endFrame), injectAt, images, win, pre.method.offsets, pre.method.seedToFirstFrameMs, 2, pre.method.robust ?? null) })));
 } else if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   await main(process.argv.slice(2));
 }

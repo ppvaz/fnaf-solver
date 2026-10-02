@@ -1,0 +1,46 @@
+{
+ "schema": "phone-seed-scan-spec-draft",
+ "trace": {
+  "path": "captures/frame-traces/night7-k3-0of20-sr01-20261001T221003Z-334573767862822.tsv",
+  "sha256": "42450fad1711e884b09003a4a8e67ed5a9cf209459e6ba525b23444c8db04650"
+ },
+ "winner": "packages/propose/bindings/fnaf2/campaign-night7-k3-winner.json",
+ "night": 7,
+ "customNight": {
+  "withfreddy": 0,
+  "withbonnie": 0,
+  "withchica": 0,
+  "foxy": 0,
+  "toyfreddy": 0,
+  "toybonnie": 0,
+  "toychica": 0,
+  "mangle": 0,
+  "bb": 0,
+  "golden": 0
+ },
+ "seedToFirstFrameMs": 83.2,
+ "region": "static_view",
+ "robust": {
+  "above": 250,
+  "below": 5,
+  "statistic": "median"
+ },
+ "windows": [
+  {
+   "name": "wind-1",
+   "fromMs": 10400,
+   "toMs": 13700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-2",
+   "fromMs": 20400,
+   "toMs": 23700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  }
+ ]
+}

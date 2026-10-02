@@ -2562,6 +2562,22 @@
       ]
     },
     {
+      "file": "packages/propose/bin/recompile/phone-seed-scan.ts",
+      "imports": [
+        "../../../source/recompile/model-draw-trace.ts",
+        "./phone-encounter-replay.ts",
+        "./phone-region-readout.ts",
+        "./phone-static-readout.ts",
+        "./schedule-to-input.ts",
+        "./sweep-common.ts",
+        "@sixam/review/renamed-path",
+        "node:fs",
+        "node:path",
+        "node:url",
+        "node:worker_threads"
+      ]
+    },
+    {
       "file": "packages/propose/bin/recompile/phone-static-readout.ts",
       "imports": [
         "../../../source/recompile/model-draw-trace.ts",

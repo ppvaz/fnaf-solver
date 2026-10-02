@@ -225,9 +225,15 @@ Details:
     windows were unreadable (stalls, a camera-switch flash). Open: the seed
     itself. Stepping back gives 23712, not the wall clock; the wall-clock seed
     63 ms before onset would put the phone 5 draws ahead of the model before
-    the first window (exploratory; pre-register on a new night). At 10/20,
-    the night's press landings are needed (frame trace + readout now
-    coexist on Companion 16).
+    the first window (exploratory; pre-register on a new night). Replaying
+    every seed from the night's first update on its frame-traced clock picks
+    the same model-equivalent seed out of 65,536 from about 7 s of static
+    (mean r 0.973 against 0.585 for the next; 1.3 minutes on 8 workers;
+    exploratory,
+    [seed scan](../docs/evidence/s2-seed-scan-night7-0of20-20261001.json),
+    `s2-seed-scan-night7-0of20-8ef41c1bd314c880`). That whole-seed replay is
+    the method at 10/20, where window draws depend on game state; the frame
+    trace and the readout now coexist on Companion 16.
   - **Press landing reorders the office stream (2026-10-01, MODEL_ONLY,
     exploratory).** On full-06's measured clock, moving each press from its
     landing frame to its send update (about four updates) leaves every
