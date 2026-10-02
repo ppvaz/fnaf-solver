@@ -5,6 +5,7 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
+import type { BinaryLike } from 'node:crypto';
 import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -15,6 +16,7 @@ import {
   nativeResponses, responseCoverage, mapResponses, mapSchedule,
   responseEvidence, deriveResponseExperiment, loadConfig, prepare,
 } from './phone-encounter-replay.ts';
+import type { MappedResponse, ScheduleMs, SideState } from './phone-encounter-replay.ts';
 import { drawTrace, measuredClock } from '../../../source/recompile/model-draw-trace.ts';
 import { committedVersion } from './phone-input-bracket-sweep.ts';
 import { currentPath } from '@sixam/review/renamed-path';
@@ -22,8 +24,12 @@ import { currentPath } from '@sixam/review/renamed-path';
 const ROOT = fileURLToPath(new URL('../../../../', import.meta.url));
 
 // A repository path, or one a committed record names where the file stood when it was written.
-const read = (rel) => readFileSync(new URL(`../../../../${currentPath(ROOT, rel) ?? rel}`, import.meta.url), 'utf8');
-const sha256 = (value) => createHash('sha256').update(value).digest('hex');
+const read = (rel: string) => readFileSync(new URL(`../../../../${currentPath(ROOT, rel) ?? rel}`, import.meta.url), 'utf8');
+const sha256 = (value: BinaryLike) => createHash('sha256').update(value).digest('hex');
+// A lookup or optional field the fixture knows is there; the assertion reads it.
+const found = <T>(value: T | null | undefined) => value as T;
+/** A committed night, record row or result row, as the checks below find it. */
+type Named = { readonly name: string };
 
 // Exercise the CLI with the frozen config's pre-move winner, navigation and save paths.
 // No phone/private capture: the fixture supplies the binding's own press list at constant 60 Hz.
@@ -31,7 +37,7 @@ const sha256 = (value) => createHash('sha256').update(value).digest('hex');
   const dir = mkdtempSync(join(tmpdir(), 'phone-replay-renames-'));
   try {
     const cfg = JSON.parse(read('packages/propose/bin/recompile/phone-encounter-nights.json'));
-    const night = cfg.nights.find((row) => row.name === 'full-06');
+    const night = cfg.nights.find((row: Named) => row.name === 'full-06');
     const winner = JSON.parse(read(night.winner));
     const pressText = JSON.stringify({ actions: phoneSchedule(winner, night.night, night.originMs).queueMs });
     writeFileSync(join(dir, 'presses.json'), pressText);
@@ -98,11 +104,11 @@ const sha256 = (value) => createHash('sha256').update(value).digest('hex');
   const sched = phoneSchedule(winner, 6, 4963.6);
   assert.equal(sched.queueMs.length, 517);
   assert.deepEqual(sched.queueMs[0], [4963.6, 'press', 'monitor']);
-  const actions = sched.queueMs.map(([ms, kind, action]) => [Number(ms.toFixed(1)), kind, action]);
+  const actions = sched.queueMs.map(([ms, kind, action]): [number, string, string] => [Number(ms.toFixed(1)), kind, action]);
   assert.equal(checkPressFile(sched.queueMs, { actions }), 517);
-  const bad = actions.map((a) => [...a]); bad[40][2] = 'wind';
+  const bad = actions.map((a) => [...a] as [number, string, string]); bad[40][2] = 'wind';
   assert.throws(() => checkPressFile(sched.queueMs, { actions: bad }), /press file action 40/);
-  const presses = maskPresses(sched.queueMs.map(([ms, kind, action]) => [Math.round(ms), kind, action]));
+  const presses = maskPresses(sched.queueMs.map(([ms, kind, action]): [number, string, string] => [Math.round(ms), kind, action]));
   assert.equal(presses.filter((p) => p.i % 2 === 0).length, 43, 'Night 6 h sends 43 mask-ons; the 43rd comes after 6 AM');
 }
 
@@ -119,7 +125,7 @@ const sha256 = (value) => createHash('sha256').update(value).digest('hex');
   assert.equal(rebuiltOccupant([0, 1, 1, 0, 0], counters, none, names), '*');
   const text = ['# frame 3 seeded 7', `# overlaps in office:${names.join(',')}`, '# overlap 3 0 0 1 0 0 0 0 0 0 - -',
     '# overlap 3 1 1 0 0 0 0 0 0 0 - 1', '# frame 4 seeded 7', '# overlap 4 0 1 1 1 1 1 1 1 1 1 1', ''].join('\n');
-  const o = overlapSeries(text, OFFICE_FRAME);
+  const o = found(overlapSeries(text, OFFICE_FRAME));
   assert.deepEqual(o.names, names);
   assert.deepEqual([...o.series.keys()], [0, 1], 'only the office visit');
   assert.deepEqual(o.series.get(1), [1, 0, 0, 0, 0, 0, 0, 0, null, 1]);
@@ -128,9 +134,9 @@ const sha256 = (value) => createHash('sha256').update(value).digest('hex');
 // --- windows: the even mask presses; '.' needs the window played; a refused press is '?'
 {
   const cum = cumulative(Array(400).fill(10), 400);    // 10 ms updates
-  const states = new Map();
+  const states = new Map<number, SideState>();
   for (let u = 0; u < 400; u += 1) states.set(u, { maskValue: 0, occupant: null });
-  const put = (from, to, s) => { for (let u = from; u <= to; u += 1) states.set(u, { ...states.get(u), ...s }); };
+  const put = (from: number, to: number, s: Partial<SideState>) => { for (let u = from; u <= to; u += 1) states.set(u, { ...states.get(u), ...s } as SideState); };
   put(10, 11, { maskValue: 1 }); put(12, 60, { maskValue: 2 }); put(20, 30, { occupant: 'B' });      // window 0: B at 20
   put(200, 201, { maskValue: 1 }); put(202, 399, { maskValue: 2 });                                  // window 1: empty
   // window 2 at 300: the mask is already on, so the press did not put it on
@@ -168,7 +174,7 @@ const sha256 = (value) => createHash('sha256').update(value).digest('hex');
   const n = 600;
   const image_ns = Array.from({ length: n }, (_, k) => 5e9 + Math.round(k * FRAME_MS * 1e6));
   const monitor_luma = Array(n).fill(117);
-  const sends = [];
+  const sends: number[] = [];
   for (let s = 0; s < 6; s += 1) {
     const k = 100 + s * 80;                               // a send inside frame k's interval, drawn 4 frames on
     sends.push((k - 0.5) * FRAME_MS);
@@ -190,7 +196,7 @@ const sha256 = (value) => createHash('sha256').update(value).digest('hex');
   const image_ns = Array.from({ length: 120 }, (_, k) => 1e9 + k * 10e6);
   const mask_downstroke = Array(120).fill(142);
   const monitor_downstroke = Array(120).fill(144);
-  const set = (from, to, mask, monitor) => { for (let k = from; k < to; k += 1) {
+  const set = (from: number, to: number, mask: number, monitor: number) => { for (let k = from; k < to; k += 1) {
     mask_downstroke[k] = mask; monitor_downstroke[k] = monitor;
   } };
   set(16, 18, 0, 0); set(18, 33, 0, 144);     // monitor raise after send 100
@@ -201,7 +207,7 @@ const sha256 = (value) => createHash('sha256').update(value).digest('hex');
   const contacts = [{ control: 'monitor', downMs: 100, upMs: 200 }, { control: 'wind', downMs: 220, upMs: 270 },
     { control: 'monitor', downMs: 280, upMs: 380 }, { control: 'mask', downMs: 410, upMs: 510 },
     { control: 'mask', downMs: 700, upMs: 800 }];
-  const queueMs = contacts.flatMap((c) => [[c.downMs, 'press', c.control], [c.upMs, 'release', c.control]])
+  const queueMs = contacts.flatMap((c): [number, 'press' | 'release', string][] => [[c.downMs, 'press', c.control], [c.upMs, 'release', c.control]])
     .sort((a, b) => a[0] - b[0]);
   const sched = { contacts, queueMs };
   const rows = nativeResponses(columns, 0, contacts, 0);
@@ -211,9 +217,9 @@ const sha256 = (value) => createHash('sha256').update(value).digest('hex');
   assert.equal(rows[0].lowerImageMs, 150);
   assert.equal(rows[0].upperImageMs, 160);
   const clock = officeClock(image_ns, 0);
-  const median = (ms) => traceTick(ms + 80, clock);
+  const median = (ms: number) => traceTick(ms + 80, clock);
   const mapped = mapResponses(sched, median, rows, clock, 0);
-  assert.equal(mapped.queue.find(([, kind, control]) => kind === 'press' && control === 'monitor')[0], 16);
+  assert.equal(found(mapped.queue.find(([, kind, control]) => kind === 'press' && control === 'monitor'))[0], 16);
   assert.deepEqual(mapped.contacts.find((c) => c.control === 'wind'), mapSchedule(sched, median).contacts.find((c) => c.control === 'wind'));
   assert.equal(mapped.contacts[0].upFrame - mapped.contacts[0].downFrame, 10, 'scheduled duration, not observed release acceptance');
   // If the expected prior state is acquired only after send, the strict variant withholds its mapping.
@@ -234,11 +240,11 @@ const sha256 = (value) => createHash('sha256').update(value).digest('hex');
   assert.throws(() => mapResponses(sched, median, bad, clock, 0), /identity differs/);
   // A capture gap contains several inferred updates. The early sensitivity is after the unchanged capture.
   const gap = officeClock([0, 50e6, 100e6, 116e6], 0);
-  const gapSched = { contacts: [{ control: 'monitor', downMs: 10, upMs: 100 }], queueMs: [[10, 'press', 'monitor']] };
-  const gapRows = [{ status: 'OBSERVED_RESPONSE', contactIndex: 0, control: 'monitor', sendMs: 10,
+  const gapSched: ScheduleMs = { contacts: [{ control: 'monitor', downMs: 10, upMs: 100 }], queueMs: [[10, 'press', 'monitor']] };
+  const gapRows: MappedResponse[] = [{ status: 'OBSERVED_RESPONSE', contactIndex: 0, control: 'monitor', sendMs: 10,
     priorImageMs: 50, upperImageMs: 100, latencyMs: 90 }];
-  const early = mapResponses(gapSched, (ms) => traceTick(ms, gap), gapRows, gap, 0, { early: true });
-  const latest = mapResponses(gapSched, (ms) => traceTick(ms, gap), gapRows, gap, 0);
+  const early = mapResponses(gapSched, (ms: number) => traceTick(ms, gap), gapRows, gap, 0, { early: true });
+  const latest = mapResponses(gapSched, (ms: number) => traceTick(ms, gap), gapRows, gap, 0);
   assert.ok(early.contacts[0].downFrame < latest.contacts[0].downFrame);
   assert.equal(early.contacts[0].upFrame - early.contacts[0].downFrame, latest.contacts[0].upFrame - latest.contacts[0].downFrame);
 }
@@ -261,9 +267,9 @@ for (const night of result.nights) {
   assert.equal(verdictOf(night, derive(night)), night.verdict);
   assert.equal(night.winnerSha256, sha256(read(night.winner)), `${night.name}: the binding replayed is the committed one`);
   // the model strings this record sets beside the rebuild are the committed encounter record's
-  const n6 = modelRecord.nights.find((n) => n.name === night.name);
-  const n7 = modelRecord.night7Reproduction.rows.find((r) => r.name === `${night.name}-k3`);
-  const committedModel = n6 ? n6.baseline.find((r) => r.seed === night.seed).windows : n7.windows;
+  const n6 = modelRecord.nights.find((n: Named) => n.name === night.name);
+  const n7 = modelRecord.night7Reproduction.rows.find((r: Named) => r.name === `${night.name}-k3`);
+  const committedModel = n6 ? n6.baseline.find((r: { readonly seed: number }) => r.seed === night.seed).windows : n7.windows;
   assert.equal(night.modelRecord.windows, committedModel, `${night.name}: model record windows`);
   if (n6) {
     // reused phone reads are the encounter record's; exclusions only ever turn a read into UNKNOWN
@@ -276,7 +282,7 @@ for (const night of result.nights) {
     assert.equal(v.windows.rows.length, 43, `${night.name}/${v.variant}: one row per schedule mask-on`);
     assert.ok(v.windows.rows[42].ms > 420000 && v.windows.rows[42].rebuilt === '?' && v.windows.rows[42].model === '?',
       'the 43rd mask-on comes after the night on both sides');
-    assert.ok(v.windows.rows.every((r, k) => r.index === k && (k === 0 || r.tick > v.windows.rows[k - 1].tick)), 'windows in schedule order');
+    assert.ok(v.windows.rows.every((r: { readonly index: number, readonly tick: number }, k: number) => r.index === k && (k === 0 || r.tick > v.windows.rows[k - 1].tick)), 'windows in schedule order');
   }
 }
 const evidence = JSON.parse(read('docs/evidence/rebuild-phone-encounters-20260927.json'));
@@ -285,7 +291,7 @@ assert.match(evidence.claimLevel, /^MODEL_ONLY/, 'a rebuild comparison is never 
 assert.equal(evidence.result.evidenceId, result.evidenceId, 'the evidence record cites this result');
 assert.equal(evidence.result.status, result.status);
 for (const row of evidence.nights) {
-  const night = result.nights.find((n) => n.name === row.name);
+  const night = result.nights.find((n: Named) => n.name === row.name);
   assert.equal(row.verdict, night.verdict, `${row.name}: verdict`);
   const d = night.derived[night.primaryVariant].rebuiltVsPhone;
   assert.deepEqual(row.rebuiltVsPhone, { agree: d.agree, compared: d.compared, hits: d.hits, occupied: d.occupied },
@@ -320,7 +326,7 @@ for (const v of responseResult.nights[0].variants) {
   assert.ok(committedVersion(v.responses.rule.source, v.responses.ruleSourceSha256),
     `${v.responses.rule.source}: the hashed rule source is a committed version of its recorded path`);
   assert.equal(v.responses.rule.source, 'packages/adapters/src/button-strokes.js');
-  for (const row of v.responses.rows.filter((r) => r.status === 'OBSERVED_RESPONSE')) {
+  for (const row of v.responses.rows.filter((r: { readonly status: string }) => r.status === 'OBSERVED_RESPONSE')) {
     assert.ok(row.lowerImageMs >= row.sendImageMs && row.lowerImageMs < row.upperImageMs);
     assert.equal(row.responseRow, row.priorRow + 1);
     assert.ok(row.settledRow >= row.responseRow);
@@ -328,7 +334,7 @@ for (const v of responseResult.nights[0].variants) {
   }
 }
 const badControl = structuredClone(result);
-badControl.nights.find((n) => n.name === 'full-06').variants.find((v) => v.variant === 'landed').windows.rebuilt = '?';
+badControl.nights.find((n: Named) => n.name === 'full-06').variants.find((v: { readonly variant: string }) => v.variant === 'landed').windows.rebuilt = '?';
 assert.equal(deriveResponseExperiment(responseResult, badControl).status, 'CONTROL_NOT_REPRODUCED');
 const changed = structuredClone(responseResult);
 changed.responseExperiment.status = 'TARGET_CLEARS_IN_TESTED_VARIANTS';
@@ -348,13 +354,13 @@ console.log(`${responseResult.evidenceId}: control reproduced; native response c
     'packages/propose/bin/recompile/full06-response-experiment.json']) {
     const cfg = loadConfig(join(ROOT, config));
     const named = [cfg.profile, cfg.modelOptions,
-      ...cfg.nights.flatMap((n) => [n.winner, n.navigation, n.save, n.customNight])].filter(Boolean);
+      ...cfg.nights.flatMap((n) => [n.winner, n.navigation, n.save, n.customNight])].filter((path): path is string => Boolean(path));
     for (const path of named) assert.ok(currentPath(ROOT, path), `${config} names ${path}, which no move leads to`);
     const empty = mkdtempSync(join(tmpdir(), 'encounter-inputs-'));
     try {
       const night = cfg.nights[0];
       assert.throws(() => prepare(cfg, night, night.variants[0], empty),
-        (error: any) => error.code === 'ENOENT' && error.path === join(empty, night.presses.path),
+        (error: NodeJS.ErrnoException) => error.code === 'ENOENT' && error.path === join(empty, night.presses.path),
         `${config}: prepare() must reach ${night.name}'s private press file`);
     } finally { rmSync(empty, { recursive: true, force: true }); }
   }

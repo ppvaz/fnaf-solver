@@ -155,10 +155,10 @@ longer rebuilds.
   area: an area without a `typeDebt` entry in `tools/quality-baseline.json`
   carries none (`packages/kernel/src`, `packages/source/src`,
   `packages/source/recompile`, `packages/play/src`, `packages/play/games`,
-  `packages/play/bin`,
-  `packages/propose/src`, `packages/review/src`, `apps/wiki` with its test,
-  `apps/trainer/src`, `apps/desktop/src` and `packages/kernel/test` so far),
-  and the others only shrink.
+  `packages/play/bin`, `packages/propose/src`, `packages/review/src`,
+  `packages/review/venue-grid`, `apps/wiki` with its test, `apps/trainer/src`,
+  `apps/desktop/src` and `packages/kernel/test` so far), and the others only
+  shrink.
   The pass that wrote `any` to get there (`tools/ts-strict.ts`, 7a8393f0) is retired.
 - A validator takes `unknown`, narrows it with the kernel's guards (`isRecord`,
   `isList`, `isOneOf`, `isText`, `fail(): never`, `@sixam/kernel` labels) and

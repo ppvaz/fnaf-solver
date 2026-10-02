@@ -5,16 +5,24 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
+import type { BinaryLike } from 'node:crypto';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { bestCell, cellMatches, cellScore, check, deriveNight, deriveVerdict, droppedClock, scaledDeltas, SCHEMA } from './phone-clock-sweep.ts';
+import type { SweepResult } from './phone-clock-sweep.ts';
 import { officeClock, traceTick } from './phone-encounter-replay.ts';
 
-const read = (rel) => readFileSync(new URL(`../../../../${rel}`, import.meta.url), 'utf8');
-const sha256 = (value) => createHash('sha256').update(value).digest('hex');
-const cleaningMap = (cells) => cells.map((c) => c.deltaMs).sort((a, b) => a - b);
+const read = (rel: string) => readFileSync(new URL(`../../../../${rel}`, import.meta.url), 'utf8');
+const sha256 = (value: BinaryLike) => createHash('sha256').update(value).digest('hex');
+/** A committed night, and a committed cell, as the checks below read them. */
+type Named = { readonly name: string };
+type Cell = {
+  readonly deltaMs: number, readonly timerRate: number, readonly dropMs?: number, readonly codes: string, readonly compared: number;
+  readonly agree: number,
+};
+const cleaningMap = (cells: readonly { readonly deltaMs: number }[]) => cells.map((c) => c.deltaMs).sort((a, b) => a - b);
 
 // --- dropping the intro rebuilds update 0 at the retained image and re-bases event time to it
 {
@@ -106,8 +114,8 @@ const cleaningMap = (cells) => cells.map((c) => c.deltaMs).sort((a, b) => a - b)
 // --- the committed results: schema, control equality to the retained replay, and every score re-derived
 {
   for (const [resultPath, minCells] of [['tools/recompile/results/phone-clock-sweep-20260928.json', 40],
-    ['tools/recompile/results/phone-clock-sweep-fine-20260928.json', 40]]) {
-    const result = JSON.parse(read(resultPath));
+    ['tools/recompile/results/phone-clock-sweep-fine-20260928.json', 40]] as const) {
+    const result: SweepResult = JSON.parse(read(resultPath));
     assert.equal(result.schema, SCHEMA);
     assert.equal(result.claimLevel, 'MODEL_ONLY');
     const summary = check(result);
@@ -124,7 +132,7 @@ const cleaningMap = (cells) => cells.map((c) => c.deltaMs).sort((a, b) => a - b)
   {
     const coarse = JSON.parse(read('tools/recompile/results/phone-clock-sweep-20260928.json'));
     const fine = JSON.parse(read('tools/recompile/results/phone-clock-sweep-fine-20260928.json'));
-    const full06 = fine.nights.find((n) => n.name === 'full-06');
+    const full06 = fine.nights.find((n: Named) => n.name === 'full-06');
     // no cell of either pass reproduces the phone's occupied windows on the full-read night
     assert.ok(full06.derived.matchCells.length === 0);
     assert.equal(full06.derived.best.agree, 32);
@@ -133,23 +141,23 @@ const cleaningMap = (cells) => cells.map((c) => c.deltaMs).sort((a, b) => a - b)
     assert.ok(full06.derived.best.agree < full06.derived.best.compared, 'the best cell anywhere still disagrees');
     // window 6 is phase-robust: it disagrees at the control, at every coarse rate-0 cell, and at 34 of
     // 44 fine cells; where it clears, other windows still disagree (disagreement is redistributed, not resolved)
-    const control = full06.cells.find((c) => c.deltaMs === 0 && c.timerRate === 0);
+    const control = full06.cells.find((c: Cell) => c.deltaMs === 0 && c.timerRate === 0);
     assert.equal(control.firstDisagreement.window, 6);
-    const coarseFull06 = coarse.nights.find((n) => n.name === 'full-06');
-    const coarseRate0 = coarseFull06.cells.filter((c) => c.timerRate === 0);
-    assert.ok(coarseRate0.every((c) => (c.codes[6] ?? '?') !== full06.phone.windows[6]), 'window 6 disagrees at every coarse rate-0 cell');
-    const fineRate0 = full06.cells.filter((c) => c.timerRate === 0);
-    assert.equal(fineRate0.filter((c) => (c.codes[6] ?? '?') !== full06.phone.windows[6]).length, 34);
-    const clearing = fineRate0.filter((c) => (c.codes[6] ?? '?') === full06.phone.windows[6]);
+    const coarseFull06 = coarse.nights.find((n: Named) => n.name === 'full-06');
+    const coarseRate0 = coarseFull06.cells.filter((c: Cell) => c.timerRate === 0);
+    assert.ok(coarseRate0.every((c: Cell) => (c.codes[6] ?? '?') !== full06.phone.windows[6]), 'window 6 disagrees at every coarse rate-0 cell');
+    const fineRate0 = full06.cells.filter((c: Cell) => c.timerRate === 0);
+    assert.equal(fineRate0.filter((c: Cell) => (c.codes[6] ?? '?') !== full06.phone.windows[6]).length, 34);
+    const clearing = fineRate0.filter((c: Cell) => (c.codes[6] ?? '?') === full06.phone.windows[6]);
     assert.deepEqual(cleaningMap(clearing), [-40, -20, -10, 50, 60, 65, 70, 75, 110, 130]);
-    assert.ok(clearing.every((c) => c.compared - c.agree >= 8), 'every window-6-clearing cell still disagrees elsewhere');
-    assert.ok(fineRate0.filter((c) => c.compared >= 10).every((c) => c.compared - c.agree >= 8), 'no cell anywhere resolves the night');
+    assert.ok(clearing.every((c: Cell) => c.compared - c.agree >= 8), 'every window-6-clearing cell still disagrees elsewhere');
+    assert.ok(fineRate0.filter((c: Cell) => c.compared >= 10).every((c: Cell) => c.compared - c.agree >= 8), 'no cell anywhere resolves the night');
     // twin-01's all-empty read matches at two configurations 6 s apart: the rule's output, read as noise
-    const twinFine = fine.nights.find((n) => n.name === 'twin-01');
-    const twinCoarse = coarse.nights.find((n) => n.name === 'twin-01');
+    const twinFine = fine.nights.find((n: Named) => n.name === 'twin-01');
+    const twinCoarse = coarse.nights.find((n: Named) => n.name === 'twin-01');
     assert.ok(twinFine.derived.matchCells.length > 0 && twinCoarse.derived.matchCells.length > 0);
-    assert.ok(Math.max(...twinFine.derived.matchCells.map((c) => c.deltaMs))
-      - Math.min(...twinCoarse.derived.matchCells.map((c) => c.deltaMs)) >= 5000);
+    assert.ok(Math.max(...twinFine.derived.matchCells.map((c: Cell) => c.deltaMs))
+      - Math.min(...twinCoarse.derived.matchCells.map((c: Cell) => c.deltaMs)) >= 5000);
   }
 }
 
@@ -161,20 +169,20 @@ const cleaningMap = (cells) => cells.map((c) => c.deltaMs).sort((a, b) => a - b)
     ['full-04', 'full-04', 4, 3], ['full-06', 'full-06', 14, 2],
   ]) {
     const result = JSON.parse(read(`tools/recompile/results/phone-clock-sweep-zero-${suffix}-20260928.json`));
-    const retained = evidence.results.find((r) => r.night === name);
+    const retained = evidence.results.find((r: { readonly night: string }) => r.night === name);
     assert.equal(retained.evidenceId, result.evidenceId);
     assert.equal(retained.sha256, sha256(read(retained.path)));
     assert.equal(result.claimLevel, 'MODEL_ONLY');
     assert.equal(check(result).status, 'NO_PHASE_RATE_ALIGNMENT');
     const night = result.nights[0];
     assert.equal(night.name, name);
-    assert.equal(night.cells.find((c) => c.deltaMs === 0 && c.dropMs === 0).agree, expectedControl);
+    assert.equal(night.cells.find((c: Cell) => c.deltaMs === 0 && c.dropMs === 0).agree, expectedControl);
     const reference = config.references[name];
     const grid = config.grid.byNight[name];
     assert.equal(Number((reference.anchorFireAfterFirstFrameMs - reference.configuredOriginAfterFirstFrameMs).toFixed(1)), reference.scheduleDelayMs);
     assert.ok(grid.deltaMs.includes(-reference.scheduleDelayMs));
     assert.ok(grid.dropMs.includes(reference.clockZeroAfterFirstFrameMs));
-    const joint = night.cells.find((c) => c.deltaMs === -reference.scheduleDelayMs && c.dropMs === reference.clockZeroAfterFirstFrameMs);
+    const joint = night.cells.find((c: Cell) => c.deltaMs === -reference.scheduleDelayMs && c.dropMs === reference.clockZeroAfterFirstFrameMs);
     assert.ok(joint, 'the joint measured correction ran');
     assert.ok(joint.clockStartMs >= joint.dropMs && joint.clockStartMs - joint.dropMs < 40, 'clock zero uses the first captured frame at or after the fitted phase');
     assert.ok(joint.droppedFrames > 0);

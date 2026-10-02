@@ -86,7 +86,7 @@ export function measuredClock(frameTimes: number[]) {
 export function drawTrace({ night, seed, frames, rows = [], contacts = null, customNight = undefined, modelOptions = {}, observe = null,
   frameTimes = null }: {
   night: number, seed: number, frames: number, rows?: readonly SimRow[], contacts?: readonly ModelContact[] | null;
-  customNight?: Readonly<Record<string, number>>, modelOptions?: unknown, observe?: ((sim: Sim) => unknown) | null;
+  customNight?: Readonly<Record<string, number>> | null, modelOptions?: unknown, observe?: ((sim: Sim) => unknown) | null;
   frameTimes?: number[] | null,
 }) {
   if (contacts !== null) {

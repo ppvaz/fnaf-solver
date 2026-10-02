@@ -42,7 +42,7 @@ export const NATIVE = Object.freeze([2400, 1080]);
 export const WINDOW = Object.freeze([1024, 768]);
 
 /** One authored plan row, as minus-toys-plan.ts's schedule() takes it. */
-type PlanRow = NonNullable<NonNullable<Parameters<typeof schedule>[0]>['opening']>[number];
+export type PlanRow = NonNullable<NonNullable<Parameters<typeof schedule>[0]>['opening']>[number];
 /** A queued Sim press or release at its frame, as schedule() returns them. */
 type QueuedAction = ReturnType<typeof schedule>[number];
 /** One contact of the expanded schedule, in ms and in 60 Hz updates, and the row it came from. */
@@ -84,7 +84,7 @@ export const simAction = (control: string) => (/^cam\d+$/.test(control) ? `cam:$
   : control === 'cameraFeedLight' || control === 'hallLight' ? MODEL_CONTEXT_LIGHT : control);
 
 /** The same measured intervals used by the harness, expressed in the source model's actions. */
-export const modelContacts = (contacts: readonly Contact[]) => contacts.map(({ control, downFrame, upFrame }) =>
+export const modelContacts = (contacts: readonly Pick<Contact, 'control' | 'downFrame' | 'upFrame'>[]) => contacts.map(({ control, downFrame, upFrame }) =>
   ({ action: simAction(control), downFrame, upFrame }));
 
 /**

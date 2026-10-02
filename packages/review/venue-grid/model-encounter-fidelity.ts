@@ -8,43 +8,53 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { score } from './encounter-replay.ts';
+import type { NightCfg } from './encounter-replay.ts';
+
+/** A replayed row, as encounter-replay.ts writes it: the fields this record keeps. */
+interface ReplayRow {
+  seed: number, won: boolean, death: string | null, endMs: number, w: string, windowStartMs: number[];
+  hopCount: Record<string, number>, leaveCam8: Record<string, number>, bbIn: number[], insides: unknown[];
+}
+/** An encounter-replay.ts output: its options, its config and each night's rows. */
+interface ReplayOutput { opts: unknown, cfg: { nights: NightCfg[] }, out: { name: string, phone: string | null, rows: ReplayRow[] }[] }
 
 // Paths are written relative to this checkout's root, whatever the directory is called.
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../..');
-const repoRel = p => (p && isAbsolute(p) && !relative(ROOT, p).startsWith('..')) ? relative(ROOT, p) : p;
+const repoRel = (p: string | undefined) => (p && isAbsolute(p) && !relative(ROOT, p).startsWith('..')) ? relative(ROOT, p) : p;
 
 const [input, output] = process.argv.slice(2);
 if (!input || !output) throw new Error('usage: model-encounter-fidelity.mjs INPUT_DIR OUT.json');
-const sources = [];
-const hashFile = p => createHash('sha256').update(readFileSync(p)).digest('hex');
-const read = (name) => {
+const sources: { file: string, sha256: string }[] = [];
+const hashFile = (p: string | URL) => createHash('sha256').update(readFileSync(p)).digest('hex');
+const read = (name: string) => {
   const bytes = readFileSync(join(input, name));
   sources.push({ file: name, sha256: createHash('sha256').update(bytes).digest('hex') });
-  return JSON.parse(bytes);
+  return JSON.parse(String(bytes));
 };
-const base = read('out-baseline-reviewed.json');
-const gated = read('out-gated-reviewed.json');
-const cam8 = read('out-cam8-reviewed.json');
-const rollResolution = read('out-rollres-reviewed.json');
-const old = read('enc-old.json');
-const current = read('enc-new.json');
-const night7 = read('out-night7-reviewed.json');
-const census = read('wc-gated-3000.json');
-const phoneCounts = { nights: base.out.length, read: 0, occupied: 0, byCharacter: { B: 0, C: 0, F: 0 } };
-const compactRow = (row, phone) => ({
+const base: ReplayOutput = read('out-baseline-reviewed.json');
+const gated: ReplayOutput = read('out-gated-reviewed.json');
+const cam8: ReplayOutput = read('out-cam8-reviewed.json');
+const rollResolution: ReplayOutput = read('out-rollres-reviewed.json');
+const old: { rows: { w: string, hall: unknown }[] } = read('enc-old.json');
+const current: { rows: { w: string, hall: unknown }[] } = read('enc-new.json');
+const night7: ReplayOutput = read('out-night7-reviewed.json');
+const census: { method: { git: { commit: string } }, bindings: unknown[] } = read('wc-gated-3000.json');
+const phoneCounts = { nights: base.out.length, read: 0, occupied: 0, byCharacter: { B: 0, C: 0, F: 0 } as Record<string, number> };
+const compactRow = (row: ReplayRow, phone: string | null) => ({
   seed: row.seed, won: row.won, death: row.death, endMs: row.endMs,
   windows: row.w, windowStartMs: row.windowStartMs, score: score(phone, row.w),
   movementHops: row.hopCount, firstDepartureFromCam8Ms: row.leaveCam8,
   bbInsideMs: row.bbIn, officeEntries: row.insides,
 });
+// Each reviewed night has its config and the phone's reads.
 const nights = base.out.map((night) => {
-  const cfg = base.cfg.nights.find(n => n.name === night.name);
-  for (const c of night.phone) {
+  const cfg = base.cfg.nights.find(n => n.name === night.name) as NightCfg;
+  for (const c of night.phone as string) {
     if (c === '?') continue;
     phoneCounts.read++;
     if (c !== '.') { phoneCounts.occupied++; phoneCounts.byCharacter[c]++; }
   }
-  const path = p => repoRel(p)?.replace(/^.*\/scratchpad\//, 'artifacts/forensics/encounter-fidelity-20260927/');
+  const path = (p: string | undefined) => repoRel(p)?.replace(/^.*\/scratchpad\//, 'artifacts/forensics/encounter-fidelity-20260927/');
   const baseline = night.rows.map(r => compactRow(r, night.phone));
   return {
     name: night.name, phoneWindows: night.phone,
@@ -53,27 +63,28 @@ const nights = base.out.map((night) => {
       trace: path(cfg.trace) ?? null, traceSha256: cfg.trace ? hashFile(cfg.trace) : null,
       firstNightFrameIndex: cfg.first ?? null },
     seeds: cfg.seeds, baseline,
-    gated: gated.out.find(n => n.name === night.name).rows.map(r => compactRow(r, night.phone)),
+    gated: (gated.out.find(n => n.name === night.name) as ReplayOutput['out'][number]).rows.map(r => compactRow(r, night.phone)),
     cam8: cam8.out.find(n => n.name === night.name)?.rows.map(r => compactRow(r, night.phone)) ?? 'NOT_RUN',
     rollResolution: rollResolution.out.find(n => n.name === night.name)?.rows.map(r => compactRow(r, night.phone)) ?? 'NOT_RUN',
   };
 });
-const populations = {};
+const populations: Record<string, Record<string, unknown>> = {};
 for (const name of ['base-tw04', 'base-c201', 'base-slh', 'xcam8-tw04', 'gated-tw04',
   'sub-xMask', 'sub-xFoxy', 'sub-xStreak', 'sub-xOther', 'd-stale', 'd-rollres', 'd-roll2n',
   'd-delay20000', 'd-delay30000', 'd-delay40000']) {
   const row = read(`pop-${name}.json`);
   populations[name] = { options: row.opts, night: row.night, ...row.stats };
 }
-const ownSeedNulls = {};
+const ownSeedNulls: Record<string, unknown> = {};
 for (const name of ['base', 'rollres', 'gated']) ownSeedNulls[name] = read(`ownseed-${name}.json`);
-const lanes = {};
+const lanes: Record<string, { night: unknown, options: unknown, rows: unknown }> = {};
 for (const name of ['n3v-4551-off', 'n3v-4551-on', 'n34-5051-n3-on',
   'n5-phase-off', 'n5-phase-on', 'm5p-phase-off', 'm5p-phase-on']) {
   const lane = read(`lane-${name}.json`);
   lanes[name] = { night: lane.night, options: lane.extra, rows: lane.rows };
 }
-const tw04 = nights.find(n => n.name === 'tw-04');
+// tw-04 is one of the reviewed nights.
+const tw04 = nights.find(n => n.name === 'tw-04') as (typeof nights)[number];
 const reproduced = old.rows.every((r, i) => r.w === current.rows[i].w && r.hall === current.rows[i].hall);
 if (!reproduced) throw new Error('the historical and current encounter replay no longer agree');
 const record = {
@@ -126,7 +137,8 @@ const record = {
     claimLevel: 'MODEL_ONLY replay of retained DEVICE_MEASURED traces; no new phone run',
     options: night7.opts,
     rows: night7.out.map(n => {
-      const cfg = night7.cfg.nights.find(c => c.name === n.name);
+      // Each Night 7 night has its config and a frame trace.
+      const cfg = night7.cfg.nights.find(c => c.name === n.name) as NightCfg & { trace: string };
       return { name: n.name, firstNightFrameIndex: cfg.first,
         presses: repoRel(cfg.presses), pressesSha256: hashFile(cfg.presses),
         trace: repoRel(cfg.trace), traceSha256: hashFile(cfg.trace),

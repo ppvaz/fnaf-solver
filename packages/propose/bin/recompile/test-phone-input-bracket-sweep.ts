@@ -2,13 +2,14 @@
 // The retained bracket family is checkable without the ignored frame trace or rebuilt binary.
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
+import type { BinaryLike } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { check, committedVersion, recordedModelFiles } from './phone-input-bracket-sweep.ts';
 import { MODEL_SOURCES } from '../../../source/recompile/model-draw-trace.ts';
 
 const root = new URL('../../../../', import.meta.url);
-const read = (path) => readFileSync(new URL(path, root), 'utf8');
-const hash = (value) => createHash('sha256').update(value).digest('hex');
+const read = (path: string) => readFileSync(new URL(path, root), 'utf8');
+const hash = (value: BinaryLike) => createHash('sha256').update(value).digest('hex');
 const resultPath = 'tools/recompile/results/phone-input-bracket-full-06-20260928.json';
 const recordPath = 'docs/evidence/phone-input-bracket-20260928.json';
 const result = JSON.parse(read(resultPath));
@@ -20,18 +21,24 @@ assert.equal(result.coverage.measuredResponseRowsThroughHorizon, 29);
 assert.equal(result.coverage.observedResponseRowsThroughHorizon, 29);
 assert.equal(result.coverage.unknownRowsThroughHorizon, 0);
 assert.deepEqual(result.coverage.contactsWithoutResponseRowsThroughHorizon, []);
-assert.deepEqual(result.dimensions.map(({ contactIndex, minTick, maxTick }) => [contactIndex, minTick, maxTick]), [
+/** A committed candidate, as the checks below read it. */
+type Candidate = {
+  readonly preservesPhonePrefix: boolean, readonly targetCode: string, readonly clearsTarget: boolean;
+  readonly targetState: { readonly activeBlackoutUnit: string, readonly withBonnie: { readonly openingSince: number };
+    readonly withBonnieEncounterFrame: number, readonly encounterLeadUpdates: number },
+};
+assert.deepEqual(result.dimensions.map(({ contactIndex, minTick, maxTick }: { contactIndex: number, minTick: number, maxTick: number }) => [contactIndex, minTick, maxTick]), [
   [12, 606, 607], [16, 831, 832],
 ]);
 assert.equal(result.candidateCount, 4);
-assert.ok(result.candidates.every((candidate) => candidate.preservesPhonePrefix && candidate.targetCode === 'B' && !candidate.clearsTarget));
-assert.ok(result.limitations.some((limit) => limit.includes('wind and camera/light contacts retain their baseline timing mapping')));
-assert.ok(result.candidates.every((candidate) => candidate.targetState.activeBlackoutUnit === 'withbonnie' &&
+assert.ok(result.candidates.every((candidate: Candidate) => candidate.preservesPhonePrefix && candidate.targetCode === 'B' && !candidate.clearsTarget));
+assert.ok(result.limitations.some((limit: string) => limit.includes('wind and camera/light contacts retain their baseline timing mapping')));
+assert.ok(result.candidates.every((candidate: Candidate) => candidate.targetState.activeBlackoutUnit === 'withbonnie' &&
   candidate.targetState.withBonnie.openingSince === 3627 && candidate.targetState.withBonnieEncounterFrame === 3840 &&
   candidate.targetState.encounterLeadUpdates === 24));
 assert.equal(result.conclusion, 'No measured response-bracket timing choice preserves the first six phone windows and clears window 6.');
 
-const row = evidence.results.find((entry) => entry.evidenceId === result.evidenceId);
+const row = evidence.results.find((entry: { readonly evidenceId: string }) => entry.evidenceId === result.evidenceId);
 assert.ok(row);
 assert.equal(row.sha256, hash(read(resultPath)));
 assert.equal(evidence.measurements.coverage.candidateSchedules, result.candidateCount);
@@ -57,7 +64,7 @@ assert.equal(committedVersion(movedPath, '0'.repeat(64)), null, 'a moved path wi
 // The record's old paths name the same model files as the moved sources.
 const recorded = Object.keys(result.source.modelSources);
 assert.ok(recorded.every((path) => path.startsWith('packages/core/src/mechanics/')));
-const moved = (names) => names.map((name) => `packages/source/src/games/fnaf2/${name}`);
+const moved = (names: readonly string[]) => names.map((name) => `packages/source/src/games/fnaf2/${name}`);
 assert.ok(recordedModelFiles(recorded, moved(['plant-model.js', 'config.js', 'rng.js'])));
 assert.ok(!recordedModelFiles(recorded, moved(['plant-model.js', 'rng.js', 'config.js'])));
 assert.ok(recordedModelFiles(recorded, moved(['plant-model.ts', 'config.ts', 'rng.ts'])));

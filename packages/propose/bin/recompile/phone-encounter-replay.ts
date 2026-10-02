@@ -46,6 +46,7 @@
 // Content-free: codes, ticks, times and hashes. The rebuild and the model are MODEL_ONLY; phone reads and
 // terminals are reused DEVICE_MEASURED observations named by their records. Nothing here promotes anything.
 import { createHash } from 'node:crypto';
+import type { BinaryLike } from 'node:crypto';
 import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -53,18 +54,20 @@ import { compareTrace } from '../../../review/bin/recompile/compare-draw-trace.t
 import { MODEL_SOURCES } from '../../../source/recompile/model-draw-trace.ts';
 import { LEDGERS, compareLedger, counterSeries, mismatchRuns, outcomes, watchSeries } from './compare-schedule-replay.ts';
 import { controlPoints, expandRows, frameOf, formatRows, harnessRows, modelContacts } from './schedule-to-input.ts';
+import type { Contact, PlanRow } from './schedule-to-input.ts';
 import { STRATEGY_REGISTRY, validateWinner } from '../plans/bundle.ts';
 import { KNOBS0, build } from '../plans/minus-toys-plan.ts';
 import { windowCode } from '../../../review/venue-grid/encounter-replay.ts';
 import { MODEL_CONTEXT_LIGHT } from '@sixam/source';
 import { buttonStrokeState, BUTTON_STROKE_THRESHOLDS } from '../../../play/src/sensors/fnaf2/button-strokes.ts';
 import { currentPath } from '@sixam/review/renamed-path';
+import type { Sim } from '@sixam/source/fnaf2';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
 // A repository path a config names, where it lives now: the configs are hash-bound and keep the paths
 // they were written with (ADR 0002 principle 9), and the files they name have moved since.
-const current = (path) => currentPath(ROOT, path) ?? path;
-const sha256 = (value) => createHash('sha256').update(value).digest('hex');
+const current = (path: string) => currentPath(ROOT, path) ?? path;
+const sha256 = (value: BinaryLike) => createHash('sha256').update(value).digest('hex');
 export const FRAME_MS = 1000 / 60;
 export const OFFICE_FRAME = 3;
 export const WINDOW_MS = 1500;
@@ -89,8 +92,30 @@ export function watchEnv() {
 
 // ---------------------------------------------------------------- the clock
 
+/** A frame trace's numeric columns, by name. */
+export type Columns = Record<string, number[]>;
+/** The office update clock from the first night frame (officeClock). */
+export type Clock = ReturnType<typeof officeClock>;
+/** A schedule row in ms after the seed: [ms, press|release, action]. */
+export type QueuedMs = [ms: number, kind: 'press' | 'release', action: string];
+/** A queue row on update ticks. */
+type QueuedTick = [tick: number, kind: 'press' | 'release', action: string];
+/** The binding's rows at a measured release (phoneSchedule). */
+export type PhoneSchedule = ReturnType<typeof phoneSchedule>;
+/** When a schedule time lands: its update tick, by the time and, for some rules, the edge and control. */
+type TickOf = (ms: number, kind: string, control: string) => number;
+/** A contact in ms, as the mappings read it. */
+type ContactMs = Pick<Contact, 'control' | 'downMs' | 'upMs'>;
+/** A schedule in ms, as the mappings read it: its contacts and its queue. */
+export interface ScheduleMs<C extends ContactMs = ContactMs> {
+  readonly contacts: readonly C[], readonly queueMs: readonly (readonly [number, 'press' | 'release', string])[];
+}
+/** What mapResponses reads of a response row: its contact and, for an observed one, its frames and latency. */
+export type MappedResponse = Pick<ResponseRow, 'contactIndex' | 'control' | 'sendMs'>
+  & ({ status: 'UNKNOWN' } | { status: 'OBSERVED_RESPONSE', priorImageMs: number, upperImageMs: number, latencyMs: number });
+
 /** Named numeric columns of a fnaf2-frame-trace-v3 TSV (image_ns always). */
-export function traceColumns(text, names = ['image_ns']) {
+export function traceColumns(text: string, names: readonly string[] = ['image_ns']): Columns {
   const lines = text.split('\n');
   if (!lines[0].startsWith('# schema=fnaf2-frame-trace-v')) throw new Error('not a fnaf2 frame trace');
   const header = lines[1].split('\t');
@@ -100,7 +125,7 @@ export function traceColumns(text, names = ['image_ns']) {
 }
 
 /** image_ns of every row of a fnaf2-frame-trace-v3 TSV. */
-export function traceImageNs(text) {
+export function traceImageNs(text: string) {
   return traceColumns(text).image_ns;
 }
 
@@ -114,10 +139,10 @@ export const OFFICE_VIEW_TOLERANCE = 3;
  * frame at or after the send whose monitor_luma differs by LANDING_CHANGE or more, less the send.
  * `sends` are send times on the image clock (0 = the first office frame).
  */
-export function landingLatency(columns, first, sends) {
+export function landingLatency(columns: Columns, first: number, sends: readonly number[]) {
   const t = columns.image_ns.map((ns) => (ns - columns.image_ns[first]) / 1e6);
   const luma = columns.monitor_luma;
-  const at = (T) => { let k = first; while (k < t.length && t[k] < T) k += 1; return k; };
+  const at = (T: number) => { let k = first; while (k < t.length && t[k] < T) k += 1; return k; };
   const k0 = at(sends[0]);
   const reference = [...luma.slice(Math.max(first, k0 - 60), k0)].sort((a, b) => a - b);
   const office = reference[Math.floor(reference.length / 2)];
@@ -133,7 +158,7 @@ export function landingLatency(columns, first, sends) {
   }
   if (latencies.length < 5) throw new Error(`only ${latencies.length} measurable raises: no landing latency`);
   const sorted = [...latencies].sort((a, b) => a - b);
-  const q = (p) => Number(sorted[Math.floor(p * (sorted.length - 1))].toFixed(1));
+  const q = (p: number) => Number(sorted[Math.floor(p * (sorted.length - 1))].toFixed(1));
   return { raises: sorted.length, officeViewLuma: office, medianMs: q(0.5), p10Ms: q(0.1), p90Ms: q(0.9), minMs: q(0), maxMs: q(1) };
 }
 
@@ -147,7 +172,19 @@ export const RESPONSE_RULE = Object.freeze({ searchMs: 200, confirmMs: 600, stab
  * A response is not dispatch: the preceding positive frame and first changed frame bound visible departure.
  * allowReadyAfterSend explicitly permits an observed prior state acquired after the scheduled send.
  */
-export function nativeResponses(columns, first, contacts, shift, { allowReadyAfterSend = false } = {}) {
+/** One contact's visible response: UNKNOWN and why, or the frames that bracket and settle it. */
+export type ResponseRow = {
+  contactIndex: number, control: string, sendMs: number, sendImageMs: number, from: string, to: string,
+} & ({ status: 'UNKNOWN', reason: string } & { [K in keyof ResponseFrames]?: undefined }
+  | { status: 'OBSERVED_RESPONSE', reason: undefined } & ResponseFrames);
+/** The frames that bracket and settle an observed response, and its latency. */
+interface ResponseFrames {
+  priorRow: number, responseRow: number, settledRow: number, readyAfterSend: boolean, priorImageMs: number;
+  responseImageMs: number, lowerImageMs: number, upperImageMs: number, latencyMs: number;
+}
+
+export function nativeResponses(columns: Columns, first: number, contacts: readonly Pick<Contact, 'control' | 'downMs'>[], shift: number,
+  { allowReadyAfterSend = false } = {}) {
   const { image_ns, mask_downstroke, monitor_downstroke } = columns;
   if (!image_ns?.length || !mask_downstroke || !monitor_downstroke ||
       mask_downstroke.length !== image_ns.length || monitor_downstroke.length !== image_ns.length)
@@ -159,17 +196,18 @@ export function nativeResponses(columns, first, contacts, shift, { allowReadyAft
   });
   const states = image_ns.map((_, k) => buttonStrokeState({ maskButtonDownstroke: mask_downstroke[k],
     monitorButtonDownstroke: monitor_downstroke[k] }).signature);
-  const at = (ms) => { let lo = first; let hi = times.length;
+  const at = (ms: number) => { let lo = first; let hi = times.length;
     while (lo < hi) { const mid = (lo + hi) >> 1; if (times[mid] < ms) lo = mid + 1; else hi = mid; } return lo; };
   const ordinal = { mask: 0, monitor: 0 };
-  const rows = [];
+  const rows: ResponseRow[] = [];
   contacts.forEach((c, contactIndex) => {
     if (!['mask', 'monitor'].includes(c.control)) return;
-    const on = ordinal[c.control]++ % 2 === 0;
+    // The line above kept the mask and the monitor.
+    const on = ordinal[c.control as 'mask' | 'monitor']++ % 2 === 0;
     const other = c.control === 'mask' ? 'mask-on' : 'monitor-up';
     const from = on ? 'office' : other; const to = on ? other : 'office';
     const sendImageMs = c.downMs + shift;
-    const row = { contactIndex, control: c.control, sendMs: c.downMs, sendImageMs, from, to,
+    const row: ResponseRow = { contactIndex, control: c.control, sendMs: c.downMs, sendImageMs, from, to,
       status: 'UNKNOWN', reason: 'no positive prior state' };
     rows.push(row);
     const k = at(sendImageMs);
@@ -201,7 +239,7 @@ export function nativeResponses(columns, first, contacts, shift, { allowReadyAft
 }
 
 /** Coverage is derived from rows, retaining every unsupported contact as a median assumption. */
-export function responseCoverage(rows) {
+export function responseCoverage(rows: readonly ResponseRow[]) {
   return Object.fromEntries(['monitor', 'mask'].map((control) => {
     const rr = rows.filter((r) => r.control === control);
     const observed = rr.filter((r) => r.status === 'OBSERVED_RESPONSE');
@@ -217,9 +255,10 @@ export function responseCoverage(rows) {
  * by the first changed capture's update. It shifts the release by the same update count; it is not a proof
  * over every independently perturbed contact in the brackets.
  */
-export function mapResponses(sched, baselineTickOf, rows, clock, shift, { early = false } = {}) {
-  const ticks = new Map();
-  const key = (ms, kind, control) => `${control}/${kind}/${ms.toFixed(3)}`;
+export function mapResponses<C extends ContactMs>(sched: ScheduleMs<C>, baselineTickOf: (ms: number) => number, rows: readonly MappedResponse[],
+  clock: Clock, shift: number, { early = false } = {}) {
+  const ticks = new Map<string, number>();
+  const key = (ms: number, kind: string, control: string) => `${control}/${kind}/${ms.toFixed(3)}`;
   for (const row of rows) {
     if (row.status !== 'OBSERVED_RESPONSE') continue;
     const c = sched.contacts[row.contactIndex];
@@ -231,7 +270,7 @@ export function mapResponses(sched, baselineTickOf, rows, clock, shift, { early 
     ticks.set(key(c.downMs, 'press', c.control), down);
     ticks.set(key(c.upMs, 'release', c.control), up);
   }
-  return mapSchedule(sched, (ms, kind, control) => ticks.get(key(ms, kind, control)) ?? baselineTickOf(ms));
+  return mapSchedule(sched, (ms: number, kind: string, control: string) => ticks.get(key(ms, kind, control)) ?? baselineTickOf(ms));
 }
 
 /**
@@ -239,7 +278,7 @@ export function mapResponses(sched, baselineTickOf, rows, clock, shift, { early 
  * delta in ms; passStart[k] is the first update of the pass that drew captured frame first + k; imageMs[k] is
  * that frame's image time after the first night frame.
  */
-export function officeClock(imageNs, first, { catchUp = true } = {}) {
+export function officeClock(imageNs: readonly number[], first: number, { catchUp = true } = {}) {
   if (!Number.isInteger(first) || first < 0 || first >= imageNs.length) throw new Error('first night frame is outside the trace');
   const deltas = [FRAME_MS];
   const passStart = [0];
@@ -256,14 +295,14 @@ export function officeClock(imageNs, first, { catchUp = true } = {}) {
 }
 
 /** cum[u] = the update clock when update u starts (sum of the deltas before it); past the list, 60 Hz. */
-export function cumulative(deltas, length) {
+export function cumulative(deltas: readonly number[], length: number) {
   const cum = [0];
   for (let u = 0; u < length; u += 1) cum.push(cum[u] + (deltas[u] ?? FRAME_MS));
   return cum;
 }
 
 /** The `cum` rule: the first update F with t <= cum(F) + delta(F) / 2. */
-export function cumTick(t, deltas) {
+export function cumTick(t: number, deltas: readonly number[]) {
   let cum = 0;
   for (let u = 0; ; u += 1) {
     const d = deltas[u] ?? FRAME_MS;
@@ -273,7 +312,7 @@ export function cumTick(t, deltas) {
 }
 
 /** The landed and sched rules: the first update of the pass that drew the first captured frame at or after T. */
-export function traceTick(T, clock) {
+export function traceTick(T: number, clock: Clock) {
   const { imageMs, passStart, deltas } = clock;
   if (T <= 0) return 0;
   let lo = 0;
@@ -287,48 +326,51 @@ export function traceTick(T, clock) {
 
 // ---------------------------------------------------------------- the schedule
 
-const simAction = (control) => (/^cam\d+$/.test(control) ? `cam:${control.slice(3)}`
+const simAction = (control: string) => (/^cam\d+$/.test(control) ? `cam:${control.slice(3)}`
   : control === 'cameraFeedLight' || control === 'hallLight' ? MODEL_CONTEXT_LIGHT : control);
 
 /**
  * The binding's rows at a measured release: contacts in ms (schedule-to-input.ts expandRows at epoch = originMs)
  * and the Sim queue in ms ([ms, press|release, action]), whose 60 Hz quantization must be expandRows's queue.
  */
-export function phoneSchedule(winner, night, originMs) {
+export function phoneSchedule(winner: unknown, night: number, originMs: number) {
   const valid = validateWinner(winner);
   if (!valid.nights.includes(night)) throw new Error(`the binding does not name night ${night}`);
   if (valid.strategy !== 'minus-toys') throw new Error(`strategy ${valid.strategy}: only minus-toys schedules have a harness form`);
   const emitted = STRATEGY_REGISTRY[valid.strategy].emit(valid, night);
-  const kk = { ...KNOBS0, ...emitted.knobs };
+  // The minus-toys emitter's knobs are the plan's own.
+  const knobs = emitted.knobs as Parameters<typeof build>[0];
+  const kk = { ...KNOBS0, ...knobs };
   if (kk.reactiveBB) throw new Error('reactiveBB adds presses the schedule does not hold');
-  const rows = build(emitted.knobs);
+  const rows = build(knobs);
   const bounds = { periodMs: kk.minimal ? kk.minPeriodMs : kk.loopPeriodMs, loopStartMs: kk.minimal ? kk.minLoopStartMs : 0,
     untilMs: kk.minimal ? kk.minStopAtMs : 420000, epochMs: originMs };
   const expanded = expandRows({ ...rows, ...bounds });
-  const queue = [];
-  const add = (base, row) => {
-    const [at, kind, a, b, cc] = row;
-    const when = base + at + originMs;
-    if (kind === 'tap') queue.push([when, 'press', simAction(a)]);
-    else if (kind === 'hold' || kind === 'hall') {
-      const control = kind === 'hall' ? 'hallLight' : a;
-      const duration = kind === 'hall' ? a : b;
+  const queue: QueuedMs[] = [];
+  const add = (base: number, row: PlanRow) => {
+    const when = base + row[0] + originMs;
+    if (row[1] === 'tap') queue.push([when, 'press', simAction(row[2])]);
+    else if (row[1] === 'hold' || row[1] === 'hall') {
+      const control = row[1] === 'hall' ? 'hallLight' : row[2];
+      const duration = row[1] === 'hall' ? row[2] : row[3];
       queue.push([when, 'press', simAction(control)], [when + duration, 'release', simAction(control)]);
-    } else if (kind === 'camdrop') {
+    } else if (row[1] === 'camdrop') {
+      const [, , a, b, cc] = row;
       queue.push([when, 'press', MODEL_CONTEXT_LIGHT], [when + a, 'press', 'monitor'], [when + a + b + cc, 'release', MODEL_CONTEXT_LIGHT]);
-    } else throw new Error(`row kind ${kind} has no harness form`);
+      // A row of another kind: the rows come from JSON as well as from build().
+    } else throw new Error(`row kind ${(row as PlanRow)[1]} has no harness form`);
   };
   rows.opening.forEach((row) => add(0, row));
   for (let base = bounds.loopStartMs; base < bounds.untilMs; base += bounds.periodMs) rows.loop.forEach((row) => add(base, row));
   (rows.finish ?? []).forEach((row) => add(0, row));
-  const order = queue.map((q, i) => [q, i]).sort((x, y) => x[0][0] - y[0][0] || x[1] - y[1]).map(([q]) => q);
-  const quantized = order.map(([ms, kind, action]) => [frameOf(ms), kind, action]).sort((x, y) => x[0] - y[0]);
+  const order = queue.map((q, i): [QueuedMs, number] => [q, i]).sort((x, y) => x[0][0] - y[0][0] || x[1] - y[1]).map(([q]) => q);
+  const quantized = order.map(([ms, kind, action]): QueuedTick => [frameOf(ms), kind, action]).sort((x, y) => x[0] - y[0]);
   if (JSON.stringify(quantized) !== JSON.stringify(expanded.queue)) throw new Error('the ms queue does not quantize to expandRows\'s queue');
   return { emitted, bounds, contacts: expanded.contacts, queueMs: order };
 }
 
 /** The retained press file must be this schedule, action for action, to 0.05 ms. */
-export function checkPressFile(queueMs, pressFile) {
+export function checkPressFile(queueMs: readonly QueuedMs[], pressFile: { readonly actions: readonly (readonly [number, string, string])[] }) {
   const actions = pressFile.actions;
   if (actions.length !== queueMs.length) throw new Error(`press file has ${actions.length} actions, the schedule ${queueMs.length}`);
   queueMs.forEach(([ms, kind, action], i) => {
@@ -340,7 +382,7 @@ export function checkPressFile(queueMs, pressFile) {
 }
 
 /** Contacts on update ticks, and the model queue on the same ticks. */
-export function mapSchedule(sched, tickOf) {
+export function mapSchedule<C extends ContactMs>(sched: ScheduleMs<C>, tickOf: TickOf) {
   let stretched = 0;
   const contacts = sched.contacts.map((c) => {
     const downFrame = tickOf(c.downMs, 'press', c.control);
@@ -348,12 +390,12 @@ export function mapSchedule(sched, tickOf) {
     if (upFrame <= downFrame) { upFrame = downFrame + 1; stretched += 1; }
     return { ...c, downFrame, upFrame };
   }).sort((x, y) => x.downFrame - y.downFrame || x.upFrame - y.upFrame);
-  const queue = sched.queueMs.map(([ms, kind, action]) => [tickOf(ms, kind, action), kind, action]).sort((a, b) => a[0] - b[0]);
+  const queue = sched.queueMs.map(([ms, kind, action]): QueuedTick => [tickOf(ms, kind, action), kind, action]).sort((a, b) => a[0] - b[0]);
   return { contacts, queue, stretched };
 }
 
 /** Schedule mask presses (queue order) with their ordinal; windows are the even ones (on, off, on, ...). */
-export function maskPresses(queue) {
+export function maskPresses(queue: readonly (readonly [number, string, string])[]) {
   return queue.filter(([, kind, action]) => kind === 'press' && action === 'mask').map(([tick], i) => ({ tick, i }));
 }
 
@@ -384,9 +426,10 @@ export function overlapSeries(text: string, frame: number) {
 }
 
 /** The rebuild's occupant letter at the end of one update, or null. */
-export function rebuiltOccupant(counterValues, counterNames, overlapValues, overlapNames) {
+export function rebuiltOccupant(counterValues: readonly (number | null)[], counterNames: readonly string[],
+  overlapValues: readonly (number | null)[], overlapNames: readonly string[]) {
   const danger = counterValues[counterNames.indexOf('in danger')];
-  if (!(danger > 0)) return null;
+  if (!(Number(danger) > 0)) return null;
   for (const [name, letter] of STREAK) if (overlapValues[overlapNames.indexOf(name)] === 1) return letter;
   for (const [name, letter] of OVERLAYS) if (overlapValues[overlapNames.indexOf(name)] !== null) return letter;
   return '*';
@@ -397,18 +440,24 @@ export function rebuiltOccupant(counterValues, counterNames, overlapValues, over
  * { maskValue: 0 off / 1 putting on / 2 on / 3 taking off, occupant: letter | null }. `cum` is the update clock;
  * `endMs` the clock when the side's night ended (or its last update). Returns [{ index, tick, code, occupantTick }].
  */
-export function windowCodes(presses, state, cum, endMs, { windowMs = WINDOW_MS } = {}) {
-  const out = [];
+/** A side's state at the end of one update: the mask's alterable, and the occupant's letter. */
+export interface SideState { maskValue: number, occupant?: string | null }
+/** A window's code on one side, the tick its occupant was first seen and, for a streak occupant, its arrival. */
+export interface WindowRow { index: number, tick: number, code: string, occupantTick?: number, why?: string, arrivalMs?: number }
+
+export function windowCodes(presses: readonly { tick: number, i: number }[], state: (u: number) => SideState | null | undefined,
+  cum: readonly number[], endMs: number, { windowMs = WINDOW_MS } = {}) {
+  const out: WindowRow[] = [];
   for (const { tick, i } of presses) {
     if (i % 2) continue;
     const index = i / 2;
-    const before = tick === 0 ? { maskValue: 0 } : state(tick - 1);
+    const before: SideState | null | undefined = tick === 0 ? { maskValue: 0 } : state(tick - 1);
     const at = state(tick);
     if (!before || !at) { out.push({ index, tick, code: '?', why: 'unplayed' }); continue; }
     if (before.maskValue !== 0 || at.maskValue !== 1) { out.push({ index, tick, code: '?', why: 'mask did not go on' }); continue; }
     const until = cum[tick] + windowMs;
-    let first = null;
-    let firstTick = null;
+    let first = null as string | null;
+    let firstTick = null as number | null;
     for (let u = tick; ; u += 1) {
       const s = state(u);
       if (!s) break;
@@ -426,9 +475,9 @@ export function windowCodes(presses, state, cum, endMs, { windowMs = WINDOW_MS }
  * phone read and the side did not play ('?': ended, or its mask never went on) is `unplayed`: never an agreement,
  * and the first disagreement when it comes first (the phone was there to read it).
  */
-export function scoreWindows(phone, side) {
+export function scoreWindows(phone: string, side: string) {
   let read = 0; let occupied = 0; let compared = 0; let agree = 0; let hits = 0; let occupancyAgree = 0; let unplayed = 0;
-  let firstDisagreement = null;
+  let firstDisagreement = null as { window: number, phone: string, side: string } | null;
   for (let k = 0; k < phone.length; k += 1) {
     const p = phone[k];
     if (p === '?') continue;
@@ -453,18 +502,19 @@ export function scoreWindows(phone, side) {
 export const OUTCOME_TOLERANCE_MS = 10000;   // one 10 s cycle
 
 /** A side's end against the phone's terminal: same result, and a death within one cycle of the phone's. */
-export function compareOutcome(phoneTerminal, side) {
+export function compareOutcome(phoneTerminal: Terminal, side: { readonly result: string, readonly endMs: number | null }) {
   if (phoneTerminal.result === 'UNKNOWN') return { sameResult: null, deltaMs: null, agrees: null };
   const sameResult = phoneTerminal.result === side.result;
+  // Number.isFinite passes only numbers.
   const deltaMs = Number.isFinite(phoneTerminal.seedClockMs) && Number.isFinite(side.endMs)
-    ? Number((side.endMs - phoneTerminal.seedClockMs).toFixed(1)) : null;
+    ? Number(((side.endMs as number) - (phoneTerminal.seedClockMs as number)).toFixed(1)) : null;
   const agrees = sameResult && (side.result !== 'death' || (deltaMs !== null && Math.abs(deltaMs) <= OUTCOME_TOLERANCE_MS));
   return { sameResult, deltaMs, agrees };
 }
 
 /** Two host sides against each other over the windows both played. */
-export function compareSides(a, b) {
-  let compared = 0; let agree = 0; let firstDisagreement = null;
+export function compareSides(a: string, b: string) {
+  let compared = 0; let agree = 0; let firstDisagreement = null as { window: number, a: string, b: string } | null;
   for (let k = 0; k < Math.min(a.length, b.length); k += 1) {
     if (a[k] === '?' || b[k] === '?') continue;
     compared += 1;
@@ -476,13 +526,40 @@ export function compareSides(a, b) {
 
 // ---------------------------------------------------------------- config and inputs
 
-export function loadConfig(path) {
+/** The phone's terminal: how its night ended, and when on the seed's clock. */
+export interface Terminal { readonly result: string, readonly seedClockMs?: number | null }
+/** A hash-bound file a config names. */
+export interface FileRef { readonly path: string, readonly sha256: string }
+/** A replay variant: its clock and press rule, and its options. */
+interface VariantSpec {
+  readonly clock: string, readonly presses: string, readonly releaseLatencyMs?: number;
+  readonly allowReadyAfterSend?: boolean, readonly early?: boolean,
+}
+/** A predeclared per-contact response experiment: its night and window, its control variant and the retained control. */
+interface ResponseExperimentSpec { readonly night: string, readonly window: number, readonly control: string, readonly reference: FileRef }
+/** One phone night of the config: its run, seed and binding, its hashed inputs, the phone's reads and the variants. */
+export interface NightConfig {
+  readonly name: string, readonly run: unknown, readonly night: number, readonly seed: number, readonly seedEvidence: unknown;
+  readonly winner: string, readonly originMs: number, readonly presses: FileRef;
+  readonly trace?: FileRef & { readonly first: number, readonly releaseAfterFirstNightFrameMs: number };
+  readonly navigation: string, readonly save: string, readonly customNight?: string;
+  readonly phone: { readonly windows: string, readonly terminal: Terminal };
+  readonly modelRecord?: { readonly windows?: string }, readonly variants: readonly string[], readonly primaryVariant: string;
+}
+/** A phone-encounter-nights-v1 config. */
+export interface EncounterConfig {
+  readonly schema: string, readonly modelOptions: string, readonly profile: string, readonly binary: unknown, readonly harness: unknown;
+  readonly variants: Readonly<Record<string, VariantSpec>>, readonly nights: readonly NightConfig[];
+  readonly responseExperiment?: ResponseExperimentSpec;
+}
+
+export function loadConfig(path: string): EncounterConfig {
   const cfg = JSON.parse(readFileSync(path, 'utf8'));
   if (cfg.schema !== 'phone-encounter-nights-v1') throw new Error('config schema must be phone-encounter-nights-v1');
   return cfg;
 }
 
-function privateFile(inputsRoot, ref) {
+function privateFile(inputsRoot: string, ref: FileRef) {
   const path = resolve(inputsRoot, ref.path);
   const bytes = readFileSync(path);
   if (sha256(bytes) !== ref.sha256) throw new Error(`${ref.path}: sha256 ${sha256(bytes)} is not the recorded ${ref.sha256}`);
@@ -490,16 +567,16 @@ function privateFile(inputsRoot, ref) {
 }
 
 /** Everything one (night, variant) replay needs, derived only from the config and its hashed inputs. */
-export function prepare(cfg, nightCfg, variant, inputsRoot) {
+export function prepare(cfg: EncounterConfig, nightCfg: NightConfig, variant: string, inputsRoot: string) {
   const winnerPath = resolve(ROOT, current(nightCfg.winner));
   const winner = JSON.parse(readFileSync(winnerPath, 'utf8'));
   const sched = phoneSchedule(winner, nightCfg.night, nightCfg.originMs);
   const pressCount = checkPressFile(sched.queueMs, JSON.parse(privateFile(inputsRoot, nightCfg.presses)));
   const spec = cfg.variants[variant];
   if (!spec) throw new Error(`unknown variant ${variant}`);
-  let clock = null;
-  let latency = null;
-  let columns = null;
+  let clock = null as Clock | null;
+  let latency = null as ReturnType<typeof landingLatency> | null;
+  let columns = null as Columns | null;
   if (spec.clock !== 'constant-60hz') {
     if (!nightCfg.trace) throw new Error(`${nightCfg.name} has no frame trace for the ${variant} variant`);
     columns = traceColumns(privateFile(inputsRoot, nightCfg.trace), ['image_ns', 'monitor_luma',
@@ -511,11 +588,15 @@ export function prepare(cfg, nightCfg, variant, inputsRoot) {
   }
   // the harness reads frametimes.txt's six decimals; the model gets the same numbers
   const deltas = clock ? clock.deltas.map((d) => Number(d.toFixed(6))) : [];
-  let tickOf;
+  // A clock, and the landing latency, come from the night's trace.
+  type Traced = NonNullable<NightConfig['trace']>;
+  let tickOf: TickOf;
   if (spec.presses === 'landed' || spec.presses === 'sched' || spec.presses === 'native-response') {
     if (!clock) throw new Error(`the ${spec.presses} press rule needs a frame trace`);
-    const shift = nightCfg.trace.releaseAfterFirstNightFrameMs - nightCfg.originMs + (spec.presses !== 'sched' ? latency.medianMs : 0);
-    tickOf = (ms) => traceTick(ms + shift, clock);
+    const shift = (nightCfg.trace as Traced).releaseAfterFirstNightFrameMs - nightCfg.originMs
+      + (spec.presses !== 'sched' ? (latency as ReturnType<typeof landingLatency>).medianMs : 0);
+    const measured = clock;
+    tickOf = (ms) => traceTick(ms + shift, measured);
   } else if (spec.presses === 'cum') tickOf = (ms) => cumTick(ms, deltas);
   else throw new Error(`unknown press rule ${spec.presses}`);
   // A variant may land releases at their own latency after the send (docs/evidence/phone-release-latency-20261001.json:
@@ -523,16 +604,23 @@ export function prepare(cfg, nightCfg, variant, inputsRoot) {
   if (Number.isFinite(spec.releaseLatencyMs)) {
     if (!clock) throw new Error('a release latency needs a frame trace');
     const pressTick = tickOf;
-    const sendShift = nightCfg.trace.releaseAfterFirstNightFrameMs - nightCfg.originMs;
-    tickOf = (ms, kind) => (kind === 'release' ? traceTick(ms + sendShift + spec.releaseLatencyMs, clock) : pressTick(ms));
+    const sendShift = (nightCfg.trace as Traced).releaseAfterFirstNightFrameMs - nightCfg.originMs;
+    const measured = clock;
+    const releaseLatencyMs = spec.releaseLatencyMs as number;
+    tickOf = (ms, kind, control) => (kind === 'release' ? traceTick(ms + sendShift + releaseLatencyMs, measured) : pressTick(ms, kind, control));
   }
-  let responses = null;
+  let responses = null as {
+    rule: typeof RESPONSE_RULE, ruleSourceSha256: string, coverage: ReturnType<typeof responseCoverage>, rows: ResponseRow[];
+    interpretation: string,
+  } | null;
   let mapped = mapSchedule(sched, tickOf);
   if (spec.presses === 'native-response') {
-    const shift = nightCfg.trace.releaseAfterFirstNightFrameMs - nightCfg.originMs;
-    const rows = nativeResponses(columns, nightCfg.trace.first, sched.contacts, shift,
+    const shift = (nightCfg.trace as Traced).releaseAfterFirstNightFrameMs - nightCfg.originMs;
+    const rows = nativeResponses(columns as Columns, (nightCfg.trace as Traced).first, sched.contacts, shift,
       { allowReadyAfterSend: spec.allowReadyAfterSend === true });
-    mapped = mapResponses(sched, tickOf, rows, clock, shift, { early: spec.early === true });
+    // mapResponses reads the fallback rule by time alone, so a release latency would not reach a contact with no
+    // observed response; no configured variant sets both.
+    mapped = mapResponses(sched, tickOf as (ms: number) => number, rows, clock as Clock, shift, { early: spec.early === true });
     responses = { rule: RESPONSE_RULE, ruleSourceSha256: sha256(readFileSync(resolve(ROOT, RESPONSE_RULE.source))),
       coverage: responseCoverage(rows), rows,
       interpretation: 'Visible response proxies, not dispatch or measured release acceptance; UNKNOWN contacts retain the nightly median. Both host programs receive each mapped contact duration.' };
@@ -548,7 +636,7 @@ export function prepare(cfg, nightCfg, variant, inputsRoot) {
   return { sched, pressCount, clock, latency, responses, deltas, mapped, office, inputText, frameTimesText, spec, officeRowsSha256: sha256(body) };
 }
 
-function emit(cfg, nightCfg, variant, outDir, inputsRoot) {
+function emit(cfg: EncounterConfig, nightCfg: NightConfig, variant: string, outDir: string, inputsRoot: string) {
   const p = prepare(cfg, nightCfg, variant, inputsRoot);
   mkdirSync(outDir, { recursive: true });
   writeFileSync(join(outDir, 'run.input'), p.inputText);
@@ -567,7 +655,8 @@ function emit(cfg, nightCfg, variant, outDir, inputsRoot) {
 
 // ---------------------------------------------------------------- one comparison
 
-export function compareOne(cfg, nightCfg, variant, runDir, inputsRoot, modelOptions) {
+export function compareOne(cfg: EncounterConfig, nightCfg: NightConfig, variant: string, runDir: string, inputsRoot: string,
+  modelOptions: unknown) {
   const p = prepare(cfg, nightCfg, variant, inputsRoot);
   const inputPath = join(runDir, 'run.input');
   if (readFileSync(inputPath, 'utf8') !== p.inputText) throw new Error(`${inputPath} is not this night's emitted input`);
@@ -575,8 +664,8 @@ export function compareOne(cfg, nightCfg, variant, runDir, inputsRoot, modelOpti
   if (p.frameTimesText && !text.includes(`# frametimes ${p.deltas.length} updates of frame ${OFFICE_FRAME}\n`))
     throw new Error(`${runDir}/trace was not run on the measured clock (no # frametimes line)`);
   const customNight = nightCfg.customNight ? JSON.parse(readFileSync(resolve(ROOT, current(nightCfg.customNight)), 'utf8')) : null;
-  const observe = (sim) => ({ mask: LEDGERS.mask.model(sim), unit: sim.blackout.active ? sim.blackout.unitId : null });
-  const result: any = compareTrace(text, { night: nightCfg.night, seed: nightCfg.seed, frame: OFFICE_FRAME, frames: 40000, modelOptions,
+  const observe = (sim: Sim) => ({ mask: LEDGERS.mask.model(sim), unit: sim.blackout.active ? sim.blackout.unitId : null });
+  const result = compareTrace(text, { night: nightCfg.night, seed: nightCfg.seed, frame: OFFICE_FRAME, frames: 40000, modelOptions,
     customNight, schedule: p.mapped.queue, contacts: modelContacts(p.mapped.contacts), observe, ...(p.clock ? { frameTimes: p.deltas } : {}) });
   const counters = counterSeries(text, OFFICE_FRAME);
   const overlaps = overlapSeries(text, OFFICE_FRAME);
@@ -589,15 +678,17 @@ export function compareOne(cfg, nightCfg, variant, runDir, inputsRoot, modelOpti
   const cum = cumulative(p.deltas, Math.max(officeUpdates, model.out.length, lastTick) + 2);
   const presses = maskPresses(p.mapped.queue);
   // rebuild: update u's end state; model: frame u + 1 is the state after the update the harness calls u
-  const rebuiltState = (u) => {
+  // observe ran: one { mask, unit } per model frame.
+  const observed = model.observed as ReturnType<typeof observe>[];
+  const rebuiltState = (u: number) => {
     if (u < 0 || u >= officeUpdates) return null;
     const c = counters.series.get(u); const o = overlaps.series.get(u); const m = maskWatch.get(u);
     if (!c || !o || m === undefined) return null;
     return { maskValue: m, occupant: rebuiltOccupant(c, counters.names, o, overlaps.names) };
   };
-  const CODE = { withbonnie: 'B', withchica: 'C', withfreddy: 'F', toybonnie: 'b', toychica: 'c', toyfreddy: 'f', mangle: 'M', bb: 'x' };
-  const modelState = (u) => {
-    const o = model.observed[u + 1];
+  const CODE: Readonly<Record<string, string>> = { withbonnie: 'B', withchica: 'C', withfreddy: 'F', toybonnie: 'b', toychica: 'c', toyfreddy: 'f', mangle: 'M', bb: 'x' };
+  const modelState = (u: number) => {
+    const o = observed[u + 1];
     if (!o) return null;
     return { maskValue: o.mask, occupant: o.unit ? (CODE[o.unit] ?? '?') : null };
   };
@@ -616,19 +707,19 @@ export function compareOne(cfg, nightCfg, variant, runDir, inputsRoot, modelOpti
   const modelWindows = windowCodes(presses, modelState, cum, modelEnd);
   // the model's own window rule (encounter-replay.mjs) closes on its own frame clock; windowCode is the same test
   if (windowCode(null, 1500, 1499) !== '?') throw new Error('encounter-replay windowCode changed its unplayed rule');
-  const at = (tick) => (tick === null || tick === undefined ? null : Number(cum[tick].toFixed(1)));
+  const at = (tick: number | null | undefined) => (tick === null || tick === undefined ? null : Number(cum[tick].toFixed(1)));
   // A monitor contact sent from the office view whose finger is still down when the cameras come up, and the
   // cameras go down again before its release: g618 reads the held touch over the drop button once the flip is
   // fully up (v0 == 2), so a hold one update longer than the raise drops the monitor it raised.
   const viewing = counters.names.indexOf('viewing');
-  const heldTapDrops = [];
+  const heldTapDrops: { tick: number, ms: number | null, downTick: number, upTick: number, holdUpdates: number, upAtTick: number }[] = [];
   for (const x of p.mapped.contacts) {
     if (x.control !== 'monitor' || (counters.series.get(x.downFrame - 1)?.[viewing] ?? 0) !== 0) continue;
     let upAt = -1;
     for (let u = x.downFrame; u <= x.upFrame; u += 1) {
       const v = counters.series.get(u)?.[viewing];
       if (v === undefined) break;
-      if (v > 0 && upAt < 0) upAt = u;
+      if (Number(v) > 0 && upAt < 0) upAt = u;
       if (upAt >= 0 && v === 0) {
         heldTapDrops.push({ tick: u, ms: at(u), downTick: x.downFrame, upTick: x.upFrame, holdUpdates: x.upFrame - x.downFrame, upAtTick: upAt });
         break;
@@ -637,7 +728,7 @@ export function compareOne(cfg, nightCfg, variant, runDir, inputsRoot, modelOpti
   }
   const runs = mismatchRuns(rows, model.out);
   const persistent = runs.runs.find((r) => !r.rejoined) ?? null;
-  const ledger = compareLedger(maskWatch, model.observed.map((o) => o.mask), 'mask');
+  const ledger = compareLedger(maskWatch, observed.map((o) => o.mask), 'mask');
   const attacker = outcome.rebuilt.attacker ?? null;
   return {
     variant, clock: p.spec.clock, presses: p.spec.presses,
@@ -673,9 +764,33 @@ export function compareOne(cfg, nightCfg, variant, runDir, inputsRoot, modelOpti
 // ---------------------------------------------------------------- the record's own arithmetic
 
 /** Everything check() recomputes from a result's rows: per night and variant, the scores and verdict fields. */
-export function derive(night) {
+/** A variant's scores against the phone and between the host sides. */
+interface VariantScores {
+  rebuiltVsPhone: ReturnType<typeof scoreWindows>, modelVsPhone: ReturnType<typeof scoreWindows>;
+  rebuiltVsModel: ReturnType<typeof compareSides>, rebuiltOutcome: ReturnType<typeof compareOutcome>;
+  modelOutcome: ReturnType<typeof compareOutcome>;
+}
+/** A variant's record (compareOne). */
+export type VariantRecord = ReturnType<typeof compareOne>;
+/** A night of a result: the config's fields, the variants' records, the derived scores and the verdict. */
+export interface NightRecord {
+  name: string, run: unknown, night: number, seed: number, seedEvidence: unknown, winner: string, winnerSha256: string;
+  originMs: number, presses: FileRef, trace: NightConfig['trace'], customNight: string | null;
+  phone: NightConfig['phone'], modelRecord: { readonly windows?: string } | null, primaryVariant: string;
+  variants: VariantRecord[], derived?: Record<string, unknown>, verdict?: string;
+}
+/** A recompile-phone-encounters-v1 result. */
+export interface EncounterResult {
+  schema: string, claimLevel: string, fidelity: string, comparedWith: string, question: string, status: string;
+  method: { readonly [field: string]: unknown, readonly config: string, readonly configSha256: string, readonly modelOptions: string;
+    readonly modelOptionsSha256: string, readonly binary: unknown, readonly responseExperiment?: ResponseExperimentSpec };
+  provenance: object, nights: NightRecord[], limitations: string[];
+  responseExperiment?: ReturnType<typeof deriveResponseExperiment>, evidenceId?: string;
+}
+
+export function derive(night: NightRecord) {
   const phone = night.phone.windows;
-  const out: any = {};
+  const out: Record<string, unknown> = {};
   for (const v of night.variants) {
     out[v.variant] = {
       rebuiltVsPhone: scoreWindows(phone, v.windows.rebuilt),
@@ -688,9 +803,10 @@ export function derive(night) {
   if (night.modelRecord?.windows) out.modelRecordVsPhone = scoreWindows(phone, night.modelRecord.windows);
   // every host side at the primary replay's first disagreeing window: does the difference survive the press rule
   // and the clock, and do the rebuild and the model share it?
-  const first = out[night.primaryVariant].rebuiltVsPhone.firstDisagreement;
+  // The primary variant is one of the night's variants.
+  const first = (out[night.primaryVariant] as VariantScores).rebuiltVsPhone.firstDisagreement;
   if (first) {
-    const at = (s) => s[first.window] ?? '?';
+    const at = (s: string) => s[first.window] ?? '?';
     out.atFirstDisagreement = { window: first.window, phone: phone[first.window],
       rebuilt: Object.fromEntries(night.variants.map((v) => [v.variant, at(v.windows.rebuilt)])),
       model: Object.fromEntries(night.variants.map((v) => [v.variant, at(v.windows.model)])),
@@ -700,12 +816,13 @@ export function derive(night) {
 }
 
 /** A predeclared per-contact experiment's conclusion, from rows and its hash-bound retained control. */
-export function deriveResponseExperiment(result, reference) {
-  const spec = result.method.responseExperiment;
+export function deriveResponseExperiment(result: EncounterResult, reference: EncounterResult) {
+  // Called only for a result whose method names its experiment.
+  const spec = result.method.responseExperiment as ResponseExperimentSpec;
   const night = result.nights.find((n) => n.name === spec.night);
   const control = night?.variants.find((v) => v.variant === spec.control);
   const retained = reference.nights.find((n) => n.name === spec.night)?.variants.find((v) => v.variant === spec.control);
-  if (!control || !retained || !Number.isInteger(spec.window) || spec.window < 0 || spec.window >= night.phone.windows.length)
+  if (!night || !control || !retained || !Number.isInteger(spec.window) || spec.window < 0 || spec.window >= night.phone.windows.length)
     throw new Error('response experiment has no named control or phone window');
   const checks = {
     officeRowsHash: control.input.officeRowsSha256 === retained.input.officeRowsSha256,
@@ -717,7 +834,8 @@ export function deriveResponseExperiment(result, reference) {
   };
   const candidates = night.variants.filter((v) => v.variant !== spec.control).map((v) => ({
     variant: v.variant, rebuilt: v.windows.rebuilt[spec.window] ?? '?', model: v.windows.model[spec.window] ?? '?',
-    coverage: v.responses?.coverage ?? null, firstDisagreement: night.derived[v.variant].rebuiltVsPhone.firstDisagreement,
+    coverage: v.responses?.coverage ?? null,
+    firstDisagreement: ((night.derived as Record<string, unknown>)[v.variant] as VariantScores).rebuiltVsPhone.firstDisagreement,
     rebuiltOutcome: v.outcome.rebuilt.result, modelOutcome: v.outcome.model.result,
   }));
   if (!candidates.length) throw new Error('response experiment has no candidates');
@@ -737,7 +855,7 @@ export function deriveResponseExperiment(result, reference) {
 }
 
 /** A compact generated evidence record; the detailed result owns all response and encounter rows. */
-export function responseEvidence(result, resultPath, resultBytes) {
+export function responseEvidence(result: EncounterResult, resultPath: string, resultBytes: string) {
   if (!result.responseExperiment) throw new Error('an evidence record needs a response experiment');
   return { schema: 'evidence-record-v1', id: result.evidenceId, claimLevel: 'MODEL_ONLY', step: 'ROADMAP S2b',
     question: 'Does substituting individually observed native response proxies for the nightly median empty full-06 window 6?',
@@ -747,26 +865,27 @@ export function responseEvidence(result, resultPath, resultBytes) {
     binary: result.method.binary, limitations: result.limitations };
 }
 
-function responseExperiment(result) {
-  const ref = result.method.responseExperiment.reference;
+function responseExperiment(result: EncounterResult) {
+  // Called only for a result whose method names its experiment.
+  const ref = (result.method.responseExperiment as ResponseExperimentSpec).reference;
   const bytes = readFileSync(resolve(ROOT, current(ref.path)));
   if (sha256(bytes) !== ref.sha256) throw new Error('response experiment control reference hash differs');
   return deriveResponseExperiment(result, JSON.parse(bytes.toString('utf8')));
 }
 
 /** The night's verdict from its primary variant: every phone-read window played and agreeing, and the same end. */
-export function verdictOf(night, derived) {
-  const primary = derived[night.primaryVariant];
+export function verdictOf(night: NightRecord, derived: Record<string, unknown>) {
+  const primary = derived[night.primaryVariant] as VariantScores;
   const s = primary.rebuiltVsPhone;
   if (s.read === 0) return 'UNKNOWN';
   if (s.firstDisagreement === null && s.unplayed === 0 && primary.rebuiltOutcome.agrees !== false) return 'EQUIVALENT_ON_READ_WINDOWS';
   return 'DIVERGENT';
 }
 
-const idOf = (result) => `recompile-phone-encounters-${sha256(JSON.stringify({ ...result, evidenceId: undefined })).slice(0, 16)}`;
+const idOf = (result: EncounterResult) => `recompile-phone-encounters-${sha256(JSON.stringify({ ...result, evidenceId: undefined })).slice(0, 16)}`;
 
 /** Recompute every derived field and the id; throws on the first difference. */
-export function check(result) {
+export function check(result: EncounterResult) {
   if (result.schema !== SCHEMA) throw new Error(`schema must be ${SCHEMA}`);
   if (result.claimLevel !== 'MODEL_ONLY') throw new Error('a rebuild comparison is MODEL_ONLY');
   for (const night of result.nights) {
@@ -792,16 +911,16 @@ export function check(result) {
 
 // ---------------------------------------------------------------- compare, whole config
 
-function compareAll(cfg, cfgPath, runsDir, inputsRoot) {
+function compareAll(cfg: EncounterConfig, cfgPath: string, runsDir: string, inputsRoot: string) {
   const modelOptions = JSON.parse(readFileSync(resolve(ROOT, current(cfg.modelOptions)), 'utf8'));
-  const nights = [];
+  const nights: NightRecord[] = [];
   for (const nightCfg of cfg.nights) {
-    const variants = [];
+    const variants: VariantRecord[] = [];
     for (const variant of nightCfg.variants) {
       const runDir = join(runsDir, `${nightCfg.name}-${variant}`);
       variants.push(compareOne(cfg, nightCfg, variant, runDir, inputsRoot, modelOptions));
     }
-    const night: any = {
+    const night: NightRecord = {
       name: nightCfg.name, run: nightCfg.run, night: nightCfg.night, seed: nightCfg.seed, seedEvidence: nightCfg.seedEvidence,
       winner: nightCfg.winner, winnerSha256: sha256(readFileSync(resolve(ROOT, current(nightCfg.winner)))), originMs: nightCfg.originMs,
       presses: nightCfg.presses, trace: nightCfg.trace, customNight: nightCfg.customNight ?? null,
@@ -812,7 +931,7 @@ function compareAll(cfg, cfgPath, runsDir, inputsRoot) {
     nights.push(night);
   }
   const verdicts = nights.map((n) => n.verdict);
-  const result: any = {
+  const result: EncounterResult = {
     schema: SCHEMA, claimLevel: 'MODEL_ONLY', fidelity: 'rebuilt-runtime',
     comparedWith: 'DEVICE_MEASURED phone reads and terminals, reused from the records each night names; no new phone run',
     question: 'On phone nights whose seed is established, replayed into the rebuilt runtime at that seed on the phone\'s own frame clock: does each mask window hold the same occupant as on the phone, and does the night end the same way?',
@@ -857,7 +976,7 @@ function compareAll(cfg, cfgPath, runsDir, inputsRoot) {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const [mode, ...rest] = process.argv.slice(2);
-  const args: any = {};
+  const args: Record<string, string> = {};
   if (mode === 'check') {
     const path = rest[0];
     if (!path) throw new Error('usage: check RESULT.json');
@@ -883,7 +1002,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     if (!args.out.endsWith('.json')) throw new Error('--out must be a .json path');
     if (args.evidence && (!cfg.responseExperiment || !args.evidence.endsWith('.json')))
       throw new Error('--evidence needs a response experiment and a .json path');
-    const result: any = compareAll(cfg, cfgPath, resolve(args.runs), inputsRoot);
+    const result = compareAll(cfg, cfgPath, resolve(args.runs), inputsRoot);
     check(result);
     const resultBytes = `${JSON.stringify(result, null, 1)}\n`;
     writeFileSync(args.out, resultBytes);
@@ -893,7 +1012,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     for (const n of result.nights) {
       console.log(`  ${n.name} seed ${n.seed}: ${n.verdict}; phone ${n.phone.windows.slice(0, 42)} (${n.phone.terminal.result})`);
       for (const v of n.variants) {
-        const d = n.derived[v.variant];
+        // check() just derived every variant's scores.
+        const d = (n.derived as Record<string, unknown>)[v.variant] as VariantScores;
         console.log(`    ${v.variant.padEnd(14)} rebuilt ${v.windows.rebuilt.slice(0, 42)} ${v.outcome.rebuilt.result}${v.outcome.rebuilt.reason ? ` (${v.outcome.rebuilt.reason})` : ''} @${v.outcome.rebuilt.endMs} ms` +
           ` (outcome ${d.rebuiltOutcome.agrees === null ? 'UNKNOWN' : d.rebuiltOutcome.agrees ? 'agrees' : 'differs'}${d.rebuiltOutcome.deltaMs !== null ? `, ${d.rebuiltOutcome.deltaMs} ms` : ''}); ` +
           `agree ${d.rebuiltVsPhone.agree}/${d.rebuiltVsPhone.compared} (+${d.rebuiltVsPhone.unplayed} unplayed), first ${JSON.stringify(d.rebuiltVsPhone.firstDisagreement)}`);

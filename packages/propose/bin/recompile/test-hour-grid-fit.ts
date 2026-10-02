@@ -3,11 +3,13 @@
 // checks run in a clean checkout; source frame traces remain hash-named inputs and are not required.
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
+import type { BinaryLike } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { check, fitHourGrid, hourTransitions, SCHEMA } from './hour-grid-fit.ts';
+import type { Checked, Transition } from './hour-grid-fit.ts';
 
-const read = (rel) => readFileSync(new URL(`../../../../${rel}`, import.meta.url), 'utf8');
-const sha256 = (value) => createHash('sha256').update(value).digest('hex');
+const read = (rel: string) => readFileSync(new URL(`../../../../${rel}`, import.meta.url), 'utf8');
+const sha256 = (value: BinaryLike) => createHash('sha256').update(value).digest('hex');
 
 // --- detect a dark interstitial after each expected hour and fit its phase
 {
@@ -27,12 +29,12 @@ const sha256 = (value) => createHash('sha256').update(value).digest('hex');
 // --- a hash-bound fixture can be checked with the local source bytes
 {
   const traceBytes = Buffer.from('fixture trace bytes');
-  const transitions = [
+  const transitions: Extract<Transition, { imageMs: number }>[] = [
     { k: 1, imageMs: 70_010, luma: 12, prevLuma: 40 },
     { k: 2, imageMs: 140_030, luma: 8, prevLuma: 40 },
   ];
   const fit = { ...fitHourGrid(transitions), zeroMinusAnchorFireMs: 20 };
-  const result: any = {
+  const result: Checked & { claimLevel: string, input: { tracePath: string } } = {
     schema: SCHEMA,
     claimLevel: 'DEVICE_MEASURED observations; arithmetic fit',
     toolSha256: sha256(Buffer.from('fixture tool bytes')),
@@ -61,7 +63,7 @@ const sha256 = (value) => createHash('sha256').update(value).digest('hex');
   assert.equal(full04.fit.zeroMsAfterFirst, 3831.4);
   assert.equal(full04.fit.zeroMinusAnchorFireMs, -48.2);
   for (const result of [full06, full04]) {
-    const row = record.results.find((r) => r.night === result.label);
+    const row = record.results.find((r: { readonly night: string }) => r.night === result.label);
     assert.equal(row.evidenceId, result.evidenceId);
     assert.equal(row.sha256, sha256(read(row.path)));
   }

@@ -201,13 +201,12 @@
       "debt:apps/desktop/test": 29,
       "debt:apps/trainer/test": 24,
       "debt:packages/play/test": 62,
-      "debt:packages/propose/bin": 24,
+      "debt:packages/propose/bin": 10,
       "debt:packages/propose/bindings": 21,
       "debt:packages/propose/parked": 53,
       "debt:packages/propose/test": 30,
       "debt:packages/review/bin": 7,
       "debt:packages/review/test": 40,
-      "debt:packages/review/venue-grid": 1,
       "debt:packages/source/test": 12,
       "debt:tools": 17
     }
