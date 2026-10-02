@@ -106,7 +106,12 @@ for (const game of GAMES) {
     assert.equal(gaps[3].holds, 'partly', 'promotion is no longer empty, and custody is not complete for every pack');
     assert.ok((described as any).notMeasured.some(item => item.startsWith('reliability')), 'a promotion is one clear, and that is said');
   }
-  if (game.alias === 'fnaf3' || game.alias === 'fnaf4') assert.ok(isUnknown(phone), `no pack is attributed to ${game.alias}`);
+  if (game.alias === 'fnaf3') assert.ok(isUnknown(phone), 'no pack is attributed to fnaf3');
+  if (game.alias === 'fnaf4') {
+    // n5b and n3c (packed 2026-10-02): runner packs attributed by target.package, none promoted.
+    assert.equal(phone.packs, packIds.filter(id => id.startsWith('fnaf4-')).length, 'every fnaf4 runner pack is attributed to fnaf4');
+    assert.ok(isUnknown(phone.promotion), 'no FNaF 4 pack is promoted');
+  }
   if (game.alias === 'fnaf1') {
     assert.ok(!isUnknown(phone.promotion) && phone.promotion.promotedRuns.includes('fnaf1-custom-grid420-420-a-20260925T024452598Z'),
       'the FNaF 1 4/20 run is promoted through Plan 12\'s checks read from its runner pack (fnaf1-promotion.ts)');
