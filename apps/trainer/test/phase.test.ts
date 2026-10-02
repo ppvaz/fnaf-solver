@@ -9,14 +9,27 @@ const BASE = process.argv[2] || 'http://localhost:8731/dist/index.html';
 const PORT = 9345;
 const chrome = spawn(chromeBinary(),
   chromeArgs(PORT, mkdtempSync(join(tmpdir(), 'm7p-'))), { stdio: 'ignore' });
-const sleep = ms => new Promise<any>(r => setTimeout(r, ms));
+const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
+/** An entry of Chrome's /json target list; a fresh Chrome opens about:blank, a page target. */
+interface Target { readonly type: string, readonly webSocketDebuggerUrl: string }
+interface ExceptionDetails { readonly exception?: { readonly description?: string } }
+/** What this test reads of each DevTools method's reply; any other reply it ignores. */
+interface Replies {
+  'Runtime.evaluate': { readonly result?: { readonly value?: unknown } };
+  'Page.captureScreenshot': { readonly data: string };
+}
+type Reply<M extends string> = M extends keyof Replies ? Replies[M] : unknown;
+/** A DevTools message: the reply to a request carries its id, and its result or an error. */
+interface Message<R> { readonly id?: number, readonly result: R, readonly error?: { readonly message: string } }
+/** The event this test reads; it passes over every other message. */
+interface CdpEvent { readonly method: 'Runtime.exceptionThrown', readonly params: { readonly exceptionDetails: ExceptionDetails } }
 let id = 0;
-const rpc = (ws, m, p = {}) => new Promise<any>((res, rej) => { const mid = ++id;
-  const on = e => { const x = JSON.parse(e.data); if (x.id !== mid) return;
+const rpc = <M extends string>(ws: WebSocket, m: M, p = {}) => new Promise<Reply<M>>((res, rej) => { const mid = ++id;
+  const on = (e: MessageEvent) => { const x: Message<Reply<M>> = JSON.parse(e.data); if (x.id !== mid) return;
     ws.removeEventListener('message', on); x.error ? rej(new Error(x.error.message)) : res(x.result); };
   ws.addEventListener('message', on); ws.send(JSON.stringify({ id: mid, method: m, params: p })); });
 
-const errs = [], fails = [];
+const errs: (string | undefined)[] = [], fails: string[] = [];
 
 // Plays the coached cycle, holding inputs that must be held.
 const CYCLE_BOT = `window.__auto && clearInterval(window.__auto);
@@ -61,21 +74,21 @@ window.__duel=setInterval(()=>{const app=window.app; if(!app||!app.running)retur
 
 async function main() {
   for (let i = 0; i < 60; i++) { try { await fetch(`http://127.0.0.1:${PORT}/json`); break; } catch { await sleep(200); } }
-  const t = (await (await fetch(`http://127.0.0.1:${PORT}/json`)).json()).find(x => x.type === 'page');
+  const t: Target = (await (await fetch(`http://127.0.0.1:${PORT}/json`)).json()).find((x: Target) => x.type === 'page');
   const ws = new WebSocket(t.webSocketDebuggerUrl);
-  await new Promise<any>(r => ws.addEventListener('open', r));
-  ws.addEventListener('message', e => { const m = JSON.parse(e.data);
+  await new Promise<Event>(r => ws.addEventListener('open', r));
+  ws.addEventListener('message', e => { const m: CdpEvent = JSON.parse(e.data);
     if (m.method === 'Runtime.exceptionThrown') errs.push(m.params.exceptionDetails.exception?.description); });
   await rpc(ws, 'Runtime.enable'); await rpc(ws, 'Page.enable');
   await rpc(ws, 'Page.navigate', { url: BASE }); await sleep(1500);
 
-  const ev = async e => (await rpc(ws, 'Runtime.evaluate', { expression: e, awaitPromise: true, returnByValue: true })).result?.value;
-  const show = async (l, e) => { const v = await ev(e); console.log(`  ${l}: ${JSON.stringify(v)}`); return v; };
-  const expect = async (l, e, want) => { const v = await ev(e);
+  const ev = async (e: string) => (await rpc(ws, 'Runtime.evaluate', { expression: e, awaitPromise: true, returnByValue: true })).result?.value;
+  const show = async (l: string, e: string) => { const v = await ev(e); console.log(`  ${l}: ${JSON.stringify(v)}`); return v; };
+  const expect = async (l: string, e: string, want: unknown) => { const v = await ev(e);
     const ok = JSON.stringify(v) === JSON.stringify(want);
     console.log(`  ${ok ? 'ok  ' : 'FAIL'} ${l}: ${JSON.stringify(v)}${ok ? '' : ` (want ${JSON.stringify(want)})`}`);
     if (!ok) fails.push(l); return v; };
-  const open = async (id) => { await ev('document.getElementById("btn-quit")?.click()');
+  const open = async (id: string) => { await ev('document.getElementById("btn-quit")?.click()');
     await ev('document.querySelector("[data-close]")?.click()'); await sleep(150);
     await ev(`document.querySelector('[data-mode="${id}"]').click()`); await sleep(200);
     await ev('document.getElementById("btn-brief-go").click()'); await sleep(600); };

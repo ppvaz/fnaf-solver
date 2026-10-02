@@ -28,7 +28,7 @@ assert.ok(Object.isFrozen(admitted));
 assert.equal(validateActivityGateProfile(profile).id, profile.id);
 assert.equal(validateActivityGateSnapshot(snapshot).profileId, profile.id);
 
-const withChanges = changes => evaluateActivityGate({ ...snapshot, ...changes }, profile);
+const withChanges = (changes: object) => evaluateActivityGate({ ...snapshot, ...changes }, profile);
 assert.ok(withChanges({ screen: { identity: 'OTHER', qualification: 'QUALIFIED' } }).reasons.includes('screen-not-night'));
 assert.ok(withChanges({ screen: { identity: 'FNAF2_NIGHT', qualification: 'UNQUALIFIED' } }).reasons.includes('screen-unqualified'));
 assert.ok(withChanges({ belief: { ...snapshot.belief, freshness: 'STALE' } }).reasons.includes('belief-stale'));
@@ -63,7 +63,7 @@ const critical = withChanges({ belief: { ...snapshot.belief, criticalState: 'ACT
 assert.equal(critical.admitted, false);
 assert.deepEqual(critical.reasons, ['critical-cue-active']);
 
-const expectThrow = (fn, message) => assert.throws(fn, undefined, message);
+const expectThrow = (fn: () => unknown, message: string) => assert.throws(fn, message);
 expectThrow(() => validateActivityGateSnapshot({ ...snapshot,
   belief: { ...snapshot.belief, riskUpperBound: -0.1 },
 }), 'negative risk was accepted');

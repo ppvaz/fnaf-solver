@@ -11,7 +11,7 @@ import { ROUTE_FACTS, factText, pick } from '../src/route-facts.ts';
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const NAMED = /10\/20|6 AM|±60 ms|\d{4}-\d{2}-\d{2}/g;
-const unnamed = text => text.replace(NAMED, '').match(/\d+(?:\.\d+)?/g) ?? [];
+const unnamed = (text: string) => text.replace(NAMED, '').match(/\d+(?:\.\d+)?/g) ?? [];
 
 // The checks catch a planted drift first, or they check nothing.
 {
@@ -39,7 +39,8 @@ for (const fact of ROUTE_FACTS) {
   assert.ok(fact.record && existsSync(`${ROOT}${fact.record}`), `${fact.id}: no record at ${fact.record}`);
   const record = JSON.parse(readFileSync(`${ROOT}${fact.record}`, 'utf8'));
   assert.equal(record.claimLevel, fact.label, `${fact.id}: labelled ${fact.label}, but ${fact.record} is ${record.claimLevel}`);
-  for (const [key, value] of Object.entries(fact.values)) {
+  // A fact that cites a record holds its values; Object.entries throws on one that does not.
+  for (const [key, value] of Object.entries(fact.values as Record<string, number>)) {
     assert.ok(fact.from?.[key], `${fact.id}: {${key}} names no field of its record`);
     assert.equal(pick(record, fact.from[key]), value,
       `${fact.id}: {${key}} shows ${value}, ${fact.record} ${JSON.stringify(fact.from[key])} holds ${pick(record, fact.from[key])}`);
@@ -48,7 +49,8 @@ for (const fact of ROUTE_FACTS) {
   // Every other number in its text is one of those checked values. The only
   // numbers left unchecked are names: the 10/20 mode, 6 AM, the human gate's
   // ±60 ms (ROADMAP S5) and a date.
-  const shown = new Set(Object.values(fact.values).map(String));
+  // Defined: Object.entries above would have thrown otherwise.
+  const shown = new Set(Object.values(fact.values as Record<string, number>).map(String));
   for (const number of unnamed(text))
     assert.ok(shown.has(number), `${fact.id}: "${number}" in its text is not a value checked against its record`);
 }

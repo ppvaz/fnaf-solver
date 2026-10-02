@@ -14,13 +14,16 @@ import {
   makeTimingExercise,
   replayMicrotrainerSession,
 } from '../src/microtrainer.ts';
+import type { Resolution } from '../src/training/index.ts';
 
-const expectThrow = (fn, pattern) => {
-  assert.throws(fn, (error: any) => {
-    if (pattern && !pattern.test(error.message)) return false;
+const expectThrow = (fn: () => unknown, pattern: RegExp) => {
+  assert.throws(fn, (error: unknown) => {
+    if (pattern && !pattern.test((error as Error).message)) return false;
     return true;
   });
 };
+
+type ScoredGrade = Extract<ReturnType<typeof makeMicrotrainerRecord>['grade'], { status: 'SCORED' }>;
 
 const scheduler = Object.freeze({
   policyId: 'fixed-replay-v1', policyVersion: '1', selectionProbability: 0.5,
@@ -48,7 +51,8 @@ const prediction = makePredictionExercise({
 });
 assert.equal(prediction.exercise.disposition, 'UNRESOLVED');
 assert.equal(prediction.replay.disposition, 'COMPLETED');
-assert.equal(prediction.replay.resolution.outcome, 'THREAT');
+// A COMPLETED replay carries its resolution.
+assert.equal((prediction.replay.resolution as Resolution).outcome, 'THREAT');
 
 const predictionAttempt = makeMicrotrainerAttempt({
   exercise: prediction.replay, rendererId: 'campaign', rendererVersion: '1',
@@ -95,7 +99,8 @@ const recognition = makeRecognitionExercise({
 });
 assert(recognition.exercise.question.choices.includes(UNKNOWN_CHOICE),
   'recognition must always offer abstention');
-assert(recognition.exercise.eligibility.sourceCrop.sha256 === crop.sha256,
+// makeRecognitionExercise retains the crop's provenance as eligibility.sourceCrop.
+assert((recognition.exercise.eligibility.sourceCrop as { sha256: string }).sha256 === crop.sha256,
   'recognition must retain artifact hash provenance');
 const recognitionAttempt = makeMicrotrainerAttempt({
   exercise: recognition.replay, rendererId: 'threat-constellation', rendererVersion: '1',
@@ -104,7 +109,8 @@ const recognitionAttempt = makeMicrotrainerAttempt({
 const recognitionRecord = makeMicrotrainerRecord({
   exercise: recognition.exercise, events: recognition.events, attempt: recognitionAttempt,
 });
-assert.equal(recognitionRecord.grade.correct, false,
+// An abstention is a commitment, and the label resolves it, so the grade is SCORED.
+assert.equal((recognitionRecord.grade as ScoredGrade).correct, false,
   'an abstention is scored against the retained label, not treated as the label');
 expectThrow(() => makeRecognitionExercise({
   id: 'recognition-bad-profile', snapshot, crop: { ...crop, profileId: 'other-profile' },
@@ -130,7 +136,8 @@ const timing = makeTimingExercise({
   commitment: { schema: 'commitment-v1', choice: 'SOON', committedAtMs: 1200,
     responsePort: 'replay-keyboard' },
 });
-assert.equal(timing.replay.resolution.outcome, 'SOON');
+// The commitment and the observed action resolve the timing replay.
+assert.equal((timing.replay.resolution as Resolution).outcome, 'SOON');
 assert.equal(timing.exercise.eligibility.responseLatencyBudgetMs, 200);
 expectThrow(() => makeTimingExercise({
   id: 'timing-too-late', snapshot, target: 'deadline', deadlineAtMs: 1150,
@@ -187,11 +194,14 @@ const session = makeMicrotrainerSession({
 });
 assert(Object.isFrozen(session) && Object.isFrozen(session.records),
   'microtrainer session must be immutable');
-assert(session.events.some(event => event.type === 'COMMITTED'),
+// validateMicrotrainerSession checked session.events is the list of rows it writes.
+const sessionEvents = session.events as readonly { readonly type: string }[];
+assert(sessionEvents.some(event => event.type === 'COMMITTED'),
   'session event stream must retain commitment events');
-assert(session.events.some(event => event.type === 'RESOLVED'),
+assert(sessionEvents.some(event => event.type === 'RESOLVED'),
   'session event stream must retain independent resolution events');
-assert.equal(replayMicrotrainerSession(session).find(row => row.exerciseId === 'prediction-1').grade.correct, true);
+// prediction-1 was committed and resolved, so its grade is SCORED.
+assert.equal((replayMicrotrainerSession(session).find(row => row.exerciseId === 'prediction-1')?.grade as ScoredGrade | undefined)?.correct, true);
 expectThrow(() => makeMicrotrainerSession({
   session: { ...session.session, endedAtMs: 1200 }, records: [predictionRecord], artifacts: [],
 }), /outside session bounds/);

@@ -16,10 +16,10 @@ import { summarize } from './tracereport.ts';
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, '..', '..', '..');
 let failed = 0;
-const check = (name, cond, detail = '') => {
+const check = (name: string, cond: boolean, detail = '') => {
   if (!cond) { failed++; console.error(`FAIL ${name}${detail ? ` -- ${detail}` : ''}`); }
 };
-const near = (a, b, eps = 1e-6) => Math.abs(a - b) <= eps;
+const near = (a: number | null | undefined, b: number, eps = 1e-6) => Math.abs(Number(a) - b) <= eps;
 
 // ---------------------------------------------------------- the Coach census
 // A stub sim: the Coach reads only t and isWinding, and stubbing them lets the
@@ -30,7 +30,7 @@ const script = [
   { id: 'wind', at: 1.0, label: 'Wind', action: 'wind', hold: 1.0 },
   { id: 'tap-b', at: 2.6, label: 'Tap B', action: 'light' },
 ];
-const coach = new Coach(sim, { script });
+const coach = new Coach(sim as unknown as C.Sim, { script });   // the partial fake above
 
 // anchorDigits [2,7] from t=0 puts cycle 0 at t=2. Cycle 0 is played with
 // small known lateness; cycle 1 (anchored at t=7) is left entirely unplayed.
@@ -60,7 +60,8 @@ check('hold 0 is a duration', coach.holds[0]?.cycle === 0 &&
 check('hold 1 is empty', coach.holds[1]?.cycle === 1 && coach.holds[1]?.heldSec === 0);
 // The UI's rolling window must not be the census: the trace is a different,
 // uncapped array, so trimming results cannot drop early cycles from it.
-check('trace is not the rolling results array', coach.trace !== coach.results);
+// Widened: the two arrays differ in type, and the check is that they are different arrays.
+check('trace is not the rolling results array', (coach.trace as unknown) !== coach.results);
 
 // ------------------------------------------------------- summarizer banding
 {
@@ -99,7 +100,9 @@ const traceDir = mkdtempSync(join(tmpdir(), 'fnaf-traces-'));
 const server = spawn('python3', [join(HERE, 'serve.py'), String(PORT)],
   { cwd: ROOT, stdio: 'ignore', env: { ...process.env, FNAF_TRACE_DIR: traceDir } });
 
-const post = async (body) => {
+/** What serve.py answers a /save-trace POST with. */
+interface SaveReply { readonly ok?: boolean, readonly dry?: boolean, readonly file?: string, readonly error?: string }
+const post = async (body: unknown): Promise<{ status: number, body: SaveReply }> => {
   const res = await fetch(`http://127.0.0.1:${PORT}/save-trace`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -111,7 +114,7 @@ try {
   let up = false;
   for (let i = 0; i < 40 && !up; i++) {
     try { up = (await fetch(`http://127.0.0.1:${PORT}/index.html`)).ok; }
-    catch { await new Promise<any>(r => setTimeout(r, 25)); }
+    catch { await new Promise<void>(r => setTimeout(r, 25)); }
   }
   check('serve.py answered', up);
   if (up) {

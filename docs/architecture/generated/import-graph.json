@@ -428,6 +428,7 @@
       "file": "apps/trainer/test/coach.test.ts",
       "imports": [
         "../src/coach.ts",
+        "../src/curriculum.ts",
         "@sixam/source/fnaf2",
         "node:assert/strict"
       ]
@@ -472,6 +473,7 @@
       "file": "apps/trainer/test/microtrainer.test.ts",
       "imports": [
         "../src/microtrainer.ts",
+        "../src/training/index.ts",
         "node:assert/strict"
       ]
     },
@@ -483,6 +485,7 @@
         "node:fs",
         "node:fs/promises",
         "node:http",
+        "node:net",
         "node:os",
         "node:path",
         "node:url"

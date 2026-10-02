@@ -20,50 +20,66 @@ const restore = () => {
       execFileSync('python3', [new URL('./build.py', import.meta.url).pathname], { stdio: 'ignore' });
       console.log('(restored canonical core config and rebuilt)');
     }
-  } catch (e) { console.error('RESTORE FAILED:', e.message); }
+  } catch (e) { console.error('RESTORE FAILED:', (e as Error).message); }
 };
 process.on('exit', restore);
 const PORT = 9334;
 const chrome = spawn(chromeBinary(),
   chromeArgs(PORT, mkdtempSync(join(tmpdir(), 'm7c-'))), { stdio: 'ignore' });
 
-const sleep = (ms) => new Promise<any>(r => setTimeout(r, ms));
+const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
+/** An entry of Chrome's /json target list; a fresh Chrome opens about:blank, a page target. */
+interface Target { readonly type: string, readonly webSocketDebuggerUrl: string }
+/** What this test reads of a DevTools exception. */
+interface ExceptionDetails { readonly text: string, readonly exception?: { readonly description?: string } }
+/** What this test reads of each DevTools method's reply; any other reply it ignores. */
+interface Replies {
+  'Runtime.evaluate': { readonly result?: { readonly value?: unknown }, readonly exceptionDetails?: ExceptionDetails };
+  'Page.captureScreenshot': { readonly data: string };
+}
+type Reply<M extends string> = M extends keyof Replies ? Replies[M] : unknown;
+/** A DevTools message: the reply to a request carries its id, and its result or an error. */
+interface Message<R> { readonly id?: number, readonly result: R, readonly error?: { readonly message: string } }
+/** The events this test reads; it passes over every other message. */
+type CdpEvent =
+  | { readonly method: 'Runtime.exceptionThrown', readonly params: { readonly exceptionDetails: ExceptionDetails } }
+  | { readonly method: 'Runtime.consoleAPICalled', readonly params: { readonly type: string, readonly args: readonly { readonly value?: unknown }[] } };
 let id = 0;
-const rpc = (ws, method, params = {}) => new Promise<any>((res, rej) => {
+const rpc = <M extends string>(ws: WebSocket, method: M, params = {}) => new Promise<Reply<M>>((res, rej) => {
   const mid = ++id;
-  const on = (e) => { const m = JSON.parse(e.data); if (m.id !== mid) return;
+  const on = (e: MessageEvent) => { const m: Message<Reply<M>> = JSON.parse(e.data); if (m.id !== mid) return;
     ws.removeEventListener('message', on); m.error ? rej(new Error(m.error.message)) : res(m.result); };
   ws.addEventListener('message', on); ws.send(JSON.stringify({ id: mid, method, params }));
 });
 
-const errs = [], fails = [];
+const errs: string[] = [], fails: string[] = [];
 
 async function main() {
   for (let i = 0; i < 60; i++) { try { await fetch(`http://127.0.0.1:${PORT}/json`); break; } catch { await sleep(250); } }
-  const t = (await (await fetch(`http://127.0.0.1:${PORT}/json`)).json()).find(x => x.type === 'page');
+  const t: Target = (await (await fetch(`http://127.0.0.1:${PORT}/json`)).json()).find((x: Target) => x.type === 'page');
   const ws = new WebSocket(t.webSocketDebuggerUrl);
-  await new Promise<any>(r => ws.addEventListener('open', r));
+  await new Promise<Event>(r => ws.addEventListener('open', r));
   ws.addEventListener('message', (e) => {
-    const m = JSON.parse(e.data);
+    const m: CdpEvent = JSON.parse(e.data);
     if (m.method === 'Runtime.exceptionThrown') errs.push(m.params.exceptionDetails.exception?.description || m.params.exceptionDetails.text);
     if (m.method === 'Runtime.consoleAPICalled' && m.params.type === 'error') errs.push(m.params.args.map(a => a.value).join(' '));
   });
   await rpc(ws, 'Runtime.enable'); await rpc(ws, 'Page.enable');
   await rpc(ws, 'Page.navigate', { url: BASE }); await sleep(1500);
 
-  const ev = async (expr) => {
+  const ev = async (expr: string) => {
     const r = await rpc(ws, 'Runtime.evaluate', { expression: expr, awaitPromise: true, returnByValue: true });
     if (r.exceptionDetails) errs.push(r.exceptionDetails.exception?.description || r.exceptionDetails.text);
     return r.result?.value;
   };
-  const show = async (label, expr) => { const v = await ev(expr); console.log(`  ${label}: ${JSON.stringify(v)}`); return v; };
-  const expect = async (label, expr, want) => {
+  const show = async (label: string, expr: string) => { const v = await ev(expr); console.log(`  ${label}: ${JSON.stringify(v)}`); return v; };
+  const expect = async (label: string, expr: string, want: unknown) => {
     const v = await ev(expr);
     const ok = JSON.stringify(v) === JSON.stringify(want);
     console.log(`  ${ok ? 'ok  ' : 'FAIL'} ${label}: ${JSON.stringify(v)}${ok ? '' : ` (expected ${JSON.stringify(want)})`}`);
     if (!ok) fails.push(label);
   };
-  const drag = (sel, dx, dy, pid) => ev(`(()=>{const el=document.querySelector(${JSON.stringify(sel)});
+  const drag = (sel: string, dx: number, dy: number, pid: number) => ev(`(()=>{const el=document.querySelector(${JSON.stringify(sel)});
     const b=el.getBoundingClientRect();
     const p=(t,x,y)=>el.dispatchEvent(new PointerEvent(t,{bubbles:true,pointerId:${pid},clientX:x,clientY:y}));
     p('pointerdown',b.left+8,b.top+8); p('pointermove',b.left+8+${dx},b.top+8+${dy});
@@ -103,11 +119,12 @@ async function main() {
   await ev('document.querySelector(\'[data-ui="settings"]\').click()'); await sleep(200);
   // Dry run: exercises validation and the whole client path without rewriting
   // canonical core config, which earlier versions of this test silently destroyed.
+  // The page function returns the save's status and JSON body; nothing if it threw.
   const res = await ev(`(async () => {
     const r = await fetch('/save-layout', {method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ map: window.app.ui.map, widgets: window.app.ui.widgets, dry: true })});
     return { status: r.status, body: await r.json() };
-  })()`);
+  })()`) as { readonly status: number, readonly body?: { readonly ok?: unknown } | null } | undefined;
   console.log(`  save (dry): ${JSON.stringify(res)}`);
   if (!res || res.status !== 200 || !res.body?.ok) fails.push('save validates');
 

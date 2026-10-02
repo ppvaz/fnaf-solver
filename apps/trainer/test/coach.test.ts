@@ -7,6 +7,7 @@ import assert from 'node:assert/strict';
 import * as C from '@sixam/source/fnaf2';
 import { Sim } from '@sixam/source/fnaf2';
 import { Coach, playPress, pressLanded, pressState } from '../src/coach.ts';
+import type { Step } from '../src/curriculum.ts';
 
 const QUIET = { bbEnabled: false, foxyEnabled: false, gfEnabled: false, boxEnabled: false,
   stalledEnabled: false, powerEnabled: false, lethal: false, record: false, seed: 1 };
@@ -14,7 +15,7 @@ const QUIET = { bbEnabled: false, foxyEnabled: false, gfEnabled: false, boxEnabl
 // pressLanded, press by press, on states the Sim refuses and accepts.
 {
   const sim = new Sim(QUIET);
-  const press = act => { const before = pressState(sim); sim.press(act); return pressLanded(before, pressState(sim), act); };
+  const press = (act: string) => { const before = pressState(sim); sim.press(act); return pressLanded(before, pressState(sim), act); };
   assert.equal(sim.monitor, 'down');
   assert.equal(press('cam:10'), false, 'a camera with the monitor down is refused');
   assert.equal(press('mask'), true, 'the mask goes on from rest');
@@ -28,7 +29,8 @@ const QUIET = { bbEnabled: false, foxyEnabled: false, gfEnabled: false, boxEnabl
   sim.release('light');
   assert.equal(press('monitor'), true, 'the monitor raises');
   assert.equal(press('cam:10'), false, 'a camera is refused while the monitor is still raising');
-  for (let i = 0; sim.monitor !== 'up' && i < 60; i++) sim.tick();
+  // Widened: the ticks move the monitor, which the assert above narrowed to 'down'.
+  for (let i = 0; (sim.monitor as string) !== 'up' && i < 60; i++) sim.tick();
   assert.equal(press('cam:10'), true, 'a camera answers once the monitor is up');
   assert.equal(press('cam:10'), true, 'selecting the camera already selected still lands');
   assert.equal(press('wind'), true);
@@ -43,10 +45,11 @@ const QUIET = { bbEnabled: false, foxyEnabled: false, gfEnabled: false, boxEnabl
     { id: 'mask-off', at: 0.10, label: 'Mask off', action: 'mask' },   // inside MASK_ANIM_ON
     { id: 'flash-hall', at: 0.60, label: 'Flash the hall', action: 'light' },
   ];
-  const passes = [];
+  const passes: boolean[] = [];
   const coach = new Coach(sim, { script, tolGood: 0.2, tolOk: 0.4, onCycle: ok => passes.push(ok) });
   coach.start(0);
-  const due = id => coach.cycleStart + script.find(st => st.id === id).at;
+  // Called after coach.start, with ids of the script above.
+  const due = (id: string) => (coach.cycleStart as number) + (script.find(st => st.id === id) as Step).at;
   while (sim.t < due('mask-on')) sim.tick();
   assert.equal(playPress(sim, coach, 'mask'), true);
   while (sim.t < due('mask-off')) sim.tick();
@@ -54,7 +57,7 @@ const QUIET = { bbEnabled: false, foxyEnabled: false, gfEnabled: false, boxEnabl
   const [on, off] = coach.trace;
   assert.equal(on.grade, 'good');
   assert.equal(off.grade, 'refused', 'a refused press is not graded on its timing');
-  assert.ok(Math.abs(off.delta) < 1 / C.FPS, 'the refused row keeps the press time for the lateness census');
+  assert.ok(Math.abs(Number(off.delta)) < 1 / C.FPS, 'the refused row keeps the press time for the lateness census');
   assert.equal(coach.combo, 0, 'a refused press breaks the combo');
   assert.equal(coach.summary.bad, 1);
   // The mask is still on, so the flash is refused too, and the pass is not clean.
@@ -74,8 +77,9 @@ const QUIET = { bbEnabled: false, foxyEnabled: false, gfEnabled: false, boxEnabl
     { id: 'tap', at: 0, label: 'Tap', action: 'light' },
     { id: 'wind', at: 1, label: 'Hold WIND', action: 'wind', hold: 3.5 },
   ];
-  const passes = [];
-  const coach = new Coach(sim, { script, tolGood: 0.2, tolOk: 0.4, onCycle: ok => passes.push(ok) });
+  const passes: boolean[] = [];
+  // A partial fake: the coach reads only t and isWinding.
+  const coach = new Coach(sim as unknown as C.Sim, { script, tolGood: 0.2, tolOk: 0.4, onCycle: ok => passes.push(ok) });
   // Anchors at 2 and 7. Pass 0 winds its full 3.5 s; pass 1 only taps WIND.
   const presses = new Map([[2 * C.FPS, 'light'], [3 * C.FPS, 'wind'], [7 * C.FPS, 'light'], [8 * C.FPS, 'wind']]);
   for (let f = 0; f <= 12.5 * C.FPS; f++) {
@@ -99,12 +103,13 @@ const QUIET = { bbEnabled: false, foxyEnabled: false, gfEnabled: false, boxEnabl
 // Grading is per step and lopsided: `mask-off` has 450 ms of room early and
 // about 50 ms late, because the mask blocks the hall flash that resets Foxy.
 {
-  const stub = { t: 0, isWinding: false, camsUp: false };
+  // A partial fake: the coach reads only these.
+  const stub = { t: 0, isWinding: false, camsUp: false } as unknown as C.Sim;
   const coach = new Coach(stub, { script: C.CYCLE_SCRIPT });
-  const maskOff: any = C.CYCLE_SCRIPT.find(st => st.id === 'mask-off');
+  const maskOff = C.CYCLE_SCRIPT.find(st => st.id === 'mask-off');
   const beat = { id: 'beat', at: 0, label: 'Tap', action: 'light' };
 
-  if (!maskOff.win) throw new Error('mask-off lost its measured window');
+  if (!maskOff?.win) throw new Error('mask-off lost its measured window');
   if (coach.grade(maskOff, -0.10) !== 'good')
     throw new Error('a 100ms-early mask-off should still be good');
   if (coach.grade(maskOff, 0.10) === 'good')

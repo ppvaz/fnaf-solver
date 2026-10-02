@@ -12,7 +12,7 @@ import {
   makeReplaySnapshot,
 } from '../src/microtrainer.ts';
 
-const expectThrow = (fn, pattern) => assert.throws(fn, (error: any) => !pattern || pattern.test(error.message));
+const expectThrow = (fn: () => unknown, pattern: RegExp) => assert.throws(fn, (error: unknown) => !pattern || pattern.test((error as Error).message));
 const scheduler = { policyId: 'renderer-test', policyVersion: '1', selectionProbability: 1 };
 const snapshot = makeReplaySnapshot({
   id: 'render-snapshot', sessionId: 'render-source', beliefSequence: 1,
@@ -28,9 +28,11 @@ const made = makePredictionExercise({
     responsePort: 'keyboard' },
 });
 const final = made.replay;
+type ScoredGrade = Extract<ReturnType<typeof compareRendererAttempts>['grade'], { status: 'SCORED' }>;
 
 for (const id of Object.keys(RENDERERS)) {
-  const renderer = validateRenderer(RENDERERS[id]);
+  // id is one of RENDERERS' own keys.
+  const renderer = validateRenderer(RENDERERS[id as keyof typeof RENDERERS]);
   assert.equal(renderer.schema, RENDERER_SCHEMA);
   const view = makeRendererView(final, renderer);
   assert.deepEqual(view.choices, final.question.choices);
@@ -48,7 +50,8 @@ const attempts = Object.keys(RENDERERS).map((renderer, index) => makeRendererAtt
 }).attempt);
 const invariant = compareRendererAttempts(final, attempts);
 assert.equal(invariant.invariant, true);
-assert.equal(invariant.grade.correct, true);
+// Every attempt carries the exercise's commitment and it resolved, so the grade is SCORED.
+assert.equal((invariant.grade as ScoredGrade).correct, true);
 expectThrow(() => validateRenderer({ ...RENDERERS.campaign,
   accessibility: { ...RENDERERS.campaign.accessibility, keyboard: false },
 }), /accessibility.keyboard/);

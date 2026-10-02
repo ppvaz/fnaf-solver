@@ -160,8 +160,8 @@ longer rebuilds.
   `packages/review/bin`, `packages/review/venue-grid`, `apps/wiki` with its
   test, `apps/trainer/src`, `apps/desktop/src`, `apps/desktop/bin`,
   `packages/kernel/test`, `packages/source/test`, `packages/review/test`,
-  `packages/play/test` and `apps/desktop/test` so far), and the others only
-  shrink.
+  `packages/play/test`, `apps/desktop/test` and `apps/trainer/test` so far),
+  and the others only shrink.
   The pass that wrote `any` to get there (`tools/ts-strict.ts`, 7a8393f0) is retired.
 - A validator takes `unknown`, narrows it with the kernel's guards (`isRecord`,
   `isList`, `isOneOf`, `isText`, `fail(): never`, `@sixam/kernel` labels) and

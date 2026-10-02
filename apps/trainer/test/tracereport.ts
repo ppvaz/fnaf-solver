@@ -10,21 +10,32 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const quantile = (xs, q) => {
+/** A saved trace, as the trainer posts it to /save-trace: the fields the summary reads, any of them absent. */
+interface Trace {
+  readonly env?: { readonly webdriver?: boolean };
+  readonly speed?: number;
+  readonly settings?: { readonly coach?: boolean };
+  readonly commit?: string;
+  readonly steps?: readonly { readonly stepId: string, readonly delta: number | null }[];
+  readonly holds?: readonly { readonly heldSec: number, readonly targetSec: number }[];
+  readonly events?: readonly { readonly kind: string, readonly t: number }[];
+}
+
+const quantile = (xs: number[], q: number) => {
   if (!xs.length) return null;
   const s = [...xs].sort((a, b) => a - b);
   return s[Math.min(s.length - 1, Math.floor(q * s.length))];
 };
-const ms = (v) => v == null ? '--' : `${Math.round(v * 1000)}ms`;
+const ms = (v: number | null) => v == null ? '--' : `${Math.round(v * 1000)}ms`;
 
 // Split the runs into the census and the excluded partitions, then band the
 // census per step. Exported so tracetest can gate the math on synthetic runs.
-export function summarize(traces) {
+export function summarize(traces: readonly Trace[]) {
   const bot = traces.filter(t => t.env?.webdriver);
   const offSpeed = traces.filter(t => !t.env?.webdriver && (t.speed ?? 1) !== 1);
   const census = traces.filter(t => !t.env?.webdriver && (t.speed ?? 1) === 1);
 
-  const steps = new Map();
+  const steps = new Map<string, { stepId: string, n: number, deltas: number[], misses: number }>();
   for (const tr of census) {
     for (const s of tr.steps || []) {
       const b = steps.get(s.stepId) ||
@@ -44,21 +55,21 @@ export function summarize(traces) {
     earlyShare: b.deltas.length ? b.deltas.filter(d => d < 0).length / b.deltas.length : null,
   })).sort((a, b) => a.stepId.localeCompare(b.stepId));
 
-  const holds = [];
+  const holds: { readonly heldSec: number, readonly targetSec: number }[] = [];
   for (const tr of census) for (const h of tr.holds || []) holds.push(h);
   const heldFrac = holds.filter(h => h.targetSec > 0).map(h => h.heldSec / h.targetSec);
 
   // Inter-press spacing, from the raw event stream: how close together two
   // consecutive presses actually land. The floor of this distribution is what
   // an "inhumanly timed" schedule violates.
-  const gaps = [];
+  const gaps: number[] = [];
   for (const tr of census) {
     const presses = (tr.events || []).filter(e => e.kind === 'press')
       .map(e => e.t).sort((a, b) => a - b);
     for (let i = 1; i < presses.length; i++) gaps.push(presses[i] - presses[i - 1]);
   }
 
-  const commits = new Map();
+  const commits = new Map<string, number>();
   for (const tr of census) {
     const c = tr.commit || 'unstamped';
     commits.set(c, (commits.get(c) || 0) + 1);
@@ -77,7 +88,7 @@ export function summarize(traces) {
 function main() {
   const HERE = dirname(fileURLToPath(import.meta.url));
   const dir = process.argv[2] || join(HERE, '..', '..', '..', 'captures', 'traces');
-  let files = [];
+  let files: string[] = [];
   try { files = readdirSync(dir).filter(f => f.endsWith('.json')); } catch { /* no dir yet */ }
   if (!files.length) {
     // Say so, loudly: a report that prints nothing reads as coverage.
@@ -85,10 +96,10 @@ function main() {
     console.log('play a coached lesson with `npm run serve:trainer` running to record one');
     return;
   }
-  const traces = [];
+  const traces: Trace[] = [];
   for (const f of files) {
     try { traces.push(JSON.parse(readFileSync(join(dir, f), 'utf8'))); }
-    catch (e) { console.log(`unreadable trace ${f}: ${e.message}`); }
+    catch (e) { console.log(`unreadable trace ${f}: ${(e as Error).message}`); }
   }
   const s = summarize(traces);
   console.log(`${s.runs} census run(s) from ${files.length} file(s)` +

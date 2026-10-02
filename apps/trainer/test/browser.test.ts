@@ -12,9 +12,27 @@ const profile = mkdtempSync(join(tmpdir(), 'm7-chrome-'));
 
 const chrome = spawn(chromeBinary(), chromeArgs(PORT, profile), { stdio: 'ignore' });
 
-const sleep = (ms) => new Promise<any>(r => setTimeout(r, ms));
+const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
 
-async function targets() {
+/** An entry of Chrome's /json target list. */
+interface Target { readonly type: string, readonly webSocketDebuggerUrl: string }
+/** What this test reads of a DevTools exception or console argument. */
+interface RemoteObject { readonly type: string, readonly value?: unknown, readonly description?: string }
+interface ExceptionDetails { readonly text: string, readonly exception?: RemoteObject }
+/** What this test reads of each DevTools method's reply; any other reply it ignores. */
+interface Replies {
+  'Runtime.evaluate': { readonly result?: { readonly value?: unknown }, readonly exceptionDetails?: ExceptionDetails };
+  'Page.captureScreenshot': { readonly data: string };
+}
+type Reply<M extends string> = M extends keyof Replies ? Replies[M] : unknown;
+/** A DevTools message: the reply to a request carries its id, and its result or an error. */
+interface Message<R> { readonly id?: number, readonly result: R, readonly error?: { readonly message: string } }
+/** The events this test reads; it passes over every other message. */
+type CdpEvent =
+  | { readonly method: 'Runtime.consoleAPICalled', readonly params: { readonly type: string, readonly args: readonly RemoteObject[] } }
+  | { readonly method: 'Runtime.exceptionThrown', readonly params: { readonly exceptionDetails: ExceptionDetails } };
+
+async function targets(): Promise<Target[]> {
   for (let i = 0; i < 60; i++) {
     try { const r = await fetch(`http://127.0.0.1:${PORT}/json`); return await r.json(); }
     catch { await sleep(250); }
@@ -23,11 +41,11 @@ async function targets() {
 }
 
 let id = 0;
-function rpc(ws, method, params = {}) {
+function rpc<M extends string>(ws: WebSocket, method: M, params = {}) {
   const mid = ++id;
-  return new Promise<any>((res, rej) => {
-    const on = (e) => {
-      const m = JSON.parse(e.data);
+  return new Promise<Reply<M>>((res, rej) => {
+    const on = (e: MessageEvent) => {
+      const m: Message<Reply<M>> = JSON.parse(e.data);
       if (m.id !== mid) return;
       ws.removeEventListener('message', on);
       m.error ? rej(new Error(`${method}: ${m.error.message}`)) : res(m.result);
@@ -37,15 +55,16 @@ function rpc(ws, method, params = {}) {
   });
 }
 
-const logs = [], errors = [];
+const logs: string[] = [], errors: string[] = [];
 
 async function main() {
-  const t = (await targets()).find(x => x.type === 'page');
+  // A fresh Chrome opens about:blank (chromeArgs), a page target.
+  const t = (await targets()).find(x => x.type === 'page') as Target;
   const ws = new WebSocket(t.webSocketDebuggerUrl);
-  await new Promise<any>(r => ws.addEventListener('open', r));
+  await new Promise<Event>(r => ws.addEventListener('open', r));
 
   ws.addEventListener('message', (e) => {
-    const m = JSON.parse(e.data);
+    const m: CdpEvent = JSON.parse(e.data);
     if (m.method === 'Runtime.consoleAPICalled') {
       const txt = m.params.args.map(a => a.value ?? a.description ?? a.type).join(' ');
       logs.push(`${m.params.type}: ${txt}`);
@@ -63,13 +82,13 @@ async function main() {
   await rpc(ws, 'Page.navigate', { url: URL_ });
   await sleep(1500);
 
-  const evalJs = async (expr) => {
+  const evalJs = async (expr: string) => {
     const r = await rpc(ws, 'Runtime.evaluate', { expression: expr, awaitPromise: true, returnByValue: true });
     if (r.exceptionDetails) errors.push(r.exceptionDetails.exception?.description || r.exceptionDetails.text);
     return r.result?.value;
   };
 
-  const step = async (label, expr) => {
+  const step = async (label: string, expr: string) => {
     const v = await evalJs(expr);
     console.log(`  ${label}: ${JSON.stringify(v)}`);
     return v;

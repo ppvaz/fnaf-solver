@@ -12,9 +12,9 @@ import {
   makeReplaySnapshot,
 } from '../src/microtrainer.ts';
 
-const expectThrow = (fn, pattern) => assert.throws(fn, (error: any) => !pattern || pattern.test(error.message));
+const expectThrow = (fn: () => unknown, pattern: RegExp) => assert.throws(fn, (error: unknown) => !pattern || pattern.test((error as Error).message));
 const scheduler = { policyId: 'arcade-test', policyVersion: '1', selectionProbability: 1 };
-function exercise(id, atMs) {
+function exercise(id: string, atMs: number) {
   const snapshot = makeReplaySnapshot({
     id: `snapshot-${id}`, sessionId: 'arcade-source', beliefSequence: atMs,
     clock: 'host-monotonic-ms', atMs, profileId: 'arcade-profile',

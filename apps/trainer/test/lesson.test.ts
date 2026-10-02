@@ -10,14 +10,27 @@ const BASE = process.argv.find(arg => /^https?:\/\//.test(arg)) ||
 const PORT = 9337;
 const chrome = spawn(chromeBinary(),
   chromeArgs(PORT, mkdtempSync(join(tmpdir(), 'm7l-'))), { stdio: 'ignore' });
-const sleep = (ms) => new Promise<any>(r => setTimeout(r, ms));
+const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
+/** An entry of Chrome's /json target list; a fresh Chrome opens about:blank, a page target. */
+interface Target { readonly type: string, readonly webSocketDebuggerUrl: string }
+interface ExceptionDetails { readonly text: string, readonly exception?: { readonly description?: string } }
+/** What this test reads of each DevTools method's reply; any other reply it ignores. */
+interface Replies {
+  'Runtime.evaluate': { readonly result?: { readonly value?: unknown }, readonly exceptionDetails?: ExceptionDetails };
+  'Page.captureScreenshot': { readonly data: string };
+}
+type Reply<M extends string> = M extends keyof Replies ? Replies[M] : unknown;
+/** A DevTools message: the reply to a request carries its id, and its result or an error. */
+interface Message<R> { readonly id?: number, readonly result: R, readonly error?: { readonly message: string } }
+/** The event this test reads; it passes over every other message. */
+interface CdpEvent { readonly method: 'Runtime.exceptionThrown', readonly params: { readonly exceptionDetails: ExceptionDetails } }
 let id = 0;
-const rpc = (ws, m, p = {}) => new Promise<any>((res, rej) => { const mid = ++id;
-  const on = e => { const x = JSON.parse(e.data); if (x.id !== mid) return;
+const rpc = <M extends string>(ws: WebSocket, m: M, p = {}) => new Promise<Reply<M>>((res, rej) => { const mid = ++id;
+  const on = (e: MessageEvent) => { const x: Message<Reply<M>> = JSON.parse(e.data); if (x.id !== mid) return;
     ws.removeEventListener('message', on); x.error ? rej(new Error(x.error.message)) : res(x.result); };
   ws.addEventListener('message', on); ws.send(JSON.stringify({ id: mid, method: m, params: p })); });
 
-const errs = [], fails = [];
+const errs: string[] = [], fails: string[] = [];
 
 // tapped as soon as each step falls due — a metronomically perfect player
 // `hold` decides whether the bot lets go: a held input stays down until the
@@ -29,7 +42,7 @@ const errs = [], fails = [];
 // stalled units walked, the monitor was forced down, and since the coach
 // grades what the game took (2026-09-30) the camera taps after it were
 // refused on a seed-dependent share of runs.
-const player = (hold) => `window.__auto && clearInterval(window.__auto);
+const player = (hold: boolean) => `window.__auto && clearInterval(window.__auto);
 window.__held = null;
 window.__heldUntil = 0;
 window.__release = () => { if (window.__held) {
@@ -57,22 +70,22 @@ const AUTOPLAYER = player(true);
 
 async function main() {
   for (let i = 0; i < 60; i++) { try { await fetch(`http://127.0.0.1:${PORT}/json`); break; } catch { await sleep(200); } }
-  const t = (await (await fetch(`http://127.0.0.1:${PORT}/json`)).json()).find(x => x.type === 'page');
+  const t: Target = (await (await fetch(`http://127.0.0.1:${PORT}/json`)).json()).find((x: Target) => x.type === 'page');
   const ws = new WebSocket(t.webSocketDebuggerUrl);
-  await new Promise<any>(r => ws.addEventListener('open', r));
-  ws.addEventListener('message', e => { const m = JSON.parse(e.data);
+  await new Promise<Event>(r => ws.addEventListener('open', r));
+  ws.addEventListener('message', e => { const m: CdpEvent = JSON.parse(e.data);
     if (m.method === 'Runtime.exceptionThrown') errs.push(m.params.exceptionDetails.exception?.description || m.params.exceptionDetails.text); });
   await rpc(ws, 'Runtime.enable'); await rpc(ws, 'Page.enable');
   await rpc(ws, 'Page.navigate', { url: BASE }); await sleep(1500);
 
-  const ev = async (expr) => { const r = await rpc(ws, 'Runtime.evaluate', { expression: expr, awaitPromise: true, returnByValue: true });
+  const ev = async (expr: string) => { const r = await rpc(ws, 'Runtime.evaluate', { expression: expr, awaitPromise: true, returnByValue: true });
     if (r.exceptionDetails) errs.push(r.exceptionDetails.exception?.description || r.exceptionDetails.text);
     return r.result?.value; };
-  const expect = async (label, expr, want) => { const v = await ev(expr);
+  const expect = async (label: string, expr: string, want: unknown) => { const v = await ev(expr);
     const ok = JSON.stringify(v) === JSON.stringify(want);
     console.log(`  ${ok ? 'ok  ' : 'FAIL'} ${label}: ${JSON.stringify(v)}${ok ? '' : ` (want ${JSON.stringify(want)})`}`);
     if (!ok) fails.push(label); return v; };
-  const show = async (l, e) => { console.log(`  ${l}: ${JSON.stringify(await ev(e))}`); };
+  const show = async (l: string, e: string) => { console.log(`  ${l}: ${JSON.stringify(await ev(e))}`); };
 
   await ev('localStorage.removeItem("m7.progress")');
   await ev('location.reload()'); await sleep(1200);

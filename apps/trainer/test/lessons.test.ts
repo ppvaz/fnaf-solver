@@ -11,16 +11,20 @@ import assert from 'node:assert/strict';
 import * as C from '@sixam/source/fnaf2';
 import { Coach, playPress } from '../src/coach.ts';
 import { LESSONS, MINUS7_CYCLE, lessonSim } from '../src/curriculum.ts';
+import type { Step } from '../src/curriculum.ts';
+
+type Lesson = typeof LESSONS[number];
 
 const TAP_FRAMES = 6;   // a light held 100 ms, as lesson.test.ts's player holds it
 
+// Played only for a lesson with a script, or with one given.
 /** A metronomic player: every cue pressed on the first frame it is due. */
-function play(lesson, { seed, script = lesson.script, seconds }) {
+function play(lesson: Lesson, { seed, script = lesson.script as readonly Step[], seconds }: { seed: number, script?: readonly Step[], seconds: number }) {
   const sim = lessonSim(lesson, { seed, record: false });
-  const passes = [];
+  const passes: boolean[] = [];
   const coach = new Coach(sim, { script, tolGood: lesson.tol?.tolGood, tolOk: lesson.tol?.tolOk,
     onCycle: ok => passes.push(ok) });
-  let releases = [];
+  let releases: [number, string][] = [];
   while (sim.alive && !sim.won && sim.t < seconds) {
     sim.tick();
     coach.update();
@@ -38,8 +42,9 @@ function play(lesson, { seed, script = lesson.script, seconds }) {
   }
   return { sim, coach, passes };
 }
-const refused = coach => coach.trace.filter(row => row.grade === 'refused').map(row => `${row.cycle}:${row.stepId}`);
-const lessonById = id => LESSONS.find(lesson => lesson.id === id);
+const refused = (coach: Coach) => coach.trace.filter(row => row.grade === 'refused').map(row => `${row.cycle}:${row.stepId}`);
+// Called only with the id of a lesson LESSONS lists.
+const lessonById = (id: string) => LESSONS.find(lesson => lesson.id === id) as Lesson;
 
 // The control: the pattern taught until 2026-09-30 must be caught, or this
 // check measures nothing.
@@ -51,14 +56,16 @@ const lessonById = id => LESSONS.find(lesson => lesson.id === id);
 
 // The taught cycle's gated gaps are the sourced animations plus two frames.
 {
-  const at = id => MINUS7_CYCLE.find(step => step.id === id).at;
-  const gap = (a, b) => Math.round((at(b) - at(a)) * C.FPS);
+  // Called only with ids MINUS7_CYCLE lists.
+  const at = (id: string) => (MINUS7_CYCLE.find(step => step.id === id) as Step).at;
+  const gap = (a: string, b: string) => Math.round((at(b) - at(a)) * C.FPS);
   assert.equal(gap('mask-on', 'mask-off'), C.MASK_ANIM_ON + 2);
   assert.ok(gap('mask-off', 'flash-hall') >= C.MASK_ANIM_OFF + 2);
   assert.ok(gap('monitor-up', 'cam-10') >= C.MONITOR_ANIM_UP + 2);
   assert.ok(MINUS7_CYCLE.every(step => !step.win), 'STEP_WINDOWS belong to CYCLE_SCRIPT\'s geometry, not this one');
-  const wind = MINUS7_CYCLE.at(-1);
-  assert.ok(wind.at + wind.hold <= 5, 'the wind hold ends by the next anchor');
+  // MINUS7_CYCLE is a non-empty literal list.
+  const wind = MINUS7_CYCLE.at(-1) as Step;
+  assert.ok(wind.at + Number(wind.hold) <= 5, 'the wind hold ends by the next anchor');
 }
 
 // Every scripted lesson: every press taken; a drill passes; a lesson that can

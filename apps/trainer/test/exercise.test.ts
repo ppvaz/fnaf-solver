@@ -6,6 +6,7 @@ import {
   makeExercise, replayExercise, validateCommitment, validateExercise,
   validateExerciseAttempt, validateExerciseEvent, validateResolution,
 } from '@sixam/trainer/training';
+import type { Resolution } from '@sixam/trainer/training';
 
 const base = makeExercise({
   id: 'exercise-001', kind: 'prediction', sourceSessionId: 'session-001',
@@ -21,7 +22,7 @@ const base = makeExercise({
   },
 });
 
-const prompted = atMs => ({
+const prompted = (atMs: number) => ({
   schema: EXERCISE_EVENT_SCHEMA, exerciseId: base.id, seq: 0,
   type: 'PROMPTED', clock: base.clock, atMs,
 });
@@ -57,8 +58,9 @@ assert.equal(validateResolution({
 
 const completed = replayExercise(base, [prompted(100), committed(), resolved()]);
 assert.equal(completed.disposition, 'COMPLETED');
-assert.equal(completed.commitment.choice, 'left-vent');
-assert.equal(completed.resolution.outcome, 'left-vent');
+assert.equal(completed.commitment?.choice, 'left-vent');
+// A COMPLETED replay carries its resolution.
+assert.equal((completed.resolution as Resolution).outcome, 'left-vent');
 assert.equal(base.commitment, null, 'replay mutated the frozen initial record');
 assert.equal(validateExerciseEvent(prompted(100), base).type, 'PROMPTED');
 
@@ -73,7 +75,7 @@ const cancelled = replayExercise(base, [prompted(100), {
 }]);
 assert.equal(cancelled.disposition, 'CANCELLED');
 assert.equal(cancelled.resolution, 'CENSORED');
-assert.equal(cancelled.cancellation.reason, 'critical-cue');
+assert.equal(cancelled.cancellation?.reason, 'critical-cue');
 
 const ambiguous = replayExercise(base, [prompted(100), {
   schema: EXERCISE_EVENT_SCHEMA, exerciseId: base.id, seq: 1,
@@ -81,20 +83,20 @@ const ambiguous = replayExercise(base, [prompted(100), {
   cancellation: { schema: CANCELLATION_SCHEMA, reason: 'ambiguous-outcome', atMs: 160 },
 }]);
 assert.equal(ambiguous.disposition, 'CANCELLED');
-assert.equal(ambiguous.cancellation.reason, 'ambiguous-outcome');
+assert.equal(ambiguous.cancellation?.reason, 'ambiguous-outcome');
 
 const expiredBeforeCommit = replayExercise(base, [prompted(100), {
   schema: EXERCISE_EVENT_SCHEMA, exerciseId: base.id, seq: 1,
   type: 'EXPIRED', atMs: 301,
 }]);
 assert.equal(expiredBeforeCommit.disposition, 'EXPIRED');
-assert.equal(expiredBeforeCommit.cancellation.reason, 'commit-deadline');
+assert.equal(expiredBeforeCommit.cancellation?.reason, 'commit-deadline');
 
 const expiredBeforeResolution = replayExercise(base, [prompted(100), committed(), {
   schema: EXERCISE_EVENT_SCHEMA, exerciseId: base.id, seq: 2,
   type: 'EXPIRED', atMs: 701,
 }]);
-assert.equal(expiredBeforeResolution.cancellation.reason, 'resolution-deadline');
+assert.equal(expiredBeforeResolution.cancellation?.reason, 'resolution-deadline');
 
 const attempt = validateExerciseAttempt({
   schema: EXERCISE_ATTEMPT_SCHEMA, exerciseId: base.id,
@@ -104,7 +106,7 @@ const attempt = validateExerciseAttempt({
 });
 assert.ok(Object.isFrozen(attempt));
 
-const expectThrow = (fn, message) => assert.throws(fn, undefined, message);
+const expectThrow = (fn: () => unknown, message: string) => assert.throws(fn, message);
 expectThrow(() => replayExercise(base, [prompted(100), committed(1, 301)]),
   'late commitment was accepted');
 expectThrow(() => replayExercise(base, [prompted(100), resolved(2), committed(1)]),

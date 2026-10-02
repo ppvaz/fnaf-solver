@@ -13,12 +13,17 @@
 import { readFileSync } from 'node:fs';
 import { stripTypeScriptTypes } from 'node:module';
 
-const out = {};
+// Node 22.13 added it; the @types/node this repository pins (22.10) does not declare it yet.
+declare module 'node:module' {
+  export function stripTypeScriptTypes(code: string, options?: { mode?: 'strip' | 'transform', sourceMap?: boolean, sourceUrl?: string }): string;
+}
+
+const out: Record<string, string> = {};
 for (const file of process.argv.slice(2)) {
   try {
     out[file] = stripTypeScriptTypes(readFileSync(file, 'utf8'), { mode: 'strip' });
   } catch (error) {
-    console.error(`strip-types: ${file}: ${error.message}`);
+    console.error(`strip-types: ${file}: ${(error as Error).message}`);
     process.exit(1);
   }
 }
