@@ -143,6 +143,12 @@
           ]
         },
         {
+          "file": "packages/play/src/campaign/lifecycle-state.ts",
+          "evidence": [
+            "python-classifier"
+          ]
+        },
+        {
           "file": "packages/play/src/campaign/modern-campaign-ports.ts",
           "evidence": [
             "native-screen",

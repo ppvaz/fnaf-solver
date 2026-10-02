@@ -16,6 +16,7 @@ import {
   AdbDeviceLocalArtifactExecutor, OBSERVER_INTERVAL_BOUND_MS, STATIC_TERMINAL_MAX_MS, STATIC_TERMINAL_WAIT_MS,
 } from '../src/campaign/adb-device-local-executor.ts';
 import { SHARED_HID_RELEASE } from '../src/campaign/hid-schedule.ts';
+import type { LifecycleState } from '../src/campaign/lifecycle-state.ts';
 
 type ExecutorOptions = NonNullable<ConstructorParameters<typeof AdbDeviceLocalArtifactExecutor>[0]>;
 type ExecutorEvent = Parameters<NonNullable<ExecutorOptions['onEvent']>>[0];
@@ -82,8 +83,8 @@ writeFileSync(fakeAdb, '#!/bin/sh\ncase "$*" in *" logcat "*|*" test -e "*|*" to
 chmodSync(fakeAdb, 0o755);
 
 /** Replays `states`, then repeats the last one; records when each read returned. */
-const scripted = (states: string[], { readMs = 0 }: { readMs?: number } = {}) => {
-  const reads: { state: string, at: number }[] = [];
+const scripted = (states: LifecycleState[], { readMs = 0 }: { readMs?: number } = {}) => {
+  const reads: { state: LifecycleState, at: number }[] = [];
   return {
     reads,
     observe: async () => {
@@ -169,7 +170,7 @@ try {
     const sharedHid = { write: async (value: string) => { writes.push(value); } };
     let executor = null as AdbDeviceLocalArtifactExecutor | null;
     let stoppedAfter = null as number | null;
-    const states = ['night', 'static', 'static', 'static', 'static'];
+    const states: LifecycleState[] = ['night', 'static', 'static', 'static', 'static'];
     let index = 0;
     const observe = async () => {
       const state = states[Math.min(index, states.length - 1)];

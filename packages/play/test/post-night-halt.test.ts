@@ -22,6 +22,7 @@ import {
 import { SHARED_HID_RELEASE, compileDeviceLocalHidSchedule } from '../src/campaign/hid-schedule.ts';
 import type { HidSchedule } from '../src/campaign/hid-schedule.ts';
 import type { NightTiming } from '../src/campaign/campaign.ts';
+import type { LifecycleState } from '../src/campaign/lifecycle-state.ts';
 
 type ExecutorEvent = Parameters<NonNullable<NonNullable<ConstructorParameters<typeof AdbDeviceLocalArtifactExecutor>[0]>['onEvent']>>[0];
 
@@ -355,7 +356,7 @@ try {
   // in the record, every one inside a live night) and a static before any
   // night neither halt nor end the night.
   for (const states of [['night', 'night', 'newspaper', 'night', 'night', 'sixam'],
-    ['static', 'night', 'night', 'night', 'sixam']]) {
+    ['static', 'night', 'night', 'night', 'sixam']] satisfies LifecycleState[][]) {
     const h = harness();
     let reads = 0;
     const executor = new AdbDeviceLocalArtifactExecutor({ serial: 'fixture-device', adb: fakeAdb, readyDelayMs: 1,

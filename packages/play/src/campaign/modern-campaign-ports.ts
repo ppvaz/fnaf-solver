@@ -33,6 +33,7 @@ import { LESSON_LINE, lessonForNight, lessonLines, lessonOriginLine } from '../c
 import { phoneWallAt, planTimedStart, waitUntilHostMs } from './timed-start.ts';
 import { DeviceCampaignRunner } from './campaign-runner.ts';
 import { venueDriftDuringRun } from './venue.ts';
+import { parseLifecycleLine } from './lifecycle-state.ts';
 
 type AnchorResult = Awaited<ReturnType<typeof anchorNightRelease>>;
 /** What one observer script printed, and how it exited. */
@@ -134,8 +135,7 @@ async function captureAndObserve(bridge: AdbDeviceBridge, serial: string, script
 
 async function lifecycle(bridge: AdbDeviceBridge, serial: string) {
   const result = await captureAndObserve(bridge, serial, LIFECYCLE_OBSERVER, ['--sensor', 'screencap-2400x1080']);
-  const line = lastLine(result.stdout);
-  return line.startsWith('state=') ? line.slice(6) : null;
+  return parseLifecycleLine(lastLine(result.stdout));
 }
 
 async function title(bridge: AdbDeviceBridge, serial: string, model: string) {

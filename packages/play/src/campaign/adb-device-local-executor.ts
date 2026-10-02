@@ -21,6 +21,7 @@ import {
   SHARED_HID_RELEASE, compileDeviceLocalHidSchedule, sharedScheduleBody,
 } from './hid-schedule.ts';
 import type { HidSchedule } from './hid-schedule.ts';
+import type { LifecycleState } from './lifecycle-state.ts';
 import { compactControlSample, controlEffectVerdict, effectTransitions } from './control-effect.ts';
 import type { MaskTransition, MonitorTransition } from './control-effect.ts';
 import { boundedRemotePath, renderDeviceLocalScript } from './device-shell.ts';
@@ -156,7 +157,7 @@ export const POST_NIGHT_STATIC_HALT = 'post-night-static';
 // Screens that end a scheduled night on their FIRST positive read once a night
 // has been observed. These are not animations a healthy run passes through,
 // and two of them put menu controls under the schedule's own tap coordinates.
-const TERMINAL_SCREENS = new Set(['title', 'gameover', 'sixam']);
+const TERMINAL_SCREENS: ReadonlySet<LifecycleState> = new Set<LifecycleState>(['title', 'gameover', 'sixam']);
 // The title HID is already ready when the intro observes the office. A
 // handoff that takes longer than this has already spent the model's measured
 // late margin, so the attempt is invalid rather than a silently phase-shifted
@@ -278,7 +279,7 @@ export class AdbDeviceLocalArtifactExecutor {
   declare serial: string;
   declare adb: string;
   declare readyDelayMs: number;
-  declare observe: (() => Promise<string | null>) | null;
+  declare observe: (() => Promise<LifecycleState | null>) | null;
   declare observeArm: (() => ArmSample | Promise<ArmSample>) | null;
   declare observeControlState: (() => unknown) | null;
   declare pollMs: number;
@@ -305,7 +306,7 @@ export class AdbDeviceLocalArtifactExecutor {
   declare nightAuthorizedAt: number | null;
   declare deviceLocal: boolean;
   constructor(options: { serial?: string, adb?: string, readyDelayMs?: number,
-    observe?: (() => Promise<string | null>) | null, observeArm?: (() => ArmSample | Promise<ArmSample>) | null,
+    observe?: (() => Promise<LifecycleState | null>) | null, observeArm?: (() => ArmSample | Promise<ArmSample>) | null,
     observeControlState?: (() => unknown) | null, sharedHid?: (() => SharedHid | null) | null,
     closeSharedHid?: (() => unknown) | null, pollMs?: number, onEvent?: (event: ExecutorEvent) => void,
     onOutput?: (chunk: string) => void, timing?: ExecutorTiming, nightReleaseOwner?: string } = {}) {
@@ -1314,7 +1315,7 @@ export class AdbDeviceLocalArtifactExecutor {
           await new Promise<void>(resolve => setTimeout(resolve, this.pollMs));
           if (stopObserver || this.child !== processIdentity || !this.running) break;
           const observeStartedAt = Date.now();
-          let state: string | null = null;
+          let state: LifecycleState | null = null;
           let unreadable = false;
           try { state = this.observe ? await this.observe() : null; }
           catch { unreadable = true; }

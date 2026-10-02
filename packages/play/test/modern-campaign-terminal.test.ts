@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 import type { VenueIdentity } from '@sixam/kernel';
 import { terminalFromExecution } from '../src/campaign/modern-campaign-ports.ts';
+import { parseLifecycleLine } from '../src/campaign/lifecycle-state.ts';
 
 const target = { night: 5, mode: 'story' };
 
@@ -103,4 +104,16 @@ test('venue drift during a run counts only drift fields both readings know', asy
   assert.deepEqual(venueDriftDuringRun(before, { ...before, timeZone: 'UTC', companionVersion: '2' }), [],
     'the note fields are recorded at preflight, never drift');
   assert.deepEqual(venueDriftDuringRun(null, before), [], 'no preflight reading, nothing to compare');
+});
+
+// lifecycle-observe.py prints one `state=<name>` line or an `unknown=` refusal.
+// A name outside the screens it is known to print is a renamed or misspelled
+// state, not a screen: read as a positive non-night it would vote the night
+// over, so it fails loudly instead.
+test('a lifecycle line names a known screen, refuses, or throws', () => {
+  assert.equal(parseLifecycleLine('state=night'), 'night');
+  assert.equal(parseLifecycleLine('state=titleDialog'), 'titleDialog');
+  assert.equal(parseLifecycleLine('unknown=no-signature-matched'), null);
+  assert.equal(parseLifecycleLine(''), null);
+  assert.throws(() => parseLifecycleLine('state=gameOver'), /unknown lifecycle state "gameOver"/);
 });
