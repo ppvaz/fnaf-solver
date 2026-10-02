@@ -347,7 +347,9 @@ Each entry below broke a gate, a test or a replay during the ADR 0002 moves.
     over zero winners; an import placed before its `sys.path` insert; a
     regex-escaped path. `tools/test-sibling-paths.ts` refuses the literal forms.
     A listing, a template or a string inside another language still has to be
-    read, and a test that finds nothing to check must fail.
+    read, and a test that finds nothing to check must fail. A file-extension
+    filter moves with the files too: the fact register read only `.js`, so from
+    the TypeScript move it found no producer and its gate passed over none.
 
 15. **A path inside a pinned record names that record's tree, not this
     checkout.** A winner's `sources` keys, `fnaf1-winner.ts`'s `RUNNER` and the

@@ -17,9 +17,55 @@
         "grid-anchor",
         "grid-luma-fallback"
       ],
-      "strongestAvailable": null,
-      "weakestInUse": null,
-      "producers": []
+      "strongestAvailable": "native-stroke",
+      "weakestInUse": "grid-luma-fallback",
+      "producers": [
+        {
+          "file": "packages/play/bin/grade/tap-stall-audit.ts",
+          "evidence": [
+            "native-stroke"
+          ]
+        },
+        {
+          "file": "packages/play/bin/probe/intersection-state-gate.ts",
+          "evidence": [
+            "native-stroke",
+            "grid-anchor"
+          ]
+        },
+        {
+          "file": "packages/play/src/campaign/adb-device-local-executor.ts",
+          "evidence": [
+            "native-stroke",
+            "grid-luma-fallback"
+          ]
+        },
+        {
+          "file": "packages/play/src/campaign/control-effect.ts",
+          "evidence": [
+            "native-stroke"
+          ]
+        },
+        {
+          "file": "packages/play/src/campaign/modern-campaign-ports.ts",
+          "evidence": [
+            "native-stroke",
+            "grid-anchor"
+          ]
+        },
+        {
+          "file": "packages/play/src/sensors/fnaf2/button-strokes.ts",
+          "evidence": [
+            "native-stroke"
+          ]
+        },
+        {
+          "file": "packages/play/src/sensors/fnaf2/calibration-state-rule.ts",
+          "evidence": [
+            "grid-anchor"
+          ]
+        }
+      ]
     },
     "monitorUp": {
       "question": "is the monitor raised?",
@@ -29,9 +75,44 @@
         "native-stroke",
         "grid-anchor"
       ],
-      "strongestAvailable": null,
-      "weakestInUse": null,
-      "producers": []
+      "strongestAvailable": "native-explicit",
+      "weakestInUse": "grid-anchor",
+      "producers": [
+        {
+          "file": "packages/play/bin/probe/intersection-state-gate.ts",
+          "evidence": [
+            "native-stroke",
+            "native-explicit",
+            "grid-anchor"
+          ]
+        },
+        {
+          "file": "packages/play/src/campaign/modern-campaign-ports.ts",
+          "evidence": [
+            "native-stroke",
+            "grid-anchor"
+          ]
+        },
+        {
+          "file": "packages/play/src/sensors/fnaf2/button-strokes.ts",
+          "evidence": [
+            "native-stroke"
+          ]
+        },
+        {
+          "file": "packages/play/src/sensors/fnaf2/calibration-state-rule.ts",
+          "evidence": [
+            "grid-anchor"
+          ]
+        },
+        {
+          "file": "packages/play/src/sensors/fnaf2/monitor-rule.ts",
+          "evidence": [
+            "native-explicit",
+            "grid-anchor"
+          ]
+        }
+      ]
     },
     "screenIdentity": {
       "question": "which screen is on the display?",
@@ -40,9 +121,59 @@
         "native-screen",
         "python-classifier"
       ],
-      "strongestAvailable": null,
-      "weakestInUse": null,
-      "producers": []
+      "strongestAvailable": "native-screen",
+      "weakestInUse": "python-classifier",
+      "producers": [
+        {
+          "file": "packages/play/bin/probe/intersection-state-gate.ts",
+          "evidence": [
+            "native-screen"
+          ]
+        },
+        {
+          "file": "packages/play/src/campaign/adb-device-local-executor.ts",
+          "evidence": [
+            "native-screen"
+          ]
+        },
+        {
+          "file": "packages/play/src/campaign/control-effect.ts",
+          "evidence": [
+            "native-screen"
+          ]
+        },
+        {
+          "file": "packages/play/src/campaign/modern-campaign-ports.ts",
+          "evidence": [
+            "native-screen",
+            "python-classifier"
+          ]
+        },
+        {
+          "file": "packages/play/src/campaign/night-anchor.ts",
+          "evidence": [
+            "native-screen"
+          ]
+        },
+        {
+          "file": "packages/play/src/phone/night-onset.ts",
+          "evidence": [
+            "native-screen"
+          ]
+        },
+        {
+          "file": "packages/play/src/sensors/fnaf2/calibration-state-rule.ts",
+          "evidence": [
+            "native-screen"
+          ]
+        },
+        {
+          "file": "packages/play/src/sensors/fnaf2/monitor-rule.ts",
+          "evidence": [
+            "native-screen"
+          ]
+        }
+      ]
     },
     "nightOrigin": {
       "question": "when did the night actually start?",
@@ -53,9 +184,37 @@
         "python-classifier",
         "intro-handoff"
       ],
-      "strongestAvailable": null,
-      "weakestInUse": null,
-      "producers": []
+      "strongestAvailable": "native-onset-latch",
+      "weakestInUse": "intro-handoff",
+      "producers": [
+        {
+          "file": "packages/play/src/campaign/adb-device-local-executor.ts",
+          "evidence": [
+            "native-screen",
+            "python-classifier",
+            "intro-handoff"
+          ]
+        },
+        {
+          "file": "packages/play/src/campaign/modern-campaign-ports.ts",
+          "evidence": [
+            "native-onset-latch",
+            "python-classifier"
+          ]
+        },
+        {
+          "file": "packages/play/src/campaign/night-anchor.ts",
+          "evidence": [
+            "native-onset-latch"
+          ]
+        },
+        {
+          "file": "packages/play/src/phone/night-onset.ts",
+          "evidence": [
+            "native-onset-latch"
+          ]
+        }
+      ]
     }
   }
 }

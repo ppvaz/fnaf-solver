@@ -498,7 +498,7 @@ export function anchorAimFor(winnerHash: string) {
 // Where the facts' producers live: the phone's code in Play and the desktop's runners. Until the ADR
 // 0002 moves most of them sat in tools/device, and a directory a producer leaves must be followed here.
 const SEARCH_DIRS = ['packages/play/src', 'packages/play/bin', 'packages/play/games', 'apps/desktop/src', 'apps/desktop/bin'];
-const SKIP = /^(test-|_)|\.test\.js$|fact-register/;
+const SKIP = /^(test-|_)|\.test\.(?:js|ts)$|fact-register/;
 
 function sources() {
   const out = [];
@@ -509,7 +509,8 @@ function sources() {
       const rel = join(dir, name);
       const full = join(ROOT, rel);
       if (statSync(full).isDirectory()) { walk(rel); continue; }
-      if (!/\.(mjs|js)$/.test(name) || SKIP.test(name)) continue;
+      // The producers have been TypeScript since the 2026-09-30 and 10-01 moves; a register that read only .js found none.
+      if (!/\.(mjs|js|ts)$/.test(name) || SKIP.test(name)) continue;
       out.push({ path: rel, text: readFileSync(full, 'utf8') });
     }
   };

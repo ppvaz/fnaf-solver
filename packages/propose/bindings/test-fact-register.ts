@@ -36,6 +36,9 @@ let failed = 0;
 const fail = message => { failed += 1; process.stdout.write(`  FAIL ${message}\n`); };
 
 const register = build();
+// A register that finds no producer checks nothing: every fact has one in the directories it searches.
+for (const fact of Object.keys(FACTS))
+  if (!register.facts[fact].producers.length) fail(`${fact}: no producer found under ${register.generatedFrom.join(', ')}`);
 for (const [fact, info] of Object.entries(register.facts)) {
   const rank = FACTS[fact].evidenceRanking;
   const best = (info as any).strongestAvailable;
