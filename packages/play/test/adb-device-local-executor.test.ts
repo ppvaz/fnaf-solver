@@ -341,6 +341,10 @@ chmodSync(fakeAdb, 0o755);
 const gateAdb = join(fakeRoot, 'gate-adb');
 writeFileSync(gateAdb, '#!/bin/sh\ncase "$*" in *" logcat "*|*" test -e "*|*" touch "*) exit 0;; esac\ncat >/dev/null\nexec tail -f /dev/null\n');
 chmodSync(gateAdb, 0o755);
+// A device whose night-go marker cannot be written: every other signal lands.
+const nightGoLostAdb = join(fakeRoot, 'night-go-lost-adb');
+writeFileSync(nightGoLostAdb, '#!/bin/sh\ncase "$*" in *" touch "*night-go*) echo "touch: read-only" >&2; exit 1;; *" logcat "*|*" test -e "*|*" touch "*) exit 0;; esac\ncat >/dev/null\nexec tail -f /dev/null\n');
+chmodSync(nightGoLostAdb, 0o755);
 const effectAdb = join(fakeRoot, 'effect-adb');
 writeFileSync(effectAdb, '#!/bin/sh\ncase "$*" in *" logcat "*) echo "I am_anr : [0,1,com.scottgames.fnaf2,0,Input dispatching timed out]"; exit 0;; *" test -e "*|*" touch "*) exit 0;; esac\ncat >/dev/null\nexec tail -f /dev/null\n');
 chmodSync(effectAdb, 0o755);
@@ -572,6 +576,28 @@ try {
     'the deciding detector must be retained in the sample');
   assert.equal(sourcedSamples?.[0].panelSequence, 900 + Number(sourcedSamples?.[0].sequence),
     'the camera read sequence must be retained beside the frame sequence it was paired with');
+
+  // A night-go marker that cannot be written leaves the gated stream parked
+  // at its arm-ready wait. The drop guard still ends the run, but the reason
+  // the schedule never started must be in the record.
+  const lostGoLog: ExecutorEvent[] = [];
+  let lostGoObservations = 0;
+  let lostGoSequence = 0;
+  const lostGo = new AdbDeviceLocalArtifactExecutor({ serial: 'fixture-device', adb: nightGoLostAdb,
+    readyDelayMs: 1, pollMs: 250, observe: async () => ++lostGoObservations > 20 ? 'gameover' : 'night',
+    onEvent: event => lostGoLog.push(event),
+    timing: { pollMs: 1, armSettleMs: 0, armObservationWindowMs: 500, gateRetryGapMs: 0, maskSettleMs: 0,
+      gateMinSlackMs: 10, gateBudgetMinMs: 10, gateBudgetMaxMs: 20, gateBudgetReserveMs: 40 },
+    observeArm: async () => ({ sequence: ++lostGoSequence + 500, highlights: ['cam:8', 'cam:11'], viewing: null }),
+    observeControlState: async () => ({ sequence: ++lostGoSequence, ageUs: 10,
+      screen: 'FNAF2_NIGHT', monitorUp: false, maskOn: true, maskEvidence: 'fixture' }) });
+  await assert.rejects(() => lostGo.execute(fastGateRequest), /camera arm verification ended/,
+    'a night whose schedule never released cannot verify its arm');
+  const lostGoEvent = lostGoLog.find(event => event.type === 'hid.night-go-failed');
+  assert.match(String(lostGoEvent?.error), /could not signal device-local arm gate/,
+    'a night-go marker that could not be written must be recorded with its cause');
+  assert.ok(!lostGoLog.some(event => event.type === 'hid.night-go-released'),
+    'a lost night-go must not be recorded as released');
 
   // A frame the fitted rule refuses still refutes mask-on when the grid is far
   // too bright for an opaque mask, so the gate corrects rather than ending the

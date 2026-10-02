@@ -47,6 +47,18 @@ const broken = new DeviceCampaignRunner({ spec: full, ports: {
 await assert.rejects(() => broken.run(), /intro-timeout/);
 assert.equal(broken.machine.state, 'ABORTED');
 assert.equal(cleaned, true);
+// A cleanup or release that fails behind a port failure does not replace that
+// failure, and it is not lost either: each is a campaign event.
+const unclean = new DeviceCampaignRunner({ spec: full, ports: {
+  ...ports,
+  intro: async () => { throw new Error('intro-timeout'); },
+  cleanup: async () => { throw new Error('cleanup-broke'); },
+  releaseAll: async () => { throw new Error('release-broke'); },
+}});
+await assert.rejects(() => unclean.run(), /intro-timeout/);
+assert.deepEqual(unclean.machine.events.filter(item => item.type !== 'campaign.state' && item.type !== 'campaign.attempt')
+  .map(item => [item.type, item.data.error]),
+[['campaign.cleanup-failed', 'cleanup-broke'], ['campaign.release-failed', 'release-broke']]);
 console.log('device campaign runner: ordered target execution, hold-before-actuation, and cleanup pass');
 
 let attempts = 0;

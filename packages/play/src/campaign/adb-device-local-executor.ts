@@ -198,6 +198,8 @@ const MASK_OFF_GRID_LUMA_FLOOR = 25;
 const execFile = promisify(execFileCallback);
 
 function fail(message: string): never { throw new TypeError(`adb device-local executor: ${message}`); }
+/** A failure as one bounded line for an event record. */
+const messageOf = (error: unknown) => String(error instanceof Error ? error.message : error).slice(0, 240);
 const isEpipe = (error: unknown) => typeof error === 'object' && error !== null
   && 'code' in error && error.code === 'EPIPE';
 /** What a failed adb call said: its stderr when it wrote one, else the error's message. */
@@ -607,7 +609,7 @@ export class AdbDeviceLocalArtifactExecutor {
             }
           }
         } catch (caught) {
-          error = String(caught instanceof Error ? caught.message : caught).slice(0, 240);
+          error = messageOf(caught);
         }
         this.onEvent({ type: 'lifecycle.actuation-stopped', at: Date.now(), reason, method,
           ...(error === null ? {} : { error }) });
@@ -1411,7 +1413,7 @@ export class AdbDeviceLocalArtifactExecutor {
             // vote rather than destroying the votes already cast. It does not
             // hold a halted run open past its window either.
             try { if (await endAtHaltWindow(observedAt)) break; }
-            catch { /* the stop's own failure is teardown's to report */ }
+            catch (error) { this.onEvent({ type: 'lifecycle.stop-failed', at: Date.now(), error: messageOf(error) }); }
             continue;
           }
           try {
@@ -1496,8 +1498,11 @@ export class AdbDeviceLocalArtifactExecutor {
                         phaseEndMs: schedule.gated.armReadyAtMs });
                     this.onEvent({ type: 'hid.night-go-released', at: nightGoAt,
                       originUncertaintyMs: 50 });
+                  } catch (error) {
+                    // The drop guard below still governs the run; the record
+                    // says why the schedule never started.
+                    this.onEvent({ type: 'hid.night-go-failed', at: Date.now(), error: messageOf(error) });
                   }
-                  catch { /* the drop guard below still governs the run */ }
                 }
               }
               nightObserved = true;
@@ -1564,9 +1569,10 @@ export class AdbDeviceLocalArtifactExecutor {
               }
             }
             if (await endAtHaltWindow(observedAt)) break;
-          } catch {
+          } catch (error) {
             // A stop that fails while ending the run leaves the decision
             // already recorded above; teardown still releases the stream.
+            this.onEvent({ type: 'lifecycle.stop-failed', at: Date.now(), error: messageOf(error) });
           }
         }
       })() : Promise.resolve();

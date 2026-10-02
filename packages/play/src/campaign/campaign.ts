@@ -380,9 +380,15 @@ export class CampaignStateMachine {
     const record = { night: target.night, mode: target.mode, attempt: this.attempt, status: 'ACTIVE' };
     this.attempts.push(record);
     this.activeAttempt = record;
-    const attemptEvent = event(this.state, 'campaign.attempt', { night: target.night, attempt: this.attempt }, this.now());
-    this.events.push(attemptEvent); this.onEvent(attemptEvent);
+    this.record('campaign.attempt', { night: target.night, attempt: this.attempt });
     return this.snapshot();
+  }
+
+  /** Retain an event that does not move the state, in the current state. */
+  record(type: string, data: Readonly<Record<string, unknown>>) {
+    const record = event(this.state, type, data, this.now());
+    this.events.push(record);
+    this.onEvent(record);
   }
 
   acceptTerminal({ night, outcome, sixAm = false, why }: {night?: number, outcome?: string, sixAm?: boolean, why?: string} = {}) {

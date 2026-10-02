@@ -33,6 +33,8 @@ export interface CampaignPorts {
   releaseAll?: () => unknown;
 }
 
+const messageOf = (error: unknown) => error instanceof Error ? error.message : String(error);
+
 const required = (ports: Partial<CampaignPorts>, name: keyof CampaignPorts) => {
   if (typeof ports?.[name] !== 'function') throw new TypeError(`campaign runner requires ${name} port`);
   return ports[name];
@@ -119,12 +121,17 @@ export class DeviceCampaignRunner {
       return machine.result();
     } catch (error) {
       failed = true;
-      machine.abort(`campaign-port-failure: ${(error as Error).message}`);
-      try { await ports.cleanup?.(error); } catch { /* cleanup must not hide the original failure */ }
+      machine.abort(`campaign-port-failure: ${messageOf(error)}`);
+      // Cleanup must not hide the original failure, nor be lost behind it.
+      try { await ports.cleanup?.(error); }
+      catch (cleanupError) { machine.record('campaign.cleanup-failed', { error: messageOf(cleanupError) }); }
       throw error;
     } finally {
       try { await ports.releaseAll?.(); }
-      catch (error) { if (!failed) throw error; }
+      catch (error) {
+        if (!failed) throw error;
+        machine.record('campaign.release-failed', { error: messageOf(error) });
+      }
     }
   }
 }
