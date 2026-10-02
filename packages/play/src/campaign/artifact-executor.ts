@@ -7,7 +7,7 @@
  * legacy transport fallback.
  * CONTRACT:device-executor-v1.
  */
-import { deviceProfileGame } from '@sixam/source';
+import { deviceProfileGame, resolveDeviceProfile } from '@sixam/source';
 import { stableHash } from '@sixam/kernel/contracts';
 import { artifactActionTableFor } from '@sixam/source';
 import { isList, isOneOf, isRecord } from '@sixam/kernel';
@@ -111,6 +111,12 @@ const text = (value: unknown, label: string) => {
 /** The artifact action table for the game a resolved profile targets. */
 function actionTableOf(profile: unknown, label: string): ArtifactActionTable {
   try { return artifactActionTableFor(deviceProfileGame(profile).game); }
+  catch (error) { fail(`${label}: ${(error as Error).message}`); }
+}
+
+/** The profile resolved against its game's catalog; the game is refused first, by actionTableOf. */
+function resolvedProfileOf(profile: unknown, label: string): ResolvedDeviceProfile {
+  try { return resolveDeviceProfile(profile); }
   catch (error) { fail(`${label}: ${(error as Error).message}`); }
 }
 
@@ -289,10 +295,9 @@ function planReferences(manifest: unknown, compiledPlans: unknown, table: Artifa
 export function makeExecutorRequest({ manifest, profile: input, compiledPlans, mode = 'live', limits = {} }: {manifest?: unknown,
   profile?: unknown, compiledPlans?: readonly unknown[], mode?: string, limits?: { maxActions?: number, maxDurationMs?: number }} = {}) {
   if (!isRecord(input) || typeof input.id !== 'string') fail('resolved profile is required');
-  // A resolved profile, as resolveDeviceProfile returned it to the caller.
-  const profile = input as unknown as ResolvedDeviceProfile;
   if (mode !== 'live' && mode !== 'dry-run') fail(`unsupported execution mode ${JSON.stringify(mode)}`);
-  const table = actionTableOf(profile, 'resolved profile');
+  const table = actionTableOf(input, 'resolved profile');
+  const profile = resolvedProfileOf(input, 'resolved profile');
   const planRefs = planReferences(manifest, compiledPlans, table);
   const blocks: Record<string, unknown>[] = [];
   for (const plan of compiledPlans ?? []) {
@@ -338,9 +343,8 @@ export function validateExecutorRequest(request: unknown): ExecutorRequest {
     .map(key => text(artifact[key], `artifact.${key}`));
   if (!/^[a-f0-9]{64}$/.test(profileHash)) fail('artifact.profileHash must be a SHA-256 digest');
   if (!isRecord(request.profile) || typeof request.profile.id !== 'string') fail('request profile is missing');
-  // The profile's identity is its stable hash, checked next; its limits are read only where set.
-  const profile = request.profile as unknown as ResolvedDeviceProfile;
-  const table = actionTableOf(profile, 'request profile');
+  const table = actionTableOf(request.profile, 'request profile');
+  const profile = resolvedProfileOf(request.profile, 'request profile');
   if (stableHash(profile) !== profileStableHash)
     fail('artifact.profileStableHash does not match the resolved profile');
   if (!isList(artifact.plans) || artifact.plans.length === 0)

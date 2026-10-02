@@ -56,6 +56,15 @@ const gameless = { ...profile, targetBuild: 'fnaf2' };
 assert.throws(() => validateExecutorRequest(requestWith(ok.blocks[0].actions, { requestProfile: gameless })),
   /request profile: .*<package>:<version>/);
 
+// The request's profile is resolved, not trusted: a safety limit the executor
+// compares against must be a number, and a control map must name the game's controls.
+const stringLimit = { ...profile, limits: { ...profile.limits, maxActions: '64' } };
+assert.throws(() => validateExecutorRequest(requestWith(ok.blocks[0].actions, { requestProfile: stringLimit })),
+  /request profile: .*limits\.maxActions must be a positive integer/);
+const strayControl = { ...profile, controlMap: { ...profile.controlMap, turbo: { x: 1, y: 1 } } };
+assert.throws(() => validateExecutorRequest(requestWith(ok.blocks[0].actions, { requestProfile: strayControl })),
+  /request profile: .*controlMap names turbo/);
+
 // The FNaF 2 rules that moved into the cartridge still refuse, with the same words.
 const refuses = (actions: ReturnType<typeof action>[], pattern: RegExp, options?: RequestOptions) =>
   assert.throws(() => validateExecutorRequest(requestWith(actions, options)), pattern);
