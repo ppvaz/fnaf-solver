@@ -1,13 +1,15 @@
 // Draws at events the model already simulates, under sourcedEventDraws (dump e237/e324/e338/e351-e354/e377/e478-e489/e548).
 import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
+import type { Unit } from '../src/games/fnaf2/plant-model.ts';
+import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
 import * as C from '../src/games/fnaf2/config.ts';
 import { RNG_MULTIPLIER, RNG_INCREMENT, RNG_MASK, RNG_MODULUS } from '../src/games/fnaf2/rng.ts';
 
-const lcg = s => (s * RNG_MULTIPLIER + RNG_INCREMENT) & RNG_MASK;
-const after = (s, n) => { for (let i = 0; i < n; i++) s = lcg(s); return s; };
+const lcg = (s: number) => (s * RNG_MULTIPLIER + RNG_INCREMENT) & RNG_MASK;
+const after = (s: number, n: number) => { for (let i = 0; i < n; i++) s = lcg(s); return s; };
 /** Random(n) from a state: [value, next state], bit-exact to Rng.int(0, n-1). */
-const rnd = (s, n) => { const t = lcg(s); return [Math.floor((t / RNG_MODULUS) * n), t]; };
+const rnd = (s: number, n: number) => { const t = lcg(s); return [Math.floor((t / RNG_MODULUS) * n), t]; };
 const QUIET = { night: 7, seed: 5, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false,
                 boxEnabled: false, foxyEnabled: false };
 const pair = (extra = {}) => [new Sim({ ...QUIET, ...extra }), new Sim({ ...QUIET, ...extra, sourcedEventDraws: true })];
@@ -17,14 +19,14 @@ const pair = (extra = {}) => [new Sim({ ...QUIET, ...extra }), new Sim({ ...QUIE
   const [off, on] = pair();
   for (const s of [off, on]) {
     s.frame = 1000;
-    const u = s.units.find(x => x.id === 'withbonnie'); u.atOpening = true;
+    const u = s.units.find(x => x.id === 'withbonnie') as Unit; u.atOpening = true;   // one of the seven route units
     s.blackout = { active: true, until: s.frame + 1, by: u.name, unitId: u.id, masked: false, deadline: 0 };
   }
   const s0 = on.rng.state; assert.equal(off.rng.state, s0);
   off.tick(); on.tick();
   assert.equal(off.rng.state, s0, 'default: no draw on the failed branch');
   assert.equal(on.rng.state, lcg(s0), 'e478-e489: one Random(500)');
-  assert.equal(on.units.find(x => x.id === 'withbonnie').inside, true);
+  assert.equal(on.units.find(x => x.id === 'withbonnie')?.inside, true);
 }
 
 // Balloon Boy hops: stage 1 silent, stages 2-3 one cue, stage 4 two cues, e548 redraws a 4.
@@ -65,9 +67,9 @@ const pair = (extra = {}) => [new Sim({ ...QUIET, ...extra }), new Sim({ ...QUIE
 {
   const [off, on] = pair({ stalledEnabled: true });
   const s0 = on.rng.state;
-  for (const s of [off, on]) { const u = s.units.find(x => x.id === 'withchica'); u.idx = u.path.indexOf(2); s.advanceUnit(u); }
+  for (const s of [off, on]) { const u = s.units.find(x => x.id === 'withchica') as Unit; u.idx = u.path.indexOf(2); s.advanceUnit(u); }   // one of the seven route units
   assert.equal(off.rng.state, s0); assert.equal(on.rng.state, lcg(s0), 'e324');
-  assert.equal(on.units.find(x => x.id === 'withchica').path[on.units.find(x => x.id === 'withchica').idx], 6);
+  assert.equal((on.units.find(x => x.id === 'withchica') as Unit).path[(on.units.find(x => x.id === 'withchica') as Unit).idx], 6);   // one of the seven route units
 }
 
 // The cameras-up streak sending a Withered unit inside draws its Random(500) (e479-e482).
@@ -78,18 +80,18 @@ const pair = (extra = {}) => [new Sim({ ...QUIET, ...extra }), new Sim({ ...QUIE
   for (const s of [off, on]) {
     s.frame = f; s.monitor = 'up'; s.monAnim = 0;
     s.camsUpSince = f - C.entryStreakFrames(7) - 1;
-    s.units.find(x => x.id === 'withfreddy').atOpening = true;
+    (s.units.find(x => x.id === 'withfreddy') as Unit).atOpening = true;   // one of the seven route units
     s.tickUnits(f);
   }
   assert.equal(off.rng.state, s0, 'default: the streak entry draws nothing');
   assert.equal(on.rng.state, lcg(s0), 'e479-e482: one Random(500)');
-  assert.equal(on.units.find(x => x.id === 'withfreddy').inside, true);
-  assert.equal(off.units.find(x => x.id === 'withfreddy').inside, true);
+  assert.equal(on.units.find(x => x.id === 'withfreddy')?.inside, true);
+  assert.equal(off.units.find(x => x.id === 'withfreddy')?.inside, true);
 }
 
 // Off: the default is unchanged.
 {
-  const run = opts => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
+  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
   if (new Sim({ night: 7, seed: 1 }).opts.sourcedEventDraws === false)
     assert.equal(run({}), run({ sourcedEventDraws: false }), 'explicit off equals the default');
 }

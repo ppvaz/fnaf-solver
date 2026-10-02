@@ -27,15 +27,15 @@ import {
 import { AI_BY_NIGHT, aiCap } from '@sixam/source/fnaf2';
 import * as FPS_C from '@sixam/source/games/fnaf2/config.ts';
 
-const failures = [];
+const failures: string[] = [];
 let checks = 0;
 
-function ok(what, condition) {
+function ok(what: string, condition: unknown) {
   checks += 1;
   if (!condition) failures.push(what);
 }
 
-function eq(what, actual, expected) {
+function eq(what: string, actual: unknown, expected: unknown) {
   checks += 1;
   const a = JSON.stringify(actual);
   const e = JSON.stringify(expected);
@@ -200,7 +200,7 @@ ok('fnaf1 night 6 Freddy expects at least 5 moves an hour',
 // FNaF 4 Night 3 Foxy is the extreme case: bound 10, level 10.
 eq('fnaf4 night 3 Foxy passes every roll', opportunities('fnaf4', 3)[0].rolls.foxy.chance, 1);
 eq('rollsInHour counts whole periods only',
-  rollsInHour({ everyMs: 4000 }, 10_000, 0).opportunities, 2);
+  rollsInHour({ everyMs: 4000 } as Parameters<typeof rollsInHour>[0], 10_000, 0).opportunities, 2);   // only the period counts opportunities
 
 // --- structure: nothing may be uncited --------------------------------------
 for (const game of GAME_IDS) {
@@ -208,7 +208,7 @@ for (const game of GAME_IDS) {
   ok(`${game} clock cites its groups`, typeof model.clock.source === 'string'
     && model.clock.source.length > 0);
   ok(`${game} declares a win hour`, model.clock.winHour === 6);
-  ok(`${game} knows its package`, typeof PACKAGES[game] === 'string');
+  ok(`${game} knows its package`, typeof (PACKAGES as Partial<Record<string, string>>)[game] === 'string');   // any id may be missing
   for (const [index, row] of model.rows.entries()) {
     // FNaF 2's rows are translated from config.js, which cites its groups in
     // comments beside the table rather than per row; every other game's rows
@@ -219,9 +219,9 @@ for (const game of GAME_IDS) {
       row.night && typeof row.night.op === 'string');
   }
   for (const [id, roll] of Object.entries(model.rolls)) {
-    ok(`${game}.${id} roll cites a group`, Number.isInteger((roll as any).group));
-    ok(`${game}.${id} roll has a period`, (roll as any).everyMs > 0);
-    ok(`${game}.${id} roll has a bound`, (roll as any).bound > 0);
+    ok(`${game}.${id} roll cites a group`, Number.isInteger(roll.group));
+    ok(`${game}.${id} roll has a period`, roll.everyMs > 0);
+    ok(`${game}.${id} roll has a bound`, roll.bound > 0);
   }
 }
 
@@ -264,7 +264,7 @@ for (const game of GAME_IDS) {
   ok('the hub is actionable', follow.actionable.includes(follow.hub));
   // Every station has an approach and a return, and neither is empty -- that
   // is the travel cost a schedule has to carry.
-  for (const name of Object.keys(follow.stations)) {
+  for (const name of Object.keys(follow.stations) as Array<keyof typeof follow.stations>) {   // the keys of a literal record
     ok(`${name} has an approach walk`, follow.approaches[name].via.length > 0);
     ok(`${name} has a return walk`, follow.returns[name].via.length > 0);
   }
@@ -273,7 +273,7 @@ for (const game of GAME_IDS) {
   ok('the left door can be closed and flashed',
     follow.actions.leftDoor.close && follow.actions.leftDoor.flashlight);
   ok('the closet can be closed but not flashed',
-    follow.actions.closet.close && !(follow.actions.closet as any).flashlight);
+    follow.actions.closet.close && !(follow.actions.closet as Readonly<Record<string, unknown>>).flashlight);   // a key it lacks reads undefined
   eq('the bed has no station action', Object.keys(follow.actions.bed).length, 0);
   // The doors are reached by different hitzones and are never co-located.
   ok('the two doors are separate stations',
@@ -301,7 +301,7 @@ for (const game of GAME_IDS) {
 // frames and speeds that comment quotes: if someone edits a constant without
 // the bank, this fails.
 {
-  const durationMs = (frames, speed, rate = 60) => frames * 100 / (speed * rate) * 1000;
+  const durationMs = (frames: number, speed: number, rate = 60) => frames * 100 / (speed * rate) * 1000;
   const BANK = {                       // as read from build 296's animation bank
     mmonitorUp: { frames: 11, speed: 90, constant: FPS_C.MONITOR_ANIM_UP },
     mmonitorDown: { frames: 11, speed: 50, constant: FPS_C.MONITOR_ANIM_DOWN },

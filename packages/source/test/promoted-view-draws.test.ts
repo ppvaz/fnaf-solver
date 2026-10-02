@@ -3,6 +3,8 @@
 // rebuilt runtime split on this on all three nights (packages/source/recompile/README.md, "Winner schedules replayed").
 import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
+import type { Unit } from '../src/games/fnaf2/plant-model.ts';
+import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
 
 const SOURCED = { sourcedDropLightOrder: true, sourcedFoxyChain: true, sourcedSecondPass: true, sourcedSheetOrder: true,
                   sourcedViewDraws: true };
@@ -12,10 +14,10 @@ const QUIET = { night: 7, seed: 5, lethal: false, stalledEnabled: false, bbEnabl
 assert.throws(() => new Sim({ night: 1, sourcedPromotedViewDraws: true }), /requires sourcedViewDraws/);
 
 /** Random(100) draws spent by one call of drawViewed(part) with the monitor up on the Toy's room. */
-const viewDraws = (opts, id, part, setup) => {
+const viewDraws = (opts: Partial<SimOptions>, id: string, part: string, setup: (u: Unit, s: Sim) => void) => {
   const s = new Sim({ ...QUIET, ...SOURCED, ...opts });
-  const u = s.units.find(x => x.id === id);
-  s.viewing = 1; s.cam = u.path[u.idx];
+  const u = s.units.find(x => x.id === id) as Unit;   // one of the seven route units
+  s.viewing = 1; s.cam = u.path[u.idx] as number;   // a Toy waits on a camera
   setup(u, s);
   let n = 0;
   const int = s.rng.int.bind(s.rng);
@@ -25,8 +27,8 @@ const viewDraws = (opts, id, part, setup) => {
 };
 
 for (const [id, part] of [['toybonnie', 'g366'], ['toychica', 'g368'], ['toyfreddy', 'g419']]) {
-  const held = (u) => { u.pending = true; u.promoted = false; };      // a passed roll held at value 0 == 1
-  const promoted = (u) => { u.pending = true; u.promoted = true; };   // value 0 == 2
+  const held = (u: Unit) => { u.pending = true; u.promoted = false; };      // a passed roll held at value 0 == 1
+  const promoted = (u: Unit) => { u.pending = true; u.promoted = true; };   // value 0 == 2
   assert.equal(viewDraws({}, id, part, held), 1, `off: ${part} draws for any pending roll`);
   assert.equal(viewDraws({ sourcedPromotedViewDraws: true }, id, part, held), 0, `on: ${part} is silent at value 0 == 1`);
   assert.equal(viewDraws({ sourcedPromotedViewDraws: true }, id, part, promoted), 1, `on: ${part} draws at value 0 == 2`);
@@ -35,7 +37,7 @@ for (const [id, part] of [['toybonnie', 'g366'], ['toychica', 'g368'], ['toyfred
 // The fade counter: a roll into the stun marks nothing; the promotion, once B is 0, writes C = 10.
 {
   const s = new Sim({ ...QUIET, ...SOURCED, sourcedPromotedViewDraws: true });
-  const u = s.units.find(x => x.id === 'toyfreddy');
+  const u = s.units.find(x => x.id === 'toyfreddy') as Unit;   // one of the seven route units
   u.stunUntil = s.frame + 100;
   s.footstepPromote(u, true);
   assert.equal(u.promoted, false, 'stunned: the roll is not promoted');
@@ -48,7 +50,7 @@ for (const [id, part] of [['toybonnie', 'g366'], ['toychica', 'g368'], ['toyfred
 
 // Off leaves the default unchanged.
 {
-  const run = opts => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
+  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
   assert.equal(run({}), run({ sourcedPromotedViewDraws: false }), 'off equals the default');
 }
 

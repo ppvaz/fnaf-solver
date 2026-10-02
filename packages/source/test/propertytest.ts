@@ -15,7 +15,7 @@ const ACTIONS = [
   'cam:4', 'cam:7', 'cam:10', 'cam:11',
 ];
 
-function propertyOptions(seed) {
+function propertyOptions(seed: number) {
   return {
     seed,
     night: 4,
@@ -25,7 +25,7 @@ function propertyOptions(seed) {
   };
 }
 
-function actionTrace(seed, length) {
+function actionTrace(seed: number, length: number) {
   let state = (seed ^ 0x9e3779b9) >>> 0;
   const next = () => {
     state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
@@ -37,7 +37,7 @@ function actionTrace(seed, length) {
   }));
 }
 
-function drive(sim, trace) {
+function drive(sim: Sim, trace: ReturnType<typeof actionTrace>) {
   for (const { action, ticks } of trace) {
     sim.press(action);
     for (let tick = 0; tick < ticks; tick++) sim.tick();
@@ -45,7 +45,7 @@ function drive(sim, trace) {
   }
 }
 
-function minimalFailingSeed(seed, predicate) {
+function minimalFailingSeed(seed: number, predicate: (seed: number) => boolean) {
   for (const candidate of SEEDS) {
     if (candidate >= seed) break;
     if (predicate(candidate)) return candidate;
@@ -53,7 +53,7 @@ function minimalFailingSeed(seed, predicate) {
   return seed;
 }
 
-function runProperty(name, property) {
+function runProperty(name: string, property: (seed: number) => void) {
   for (const seed of SEEDS) {
     try {
       property(seed);
@@ -72,7 +72,7 @@ function runProperty(name, property) {
   }
 }
 
-function snapshotRoundTrip(seed) {
+function snapshotRoundTrip(seed: number) {
   const options = propertyOptions(seed);
   const trace = actionTrace(seed, 120);
   const continuation = actionTrace(seed ^ 0xa5a5a5a5, 100);
@@ -91,7 +91,7 @@ function snapshotRoundTrip(seed) {
     'restored event trace diverged from the original');
 }
 
-function deterministicTrace(seed) {
+function deterministicTrace(seed: number) {
   const options = propertyOptions(seed);
   const trace = actionTrace(seed ^ 0x13579bdf, 220);
   const first = new Sim(options);
@@ -104,7 +104,7 @@ function deterministicTrace(seed) {
     'same seed and actions produced different events');
 }
 
-function nightOneNeverArmsBalloonBoy(seed) {
+function nightOneNeverArmsBalloonBoy(seed: number) {
   assert.equal(C.canAct(1, 'bb'), false,
     'the sourced Night-1 reachability table must exclude Balloon Boy');
   const sim = new Sim({
@@ -124,7 +124,7 @@ function nightOneNeverArmsBalloonBoy(seed) {
   assert.equal(sim.bb.inside, false, 'Balloon Boy reached the office on Night 1');
   assert.equal(sim.events.some(event =>
     event.type === 'laugh' ||
-    (event.data && event.data.who === 'bb')), false,
+    (event as { readonly data?: { readonly who?: unknown } }).data?.who === 'bb'), false,   // an event without a `who` reads undefined
   'Balloon Boy emitted a route event on Night 1');
 }
 

@@ -1,9 +1,10 @@
 // Foxy's A/B chain under sourcedFoxyChain (dump g337/g349/g364/g389/g390/g573/g745/g824/g825/g846/g855/g864).
 import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
+import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
 import { RNG_MULTIPLIER, RNG_INCREMENT, RNG_MASK } from '../src/games/fnaf2/rng.ts';
 
-const lcg = s => (s * RNG_MULTIPLIER + RNG_INCREMENT) & RNG_MASK;
+const lcg = (s: number) => (s * RNG_MULTIPLIER + RNG_INCREMENT) & RNG_MASK;
 const ON = { sourcedDropLightOrder: true, sourcedFoxyChain: true };
 const fresh = (extra = {}) => {
   const s = new Sim({ night: 7, seed: 9, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false, boxEnabled: false, ...ON, ...extra });
@@ -98,12 +99,12 @@ assert.throws(() => new Sim({ night: 7, seed: 1, sourcedFoxyChain: true }), /req
 {
   const s = fresh({ lethal: true }); const fx = s.foxy; fx.loc = 'hall'; fx.gotYou = true; s.hallLit = true;
   s.viewing = 11; s.tickFoxyChain(130); assert.equal(s.alive, true, 'viewing a camera blocks g573');
-  s.viewing = 0; s.tickFoxyChain(131); assert.equal(s.alive, false); assert.equal(s.death.reason, 'foxy');
+  s.viewing = 0; s.tickFoxyChain(131); assert.equal(s.alive, false); assert.equal(s.death?.reason, 'foxy');
 }
 
 // Off: the default is unchanged.
 {
-  const run = opts => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify(x.events); };
+  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify(x.events); };
   if (new Sim({ night: 7, seed: 1 }).opts.sourcedFoxyChain === false)
     assert.equal(run({}), run({ sourcedFoxyChain: false }), 'explicit off equals the default');
 }
@@ -114,7 +115,7 @@ assert.throws(() => new Sim({ night: 7, seed: 1, sourcedFoxyChain: true }), /req
 {
   const base = { night: 7, seed: 11, sourcedDropLightOrder: true, sourcedFoxyChain: true,
     sourcedSheetOrder: true, sourcedSecondPass: true };
-  const drain = frameValue5 => {
+  const drain = (frameValue5: () => number) => {
     const s = new Sim({ ...base, frameMs: () => 1000 / 60, frameValue5 });
     s.foxy.B = 50;
     const before = s.foxy.B;

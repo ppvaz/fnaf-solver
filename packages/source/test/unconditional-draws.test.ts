@@ -1,9 +1,10 @@
 // The Office frame's unconditional random draws under sourcedUnconditionalDraws (dump g58/g59/g192/g822).
 import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
+import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
 import { RNG_MULTIPLIER, RNG_INCREMENT, RNG_MASK } from '../src/games/fnaf2/rng.ts';
 
-const lcg = (s, n = 1) => { for (let i = 0; i < n; i++) s = (s * RNG_MULTIPLIER + RNG_INCREMENT) & RNG_MASK; return s; };
+const lcg = (s: number, n = 1) => { for (let i = 0; i < n; i++) s = (s * RNG_MULTIPLIER + RNG_INCREMENT) & RNG_MASK; return s; };
 const QUIET = { night: 7, seed: 77, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false,
                 boxEnabled: false, foxyEnabled: false };
 
@@ -20,7 +21,7 @@ const QUIET = { night: 7, seed: 77, lethal: false, stalledEnabled: false, bbEnab
 {
   const s = new Sim({ ...QUIET, sourcedUnconditionalDraws: true, sourcedRandomImageDraw: true });
   const initialState = s.rng.state;
-  const seen = [];
+  const seen: Array<[number, number]> = [];
   const draw = s.rng.next.bind(s.rng);
   s.rng.next = () => { const v = draw(); seen.push([s.frame, s.rng.state]); return v; };
   const image = s.randomImageDraw.bind(s);
@@ -61,7 +62,7 @@ const QUIET = { night: 7, seed: 77, lethal: false, stalledEnabled: false, bbEnab
 // Order within a 5 s frame: g58/g59/g192, then the g337 rolls. No g822 repeat.
 {
   const s = new Sim({ ...QUIET, foxyEnabled: true, sourcedUnconditionalDraws: true });
-  const order = [];
+  const order: string[] = [];
   const draw = s.drawUnconditional.bind(s), five = s.onFiveSecond.bind(s);
   s.drawUnconditional = () => { if (s.frame === 300) order.push('timers'); return draw(); };
   s.onFiveSecond = () => { if (s.frame === 300) order.push('rolls'); return five(); };
@@ -71,7 +72,7 @@ const QUIET = { night: 7, seed: 77, lethal: false, stalledEnabled: false, bbEnab
 
 // Off: the default is unchanged.
 {
-  const run = opts => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
+  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
   if (new Sim({ night: 7, seed: 1 }).opts.sourcedUnconditionalDraws === false)
     assert.equal(run({}), run({ sourcedUnconditionalDraws: false }), 'explicit off equals the default');
 }

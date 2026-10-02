@@ -4,6 +4,8 @@
 // (g848-g854) is written after g488/g489, so under sourcedHallLatchOrder it follows the deferred latch reset.
 import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
+import type { Unit } from '../src/games/fnaf2/plant-model.ts';
+import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
 import { drainUnitStuns, setUnitStun, unitStunReady } from '../src/games/fnaf2/movement-clock.ts';
 
 const QUIET = { night: 7, seed: 5, lethal: false, bbEnabled: false, gfEnabled: false, boxEnabled: false, foxyEnabled: false };
@@ -17,7 +19,7 @@ assert.throws(() => new Sim({ ...QUIET, sourcedMovementClock: true }), /requires
 {
   const s = new Sim({ ...QUIET, ...WEIGHTED });
   s.decidePath = 1;
-  const u = s.units.find(x => x.id === 'withfreddy');
+  const u = s.units.find(x => x.id === 'withfreddy') as Unit;   // one of the seven route units
   u.idx = u.path.indexOf(3); u.pending = true;
   setUnitStun(s, u, 2.5);
   s.routePass(1);
@@ -33,7 +35,7 @@ assert.throws(() => new Sim({ ...QUIET, sourcedMovementClock: true }), /requires
 // Every B writer uses the same counter: camera flash, route return, repel, and Toy Bonnie's arrival.
 {
   const s = new Sim({ ...QUIET, ...WEIGHTED });
-  const u = s.units.find(x => x.id === 'withfreddy');
+  const u = s.units.find(x => x.id === 'withfreddy') as Unit;   // one of the seven route units
   u.idx = u.path.indexOf(3);
   s.stunCam(3, 7.25);
   assert.equal(s.unitStunLeft(u), 7.25);
@@ -42,7 +44,7 @@ assert.throws(() => new Sim({ ...QUIET, sourcedMovementClock: true }), /requires
   u.idx = u.path.indexOf('blindB'); u.promoted = true; s.maskOn = true; s.maskAnim = 0;
   assert.equal(s.sourcedRouteStep(u, s.frame, 'move'), 'returned');
   assert.equal(s.unitStunLeft(u), 1500);
-  const toy = s.units.find(x => x.id === 'toybonnie');
+  const toy = s.units.find(x => x.id === 'toybonnie') as Unit;   // one of the seven route units
   toy.idx = toy.path.length - 2;
   s.advanceUnit(toy);
   assert.equal(s.unitStunLeft(toy), 300);
@@ -66,9 +68,9 @@ assert.throws(() => new Sim({ ...QUIET, sourcedMovementClock: true }), /requires
 
 // The promotion read: a flash on loop L = 1000 writes stunUntil 1400.
 {
-  const promotable = (opts, f) => {
+  const promotable = (opts: Partial<SimOptions>, f: number) => {
     const s = new Sim({ ...QUIET, ...opts });
-    const u = s.units.find(x => x.id === 'toybonnie');
+    const u = s.units.find(x => x.id === 'toybonnie') as Unit;   // one of the seven route units
     u.stunUntil = 1400;
     return s.footstepPromotable(u, f);
   };
@@ -79,9 +81,9 @@ assert.throws(() => new Sim({ ...QUIET, sourcedMovementClock: true }), /requires
 
 // The Night 1 discard (g356): Toy Chica's accepted roll is discarded on the loop her B is first read 0.
 {
-  const discard = (opts, f) => {
+  const discard = (opts: Partial<SimOptions>, f: number) => {
     const s = new Sim({ ...QUIET, night: 1, sourcedRouteForks: true, ...opts });
-    const u = s.units.find(x => x.id === 'toychica');
+    const u = s.units.find(x => x.id === 'toychica') as Unit;   // one of the seven route units
     u.stunUntil = 1400;
     return s.sourcedRouteStep(u, f);
   };
@@ -94,10 +96,10 @@ assert.throws(() => new Sim({ ...QUIET, sourcedMovementClock: true }), /requires
 {
   const SOURCED = { sourcedDropLightOrder: true, sourcedFoxyChain: true, sourcedSecondPass: true, sourcedSheetOrder: true,
                     sourcedHallLatchOrder: true, frameMs: () => 50 / 3, frameValue5: () => 1 };
-  const lastPin = (opts) => {
+  const lastPin = (opts: Partial<SimOptions>) => {
     const s = new Sim({ ...QUIET, ...SOURCED, stalledEnabled: true, ...opts });
     for (const k of Object.keys(s.ai)) s.ai[k] = 0;
-    const u = s.units.find(x => x.id === 'withfreddy');
+    const u = s.units.find(x => x.id === 'withfreddy') as Unit;   // one of the seven route units
     u.idx = u.path.indexOf('blindB');
     for (let i = 0; i < 20; i += 1) s.tick();
     s.lightHeld = true;
@@ -115,7 +117,7 @@ assert.throws(() => new Sim({ ...QUIET, sourcedMovementClock: true }), /requires
 
 // Off leaves the default unchanged.
 {
-  const run = opts => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
+  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
   assert.equal(run({}), run({ sourcedBDrainOrder: false }), 'off equals the default');
 }
 

@@ -12,6 +12,7 @@ import {
 } from '../src/clockwork/index.ts';
 import { deviceProfileGame, resolveDeviceProfile, validateControlCommand } from '../src/clockwork/control-contracts.ts';
 import { stableHash } from '@sixam/kernel/contracts';
+import type { ControlDescriptor, GamePackage } from '@sixam/kernel/contracts';
 import { PlantModel } from '../src/games/fnaf2/plant.ts';
 
 const FNAF1 = 'com.scottgames.fivenightsatfreddys';
@@ -60,10 +61,10 @@ assert.equal(GAME_CONTROLS[FNAF1].cameraRange, 'UNKNOWN(unmapped-view-ids)');
 }
 
 // -- semantic-control-v1 is parametric by game.
-const command = (control, game?) => validateControlCommand({ schema: 'control-command-v1', id: 'c',
+const command = (control: string, game?: string) => validateControlCommand({ schema: 'control-command-v1', id: 'c',
   action: { kind: 'press', control }, requestedAt: { clock: 'game-frame', value: 0 },
   source: { controller: 'test' } }, game === undefined ? undefined : { game });
-const accepts = (control, game?) => { try { command(control, game); return true; } catch { return false; } };
+const accepts = (control: string, game?: string) => { try { command(control, game); return true; } catch { return false; } };
 
 for (const control of [...FNAF2_IDS, 'light', 'hall', 'ventL', 'ventR', 'cam:0', 'cam:12'])
   assert.ok(accepts(control, FNAF2), `FNaF 2 accepts ${control}`);
@@ -87,7 +88,7 @@ for (const control of ['cam:16', 'mute', 'x:1', 'cam:01'])
 assert.throws(() => command('cam:16'), /must be semantic/);
 
 // The FNaF 2 plant checks its commands against FNaF 2's catalog alone.
-assert.throws(() => new PlantModel(1, 2).apply({ schema: 'control-command-v1', id: 'p',
+assert.throws(() => new PlantModel().apply({ schema: 'control-command-v1', id: 'p',
   action: { kind: 'select', control: 'cam:13' }, requestedAt: { clock: 'game-frame', value: 0 },
   source: { controller: 'test' } }), /not a FNaF 2 control/);
 
@@ -118,16 +119,16 @@ assert.equal(resolveDeviceProfile({ ...profile, targetBuild: 'com.scottgames.fna
 
 // -- FNaF 2's artifact action table: the rules that were literals in
 //    apps/device/src/artifact-executor.js until D5, pinned here as moved.
-assert.equal(artifactActionTableFor(FNAF2), FNAF2_ARTIFACT_ACTIONS);
+assert.equal(FNAF2_ARTIFACT_ACTIONS, artifactActionTableFor(FNAF2));
 assert.deepEqual(FNAF2_ARTIFACT_ACTIONS.controls,
   [...FNAF2_IDS, 'cam:4', 'cam:5', 'cam:7', 'cam:8', 'cam:9', 'cam:10', 'cam:11']);
 assert.deepEqual(Object.keys(FNAF2_ARTIFACT_ACTIONS.kinds).sort(),
   ['compound', 'ensure', 'hold', 'observe-left', 'press', 'sweep-slot', 'tap']);
-assert.deepEqual(FNAF2_ARTIFACT_ACTIONS.kinds.ensure.controls, ['monitor']);
-assert.deepEqual(FNAF2_ARTIFACT_ACTIONS.kinds['observe-left'].controls, ['leftVentLight']);
-assert.deepEqual(FNAF2_ARTIFACT_ACTIONS.kinds['sweep-slot'].controls,
+assert.deepEqual(FNAF2_ARTIFACT_ACTIONS.kinds.ensure?.controls, ['monitor']);
+assert.deepEqual(FNAF2_ARTIFACT_ACTIONS.kinds['observe-left']?.controls, ['leftVentLight']);
+assert.deepEqual(FNAF2_ARTIFACT_ACTIONS.kinds['sweep-slot']?.controls,
   ['cam:4', 'cam:5', 'cam:7', 'cam:8', 'cam:9', 'cam:10', 'cam:11']);
-assert.deepEqual(FNAF2_ARTIFACT_ACTIONS.kinds.tap.controls, FNAF2_ARTIFACT_ACTIONS.controls);
+assert.deepEqual(FNAF2_ARTIFACT_ACTIONS.kinds.tap?.controls, FNAF2_ARTIFACT_ACTIONS.controls);
 assert.deepEqual(JSON.parse(JSON.stringify(FNAF2_ARTIFACT_ACTIONS.compounds)), {
   hallvent: { control: 'hallLight', ventControl: 'rightVentLight' },
   hallraise: { control: 'hallLight' }, maskraise: {}, camdrop: { control: 'cameraFeedLight' },
@@ -135,7 +136,7 @@ assert.deepEqual(JSON.parse(JSON.stringify(FNAF2_ARTIFACT_ACTIONS.compounds)), {
 assert.deepEqual(JSON.parse(JSON.stringify(FNAF2_ARTIFACT_ACTIONS.armVerification)),
   { cameras: [1, 12], firstAction: 'wind' });
 // The descriptors' action kinds are generated from that table.
-const actionsOf = id => controlCatalogFor(FNAF2).controls.find(control => control.id === id).actions;
+const actionsOf = (id: string) => (controlCatalogFor(FNAF2).controls.find(control => control.id === id) as ControlDescriptor).actions;   // both ids below are FNaF 2 controls
 assert.deepEqual(actionsOf('monitor'), ['ensure', 'tap', 'press', 'hold', 'compound']);
 assert.deepEqual(actionsOf('leftVentLight'), ['tap', 'press', 'hold', 'compound', 'observe-left']);
 for (const game of [FNAF1, FNAF3, FNAF4]) {
@@ -144,7 +145,7 @@ for (const game of [FNAF1, FNAF3, FNAF4]) {
 }
 
 // -- the catalog shape is enforced when a game is defined.
-const minimal = { schema: 'control-catalog-v1', game: 'com.scottgames.test', title: 'T',
+const minimal = { schema: 'control-catalog-v1', game: 'com.scottgames.test' as GamePackage, title: 'T',   // a package no game registers, on purpose
   controls: [{ id: 'button', aliases: [], binding: { adapter: 'touch', contact: 'tap', anchor: 'screen' },
     requires: {}, observes: 'UNKNOWN(no-effect-reader)' }],
   cameras: { range: null }, modelControls: [], auxiliaryPoints: [], artifactActions: null, sources: ['test'] };

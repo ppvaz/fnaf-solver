@@ -1,10 +1,12 @@
 // Dump route forks and gates behind sourcedRouteForks (docs/evidence/withered-freddy-route-night7-20260915.json).
 import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
+import type { Unit } from '../src/games/fnaf2/plant-model.ts';
+import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
 import { Rng } from '../src/games/fnaf2/rng.ts';
 
-const sim = (night, extra = {}) => new Sim({ night, seed: 7, lethal: false, sourcedRouteForks: true, ...extra });
-const unit = (s, id) => s.units.find(u => u.id === id);
+const sim = (night: number, extra = {}) => new Sim({ night, seed: 7, lethal: false, sourcedRouteForks: true, ...extra });
+const unit = (s: Sim, id: string) => s.units.find(u => u.id === id) as Unit;   // every id below is one of the seven route units
 
 // g744: one bit-exact Random(2)+1 draw.
 {
@@ -68,7 +70,7 @@ for (const night of [7, 3]) {
 {
   const off = new Sim({ night: 7, seed: 7, lethal: false, sourcedRouteForks: false }); const u = unit(off, 'withfreddy'); u.idx = u.path.indexOf(3);
   off.decidePath = 2; assert.equal(off.sourcedRouteStep(u, 1), null); off.advanceUnit(u); assert.equal(u.path[u.idx], 'blindB');
-  const run = opts => { const s = new Sim({ night: 7, seed: 11, lethal: false, durationFrames: 3600, ...opts }); for (let i = 0; i < 3600; i++) s.tick(); return JSON.stringify(s.events); };
+  const run = (opts: Partial<SimOptions>) => { const s = new Sim({ night: 7, seed: 11, lethal: false, durationFrames: 3600, ...opts }); for (let i = 0; i < 3600; i++) s.tick(); return JSON.stringify(s.events); };
   assert.notEqual(run({ sourcedRouteForks: false }), run({ sourcedRouteForks: true }), 'on changes the night (at least the per-second draw)');
   // Until the default flips (bundles must be re-emitted first), the default is off and equals explicit off.
   if (new Sim({ night: 7, seed: 1 }).opts.sourcedRouteForks === false)

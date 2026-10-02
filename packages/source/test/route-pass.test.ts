@@ -4,6 +4,8 @@
 // before Toy Chica's promotion test.
 import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
+import type { Unit } from '../src/games/fnaf2/plant-model.ts';
+import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
 
 const BASE = { night: 1, seed: 5, lethal: false, bbEnabled: false, gfEnabled: false, boxEnabled: false, foxyEnabled: false,
                sourcedRouteForks: true, sourcedRollDraws: true, sourcedPromotedMoves: true, sourcedRollsBeforeMoves: true };
@@ -11,15 +13,15 @@ const BASE = { night: 1, seed: 5, lethal: false, bbEnabled: false, gfEnabled: fa
 assert.throws(() => new Sim({ night: 1, sourcedRoutePass: true }), /requires sourcedPromotedMoves and sourcedRollsBeforeMoves/);
 
 /** Toy Bonnie and Toy Chica both on CAM 09 with a passed roll and value 1 at 0; one loop of the route logic. */
-const loop = (opts) => {
+const loop = (opts: Partial<SimOptions>) => {
   const s = new Sim({ ...BASE, ...opts });
   for (const id of ['toybonnie', 'toychica']) {
-    const u = s.units.find(x => x.id === id);
+    const u = s.units.find(x => x.id === id) as Unit;   // one of the seven route units
     u.idx = 0; u.pending = true; u.promoted = false; u.stunUntil = -1;
   }
   s.frame = 100;
   if (opts.sourcedRoutePass) s.routePass(s.frame); else s.tickUnits(s.frame);
-  const at = id => { const u = s.units.find(x => x.id === id); return [u.path[u.idx], u.pending]; };
+  const at = (id: string) => { const u = s.units.find(x => x.id === id) as Unit; return [u.path[u.idx], u.pending]; };   // one of the seven route units
   return { bonnie: at('toybonnie'), chica: at('toychica') };
 };
 
@@ -34,7 +36,7 @@ const loop = (opts) => {
 
 // Off leaves the default unchanged.
 {
-  const run = opts => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
+  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
   assert.equal(run({}), run({ sourcedRoutePass: false }), 'off equals the default');
 }
 

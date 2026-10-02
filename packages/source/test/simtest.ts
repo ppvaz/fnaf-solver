@@ -9,7 +9,7 @@ import { Sim } from '@sixam/source/fnaf2';
 {
   const gate = new Sim({ seed: 1, worst: true, bbEnabled: false, foxyEnabled: false,
     gfEnabled: false, boxEnabled: false, powerEnabled: false, record: false });
-  const wbGate = gate.units.find(u => u.id === 'withbonnie');
+  const wbGate = gate.units.find(u => u.id === 'withbonnie') as C.Unit;   // one of the seven route units
   wbGate.idx = wbGate.path.length - 2; // CAM 05 -> left opening requires cams up
   gate.frame = C.MO_FRAMES;
   gate.onFiveSecond();
@@ -25,7 +25,7 @@ import { Sim } from '@sixam/source/fnaf2';
   // source.
   const lightGate = new Sim({ seed: 3, worst: true, bbEnabled: false, foxyEnabled: false,
     gfEnabled: false, boxEnabled: false, powerEnabled: false, record: false });
-  const litWb = lightGate.units.find(u => u.id === 'withbonnie');
+  const litWb = lightGate.units.find(u => u.id === 'withbonnie') as C.Unit;   // one of the seven route units
   litWb.idx = 1; // source CAM 07 -> hall stage 1 (g381) is light-gated
   lightGate.press('light'); lightGate.tick(); lightGate.release('light');
   litWb.pending = true;
@@ -33,12 +33,12 @@ import { Sim } from '@sixam/source/fnaf2';
   if (!litWb.pending || litWb.idx !== 1)
     throw new Error('W. Bonnie crossed a sourced light-gated edge while latch was active');
   while (lightGate.frame < C.FPS) lightGate.tick();
-  if (litWb.pending || litWb.idx !== 2)
+  if (litWb.pending || (litWb.idx as number) !== 2)   // the ticks above move him
     throw new Error('W. Bonnie did not cross after the office-light latch cleared');
 
   const ungated = new Sim({ seed: 4, worst: true, bbEnabled: false, foxyEnabled: false,
     gfEnabled: false, boxEnabled: false, powerEnabled: false, record: false });
-  const lateWb = ungated.units.find(u => u.id === 'withbonnie');
+  const lateWb = ungated.units.find(u => u.id === 'withbonnie') as C.Unit;   // one of the seven route units
   lateWb.idx = 3; lateWb.pending = true; // CAM 01 -> CAM 05 (g383) has no light gate
   ungated.press('light'); ungated.tick(); ungated.release('light');
   ungated.tickUnits(ungated.frame);
@@ -47,7 +47,7 @@ import { Sim } from '@sixam/source/fnaf2';
 
   const ventLight = new Sim({ seed: 5, worst: true, bbEnabled: false, foxyEnabled: false,
     gfEnabled: false, boxEnabled: false, record: false });
-  const ventWb = ventLight.units.find(u => u.id === 'withbonnie');
+  const ventWb = ventLight.units.find(u => u.id === 'withbonnie') as C.Unit;   // one of the seven route units
   ventWb.idx = 1; ventWb.pending = true;
   ventLight.press('ventR'); ventLight.tick(); ventLight.release('ventR');
   if (!ventWb.pending)
@@ -58,7 +58,7 @@ import { Sim } from '@sixam/source/fnaf2';
 
   const threshold = new Sim({ seed: 6, bbEnabled: false, foxyEnabled: false,
     gfEnabled: false, boxEnabled: false, powerEnabled: false, record: false });
-  const tc = threshold.units.find(u => u.id === 'toychica');
+  const tc = threshold.units.find(u => u.id === 'toychica') as C.Unit;   // one of the seven route units
   tc.idx = tc.path.length - 1; tc.atOpening = true;
   threshold.press('mask');
   if (!tc.atOpening)
@@ -73,7 +73,7 @@ import { Sim } from '@sixam/source/fnaf2';
 
   const maskedArrival = new Sim({ seed: 7, bbEnabled: false, foxyEnabled: false,
     gfEnabled: false, boxEnabled: false, powerEnabled: false, record: false });
-  const arrivingTc = maskedArrival.units.find(u => u.id === 'toychica');
+  const arrivingTc = maskedArrival.units.find(u => u.id === 'toychica') as C.Unit;   // one of the seven route units
   arrivingTc.idx = arrivingTc.path.length - 2;
   maskedArrival.press('mask');
   maskedArrival.advanceUnit(arrivingTc);
@@ -82,7 +82,7 @@ import { Sim } from '@sixam/source/fnaf2';
 
   const tbCue = new Sim({ seed: 1, bbEnabled: false, foxyEnabled: false,
     gfEnabled: false, boxEnabled: false, powerEnabled: false, record: false });
-  const cueTb = tbCue.units.find(u => u.id === 'toybonnie');
+  const cueTb = tbCue.units.find(u => u.id === 'toybonnie') as C.Unit;   // one of the seven route units
   cueTb.idx = cueTb.path.length - 1; cueTb.atOpening = true;
   cueTb.stunUntil = C.s(5); // his B opening timer, still draining
   tbCue.press('mask');
@@ -96,7 +96,7 @@ import { Sim } from '@sixam/source/fnaf2';
 
   const streakEncounter = new Sim({ seed: 8, bbEnabled: false, foxyEnabled: false,
     gfEnabled: false, boxEnabled: false, powerEnabled: false, record: false });
-  const encounterWb = streakEncounter.units.find(u => u.id === 'withbonnie');
+  const encounterWb = streakEncounter.units.find(u => u.id === 'withbonnie') as C.Unit;   // one of the seven route units
   encounterWb.idx = encounterWb.path.length - 1; encounterWb.atOpening = true;
   streakEncounter.tickUnits(0);
   if (!streakEncounter.blackout.active || streakEncounter.blackout.unitId !== 'withbonnie')
@@ -108,7 +108,7 @@ import { Sim } from '@sixam/source/fnaf2';
 
   const missedEncounter = new Sim({ seed: 9, worst: true, bbEnabled: false, foxyEnabled: false,
     gfEnabled: false, boxEnabled: false, powerEnabled: false, record: false });
-  const missedWb = missedEncounter.units.find(u => u.id === 'withbonnie');
+  const missedWb = missedEncounter.units.find(u => u.id === 'withbonnie') as C.Unit;   // one of the seven route units
   for (const u of missedEncounter.units) if (u !== missedWb) u.done = true;
   missedWb.idx = missedWb.path.length - 1; missedWb.atOpening = true;
   missedEncounter.tickUnits(0);
@@ -124,7 +124,7 @@ import { Sim } from '@sixam/source/fnaf2';
 
   const fuseEdge = new Sim({ seed: 10, bbEnabled: false, foxyEnabled: false,
     gfEnabled: false, boxEnabled: false, powerEnabled: false, record: false });
-  const edgeWb = fuseEdge.units.find(u => u.id === 'withbonnie');
+  const edgeWb = fuseEdge.units.find(u => u.id === 'withbonnie') as C.Unit;   // one of the seven route units
   edgeWb.idx = edgeWb.path.length - 1; edgeWb.atOpening = true;
   fuseEdge.tickUnits(0);
   while (fuseEdge.frame < C.maskGraceFrames(7) - C.MASK_ANIM_ON) fuseEdge.tick();
@@ -135,7 +135,7 @@ import { Sim } from '@sixam/source/fnaf2';
 
   const endgame = new Sim({ seed: 2, bbEnabled: false, foxyEnabled: false,
     gfEnabled: false, boxEnabled: false, powerEnabled: false, record: false });
-  const armedTb = endgame.units.find(u => u.id === 'toybonnie');
+  const armedTb = endgame.units.find(u => u.id === 'toybonnie') as C.Unit;   // one of the seven route units
   armedTb.idx = armedTb.path.length - 1; armedTb.atOpening = true; armedTb.stunUntil = 0;
   endgame.monitor = 'up'; endgame.camsUpSince = endgame.frame;
   endgame.tickUnits(endgame.frame);
@@ -148,7 +148,7 @@ import { Sim } from '@sixam/source/fnaf2';
 
   const mangleRaise = new Sim({ seed: 11, bbEnabled: false, foxyEnabled: false,
     gfEnabled: false, boxEnabled: false, powerEnabled: false, record: false });
-  const mg = mangleRaise.units.find(u => u.id === 'mangle');
+  const mg = mangleRaise.units.find(u => u.id === 'mangle') as C.Unit;   // one of the seven route units
   for (const u of mangleRaise.units) if (u !== mg) u.done = true;
   mg.idx = mg.path.length - 1; mg.atOpening = true;
   mangleRaise.setMonitor(true);
@@ -158,7 +158,7 @@ import { Sim } from '@sixam/source/fnaf2';
 
   const mangleMask = new Sim({ seed: 12, worst: true, bbEnabled: false, foxyEnabled: false,
     gfEnabled: false, boxEnabled: false, powerEnabled: false, record: false });
-  const maskedMg = mangleMask.units.find(u => u.id === 'mangle');
+  const maskedMg = mangleMask.units.find(u => u.id === 'mangle') as C.Unit;   // one of the seven route units
   for (const u of mangleMask.units) if (u !== maskedMg) u.done = true;
   maskedMg.idx = maskedMg.path.length - 1; maskedMg.atOpening = true;
   mangleMask.press('mask');
@@ -188,7 +188,7 @@ import { Sim } from '@sixam/source/fnaf2';
   // must survive that return.
   const orderedInside = new Sim({ seed: 13, bbEnabled: false, foxyEnabled: false,
     gfEnabled: false, boxEnabled: false, powerEnabled: false, record: false });
-  const orderedTb = orderedInside.units.find(u => u.id === 'withbonnie');
+  const orderedTb = orderedInside.units.find(u => u.id === 'withbonnie') as C.Unit;   // one of the seven route units
   for (const u of orderedInside.units) if (u !== orderedTb) u.done = true;
   orderedTb.inside = true;
   orderedInside.maskOn = true; orderedInside.maskAnim = 0;
@@ -207,8 +207,8 @@ import { Sim } from '@sixam/source/fnaf2';
   const insideTriggers = new Sim({ seed: 14, worst: true, bbEnabled: false,
     foxyEnabled: false, gfEnabled: false, boxEnabled: false, powerEnabled: false,
     record: false });
-  const insideTb = insideTriggers.units.find(u => u.id === 'toybonnie');
-  const insideMg = insideTriggers.units.find(u => u.id === 'mangle');
+  const insideTb = insideTriggers.units.find(u => u.id === 'toybonnie') as C.Unit;   // one of the seven route units
+  const insideMg = insideTriggers.units.find(u => u.id === 'mangle') as C.Unit;   // one of the seven route units
   for (const u of insideTriggers.units)
     if (u !== insideTb && u !== insideMg) u.done = true;
   insideTb.inside = true;
@@ -234,7 +234,7 @@ import { Sim } from '@sixam/source/fnaf2';
   // occupant to their sourced mid-route room with B = Random(500)/night.
   const repel = new Sim({ seed: 16, bbEnabled: false, foxyEnabled: false,
     gfEnabled: false, boxEnabled: false, powerEnabled: false, record: false });
-  const repelWb = repel.units.find(u => u.id === 'withbonnie');
+  const repelWb = repel.units.find(u => u.id === 'withbonnie') as C.Unit;   // one of the seven route units
   for (const u of repel.units) if (u !== repelWb) u.done = true;
   repelWb.idx = repelWb.path.length - 1; repelWb.atOpening = true;
   repel.rng.int = () => 499; // pin Random(500) to its max
@@ -250,7 +250,7 @@ import { Sim } from '@sixam/source/fnaf2';
   // marker 122, and B = 0 plus cameras up crosses him to 123 (group 546).
   const tbTimer = new Sim({ seed: 17, bbEnabled: false, foxyEnabled: false,
     gfEnabled: false, boxEnabled: false, powerEnabled: false, record: false });
-  const timerTb = tbTimer.units.find(u => u.id === 'toybonnie');
+  const timerTb = tbTimer.units.find(u => u.id === 'toybonnie') as C.Unit;   // one of the seven route units
   for (const u of tbTimer.units) if (u !== timerTb) u.done = true;
   timerTb.idx = timerTb.path.length - 2; timerTb.pending = true;
   tbTimer.tickUnits(0); // cams down + right vent light off: his gate is open
@@ -270,7 +270,7 @@ import { Sim } from '@sixam/source/fnaf2';
   // as cameras down — holding it stalls his entry (the Shooter25 stall).
   const rightLight = new Sim({ seed: 22, bbEnabled: false, foxyEnabled: false,
     gfEnabled: false, boxEnabled: false, powerEnabled: false, record: false });
-  const stallTb = rightLight.units.find(u => u.id === 'toybonnie');
+  const stallTb = rightLight.units.find(u => u.id === 'toybonnie') as C.Unit;   // one of the seven route units
   for (const u of rightLight.units) if (u !== stallTb) u.done = true;
   stallTb.idx = stallTb.path.length - 2; stallTb.pending = true;
   rightLight.press('ventR');
@@ -298,7 +298,7 @@ import { Sim } from '@sixam/source/fnaf2';
   if (fx.loc !== 'hall')
     throw new Error('Foxy retreated before his pinned B = 50 drained');
   foxyPin.tick();
-  if (fx.loc !== 'parts')
+  if ((fx.loc as string) !== 'parts')   // the tick above moves him
     throw new Error('over-exposed Foxy did not retreat once lights were off and B = 0');
 
   // The pin also blocks his 5-second roll: B must be 0 before he can lock on.
@@ -330,13 +330,13 @@ import { Sim } from '@sixam/source/fnaf2';
     throw new Error('Foxy D accumulated on night 2 before 2 AM');
   night2.frame = 2 * C.HOUR_FRAMES;
   for (let i = 0; i < C.FPS * 3; i++) night2.tick();
-  if (night2.foxy.D !== 3)
+  if ((night2.foxy.D as number) !== 3)   // the ticks above accrue it
     throw new Error('Foxy D did not resume its +1/s accrual at 2 AM on night 2');
 
   const mutex = new Sim({ seed: 15, bbEnabled: false, foxyEnabled: false,
     gfEnabled: false, boxEnabled: false, powerEnabled: false, record: false });
-  const mutexWb = mutex.units.find(u => u.id === 'withbonnie');
-  const mutexTf = mutex.units.find(u => u.id === 'toyfreddy');
+  const mutexWb = mutex.units.find(u => u.id === 'withbonnie') as C.Unit;   // one of the seven route units
+  const mutexTf = mutex.units.find(u => u.id === 'toyfreddy') as C.Unit;   // one of the seven route units
   mutex.monitor = 'up';
   mutexWb.idx = mutexWb.path.length - 2;
   mutex.advanceUnit(mutexWb);
@@ -354,7 +354,7 @@ const maskOffReady = maskOffTap + C.MASK_ANIM_OFF + 3;
 const monitorUpTap = maskOffReady + 3;
 const firstCamera = monitorUpTap + C.MONITOR_ANIM_UP + 3;
 
-const CYCLE = [
+const CYCLE: Array<[number, string, string]> = [
   [0,  'tap',  'monitor'],   // cams down
   [maskOnTap,  'tap', 'mask'], // mask on (clears Golden Freddy)
   [maskOffTap, 'tap', 'mask'], // mask off, after put-on animation and margin
@@ -376,15 +376,15 @@ export function run(opts = {}) {
   // Start of night: raise the cams, sit on CAM 11 and wind until 0:07, which is
   // the first anchor. From there the main cycle runs on :X2 / :X7.
   let anchor = C.s(7);
-  let queue = [
+  let queue: Array<[number, string, string]> = [
     [2, 'tap', 'monitor'], [20, 'tap', 'cam:11'], [24, 'down', 'wind'],
-    ...CYCLE.map(([o, k, a]) => [anchor + o, k, a]),
+    ...CYCLE.map(([o, k, a]): [number, string, string] => [anchor + o, k, a]),
   ];
   let minBox = 1, maxD = 0;
 
   while (sim.alive && !sim.won) {
     while (queue.length && queue[0][0] <= sim.frame) {
-      const [, kind, act] = queue.shift();
+      const [, kind, act] = queue.shift() as [number, string, string];   // queue.length was checked
       if (kind === 'up') sim.release(act); else sim.press(act);
     }
     if (!queue.length) {
@@ -424,7 +424,7 @@ if (!s.won || targetStunMax.some(max => max === 0)) {
   throw new Error(`canonical cycle lost camera coverage: ${s.death?.reason ?? 'no win'}; ` +
     `${C.TARGET_CAMS.map((cam, i) => `${cam}=${targetStunMax[i] ?? 0}`).join(', ')}`);
 }
-console.log(`result        : ${s.won ? 'SURVIVED to 6 AM' : 'DIED ' + s.death.reason}`);
+console.log(`result        : ${s.won ? 'SURVIVED to 6 AM' : 'DIED ' + (s.death as C.Death).reason}`);   // a night not won ended in a death
 if (s.death) console.log(`               ${s.death.detail} @ ${(s.death.t).toFixed(2)}s`);
 console.log(`time          : ${(s.frame / 60).toFixed(1)}s of ${(C.NIGHT_FRAMES / 60)}s`);
 console.log(`power left    : ${s.power}/${C.POWER_FRAMES} frames (${(s.power / 60).toFixed(1)}s)`);
@@ -441,14 +441,14 @@ console.log(`stun lapses   : ${stunGaps}`);
 
 // --- sweep: Minus 7's claim is that a correct cycle never loses -------------
 if (process.argv.includes('--sweep')) {
-  const n = 200; const fails = {};
+  const n = 200; const fails: Record<string, number> = {};
   let worstD = 0, minBoxAll = 1, minPower = C.POWER_FRAMES;
   for (let i = 0; i < n; i++) {
     const r = run({ seed: (i * 2654435761) >>> 0 });
     worstD = Math.max(worstD, r.maxD);
     minBoxAll = Math.min(minBoxAll, r.minBox);
     minPower = Math.min(minPower, r.sim.power);
-    if (!r.sim.won) fails[r.sim.death.reason] = (fails[r.sim.death.reason] || 0) + 1;
+    if (!r.sim.won) fails[(r.sim.death as C.Death).reason] = (fails[(r.sim.death as C.Death).reason] || 0) + 1;   // a night not won ended in a death
   }
   const failed = Object.values(fails).reduce((a, b) => a + b, 0);
   if (failed) throw new Error(`canonical cycle sweep had ${failed} death(s)`);

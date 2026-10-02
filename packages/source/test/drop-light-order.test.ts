@@ -1,6 +1,7 @@
 // Drop latency, the hall latch and Foxy under sourcedDropLightOrder (dump g75/g84/g94/g262/g445/g488/g489/g614/g745/g573).
 import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
+import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
 
 const fresh = (extra = {}) => {
   const s = new Sim({ night: 7, seed: 3, lethal: false, sourcedDropLightOrder: true, stalledEnabled: false, bbEnabled: false, gfEnabled: false, boxEnabled: false, ...extra });
@@ -43,13 +44,13 @@ const fresh = (extra = {}) => {
   const s = fresh({ lethal: true }); s.monitor = 'down'; s.viewing = 0; s.foxy.loc = 'hall'; s.foxy.gotYou = true; s.frame = 130;
   s.blackout = { active: true, until: s.frame + 300, by: 'x', unitId: null, masked: true, deadline: 0 }; s.hallLatch = true;
   s.tickFoxy(s.frame); assert.equal(s.alive, true, 'in danger blocks g573');
-  s.blackout.active = false; s.tickFoxy(s.frame); assert.equal(s.alive, false); assert.equal(s.death.reason, 'foxy');
+  s.blackout.active = false; s.tickFoxy(s.frame); assert.equal(s.alive, false); assert.equal(s.death?.reason, 'foxy');
 }
 // Off: the drop is immediate as before.
 {
   const s = new Sim({ night: 7, seed: 3, lethal: false, sourcedDropLightOrder: false }); s.monitor = 'up'; s.maskOn = false; s.maskAnim = 0;
   s.press('monitor'); assert.equal(s.monitor, 'lowering');
-  const run = opts => { const x = new Sim({ night: 7, seed: 11, lethal: false, durationFrames: 3600, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify(x.events); };
+  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ night: 7, seed: 11, lethal: false, durationFrames: 3600, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify(x.events); };
   if (new Sim({ night: 7, seed: 1 }).opts.sourcedDropLightOrder === false)
     assert.equal(run({}), run({ sourcedDropLightOrder: false }), 'explicit off equals the default');
 }

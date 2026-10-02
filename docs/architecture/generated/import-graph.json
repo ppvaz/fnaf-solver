@@ -4673,6 +4673,7 @@
       "file": "packages/source/test/animation-count.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/plant-options.ts",
         "node:assert/strict",
         "node:fs"
       ]
@@ -4682,6 +4683,7 @@
       "imports": [
         "../src/games/fnaf2/movement-clock.ts",
         "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/plant-options.ts",
         "node:assert/strict"
       ]
     },
@@ -4689,6 +4691,7 @@
       "file": "packages/source/test/bb-moves.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/plant-options.ts",
         "node:assert/strict"
       ]
     },
@@ -4696,6 +4699,7 @@
       "file": "packages/source/test/blackout-clock-end.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/plant-options.ts",
         "node:assert/strict"
       ]
     },
@@ -4703,6 +4707,7 @@
       "file": "packages/source/test/blackout-draws.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/plant-options.ts",
         "node:assert/strict"
       ]
     },
@@ -4736,6 +4741,7 @@
         "../recompile/model-draw-trace.ts",
         "../src/games/fnaf2/config.ts",
         "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/plant-options.ts",
         "node:assert/strict"
       ]
     },
@@ -4743,6 +4749,7 @@
       "file": "packages/source/test/drop-light-order.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/plant-options.ts",
         "node:assert/strict"
       ]
     },
@@ -4751,6 +4758,7 @@
       "imports": [
         "../src/games/fnaf2/config.ts",
         "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/plant-options.ts",
         "../src/games/fnaf2/rng.ts",
         "node:assert/strict"
       ]
@@ -4766,6 +4774,7 @@
       "file": "packages/source/test/exposure-value5.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/plant-options.ts",
         "node:assert/strict"
       ]
     },
@@ -4780,6 +4789,7 @@
       "file": "packages/source/test/footstep-draws.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/plant-options.ts",
         "node:assert/strict"
       ]
     },
@@ -4787,6 +4797,7 @@
       "file": "packages/source/test/footstep-value2.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/plant-options.ts",
         "node:assert/strict"
       ]
     },
@@ -4794,6 +4805,7 @@
       "file": "packages/source/test/foxy-chain.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/plant-options.ts",
         "../src/games/fnaf2/rng.ts",
         "node:assert/strict"
       ]
@@ -4810,6 +4822,7 @@
       "imports": [
         "../src/games/fnaf2/config.ts",
         "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/plant-options.ts",
         "node:assert/strict"
       ]
     },
@@ -4817,6 +4830,7 @@
       "file": "packages/source/test/gated-every.test.ts",
       "imports": [
         "../src/games/fnaf2/index.ts",
+        "../src/games/fnaf2/plant-options.ts",
         "node:assert/strict"
       ]
     },
@@ -4824,6 +4838,7 @@
       "file": "packages/source/test/hall-latch-order.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/plant-options.ts",
         "node:assert/strict"
       ]
     },
@@ -4831,6 +4846,7 @@
       "file": "packages/source/test/last-view-pause.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/plant-options.ts",
         "node:assert/strict"
       ]
     },
@@ -4838,6 +4854,7 @@
       "file": "packages/source/test/mangle-return.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/plant-options.ts",
         "node:assert/strict"
       ]
     },
@@ -4852,6 +4869,7 @@
       "file": "packages/source/test/monitor-down-draw.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/plant-options.ts",
         "node:assert/strict"
       ]
     },
@@ -4859,6 +4877,7 @@
       "file": "packages/source/test/monitor-raise-gate.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/plant-options.ts",
         "node:assert/strict"
       ]
     },
@@ -4866,6 +4885,7 @@
       "file": "packages/source/test/office-footsteps.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/plant-options.ts",
         "node:assert/strict"
       ]
     },
@@ -4873,6 +4893,7 @@
       "file": "packages/source/test/office-rolls.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/plant-options.ts",
         "node:assert/strict"
       ]
     },
@@ -4887,7 +4908,9 @@
     {
       "file": "packages/source/test/promoted-moves.test.ts",
       "imports": [
+        "../src/games/fnaf2/config.ts",
         "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/plant-options.ts",
         "node:assert/strict"
       ]
     },
@@ -4895,6 +4918,7 @@
       "file": "packages/source/test/promoted-view-draws.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/plant-options.ts",
         "node:assert/strict"
       ]
     },
@@ -4909,6 +4933,7 @@
       "file": "packages/source/test/puppet-glitch-draws.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/plant-options.ts",
         "node:assert/strict"
       ]
     },
@@ -4916,6 +4941,7 @@
       "file": "packages/source/test/random-image-draw.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/plant-options.ts",
         "node:assert/strict"
       ]
     },
@@ -4924,6 +4950,7 @@
       "imports": [
         "../src/games/fnaf2/config.ts",
         "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/plant-options.ts",
         "node:assert/strict"
       ]
     },
@@ -4932,6 +4959,7 @@
       "imports": [
         "../src/games/fnaf2/config.ts",
         "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/plant-options.ts",
         "node:assert/strict"
       ]
     },
@@ -4939,6 +4967,7 @@
       "file": "packages/source/test/rolls-before-moves.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/plant-options.ts",
         "node:assert/strict"
       ]
     },
@@ -4946,6 +4975,7 @@
       "file": "packages/source/test/route-forks.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/plant-options.ts",
         "../src/games/fnaf2/rng.ts",
         "node:assert/strict"
       ]
@@ -4954,6 +4984,7 @@
       "file": "packages/source/test/route-pass.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/plant-options.ts",
         "node:assert/strict"
       ]
     },
@@ -4961,6 +4992,7 @@
       "file": "packages/source/test/route-view-draws.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/plant-options.ts",
         "node:assert/strict"
       ]
     },
@@ -4968,12 +5000,14 @@
       "file": "packages/source/test/second-pass.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/plant-options.ts",
         "node:assert/strict"
       ]
     },
     {
       "file": "packages/source/test/seed-recovery.ts",
       "imports": [
+        "@sixam/kernel",
         "@sixam/source/fnaf2",
         "node:fs"
       ]
@@ -4990,6 +5024,7 @@
       "imports": [
         "../src/games/fnaf2/config.ts",
         "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/plant-options.ts",
         "node:assert/strict"
       ]
     },
@@ -5003,6 +5038,7 @@
       "file": "packages/source/test/sourcetest.ts",
       "imports": [
         "@sixam/source/fnaf2",
+        "@sixam/source/games/fnaf2/plant-options.ts",
         "node:url"
       ]
     },
@@ -5017,6 +5053,7 @@
     {
       "file": "packages/source/test/truth.test.ts",
       "imports": [
+        "../src/truth/dump.ts",
         "./fixtures/truth-dump.ts",
         "@sixam/kernel",
         "@sixam/source/truth",
@@ -5033,6 +5070,7 @@
       "file": "packages/source/test/unconditional-draws.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/plant-options.ts",
         "../src/games/fnaf2/rng.ts",
         "node:assert/strict"
       ]
@@ -5041,6 +5079,7 @@
       "file": "packages/source/test/value5.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/plant-options.ts",
         "node:assert/strict"
       ]
     },
@@ -5048,6 +5087,7 @@
       "file": "packages/source/test/vent-cam-draws.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/plant-options.ts",
         "node:assert/strict"
       ]
     },
@@ -5055,6 +5095,7 @@
       "file": "packages/source/test/view-draws.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/plant-options.ts",
         "node:assert/strict"
       ]
     },

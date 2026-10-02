@@ -3,6 +3,8 @@
 // 22241: Toy Bonnie leaves CAM 09 with your view on it). Off: the model drew them after every move.
 import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
+import type { Unit } from '../src/games/fnaf2/plant-model.ts';
+import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
 
 const SOURCED = { sourcedDropLightOrder: true, sourcedFoxyChain: true, sourcedSecondPass: true, sourcedSheetOrder: true,
                   sourcedRollDraws: true, sourcedViewDraws: true, sourcedPromotedViewDraws: true,
@@ -13,9 +15,9 @@ assert.throws(() => new Sim({ ...QUIET, sourcedRoutePass: true, sourcedPromotedM
   sourcedRouteViewDraws: true }), /requires sourcedRoutePass and sourcedPromotedViewDraws/);
 
 /** Toy Bonnie waiting on CAM 09 with value 1 at 0, the monitor up on CAM 09: g366 draws on the loop he moves? */
-const drawsOnMoveLoop = (opts) => {
+const drawsOnMoveLoop = (opts: Partial<SimOptions>) => {
   const s = new Sim({ ...QUIET, ...SOURCED, ...opts });
-  const u = s.units.find(x => x.id === 'toybonnie');
+  const u = s.units.find(x => x.id === 'toybonnie') as Unit;   // one of the seven route units
   u.idx = 0; u.pending = true; u.promoted = false; u.stunUntil = -1;
   s.monitor = 'up'; s.viewing = 9; s.cam = 9;
   let n = 0;
@@ -30,7 +32,7 @@ assert.deepEqual(drawsOnMoveLoop({ sourcedRouteViewDraws: true }), { draws: 1, n
 
 // Off leaves the default unchanged.
 {
-  const run = opts => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
+  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
   assert.equal(run({}), run({ sourcedRouteViewDraws: false }), 'off equals the default');
 }
 

@@ -11,12 +11,22 @@
 // event replay intentionally has a smaller default bound because it invokes
 // the full simulator once per candidate.
 import { readFileSync } from 'node:fs';
+import { isList } from '@sixam/kernel';
 import { SEED_SPACE, filterSeedCandidatesByEvents, filterSeedCandidatesByRolls, normalizeSeedCandidates, seedCandidatesFromHostMarker, seedCandidatesFromTimeWindow } from '@sixam/source/fnaf2';
+
+/** A device clock sample (docs/device/RNG-SEED-RECOVERY.md); a READY one carries its device time and window. */
+interface ClockSample {
+  readonly status?: string;
+  readonly reason?: string;
+  readonly deviceMs: number;
+  readonly uncertaintyMs: number;
+  readonly deviceWindow?: { readonly startMs: number, readonly endMs: number };
+}
 
 const args = process.argv.slice(2);
 const command = args[0];
 
-function value(name, fallback = undefined) {
+function value<F = undefined>(name: string, fallback: F | undefined = undefined) {
   const prefix = `--${name}=`;
   const inline = args.find(arg => arg.startsWith(prefix));
   if (inline) return inline.slice(prefix.length);
@@ -24,9 +34,9 @@ function value(name, fallback = undefined) {
   return index >= 0 ? args[index + 1] : fallback;
 }
 
-function hasFlag(name) { return args.includes(`--${name}`) || args.some(arg => arg.startsWith(`--${name}=`)); }
+function hasFlag(name: string) { return args.includes(`--${name}`) || args.some(arg => arg.startsWith(`--${name}=`)); }
 
-function numberOption(name, fallback = undefined) {
+function numberOption(name: string, fallback: number | undefined = undefined) {
   const raw = value(name, fallback);
   if (raw === undefined) return undefined;
   const parsed = Number(raw);
@@ -41,15 +51,15 @@ function inputPath() {
   return positional;
 }
 
-function readJson(file) {
+function readJson(file: string | undefined) {
   if (!file) throw new Error('an input JSON path is required');
   const text = file === '-' ? readFileSync(0, 'utf8') : readFileSync(file, 'utf8');
   return JSON.parse(text);
 }
 
-function sampleFromInput(input) {
-  if (Array.isArray(input.samples)) {
-    const index = numberOption('sample-index', 0);
+function sampleFromInput(input: ClockSample & { readonly samples?: readonly ClockSample[] }) {
+  if (isList(input.samples)) {
+    const index = numberOption('sample-index', 0) as number;   // its fallback is 0
     if (index < 0 || index >= input.samples.length)
       throw new RangeError(`--sample-index must be in 0..${input.samples.length - 1}`);
     return input.samples[index];
@@ -57,7 +67,7 @@ function sampleFromInput(input) {
   return input;
 }
 
-function print(valueToPrint) {
+function print(valueToPrint: unknown) {
   process.stdout.write(`${JSON.stringify(valueToPrint, null, 2)}\n`);
 }
 

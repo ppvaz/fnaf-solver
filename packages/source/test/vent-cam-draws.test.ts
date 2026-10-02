@@ -2,18 +2,20 @@
 // or CAM 06 (Toy Bonnie, W. Chica, Mangle, Puppet), once per stay, in the sheet slot before the footstep cues.
 import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
+import type { Unit } from '../src/games/fnaf2/plant-model.ts';
+import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
 
 const BASE = { night: 7, seed: 111, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false,
                boxEnabled: false, foxyEnabled: false, sourcedSecondPass: true, sourcedSheetOrder: true };
-const script = s => { const log = []; s.rng.int = (a, b) => { log.push([s.frame, `${a},${b}`]); return a; }; s.rng.chance = () => false; return log; };
-const draws = log => log.filter(([, k]) => k === '0,3');
+const script = (s: Sim) => { const log: Array<[number, string]> = []; s.rng.int = (a, b) => { log.push([s.frame, `${a},${b}`]); return a; }; s.rng.chance = () => false; return log; };
+const draws = (log: Array<[number, string]>) => log.filter(([, k]) => k === '0,3');
 
 assert.throws(() => new Sim({ night: 7, sourcedVentCamDraws: true }), /requires sourcedSheetOrder/);
 
 // Withered Bonnie 1 -> 5: one Random(4) on the first loop she stands on CAM 05, none while she stays.
 {
   const s = new Sim({ ...BASE, sourcedVentCamDraws: true }); s.frame = 1000;
-  const u = s.units.find(x => x.id === 'withbonnie'); u.idx = u.path.indexOf(1);
+  const u = s.units.find(x => x.id === 'withbonnie') as Unit; u.idx = u.path.indexOf(1);   // one of the seven route units
   const log = script(s);
   s.tick(); assert.equal(draws(log).length, 0, 'CAM 01 is not a vent camera');
   s.advanceUnit(u); s.tick(); assert.equal(u.path[u.idx], 5);
@@ -24,7 +26,7 @@ assert.throws(() => new Sim({ night: 7, sourcedVentCamDraws: true }), /requires 
 // Leaving and coming back re-arms the flag: Withered Chica 2 -> 6, back to 4 by hand, 2 -> 6 again.
 {
   const s = new Sim({ ...BASE, sourcedVentCamDraws: true, sourcedEventDraws: false }); s.frame = 1000;
-  const u = s.units.find(x => x.id === 'withchica'); u.idx = u.path.indexOf(2);
+  const u = s.units.find(x => x.id === 'withchica') as Unit; u.idx = u.path.indexOf(2);   // one of the seven route units
   const log = script(s);
   s.advanceUnit(u); s.tick(); assert.equal(u.path[u.idx], 6); assert.equal(draws(log).length, 1);
   u.idx = u.path.indexOf(4); s.tick(); assert.equal(draws(log).length, 1);
@@ -38,7 +40,7 @@ assert.throws(() => new Sim({ night: 7, sourcedVentCamDraws: true }), /requires 
 // queue (hall stages) is untouched.
 {
   const s = new Sim({ ...BASE, sourcedVentCamDraws: true, sourcedFootstepDraws: true }); s.frame = 1000;
-  const u = s.units.find(x => x.id === 'toychica'); u.idx = u.path.indexOf(1);
+  const u = s.units.find(x => x.id === 'toychica') as Unit; u.idx = u.path.indexOf(1);   // one of the seven route units
   const log = script(s);
   s.advanceUnit(u); s.tick(); assert.equal(u.path[u.idx], 5);
   assert.deepEqual(log.filter(([, k]) => k === '0,3' || k === '0,4').map(([, k]) => k), ['0,3']);
@@ -46,7 +48,7 @@ assert.throws(() => new Sim({ night: 7, sourcedVentCamDraws: true }), /requires 
 
 // Off: the default is unchanged.
 {
-  const run = opts => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
+  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
   if (new Sim({ night: 7, seed: 1 }).opts.sourcedVentCamDraws === false)
     assert.equal(run({}), run({ sourcedVentCamDraws: false }), 'explicit off equals the default');
 }

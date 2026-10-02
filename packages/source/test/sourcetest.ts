@@ -19,10 +19,11 @@ import { pathToFileURL } from 'node:url';
 import * as C from '@sixam/source/fnaf2';
 import { Sim } from '@sixam/source/fnaf2';
 import { Rng } from '@sixam/source/fnaf2';
+import type { SimOptions } from '@sixam/source/games/fnaf2/plant-options.ts';
 
 let pass = 0;
-const fails = [];
-const ok = (group, what, cond) => {
+const fails: string[] = [];
+const ok = (group: string, what: string, cond: unknown) => {
   if (cond) { pass++; return; }
   fails.push(`${group}: ${what}`);
 };
@@ -33,9 +34,9 @@ const bare = (opts = {}) => new Sim(Object.assign({
   seed: 12345, bbEnabled: false, foxyEnabled: false, gfEnabled: false,
   boxEnabled: false, powerEnabled: false, stalledEnabled: false,
 }, opts));
-const step = (s, n) => { for (let i = 0; i < n; i++) s.tick(); };
+const step = (s: Sim, n: number) => { for (let i = 0; i < n; i++) s.tick(); };
 // Settle a monitor/mask animation.
-const settle = (s) => step(s, Math.max(C.MONITOR_ANIM_UP, C.MASK_ANIM_ON) + 2);
+const settle = (s: Sim) => step(s, Math.max(C.MONITOR_ANIM_UP, C.MASK_ANIM_ON) + 2);
 
 // ---------------------------------------------------------------- input gates
 {
@@ -152,7 +153,7 @@ const settle = (s) => step(s, Math.max(C.MONITOR_ANIM_UP, C.MASK_ANIM_ON) + 2);
   // the whole window the one action g533 says ends it. The old assertion is
   // kept here as the reason the bug survived: a test asserted it.
   const s = bare({ stalledEnabled: true, night: 3 });
-  const u = s.units.find(x => x.id === 'withfreddy');
+  const u = s.units.find(x => x.id === 'withfreddy') as C.Unit;   // one of the seven route units
   u.inside = true;
   s.armInsideAttack(u, 'test');
   ok('g530', 'danger raises a countdown rather than killing outright',
@@ -165,7 +166,7 @@ const settle = (s) => step(s, Math.max(C.MONITOR_ANIM_UP, C.MASK_ANIM_ON) + 2);
 {
   // g532: and if the mask is NOT on in time, the window expires and kills.
   const s = bare({ stalledEnabled: true, night: 6 });
-  const u = s.units.find(x => x.id === 'withfreddy');
+  const u = s.units.find(x => x.id === 'withfreddy') as C.Unit;   // one of the seven route units
   u.inside = true;
   s.armInsideAttack(u, 'test');
   step(s, C.timeAllowedFrames(6) + C.INSIDE_ATTACK_FRAMES + 2);
@@ -201,7 +202,7 @@ const settle = (s) => step(s, Math.max(C.MONITOR_ANIM_UP, C.MASK_ANIM_ON) + 2);
   t.gf.present = true;
   t.press('monitor');
   ok('g777', 'raising the monitor with him present kills', !t.alive &&
-    t.death.reason === 'golden-freddy');
+    t.death?.reason === 'golden-freddy');
 }
 {
   // g778: kill on a hall flash, which is the cams-down light.
@@ -210,7 +211,7 @@ const settle = (s) => step(s, Math.max(C.MONITOR_ANIM_UP, C.MASK_ANIM_ON) + 2);
   ok('g778', 'the hall view is the cams-down state', s.hallView);
   s.press('light');
   ok('g778', 'flashing the hall with him present kills', !s.alive &&
-    s.death.reason === 'golden-freddy');
+    s.death?.reason === 'golden-freddy');
 }
 {
   // g573 before g778. Both hazards read the same hall flash and neither gates
@@ -223,7 +224,7 @@ const settle = (s) => step(s, Math.max(C.MONITOR_ANIM_UP, C.MASK_ANIM_ON) + 2);
   s.foxy.gotYou = true;
   s.press('light');
   ok('g573', 'a locked-on Foxy kills through Golden Freddy on the same flash',
-    !s.alive && s.death.reason === 'foxy');
+    !s.alive && s.death?.reason === 'foxy');
 }
 {
   // g780: the hallway figure kills above 100 frames of held light, not at 100.
@@ -276,19 +277,19 @@ const settle = (s) => step(s, Math.max(C.MONITOR_ANIM_UP, C.MASK_ANIM_ON) + 2);
   // same sample, and no detector can tell them apart. Plan 08 removed early
   // unmasking from scope on exactly this fact; the assertion exists so a
   // future controller cannot quietly start trusting the `who` field again.
-  const leaveSample = (id) => {
+  const leaveSample = (id: string) => {
     const s = bare({ bbEnabled: true, stalledEnabled: true });
     if (id === 'bb') {
       s.bb.inOpening = true;
     } else {
-      const u = s.units.find(x => x.id === id);
+      const u = s.units.find(x => x.id === id) as C.Unit;   // one of the seven route units
       u.atOpening = true; u.openingSince = s.frame;
     }
     s.press('mask'); step(s, C.MASK_ANIM_ON + 1);
     for (let i = 0; i < C.FPS * 8 && !s.events.some(
       e => e.type === 'vent-bang' && e.data?.leaving); i++) s.tick();
     return s.events.find(
-      e => e.type === 'vent-bang' && e.data?.leaving)?.data?.sample;
+      (e): e is Extract<C.SimEvent, { type: 'vent-bang' }> => e.type === 'vent-bang' && e.data?.leaving)?.data?.sample;
   };
   const fromBb = leaveSample('bb');
   const fromToy = leaveSample('toychica');
@@ -305,7 +306,7 @@ const settle = (s) => step(s, Math.max(C.MONITOR_ANIM_UP, C.MASK_ANIM_ON) + 2);
   ok('g608-611', 'the vocal bank is the three sourced handles',
     C.BB_VOCAL_SAMPLES.join(',') === '21,24,23');
   ok('g607', 'arrival at 122 adds a sample the departure never has',
-    C.BB_ARRIVAL_SAMPLE === 21 && C.BB_ARRIVAL_SAMPLE !== C.THUD_SAMPLE);
+    C.BB_ARRIVAL_SAMPLE === 21 && (C.BB_ARRIVAL_SAMPLE as number) !== C.THUD_SAMPLE);   // two literal constants, compared as numbers
   // g60 defaults channel 14 to 50; g414-416 play a route hop at 25; g906 plays
   // at 60 when he is on the viewed camera. Level, not sample identity, is what
   // separates those two meanings, and a 285 s device recording found no vocal
@@ -413,7 +414,7 @@ const settle = (s) => step(s, Math.max(C.MONITOR_ANIM_UP, C.MASK_ANIM_ON) + 2);
 // Cheap, and exactly the failure mode the population checks cannot see: a
 // sourced number silently edited. Each line names the group or dump the value
 // came from, so a failure points at the claim rather than at the symptom.
-const eq = (group, what, got, want) =>
+const eq = (group: string, what: string, got: unknown, want: unknown) =>
   ok(group, `${what} = ${want} (got ${got})`, got === want);
 
 // clock
@@ -503,9 +504,9 @@ eq('g875-880', '`hall movement` blocks him for 300 frames', C.HALL_MOVEMENT_FRAM
   // g875-880 carry C -7 ("only one action when event loops"): the 300 is
   // written once per continuous overlap of the hitbox, i.e. on entry into the
   // hall column, and a hall-stage-1 -> hall-stage-2 hop keeps it continuous.
-  const drive = (opts) => {
+  const drive = (opts: Partial<SimOptions>) => {
     const s = bare({ stalledEnabled: true, gfEnabled: true, ...opts });
-    const tf = s.units.find(u => u.id === 'toyfreddy');
+    const tf = s.units.find(u => u.id === 'toyfreddy') as C.Unit;   // one of the seven route units
     for (const u of s.units) if (u !== tf) u.done = true;
     s.ai.toyfreddy = 0;          // no movement roll can move him off the stage
     tf.idx = 2;                  // hall stage 1 (`blindA`)
@@ -528,11 +529,11 @@ eq('g875-880', '`hall movement` blocks him for 300 frames', C.HALL_MOVEMENT_FRAM
   // The latch is readable at any frame and ticks without Golden Freddy, so a
   // trace can score the phone's DIM hall flash (g202) against it.
   const t = bare({ stalledEnabled: true, gfEnabled: false, sourcedHallEntry: true });
-  const tf = t.units.find(u => u.id === 'toyfreddy');
+  const tf = t.units.find(u => u.id === 'toyfreddy') as C.Unit;   // one of the seven route units
   for (const u of t.units) if (u !== tf) u.done = true;
   t.ai.toyfreddy = 0;
   tf.idx = 2; t.tick();
-  const armed = t.events.filter(e => e.type === 'hall-movement').map(e => e.data.who);
+  const armed = t.events.filter((e): e is Extract<C.SimEvent, { type: 'hall-movement' }> => e.type === 'hall-movement').map(e => e.data.who);
   ok('g202', 'hallMovementFrames reads the 300 with Golden Freddy disabled',
     t.hallMovementFrames === C.HALL_MOVEMENT_FRAMES && armed.join() === 'toyfreddy');
   step(t, C.HALL_MOVEMENT_FRAMES);
@@ -586,7 +587,7 @@ eq('g494-497', "the Puppet's bare <= roll is 16/20 at AI 15",
   // 10/20 is the same table with the dials copied in, so the levels the rest
   // of this file asserts have to fall out of it.
   const s = bare({ night: 7 });
-  eq('g787', 'every 10/20 dial is 20', (C.AI_BY_NIGHT[7][0].set as any).bb, C.AI_10_20);
+  eq('g787', 'every 10/20 dial is 20', C.AI_BY_NIGHT[7][0].set.bb, C.AI_10_20);
   eq('g856-863', '...held at 15 for the seven', s.ai.toychica, C.STALLED_AI);
   eq('g829', '...at 17 for Foxy', s.ai.foxy, C.FOXY_AI);
   eq('g830', '...and at 10 for Golden Freddy',
@@ -600,7 +601,7 @@ eq('g494-497', "the Puppet's bare <= roll is 16/20 at AI 15",
   // table with one 12 AM row. g787 copies the ten dials the player set; the
   // menu has no Puppet dial, so g821 still pins him at 15. `night` stays 7, so
   // every night>=7 rule keeps applying -- which is why customNight requires it.
-  const only = (dials) => bare({ night: 7, customNight: dials });
+  const only = (dials: Record<string, number>) => bare({ night: 7, customNight: dials });
 
   const tc = only({ toychica: 20 });
   eq('g787', 'a custom dial applies, capped at 15', tc.ai.toychica, C.STALLED_AI);
@@ -620,7 +621,7 @@ eq('g494-497', "the Puppet's bare <= roll is 16/20 at AI 15",
   const idle = new Sim({ seed: 7, night: 7, customNight: {} });
   while (idle.alive && !idle.won) idle.tick();
   ok('customNight', 'with only the Puppet armed, only the Puppet kills',
-    !idle.won && idle.death.reason === 'puppet');
+    !idle.won && idle.death?.reason === 'puppet');
 
   let threw = false;
   try { new Sim({ night: 3, customNight: { bb: 20 } }); } catch { threw = true; }
@@ -664,7 +665,7 @@ eq('g623', 'the Puppet office edge is a 1-in-10 roll', C.PUPPET_OFFICE_ROLL, 10)
   // g848-854 refresh B=40 only while the character is physically at a hall
   // marker. Once the one-second light latch clears, that tail still drains.
   const s = bare({ stalledEnabled: true });
-  const wb = s.units.find(u => u.id === 'withbonnie');
+  const wb = s.units.find(u => u.id === 'withbonnie') as C.Unit;   // one of the seven route units
   for (const u of s.units) if (u !== wb) u.done = true;
   wb.idx = 2;                 // hall stage 1 (`blindA`)
   wb.pending = true;
@@ -682,7 +683,7 @@ eq('g623', 'the Puppet office edge is a 1-in-10 roll', C.PUPPET_OFFICE_ROLL, 10)
 {
   // g903-905 use six global scheduler ticks, not arrival + 300 frames.
   const s = bare({ stalledEnabled: true });
-  const tc = s.units.find(u => u.id === 'toychica');
+  const tc = s.units.find(u => u.id === 'toychica') as C.Unit;   // one of the seven route units
   for (const u of s.units) if (u !== tc) u.done = true;
   tc.idx = tc.path.length - 1;
   tc.atOpening = true;
@@ -832,7 +833,7 @@ ok('build 296', 'taking the mask off is slower than putting it on',
 // The stream itself, not just the rolls: graine = (graine*31415 + 1) & 0xFFFF,
 // Random(N) = (graine*N) >> 16. The reference below is that Java, transcribed.
 {
-  const ref = { g: 0, random(n) { this.g = (this.g * 31415 + 1) & 0xffff; return (this.g * n) >>> 16; } };
+  const ref = { g: 0, random(n: number) { this.g = (this.g * 31415 + 1) & 0xffff; return (this.g * n) >>> 16; } };
   // First states and Random(20) draws from seed 0, precomputed from the
   // decompiled source. If either line drifts, the port is no longer the game.
   const r = new Rng(0);

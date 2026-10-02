@@ -1,11 +1,12 @@
 // The blackout flicker's per-frame draws under sourcedBlackoutDraws (dump g514/g517/g518).
 import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
+import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
 
 const QUIET = { night: 7, seed: 21, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false,
                 boxEnabled: false, foxyEnabled: false };
 
-const drawFrames = extra => {
+const drawFrames = (extra: Partial<SimOptions>) => {
   const s = new Sim({ ...QUIET, ...extra });
   s.frame = 1000;
   s.startBlackout('test');
@@ -43,7 +44,7 @@ assert.deepEqual(drawFrames({}), []);
 
 // Off: the default is unchanged.
 {
-  const run = opts => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
+  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
   if (new Sim({ night: 7, seed: 1 }).opts.sourcedBlackoutDraws === false)
     assert.equal(run({}), run({ sourcedBlackoutDraws: false }), 'explicit off equals the default');
 }

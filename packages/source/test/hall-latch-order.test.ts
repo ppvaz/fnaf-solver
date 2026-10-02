@@ -4,6 +4,7 @@
 // clear it at the top of the tick, before the rolls and moves (Night 7 k3's first replay mismatch).
 import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
+import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
 
 const SOURCED = { sourcedDropLightOrder: true, sourcedFoxyChain: true, sourcedSecondPass: true, sourcedSheetOrder: true };
 const HOOK60 = { frameMs: () => 50 / 3, frameValue5: () => 1 };
@@ -13,9 +14,9 @@ const QUIET = { night: 7, seed: 5, lethal: false, stalledEnabled: false, bbEnabl
 assert.throws(() => new Sim({ night: 1, sourcedHallLatchOrder: true }), /requires frameMs/);
 
 /** The latch as tickUnits sees it on the first second boundary after the light is released, and after that tick. */
-const boundary = (opts) => {
+const boundary = (opts: Partial<SimOptions>) => {
   const s = new Sim({ ...QUIET, ...SOURCED, ...HOOK60, ...opts });
-  const seen = [];
+  const seen: Array<{ frame: number, sec: boolean, stall: boolean }> = [];
   const units = s.tickUnits.bind(s);
   s.tickUnits = (f) => { seen.push({ frame: s.frame, sec: s.secTick, stall: s.lightStallOn }); return units(f); };
   for (let i = 0; i < 20; i += 1) s.tick();
@@ -28,7 +29,7 @@ const boundary = (opts) => {
     s.tick();
     if (seen[seen.length - 1].sec) after = s.lightStallOn;
   }
-  const at = seen.slice(from).find((x) => x.sec);
+  const at = seen.slice(from).find((x) => x.sec) as (typeof seen)[number];   // a second boundary falls within the 90 ticks above
   return { during: at.stall, after };
 };
 
@@ -42,7 +43,7 @@ const boundary = (opts) => {
 
 // Off leaves the default unchanged.
 {
-  const run = opts => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
+  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
   assert.equal(run({}), run({ sourcedHallLatchOrder: false }), 'off equals the default');
 }
 

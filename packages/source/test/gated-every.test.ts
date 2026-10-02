@@ -6,13 +6,14 @@
 // a fully-on window gets 4 or 5 ticks by the carried remainder, at any phase.
 import assert from 'node:assert/strict';
 import * as C from '../src/games/fnaf2/index.ts';
+import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
 
 const QUIET = { night: 5, seed: 7, worst: true, lethal: false, stalledEnabled: false, gfEnabled: false, bbEnabled: false,
                 boxEnabled: false, foxyEnabled: false, powerEnabled: false };
-const bbAtVent = s => { s.bb.stage = C.BB_STAGES; s.bb.inOpening = true; s.bb.openingAtCamsUp = s.camsUpCount; };
+const bbAtVent = (s: C.Sim) => { s.bb.stage = C.BB_STAGES; s.bb.inOpening = true; s.bb.openingAtCamsUp = s.camsUpCount; };
 // Put the mask on, hold it FULLY on for `frames` frames (the put-on's last tick is the first fully-on
 // frame), take it off and let the take-off finish. Returns the vent ticks the window counted.
-function window(s, frames) {
+function window(s: C.Sim, frames: number) {
   s.press('mask');
   for (let i = 0; i < C.MASK_ANIM_ON - 1 + frames; i++) s.tick();
   const ticks = s.bb.maskTicks;
@@ -76,7 +77,7 @@ for (const prime of [0, 1, 17, 59, 100, 133]) {
 
 // g824 on (requires the sourced Foxy chain): D counts gated fires, which stop while in danger.
 {
-  const mk = gated => {
+  const mk = (gated: boolean) => {
     const s = new C.Sim({ ...QUIET, foxyEnabled: true, sourcedDropLightOrder: true, sourcedFoxyChain: true,
                           sourcedGatedEvery: gated });
     s.ai.foxy = 0;          // g337 never accepts, so nothing zeroes D
@@ -98,7 +99,7 @@ for (const prime of [0, 1, 17, 59, 100, 133]) {
 {
   const s = new C.Sim({ ...QUIET, stalledEnabled: true, sourcedGatedEvery: true, sourcedMangleReturn: true });
   s.onFiveSecond = () => {}; // isolate this encounter from new movement rolls
-  const m = s.units.find(u => u.id === 'mangle');
+  const m = s.units.find(u => u.id === 'mangle') as C.Unit;   // one of the seven route units
   m.idx = m.path.indexOf('ventR'); m.atOpening = true;
   window(s, 273);
   assert.equal(m.atOpening, true, 'g401 cannot force Mangle out after four ticks');
@@ -125,7 +126,7 @@ for (const prime of [0, 1, 17, 59, 100, 133]) {
 {
   const s = new C.Sim({ ...QUIET, stalledEnabled: true, sourcedGatedEvery: true });
   s.onFiveSecond = () => {}; // isolate this encounter from new movement rolls
-  const u = s.units.find(x => x.id === 'toychica');
+  const u = s.units.find(x => x.id === 'toychica') as C.Unit;   // one of the seven route units
   s.frame = 1000; s.monitor = 'up'; s.monAnim = 0; s.viewing = 5; s.cam = 5;
   u.idx = u.path.indexOf('ventL'); u.atOpening = true;
   for (let i = 0; i < 301; i++) s.tick();
@@ -144,7 +145,7 @@ for (const prime of [0, 1, 17, 59, 100, 133]) {
 {
   const s = new C.Sim({ ...QUIET, stalledEnabled: true, sourcedGatedEvery: true });
   s.onFiveSecond = () => {};
-  const u = s.units.find(x => x.id === 'toybonnie');
+  const u = s.units.find(x => x.id === 'toybonnie') as C.Unit;   // one of the seven route units
   s.frame = 1000; s.monitor = 'up'; s.monAnim = 0; s.viewing = 5; s.cam = 5;
   u.inside = true;
   for (let i = 0; i < 600; i++) s.tick();
@@ -167,7 +168,7 @@ for (const prime of [0, 1, 17, 59, 100, 133]) {
 // Default off, and explicit off equals the default, event for event.
 {
   assert.equal(new C.Sim({ night: 6, seed: 1 }).opts.sourcedGatedEvery, false, 'default off');
-  const run = opts => { const x = new C.Sim({ night: 6, seed: 23, lethal: false, ...opts }); for (let i = 0; i < 6000; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
+  const run = (opts: Partial<SimOptions>) => { const x = new C.Sim({ night: 6, seed: 23, lethal: false, ...opts }); for (let i = 0; i < 6000; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
   assert.equal(run({}), run({ sourcedGatedEvery: false }), 'explicit off equals the default');
 }
 console.log('gated every: BB/Mangle mask windows, variable frame clock, cams streak, Foxy danger, Toy Chica/Bonnie and Golden Freddy countdowns; off keeps the global grid');

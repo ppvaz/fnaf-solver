@@ -13,7 +13,7 @@ import { decodeFactMessage } from '@sixam/kernel/time';
 const register = JSON.parse(readFileSync(fileURLToPath(new URL('../../kernel/contracts/register.json', import.meta.url)), 'utf8'));
 const catalog = JSON.parse(readFileSync(fileURLToPath(new URL('../../../docs/architecture/generated/contract-specifications.json', import.meta.url)), 'utf8'));
 assert.equal(catalog.specifications.length, register.contracts.length);
-for (const entry of register.contracts) assert.ok(catalog.specifications.some(spec => spec.contractId === entry.id && spec.runtimeValidation === entry.validator));
+for (const entry of register.contracts) assert.ok(catalog.specifications.some((spec: { contractId: string, runtimeValidation: string }) => spec.contractId === entry.id && spec.runtimeValidation === entry.validator));
 
 const command = { schema: 'control-command-v1', id: 'cmd-1', action: { kind: 'press', control: 'mask' }, requestedAt: { clock: 'game-frame', value: 0 }, source: { controller: 'test' } };
 assert.equal(validateControlCommand(command), command);
@@ -22,7 +22,7 @@ assert.throws(() => validateClockRef({ clock: 'wall-clock', value: 1 }), /declar
 assert.equal(canonicalJson({ b: 1, a: 2 }), '{"a":2,"b":1}\n');
 assert.equal(stableHash({ a: 1 }), stableHash({ a: 1 }));
 const vectors = readFileSync(fileURLToPath(new URL('./fixtures/fact-message-v1.jsonl', import.meta.url)), 'utf8').trim().split('\n');
-assert.equal((decodeFactMessage(vectors[0] + '\n') as any).value, true);
+assert.equal((decodeFactMessage(vectors[0] + '\n') as Extract<ReturnType<typeof decodeFactMessage>, { state: 'OBSERVED' }>).value, true);   // vector 0 is an observation
 assert.equal(decodeFactMessage(vectors[1] + '\n').state, 'UNKNOWN');
 const commandVectors = readFileSync(fileURLToPath(new URL('./fixtures/semantic-control-v1.jsonl', import.meta.url)), 'utf8').trim().split('\n').map(line => JSON.parse(line));
 assert.doesNotThrow(() => validateControlCommand(commandVectors[0]));

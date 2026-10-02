@@ -1,6 +1,7 @@
 // The frame-time hook (frameMs, frameValue5) over the sheet-ordered countdowns.
 import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
+import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
 import * as C from '../src/games/fnaf2/config.ts';
 
 const SOURCED = { sourcedDropLightOrder: true, sourcedFoxyChain: true, sourcedUnconditionalDraws: true,
@@ -20,7 +21,7 @@ assert.throws(() => new Sim({ night: 7, frameMs: () => 17 }), /requires sourcedS
 // The shared cadences at 20 ms loops (60 units): 1 s every 50 frames, 500 ms every 25, 200 ms every 10, 10 s every 500.
 {
   const s = new Sim({ ...QUIET, ...SOURCED, frameMs: () => 20 });
-  const seen = { sec: [], half: [], sample: [], ten: [] };
+  const seen: { sec: number[], half: number[], sample: number[], ten: number[] } = { sec: [], half: [], sample: [], ten: [] };
   while (s.frame < 1000) {
     s.tick();
     if (s.secTick) seen.sec.push(s.frame);
@@ -39,7 +40,7 @@ assert.throws(() => new Sim({ night: 7, frameMs: () => 17 }), /requires sourcedS
 // countdown reaches, so hooked cadences slip a frame per non-lethal kill -- frames the phone never plays.)
 {
   const cams = [11, 3, 4, 1, 10, 7, 8, 5];
-  const play = (seed, hook, base = {}) => {
+  const play = (seed: number, hook: Partial<SimOptions>, base = {}) => {
     const s = new Sim({ night: 7, lethal: true, seed, ...base, ...SOURCED, ...hook });
     while (s.alive && !s.won && s.frame < 30000) {
       const f = s.frame;
@@ -80,9 +81,9 @@ assert.throws(() => new Sim({ night: 7, frameMs: () => 17 }), /requires sourcedS
 // 20 ms loops (60 units): a second is 50 frames, an hour 3500, the night 21000.
 {
   const s = new Sim({ ...QUIET, ...SOURCED, frameMs: () => 20 });
-  const hours = []; const h = s.applyAiHour.bind(s);
+  const hours: Array<[number, number]> = []; const h = s.applyAiHour.bind(s);
   s.applyAiHour = n => { hours.push([s.frame, n]); return h(n); };
-  const fives = []; const five = s.onFiveSecond.bind(s);
+  const fives: number[] = []; const five = s.onFiveSecond.bind(s);
   s.onFiveSecond = () => { fives.push(s.frame); return five(); };
   while (!s.won && s.frame < 25200) s.tick();
   assert.deepEqual(fives.slice(0, 3), [250, 500, 750]);
@@ -92,7 +93,7 @@ assert.throws(() => new Sim({ night: 7, frameMs: () => 17 }), /requires sourcedS
 
 // g514 at global value 5 = 2: the clock passes 20 and reaches 200 twice as fast -- 89 flicker draws, not 179.
 {
-  const count = v5 => {
+  const count = (v5: number) => {
     const s = new Sim({ ...QUIET, ...SOURCED, frameValue5: () => v5 });
     s.frame = 1000;
     let n = 0; const int = s.rng.int.bind(s.rng);

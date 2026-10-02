@@ -7,20 +7,22 @@
 // sourcedCam8Cancel (g380/g385 zero the other Withereds' value 0).
 import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
+import type { Unit } from '../src/games/fnaf2/plant-model.ts';
+import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
 import * as C from '../src/games/fnaf2/config.ts';
 
 const BASE = { night: 7, seed: 111, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false,
                boxEnabled: false, foxyEnabled: false, sourcedSecondPass: true, sourcedSheetOrder: true };
-const script = s => { const log = []; s.rng.int = (a, b) => { log.push([s.frame, `${a},${b}`]); return a; }; s.rng.chance = () => false; return log; };
+const script = (s: Sim) => { const log: Array<[number, string]> = []; s.rng.int = (a, b) => { log.push([s.frame, `${a},${b}`]); return a; }; s.rng.chance = () => false; return log; };
 
 assert.throws(() => new Sim({ night: 1, sourcedBoxCountdown: true }), /requires sourcedSheetOrder/);
 assert.throws(() => new Sim({ night: 1, sourcedPuppetMoveOrder: true }), /requires sourcedSheetOrder/);
 
 // footstepCamMarkers: Withered Freddy 8 -> 7 -> 3 -> hall stage 2 draws on CAM 03 and on the hall stage.
 {
-  const hops = knob => {
+  const hops = (knob: boolean) => {
     const s = new Sim({ ...BASE, sourcedFootstepDraws: true, footstepCamMarkers: knob }); s.frame = 1000;
-    const u = s.units.find(x => x.id === 'withfreddy');
+    const u = s.units.find(x => x.id === 'withfreddy') as Unit;   // one of the seven route units
     const log = script(s);
     const at = [];
     for (let i = 0; i < 3; i += 1) { s.advanceUnit(u); s.tick(); at.push([u.path[u.idx], log.filter(([, k]) => k === '0,4').length]); }
@@ -68,9 +70,9 @@ const QUIET1 = { night: 1, seed: 7, lethal: false, stalledEnabled: false, bbEnab
 
 // sourcedPuppetMoveOrder: g496 arms a hop; the hop lands at g403-g411 of the next loop, not the same one.
 {
-  const firstHop = opts => {
+  const firstHop = (opts: Partial<SimOptions>) => {
     const s = new Sim({ ...QUIET1, ...opts });   // tickPuppet runs at the end of tickBox
-    const p = (s.puppet as any);
+    const p = s.puppet;
     p.out = true; p.stage = C.PUPPET_ESCAPE_STAGES; p.stunUntil = 0; s.ai.puppet = 20;   // every one-second roll arms a hop
     let armed = -1;
     let n = s.events.length;
@@ -94,8 +96,8 @@ const QUIET1 = { night: 1, seed: 7, lethal: false, stalledEnabled: false, bbEnab
 // 3-5 roll Golden Freddy there (g677 Random(1000), g679/g681 Random(100)); the constructor draws nothing.
 assert.throws(() => new Sim({ night: 4, sourcedHourTable: true }), /requires sourcedSheetOrder/);
 {
-  const firstFrame = (night, opts) => {
-    const log = [];
+  const firstFrame = (night: number, opts: Partial<SimOptions>) => {
+    const log: string[] = [];
     const Probe = class extends Sim {};
     const s = new Probe({ night, seed: 5, ...SOURCED, sourcedUnconditionalDraws: true, sourcedRandomImageDraw: true, ...opts });
     const built = s.rng.state;
@@ -121,7 +123,7 @@ assert.throws(() => new Sim({ night: 4, sourcedHourTable: true }), /requires sou
 }
 
 // Custom Night (tools/recompile, nights 7 at dials 0 and 20).
-const DIALS = v => Object.fromEntries(C.AI_DIALS.map(id => [id, v]));
+const DIALS = (v: number) => Object.fromEntries(C.AI_DIALS.map(id => [id, v]));
 
 // sourcedParkedMarker: g486/g487 read the frame-local `night` (CCN initial 0) before g632 copies
 // `night number` into it, so g486 parks `your view` on CAM 09 on Custom Night too; g4's first raise,
@@ -135,7 +137,7 @@ const DIALS = v => Object.fromEntries(C.AI_DIALS.map(id => [id, v]));
   for (let i = 0; i < 40 && raised.monitor !== 'up'; i += 1) raised.tick();
   assert.equal(raised.monitor, 'up');
   assert.deepEqual([raised.cam, raised.viewing], [7, 7], 'g4: the first raise opens CAM 07');
-  const g498 = knob => {
+  const g498 = (knob: boolean) => {
     const s = new Sim({ ...BASE, sourcedViewDraws: true, sourcedParkedMarker: knob });
     Object.assign(s.puppet, { out: true, loc: 10 });
     let n = 0; const int = s.rng.int.bind(s.rng);
@@ -160,7 +162,7 @@ assert.throws(() => new Sim({ night: 7, sourcedCustomDialOrder: true }), /requir
   assert.deepEqual([on.ai.golden, on.ai.puppet], [0, 0], 'on: nothing before the first loop');
   on.tick();
   assert.deepEqual([on.ai.golden, on.ai.puppet, on.ai.foxy], [10, C.PUPPET_AI, 17], 'on: g787, g821 and the caps on frame 1');
-  const firstHallRoll = s => {
+  const firstHallRoll = (s: Sim) => {
     let first = -1; const int = s.rng.int.bind(s.rng);
     s.rng.int = (a, b, w) => { if (first < 0 && a === 0 && b === C.GF_HALL_ROLL - 1) first = s.frame; return int(a, b, w); };
     while (first < 0 && s.frame < 200) s.tick();
@@ -179,20 +181,20 @@ assert.throws(() => new Sim({ night: 7, sourcedCustomDialOrder: true }), /requir
 // (W. Chica off CAM 08) zeroes W. Freddy's. At 20/20 on one five-second loop: Freddy hops first
 // (g374), then Bonnie's hop cancels Chica's armed hop.
 {
-  const at = knob => {
+  const at = (knob: boolean) => {
     const s = new Sim({ night: 7, seed: 1, lethal: false, sourcedRouteForks: true, sourcedCam8Cancel: knob });
     s.rng.chance = () => true; s.rng.int = a => a;
     s.frame = 300;
     s.rollAllFiveSecond();
-    const u = id => (s.units.find(x => x.id === id) as any);
+    const u = (id: string) => (s.units.find(x => x.id === id) as Unit);   // one of the seven route units
     return ['withfreddy', 'withbonnie', 'withchica'].map(id => [u(id).path[u(id).idx], u(id).pending]);
   };
   assert.deepEqual(at(false), [[7, false], [7, false], [4, false]], 'off: all three leave CAM 08 together');
   assert.deepEqual(at(true), [[7, false], [7, false], [8, false]], 'on: Chica stays, her roll spent');
   // Story nights: Chica's roll waits (g347) while Bonnie stands on CAM 08, and his departure discards it.
-  const held = knob => {
+  const held = (knob: boolean) => {
     const s = new Sim({ night: 3, seed: 1, lethal: false, sourcedRouteForks: true, sourcedCam8Cancel: knob });
-    const u = id => (s.units.find(x => x.id === id) as any);
+    const u = (id: string) => (s.units.find(x => x.id === id) as Unit);   // one of the seven route units
     u('withchica').pending = true;
     s.advanceUnit(u('withbonnie'));
     return u('withchica').pending;
@@ -203,7 +205,7 @@ assert.throws(() => new Sim({ night: 7, sourcedCustomDialOrder: true }), /requir
 
 // Off, all three leave the default unchanged.
 {
-  const run = opts => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
+  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
   assert.equal(run({}), run({ footstepCamMarkers: false }), 'footstep knob off equals the default');
 }
 

@@ -6,16 +6,19 @@
 // stun and the marker are re-tested at the move, and Mangle has no latch gate off her CAM 07 / hall hops.
 import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
+import type { Unit } from '../src/games/fnaf2/plant-model.ts';
+import type { RouteNode } from '../src/games/fnaf2/config.ts';
+import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
 
 const QUIET = { night: 7, seed: 5, lethal: false, bbEnabled: false, gfEnabled: false, boxEnabled: false, foxyEnabled: false };
 const LATCHED = Number.MAX_SAFE_INTEGER;
 
 /** A Sim whose only roller is `id` (AI 20, a sure pass), standing on `node` with the hall-light latch `latch`. */
-const setup = (opts, id, node) => {
+const setup = (opts: Partial<SimOptions>, id: string, node: RouteNode) => {
   const s = new Sim({ ...QUIET, ...opts });
   for (const k of Object.keys(s.ai)) s.ai[k] = 0;
   s.ai[id] = 20;
-  const u = s.units.find(x => x.id === id);
+  const u = s.units.find(x => x.id === id) as Unit;   // one of the seven route units
   u.idx = u.path.indexOf(node);
   assert.ok(u.idx >= 0, `${id} stands on ${node}`);
   u.stunUntil = -1;
@@ -49,7 +52,7 @@ const setup = (opts, id, node) => {
 
 // Toy Chica on CAM 07: promoted on a latched loop (g354/g355 carry no latch), held by g431's latch, then flashed.
 {
-  const run = (opts) => {
+  const run = (opts: Partial<SimOptions>) => {
     const { s, u } = setup(opts, 'toychica', 7);
     s.rollAllFiveSecond();
     const held = u.path[u.idx];
@@ -67,7 +70,7 @@ const setup = (opts, id, node) => {
 
 // Off leaves the default unchanged.
 {
-  const run = opts => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
+  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
   assert.equal(run({}), run({ sourcedPromotedMoves: false }), 'off equals the default');
 }
 

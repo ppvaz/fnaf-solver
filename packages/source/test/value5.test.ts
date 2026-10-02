@@ -4,6 +4,7 @@
 // k3 tick 2044 and Night 5 contact-final tick 7460 in the rebuilt runtime). Off: value 5 is frameValue5, or 1.
 import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
+import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
 
 const SOURCED = { sourcedDropLightOrder: true, sourcedFoxyChain: true, sourcedSecondPass: true, sourcedSheetOrder: true,
                   sourcedBlackoutDraws: true };
@@ -25,12 +26,12 @@ assert.throws(() => new Sim({ ...QUIET, ...SOURCED, sourcedValue5: true, frameMs
 }
 
 /** Frames after the blackout starts on which the g517/g518 flicker draws. */
-const flicker = (hook) => {
+const flicker = (hook: Partial<SimOptions>) => {
   const s = new Sim({ ...QUIET, ...SOURCED, ...hook });
   for (let i = 0; i < 30; i += 1) s.tick();
   s.startBlackout('test');
   const start = s.frame;
-  const drawn = [];
+  const drawn: number[] = [];
   const int = s.rng.int.bind(s.rng);
   s.rng.int = (a, b, ...r) => { if (b === 49 && s.blackout.active) drawn.push(s.frame - start); return int(a, b, ...r); };
   for (let i = 0; i < 260; i += 1) s.tick();
@@ -48,7 +49,7 @@ const flicker = (hook) => {
 
 // Off leaves the default unchanged.
 {
-  const run = opts => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
+  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
   assert.equal(run({}), run({ sourcedValue5: false }), 'off equals the default');
 }
 

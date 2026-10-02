@@ -10,32 +10,32 @@
 export const SYNTHETIC_K = 28;
 
 const TAB = '\t';
-const join = fields => fields.join(TAB);
+const join = (fields: readonly (string | number)[]) => fields.join(TAB);
 
 /** Stored item-table handles and their types. */
 export const STORED = Object.freeze({ tally: 0, lamp: 1, crate: 2, label: 3 });
 const TYPES = Object.freeze({ tally: 7, lamp: 2, crate: 2, label: 3 });
-const FILLER = Object.freeze([[4, 7, 'dial'], [5, 3, 'caption'], [6, 2, 'door'], [7, 7, 'meter'], [8, 2, 'fan'], [9, 3, 'sign']]);
+const FILLER = Object.freeze([[4, 7, 'dial'], [5, 3, 'caption'], [6, 2, 'door'], [7, 7, 'meter'], [8, 2, 'fan'], [9, 3, 'sign']] as const);
 
 /** An event-space handle under a scramble. */
-export const eventHandle = (name, k = SYNTHETIC_K) => STORED[name] ^ k;
+export const eventHandle = (name: keyof typeof STORED, k = SYNTHETIC_K) => STORED[name] ^ k;
 
-const objectRecord = (stored, type, name, values = '') => join(['OBJECT', stored, 'TYPE', type, 'NAME', name, 'VALUES', values, 'STRINGS', '']);
-const params = list => list.join(' || ');
-const parameter = (code, loader, text) => [code, loader, text].join(':');
-const item = (index, ot, num, oi, loader, value) => `[${index}]` + [`ot=${ot}`, `num=${num}`, `oi=${oi}`, 'oil=0', `loader=${loader}`, `value=${value}`].join(',');
-const end = index => item(index, 0, 0, 0, '', 'null');
+const objectRecord = (stored: number, type: number, name: string, values = '') => join(['OBJECT', stored, 'TYPE', type, 'NAME', name, 'VALUES', values, 'STRINGS', '']);
+const params = (list: readonly string[]) => list.join(' || ');
+const parameter = (code: number, loader: string, text: string) => [code, loader, text].join(':');
+const item = (index: number, ot: number, num: number, oi: number, loader: string, value: number | string) => `[${index}]` + [`ot=${ot}`, `num=${num}`, `oi=${oi}`, 'oil=0', `loader=${loader}`, `value=${value}`].join(',');
+const end = (index: number) => item(index, 0, 0, 0, '', 'null');
 /** An expression parameter: a comparison and its tokens. */
-const expression = (code, comparison, tokens) => parameter(code, 'ExpressionParameter', `cmp=${comparison} ${[...tokens, end(tokens.length)].join(' ; ')}`);
-const literal = (code, value, comparison = '==') => expression(code, comparison, [item(0, -1, 0, 0, 'LongExp', value)]);
-const alterable = slot => parameter(50, 'AlterableValue', `AlterableValue${slot}`);
-const globalParam = slot => parameter(49, 'GlobalValue', `GlobalValue${slot > 26 ? slot : [9, 10, 13].includes(slot) ? ' ' : String.fromCharCode(slot)}`);
-const place = handle => ['Object Info: ' + handle, 'Flags: 0', 'X:10', 'Y:20', 'Slope: 0', 'Angle:0', 'Direction:0', 'TypeParent: 2', 'Parent: 0', 'Layer: 0'].join(', ');
+const expression = (code: number, comparison: string, tokens: readonly string[]) => parameter(code, 'ExpressionParameter', `cmp=${comparison} ${[...tokens, end(tokens.length)].join(' ; ')}`);
+const literal = (code: number, value: number, comparison = '==') => expression(code, comparison, [item(0, -1, 0, 0, 'LongExp', value)]);
+const alterable = (slot: number) => parameter(50, 'AlterableValue', `AlterableValue${slot}`);
+const globalParam = (slot: number) => parameter(49, 'GlobalValue', `GlobalValue${slot > 26 ? slot : [9, 10, 13].includes(slot) ? ' ' : String.fromCharCode(slot)}`);
+const place = (handle: number) => ['Object Info: ' + handle, 'Flags: 0', 'X:10', 'Y:20', 'Slope: 0', 'Angle:0', 'Direction:0', 'TypeParent: 2', 'Parent: 0', 'Layer: 0'].join(', ');
 
-const condition = (ot, num, oi, list = [], negated = false) =>
+const condition = (ot: number, num: number, oi: number, list: readonly string[] = [], negated = false) =>
   join([' C', 'OT', ot, 'NUM', num, 'OI', oi, 'NAME', 'wrong name', 'OIL', 0, 'CFLAGS', 0, 'COTHER', negated ? 1 : 0, 'PARAMS', params(list)]);
-const action = (ot, num, oi, list = []) => join([' A', 'OT', ot, 'NUM', num, 'OI', oi, 'NAME', 'wrong name', 'OIL', 0, 'PARAMS', params(list)]);
-const group = (index, conditions, actions) =>
+const action = (ot: number, num: number, oi: number, list: readonly string[] = []) => join([' A', 'OT', ot, 'NUM', num, 'OI', oi, 'NAME', 'wrong name', 'OIL', 0, 'PARAMS', params(list)]);
+const group = (index: number, conditions: readonly string[], actions: readonly string[]) =>
   [join(['GROUP', index, 'FLAGS', 0, 'RESTRICT', 'False', 'CONDS', conditions.length, 'ACTS', actions.length]), ...conditions, ...actions];
 
 /**
@@ -50,11 +50,11 @@ const group = (index, conditions, actions) =>
  *   frame 1 g6  sets a lamp flag whose number is the tally's value, computed at run time
  */
 export function syntheticDump({ k = SYNTHETIC_K }: {k?: number} = {}) {
-  const h = name => eventHandle(name, k);
+  const h = (name: keyof typeof STORED) => eventHandle(name, k);
   const lines = [
     join(['GAME', 'Synthetic Fixture', 'BUILD', 296, 'FRAMES', 2]),
     'OBJECTS',
-    ...Object.keys(STORED).map(name => objectRecord(STORED[name], TYPES[name], name, name === 'lamp' ? '0,0,5' : '')),
+    ...(Object.keys(STORED) as Array<keyof typeof STORED>).map(name => objectRecord(STORED[name], TYPES[name], name, name === 'lamp' ? '0,0,5' : '')),   // the keys of a literal record
     ...FILLER.map(([stored, type, name]) => objectRecord(stored, type, name)),
     join(['OBJANIM', 'OI', STORED.lamp, 'ANIM', 0, 'DIR', 0, 'FRAMES', '11,12']),
     join(['FRAME', 0, 'Menu', 'GROUPS', 1]),

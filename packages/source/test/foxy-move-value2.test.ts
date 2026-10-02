@@ -15,7 +15,7 @@ const fresh = (extra = {}) => {
   s.hallLatch = false; s.hallLit = false;
   return s;
 };
-const foxySteps = s => s.events.filter(e => e.type === 'footstep' && e.data?.who === 'foxy').map(e => e.f);
+const foxySteps = (s: Sim) => s.events.filter(e => e.type === 'footstep' && e.data?.who === 'foxy').map(e => e.f);
 
 assert.throws(() => new Sim({ night: 7, sourcedDropLightOrder: true, sourcedFoxyChain: true, sourcedFoxyMoveValue2: true }),
   /requires sourcedFootstepDraws and sourcedFoxyChain/);

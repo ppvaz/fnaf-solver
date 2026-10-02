@@ -17,9 +17,10 @@ const QUIET = { night: 7, seed: 91, lethal: false, stalledEnabled: false, bbEnab
 // Only the hook runs every cadence as a countdown; unhooked f % N timers keep their own origin.
 assert.throws(() => new Sim({ ...QUIET, ...SOURCED, sourcedEveryOrigin: true }), /requires frameMs or frameValue5/);
 
-const cadence = (origin) => {
+const cadence = (origin: boolean) => {
   const s = new Sim({ ...QUIET, ...SOURCED, ...HOOK60, sourcedEveryOrigin: origin });
-  const seen = { unconditional: [], sec: [], half: [], sample: [] };
+  const seen: { unconditional: Array<[number, number]>, sec: number[], half: number[], sample: number[] } =
+    { unconditional: [], sec: [], half: [], sample: [] };
   let before = s.unconditionalDraws;
   while (s.frame < 130) {
     s.tick();

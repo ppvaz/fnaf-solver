@@ -1,24 +1,26 @@
 // The per-second draw groups as one sheet-ordered pass under sourcedSecondPass (dump g213..g781).
 import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
+import type { Unit } from '../src/games/fnaf2/plant-model.ts';
+import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
 
 const QUIET = { night: 7, seed: 61, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false,
                 boxEnabled: false, foxyEnabled: false };
 
 // Scripted rng.int: returns a value per (min,max) and logs each call with its frame.
-const script = (s, values) => {
-  const log = [];
+const script = (s: Sim, values: Record<string, number>) => {
+  const log: Array<[number, string]> = [];
   s.rng.int = (a, b) => { const k = `${a},${b}`; log.push([s.frame, k]); return values[k] ?? a; };
   s.rng.chance = () => { log.push([s.frame, 'chance']); return false; };
   return log;
 };
-const at = (log, f) => log.filter(([fr]) => fr === f).map(([, k]) => k);
+const at = (log: Array<[number, string]>, f: number) => log.filter(([fr]) => fr === f).map(([, k]) => k);
 
 // Countdowns load on the first frame reached and fire 60 frames later; Random(2) == 1 commits the attack.
 {
   const s = new Sim({ ...QUIET, sourcedSecondPass: true });
   s.frame = 1000; s.ai.golden = 0; s.box = 99;
-  const u = s.units.find(x => x.id === 'withfreddy'); u.inside = true;
+  const u = s.units.find(x => x.id === 'withfreddy') as Unit; u.inside = true;   // one of the seven route units
   s.maskOn = true; s.maskAnim = 0;
   const log = script(s, { '0,1': 1, '0,9': 0, '0,19': 19 });
   for (let i = 0; i < 70; i++) s.tick();
@@ -43,7 +45,7 @@ const at = (log, f) => log.filter(([fr]) => fr === f).map(([, k]) => k);
 {
   const s = new Sim({ ...QUIET, sourcedSecondPass: true });
   s.frame = 2000; s.ai.golden = 0; s.box = 99;
-  const m = s.units.find(x => x.id === 'mangle'); m.inside = true;
+  const m = s.units.find(x => x.id === 'mangle') as Unit; m.inside = true;   // one of the seven route units
   const log = script(s, {});
   for (let i = 0; i < 20; i++) { s.viewing = 5; s.tick(); }     // 2001 load, 2002..2020 count 19
   for (let i = 0; i < 50; i++) { s.viewing = 0; s.tick(); }     // 2021..2070 paused
@@ -57,7 +59,7 @@ const at = (log, f) => log.filter(([fr]) => fr === f).map(([, k]) => k);
 {
   const s = new Sim({ ...QUIET, sourcedSecondPass: true });
   s.frame = 3000; s.ai.golden = 0; s.box = 99;
-  const tb = s.units.find(x => x.id === 'toybonnie'); tb.idx = tb.path.indexOf('ventR'); tb.atOpening = true;
+  const tb = s.units.find(x => x.id === 'toybonnie') as Unit; tb.idx = tb.path.indexOf('ventR'); tb.atOpening = true;   // one of the seven route units
   s.maskOn = true; s.maskAnim = 0;
   s.blackout = { active: true, until: 99999, by: 'x', unitId: null, masked: true, deadline: 0 };
   script(s, { '0,2': 1 });
@@ -83,7 +85,7 @@ const at = (log, f) => log.filter(([fr]) => fr === f).map(([, k]) => k);
 
 // Off: the default is unchanged.
 {
-  const run = opts => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
+  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
   if (new Sim({ night: 7, seed: 1 }).opts.sourcedSecondPass === false)
     assert.equal(run({}), run({ sourcedSecondPass: false }), 'explicit off equals the default');
 }

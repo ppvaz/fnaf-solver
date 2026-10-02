@@ -4,6 +4,8 @@
 // Off: a unit at 122 is not promoted by its roll, and 122 is no footstep marker (Night 7 k3's replay, tick 2100).
 import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
+import type { SimEvent, Unit } from '../src/games/fnaf2/plant-model.ts';
+import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
 
 const SOURCED = { sourcedSecondPass: true, sourcedSheetOrder: true, sourcedRollDraws: true, sourcedFootstepDraws: true,
                   sourcedFootstepValue2: true, footstepCamMarkers: true };
@@ -12,17 +14,17 @@ const QUIET = { night: 7, seed: 5, lethal: false, bbEnabled: false, gfEnabled: f
 assert.throws(() => new Sim({ ...QUIET, sourcedOfficeFootsteps: true }), /requires sourcedFootstepValue2 and sourcedRollDraws/);
 
 /** `id` standing at its opening (122); its roll passes; the footstep draws of the loop that follows. */
-const rollAt122 = (opts, id) => {
+const rollAt122 = (opts: Partial<SimOptions>, id: string) => {
   const s = new Sim({ ...QUIET, ...SOURCED, ...opts });
   for (const k of Object.keys(s.ai)) s.ai[k] = 0;
   s.ai[id] = 20;
-  const u = s.units.find(x => x.id === id);
+  const u = s.units.find(x => x.id === id) as Unit;   // one of the seven route units
   u.idx = u.path.length - 1; u.atOpening = true; u.stunUntil = -1;
   s.rollAllFiveSecond();
   const value2 = u.value2;                   // g344-g358 write 10; g458-g466 drain it before g695
   const before = s.events.length;
   s.footstepDraws();
-  return { value2, footsteps: s.events.slice(before).filter(e => e.type === 'footstep').map(e => e.data.who), node: u.path[u.idx] };
+  return { value2, footsteps: s.events.slice(before).filter((e): e is Extract<SimEvent, { type: 'footstep' }> => e.type === 'footstep').map(e => e.data.who), node: u.path[u.idx] };
 };
 
 {
@@ -38,9 +40,9 @@ const rollAt122 = (opts, id) => {
 
 // An arrival at 122 while value 2 is still above 0 draws; the draw is once per continuous overlap (NotAlways).
 {
-  const arrive = (opts) => {
+  const arrive = (opts: Partial<SimOptions>) => {
     const s = new Sim({ ...QUIET, ...SOURCED, ...opts });
-    const u = s.units.find(x => x.id === 'toybonnie');
+    const u = s.units.find(x => x.id === 'toybonnie') as Unit;   // one of the seven route units
     u.idx = u.path.length - 2; u.value2 = 5; u.promoted = true;
     s.footstepDraws();                        // on CAM 06: no marker
     u.idx += 1; u.atOpening = true;           // g428 into the vent
@@ -54,7 +56,7 @@ const rollAt122 = (opts, id) => {
 
 // Off leaves the default unchanged.
 {
-  const run = opts => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
+  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
   assert.equal(run({}), run({ sourcedOfficeFootsteps: false }), 'off equals the default');
 }
 

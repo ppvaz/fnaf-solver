@@ -5,6 +5,8 @@
 // start frame.
 import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
+import type { Unit } from '../src/games/fnaf2/plant-model.ts';
+import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
 
 const SOURCED = { sourcedDropLightOrder: true, sourcedFoxyChain: true, sourcedSecondPass: true, sourcedSheetOrder: true,
                   sourcedBlackoutDraws: true, frameMs: () => 50 / 3 };
@@ -14,7 +16,7 @@ const QUIET = { night: 7, seed: 5, lethal: false, stalledEnabled: false, bbEnabl
 assert.throws(() => new Sim({ ...QUIET, sourcedBlackoutClockEnd: true }), /requires sourcedBlackoutDraws and frameMs/);
 
 /** Frames from the start frame to the frame the encounter resolved on. */
-const length = (opts) => {
+const length = (opts: Partial<SimOptions>) => {
   const s = new Sim({ ...QUIET, ...SOURCED, ...opts });
   for (let i = 0; i < 30; i += 1) s.tick();
   s.startBlackout('test');
@@ -40,7 +42,7 @@ for (const v5 of [{ frameValue5: () => 1 }, { sourcedValue5: true }]) {
   s.maskOn = false; s.monitor = 'up'; s.viewing = 11; s.tick();
   s.monitor = 'down'; s.viewing = 0;
   s.opts.stalledEnabled = true;
-  const u = s.units.find(x => x.id === 'withchica');
+  const u = s.units.find(x => x.id === 'withchica') as Unit;   // one of the seven route units
   u.atOpening = true; u.officeCue = false;
   s.tick();
   assert.equal(s.blackoutClock, 301, 'entry retains the previous clock');
@@ -67,7 +69,7 @@ for (const v5 of [{ frameValue5: () => 1 }, { sourcedValue5: true }]) {
 
 // Off leaves the default unchanged.
 {
-  const run = opts => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
+  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
   assert.equal(run({}), run({ sourcedBlackoutClockEnd: false }), 'off equals the default');
 }
 

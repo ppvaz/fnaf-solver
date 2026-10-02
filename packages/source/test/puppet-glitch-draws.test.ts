@@ -1,12 +1,13 @@
 // The Puppet's static glitch chain under sourcedPuppetGlitchDraws (dump g500-g506, g774).
 import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
+import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
 
 const QUIET = { night: 7, seed: 71, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false,
                 boxEnabled: false, foxyEnabled: false };
-const lcg = s => (s * 31415 + 1) & 0xffff;
-const stepsTo = (from, to) => { let n = 0, s = from; while (s !== to && n < 50) { s = lcg(s); n++; } return n; };
-const view = (s, cam) => { s.monitor = 'up'; s.monAnim = 0; s.viewing = cam; s.cam = cam; };
+const lcg = (s: number) => (s * 31415 + 1) & 0xffff;
+const stepsTo = (from: number, to: number) => { let n = 0, s = from; while (s !== to && n < 50) { s = lcg(s); n++; } return n; };
+const view = (s: Sim, cam: number) => { s.monitor = 'up'; s.monAnim = 0; s.viewing = cam; s.cam = cam; };
 
 // In the box (CAM 11): no draws, flag or not.
 {
@@ -29,7 +30,7 @@ const view = (s, cam) => { s.monitor = 'up'; s.monAnim = 0; s.viewing = cam; s.c
 {
   const s = new Sim({ ...QUIET, sourcedPuppetGlitchDraws: true }); s.frame = 1000;
   s.puppet.out = true; s.puppet.loc = 3; view(s, 3); s.lightHeld = true;
-  s.tick(); assert.equal(s.glitch.value5, 1, 'set by g774');
+  s.tick(); assert.equal<number>(s.glitch.value5, 1, 'set by g774');
   s.lightHeld = false;
   let cleared = -1;
   for (let i = 1; i <= 8 && cleared < 0; i++) { s.tick(); if (s.glitch.value5 === 0) cleared = i; }
@@ -59,7 +60,7 @@ const view = (s, cam) => { s.monitor = 'up'; s.monAnim = 0; s.viewing = cam; s.c
 
 // Off: the default is unchanged.
 {
-  const run = opts => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
+  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
   if (new Sim({ night: 7, seed: 1 }).opts.sourcedPuppetGlitchDraws === false)
     assert.equal(run({}), run({ sourcedPuppetGlitchDraws: false }), 'explicit off equals the default');
 }

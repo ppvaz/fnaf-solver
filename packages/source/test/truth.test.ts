@@ -9,30 +9,38 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { isUnknown, validateClaimEnvelope } from '@sixam/kernel';
+import type { ClaimEnvelope, RefusalEnvelope } from '@sixam/kernel';
+import type { ExpressionItem } from '../src/truth/dump.ts';
 import { NO_LOCAL_DUMP, VAULT_ENV, createTruth, extractCcn } from '@sixam/source/truth';
 import { estimateHandleScramble, parseDump, parseParameter, truthUri } from '@sixam/source/truth/read';
+import type { describeObject } from '@sixam/source/truth/read';
 import { STORED, SYNTHETIC_K, eventHandle, renderedSheet, storedZip, syntheticCcn, syntheticDump } from './fixtures/truth-dump.ts';
+
+/** What truth answers, read as either envelope. */
+type Envelope = Partial<ClaimEnvelope> & Partial<RefusalEnvelope>;
+/** An object truth describes from its item-table row. */
+type Described = Extract<ReturnType<typeof describeObject>, { readonly typeName: unknown }>;
 
 const ROOT = resolve(fileURLToPath(new URL('../../..', import.meta.url)));
 const temp = mkdtempSync(join(tmpdir(), 'truth-test-'));
-const write = (name, text) => { const path = join(temp, name); writeFileSync(path, text); return path; };
+const write = (name: string, text: string | Buffer) => { const path = join(temp, name); writeFileSync(path, text); return path; };
 const dumpText = syntheticDump();
 const dumpFile = write('events.txt', dumpText);
-const vault = (name, config) => write(name, JSON.stringify({ schema: 'truth-local-vault-v1', ...config }));
-const truthWith = (vaultFile, extra = {}) => createTruth({ root: ROOT, env: { PATH: '', [VAULT_ENV]: vaultFile, ...extra } });
-const claim = (value, what) => {
+const vault = (name: string, config: Record<string, unknown>) => write(name, JSON.stringify({ schema: 'truth-local-vault-v1', ...config }));
+const truthWith = (vaultFile: string, extra = {}) => createTruth({ root: ROOT, env: { PATH: '', [VAULT_ENV]: vaultFile, ...extra } });
+const claim = <T extends Envelope>(value: T, what: string) => {
   validateClaimEnvelope(value);
   assert.notEqual(value.refused, true, `${what} is a claim: ${JSON.stringify(value).slice(0, 400)}`);
   assert.equal(value.label, 'SOURCED', `${what} is SOURCED`);
-  return value;
+  return value as Extract<T, ClaimEnvelope>;   // a refusal fails the first assertion
 };
-const refused = (value, rule, what) => {
+const refused = <T extends Envelope>(value: T, rule: string, what: string) => {
   validateClaimEnvelope(value);
   assert.equal(value.refused, true, `${what} is refused: ${JSON.stringify(value).slice(0, 300)}`);
   assert.equal(value.rule, rule, `${what} is refused by ${rule}, not ${value.rule}`);
-  return value;
+  return value as Extract<T, RefusalEnvelope>;   // a claim fails the first assertion
 };
-const groupsOf = answer => answer.claim.matches.map(match => `${match.frame}/${match.group}`);
+const groupsOf = (answer: { readonly claim: { readonly matches: readonly { readonly frame: number | null, readonly group: string }[] } }) => answer.claim.matches.map(match => `${match.frame}/${match.group}`);
 let checks = 0;
 
 try {
@@ -49,13 +57,13 @@ try {
   assert.deepEqual(compare.params.map(param => [param.code, param.loader, param.parsed]), [[50, 'AlterableValue', true], [23, 'ExpressionParameter', true]]);
   assert.equal(compare.params[0].slot, 2);
   assert.equal(compare.params[1].comparison, '==');
-  assert.deepEqual(compare.params[1].items.map(item => [item.objectType, item.num, item.loader, item.value]), [[-1, 0, 'LongExp', 1], [0, 0, null, null]]);
+  assert.deepEqual((compare.params[1].items as readonly Exclude<ExpressionItem, { readonly parsed: false }>[]).map(item => [item.objectType, item.num, item.loader, item.value]), [[-1, 0, 'LongExp', 1], [0, 0, null, null]]);   // both tokens parse
   const create = dump.frames[1].groups[2].actions[0].params[0];
-  assert.deepEqual([create.loader, create.handle, create.position.parent, create.position.x], ['Create', eventHandle('crate'), eventHandle('lamp'), 10]);
+  assert.deepEqual([create.loader, create.handle, create.position?.parent, create.position?.x], ['Create', eventHandle('crate'), eventHandle('lamp'), 10]);
   // The dumper's global-value rendering: a digit string above 26, the character with that code at or below it, and one space for 9, 10 and 13.
-  assert.equal((parseParameter(['49', 'GlobalValue', 'GlobalValue30'].join(':')) as any).slot, 30);
-  assert.equal((parseParameter(['49', 'GlobalValue', `GlobalValue${String.fromCharCode(0)}`].join(':')) as any).slot, 0);
-  assert.ok(isUnknown((parseParameter(['49', 'GlobalValue', 'GlobalValue '].join(':')) as any).slot), 'a global rendered as a space is UNKNOWN');
+  assert.equal(parseParameter(['49', 'GlobalValue', 'GlobalValue30'].join(':')).slot, 30);
+  assert.equal(parseParameter(['49', 'GlobalValue', `GlobalValue${String.fromCharCode(0)}`].join(':')).slot, 0);
+  assert.ok(isUnknown(parseParameter(['49', 'GlobalValue', 'GlobalValue '].join(':')).slot), 'a global rendered as a space is UNKNOWN');
   assert.equal(parseParameter(['29', 'IntParam', 'CTFAK.CCN.Chunks.Frame.IntParam'].join(':')).parsed, false);
   assert.deepEqual(parseParameter(['32', 'Click', '0-0'].join(':')), { code: 32, loader: 'Click', parsed: true, button: 0, double: false });
   checks += 1;
@@ -63,7 +71,7 @@ try {
   // --- K by object-type agreement ---------------------------------------------------------------
   const k28 = estimateHandleScramble(dump);
   assert.deepEqual([k28.k, k28.agreement, k28.ambiguous], [SYNTHETIC_K, 1, false], 'the synthetic K=28 is recovered at full agreement');
-  assert.ok(k28.margin > 0.3, `a sharp margin over the runner-up (${k28.margin})`);
+  assert.ok(Number(k28.margin) > 0.3, `a sharp margin over the runner-up (${k28.margin})`);
   const k0 = estimateHandleScramble(parseDump(syntheticDump({ k: 0 })));
   assert.deepEqual([k0.k, k0.agreement], [0, 1], 'an unscrambled dump (a PC build) reads K=0');
   assert.equal(estimateHandleScramble(parseDump(dumpText.split('\n').filter(line => !line.startsWith(' C') && !line.startsWith(' A')).join('\n'))).ambiguous, true,
@@ -83,12 +91,12 @@ try {
   assert.deepEqual(value.cite.slice(0, 2), [truthUri('fnaf2', 1, 0), truthUri('fnaf2', 1, 1)]);
   assert.equal(value.cite[0], 'fnaf://truth/fnaf2/frame/1/group/0');
   assert.equal(value.claim.handleScramble.k, SYNTHETIC_K);
-  assert.equal(value.claim.target.objects[0].name, 'lamp');
+  assert.equal(value.claim.target.objects?.[0]?.name, 'lamp');
   const [g0] = value.claim.matches;
   assert.deepEqual(g0.hits.map(hit => [hit.ace, hit.access, hit.via]), [['condition 0', 'read', 'alterable-value'], ['action 0', 'write', 'alterable-value']]);
   assert.deepEqual(g0.conditions[0].object, { handle: eventHandle('lamp'), stored: STORED.lamp, name: 'lamp', type: 2, typeName: 'active' });
   assert.equal(g0.conditions[0].name, 'compare-alterable-value');
-  assert.equal(g0.actions[1].object.name, 'tally', 'each row names its object through K, not the dumper\'s NAME field');
+  assert.equal(g0.actions[1].object?.name, 'tally', 'each row names its object through K, not the dumper\'s NAME field');
   assert.equal(value.claim.matches[1].hits[0].via, 'expression', 'an expression token that reads the value is a read');
   assert.ok(value.notMeasured.some(item => item.startsWith(`the handle scramble K=${SYNTHETIC_K}`)), 'the K caveat is named');
   assert.match(value.reproducer, /^npm run review -- truth events fnaf2 '/);
@@ -117,7 +125,7 @@ try {
   const limited = claim(truth.events({ game: 'fnaf2', query: { object: 'tally', limit: 1 } }), 'a limit');
   assert.equal(limited.claim.shown, 1);
   assert.ok(limited.notMeasured.includes('2 more matching groups beyond the limit'));
-  const cited = claim(truth.readUri('fnaf://truth/fnaf2/frame/1/group/4'), 'a cited group, read back');
+  const cited = claim(truth.readUri('fnaf://truth/fnaf2/frame/1/group/4') as NonNullable<ReturnType<typeof truth.readUri>>, 'a cited group, read back');   // a truth URI
   assert.deepEqual(groupsOf(cited), ['1/g4']);
   assert.ok(cited.notMeasured.some(item => item.includes('IntParam')), 'a parameter printed only as a class name is named');
   assert.equal(truth.readUri('fnaf://truth/fnaf2/group/1'), null, 'a URI without its frame is not a truth URI');
@@ -125,14 +133,14 @@ try {
 
   // --- object ----------------------------------------------------------------------------------
   const described = claim(truth.object({ game: 'fnaf2', name: 'crate' }), 'object crate');
-  const [row] = described.claim.objects;
+  const [row] = described.claim.objects as readonly Described[];   // crate is an item-table row
   assert.deepEqual([row.handle, row.type, row.typeName, row.frames], [eventHandle('crate'), 2, 'active', [1]]);
   assert.deepEqual(row.createdBy.map(item => item.group), ['g2']);
   assert.deepEqual(row.destroyedBy.map(item => item.group), ['g3']);
   assert.ok(isUnknown(row.placed), 'where it is placed is UNKNOWN, with its reason');
   assert.ok(described.cite.includes(truthUri('fnaf2', 1, 2)) && described.cite.includes(truthUri('fnaf2', 1, 3)));
   const lamp = claim(truth.object({ game: 'fnaf2', handle: eventHandle('lamp') }), 'object lamp by handle');
-  assert.deepEqual([lamp.claim.objects[0].name, lamp.claim.objects[0].initialValues], ['lamp', [0, 0, 5]]);
+  assert.deepEqual([(lamp.claim.objects[0] as Described).name, lamp.claim.objects[0].initialValues], ['lamp', [0, 0, 5]]);   // lamp is an item-table row
   assert.equal(lamp.reproducer, `npm run review -- truth object fnaf2 --handle ${eventHandle('lamp')}`);
   checks += 1;
 
@@ -201,7 +209,7 @@ try {
   checks += 1;
 
   // --- the dump-text check: tracked files pass it, the generated text does not --------------------
-  const check = file => spawnSync(process.execPath, [join(ROOT, 'tools/dump-text-check.ts'), file], { encoding: 'utf8' });
+  const check = (file: string) => spawnSync(process.execPath, [join(ROOT, 'tools/dump-text-check.ts'), file], { encoding: 'utf8' });
   const tracked = ['packages/source/src/truth/dump.ts', 'packages/source/src/truth/engine.ts', 'packages/source/src/truth/handles.ts',
     'packages/source/src/truth/query.ts', 'packages/source/src/truth/index.ts', 'packages/source/decompile/truth.ts',
     'packages/source/test/truth.test.ts', 'packages/source/test/fixtures/truth-dump.ts', 'packages/source/test/fixtures/truth-decoder-stub.ts'];

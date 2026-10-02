@@ -2,9 +2,10 @@
 // off, no encounter blackout and no committed attack. Off: the default is unchanged.
 import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
+import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
 
 const BASE = { night: 7, seed: 5, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false, boxEnabled: false, foxyEnabled: false };
-const settle = (s, n) => { for (let i = 0; i < n; i++) s.tick(); };
+const settle = (s: Sim, n: number) => { for (let i = 0; i < n; i++) s.tick(); };
 
 // Plain raise from the office still works.
 { const s = new Sim({ ...BASE, sourcedMonitorRaiseGate: true }); settle(s, 5); s.press('monitor'); settle(s, 20); assert.equal(s.monitor, 'up'); }
@@ -32,7 +33,7 @@ const settle = (s, n) => { for (let i = 0; i < n; i++) s.tick(); };
   s.press('monitor'); settle(s, 30); assert.equal(s.monitor, 'down', 'a raise pressed mid-lowering is refused'); }
 
 // Off: the default is unchanged.
-{ const run = opts => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
+{ const run = (opts: Partial<SimOptions>) => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
   if (new Sim({ night: 7, seed: 1 }).opts.sourcedMonitorRaiseGate === false)
     assert.equal(run({}), run({ sourcedMonitorRaiseGate: false }), 'explicit off equals the default'); }
 console.log('monitor raise gate: refused with the mask on or mid-animation, in danger, or a moving panel; accepted from a still office; off unchanged');

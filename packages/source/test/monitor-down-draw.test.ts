@@ -1,11 +1,12 @@
 // The monitor-down image's draw under sourcedMonitorDownDraw (generated e7, e211, e720-e722, e871-e872; dump g807).
 import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
+import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
 
 const QUIET = { night: 7, seed: 51, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false,
                 boxEnabled: false, foxyEnabled: false };
-const drawsIn = (s, ticks) => { let n = 0; for (let i = 0; i < ticks; i++) { const b = s.rng.state; s.tick(); if (s.rng.state !== b) n++; } return n; };
-const up = s => { s.monitor = 'up'; s.monAnim = 0; };
+const drawsIn = (s: Sim, ticks: number) => { let n = 0; for (let i = 0; i < ticks; i++) { const b = s.rng.state; s.tick(); if (s.rng.state !== b) n++; } return n; };
+const up = (s: Sim) => { s.monitor = 'up'; s.monAnim = 0; };
 
 // One draw on the drop frame, none while the sprite shows.
 {
@@ -34,7 +35,7 @@ const up = s => { s.monitor = 'up'; s.monAnim = 0; };
 
 // Off: the default is unchanged.
 {
-  const run = opts => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
+  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
   if (new Sim({ night: 7, seed: 1 }).opts.sourcedMonitorDownDraw === false)
     assert.equal(run({}), run({ sourcedMonitorDownDraw: false }), 'explicit off equals the default');
 }
