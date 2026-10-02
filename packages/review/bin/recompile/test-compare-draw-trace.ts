@@ -29,14 +29,14 @@ assert.equal(compareTrace(header.replace('24850', '7') + rows, settings).status,
 assert.equal(compareTrace(header + rows + header + rows, settings).status, 'INVALID_COMPARISON');
 const divergent = compareTrace(header + rows.replace(/^3 0 \d+ \d+/, '3 0 2 0'), settings);
 assert.equal(divergent.status, 'DIVERGENT');
-assert.equal(divergent.alignments[1].firstMismatch.tick, 0);
+assert.equal(divergent.alignments[1].firstMismatch?.tick, 0);
 // A mismatch on the last update of a visit the rebuild left is the terminal loop; the same
 // mismatch where the harness merely stopped is a divergence.
 const lastRow = rows.trimEnd().split('\n').length - 1;
 const endMismatch = rows.replace(new RegExp(`^3 ${lastRow} \\d+ \\d+`, 'm'), `3 ${lastRow} 999 1`);
 const left = compareTrace(header + endMismatch + '# frame 4 seeded 24850\n4 0 0 1\n', settings);
 assert.equal(left.status, 'MATCHED_TO_TERMINAL_LOOP');
-assert.equal(left.alignments[1].firstMismatch.tick, lastRow);
+assert.equal(left.alignments[1].firstMismatch?.tick, lastRow);
 assert.equal(compareTrace(header + endMismatch, settings).status, 'DIVERGENT');
 assert.throws(() => compareTrace(header + rows.trimEnd(), settings), /truncated/);
 assert.throws(() => compareTrace(header + '3 1 0 24850\n', settings), /interleaved/);
@@ -53,8 +53,8 @@ const customRows = customModel.out.slice(1).map((row, tick) => `3 ${tick} ${row.
 const customResult = compareTrace(header + customRows, custom);
 assert.equal(customResult.status, 'MATCHED_PREFIX');
 assert.deepEqual(customResult.scope.customNight, zero);
-assert.equal(customResult.model.death.reason, 'puppet');
-assert.equal(compareTrace(header + customRows, { ...custom, customNight: null }).model.death.reason, 'foxy',
+assert.equal(customResult.model.death?.reason, 'puppet');
+assert.equal(compareTrace(header + customRows, { ...custom, customNight: null }).model.death?.reason, 'foxy',
   'the dials reach the model: the 10/20 table plays a different night');
 assert.equal(compareTrace(header + rows, settings).scope.customNight, undefined, 'story nights carry no dial vector');
 console.log('PASS recompile comparison: exact prefix, mismatch, terminal loop, absent/short target, wrong seed, repeated visit, truncated trace and Custom Night dials (FIXTURE)');

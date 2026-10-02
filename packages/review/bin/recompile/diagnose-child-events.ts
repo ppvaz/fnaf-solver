@@ -6,13 +6,13 @@ import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-const hash = (data) => createHash('sha256').update(data).digest('hex');
-const fileHash = (path) => hash(readFileSync(path));
+const hash = (data: string | Buffer) => createHash('sha256').update(data).digest('hex');
+const fileHash = (path: string | URL) => hash(readFileSync(path));
 
-function completed(text) {
+function completed(text: string) {
   if (!/\[Inferior \d+ .*exited normally\]/.test(text)) throw new Error('debugger probe did not exit normally');
 }
-export function parseRngProbe(text) {
+export function parseRngProbe(text: string) {
   completed(text);
   const draws = [...text.matchAll(/^DRAW event=(\d+) range=(\d+) loop=(\d+) draws=(\d+) state=(\d+)$/gm)]
     .map((m) => Object.fromEntries(['generatedEvent', 'range', 'loop', 'draws', 'state'].map((key, i) => [key, Number(m[i + 1])])));
@@ -21,7 +21,7 @@ export function parseRngProbe(text) {
   if (!draws.length || !imageChecks.length) throw new Error('missing positive RNG/condition measurements');
   return { draws, imageChecks };
 }
-export function parseViewingProbe(text) {
+export function parseViewingProbe(text: string) {
   completed(text);
   const initial = /^INITIAL viewing=(-?[\d.]+)$/m.exec(text);
   if (!initial) throw new Error('missing initial viewing measurement');
@@ -33,9 +33,9 @@ export function parseViewingProbe(text) {
   return { initial: Number(initial[1]), writes,
     ...(final ? { final: { value: Number(final[1]), loop: Number(final[2]) }, imageChecks: images } : {}) };
 }
-export function parseChildCensus(text) {
+export function parseChildCensus(text: string) {
   const frames = [...text.matchAll(/^COUNTS (\d+) (-?\d+) (\{[^\n]+\})$/gm)].map((m) => {
-    const count = (key) => Number(new RegExp(`'${key}': (\\d+)`).exec(m[3])?.[1] ?? 0);
+    const count = (key: string) => Number(new RegExp(`'${key}': (\\d+)`).exec(m[3])?.[1] ?? 0);
     return { frame: Number(m[1]), unclosedDepth: Number(m[2]), parentLists: count('parent'), childRows: count('child'), listEnds: count('end') };
   });
   if (!frames.length || frames.length !== (text.match(/^COUNTS /gm) ?? []).length ||
@@ -45,16 +45,16 @@ export function parseChildCensus(text) {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const args: any = {};
+  const args: Record<string, string> = {};
   for (let i = 2; i < process.argv.length; i += 2) {
     if (!['--external', '--after-default', '--after-sourced', '--out'].includes(process.argv[i]) || !process.argv[i + 1]) throw new Error('see usage');
     args[process.argv[i].slice(2)] = process.argv[i + 1];
   }
   if (Object.keys(args).length !== 4) throw new Error('all four arguments are required');
-  const external = (name) => resolve(args.external, name);
-  const text = (name) => readFileSync(external(name), 'utf8');
-  const resultRef = (path) => {
-    const data = JSON.parse(readFileSync(path));
+  const external = (name: string) => resolve(args.external, name);
+  const text = (name: string) => readFileSync(external(name), 'utf8');
+  const resultRef = (path: string | URL) => {
+    const data = JSON.parse(String(readFileSync(path)));
     if (data.claimLevel !== 'MODEL_ONLY' || data.schema !== 'recompile-draw-comparison-v1') throw new Error('invalid comparison');
     return { evidenceId: data.evidenceId, status: data.status, sha256: fileHash(path),
       targetUpdates: data.runtime.targetUpdates, alignments: data.alignments };
@@ -67,7 +67,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     'runs/child-timer-office-64.trace', 'runs/child-timer-office-64.log',
     'runs/child-timer-viewing-gdb.log', 'runs/child-timer-viewing.trace', 'runs/child-contract-test.log'];
   const afterViewingPath = external('runs/child-timer-viewing-gdb.log');
-  const result: any = {
+  const result: Record<string, unknown> = {
     schema: 'recompile-child-diagnosis-v1', claimLevel: 'MODEL_ONLY', fidelity: 'rebuilt-runtime',
     status: 'SOURCE_SUPPORTED_CORRECTION',
     question: 'What source event path causes the first measured RNG disagreement?',

@@ -5,7 +5,7 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { summarizeBenchTrace } from '@sixam/review/measure';
 
-function argument(name) {
+function argument(name: string) {
   const index = process.argv.indexOf(name);
   return index < 0 ? null : process.argv[index + 1];
 }
@@ -30,7 +30,7 @@ if (helpRequested) {
     if (outputPath) await writeFile(outputPath, text);
     process.stdout.write(text);
   } catch (error) {
-    console.error(`bench trace: ${error.message}`);
+    console.error(`bench trace: ${(error as Error).message}`);
     process.exitCode = 2;
   }
 }

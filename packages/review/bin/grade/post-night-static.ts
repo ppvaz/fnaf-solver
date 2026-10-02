@@ -57,24 +57,45 @@ const EPISODE_END = new Set([...TERMINAL, 'state=title', 'state=intro']);
 // still a post-night static to it (night7-night7-k3-seedlog-01).
 const RUN_END = new Set([...TERMINAL, 'state=title']);
 
-const readJsonl = path => readFileSync(path, 'utf8').split('\n').filter(line => line.trim())
+const readJsonl = (path: string) => readFileSync(path, 'utf8').split('\n').filter(line => line.trim())
   .map(line => JSON.parse(line));
-const stamp = value => typeof value === 'number' ? value : Date.parse(value);
-const isLifecycle = label => typeof label === 'string' && (label.startsWith('state=') || label.startsWith('unknown='));
-const isPositive = label => typeof label === 'string' && label.startsWith('state=');
+const stamp = (value: number | string) => typeof value === 'number' ? value : Date.parse(value);
+const isLifecycle = (label: unknown): label is string =>
+  typeof label === 'string' && (label.startsWith('state=') || label.startsWith('unknown='));
+const isPositive = (label: unknown) => typeof label === 'string' && label.startsWith('state=');
+const finite = (value: number | null): value is number => Number.isFinite(value);
+
+/** A pack row this tool reads: a lifecycle read or an event, stamped in ms or as an ISO time. */
+interface PackRow {
+  readonly type?: string; readonly script?: string; readonly at: number | string; readonly label?: unknown;
+  readonly reason?: string; readonly releaseAt?: number;
+}
+/** A lifecycle read on the host clock. */
+export interface Read { readonly at: number; readonly label: string }
+type ReadSource = 'reads' | 'label-changes';
+/** A post-night static episode while it is walked; its positive reads are folded into a count when it closes. */
+interface WalkedEpisode {
+  run: string; source: ReadSource; firstAt: number; gapBeforeMs: number | null;
+  secondReadMs: number | null; secondReadLabel: string | null; staticReads: number;
+  nightReadsAfterMs: number[]; positiveAfter: string[]; end: { state: string; delayMs: number } | null;
+}
+/** Each lifecycle label's positive reads inside a night, and how many of them the night went on after. */
+type MisreadCounts = Record<string, { reads: number; liveNight: number }>;
 
 /**
  * The lifecycle reads of one pack, from the richest source it kept.
  */
-export function packReads(dir: string): { source: 'reads' | 'label-changes', reads: { at: number, label: string }[] } {
+export function packReads(dir: string): { source: ReadSource, reads: Read[] } {
   const observations = join(dir, 'observations.jsonl');
   if (existsSync(observations)) {
-    const reads = readJsonl(observations).filter(row => row.script === LIFECYCLE_SCRIPT && isLifecycle(row.label))
+    const rows: PackRow[] = readJsonl(observations);
+    const reads = rows.filter((row): row is PackRow & { label: string } => row.script === LIFECYCLE_SCRIPT && isLifecycle(row.label))
       .map(row => ({ at: stamp(row.at), label: row.label }));
     if (reads.length) return { source: 'reads', reads };
   }
-  const reads = readJsonl(join(dir, 'events.jsonl'))
-    .filter(row => row.type === 'observation' && isLifecycle(row.label))
+  const rows: PackRow[] = readJsonl(join(dir, 'events.jsonl'));
+  const reads = rows
+    .filter((row): row is PackRow & { label: string } => row.type === 'observation' && isLifecycle(row.label))
     .map(row => ({ at: stamp(row.at), label: row.label }));
   return { source: 'label-changes', reads };
 }
@@ -86,12 +107,13 @@ export function packReads(dir: string): { source: 'reads' | 'label-changes', rea
  * rather than ending it: p1b read `state=night` once from inside its death
  * minigame, and whether the night went on is what is being asked.
  */
-export function postNightStaticEpisodes(run: string, source: 'reads' | 'label-changes', reads: { at: number, label: string }[]) {
-  const episodes = [];
+export function postNightStaticEpisodes(run: string, source: ReadSource, reads: readonly Read[]) {
+  const episodes: WalkedEpisode[] = [];
   let night = false;
-  let episode = null;
-  let previousAt = null;
-  const close = () => { episodes.push(episode); episode = null; night = false; };
+  let episode = null as WalkedEpisode | null;
+  let previousAt = null as number | null;
+  // Called only while an episode is open.
+  const close = () => { episodes.push(episode as WalkedEpisode); episode = null; night = false; };
   for (const read of reads) {
     if (episode) {
       const delayMs = read.at - episode.firstAt;
@@ -141,8 +163,8 @@ export const nightWentOn = (episode: ReturnType<typeof postNightStaticEpisodes>[
  * Positive non-night reads inside a live night, in packs that keep every read:
  * a read after a night whose next two positive reads both name the office.
  */
-export function liveNightMisreads(reads: { at: number, label: string }[]) {
-  const counts = {};
+export function liveNightMisreads(reads: readonly Read[]) {
+  const counts: MisreadCounts = {};
   let night = false;
   for (const [index, read] of reads.entries()) {
     if (read.label === NIGHT) { night = true; continue; }
@@ -160,10 +182,10 @@ export function liveNightMisreads(reads: { at: number, label: string }[]) {
  * Read-to-read gaps while a night runs (after a night read, up to the first
  * static, terminal, title or intro read).
  */
-export function nightGaps(reads: { at: number, label: string }[]) {
-  const gaps = [];
+export function nightGaps(reads: readonly Read[]) {
+  const gaps: number[] = [];
   let night = false;
-  let previousAt = null;
+  let previousAt = null as number | null;
   for (const read of reads) {
     if (night && previousAt !== null && read.label !== STATIC && !EPISODE_END.has(read.label))
       gaps.push(read.at - previousAt);
@@ -174,7 +196,7 @@ export function nightGaps(reads: { at: number, label: string }[]) {
   return gaps;
 }
 
-const summary = values => values.length === 0 ? { n: 0, minMs: null, maxMs: null }
+const summary = (values: number[]) => values.length === 0 ? { n: 0, minMs: null, maxMs: null }
   : { n: values.length, minMs: Math.min(...values), maxMs: Math.max(...values) };
 
 /**
@@ -183,11 +205,12 @@ const summary = values => values.length === 0 ? { n: 0, minMs: null, maxMs: null
  * that stop -- what halting at the static would have withheld.
  */
 function sixamActuation(dir: string, firstAt: number, endMs: number) {
-  const rows = readJsonl(join(dir, 'events.jsonl'));
+  const rows: PackRow[] = readJsonl(join(dir, 'events.jsonl'));
   const stop = rows.find(row => row.type === 'campaign.abort.restart' && stamp(row.at) >= firstAt);
   const stopMs = stop ? stamp(stop.at) - firstAt : null;
   const until = stopMs ?? endMs;
-  const releasesAfterStaticMs = rows.filter(row => row.type === 'control.gate' && Number.isFinite(row.releaseAt))
+  const releasesAfterStaticMs = rows
+    .filter((row): row is PackRow & { releaseAt: number } => row.type === 'control.gate' && Number.isFinite(row.releaseAt))
     .map(row => row.releaseAt - firstAt).filter(delta => delta >= 0 && delta < until);
   const pressingMs = stopMs === null || releasesAfterStaticMs.length === 0 ? null
     : stopMs - Math.min(...releasesAfterStaticMs);
@@ -199,8 +222,8 @@ export function measurePostNightStatic({ root = ROOT, runs }: { root?: string, r
   const runsDir = join(root, RUNS_DIR);
   const scanned = (runs ?? readdirSync(runsDir).filter(name => existsSync(join(runsDir, name, 'events.jsonl'))))
     .slice().sort();
-  const episodes = [];
-  const full = { packs: 0, nightReads: 0, postNightStaticReads: 0, misreads: {}, nightGaps: [] };
+  const episodes: (ReturnType<typeof postNightStaticEpisodes>[number] & { dir: string })[] = [];
+  const full = { packs: 0, nightReads: 0, postNightStaticReads: 0, misreads: {} as MisreadCounts, nightGaps: [] as number[] };
   for (const run of scanned) {
     const dir = join(runsDir, run);
     const { source, reads } = packReads(dir);
@@ -216,18 +239,18 @@ export function measurePostNightStatic({ root = ROOT, runs }: { root?: string, r
     }
     for (const [label, count] of Object.entries(liveNightMisreads(reads))) {
       full.misreads[label] ??= { reads: 0, liveNight: 0 };
-      full.misreads[label].reads += (count as any).reads;
-      full.misreads[label].liveNight += (count as any).liveNight;
+      full.misreads[label].reads += count.reads;
+      full.misreads[label].liveNight += count.liveNight;
     }
     full.nightGaps.push(...nightGaps(reads));
   }
-  const byEnd = {};
+  const byEnd: Record<string, number> = {};
   for (const item of episodes) {
     const key = item.end?.state ?? 'open';
     byEnd[key] = (byEnd[key] ?? 0) + 1;
   }
   const fullEpisodes = episodes.filter(item => item.source === 'reads');
-  const sixam = episodes.filter(item => item.end?.state === 'sixam').map(item => ({
+  const sixam = episodes.filter((item): item is typeof item & { end: { state: string; delayMs: number } } => item.end?.state === 'sixam').map(item => ({
     run: item.run, source: item.source, delayMs: item.end.delayMs, staticReads: item.staticReads,
     insideWindow: item.end.delayMs < STATIC_TERMINAL_WAIT_MS,
     ...sixamActuation(item.dir, item.firstAt, item.end.delayMs),
@@ -240,7 +263,7 @@ export function measurePostNightStatic({ root = ROOT, runs }: { root?: string, r
   const gapRows = fullEpisodes.map(item => ({ run: item.run, gapBeforeMs: item.gapBeforeMs,
     secondReadMs: item.secondReadMs, secondReadLabel: item.secondReadLabel, staticReads: item.staticReads,
     end: item.end }));
-  const overBound = values => values.filter(value => value > OBSERVER_INTERVAL_BOUND_MS).length;
+  const overBound = (values: number[]) => values.filter(value => value > OBSERVER_INTERVAL_BOUND_MS).length;
   const body = {
     schema: 'post-night-static-halt-v1',
     id: RECORD_ID,
@@ -273,10 +296,10 @@ export function measurePostNightStatic({ root = ROOT, runs }: { root?: string, r
       postNightStaticReads: full.postNightStaticReads,
       episodes: fullEpisodes.length,
       liveNightMisreads: misreadRows,
-      secondReadAfterFirstStatic: { ...summary(fullEpisodes.map(item => item.secondReadMs).filter(Number.isFinite)),
-        overBound: overBound(fullEpisodes.map(item => item.secondReadMs).filter(Number.isFinite)) },
-      gapEndingAtFirstStatic: { ...summary(fullEpisodes.map(item => item.gapBeforeMs).filter(Number.isFinite)),
-        overBound: overBound(fullEpisodes.map(item => item.gapBeforeMs).filter(Number.isFinite)) },
+      secondReadAfterFirstStatic: { ...summary(fullEpisodes.map(item => item.secondReadMs).filter(finite)),
+        overBound: overBound(fullEpisodes.map(item => item.secondReadMs).filter(finite)) },
+      gapEndingAtFirstStatic: { ...summary(fullEpisodes.map(item => item.gapBeforeMs).filter(finite)),
+        overBound: overBound(fullEpisodes.map(item => item.gapBeforeMs).filter(finite)) },
       nightGaps: { ...summary(full.nightGaps), overBound: overBound(full.nightGaps),
         boundMs: OBSERVER_INTERVAL_BOUND_MS },
       byEpisode: gapRows,
@@ -303,10 +326,10 @@ export function measurePostNightStatic({ root = ROOT, runs }: { root?: string, r
 }
 
 /** Episodes in packs the record did not scan whose night went on after a post-night static. */
-export function newerPacksContradicting(record, { root = ROOT } = {}) {
+export function newerPacksContradicting(record: { readonly runs: { readonly scanned: readonly string[] } }, { root = ROOT } = {}) {
   const runsDir = join(root, RUNS_DIR);
   const known = new Set(record.runs.scanned);
-  const offenders = [];
+  const offenders: { run: string; end: WalkedEpisode['end']; consecutiveNightReadsAfter: number }[] = [];
   for (const run of readdirSync(runsDir).sort()) {
     if (known.has(run) || !existsSync(join(runsDir, run, 'events.jsonl'))) continue;
     const { source, reads } = packReads(join(runsDir, run));
@@ -315,14 +338,15 @@ export function newerPacksContradicting(record, { root = ROOT } = {}) {
       // A 6 AM the halted observer still reads inside its window is not a
       // contradiction; a night read twice in a row after a static, or a 6 AM
       // past the window, is.
-      if (episode.consecutiveNightReadsAfter < 2 && episode.end.delayMs < STATIC_TERMINAL_WAIT_MS) continue;
+      // A night that went on with fewer than two night reads after the static ended at 6 AM.
+      if (episode.consecutiveNightReadsAfter < 2 && (episode.end as { delayMs: number }).delayMs < STATIC_TERMINAL_WAIT_MS) continue;
       offenders.push({ run, end: episode.end, consecutiveNightReadsAfter: episode.consecutiveNightReadsAfter });
     }
   }
   return offenders;
 }
 
-export const serialize = record => `${JSON.stringify(record, null, 2)}\n`;
+export const serialize = (record: unknown) => `${JSON.stringify(record, null, 2)}\n`;
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const args = new Set(process.argv.slice(2));

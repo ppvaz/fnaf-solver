@@ -18,7 +18,7 @@ import {
 } from './post-night-static.ts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
-const reads = rows => rows.map(([at, label]) => ({ at, label }));
+const reads = (rows: readonly (readonly [number, string])[]) => rows.map(([at, label]) => ({ at, label }));
 
 // --- The tool's window is the executor's measured one -----------------------
 {
@@ -31,7 +31,7 @@ const reads = rows => rows.map(([at, label]) => ({ at, label }));
 {
   const [episode] = postNightStaticEpisodes('a', 'reads', reads([[0, 'state=night'], [1000, 'state=static'],
     [2600, 'unknown=no-signature-matched'], [4100, 'state=gameover']]));
-  assert.equal(episode.end.state, 'gameover');
+  assert.equal(episode.end?.state, 'gameover');
   assert.equal(episode.secondReadMs, 1600);
   assert.equal(episode.gapBeforeMs, 1000);
   assert.equal(nightWentOn(episode), false, 'a death is not a night that went on');
@@ -88,7 +88,7 @@ assert.equal(serialize(again), serialize(committed),
 {
   const root = mkdtempSync(join(tmpdir(), 'fnaf2-post-night-static-packs-'));
   try {
-    const pack = (name, rows) => {
+    const pack = (name: string, rows: readonly (readonly [number, string])[]) => {
       const dir = join(root, RUNS_DIR, name);
       mkdirSync(dir, { recursive: true });
       writeFileSync(join(dir, 'events.jsonl'), '');

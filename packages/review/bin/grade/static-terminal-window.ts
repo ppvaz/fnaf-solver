@@ -48,19 +48,33 @@ const TERMINAL = new Set(['state=gameover', 'state=sixam']);
 // intro card and then the title. Reads before that are still the dying game's.
 const RELAUNCH = new Set(['state=intro', 'state=title']);
 
-const readJsonl = path => readFileSync(path, 'utf8').split('\n').filter(line => line.trim())
+const readJsonl = (path: string) => readFileSync(path, 'utf8').split('\n').filter(line => line.trim())
   .map(line => JSON.parse(line));
+
+/** A pack's event row: its type and host-clock time, an observation's label, an abort's reason. */
+export interface PackRow { readonly type: string; readonly at: string; readonly label?: unknown; readonly reason?: string }
+/** One lifecycle read in a pack's observations.jsonl. */
+export interface LifecycleRead { readonly script?: string; readonly at: number; readonly label: string }
+
+/** A static episode after a night, by how it ended, timed from its first static read. */
+export type StaticEpisode =
+  | { run: string; kind: 'terminal'; state: string; delayMs: number }
+  | { run: string; kind: 'title' | 'night-resumed'; delayMs: number }
+  | { run: string; kind: 'static-abort'; abortMs: number; terminalAfterAbort?: { state: string; delayMs: number } }
+  | { run: string; kind: 'other-abort'; abortMs: number }
+  | { run: string; kind: 'open' };
+type StaticAbort = Extract<StaticEpisode, { kind: 'static-abort' }>;
 
 /**
  * Walk one pack's event rows and name every static episode that follows a
  * night. An episode starts at the first `state=static` row after a
  * `state=night` row; an UNKNOWN read inside it does not end it.
  */
-export function staticEpisodes(run: string, rows: any[]) {
-  const episodes = [];
+export function staticEpisodes(run: string, rows: readonly PackRow[]) {
+  const episodes: StaticEpisode[] = [];
   let night = false;
-  let first = null;
-  let aborted = null;
+  let first = null as number | null;
+  let aborted = null as StaticAbort | null;
   for (const row of rows) {
     const at = Date.parse(row.at);
     const label = row.type === 'observation' && typeof row.label === 'string' ? row.label : null;
@@ -68,7 +82,8 @@ export function staticEpisodes(run: string, rows: any[]) {
       // Between the static abort and the relaunch: did the dying game still
       // show its terminal screen?
       if (label && TERMINAL.has(label)) {
-        aborted.terminalAfterAbort = { state: label.slice('state='.length), delayMs: at - first };
+        // A static abort keeps the first static read it was timed from.
+        aborted.terminalAfterAbort = { state: label.slice('state='.length), delayMs: at - (first as number) };
         episodes.push(aborted); aborted = null; first = null; night = false;
       } else if ((label && RELAUNCH.has(label)) || row.type === 'campaign.abort.restarted' ||
           row.type === 'campaign.abort.restart-failed') {
@@ -110,11 +125,11 @@ export function staticEpisodes(run: string, rows: any[]) {
  * last read before the abort row. Reads after an abort belong to the restart's
  * own waiter, not to the night's observer, and are left out.
  */
-export function staticReadGaps(observations: any[], abortAt: number | null = null) {
+export function staticReadGaps(observations: readonly LifecycleRead[], abortAt: number | null = null) {
   const reads = observations.filter(item => item.script === 'lifecycle-observe.py' &&
     Number.isFinite(item.at) && (abortAt === null || item.at <= abortAt));
-  const gaps = [];
-  let night = false; let inStatic = false; let prev = null;
+  const gaps: number[] = [];
+  let night = false; let inStatic = false; let prev = null as number | null;
   for (const read of reads) {
     if (read.label === 'state=night') { night = true; inStatic = false; prev = read.at; continue; }
     if (night && read.label === 'state=static' && !inStatic) inStatic = true;
@@ -125,20 +140,20 @@ export function staticReadGaps(observations: any[], abortAt: number | null = nul
   return gaps;
 }
 
-const summary = values => values.length === 0 ? { n: 0, minMs: null, maxMs: null }
+const summary = (values: number[]) => values.length === 0 ? { n: 0, minMs: null, maxMs: null }
   : { n: values.length, minMs: Math.min(...values), maxMs: Math.max(...values) };
 
 export function measureStaticTerminalWindow({ root = ROOT, runs }: { root?: string, runs?: string[] } = {}) {
   const runsDir = join(root, RUNS_DIR);
   const scanned = (runs ?? readdirSync(runsDir).filter(name => existsSync(join(runsDir, name, 'events.jsonl'))))
     .slice().sort();
-  const terminal = [];
-  const aborts = [];
-  const other = [];
-  const directGaps = [];
+  const terminal: Extract<StaticEpisode, { kind: 'terminal' }>[] = [];
+  const aborts: StaticAbort[] = [];
+  const other: { run: string; kind: string; delayMs?: number; abortMs?: number }[] = [];
+  const directGaps: number[] = [];
   let directPacks = 0;
   for (const run of scanned) {
-    const rows = readJsonl(join(runsDir, run, 'events.jsonl'));
+    const rows: PackRow[] = readJsonl(join(runsDir, run, 'events.jsonl'));
     const episodes = staticEpisodes(run, rows);
     for (const episode of episodes) {
       if (episode.kind === 'terminal') terminal.push(episode);
@@ -152,7 +167,7 @@ export function measureStaticTerminalWindow({ root = ROOT, runs }: { root?: stri
       if (gaps.length > 0) { directPacks += 1; directGaps.push(...gaps); }
     }
   }
-  const afterAbort = aborts.filter(item => item.terminalAfterAbort);
+  const afterAbort = aborts.filter((item): item is Required<StaticAbort> => Boolean(item.terminalAfterAbort));
   const staticToTerminal = [...terminal.map(item => item.delayMs),
     ...afterAbort.map(item => item.terminalAfterAbort.delayMs)];
   const gameover = terminal.filter(item => item.state === 'gameover');
@@ -213,21 +228,26 @@ export function measureStaticTerminalWindow({ root = ROOT, runs }: { root?: stri
 }
 
 /** Episodes in packs the record did not scan that read a terminal later than its maximum. */
-export function newerPacksBeyondMaximum(record, { root = ROOT } = {}) {
+export function newerPacksBeyondMaximum(
+  record: { readonly runs: { readonly scanned: readonly string[] }; readonly window: { readonly measuredMaxMs: number } },
+  { root = ROOT } = {},
+) {
   const runsDir = join(root, RUNS_DIR);
   const known = new Set(record.runs.scanned);
-  const offenders = [];
+  const offenders: { run: string; delayMs: number }[] = [];
   for (const run of readdirSync(runsDir).sort()) {
     if (known.has(run) || !existsSync(join(runsDir, run, 'events.jsonl'))) continue;
     for (const episode of staticEpisodes(run, readJsonl(join(runsDir, run, 'events.jsonl')))) {
-      const delayMs = episode.kind === 'terminal' ? episode.delayMs : episode.terminalAfterAbort?.delayMs;
-      if (Number.isFinite(delayMs) && delayMs > record.window.measuredMaxMs) offenders.push({ run, delayMs });
+      // Only a terminal episode and a static abort carry a terminal read.
+      const delayMs = episode.kind === 'terminal' ? episode.delayMs
+        : episode.kind === 'static-abort' ? episode.terminalAfterAbort?.delayMs : undefined;
+      if (delayMs !== undefined && Number.isFinite(delayMs) && delayMs > record.window.measuredMaxMs) offenders.push({ run, delayMs });
     }
   }
   return offenders;
 }
 
-export const serialize = record => `${JSON.stringify(record, null, 2)}\n`;
+export const serialize = (record: unknown) => `${JSON.stringify(record, null, 2)}\n`;
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const args = new Set(process.argv.slice(2));

@@ -17,8 +17,8 @@ import {
 } from './static-terminal-window.ts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
-const iso = ms => new Date(Date.UTC(2026, 8, 27) + ms).toISOString();
-const obs = (ms, label) => ({ at: iso(ms), type: 'observation', label });
+const iso = (ms: number) => new Date(Date.UTC(2026, 8, 27) + ms).toISOString();
+const obs = (ms: number, label: string) => ({ at: iso(ms), type: 'observation', label });
 
 // --- Episode rules on synthetic rows ----------------------------------------
 {
@@ -48,8 +48,8 @@ const obs = (ms, label) => ({ at: iso(ms), type: 'observation', label });
     'a static read inside a live night is not a death, and a later Game Over without static is not timed from it');
 }
 {
-  const reads = [[0, 'state=night'], [1200, 'state=night'], [2900, 'state=static'], [4600, 'state=static'],
-    [6300, 'state=gameover']].map(([at, label]) => ({ at, script: 'lifecycle-observe.py', label }));
+  const reads = ([[0, 'state=night'], [1200, 'state=night'], [2900, 'state=static'], [4600, 'state=static'],
+    [6300, 'state=gameover']] as const).map(([at, label]) => ({ at, script: 'lifecycle-observe.py', label }));
   assert.deepEqual(staticReadGaps(reads), [1700, 1700, 1700]);
   assert.deepEqual(staticReadGaps(reads, 4700), [1700, 1700],
     'reads after the abort row belong to the restart\'s own waiter');

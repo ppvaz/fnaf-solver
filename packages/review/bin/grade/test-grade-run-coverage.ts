@@ -21,7 +21,9 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '../../../..');
 // A script as the repository names it, however a caller climbed to it: grade-run.sh and this gate
 // sit together, but the directories they reach are not beside either of them.
-const key = (path) => relative(ROOT, resolve(HERE, path));
+const key = (path: string) => relative(ROOT, resolve(HERE, path));
+// A path's last part; splitting yields at least one.
+const lastPart = (path: string) => path.split('/').pop() as string;
 
 // Not instruments, and why. An entry here is a decision, not a formality:
 // deleting one is how a script gets promoted into grade-run.sh.
@@ -206,7 +208,7 @@ const SIBLING_EXCLUDED = new Map([
 
 const sh = readFileSync(join(HERE, 'grade-run.sh'), 'utf8');
 let failed = 0;
-const complain = (message) => { console.error(message); failed = 1; };
+const complain = (message: string) => { console.error(message); failed = 1; };
 
 // A full 420-second Moto recording is not a small test fixture: decoding it
 // into one Python byte string costs gigabytes before the classifier starts.
@@ -235,7 +237,7 @@ if (!/GRADE_MAX_VMEM_KB="\$\{GRADE_MAX_VMEM_KB:-2097152\}"/.test(sh) ||
 // Invocation lines only. The header's prose names instruments the script never
 // runs -- counting those as covered is exactly the lie this check exists for.
 const invocations = sh.split('\n').filter((line) => !/^\s*#/.test(line));
-const referenced = new Set();
+const referenced = new Set<string>();
 for (const line of invocations)
   for (const m of line.matchAll(/\$HERE\/((?:\.\.\/)?[\w./-]+\.(?:py|mjs|ts|sh))/g))
     referenced.add(key(m[1]));
@@ -254,13 +256,13 @@ for (const ref of referenced)
 // naming `test-select-adb.sh` was enough to report the file as run while its
 // registry entry was deleted. A check that a mention satisfies is a check
 // that measures documentation.
-const scriptNames = (text) => {
-  const found = new Set();
+const scriptNames = (text: string) => {
+  const found = new Set<string>();
   for (const line of text.split('\n')) {
     if (/^\s*(#|\/\/)/.test(line)) continue;
     for (const m of line.matchAll(/['"`]([\w./-]+\.(?:py|mjs|ts|sh))['"`]/g)) {
       found.add(m[1]);
-      found.add(m[1].split('/').pop());
+      found.add(lastPart(m[1]));
     }
   }
   return found;
@@ -270,11 +272,11 @@ const ciPath = join(ROOT, '.github', 'workflows', 'ci.yml');
 const registered = scriptNames(readFileSync(suitePath, 'utf8'));
 // CI invokes gates as shell command lines rather than quoted strings.
 const ci = existsSync(ciPath) ? readFileSync(ciPath, 'utf8') : '';
-const ciNames = new Set();
+const ciNames = new Set<string>();
 for (const line of ci.split('\n')) {
   if (/^\s*#/.test(line)) continue;
   for (const m of line.matchAll(/([\w./-]+\.(?:py|mjs|ts|sh))/g))
-    ciNames.add(m[1].split('/').pop());
+    ciNames.add(lastPart(m[1]));
 }
 // The third registry. CI's lanes are `npm run test:contracts` and
 // `npm run test:core`, so a gate whose only registration is a package.json
@@ -283,13 +285,13 @@ for (const line of ci.split('\n')) {
 // Companion gate and three of the calibration gates. A checker that knows
 // one of two registries measures the registry it knows, not the coverage.
 const pkgPath = join(ROOT, 'package.json');
-const scriptNamesRun = new Set();
+const scriptNamesRun = new Set<string>();
 for (const command of Object.values(JSON.parse(readFileSync(pkgPath, 'utf8')).scripts ?? {}))
   for (const m of String(command).matchAll(/([\w./-]+\.(?:py|mjs|ts|sh))/g))
-    scriptNamesRun.add(m[1].split('/').pop());
+    scriptNamesRun.add(lastPart(m[1]));
 
-const runs = (gate) => {
-  const base = gate.split('/').pop();
+const runs = (gate: string) => {
+  const base = lastPart(gate);
   return registered.has(gate) || ciNames.has(base) || scriptNamesRun.has(base);
 };
 

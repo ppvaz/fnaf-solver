@@ -23,18 +23,43 @@ export const SCHEMA = 'device-run-report-v1';
 
 const UNKNOWN = 'UNKNOWN';
 
-const readJsonl = path => (existsSync(path)
+/** An executor event row: its type, and the fields this report reads from the rows that carry them. */
+export interface RunEvent {
+  readonly type: string;
+  readonly at?: number;
+  readonly armGoAt?: number;
+  readonly armReadyAtMs?: number;
+  readonly phaseLagMs?: number;
+  readonly elapsedMs?: number;
+  readonly reason?: string;
+  readonly mode?: string;
+  readonly status?: string;
+  readonly outcome?: string;
+  readonly count?: number;
+  readonly actionId?: string;
+  readonly signal?: string;
+  readonly target?: unknown;
+  readonly samples?: readonly (Readonly<Record<string, unknown>> | null)[];
+  readonly gateLagMs?: number;
+  readonly deliveredOffsetMs?: number;
+  readonly gateAtMs?: number;
+}
+
+/** Misses of one action's target state, counted over its cycles. */
+interface ActionMisses { key: string; total: number; missing: number; pass: number; signal?: string; target?: unknown }
+
+const readJsonl = (path: string): RunEvent[] => (existsSync(path)
   ? readFileSync(path, 'utf8').trim().split('\n').filter(Boolean).map(line => {
     try { return JSON.parse(line); } catch { return null; }
   }).filter(Boolean)
   : []);
 
-const ms = value => (Number.isFinite(value) ? `${Math.round(value)} ms` : UNKNOWN);
+const ms = (value: number | null) => (Number.isFinite(value) ? `${Math.round(Number(value))} ms` : UNKNOWN);
 
 /** Summarize one run's events. Pure: takes the parsed rows, returns the report. */
-export function report(events) {
-  const first = type => events.find(event => event.type === type);
-  const all = type => events.filter(event => event.type === type);
+export function report(events: readonly RunEvent[]) {
+  const first = (type: string) => events.find(event => event.type === type);
+  const all = (type: string) => events.filter(event => event.type === type);
 
   const start = first('hid.schedule-start');
   const nightGo = first('hid.night-go');
@@ -63,7 +88,7 @@ export function report(events) {
   // PASS / MISSING / UNSTABLE / UNKNOWN; nothing read the tally, so a loop
   // that lost the same press every cycle looked like a healthy stream.
   const effects = all('control.effect.result');
-  const effectTally = effects.reduce((into, event) => {
+  const effectTally = effects.reduce((into: Record<string, number>, event) => {
     into[event.status ?? 'UNKNOWN'] = (into[event.status ?? 'UNKNOWN'] ?? 0) + 1;
     return into;
   }, {});
@@ -77,7 +102,7 @@ export function report(events) {
   // is exactly the mistake the register warns about: an observation-based
   // claim has to cite the measured row that backs it. A miss is only called
   // systematic when the same rule positively read that target elsewhere.
-  const positiveReads = new Map();
+  const positiveReads = new Map<string, number>();
   for (const event of effects) {
     const samples = [...(event.samples ?? [])];
     for (const sample of samples) {
@@ -93,7 +118,7 @@ export function report(events) {
 
   // A press that is MISSING on most of its cycles is a systematic actuator
   // gap, not a bad frame. Group by the action and the state it asked for.
-  const byAction = new Map();
+  const byAction = new Map<string, ActionMisses>();
   for (const event of effects) {
     const key = `${event.actionId} ${event.signal}->${event.target}`;
     const row = byAction.get(key) ?? { key, total: 0, missing: 0, pass: 0,
@@ -128,7 +153,7 @@ export function report(events) {
   const armGoAt = armVerified?.armGoAt ?? null;
   const armReadyAtMs = start?.armReadyAtMs ?? null;
   const phaseLagMs = (nightAt !== null && armGoAt !== null && Number.isFinite(armReadyAtMs))
-    ? armGoAt - nightAt - armReadyAtMs
+    ? armGoAt - nightAt - Number(armReadyAtMs)
     : (phaseInvalid?.phaseLagMs ?? null);
 
   // The correction read-back moved OFF the gate's critical path on 2026-09-12:
@@ -140,8 +165,8 @@ export function report(events) {
   const verifies = all('control.gate.verify');
   const corrected = gates.filter(gate => gate.status === 'CORRECTED');
   const agreed = gates.filter(gate => gate.status === 'AGREED');
-  const gateLags = gates.map(gate => gate.gateLagMs).filter(Number.isFinite);
-  const delivered = gates.map(gate => gate.deliveredOffsetMs).filter(Number.isFinite);
+  const gateLags = gates.map(gate => gate.gateLagMs).filter((value): value is number => Number.isFinite(value));
+  const delivered = gates.map(gate => gate.deliveredOffsetMs).filter((value): value is number => Number.isFinite(value));
 
   // Why the run stopped, from the executor's own record and never from a
   // duration. A run whose end nothing recorded says so.
@@ -190,16 +215,16 @@ export function report(events) {
     },
     effects: { total: effects.length, tally: effectTally, systematicMisses },
     stop: { reason: stop, detail: stopDetail, restarts: restarts.length, interrupted },
-    counts: events.reduce((into, event) => {
+    counts: events.reduce((into: Record<string, number>, event) => {
       into[event.type] = (into[event.type] ?? 0) + 1; return into;
     }, {}),
   };
 }
 
 /** Human-readable block. The pipeline prints this next to the video graders. */
-export function render(value) {
-  const lines = [];
-  const row = (label, text) => lines.push(`  ${label.padEnd(28)}${text}`);
+export function render(value: ReturnType<typeof report>) {
+  const lines: string[] = [];
+  const row = (label: string, text: string) => lines.push(`  ${label.padEnd(28)}${text}`);
   lines.push('--- modern campaign bundle (executor-owned facts) ---');
   row('night reached', value.night.reached ? 'yes' : 'NO -- the run never entered a night');
   row('arm mode', value.arm.mode);
@@ -241,7 +266,7 @@ export function render(value) {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const flag = name => {
+  const flag = (name: string) => {
     const found = process.argv.find(value => value.startsWith(`--${name}=`));
     if (found) return found.slice(name.length + 3);
     const index = process.argv.indexOf(`--${name}`);

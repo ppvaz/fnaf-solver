@@ -21,8 +21,8 @@ if (!video || video.startsWith('--')) usage();
 if (!fs.existsSync(video)) usage(`video does not exist: ${video}`);
 
 let fps = 20;
-let expectMs = null;
-let toleranceMs = null;
+let expectMs = null as number | null;
+let toleranceMs = null as number | null;
 for (const argument of process.argv.slice(3)) {
   const [name, raw] = argument.split('=', 2);
   const value = Number(raw);
@@ -46,7 +46,7 @@ const frameBytes = width * height;
 // moves the cliff -- sweepcheck.py carried the same bug at 58 GB and was
 // OOM-killed the day this was found. Each frame reduces to two counts and is
 // never needed again, so only the scores are kept.
-const score = (buf, offset) => {
+const score = (buf: Buffer, offset: number) => {
   let hudWhite = 0;
   let leadingDigitWhite = 0;
   for (let y = 0; y < height; y++) {
@@ -66,7 +66,8 @@ const decoder = spawn('ffmpeg', [
   '-f', 'rawvideo', '-pix_fmt', 'gray', '-',
 ], { stdio: ['ignore', 'pipe', 'pipe'] });
 
-const scores = [];
+type Score = ReturnType<typeof score>;
+const scores: Score[] = [];
 let decoderError = '';
 decoder.stderr.on('data', chunk => { decoderError += chunk; });
 decoder.on('error', error => {
@@ -87,15 +88,15 @@ for await (const chunk of decoder.stdout) {
 
 // A decoder that dies mid-file must not read as a short recording. This tool
 // reports where the clock turned over; a truncated read would move that.
-const status = await new Promise<any>(resolve => decoder.on('close', resolve));
+const status = await new Promise<number | null>(resolve => decoder.on('close', resolve));
 if (status !== 0) {
   process.stderr.write(decoderError);
   process.exit(status || 2);
 }
 
 const stableFrames = Math.max(3, Math.ceil(fps * 0.15));
-const hudVisible = ({ hudWhite }) => hudWhite >= 800 && hudWhite <= 5000;
-function firstStable(start, predicate) {
+const hudVisible = ({ hudWhite }: { hudWhite: number }) => hudWhite >= 800 && hudWhite <= 5000;
+function firstStable(start: number, predicate: (frame: Score) => boolean) {
   let run = 0;
   for (let frame = start; frame < scores.length; frame++) {
     run = predicate(scores[frame]) ? run + 1 : 0;
@@ -122,7 +123,8 @@ if (oneAmFrame < 0) {
 const oneAmMs = Math.round(oneAmFrame * 1000 / fps);
 const deltaMs = oneAmMs - hudMs;
 console.log(`HUD first=${hudMs}ms; 1 AM=${oneAmMs}ms; delta=${deltaMs}ms; resolution=${Math.round(1000 / fps)}ms`);
-if (expectMs !== null) {
+// The usage check above refuses one without the other.
+if (expectMs !== null && toleranceMs !== null) {
   const errorMs = deltaMs - expectMs;
   console.log(`expected=${expectMs}ms; error=${errorMs}ms; tolerance=±${toleranceMs}ms`);
   if (Math.abs(errorMs) > toleranceMs) process.exit(1);
