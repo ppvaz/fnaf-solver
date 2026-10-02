@@ -16,6 +16,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { currentPath } from '@sixam/review/renamed-path';
 import { drawTrace } from '../../../source/recompile/model-draw-trace.ts';
 import { landingLatency, loadConfig, mapSchedule, officeClock, phoneSchedule, traceColumns, traceTick } from './phone-encounter-replay.ts';
+import type { Clock, NightConfig, PhoneSchedule } from './phone-encounter-replay.ts';
 import { inputs as censusInputs, playState } from './phone-stream-census.ts';
 import { modelContacts } from './schedule-to-input.ts';
 import { sha256 } from './sweep-common.ts';
@@ -24,8 +25,13 @@ const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '../../../..');
 export const SCHEMA = 'phone-release-latency-v1';
 export const SWEEP_MS = [70, 60, 50, 40, 30, 20, 10, 0];
 
+/** One release latency's replay: the outcome and, on a night with phone windows, how far the model agrees. */
+type ReleaseRow = {
+  releaseMs: number, outcome: string, stretched: number, prefix?: number, agree?: number, compared?: number, codes?: string,
+};
+
 /** Contacts with presses `pressMs` and releases `releaseMs` after their sends, on a measured clock. */
-export function landedContacts(sched, clock, shift, pressMs, releaseMs) {
+export function landedContacts(sched: PhoneSchedule, clock: Clock, shift: number, pressMs: number, releaseMs: number) {
   return mapSchedule(sched, (ms, kind) => traceTick(ms + shift + (kind === 'release' ? releaseMs : pressMs), clock));
 }
 
@@ -37,15 +43,16 @@ function zeroOfTwenty() {
   const cols = traceColumns(text, ['image_ns', 'monitor_luma']);
   const first = cols.image_ns.findIndex((ns) => Math.abs(ns - Math.round(inputs.onsetDeviceMs * 1e6)) < 1e6);
   const clock = officeClock(cols.image_ns, first, { catchUp: true });
-  const winner = JSON.parse(readFileSync(resolve(ROOT, currentPath(ROOT, spec.winner)), 'utf8'));
+  // The spec's binding and the options file lead to their files (records keep their paths).
+  const winner = JSON.parse(readFileSync(resolve(ROOT, currentPath(ROOT, spec.winner) as string), 'utf8'));
   const originMs = spec.seedToFirstFrameMs + inputs.releasedAimMs;
   const sched = phoneSchedule(winner, 7, originMs);
   const shift = inputs.releasedAimMs - originMs;
   const press = landingLatency(cols, first, sched.queueMs.filter(([, k, a]) => k === 'press' && a === 'monitor').map(([ms]) => ms + shift)).medianMs;
   const cfg = loadConfig(join(ROOT, 'packages/propose/bin/recompile/phone-encounter-nights.json'));
-  const modelOptions = JSON.parse(readFileSync(resolve(ROOT, currentPath(ROOT, cfg.modelOptions)), 'utf8'));
+  const modelOptions = JSON.parse(readFileSync(resolve(ROOT, currentPath(ROOT, cfg.modelOptions) as string), 'utf8'));
   const deltas = clock.deltas.map((d) => Number(d.toFixed(6)));
-  const rows = [press, ...SWEEP_MS].map((releaseMs) => {
+  const rows = [press, ...SWEEP_MS].map((releaseMs): ReleaseRow => {
     const mapped = landedContacts(sched, clock, shift, press, releaseMs);
     const run = drawTrace({ night: 7, seed: 23712, frames: deltas.length + 120, modelOptions, customNight: spec.customNight,
       contacts: modelContacts(mapped.contacts), frameTimes: deltas });
@@ -57,15 +64,16 @@ function zeroOfTwenty() {
 
 function fullSix() {
   const cfg = loadConfig(join(ROOT, 'packages/propose/bin/recompile/phone-encounter-nights.json'));
-  const n = cfg.nights.find((x) => x.name === 'full-06');
+  // full-06 is configured, with its frame trace.
+  const n = cfg.nights.find((x) => x.name === 'full-06') as NightConfig & { readonly trace: NonNullable<NightConfig['trace']> };
   const base = censusInputs('full-06');
   const cols = traceColumns(readFileSync(resolve(ROOT, n.trace.path), 'utf8'), ['image_ns', 'monitor_luma']);
   const clock = officeClock(cols.image_ns, n.trace.first, { catchUp: true });
-  const winner = JSON.parse(readFileSync(resolve(ROOT, currentPath(ROOT, n.winner)), 'utf8'));
+  const winner = JSON.parse(readFileSync(resolve(ROOT, currentPath(ROOT, n.winner) as string), 'utf8'));
   const sched = phoneSchedule(winner, n.night, n.originMs);
   const shift = n.trace.releaseAfterFirstNightFrameMs - n.originMs;
   const press = landingLatency(cols, n.trace.first, sched.queueMs.filter(([, k, a]) => k === 'press' && a === 'monitor').map(([ms]) => ms + shift)).medianMs;
-  const rows = [press, ...SWEEP_MS].map((releaseMs) => {
+  const rows = [press, ...SWEEP_MS].map((releaseMs): ReleaseRow => {
     const mapped = landedContacts(sched, clock, shift, press, releaseMs);
     const r = playState({ ...base, contacts: modelContacts(mapped.contacts), queue: mapped.queue }, base.measuredSeed, null);
     return { releaseMs, outcome: r.outcome, prefix: r.prefix, agree: r.agree, compared: r.compared, codes: r.codes, stretched: mapped.stretched };
@@ -73,7 +81,7 @@ function fullSix() {
   return { night: n.run, dials: '10/20', seed: base.measuredSeed, seedSource: n.seedEvidence, phone: n.phone.terminal.result, phoneWindows: base.phone, pressLandingMs: press, rows };
 }
 
-function main(argv) {
+function main(argv: string[]) {
   const out = argv[0] === '--out' ? argv[1] : null;
   const nights = [zeroOfTwenty(), fullSix()];
   const result = { schema: SCHEMA, claimLevel: 'MODEL_ONLY replays over DEVICE_MEASURED clocks, landings and outcomes', exploratory: true, sweepMs: SWEEP_MS, nights };

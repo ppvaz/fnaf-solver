@@ -14,15 +14,28 @@ import { isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { cumulative, maskPresses, scoreWindows, windowCodes, WINDOW_MS } from './phone-encounter-replay.ts';
 import { LEDGERS } from './compare-schedule-replay.ts';
 import { inputs } from './phone-stream-census.ts';
+import type { Inputs } from './phone-stream-census.ts';
 import { fanOut, predeclared, sweepArgs } from './sweep-common.ts';
+import type { SweepPredeclaration } from './sweep-common.ts';
+import type { Sim } from '@sixam/source/fnaf2';
 import { drawTrace } from '../../../source/recompile/model-draw-trace.ts';
 import { RNG_INCREMENT, RNG_MASK, RNG_MULTIPLIER } from '../../../source/src/games/fnaf2/rng.ts';
 
 export const SCHEMA = 'phone-early-perturbation-v1';
-const CODE = { withbonnie: 'B', withchica: 'C', withfreddy: 'F', toybonnie: 'b', toychica: 'c', toyfreddy: 'f', mangle: 'M', bb: 'x' };
+const CODE: Readonly<Record<string, string>> = { withbonnie: 'B', withchica: 'C', withfreddy: 'F', toybonnie: 'b', toychica: 'c', toyfreddy: 'f', mangle: 'M', bb: 'x' };
 const INVERSE = (() => { for (let m = 1; m < 0x10000; m += 2) if (((RNG_MULTIPLIER * m) & RNG_MASK) === 1) return m; throw new Error('no inverse'); })();
 /** The generator's state `k` draws on (k < 0: back). */
-export function stepState(state, k) {
+/** A contact as the family reads it: its control (or Sim action) and its updates. */
+type FamilyContact = { readonly control?: string, readonly action?: string, readonly downFrame: number, readonly upFrame: number };
+/** A member of the predeclared family: a contact shifted or dropped, draws added or removed at an update, or none. */
+export type Member = { kind: 'shift', index: number, control?: string, d: number }
+  | { kind: 'drop', index: number, control?: string } | { kind: 'draws', update: number, k: number } | { kind: 'none' };
+/** An early-perturbation predeclaration: its rule. */
+interface EarlyPre extends SweepPredeclaration { readonly decisionRule: { readonly minAgree: number } }
+/** One member's night (playMember). */
+type MemberRow = ReturnType<typeof playMember>;
+
+export function stepState(state: number, k: number) {
   let s = state;
   for (let i = 0; i < Math.abs(k); i += 1)
     s = k > 0 ? (s * RNG_MULTIPLIER + RNG_INCREMENT) & RNG_MASK : (((s - RNG_INCREMENT) & RNG_MASK) * INVERSE) & RNG_MASK;
@@ -30,8 +43,8 @@ export function stepState(state, k) {
 }
 
 /** Every member of the predeclared family, as plain data. */
-export function family(contacts, firstMaskTick, lastDrawUpdate = 300) {
-  const out = [];
+export function family(contacts: readonly FamilyContact[], firstMaskTick: number, lastDrawUpdate = 300) {
+  const out: Member[] = [];
   contacts.forEach((c, index) => {
     if (c.downFrame >= firstMaskTick) return;
     for (const d of [-3, -2, -1, 1, 2, 3]) out.push({ kind: 'shift', index, control: c.control ?? c.action, d });
@@ -42,7 +55,7 @@ export function family(contacts, firstMaskTick, lastDrawUpdate = 300) {
 }
 
 /** The contacts a member plays: one shifted (edges kept in order, nothing before update 1) or removed. */
-export function memberContacts(contacts, member) {
+export function memberContacts<C extends { readonly downFrame: number, readonly upFrame: number }>(contacts: readonly C[], member: Member) {
   if (member.kind === 'drop') return contacts.filter((_, i) => i !== member.index);
   if (member.kind !== 'shift') return contacts;
   return contacts.map((c, i) => {
@@ -56,16 +69,18 @@ const PHONE_VOCALS = [[10, 24], [15, 23], [20, 23]];
 const HOP_BY_UPDATE = 312;
 
 /** One member's full night: windows against the phone, Balloon Boy's first hop and his vocals at the 10/15/20 s rolls. */
-export function playMember(inp, member) {
+export function playMember(inp: Inputs, member: Member) {
   const contacts = memberContacts(inp.contacts, member);
   const cum = cumulative(inp.deltas, 40002);
-  const vocals = [];
-  let firstHop = null;
-  const observe = (sim) => {
+  const vocals: { update: number, vocal: number | string }[] = [];
+  let firstHop = null as number | null;
+  // The Sim is marked once it is wired.
+  const observe = (sim: Sim & { __wired?: boolean }) => {
     if (!sim.__wired) {
       sim.__wired = true;
-      const emit = sim.emit.bind(sim);
-      sim.emit = (kind, detail) => { if (kind === 'laugh') vocals.push({ update: sim.frame, vocal: detail?.vocal ?? 'redraw' }); return emit(kind, detail); };
+      // The wrapper hands every event its second argument, as it always has.
+      const emit = sim.emit.bind(sim) as (kind: string, detail?: { readonly vocal?: number }) => void;
+      sim.emit = ((kind: string, detail?: { readonly vocal?: number }) => { if (kind === 'laugh') vocals.push({ update: sim.frame, vocal: detail?.vocal ?? 'redraw' }); return emit(kind, detail); }) as Sim['emit'];
     }
     if (member.kind === 'draws' && sim.frame === member.update) sim.rng.state = stepState(sim.rng.state, member.k);
     if (firstHop === null && sim.bb.stage > 0) firstHop = sim.frame;
@@ -73,10 +88,11 @@ export function playMember(inp, member) {
   };
   const run = drawTrace({ night: inp.night, seed: inp.measuredSeed, frames: 40000, modelOptions: inp.modelOptions,
     ...(inp.customNight ? { customNight: inp.customNight } : {}), contacts, observe, frameTimes: inp.deltas });
-  const at = (u) => { const o = run.observed[u + 1]; return o ? { maskValue: o.mask, occupant: o.unit ? (CODE[o.unit] ?? '?') : null } : null; };
+  // observe ran: one { mask, unit } per model frame.
+  const at = (u: number) => { const o = (run.observed as ReturnType<typeof observe>[])[u + 1]; return o ? { maskValue: o.mask, occupant: o.unit ? (CODE[o.unit] ?? '?') : null } : null; };
   const codes = windowCodes(maskPresses(inp.queue), at, cum, cum[run.out.length - 1], { windowMs: WINDOW_MS }).map((w) => w.code).join('').slice(0, inp.phone.length);
   const score = scoreWindows(inp.phone, codes);
-  const vocalAt = (sec) => vocals.find((v) => Math.abs(cum[v.update - 1] / 1000 - sec) < 0.2)?.vocal ?? null;
+  const vocalAt = (sec: number) => vocals.find((v) => Math.abs(cum[v.update - 1] / 1000 - sec) < 0.2)?.vocal ?? null;
   const audio = PHONE_VOCALS.map(([sec, phone]) => ({ sec, phone, model: vocalAt(sec) }));
   return { member, codes, agree: score.agree, compared: score.compared,
     prefix: score.firstDisagreement === null ? inp.phone.length : score.firstDisagreement.window,
@@ -86,19 +102,20 @@ export function playMember(inp, member) {
 }
 
 /** The predeclared rule: SUPPORTED when some member meets both fingerprints. */
-export function decide(rule, rows) {
+export function decide(rule: EarlyPre['decisionRule'], rows: readonly Pick<MemberRow, 'audioFits' | 'agree' | 'member'>[]) {
   const fits = rows.filter((r) => r.audioFits && r.agree >= rule.minAgree);
   return fits.length ? { verdict: 'SUPPORTED', fits: fits.map((r) => r.member) } : { verdict: 'NOT_SUPPORTED', fits: [] };
 }
 
-async function main(argv) {
-  const args: any = sweepArgs(argv);
-  const { pre, inp, record } = predeclared(args.predeclaration, inputs);
+async function main(argv: string[]) {
+  const args = sweepArgs(argv);
+  const { pre, inp, record } = predeclared<EarlyPre, Inputs>(args.predeclaration, inputs);
   const firstMask = maskPresses(inp.queue)[0].tick;
   const members = family(inp.contacts, firstMask);
   const t0 = Date.now();
   const control = playMember(inp, { kind: 'none' });
-  const rows = (await fanOut(import.meta.url, SCHEMA, { night: pre.night }, members.map((m, i) => [i, m]), args.workers)).sort((a, b) => a.i - b.i).map(({ row }) => row);
+  const rows = (await fanOut<[number, Member], { i: number, row: MemberRow }>(import.meta.url, SCHEMA, { night: pre.night },
+    members.map((m, i): [number, Member] => [i, m]), args.workers)).sort((a, b) => a.i - b.i).map(({ row }) => row);
   const decision = decide(pre.decisionRule, rows);
   const result = { schema: SCHEMA, claimLevel: 'MODEL_ONLY', night: pre.night, seed: pre.seed,
     predeclaration: record, inputs: inp.hashes, phoneWindows: inp.phone,
@@ -113,7 +130,8 @@ async function main(argv) {
 
 if (!isMainThread && workerData?.tool === SCHEMA) {
   const inp = inputs(workerData.night);
-  parentPort.postMessage(workerData.chunk.map(([i, member]) => ({ i, row: playMember(inp, member) })));
+  // A worker thread has its parent's port.
+  (parentPort as NonNullable<typeof parentPort>).postMessage(workerData.chunk.map(([i, member]: [number, Member]) => ({ i, row: playMember(inp, member) })));
 } else if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   await main(process.argv.slice(2));
 }

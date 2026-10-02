@@ -18,6 +18,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { drawTrace } from '../../../source/recompile/model-draw-trace.ts';
 import { cycleIndex } from './phone-static-readout.ts';
 import { measuredNight, nightInputs, windowRunner, windowUpdates } from './phone-region-readout.ts';
+import type { RegionPre } from './phone-region-readout.ts';
 import { sha256 } from './sweep-common.ts';
 
 const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '../../../..');
@@ -56,7 +57,7 @@ function main(argv: string[]) {
   const readout = JSON.parse(readoutBytes.toString('utf8'));
   const inputsBytes = readFileSync(args['night-inputs']);
   const inputs = JSON.parse(inputsBytes.toString('utf8'));
-  const readoutPre = JSON.parse(readFileSync(join(ROOT, readout.predeclaration.path), 'utf8'));
+  const readoutPre: RegionPre = JSON.parse(readFileSync(join(ROOT, readout.predeclaration.path), 'utf8'));
   if (readout.verdict !== 'SUPPORTED') {
     const result = { schema: SCHEMA, verdict: 'UNINFORMATIVE', reason: `the night's readout is ${readout.verdict}: no state is known on the stream` };
     if (args.out) writeFileSync(args.out, `${JSON.stringify(result, null, 1)}\n`);
@@ -73,8 +74,9 @@ function main(argv: string[]) {
   const at = windowUpdates(windows[k], method).injectAt;
   const between = k === 0 ? 0 : (windowRunner(base, first)(0, at).at(-1)?.draws ?? 0);
   const s1 = back(anchor.reading.top.state, between);
-  const d1 = drawTrace({ night: base.night, seed: 0, frames: first, modelOptions: base.modelOptions,
-    ...(base.customNight ? { customNight: base.customNight } : {}), contacts: base.contacts }).out.at(-1).draws;
+  const d1 = (drawTrace({ night: base.night, seed: 0, frames: first, modelOptions: base.modelOptions,
+    // The replay plays at least its first frame.
+    ...(base.customNight ? { customNight: base.customNight } : {}), contacts: base.contacts }).out.at(-1) as { draws: number }).draws;
   const events = readFileSync(join(ROOT, 'docs/evidence/runs', inputs.run, 'events.jsonl'), 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l));
   const onsetPhoneWallMs = events.find((r) => r.type === 'origin.anchor' && r.status === 'scheduled' && Number.isFinite(r.onsetPhoneWallMs))?.onsetPhoneWallMs;
   if (!Number.isFinite(onsetPhoneWallMs)) throw new Error(`${inputs.run}: the pack holds no onsetPhoneWallMs`);

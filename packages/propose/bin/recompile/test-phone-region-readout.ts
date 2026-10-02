@@ -35,7 +35,7 @@ const top = 12345;
 const scores = [{ state: top, r: 0.95 }, { state: along(top, 3), r: 0.93 }, { state: along(top, 16384 - 2), r: 0.92 }, { state: 777, r: 0.8 }];
 const read = identifyReading(rule, scores);
 assert.equal(read.verdict, 'IDENTIFIED');
-assert.equal(read.rival.state, 777, 'the rival is the best state more than aliasSteps away');
+assert.equal((read.rival as { state: number }).state, 777, 'the rival is the best state more than aliasSteps away');
 assert.equal(identifyReading(rule, [...scores, { state: 778, r: 0.9 }]).verdict, 'UNIDENTIFIED', 'a far rival within the margin');
 assert.equal(identifyReading(rule, [{ state: top, r: 0.84 }]).verdict, 'UNIDENTIFIED', 'r under minR');
 assert.equal(identifyReading(rule, [{ state: top, r: null }]).verdict, 'UNIDENTIFIED', 'no scored state');
@@ -50,8 +50,8 @@ assert.equal(identifyReading(rule, [{ state: top, r: null }]).verdict, 'UNIDENTI
   for (const [gain, noiseSd] of [[30, 1], [30, 2], [10, 1]]) {
     const images = windows.flatMap((w) => { const xs = []; for (let ms = w.fromMs; ms <= w.toMs; ms += 33.3) xs.push({ imageMs: ms, luma: 40 + 6 * Math.sin(ms / 640) + gain * coefficientAt(w, ms) + noiseSd * g() }); return xs; });
     const got = readoutStrength(images, windows, coefficientAt);
-    assert.ok(Math.abs(got.noiseSd - noiseSd) / noiseSd < 0.35, `noise ${noiseSd} recovered as ${got.noiseSd}`);
-    assert.ok(Math.abs(got.gain - gain) / gain < 0.25, `gain ${gain} recovered as ${got.gain}`);
+    assert.ok(Math.abs((got.noiseSd as number) - noiseSd) / noiseSd < 0.35, `noise ${noiseSd} recovered as ${got.noiseSd}`);
+    assert.ok(Math.abs((got.gain as number) - gain) / gain < 0.25, `gain ${gain} recovered as ${got.gain}`);
     assert.equal(got.windows, 3);
   }
 }

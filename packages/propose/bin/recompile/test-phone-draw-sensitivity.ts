@@ -8,11 +8,12 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { isList } from '@sixam/kernel';
 import { agreement, along, compareSites } from './phone-draw-sensitivity.ts';
 
 const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '../../../..');
-const canon = (v) => Array.isArray(v) ? `[${v.map(canon).join(',')}]`
-  : v && typeof v === 'object' ? `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${canon(v[k])}`).join(',')}}` : JSON.stringify(v);
+const canon = (v: unknown): string => isList(v) ? `[${v.map(canon).join(',')}]`
+  : v && typeof v === 'object' ? `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${canon((v as Readonly<Record<string, unknown>>)[k])}`).join(',')}}` : JSON.stringify(v);
 
 // --- fixtures
 assert.equal(along(47593, 1), (47593 * 31415 + 1) & 0xffff);
@@ -26,7 +27,13 @@ assert.deepEqual(rows[1].firstMoved, [3, 4]);
 assert.deepEqual(rows[2].firstMoved, [null, 7], 'a site only one replay reaches moves at its first draw');
 
 // --- the records
-const checkResult = (data, label) => {
+/** A committed draw-sensitivity result, as the checks below read it. */
+type Result = {
+  readonly drawSites: { readonly rows: readonly { readonly site: string, readonly moved: boolean, readonly draws: readonly number[], readonly firstMoved: unknown }[] };
+  readonly readoutWindows: { readonly shiftRange: number, readonly rows: readonly { readonly window: string, readonly periods: number;
+    readonly scores: readonly { readonly variant: string, readonly agreement: number, readonly k: number }[] }[] },
+};
+const checkResult = (data: Result, label: string) => {
   let n = 0;
   for (const r of data.drawSites.rows) {
     assert.equal(r.moved, r.draws[0] !== r.draws[1] || r.firstMoved !== null, `${label} ${r.site}: MOVES flag`);
@@ -40,7 +47,8 @@ const checkResult = (data, label) => {
   }
   return n;
 };
-const RECORDS = [['docs/evidence/full06-draw-sensitivity-20261001.json', 's2-draw-sensitivity', (rec) => [['played', rec.result]]],
+const RECORDS: [path: string, prefix: string, results: (rec: { result: Result, results: Record<string, Result> }) => [string, Result][]][] = [
+  ['docs/evidence/full06-draw-sensitivity-20261001.json', 's2-draw-sensitivity', (rec) => [['played', rec.result]]],
   ['docs/evidence/full06-readout-dial-design-20261001.json', 's2-readout-dial-design', (rec) => Object.entries(rec.results)]];
 let checked = 0;
 for (const [path, prefix, results] of RECORDS) {

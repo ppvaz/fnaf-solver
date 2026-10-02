@@ -28,10 +28,31 @@ import { isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { currentPath } from '@sixam/review/renamed-path';
 import { drawTrace } from '../../../source/recompile/model-draw-trace.ts';
 import { landingLatency, loadConfig, mapSchedule, officeClock, phoneSchedule, traceColumns, traceTick } from './phone-encounter-replay.ts';
+import type { FileRef } from './phone-encounter-replay.ts';
 import { detrend, lumaByImage, pearson, staticRow, wireStatic } from './phone-static-readout.ts';
+import type { StaticState, Win } from './phone-static-readout.ts';
 import { deriveInputs, periodValue, readoutStrength } from './phone-region-readout.ts';
 import { modelContacts } from './schedule-to-input.ts';
 import { fanOut, sha256 } from './sweep-common.ts';
+import type { Sim } from '@sixam/source/fnaf2';
+
+/** A seed-scan spec (predeclared or exploratory): the night and binding, its windows, region and rules. */
+interface SeedSpec {
+  readonly night: number, readonly winner: string, readonly seedToFirstFrameMs: number, readonly releaseLatencyMs?: number;
+  readonly region: string, readonly windows: readonly Win[], readonly reportWindows?: readonly Win[], readonly trace?: FileRef;
+  readonly customNight?: Readonly<Record<string, number>>;
+  readonly robust?: { readonly above: number, readonly below: number, readonly statistic?: string };
+  readonly decisionRule: { readonly minR: number, readonly minMargin: number };
+  readonly powerCheck: { readonly referenceSeed: number, readonly seeds: readonly number[] };
+}
+/** A run's derived inputs (deriveInputs), with its frame trace. */
+type SeedInputs = ReturnType<typeof deriveInputs> & { readonly trace?: FileRef };
+/** The night prepared for the scan (tracedNight). */
+type TracedNight = ReturnType<typeof tracedNight>;
+/** One seed's score. */
+type SeedScore = ReturnType<typeof scoreSeed>;
+/** A seed's score with a correlation. */
+type Ranked = SeedScore & { r: number };
 
 export const SCHEMA = 'phone-seed-scan-v1';
 const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '../../../..');
@@ -42,9 +63,9 @@ const CONFIG = 'packages/propose/bin/recompile/phone-encounter-nights.json';
  * row whose image time is the Companion's latched onset), the binding's contacts at the measured release, landed, and
  * each readout frame inside a window as { window, update, luma }.
  */
-export function tracedNight(spec, inputs, root = ROOT) {
+export function tracedNight(spec: SeedSpec, inputs: SeedInputs, root = ROOT) {
   const cfg = loadConfig(join(root, CONFIG));
-  const trace = inputs.trace ?? spec.trace;   // a predeclared night's trace comes with its derived inputs
+  const trace = (inputs.trace ?? spec.trace) as FileRef;   // a predeclared night's trace comes with its derived inputs
   const traceText = readFileSync(resolve(root, trace.path), 'utf8');
   if (sha256(traceText) !== trace.sha256) throw new Error(`${trace.path}: not the recorded trace`);
   const cols = traceColumns(traceText, ['image_ns', 'monitor_luma']);
@@ -53,7 +74,8 @@ export function tracedNight(spec, inputs, root = ROOT) {
   if (first < 0) throw new Error('no trace row at the latched onset');
   const clock = officeClock(cols.image_ns, first, { catchUp: true });
   const deltas = clock.deltas.map((d) => Number(d.toFixed(6)));
-  const winner = JSON.parse(readFileSync(resolve(root, currentPath(root, spec.winner)), 'utf8'));
+  // The binding and the options file lead to their files (records keep their paths).
+  const winner = JSON.parse(readFileSync(resolve(root, currentPath(root, spec.winner) as string), 'utf8'));
   // Contacts in ms after the run start (the seed), the release `seedToFirstFrameMs + releasedAimMs` after it; mapped
   // onto the trace clock, which starts at the first night frame, plus the night's median landing latency.
   const originMs = spec.seedToFirstFrameMs + inputs.releasedAimMs;
@@ -64,13 +86,13 @@ export function tracedNight(spec, inputs, root = ROOT) {
   // A release lands `spec.releaseLatencyMs` after its send when the spec names it, else as late as the press: on the
   // 0/20 night and on full-06 the press's latency on releases makes the model drop a monitor the phone kept
   // (docs/evidence/phone-release-latency-20261001.json).
-  const releaseMs = Number.isFinite(spec.releaseLatencyMs) ? spec.releaseLatencyMs : latency.medianMs;
+  const releaseMs = Number.isFinite(spec.releaseLatencyMs) ? spec.releaseLatencyMs as number : latency.medianMs;
   const contacts = modelContacts(mapSchedule(sched, (ms, kind) => traceTick(ms + shift + (kind === 'release' ? releaseMs : latency.medianMs), clock)).contacts);
-  const modelOptions = JSON.parse(readFileSync(resolve(root, currentPath(root, cfg.modelOptions)), 'utf8'));
+  const modelOptions = JSON.parse(readFileSync(resolve(root, currentPath(root, cfg.modelOptions) as string), 'utf8'));
   const rows = readFileSync(resolve(root, inputs.readout.path));
   if (sha256(rows) !== inputs.readout.sha256) throw new Error(`${inputs.readout.path}: not the recorded readout`);
   const lumaAt = lumaByImage(rows.toString('utf8'), spec.region);
-  const frames = [];
+  const frames: { window: string, imageMs: number, update: number, luma: number }[] = [];
   for (let j = 0; j + first < cols.image_ns.length; j += 1) {
     const ms = clock.imageMs[j];
     const win = spec.windows.find((w) => ms >= w.fromMs && ms <= w.toMs);
@@ -82,12 +104,14 @@ export function tracedNight(spec, inputs, root = ROOT) {
 }
 
 /** One seed's static row per update, from update 0 to the night's `endFrame`. */
-export function staticRows(night, spec, seed) {
-  const st = { v0: 125, v1: 0, v2: 0, v3: 0, alpha: 255, block: 0 };
-  const per = [];
+export function staticRows(night: Pick<TracedNight, 'endFrame' | 'modelOptions' | 'contacts' | 'deltas'>,
+  spec: Pick<SeedSpec, 'night' | 'customNight'>, seed: number) {
+  const st: StaticState = { v0: 125, v1: 0, v2: 0, v3: 0, alpha: 255, block: 0 };
+  const per: ReturnType<typeof staticRow>[] = [];
   drawTrace({ night: spec.night, seed, frames: night.endFrame, modelOptions: night.modelOptions,
     ...(spec.customNight ? { customNight: spec.customNight } : {}), contacts: night.contacts, frameTimes: night.deltas,
-    observe: (sim) => { if (!sim.__wired) { sim.__wired = true; wireStatic(sim, st); } per.push(staticRow(sim, st)); return null; } });
+    // The Sim is marked once it is wired.
+    observe: (sim: Sim & { __wired?: boolean }) => { if (!sim.__wired) { sim.__wired = true; wireStatic(sim, st); } per.push(staticRow(sim, st)); return null; } });
   return per;
 }
 
@@ -95,7 +119,8 @@ export function staticRows(night, spec, seed) {
  * The night's frames with their luma replaced by a planted seed's static at a given strength (a slow pan plus gain x
  * coefficient plus Gaussian noise), on the same frame times and updates: the power check's synthetic night.
  */
-export function plantFrames(night, spec, seed, { gain, noiseSd, noiseSeed = 1 }) {
+export function plantFrames(night: TracedNight, spec: SeedSpec, seed: number,
+  { gain, noiseSd, noiseSeed = 1 }: { gain: number, noiseSd: number, noiseSeed?: number }) {
   const per = staticRows(night, spec, seed);
   let s = noiseSeed >>> 0; const uniform = () => ((s = (s * 1664525 + 1013904223) >>> 0) + 0.5) / 2 ** 32;
   const gauss = () => Math.sqrt(-2 * Math.log(uniform())) * Math.cos(2 * Math.PI * uniform());
@@ -107,28 +132,30 @@ export function plantFrames(night, spec, seed, { gain, noiseSd, noiseSeed = 1 })
  * camera-switch flash and black frames left out as the period values leave them out (`spec.robust`): on the 0/20 night
  * they inflated the gain from about 30 to 277 and made the planted check easier than the night.
  */
-export function nightStrength(night, spec, referenceSeed) {
+export function nightStrength(night: TracedNight, spec: SeedSpec, referenceSeed: number) {
   const per = staticRows(night, spec, referenceSeed);
   const byMs = new Map(night.frames.map((f) => [f.imageMs, f.update]));
-  const kept = spec.robust ? night.frames.filter((f) => f.luma < spec.robust.above && f.luma > spec.robust.below) : night.frames;
+  const kept = spec.robust ? night.frames.filter((f) => f.luma < (spec.robust as NonNullable<SeedSpec['robust']>).above
+    && f.luma > (spec.robust as NonNullable<SeedSpec['robust']>).below) : night.frames;
   return readoutStrength(kept.map((f) => ({ imageMs: f.imageMs, luma: f.luma })), spec.windows,
-    (_win, ms) => 1 - (per[byMs.get(ms)]?.alpha ?? 255) / 255);
+    // A frame's time names its update.
+    (_win, ms) => 1 - (per[byMs.get(ms) as number]?.alpha ?? 255) / 255);
 }
 
 /** One seed's static per update to `endFrame`, then each window's r: { seed, r: mean over windows, perWindow }. */
-export function scoreSeed(night, spec, seed) {
+export function scoreSeed(night: TracedNight, spec: SeedSpec, seed: number) {
   const per = staticRows(night, spec, seed);
   const perWindow = spec.windows.map((win) => {
-    const groups = new Map();
+    const groups = new Map<number, { alpha: number, ys: number[] }>();
     for (const f of night.frames) {
       if (f.window !== win.name) continue;
       const p = per[f.update];
       if (!p || !p.shown || p.cam !== win.cam || p.viewing !== win.viewing) continue;
       if (!groups.has(p.block)) groups.set(p.block, { alpha: p.alpha, ys: [] });
-      groups.get(p.block).ys.push(f.luma);
+      (groups.get(p.block) as { ys: number[] }).ys.push(f.luma);
     }
     const b = [...groups.values()].slice(1, -1).map((g) => ({ alpha: g.alpha, value: periodValue(g.ys, spec.robust), n: g.ys.length }))
-      .filter((g) => g.n >= 2 && g.value !== null);
+      .filter((g): g is { alpha: number, value: number, n: number } => g.n >= 2 && g.value !== null);
     return pearson(detrend(b.map((g) => 1 - g.alpha / 255), win.detrendK), detrend(b.map((g) => g.value), win.detrendK));
   });
   const rs = perWindow.filter((r) => r !== null);
@@ -136,17 +163,17 @@ export function scoreSeed(night, spec, seed) {
 }
 
 /** The rule over a ranked scan: IDENTIFIED when the top seed's r reaches minR and leads the next by minMargin. */
-export function identifySeed(rule, ranked) {
+export function identifySeed<S extends { readonly seed: number, readonly r: number }>(rule: SeedSpec['decisionRule'], ranked: readonly S[]) {
   const [top, second] = ranked;
   const ok = !!top && top.r >= rule.minR && top.r - (second?.r ?? -1) >= rule.minMargin;
   return { verdict: ok ? 'IDENTIFIED' : 'UNIDENTIFIED', top: top ?? null, second: second ?? null };
 }
 
-const scan = async (night, specText, seeds, workers) =>
-  (await fanOut(import.meta.url, SCHEMA, { spec: specText, night: JSON.stringify(night) }, seeds, workers))
-    .filter((s) => s.r !== null).sort((a, b) => b.r - a.r || a.seed - b.seed);
+const scan = async (night: TracedNight, specText: string, seeds: readonly number[], workers: number) =>
+  (await fanOut<number, SeedScore>(import.meta.url, SCHEMA, { spec: specText, night: JSON.stringify(night) }, seeds, workers))
+    .filter((s): s is Ranked => s.r !== null).sort((a, b) => b.r - a.r || a.seed - b.seed);
 
-async function main(argv) {
+async function main(argv: string[]) {
   const args: Record<string, string> = {};
   for (let i = 0; i < argv.length; i += 2) {
     if (argv[i] === '--power-check') { args['power-check'] = '1'; i -= 1; continue; }
@@ -166,7 +193,7 @@ async function main(argv) {
   }
   const specText = readFileSync(args.spec, 'utf8');
   const inputsText = readFileSync(args['night-inputs'], 'utf8');
-  const spec = JSON.parse(specText); const inputs = JSON.parse(inputsText);
+  const spec: SeedSpec = JSON.parse(specText); const inputs: SeedInputs = JSON.parse(inputsText);
   const night = tracedNight(spec, inputs);
   const from = Number(args.from ?? 0); const to = Number(args.to ?? 65535);
   const seeds = Array.from({ length: to - from + 1 }, (_, k) => from + k);
@@ -175,16 +202,17 @@ async function main(argv) {
   // never the recorder rows (hundreds of MB of pixels) or the trace.
   const workers = Number(args.workers ?? 4);
   const ranked = await scan(night, specText, seeds, workers);
-  let decision = null;
+  let decision = null as object | null;
   if (args['power-check']) {
     if (inputs.predeclarationSha256 !== sha256(specText)) throw new Error('the night inputs were derived for another predeclaration');
     const reading = identifySeed(spec.decisionRule, ranked);
     const strength = nightStrength(night, spec, spec.powerCheck.referenceSeed);
-    const planted = [];
+    const planted: { seed: number, verdict: string, top: Ranked | null, second: Ranked | null, recovered: boolean }[] = [];
     for (const [k, seed] of spec.powerCheck.seeds.entries()) {
-      const fake = { ...night, frames: plantFrames(night, spec, seed, { gain: strength.gain, noiseSd: strength.noiseSd, noiseSeed: k + 1 }) };
+      // The night's own frames give its noise and gain.
+      const fake = { ...night, frames: plantFrames(night, spec, seed, { gain: strength.gain as number, noiseSd: strength.noiseSd as number, noiseSeed: k + 1 }) };
       const got = identifySeed(spec.decisionRule, await scan(fake, specText, seeds, workers));
-      planted.push({ seed, verdict: got.verdict, top: got.top, second: got.second, recovered: got.verdict === 'IDENTIFIED' && got.top.seed === seed });
+      planted.push({ seed, verdict: got.verdict, top: got.top, second: got.second, recovered: got.verdict === 'IDENTIFIED' && (got.top as Ranked).seed === seed });
       console.log(`  planted ${seed}: ${got.verdict} top ${got.top?.seed}:${got.top?.r.toFixed(3)} next ${got.second?.r.toFixed(3)}`);
     }
     const powered = planted.every((p) => p.recovered);
@@ -209,7 +237,8 @@ async function main(argv) {
 
 if (!isMainThread && workerData?.tool === SCHEMA) {
   const spec = JSON.parse(workerData.spec); const night = JSON.parse(workerData.night);
-  parentPort.postMessage(workerData.chunk.map((seed) => scoreSeed(night, spec, seed)));
+  // A worker thread has its parent's port.
+  (parentPort as NonNullable<typeof parentPort>).postMessage(workerData.chunk.map((seed: number) => scoreSeed(night, spec, seed)));
 } else if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   await main(process.argv.slice(2));
 }

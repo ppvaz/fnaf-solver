@@ -543,13 +543,14 @@ export interface NightConfig {
   readonly winner: string, readonly originMs: number, readonly presses: FileRef;
   readonly trace?: FileRef & { readonly first: number, readonly releaseAfterFirstNightFrameMs: number };
   readonly navigation: string, readonly save: string, readonly customNight?: string;
+  readonly staticReadout?: FileRef & { readonly region?: string };
   readonly phone: { readonly windows: string, readonly terminal: Terminal };
   readonly modelRecord?: { readonly windows?: string }, readonly variants: readonly string[], readonly primaryVariant: string;
 }
 /** A phone-encounter-nights-v1 config. */
 export interface EncounterConfig {
   readonly schema: string, readonly modelOptions: string, readonly profile: string, readonly binary: unknown, readonly harness: unknown;
-  readonly variants: Readonly<Record<string, VariantSpec>>, readonly nights: readonly NightConfig[];
+  readonly variants: Record<string, VariantSpec>, readonly nights: readonly NightConfig[];
   readonly responseExperiment?: ResponseExperimentSpec;
 }
 

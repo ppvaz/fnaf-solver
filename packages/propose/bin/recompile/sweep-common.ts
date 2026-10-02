@@ -16,7 +16,7 @@ export interface SweepPredeclaration {
   readonly id: string, readonly night: string, readonly seed: number, readonly inputs?: Readonly<Record<string, string>>;
 }
 /** A night's inputs as the check reads them: the measured seed and each input's sha256. */
-export interface SweepInputs { readonly measuredSeed: number, readonly hashes: Readonly<Record<string, string>> }
+export interface SweepInputs { readonly measuredSeed: number, readonly hashes: Readonly<Record<string, string | null>> }
 
 /** `--predeclaration FILE [--workers N] [--out FILE]`, refusing anything else. */
 export function sweepArgs(argv: readonly string[]) {

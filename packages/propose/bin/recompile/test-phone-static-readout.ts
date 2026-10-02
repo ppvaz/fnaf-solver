@@ -4,19 +4,21 @@
 // states and record ids. No model run, frame trace or capture. In `npm run test:unit`.
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
+import type { BinaryLike } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { isList } from '@sixam/kernel';
 import { cycleIndex, detrend, identify, lumaByImage, pearson, regionMeanLuma } from './phone-static-readout.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
-const read = (path) => readFileSync(join(ROOT, path));
-const json = (path) => JSON.parse(read(path).toString('utf8'));
-const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
-const canon = (v) => Array.isArray(v) ? `[${v.map(canon).join(',')}]`
-  : v && typeof v === 'object' ? `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${canon(v[k])}`).join(',')}}` : JSON.stringify(v);
-const step = (s) => (s * 31415 + 1) & 0xffff;
-const along = (from, n) => { let s = from; for (let i = 0; i < n; i += 1) s = step(s); return s; };
+const read = (path: string) => readFileSync(join(ROOT, path));
+const json = (path: string) => JSON.parse(read(path).toString('utf8'));
+const sha256 = (bytes: BinaryLike) => createHash('sha256').update(bytes).digest('hex');
+const canon = (v: unknown): string => isList(v) ? `[${v.map(canon).join(',')}]`
+  : v && typeof v === 'object' ? `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${canon((v as Readonly<Record<string, unknown>>)[k])}`).join(',')}}` : JSON.stringify(v);
+const step = (s: number) => (s * 31415 + 1) & 0xffff;
+const along = (from: number, n: number) => { let s = from; for (let i = 0; i < n; i += 1) s = step(s); return s; };
 
 // --- fixtures
 assert.equal(pearson([1, 2, 3], [2, 4, 6]), 1);
@@ -31,7 +33,7 @@ assert.equal(identify(rule, [{ state: 1, r: 0.9 }, { state: 2, r: 0.85 }]).verdi
 assert.equal(identify(rule, [{ state: 1, r: 0.8 }]).verdict, 'UNIDENTIFIED', 'r under 0.85');
 
 // --- the native recording a measurement night writes (night-run.sh --static-readout)
-const words = (list) => Buffer.from(new Uint8Array(new Uint32Array(list).buffer)).toString('base64');
+const words = (list: readonly number[]) => Buffer.from(new Uint8Array(new Uint32Array(list).buffer)).toString('base64');
 assert.equal(regionMeanLuma({ cols: 2, rows: 1, hex: words([0xffffff, 0x000000]) }), 127.5, 'white and black average to the middle');
 assert.ok(Math.abs(regionMeanLuma({ cols: 1, rows: 1, hex: words([0xff0000]) }) - 0.299 * 255) < 1e-9, 'Rec. 601 weights');
 assert.throws(() => regionMeanLuma({ cols: 3, rows: 1, hex: words([0, 0]) }), /geometry/);
@@ -53,19 +55,19 @@ for (const path of recs) {
   assert.deepEqual(rec.inputs, pre.inputs);
   const seedCycle = cycleIndex(rec.seed);
   for (const w of rec.windows) {
-    const declared = pre.windows.find((x) => x.name === w.name);
+    const declared = pre.windows.find((x: { readonly name: string }) => x.name === w.name);
     assert.ok(declared && declared.injectAt === w.injectAt && declared.fromMs === w.fromMs && declared.toMs === w.toMs, `${w.name} is a predeclared window`);
     if (w.decision) {
       assert.equal(w.decision.verdict, identify(pre.decisionRule, w.top10).verdict, `${w.name} verdict`);
       const top = w.top10[0];
       assert.equal(w.topInSeedCycle, seedCycle.has(top.state));
       assert.equal(w.stepsFromSeed, seedCycle.get(top.state) ?? null);
-      assert.equal(w.stepsFromSeedLessModelDraws, seedCycle.has(top.state) ? seedCycle.get(top.state) - w.modelAtInject.draws : null);
+      assert.equal(w.stepsFromSeedLessModelDraws, seedCycle.has(top.state) ? (seedCycle.get(top.state) as number) - w.modelAtInject.draws : null);
       assert.ok(top.r <= w.rQuantiles.max + 1e-12 && w.rQuantiles.p999 <= w.rQuantiles.max);
     }
     if (w.offsets) {   // the confirmation's seed-cycle neighbourhood
       for (const o of w.offsets) assert.equal(o.state, along(rec.seed, w.modelAtInject.draws + o.d), `${w.name} d=${o.d}`);
-      const best = w.offsets.reduce((a, b) => (b.r > a.r ? b : a));
+      const best = w.offsets.reduce((a: { readonly r: number }, b: { readonly r: number }) => (b.r > a.r ? b : a));
       assert.deepEqual(w.best, best);
       assert.equal(w.offsets.length, 2 * pre.decisionRule.radius + 1);
       assert.ok(Math.abs(w.p - (1 - (w.below / w.scanned) ** w.offsets.length)) < 1e-12, `${w.name} p from the scan's rank`);
@@ -74,7 +76,7 @@ for (const path of recs) {
   }
   if (rec.neighbourhood) for (const n of rec.neighbourhood) for (const o of n.offsets) assert.equal(o.state, along(rec.seed, n.modelDraws + o.d));
   if (pre.kind === 'confirm') {
-    const hits = rec.windows.filter((w) => w.hit).length;
+    const hits = rec.windows.filter((w: { readonly hit: boolean }) => w.hit).length;
     assert.equal(rec.hits, hits);
     assert.equal(rec.verdict, hits >= pre.decisionRule.minHits ? 'SUPPORTED' : 'NOT_SUPPORTED');
   }

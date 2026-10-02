@@ -13,18 +13,18 @@ import { pathToFileURL } from 'node:url';
 import { inputs, playState } from './phone-stream-census.ts';
 
 export const SCHEMA = 'phone-occupancy-rates-v1';
-export const stateAt = (i) => (i * 21841 + 7) % 65536;
+export const stateAt = (i: number) => (i * 21841 + 7) % 65536;
 
 /** Occupant counts over the first `windows` read windows of each code string, and the phone's own. */
-export function tally(codeStrings, phone, windows) {
-  const model = {}; let played = 0;
+export function tally(codeStrings: readonly string[], phone: string, windows: number) {
+  const model: Record<string, number> = {}; let played = 0;
   for (const codes of codeStrings) for (const c of codes.slice(0, windows)) { if (c === '?') continue; model[c] = (model[c] ?? 0) + 1; played += 1; }
-  const own = {}; for (const c of phone.slice(0, windows)) if (c !== '?') own[c] = (own[c] ?? 0) + 1;
+  const own: Record<string, number> = {}; for (const c of phone.slice(0, windows)) if (c !== '?') own[c] = (own[c] ?? 0) + 1;
   return { model, played, phone: own, phoneRead: Object.values(own).reduce((a, b) => a + b, 0) };
 }
 
 /** Pearson's chi-square of the phone's counts against the model's rates, over the occupants either side shows. */
-export function chiSquare(t) {
+export function chiSquare(t: ReturnType<typeof tally>) {
   const keys = [...new Set([...Object.keys(t.model), ...Object.keys(t.phone)])].sort();
   let chi = 0;
   for (const k of keys) { const expected = ((t.model[k] ?? 0) / t.played) * t.phoneRead; if (expected > 0) chi += ((t.phone[k] ?? 0) - expected) ** 2 / expected; }
@@ -32,7 +32,7 @@ export function chiSquare(t) {
 }
 
 /** Per window: how many of the given code strings disagree with the phone there, and how many independence predicts. */
-export function missExpectation(codeStrings, phone, rates, played) {
+export function missExpectation(codeStrings: readonly string[], phone: string, rates: Readonly<Record<string, number>>, played: number) {
   return [...phone].map((p, k) => {
     if (p === '?') return null;
     const observed = codeStrings.filter((c) => c[k] !== '?' && c[k] !== undefined && c[k] !== p).length;
@@ -41,7 +41,7 @@ export function missExpectation(codeStrings, phone, rates, played) {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const args: any = { states: '1000', windows: '38' };
+  const args: Record<string, string> = { states: '1000', windows: '38' };
   const argv = process.argv.slice(2);
   for (let i = 0; i < argv.length; i += 2) {
     if (!['--night', '--states', '--windows', '--out'].includes(argv[i]) || !argv[i + 1]) throw new Error('see usage at top of file');
