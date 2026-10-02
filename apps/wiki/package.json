@@ -1,0 +1,10 @@
+{
+  "name": "@sixam/wiki",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@sixam/kernel": "file:../../packages/kernel",
+    "@sixam/review": "file:../../packages/review"
+  }
+}

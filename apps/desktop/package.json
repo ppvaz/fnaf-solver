@@ -6,6 +6,7 @@
   "dependencies": {
     "@sixam/kernel": "file:../../packages/kernel",
     "@sixam/play": "file:../../packages/play",
+    "@sixam/propose": "file:../../packages/propose",
     "@sixam/review": "file:../../packages/review",
     "@sixam/source": "file:../../packages/source"
   },
