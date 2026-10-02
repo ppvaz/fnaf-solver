@@ -602,6 +602,18 @@ and the solver MCP with its claim envelope (Plan 28).
     ([`fnaf3-search-block-20260930`](../docs/evidence/fnaf3-search-block-20260930.json),
     [`fnaf3-search-v2-block-20260930`](../docs/evidence/fnaf3-search-v2-block-20260930.json)).
     Neither game is shown winnable on every seed.
+  - **A FNaF 4 phone night replays in the rebuild (2026-10-02, pre-registered,
+    MODEL_ONLY over a DEVICE_MEASURED night).** Given n5b's own touches (its
+    run pack), the rebuilt FNaF 4 plays Night 5 as the phone did at 6 of
+    65,536 seeds: Fredbear R 6 s, L 9 s, R 15 s, R 21 s, silent on the other
+    roll ticks to 36 s, and the black onset in its window
+    (REPRODUCED_MULTIPLE). His roll is a pure function of the seed (the 5th
+    or 8th draw of the roll update, his side g229's 4th; 45 of 45 development
+    ticks), so 2,399 seeds were replayed, not 65,536. The seed is not
+    identified, and the landing latencies are FNaF 2's
+    ([result](../docs/evidence/fnaf4-n5b-rebuild-seed-20261002.json),
+    `fnaf4-n5b-rebuild-seed-427be4bbab38e90f`;
+    [pre-registration](../docs/evidence/fnaf4-n5b-rebuild-seed-predeclaration-20261002.json)).
 - **Absorbs** Plan 25 horizon 5 and Plans 26, 27 and 28.
 
 ### S7: The lab runs itself
