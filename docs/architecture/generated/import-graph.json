@@ -2021,6 +2021,7 @@
       "imports": [
         "../parked/minus7/reactive-pilot.ts",
         "@sixam/source/fnaf2",
+        "@sixam/source/games/fnaf2/plant-options.ts",
         "node:url"
       ]
     },
@@ -3178,6 +3179,7 @@
     {
       "file": "packages/propose/parked/minus7/policybaselines.ts",
       "imports": [
+        "./policy.ts",
         "./reactive-pilot.ts",
         "@sixam/source/fnaf2"
       ]
@@ -3201,6 +3203,7 @@
       "imports": [
         "../../../review/src/stat.ts",
         "@sixam/source/fnaf2",
+        "@sixam/source/games/fnaf2/plant-options.ts",
         "node:url",
         "node:worker_threads"
       ]

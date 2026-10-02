@@ -15,9 +15,11 @@
 import { pathToFileURL } from 'node:url';
 import * as C from '@sixam/source/fnaf2';
 import { Sim } from '@sixam/source/fnaf2';
+import type { SimOptions } from '@sixam/source/games/fnaf2/plant-options.ts';
 import { Bot } from '../parked/minus7/reactive-pilot.ts';
+import type { PlanRow } from '../parked/minus7/reactive-pilot.ts';
 
-export const MINUS6_CYCLE = [
+export const MINUS6_CYCLE: PlanRow[] = [
   [0, 'tap', 'monitor'],
   [18, 'tap', 'mask'], [27, 'tap', 'mask'],
   [30, 'down', 'light'], [32, 'up', 'light'],
@@ -27,7 +29,7 @@ export const MINUS6_CYCLE = [
   [79, 'tap', 'cam:11'], [82, 'down', 'wind'],
 ];
 
-const A = (f) => { // next frame landing on a :X2 / :X7 second boundary
+const A = (f: number) => { // next frame landing on a :X2 / :X7 second boundary
   for (let k = 0; k < 12 * C.FPS; k++) {
     const g = f + k;
     if (g % C.FPS === 0) { const d = (g / C.FPS) % 10; if (d === 2 || d === 7) return g; }
@@ -35,7 +37,7 @@ const A = (f) => { // next frame landing on a :X2 / :X7 second boundary
   return f;
 };
 
-class Minus6Bot extends Bot {
+class Minus6Bot extends Bot<Sim> {
   declare evIdx: number;
   declare threats: number;
   declare consecHolds: number;
@@ -44,10 +46,7 @@ class Minus6Bot extends Bot {
   declare holdCooldownUntil: number;
   declare defends: number;
   declare holdCount: number;
-  declare kind: string;
-  declare plan: (string | number)[][];
-  declare waiting: string | number;
-  constructor(sim, table = MINUS6_CYCLE, targets = null) {
+  constructor(sim: Sim, table: readonly PlanRow[] = MINUS6_CYCLE, targets: number[] | null = null) {
     super(sim, table, targets);
     this.evIdx = 0; this.threats = 0;
     this.consecHolds = 0; this.maxConsecHolds = 0;
@@ -58,8 +57,8 @@ class Minus6Bot extends Bot {
   // After the 300-frame sequence: unmask, flash the hall right away (Foxy's D
   // must be zeroed between every pair of 5s checks), rebuild the two-camera
   // stall off-anchor, and wind until the next :X2/:X7 anchor re-syncs.
-  postDefend(f) {
-    const p = [[f + 1, 'tap', 'mask']];
+  postDefend(f: number) {
+    const p: PlanRow[] = [[f + 1, 'tap', 'mask']];
     if (!this.sim.foxy.gotYou) p.push([f + 16, 'down', 'light'], [f + 18, 'up', 'light']);
     p.push([f + 20, 'tap', 'monitor'],
       [f + 34, 'tap', 'cam:6'], [f + 36, 'down', 'light'], [f + 38, 'up', 'light'],
@@ -143,7 +142,13 @@ class Minus6Bot extends Bot {
   }
 }
 
-export function run(opts: any = {}) {
+/** A night of the probe: the Sim's options, and the table and its cameras. */
+interface Minus6Options extends Partial<SimOptions> {
+  readonly cycle?: readonly PlanRow[];
+  readonly targets?: number[] | null;
+}
+
+export function run(opts: Minus6Options = {}) {
   const sim = new Sim(Object.assign({ seed: 999 }, opts));
   const bot = new Minus6Bot(sim, opts.cycle || MINUS6_CYCLE, opts.targets || null);
   let minBox = 1;
@@ -154,7 +159,7 @@ export function run(opts: any = {}) {
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const n = +(process.argv[2] || 200);
   const worst = process.argv.includes('--worst');
-  const fails = {}; let minB = 1, minP = C.POWER_FRAMES;
+  const fails: Record<string, number> = {}; let minB = 1, minP = C.POWER_FRAMES;
   let maxDefends = 0, maxHolds = 0;
   for (let i = 0; i < n; i++) {
     const r = run({ seed: (i * 2246822519) >>> 0, worst });
@@ -162,7 +167,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     maxDefends = Math.max(maxDefends, r.bot.defends);
     maxHolds = Math.max(maxHolds, r.bot.maxConsecHolds);
     if (!r.sim.won) {
-      const key = `${r.sim.death.reason}: ${r.sim.death.detail}`;
+      const death = r.sim.death as NonNullable<Sim['death']>; // a night that is not won ended in a death
+      const key = `${death.reason}: ${death.detail}`;
       fails[key] = (fails[key] || 0) + 1;
     }
   }

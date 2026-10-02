@@ -76,12 +76,11 @@ async function censusFnaf2({ night, policy, seeds, start }: CensusParams): Promi
   if (start !== 0) throw new Error('fnaf2 census does not support --start');
   const [{ sweep }, { POLICIES }] = await Promise.all([
     import('../../parked/minus7/policy.ts'), import('../../parked/minus7/policybaselines.ts')]);
-  const make = (POLICIES as Readonly<Record<string, (typeof POLICIES)[keyof typeof POLICIES]>>)[policy];
+  const make = POLICIES[policy];
   if (!make) {
     throw new Error(`no fnaf2 policy ${policy}; have ${Object.keys(POLICIES).join(', ')}`);
   }
-  const result = sweep((seed: number, slack: number, model: unknown) => make(seed, slack, model),
-                       { runs: seeds, night });
+  const result = sweep(make, { runs: seeds, night });
   return {
     game: 'fnaf2', night, policy, seeds, wins: result.survived, custom: null,
     rate: result.survived / seeds,

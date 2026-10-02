@@ -29,8 +29,10 @@
 import * as C from '@sixam/source/fnaf2';
 import { Rng } from '@sixam/source/fnaf2';
 import { Bot, DEFAULT_CYCLE } from './reactive-pilot.ts';
+import type { BotSim, PlanRow } from './reactive-pilot.ts';
+import type { ObservationMode, Policy, PolicyFactory, SlackModel } from './policy.ts';
 
-const ms = (v) => Math.round(v * C.FPS / 1000);
+const ms = (v: number) => Math.round(v * C.FPS / 1000);
 const MINUS7_SALT = 0x6d373037; // "m707"; its own stream, never the sim's
 
 // ---------------------------------------------------------------- Minus 7
@@ -40,17 +42,23 @@ const MINUS7_SALT = 0x6d373037; // "m707"; its own stream, never the sim's
 // semantics (one draw per row, order re-sorts afterwards). The adapter's own
 // slack must therefore be left at zero for this policy -- `sweepMinus7()`
 // below does that.
+/** What the Bot drives here: the adapter's frame and buttons, and Balloon Boy as the observation reports him. */
+interface AdapterSim extends BotSim { bb: { inOpening: boolean; stage: number } }
+
 export function minus7Policy({ slackMs = 0, slackModel = 'iid', seed = 1,
-                               cycle = DEFAULT_CYCLE, targets = null } = {}) {
+                               cycle = DEFAULT_CYCLE, targets = null }: {
+  slackMs?: number; slackModel?: SlackModel; seed?: number; cycle?: readonly PlanRow[]; targets?: number[] | null;
+} = {}): Policy {
   const rng = new Rng((((seed >>> 0) ^ MINUS7_SALT) >>> 0));
   const spread = slackModel === 'common' ? 0 : Math.round(slackMs / 3);
-  let bot = null, proxy = null;
-  const draw = (common) => slackModel !== 'iid'
+  // Built by reset(), which the adapter calls before the first step.
+  let bot: Bot<AdapterSim>, proxy: AdapterSim;
+  const draw = (common: number) => slackModel !== 'iid'
     ? common + ms(rng.int(-spread, spread)) : ms(rng.int(-slackMs, slackMs));
-  const jit = (rows) => {
+  const jit = (rows: PlanRow[]) => {
     if (!slackMs) return rows;
     const common = slackModel !== 'iid' ? ms(rng.int(-slackMs, slackMs)) : 0;
-    return rows.map(([fr, k, a]) => [Math.max(0, fr + draw(common)), k, a])
+    return rows.map(([fr, k, a]): PlanRow => [Math.max(0, fr + draw(common)), k, a])
       .sort((x, y) => x[0] - y[0]);
   };
   return {
@@ -67,7 +75,7 @@ export function minus7Policy({ slackMs = 0, slackModel = 'iid', seed = 1,
       };
       bot = new Bot(proxy, cycle, targets);
       bot.plan = jit(bot.plan);
-      for (const name of ['cycle', 'attack', 'recover']) {
+      for (const name of ['cycle', 'attack', 'recover'] as const) {
         const base = Bot.prototype[name];
         bot[name] = (...args) => jit(base.apply(bot, args));
       }
@@ -110,7 +118,9 @@ export const NO_STUN_CYCLE = DEFAULT_CYCLE.filter(
 // gives Foxy's kill equation: D climbs one per second and the check at every
 // 5 s interval needs D under 4, so ONE hall reset per 10 s cannot hold him on
 // this model whatever the rest of the loop does. Both are reported.
-export function jasonPolicy({ phaseMs = 10000, observation = 'belief' } = {}) {
+export function jasonPolicy({ phaseMs = 10000, observation = 'belief' }: {
+  phaseMs?: number; observation?: ObservationMode;
+} = {}): Policy {
   const BLOCK_MS = 1900;
   const MASK_HOLD = ms(5500);      // five continuous mask ticks + margin
   let anchor = 0, busyUntil = 0, verifyAt = -1, maskOffAt = -1;
@@ -135,7 +145,7 @@ export function jasonPolicy({ phaseMs = 10000, observation = 'belief' } = {}) {
         if (!obs.maskOn) { api.tap(f, 'mask'); verifyAt = f + ms(400); }
       }
 
-      const commit = (holdFrames) => {
+      const commit = (holdFrames: number) => {
         api.clear();
         api.tap(f + ms(30), 'mask');
         api.tap(f + ms(30) + holdFrames, 'mask');
@@ -151,7 +161,7 @@ export function jasonPolicy({ phaseMs = 10000, observation = 'belief' } = {}) {
         return;
       }
       // A vent read that came back occupied: mask until they leave.
-      const fresh = (age) => age < ms(5000);
+      const fresh = (age: number) => age < ms(5000);
       if (f >= busyUntil && !obs.maskOn &&
           ((obs.ventLOccupied && fresh(obs.ventLAge)) ||
            (obs.ventROccupied && fresh(obs.ventRAge)))) {
@@ -206,7 +216,9 @@ export function jasonPolicy({ phaseMs = 10000, observation = 'belief' } = {}) {
 // complete role the extraction does not establish. In the mod they shortcut
 // out of Checking substates 1 and 3; here the machine always completes its
 // vent scan. Anything built on value 6 is therefore absent.
-export function shooter25Policy({ observation = 'truth', hoistDanger = false } = {}) {
+export function shooter25Policy({ observation = 'truth', hoistDanger = false }: {
+  observation?: ObservationMode; hoistDanger?: boolean;
+} = {}): Policy {
   const PHASE = C.s(5);
   let state = 'Wind', sub = 0, next = 0, boxFull = false;
   let maskSince = -1, windHeld = false, ventRUntil = -1, hallPhase = -1;
@@ -249,7 +261,7 @@ export function shooter25Policy({ observation = 'truth', hoistDanger = false } =
       // "Hall light for 15 ticks, request camera-down": the light goes on
       // while the panel is still up and is still held as the panel falls, so
       // the same contact is the camera light and then the hall light.
-      const drop = (ticks) => {
+      const drop = (ticks: number) => {
         if (windHeld) { api.release(f, 'wind'); windHeld = false; }
         api.hold(f + ms(20), ticks * ms(16.66), 'light');
         api.tap(f + ms(50), 'monitor');
@@ -347,7 +359,9 @@ export function shooter25Policy({ observation = 'truth', hoistDanger = false } =
 // drain/wind rates set the wind band. They are stated once here rather than
 // searched.
 export function couraeelPolicy({ observation = 'truth', inverted = false,
-                                 hallEveryMs = 4600, name = null } = {}) {
+                                 hallEveryMs = 4600, name = null }: {
+  observation?: ObservationMode; inverted?: boolean; hallEveryMs?: number; name?: string | null;
+} = {}): Policy {
   const PATROL = C.TARGET_CAMS;               // 10, 4, 7
   const PATROL_DEADLINE = C.s(6.0);           // stun is 400 frames = 6.66 s
   const HALL_DEADLINE = ms(hallEveryMs);      // D must be under 4 at each 5 s check
@@ -364,7 +378,7 @@ export function couraeelPolicy({ observation = 'truth', inverted = false,
     },
     step(obs, api) {
       const f = api.frame;
-      const maskForRef = (cap) => {
+      const maskForRef = (cap: number) => {
         api.clear();
         if (obs.monUp) api.tap(f, 'monitor');
         const on = f + (obs.monUp ? ms(420) : ms(30));
@@ -373,7 +387,7 @@ export function couraeelPolicy({ observation = 'truth', inverted = false,
         maskUntil = on + cap;
         busy = maskUntil + ms(900);   // released early by the unmask branch
       };
-      const fresh = (v, age) => v && age < C.s(5);
+      const fresh = (v: boolean, age: number) => v && age < C.s(5);
       const threatSeen = () => fresh(obs.ventLOccupied, obs.ventLAge) ||
         fresh(obs.ventROccupied, obs.ventRAge) || obs.blackout;
 
@@ -381,7 +395,7 @@ export function couraeelPolicy({ observation = 'truth', inverted = false,
       // animation on a held hall light for exactly this reason: the seconds
       // under the mask are seconds Foxy's D is uncovered, so the recovery
       // owns a hall reset rather than waiting for the next rung to notice.
-      const unmask = (at) => {
+      const unmask = (at: number) => {
         api.tap(at, 'mask');
         api.hold(at + ms(330), ms(100), 'light');
         lastHall = at + ms(330);
@@ -415,7 +429,7 @@ export function couraeelPolicy({ observation = 'truth', inverted = false,
       // mask-off -> flash gap widened from one frame to six: on Android every
       // office light is gated on `mask = 0` (g75/g84), and a one-frame margin
       // is precisely the precision dependence under test here.
-      const officePass = (readVent) => {
+      const officePass = (readVent: string | null) => {
         api.clear();
         if (obs.monUp) api.tap(f, 'monitor');
         const t = f;
@@ -488,13 +502,13 @@ export function couraeelPolicy({ observation = 'truth', inverted = false,
 
 // ------------------------------------------------------------------ controls
 // C1: no inputs at all. Must be 0 on any night that can kill.
-export const nullPolicy = () => ({
+export const nullPolicy = (): Policy => ({
   name: 'null', version: 1, observation: 'truth', step() {},
 });
 
 // C2: a perfect music box and nothing else. If a policy's survival came from
 // the box alone this would score, and it must not.
-export const windOnlyPolicy = () => {
+export const windOnlyPolicy = (): Policy => {
   let done = false;
   return {
     name: 'wind-only', version: 1, observation: 'truth',
@@ -532,7 +546,7 @@ export const windOnlyPolicy = () => {
  * he is rendered in the office. This wrapper does nothing else: it defers to
  * the wrapped family on every frame he is absent.
  */
-export function goldenGuard(inner, { observation = null } = {}) {
+export function goldenGuard(inner: Policy, { observation = null }: { observation?: ObservationMode | null } = {}): Policy {
   let holdUntil = -1e9;
   return {
     name: `${inner.name}+gf`,
@@ -555,8 +569,8 @@ export function goldenGuard(inner, { observation = null } = {}) {
   };
 }
 
-export const POLICIES = {
-  minus7: (seed, slackMs, slackModel?) => minus7Policy({ seed, slackMs, slackModel }),
+export const POLICIES: Readonly<Record<string, PolicyFactory>> = {
+  minus7: (seed, slackMs, slackModel) => minus7Policy({ seed, slackMs, slackModel }),
   'minus7-no-stun': (seed, slackMs, slackModel) =>
     minus7Policy({ seed, slackMs, slackModel, cycle: NO_STUN_CYCLE, targets: [] }),
   'jason-10s': () => jasonPolicy({ phaseMs: 10000 }),

@@ -35,10 +35,19 @@ export const SCHEMA = 'device-fact-register-v1';
 
 const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '../../..'));
 
+/** A fact: its question, its evidence ranked strongest first, and the patterns that show a source reads each kind. */
+export interface FactSpec {
+  readonly question: string;
+  readonly authorityFixedByCharter?: boolean;
+  readonly delegated?: boolean;
+  readonly evidenceRanking: readonly string[];
+  readonly detect: readonly { readonly evidence: string; readonly match: RegExp }[];
+}
+
 // A fact is a semantic state some part of the system decides. `evidence` names
 // what a producer actually looks at, because that is what separates a strong
 // producer from a weak one -- not the file it lives in.
-export const FACTS = Object.freeze({
+export const FACTS: Readonly<Record<string, FactSpec>> = Object.freeze({
   maskOn: {
     question: 'is the mask fully on?',
     evidenceRanking: ['native-stroke', 'native-explicit', 'grid-anchor', 'grid-luma-fallback'],
@@ -109,7 +118,24 @@ export const FACTS = Object.freeze({
 // evidence's winning bands with margin, that its 3000-seed confirmations are
 // clean, and that the binding the newest Night 5 qualification binds HAS an
 // entry -- so a rebinding cannot inherit an aim priced for another policy.
-export const ANCHOR_AIMS = Object.freeze({
+/** One binding's registered aim; the comments on the entries below say what each field is. */
+export interface AnchorAim {
+  readonly night: number;
+  readonly aimMs: number;
+  readonly latencyMs: { readonly min: number; readonly max: number; readonly provenance: string };
+  readonly onsetBiasMs?: number;
+  readonly periodMs?: number;
+  readonly maxK?: number;
+  readonly qualifiedEpochMs?: number;
+  readonly evidence: string;
+  readonly reason: string;
+  readonly refuted?: string;
+  readonly planSha256?: Readonly<Record<number, string>>;
+  readonly replayHash?: string;
+  readonly alsoBinds?: Readonly<Record<string, string>>;
+}
+
+export const ANCHOR_AIMS: Readonly<Record<string, AnchorAim>> = Object.freeze({
   'fnv1a-81b5e51c': Object.freeze({
     night: 5,
     // The aim is a SCHEDULE epoch; the game acts latencyMs later, and the
@@ -392,7 +418,7 @@ export const ANCHOR_AIMS = Object.freeze({
 // of the same hash, and refuses additions here. Remove an entry by committing
 // its winner (packages/propose/bindings/fnaf2/campaign-night<N>-<name>-winner.json) from the
 // path each line names.
-export const UNTRACKED_WINNER_DEBT = Object.freeze({
+export const UNTRACKED_WINNER_DEBT: Readonly<Record<string, string>> = Object.freeze({
   'fnv1a-bc5e044c': 'night 6 a: found 2026-09-25 at artifacts/night6-anchored/bundle/winner.json with this ' +
     'stableHash, but not committable: it no longer rebuilds (winner.gate.replayHash does not match the ' +
     'candidate replay under the current engine), which test-winners-rebuild.ts refuses by design',
@@ -412,13 +438,13 @@ export const ANCHOR_AIM_MIN_MARGIN_MS = 30;
  */
 function migrationFor(winnerHash: string) {
   for (const [registered, entry] of Object.entries(ANCHOR_AIMS)) {
-    const file = (entry as any).alsoBinds?.[winnerHash];
+    const file = entry.alsoBinds?.[winnerHash];
     if (!file) continue;
-    let stored;
+    let stored: unknown;
     try { stored = JSON.parse(readFileSync(join(ROOT, file), 'utf8')); }
     catch (error) {
       return { registered, file, reason: `anchor aim migration ${winnerHash} -> ${registered} names ${file}, ` +
-        `which could not be read: ${error.message}` };
+        `which could not be read: ${(error as Error).message}` };
     }
     if (stableHash(stored) !== winnerHash)
       return { registered, file, reason: `anchor aim migration ${winnerHash} -> ${registered} names ${file}, ` +
@@ -432,10 +458,31 @@ function migrationFor(winnerHash: string) {
  * The registered aim for a binding, with its evidence read and checked, or a
  * refusal naming why. Never guesses: an unknown binding is `null`.
  */
-export function anchorAimFor(winnerHash: string) {
+/** The fields of an anchor aim's evidence record this check reads. */
+interface AimEvidence {
+  readonly binding: string;
+  readonly night: number;
+  readonly aimMs: number;
+  readonly winningBands?: readonly { readonly fromMs: number; readonly toMs: number }[];
+  readonly latencyMs?: { readonly min: number; readonly max: number };
+  readonly confirmations3000?: readonly { readonly wins: number; readonly seeds: number; readonly epochMs: number }[];
+  readonly kLimit?: { readonly maxK?: number };
+}
+
+/** A registered aim checked against its evidence, or the refusal that says why not. */
+export type AimLookup =
+  | { readonly ok: false; readonly reason: string }
+  | AnchorAim & {
+    readonly ok: true;
+    readonly band: { readonly fromMs: number; readonly toMs: number };
+    readonly winnerHash: string;
+    readonly migratedFrom: { readonly hash: string; readonly winner: string } | null;
+  };
+
+export function anchorAimFor(winnerHash: string): AimLookup {
   const asked = winnerHash;
   let entry = ANCHOR_AIMS[winnerHash];
-  let migration = null;
+  let migration: ReturnType<typeof migrationFor> = null;
   if (!entry) {
     // A winner hash moves when an unrelated KNOBS0 default is added, while the
     // plan it emits does not. An aim measured on that plan still holds, so a
@@ -447,11 +494,11 @@ export function anchorAimFor(winnerHash: string) {
     entry = ANCHOR_AIMS[migration.registered];
     winnerHash = migration.registered;
   }
-  let evidence;
+  let evidence: AimEvidence;
   try {
     evidence = JSON.parse(readFileSync(join(ROOT, entry.evidence), 'utf8'));
   } catch (error) {
-    return { ok: false, reason: `anchor aim evidence ${entry.evidence} unreadable: ${error.message}` };
+    return { ok: false, reason: `anchor aim evidence ${entry.evidence} unreadable: ${(error as Error).message}` };
   }
   if (evidence.binding !== winnerHash)
     return { ok: false, reason: `anchor aim evidence ${entry.evidence} is for binding ${evidence.binding}, not ${winnerHash}` };
@@ -475,16 +522,19 @@ export function anchorAimFor(winnerHash: string) {
   // an epoch this aim can deliver: inside the effective interval at some k.
   if (entry.qualifiedEpochMs !== undefined) {
     const period = entry.periodMs ?? 1000;
+    const qualified = entry.qualifiedEpochMs;
     const ks = Array.from({ length: (entry.maxK ?? 0) + 1 }, (_, k) => k);
-    if (!ks.some(k => entry.qualifiedEpochMs - k * period >= effectiveMin && entry.qualifiedEpochMs - k * period <= effectiveMax))
+    if (!ks.some(k => qualified - k * period >= effectiveMin && qualified - k * period <= effectiveMax))
       return { ok: false, reason: `qualified epoch ${entry.qualifiedEpochMs} ms lies outside the effective interval [${effectiveMin}, ${effectiveMax}] + k x ${period} of aim ${entry.aimMs} for k <= ${entry.maxK ?? 0}` };
   }
   const unclean = (evidence.confirmations3000 ?? []).filter(c => c.wins !== c.seeds);
   if (!evidence.confirmations3000?.length || unclean.length)
     return { ok: false, reason: `3000-seed confirmations in ${entry.evidence} are missing or not clean` };
   if (entry.maxK !== undefined) {
+    // Number(): an entry without a period divides by undefined, which is NaN either way.
+    const aimMs = entry.aimMs, periodMs = Number(entry.periodMs);
     const covered = evidence.confirmations3000.filter(c => c.wins === c.seeds)
-      .map(c => Math.floor((c.epochMs - entry.aimMs + 1) / entry.periodMs));
+      .map(c => Math.floor((c.epochMs - aimMs + 1) / periodMs));
     for (let k = 0; k <= entry.maxK; k += 1)
       if (!covered.includes(k))
         return { ok: false, reason: `k=${k} is allowed by the register but ${entry.evidence} has no clean 3000-seed row for aim + ${k} s` };
@@ -500,10 +550,23 @@ export function anchorAimFor(winnerHash: string) {
 const SEARCH_DIRS = ['packages/play/src', 'packages/play/bin', 'packages/play/games', 'apps/desktop/src', 'apps/desktop/bin'];
 const SKIP = /^(test-|_)|\.test\.(?:js|ts)$|fact-register/;
 
+/** A source file the register reads: its path from the root, and its text. */
+interface Source { readonly path: string; readonly text: string }
+
+/** A fact as the register writes it: question, ranking, the strongest and weakest evidence in use, and its producers. */
+export interface FactEntry {
+  readonly question: string;
+  readonly authorityFixedByCharter: boolean;
+  readonly evidenceRanking: readonly string[];
+  readonly strongestAvailable: string | null;
+  readonly weakestInUse: string | null;
+  readonly producers: readonly { readonly file: string; readonly evidence: readonly string[] }[];
+}
+
 function sources() {
-  const out = [];
-  const walk = dir => {
-    let entries;
+  const out: Source[] = [];
+  const walk = (dir: string) => {
+    let entries: string[];
     try { entries = readdirSync(join(ROOT, dir)); } catch { return; }
     for (const name of entries) {
       const rel = join(dir, name);
@@ -519,9 +582,9 @@ function sources() {
 }
 
 export function build(files = sources()) {
-  const facts = {};
+  const facts: Record<string, FactEntry> = {};
   for (const [fact, spec] of Object.entries(FACTS)) {
-    const producers = [];
+    const producers: { file: string; evidence: string[] }[] = [];
     for (const file of files) {
       const evidence = spec.detect.filter(rule => rule.match.test(file.text))
         .map(rule => rule.evidence);
@@ -531,7 +594,7 @@ export function build(files = sources()) {
       .sort((a, b) => spec.evidenceRanking.indexOf(a) - spec.evidenceRanking.indexOf(b));
     facts[fact] = {
       question: spec.question,
-      authorityFixedByCharter: (spec as any).authorityFixedByCharter === true,
+      authorityFixedByCharter: spec.authorityFixedByCharter === true,
       evidenceRanking: spec.evidenceRanking,
       strongestAvailable: used[0] ?? null,
       weakestInUse: used.at(-1) ?? null,
@@ -541,14 +604,14 @@ export function build(files = sources()) {
   return { schema: SCHEMA, generatedFrom: SEARCH_DIRS, facts };
 }
 
-export function render(value) {
-  const lines = [];
+export function render(value: ReturnType<typeof build>) {
+  const lines: string[] = [];
   for (const [fact, info] of Object.entries(value.facts)) {
-    lines.push(`${fact} -- ${(info as any).question}`);
-    lines.push(`  ranking:  ${(info as any).evidenceRanking.join(' > ')}`);
-    lines.push(`  in use:   strongest ${(info as any).strongestAvailable ?? 'none'}` +
-      `, weakest ${(info as any).weakestInUse ?? 'none'}`);
-    for (const p of (info as any).producers)
+    lines.push(`${fact} -- ${info.question}`);
+    lines.push(`  ranking:  ${info.evidenceRanking.join(' > ')}`);
+    lines.push(`  in use:   strongest ${info.strongestAvailable ?? 'none'}` +
+      `, weakest ${info.weakestInUse ?? 'none'}`);
+    for (const p of info.producers)
       lines.push(`    ${p.evidence.join(', ').padEnd(38)} ${p.file}`);
     lines.push('');
   }
@@ -583,7 +646,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1
     // it would anchor a Night 6 aim against the one-second grid.
     const hash = process.argv[periodIndex + 1] ?? '';
     const found = anchorAimFor(hash);
-    if (found.ok && Number.isInteger(found.periodMs) && found.periodMs > 0) { process.stdout.write(`${found.periodMs}\n`); process.exit(0); }
+    if (found.ok && Number.isInteger(found.periodMs) && Number(found.periodMs) > 0) { process.stdout.write(`${found.periodMs}\n`); process.exit(0); }
     process.stderr.write(`fact register: ${found.ok ? `binding ${hash} registers an aim but no period` : found.reason}\n`);
     process.exit(3);
   }

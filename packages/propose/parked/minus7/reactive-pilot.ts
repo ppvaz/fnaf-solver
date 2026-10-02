@@ -6,7 +6,11 @@ import { isMainThread } from 'node:worker_threads';
 import * as C from '@sixam/source/fnaf2';
 import { Sim } from '@sixam/source/fnaf2';
 import { Rng } from '@sixam/source/fnaf2';
+import type { SimOptions } from '@sixam/source/games/fnaf2/plant-options.ts';
 import { formatRate } from '../../../review/src/stat.ts';
+
+/** A plan row: its frame (an offset from the anchor in a table, absolute in a plan), the hand's motion, and the control. */
+export type PlanRow = [number, 'tap' | 'down' | 'up' | 'wait', string];
 
 // The scripted half of the routine, as frame offsets from the cycle anchor.
 // packages/propose/parked/minus7/cyclesearch.ts optimises alternatives to this table; everything the
@@ -21,7 +25,7 @@ import { formatRate } from '../../../review/src/stat.ts';
 // lands inside the 12-frame put-on animation and is correctly ignored since
 // 3d5c5f7. Historical jitter curves describe that table/engine, not the fixed
 // baseline below; they must not be carried forward as current measurements.
-export const LEGACY_ANIMATION_INVALID_CYCLE = [
+export const LEGACY_ANIMATION_INVALID_CYCLE: PlanRow[] = [
   [0, 'tap', 'monitor'], [15, 'tap', 'mask'], [24, 'tap', 'mask'],
   [40, 'down', 'light'], [42, 'up', 'light'], [46, 'tap', 'monitor'],
   [65, 'tap', 'cam:10'], [67, 'down', 'light'], [69, 'up', 'light'],
@@ -36,7 +40,7 @@ export const LEGACY_ANIMATION_INVALID_CYCLE = [
 const maskOn = 15;
 const maskOff = maskOn + C.MASK_ANIM_ON;
 const hallOn = maskOff + C.MASK_ANIM_OFF + 1;
-export const DEFAULT_CYCLE = [
+export const DEFAULT_CYCLE: PlanRow[] = [
   [0, 'tap', 'monitor'], [maskOn, 'tap', 'mask'], [maskOff, 'tap', 'mask'],
   [hallOn, 'down', 'light'], [hallOn + 2, 'up', 'light'], [hallOn + 6, 'tap', 'monitor'],
   [hallOn + 25, 'tap', 'cam:10'], [hallOn + 27, 'down', 'light'], [hallOn + 29, 'up', 'light'],
@@ -45,7 +49,7 @@ export const DEFAULT_CYCLE = [
   [hallOn + 60, 'tap', 'cam:11'], [hallOn + 63, 'down', 'wind'],
 ];
 
-const A = (f) => { // next frame landing on a :X2 / :X7 second boundary
+const A = (f: number) => { // next frame landing on a :X2 / :X7 second boundary
   for (let k = 0; k < 12 * C.FPS; k++) {
     const g = f + k;
     if (g % C.FPS === 0) { const d = (g / C.FPS) % 10; if (d === 2 || d === 7) return g; }
@@ -68,8 +72,8 @@ const A = (f) => { // next frame landing on a :X2 / :X7 second boundary
 // things in different states: `light` is the hall flash with the cams down and
 // the camera light with them up. A scripted cycle always begins mid-loop with
 // the cams up and the mask off.
-export function labelCycle(rows) {
-  let monUp = true, maskOn = false, lastCam = null, lightId = null;
+export function labelCycle(rows: readonly PlanRow[]) {
+  let monUp = true, maskOn = false, lastCam = null as number | null, lightId = null as string | null;
   return rows.map(([, kind, act]) => {
     if (act === 'monitor' && kind === 'tap') { monUp = !monUp; return monUp ? 'monitor-up' : 'monitor-down'; }
     if (act === 'mask' && kind === 'tap') { maskOn = !maskOn; return maskOn ? 'mask-on' : 'mask-off'; }
@@ -101,7 +105,13 @@ export function labelCycle(rows) {
 // Replace with measured weights (relative sigma of `delta` per stepId, taken
 // from a drilled session) before treating a profile result as more than a
 // sensitivity analysis.
-export const PROFILES = {
+/** How a jitter's magnitude is spread: `common` scales the per-pass offset, `reactive` an unscripted row, `steps` each step id. */
+export interface Profile {
+  readonly common?: number;
+  readonly reactive?: number;
+  readonly steps?: Readonly<Record<string, number>>;
+}
+export const PROFILES: Readonly<Record<string, Profile>> = {
   // The null model: every step equally hard. Not the same as the legacy
   // uniform path, which draws per row rather than per step.
   flat: { common: 1, reactive: 1, steps: {} },
@@ -126,10 +136,13 @@ export const PROFILES = {
 // it -- phaseA's extra cams-down/up pair is shifted along with the cycle's own
 // monitor taps. That is the deliberate reading: being late on a button means
 // being late on it everywhere in the pass, not only on its first appearance.
-export function shiftStep(rows, { id, frames }) {
+/** One step moved by a signed number of frames. */
+export interface StepShift { readonly id: string; readonly frames: number }
+
+export function shiftStep(rows: readonly PlanRow[], { id, frames }: StepShift) {
   const ids = labelCycle(rows);
   return rows
-    .map((row, i) => (ids[i] === id ? [row[0] + frames, row[1], row[2]] : row))
+    .map((row, i): PlanRow => (ids[i] === id ? [row[0] + frames, row[1], row[2]] : row))
     .sort((x, y) => x[0] - y[0]);
 }
 
@@ -137,53 +150,63 @@ export function shiftStep(rows, { id, frames }) {
 // the whole pass late) plus an independent per-step term scaled by that step's
 // weight. The shared term is what makes this correlated rather than i.i.d.,
 // which is the thing plan 04 flagged as missing from the uniform model.
-function jitterPlan(rows, jitter, profile, rng, scripted) {
+function jitterPlan(rows: readonly PlanRow[], jitter: number, profile: Profile, rng: Rng, scripted: boolean) {
   const spread = Math.max(1, Math.round(jitter / 3));
   const base = Math.floor(rng.next() * jitter * (profile.common ?? 1));
   const ids = scripted ? labelCycle(rows) : null;
-  const drawn = new Map();
+  const drawn = new Map<string, number>();
   return rows
-    .map((row, i) => {
+    .map((row, i): PlanRow => {
       const id = ids ? ids[i] : 'reactive';
-      if (!drawn.has(id)) {
+      let step = drawn.get(id);
+      if (step === undefined) {
         const w = scripted ? (profile.steps?.[id] ?? 1) : (profile.reactive ?? 1);
-        drawn.set(id, Math.floor(rng.next() * spread * w));
+        step = Math.floor(rng.next() * spread * w);
+        drawn.set(id, step);
       }
-      return [row[0] + base + drawn.get(id), row[1], row[2]];
+      return [row[0] + base + step, row[1], row[2]];
     })
     .sort((x, y) => x[0] - y[0]);
 }
 
-export class Bot {
-  declare sim: any;
-  declare table: (string | number)[][];
-  declare targets: any;
-  declare plan: (string | number)[][];
-  declare waiting: string | number;
+/** What a Bot reads and drives: the frame, Balloon Boy, the controls. A Sim is one; the policy adapter's proxy is another. */
+export interface BotSim {
+  readonly frame: number;
+  readonly bb: { readonly inOpening: boolean; readonly stage: number };
+  press(act: string): void;
+  release(act: string): void;
+}
+
+export class Bot<S extends BotSim = BotSim> {
+  declare sim: S;
+  declare table: readonly PlanRow[];
+  declare targets: number[];
+  declare plan: PlanRow[];
+  declare waiting: string | null;
   declare kind: string;
   declare nextAt: number;
-  constructor(sim, table = DEFAULT_CYCLE, targets = null) {
+  constructor(sim: S, table: readonly PlanRow[] = DEFAULT_CYCLE, targets: number[] | null = null) {
     this.sim = sim; this.table = table;
     // The BB attack/recovery path has to refresh the same camera set as the
     // regular cycle.  Derive it from the table by default so search tools can
     // evaluate structurally different cycles without silently falling back to
     // Minus 7's 10/04/07 sweep.
     this.targets = targets || [...new Set(table
-      .filter(([, , act]) => (act as any).startsWith('cam:') && act !== `cam:${C.BOX_CAM}`)
-      .map(([, , act]) => +(act as any).slice(4)))];
+      .filter(([, , act]) => act.startsWith('cam:') && act !== `cam:${C.BOX_CAM}`)
+      .map(([, , act]) => +act.slice(4)))];
     this.plan = []; this.waiting = null; this.kind = 'start';
     this.plan = [[2, 'tap', 'monitor'], [20, 'tap', 'cam:11'], [24, 'down', 'wind']];
     this.nextAt = C.s(7);
   }
 
-  cycle(a) {
-    return this.table.map(([o, k, act]) => [a + o, k, act]);
+  cycle(a: number) {
+    return this.table.map(([o, k, act]): PlanRow => [a + o, k, act]);
   }
 
   // BB is in the vent camera: same cycle, but the cams must be DOWN across the
   // next 5s interval. That defers his last movement rather than denying it
   // (g417 latches), which is what buys a prepared arrival instead of a random one.
-  phaseA(a, cycleRows = this.cycle(a)) {
+  phaseA(a: number, cycleRows = this.cycle(a)) {
     const p = cycleRows;
     const drop = a + 150;                     // :X4.5 — before the interval
     const back = a + 150 + C.MONITOR_ANIM_DOWN * 3; // safely after it
@@ -192,8 +215,8 @@ export class Bot {
   }
 
   // BB is in the opening: flash everything, drop, mask, and wait for his bang.
-  attack(a) {
-    const p = [[a, 'down', 'light']];
+  attack(a: number) {
+    const p: PlanRow[] = [[a, 'down', 'light']];
     this.targets.forEach((cam, i) => p.push([a + 3 + i * 6, 'tap', `cam:${cam}`]));
     const drop = a + 4 + this.targets.length * 6;
     p.push([drop, 'tap', 'monitor'], [drop + 12, 'tap', 'mask'],
@@ -201,7 +224,7 @@ export class Bot {
     return p;
   }
 
-  recover(f) {
+  recover(f: number) {
     // Raising the monitor re-exposes the final camera from attack() while the
     // light is still held, so only the preceding cameras need explicit taps.
     //
@@ -211,7 +234,7 @@ export class Bot {
     // spends them with the monitor already up, where the same held light is
     // the camera light instead and Foxy's D is never zeroed.
     const up = f + 2 + C.MASK_ANIM_OFF + 2;
-    const p = [[f + 2, 'tap', 'mask'], [up, 'tap', 'monitor']];
+    const p: PlanRow[] = [[f + 2, 'tap', 'mask'], [up, 'tap', 'monitor']];
     this.targets.slice(0, -1).forEach((cam, i) =>
       p.push([up + 17 + i * 4, 'tap', `cam:${cam}`]));
     const lightUp = up + 17 + Math.max(1, this.targets.length - 1) * 4;
@@ -237,7 +260,7 @@ export class Bot {
     }
 
     while (this.plan.length && this.plan[0][0] <= f) {
-      const [, kind, act] = this.plan.shift();
+      const [, kind, act] = this.plan.shift() as PlanRow; // the loop's condition holds a row
       if (kind === 'wait') { this.waiting = act; return; }
       if (kind === 'up') s.release(act); else s.press(act);
     }
@@ -258,7 +281,16 @@ export class Bot {
 // different. Reproducing those curves also needs their archived table/engine.
 const JITTER_SALT = 0x9e3779b9;
 
-export function run(opts: any = {}) {
+/** A night of the pilot: the Sim's options, the table and its cameras, and the error model. */
+export interface PilotOptions extends Partial<SimOptions> {
+  readonly cycle?: readonly PlanRow[];
+  readonly targets?: number[] | null;
+  readonly jitter?: number;
+  readonly profile?: string | Profile | null;
+  readonly stepShift?: StepShift | null;
+}
+
+export function run(opts: PilotOptions = {}) {
   const jitter = opts.jitter || 0;
   const profile = typeof opts.profile === 'string' ? PROFILES[opts.profile] : opts.profile || null;
   if (opts.profile && !profile) throw new Error(`unknown jitter profile: ${opts.profile}`);
@@ -271,7 +303,7 @@ export function run(opts: any = {}) {
     // (one blanket reactive weight, and never step-shifted -- the sweep is a
     // statement about the table, and the recovery path is not in it).
     const jrng = new Rng((((opts.seed ?? 999) >>> 0) ^ JITTER_SALT) >>> 0);
-    const transform = (rows, scripted) => {
+    const transform = (rows: PlanRow[], scripted: boolean) => {
       if (shift && scripted) rows = shiftStep(rows, shift);
       if (profile && jitter) rows = jitterPlan(rows, jitter, profile, jrng, scripted);
       return rows;
@@ -288,11 +320,11 @@ export function run(opts: any = {}) {
     // Human sloppiness: the whole cycle lands late by a random amount, with a
     // little spread inside it. Order is preserved -- this models a late player,
     // not one pressing things in the wrong sequence.
-    const wrap = (fn) => (a) => {
+    const wrap = (fn: (a: number) => PlanRow[]) => (a: number) => {
       const base = Math.floor(sim.rng.next() * jitter);
       const spread = Math.max(1, Math.round(jitter / 3));
       return fn.call(bot, a)
-        .map(([f, k, act]) => [f + base + Math.floor(sim.rng.next() * spread), k, act])
+        .map(([f, k, act]): PlanRow => [f + base + Math.floor(sim.rng.next() * spread), k, act])
         .sort((x, y) => x[0] - y[0]);
     };
     bot.cycle = wrap(Bot.prototype.cycle);
@@ -308,7 +340,7 @@ export function run(opts: any = {}) {
 // Pool task (packages/propose/bin/census/pool.ts): one night reduced to a structured-cloneable
 // summary. A worker cannot hand back a Sim, so everything the search tools
 // rank on has to come through here.
-export function summarize(opts) {
+export function summarize(opts: PilotOptions) {
   const { sim, minBox } = run(opts);
   return { won: sim.won, reason: sim.death?.reason || 'unknown', minBox, power: sim.power };
 }
@@ -318,7 +350,7 @@ export function summarize(opts) {
 // bbtest as its task module.
 if (isMainThread && process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
 const n = +(process.argv[2] || 200);
-const fails = {}; let minB = 1, minP = C.POWER_FRAMES, lapses = 0;
+const fails: Record<string, number> = {}; let minB = 1, minP = C.POWER_FRAMES, lapses = 0;
 for (let i = 0; i < n; i++) {
   const jf = (process.argv.find(a => a.startsWith('--jitter=')) || '').split('=')[1];
   const r = run({ seed: (i * 2246822519) >>> 0, worst: process.argv.includes('--worst'),
@@ -329,7 +361,8 @@ for (let i = 0; i < n; i++) {
     for (let j = 1; j < r.sim.rec.n; j++)
       if (r.sim.rec.stun[k][j] === 0 && r.sim.rec.stun[k][j - 1] > 0) lapses++;
   if (!r.sim.won) {
-    const key = `${r.sim.death.reason}: ${r.sim.death.detail}`;
+    const death = r.sim.death as NonNullable<Sim['death']>; // a night that is not won ended in a death
+    const key = `${death.reason}: ${death.detail}`;
     fails[key] = (fails[key] || 0) + 1;
   }
 }
@@ -343,7 +376,7 @@ console.log(`min box ${(minB * 100).toFixed(0)}% | min power ${minP} | stun laps
 // and a correct cycle never lets a stun lapse -- into something a test runner
 // can fail on. Without it this file only ever printed numbers and exited 0.
 if (process.argv.includes('--assert')) {
-  const problems = [];
+  const problems: string[] = [];
   if (failed) problems.push(`${failed}/${n} seeds died`);
   if (lapses) problems.push(`${lapses} stun lapses`);
 
@@ -351,7 +384,7 @@ if (process.argv.includes('--assert')) {
   // is keyed by stepId, so a rename on either side would silently start
   // weighting nothing. Compared as sets, so reordering the camera sweep is
   // allowed but losing, adding or renaming a step is not.
-  const set = (a) => [...new Set(a)].sort().join(',');
+  const set = (a: string[]) => [...new Set(a)].sort().join(',');
   const botIds = set(labelCycle(DEFAULT_CYCLE));
   const trainerIds = set(C.CYCLE_SCRIPT.map(st => st.id));
   if (botIds !== trainerIds)

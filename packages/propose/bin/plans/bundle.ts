@@ -912,7 +912,8 @@ export function validateBundle(directory: string, { night }: { night?: number } 
   for (const entry of entries) {
     if (!winner.nights.includes(entry.night)) fail(`manifest contains unexpected night ${entry.night}`);
     if (entry.policy !== winner.strategy) fail(`plan ${entry.file} policy mismatch`);
-    if (entry.text !== (expected.get(entry.night) as any).text) fail(`${entry.file} is not the exact emission for winner.json`);
+    // The line above refuses a night the winner does not name, so this one has an emission.
+    if (entry.text !== (expected.get(entry.night) as ReturnType<typeof emitterFor>).text) fail(`${entry.file} is not the exact emission for winner.json`);
     parsePlan(entry.text, { strategy: winner.strategy, night: entry.night, profile });
   }
   // The bundle's own replay seeds; one that changed fails the replay hash below.

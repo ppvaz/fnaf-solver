@@ -67,30 +67,94 @@ export const ADAPTER_VERSION = 1;
 // and model/reactive-pilot.ts use so two error models stay comparable on identical luck.
 const SLACK_SALT = 0x736c6163;
 
-const f = (msv) => Math.round(msv * C.FPS / 1000);
+const f = (msv: number) => Math.round(msv * C.FPS / 1000);
+
+export type ObservationMode = 'truth' | 'belief';
+/** How slack is drawn: per row (`iid`), a shared draw plus a third per row (`correlated`), or the shared draw alone (`common`). */
+export type SlackModel = 'iid' | 'correlated' | 'common';
+
+/** A stalled unit as the observation shows it; belief mode shows none of it. */
+interface UnitView { id: string; node: C.RouteNode | null; atOpening: boolean; inside: boolean; vent: 'L' | 'R' | 'O' | null }
+
+/** What a policy is shown each frame: one object, reused, so a policy reads it and never keeps it. */
+export interface Observation {
+  mode: ObservationMode; night: number; frame: number; t: number;
+  monUp: boolean; maskOn: boolean; maskFullyOn: boolean; cam: number; lightHeld: boolean; winding: boolean;
+  box: number; bars: number; power: number;
+  blackout: boolean; blackoutMasked: boolean; blackoutFuseLeft: number; gfPresent: boolean;
+  ventLOccupied: boolean; ventROccupied: boolean; ventLAge: number; ventRAge: number;
+  foxyAmbience: boolean; foxyD: number; foxyLocked: boolean; foxyInHall: boolean;
+  bbInOpening: boolean; bbInside: boolean; bbStage: number;
+  tbCue: boolean; insideCount: number; openingCount: number;
+  units: UnitView[];
+}
+
+/** How a policy acts: rows scheduled at frames (see the contract above). */
+export interface PolicyApi {
+  readonly frame: number;
+  readonly pending: number;
+  night: number;
+  s: (sec: number) => number;
+  ms: (msv: number) => number;
+  tap(frame: number, act: string): void;
+  hold(frame: number, frames: number, act: string): void;
+  press(frame: number, act: string): void;
+  release(frame: number, act: string): void;
+  clear(): void;
+}
+
+/** A policy (see the contract above); `ownSlack` says it applies its own slack, `slackMs` how much. */
+export interface Policy {
+  readonly name: string;
+  readonly version?: number;
+  readonly observation?: ObservationMode;
+  readonly ownSlack?: boolean;
+  readonly slackMs?: number;
+  reset?(api: PolicyApi): void;
+  step(obs: Observation, api: PolicyApi): void;
+}
+
+/** A policy built for a seed and the sweep's slack: only the Minus 7 control reads them. */
+export type PolicyFactory = (seed: number, slackMs: number, slackModel?: SlackModel) => Policy;
+
+/** The device actuator's options, or true for its defaults. */
+type ActuatorChoice = NonNullable<ConstructorParameters<typeof DeviceActuator>[1]> | true | null;
+
+/** One night of a policy: the night and seed, the slack, the actuator and the observation mode. */
+export interface PolicyRunOptions {
+  readonly policy: Policy;
+  readonly night?: number;
+  readonly seed?: number;
+  readonly worst?: boolean;
+  readonly slackMs?: number;
+  readonly slackModel?: SlackModel;
+  readonly deviceActuator?: ActuatorChoice;
+  readonly observation?: ObservationMode | null;
+}
 
 export class PolicyRun {
-  declare policy: any;
+  declare policy: Policy;
   declare night: number;
   declare slackMs: number;
-  declare slackModel: string;
+  declare slackModel: SlackModel;
   declare spreadMs: number;
   declare commonShift: number;
-  declare mode: any;
+  declare mode: ObservationMode;
   declare sim: Sim;
-  declare act: DeviceActuator;
+  declare act: DeviceActuator | null;
   declare slackRng: Rng;
-  declare queue: any[];
+  declare queue: [number, number, 'press' | 'release', string][];
   declare seq: number;
   declare actions: number;
   declare minBox: number;
   declare belief: { monUp: boolean; maskOn: boolean; cam: number; lightHeld: boolean; windHeld: boolean; ventL: boolean; ventR: boolean; };
-  declare sensors: { ventL: number[]; ventR: number[]; box: number[]; };
-  declare obs: { mode: any; night: number; frame: number; t: number; monUp: boolean; maskOn: boolean; maskFullyOn: boolean; cam: number; lightHeld: boolean; winding: boolean; box: number; bars: number; power: any; blackout: boolean; blackoutMasked: boolean; blackoutFuseLeft: number; gfPresent: boolean; ventLOccupied: boolean; ventROccupied: boolean; ventLAge: number; ventRAge: number; foxyAmbience: boolean; foxyD: number; foxyLocked: boolean; foxyInHall: boolean; bbInOpening: boolean; bbInside: boolean; bbStage: number; tbCue: boolean; insideCount: number; openingCount: number; units: { id: string; node: any; atOpening: boolean; inside: boolean; vent: any; }[]; };
-  declare api: { readonly frame: number; readonly pending: number; night: number; s: (sec: any) => number; ms: (msv: any) => number; tap(frame: any, act: any): void; hold(frame: any, frames: any, act: any): void; press(frame: any, act: any): void; release(frame: any, act: any): void; clear(): void; };
+  declare sensors: { ventL: [boolean | null, number]; ventR: [boolean | null, number]; box: [number | null, number]; };
+  declare obs: Observation;
+  declare api: PolicyApi;
+  // Partial: a missing policy reaches the check below, which names it.
   constructor({ policy, night = 7, seed = 1, worst = false, slackMs = 0,
                 slackModel = 'iid', deviceActuator = null,
-                observation = null }: any = {}) {
+                observation = null }: Partial<PolicyRunOptions> = {}) {
     if (!policy || typeof policy.step !== 'function')
       throw new Error('a policy must expose step(obs, api)');
     this.policy = policy;
@@ -147,7 +211,7 @@ export class PolicyRun {
   }
 
   // ------------------------------------------------------------------- api
-  makeApi() {
+  makeApi(): PolicyApi {
     const self = this;
     return {
       get frame() { return self.sim.frame; },
@@ -171,7 +235,7 @@ export class PolicyRun {
   // can make an action earlier, but not retroactive.
   // holdFrames: 0 = a bare press, >0 = press plus its release, -1 = a bare
   // release (the low-level `api.release` row).
-  emit(frame, holdFrames, act) {
+  emit(frame: number, holdFrames: number, act: string) {
     let shift = 0;
     if (this.slackMs) {
       shift = this.slackModel !== 'iid'
@@ -187,7 +251,7 @@ export class PolicyRun {
   }
 
   // ----------------------------------------------------------- observation
-  blankObs() {
+  blankObs(): Observation {
     return {
       mode: this.mode, night: this.night, frame: 0, t: 0,
       // self-state
@@ -209,7 +273,7 @@ export class PolicyRun {
   }
 
   // Whether a vent read, if paid for right now, would show an occupant.
-  ventTruth(side) {
+  ventTruth(side: 'L' | 'R') {
     const s = this.sim;
     if (side === 'L' && s.bb.inOpening) return true;
     return s.units.some(u => u.atOpening && !u.done &&
@@ -283,7 +347,7 @@ export class PolicyRun {
   }
 
   // --------------------------------------------------------------- delivery
-  dispatch(kind, act) {
+  dispatch(kind: 'press' | 'release', act: string) {
     const b = this.belief;
     if (kind === 'press') {
       if (act === 'monitor') b.monUp = !b.monUp;
@@ -318,7 +382,7 @@ export class PolicyRun {
       // given a different error model from one that spreads them.
       if (this.act && this.queue[0][0] <= this.sim.frame) this.act.beat();
       while (this.queue.length && this.queue[0][0] <= this.sim.frame) {
-        const [, , kind, act] = this.queue.shift();
+        const [, , kind, act] = this.queue.shift() as PolicyRun['queue'][number]; // the loop's condition holds a row
         this.dispatch(kind, act);
       }
     }
@@ -347,7 +411,7 @@ export class PolicyRun {
   }
 }
 
-export function runPolicy(opts) { return new PolicyRun(opts).run(); }
+export function runPolicy(opts: PolicyRunOptions) { return new PolicyRun(opts).run(); }
 
 // A seeded sweep. Seeds are the bbtest stride so two policies see the same
 // luck; the engine's Rng keeps only 16 bits, so the stride matters more than
@@ -355,12 +419,13 @@ export function runPolicy(opts) { return new PolicyRun(opts).run(); }
 // carries its OWN error stream (the Minus 7 control does, so that slack lands
 // on its plan rows the way human-gate.ts shifts a plan's offsets) has to
 // re-seed per run.
-export function sweep(makePolicy, { runs = 100, night = 7, worst = false,
-                                    slackMs = 0, slackModel = 'iid',
-                                    deviceActuator = null,
-                                    observation = null } = {}) {
+export function sweep(makePolicy: PolicyFactory, { runs = 100, night = 7, worst = false,
+                                    slackMs = 0, slackModel = 'iid' as SlackModel,
+                                    deviceActuator = null as ActuatorChoice,
+                                    observation = null as ObservationMode | null } = {}) {
   let survived = 0, minBox = 1, minPower = Infinity, actions = 0, seamDrops = 0;
-  const deaths = new Map();
+  // A night that was won has a null reason, and only a lost one is counted.
+  const deaths = new Map<string | null, number>();
   for (let i = 0; i < runs; i++) {
     const seed = (i * 2246822519) >>> 0;
     const r = runPolicy({ policy: makePolicy(seed, slackMs, slackModel), night,
