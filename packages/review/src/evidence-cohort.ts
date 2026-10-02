@@ -132,18 +132,23 @@ function cohortSlots(predeclaration: Predeclaration, packsDir: string, prefix: s
     });
     const counted = [...runs].reverse().find(run => run.reached) ?? null;
     for (const run of runs) run.role = run === counted ? 'counted' : run.reached ? 'superseded' : 'excluded';
-    slots.push({ slot: label, status: counted ? counted.status : 'MISSING', runs });
+    // A run played on another binding is not a run of this cohort: its slot is
+    // invalid, re-run as any invalid slot is, and neither scored nor counted.
+    const status = !counted ? 'MISSING' : !counted.bindingMatches ? 'WRONG_BINDING' : counted.status;
+    slots.push({ slot: label, status, runs });
   }
   const tally = (status: string) => slots.filter(slot => slot.status === status).length;
-  const counted = slots.filter(slot => !['MISSING'].includes(slot.status)).length;
+  const counted = slots.filter(slot => !['MISSING', 'WRONG_BINDING'].includes(slot.status)).length;
+  const wrongBinding = slots.flatMap(slot => slot.runs.filter(run => !run.bindingMatches).map(run => run.run));
   return {
     schema: COHORT_RESULT_SCHEMA, predeclaration: source, night, binding, size, prefix,
     rule: 'WIN = executor terminal sixam AND video terminal clear (the predeclared rule)',
     counted, wins: tally('WIN'), deaths: tally('DEATH'), ungraded: tally('UNGRADED'),
     disputed: tally('DISPUTED'), unknown: tally('UNKNOWN'), missing: tally('MISSING'),
     winRate: `${tally('WIN')}/${counted}`,
-    wrongBinding: slots.flatMap(slot => slot.runs.filter(run => !run.bindingMatches).map(run => run.run)),
-    status: tally('MISSING') || tally('UNGRADED') || tally('UNKNOWN') || tally('DISPUTED') ? 'INCOMPLETE' : 'COMPLETE',
+    wrongBinding,
+    status: tally('MISSING') || tally('UNGRADED') || tally('UNKNOWN') || tally('DISPUTED') || wrongBinding.length
+      ? 'INCOMPLETE' : 'COMPLETE',
     slots,
   };
 }

@@ -87,9 +87,19 @@ try {
 
   run('night7-k9-cohort-r03b', { outcome: 'sixam', video: 'clear -- sixam at 454.0 s', winnerHash: 'fnv1a-other' });
   const rerun = computeCohort(predeclaration, packs) as CohortResult; // no corners: one cohort's slots
-  assert.equal(rerun.slots[2].status, 'WIN');
+  assert.equal(rerun.slots[2].status, 'WRONG_BINDING', 'a counted run on another binding is not a win of this cohort');
   assert.deepEqual(rerun.slots[2].runs.map(entry => entry.role), ['superseded', 'counted']);
   assert.equal(rerun.wrongBinding.length, 1, 'a run on another binding is named, not silently counted');
+  assert.equal(rerun.wins, 2);
+  assert.equal(rerun.winRate, '2/3', 'the slot is re-run, as an invalid slot is, not scored');
+  assert.equal(rerun.status, 'INCOMPLETE');
+  // Every other slot graded and on the binding: only the wrong-binding run holds the cohort open.
+  const settled = { ...predeclaration, size: 2, labels: 'night7-k9-cohort-r01 .. night7-k9-cohort-r02' };
+  assert.equal((computeCohort(settled, packs) as CohortResult).status, 'COMPLETE');
+  run('night7-k9-cohort-r02b', { outcome: 'sixam', video: 'clear -- sixam at 454.5 s', winnerHash: 'fnv1a-other' });
+  const strayed = computeCohort(settled, packs) as CohortResult;
+  assert.equal(strayed.slots[1].status, 'WRONG_BINDING');
+  assert.equal(strayed.status, 'INCOMPLETE', 'a cohort with a run on another binding is not COMPLETE, as a corner is not');
   assert.throws(() => computeCohort({ ...predeclaration, schema: 'x' }, packs), /cohort-predeclaration-v1/);
 
   // run-timeline.py's own output shape, and a slot whose result was lost with its campaign.
