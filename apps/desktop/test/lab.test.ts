@@ -11,7 +11,7 @@ import { isUnknown, validateClaimEnvelope } from '@sixam/kernel';
 import type { RefusalEnvelope, Unknown } from '@sixam/kernel';
 import { recordRun, runRecordPath } from '../../../tools/push-gate.ts';
 import { main, parse } from '../src/cli.ts';
-import { LAB_VERBS, SESSION_FILE, STALE_PENDING_HOURS, createLab, lastEvening, parseWorktrees, runStamp } from '../src/lab.ts';
+import { LAB_VERBS, PROC_HOST, SESSION_FILE, STALE_PENDING_HOURS, createLab, lastEvening, parseWorktrees, runStamp } from '../src/lab.ts';
 
 const REPO = resolve(import.meta.dirname, '../../..');
 const OVERRIDE = ['PEDRO', 'OK'].join('-');
@@ -64,7 +64,7 @@ const promotionsStub = (modelOnly: string[]) => (() => ({
     untrackedWinnerDebt: { summary: '0 of 0', untracked: 0, entries: [] } },
 })) as unknown as NonNullable<LabOptions['promotions']>;
 const NOW = new Date('2026-09-30T09:00:00Z');
-const quietHost = { availableMb: () => 4000, processes: () => [{ pid: 1, name: 'init', rssMb: 10 }], cwds: () => [] };
+const quietHost = { availableMb: () => 4000, processes: () => [{ pid: 1, name: 'init', rssMb: 10 }], cwds: () => [], alive: () => false };
 
 /** A lab over the fixture, every host path inside the test's own temp directory. */
 function labFor(root: string, { jobs = [], host = quietHost, modelOnly = ['packages/propose/bindings/fnaf2/campaign-night1-x-winner.json'] }:
@@ -223,7 +223,7 @@ try {
   write(sick, 'artifacts/runs/k9/campaign-night7-k9-winner.json', '{}\n');
   mkdirSync(join(sick, 'node_modules/@fnaf2-1020'), { recursive: true });
   const staleJob = { id: 'cue-1-stale', kind: 'setup', state: 'PENDING', createdAt: new Date(NOW.getTime() - (STALE_PENDING_HOURS + 28) * HOUR).toISOString() };
-  const heavy = { availableMb: () => 1000, processes: () => [{ pid: 4242, name: 'Chowdren', rssMb: 1500 }], cwds: () => [] };
+  const heavy = { availableMb: () => 1000, processes: () => [{ pid: 4242, name: 'Chowdren', rssMb: 1500 }], cwds: () => [], alive: () => false };
   const sickLab = labFor(sick, { jobs: [staleJob], host: heavy });
   let report = claim(sickLab.lab.doctor());
   const found = (id: string) => report.findings.filter(item => item.id === id);
@@ -261,6 +261,41 @@ try {
   assert.ok(report.checks.every(item => item.ok === true), JSON.stringify(report.checks));
   const fast = claim(well.lab.doctor({ catalog: false }));
   assert.ok(isUnknown(fast.checks.find(item => item.id === 'catalog-drift')?.ok), 'without the worktree, catalog drift is UNKNOWN');
+  checks += 1;
+
+  // --- a host that cannot list working directories: UNKNOWN, never "orphaned" ----------------------
+  // PROC_HOST read /proc, which macOS has not; the empty list it fell back to called every worktree unused.
+  mkdirSync(pushgate, { recursive: true });
+  git(sick, 'worktree', 'add', '-q', '--detach', agent, 'HEAD');
+  for (const path of [agent, join(admin, 'HEAD'), join(admin, 'index'), join(admin, 'logs/HEAD')])
+    if (existsSync(path)) utimesSync(path, old, old);
+  const blind = { ...quietHost, cwds: () => { throw new Error("ENOENT: no such file or directory, scandir '/proc'"); } };
+  const blindReport = claim(labFor(sick, { host: blind }).lab.doctor({ catalog: false }));
+  for (const id of ['push-gate-worktrees', 'agent-worktrees']) {
+    assert.ok(isUnknown(blindReport.checks.find(item => item.id === id)?.ok), `${id} is UNKNOWN when no working directory can be read`);
+    assert.deepEqual(blindReport.findings.filter(item => item.id === id), [], `${id} recommends removing nothing it could not check`);
+  }
+  rmSync(pushgate, { recursive: true });
+  git(sick, 'worktree', 'remove', agent);
+  // This host's own reader answers here, on Linux from /proc and elsewhere from lsof.
+  const ownCwds = PROC_HOST.cwds();
+  assert.ok(ownCwds?.includes(realpathSync(process.cwd())), 'this process\'s working directory is among the ones the host lists');
+  assert.equal(PROC_HOST.alive(process.pid), true, 'this process is alive');
+  const exited = spawnSync('true').pid as number;
+  assert.equal(PROC_HOST.alive(exited), false, 'a process that has exited is not');
+  checks += 1;
+
+  // --- a device lease is held while its owner's pid is alive, as the host answers it -------------
+  const leaseLab = labFor(sick, { host: { ...quietHost, alive: (pid: number) => pid === 4242 } });
+  const locks = join(leaseLab.env.CUE_HELPER_STATE_DIR, 'locks');
+  write(locks, 'device-HELD.lock', JSON.stringify({ pid: 4242, host: 'here', acquiredAt: NOW.getTime() / 1000 }));
+  write(locks, 'device-STALE.lock', JSON.stringify({ pid: 4343, host: 'here', acquiredAt: NOW.getTime() / 1000 }));
+  write(locks, 'device-BAD.lock', JSON.stringify({ pid: 'x' }));
+  const lease = claim(leaseLab.lab.status()).phone.lease;
+  assert.deepEqual(lease.leases.map(row => [row.file, row.held, row.pid]),
+    [['device-BAD.lock', false, null], ['device-HELD.lock', true, 4242], ['device-STALE.lock', false, null]]);
+  assert.equal(lease.held, 1);
+  rmSync(locks, { recursive: true });
   checks += 1;
 
   // --- morning: the queue and the packs since the last evening ------------------------------------

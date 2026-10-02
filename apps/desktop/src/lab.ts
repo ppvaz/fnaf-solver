@@ -3,7 +3,7 @@
 // ADR 0002 wants one verb table and one set of query functions for every door. This is that table
 // for the operator's questions: `npm run lab -- <verb>` (cli.mjs) and the fnaf-solver MCP server
 // (`lab.status`, `lab.next`, `lab.doctor`) both call createLab(). It lives in apps/desktop, the
-// final layout's composition root, because it composes: git, this host's /proc, the Companion
+// final layout's composition root, because it composes: git, this host's processes, the Companion
 // queue, the push-gate record and the review package's queries. The pure queries are in
 // packages/review (consequence.mjs, mistakes.mjs, roadmap.mjs, promotions-query.mjs).
 //
@@ -18,7 +18,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, readlink
   writeFileSync } from 'node:fs';
 import { homedir, hostname, tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { BINDINGS_DIR, REPOSITORY_TARGET, type Unknown, claimEnvelope, isUnknown, refusalEnvelope, unknown } from '@sixam/kernel';
+import { BINDINGS_DIR, REPOSITORY_TARGET, type Unknown, claimEnvelope, isRecord, isUnknown, refusalEnvelope, unknown } from '@sixam/kernel';
 import { CONSEQUENCE_CITES, classifyChange, consequenceKey } from '@sixam/review/consequence';
 import { trackedWinners, winnerFiles } from '@sixam/review/evidence-pack';
 import { matchMistakes, readMistakes, stepFamily } from '@sixam/review/mistakes';
@@ -81,8 +81,8 @@ interface WindowRecord {
   readonly window?: { readonly openedAt?: string, readonly closedAt?: string }, readonly outcome?: string, readonly reason?: string,
   readonly morning?: { readonly summary?: string, readonly nights?: unknown[] },
 }
-/** A device lock's owner record. */
-interface LockOwner { readonly pid?: number, readonly host?: string, readonly acquiredAt?: number }
+/** A device lock's owner record, as companion_device_lock.py writes it. */
+interface LockOwner { readonly pid: number, readonly host: string | null, readonly acquiredAt: number | null }
 /** The queue as status and doctor read it; status drops the raw jobs. */
 interface QueueView {
   jobs: number, byState: Record<string, number>,
@@ -107,6 +107,17 @@ const readJson = (path: string): unknown => JSON.parse(readFileSync(path, 'utf8'
 const iso = (date: Date) => date.toISOString();
 const hoursBetween = (from: Date, to: Date) => Math.round(((to.getTime() - from.getTime()) / HOUR) * 10) / 10;
 const mtime = (path: string) => { try { return statSync(path).mtime; } catch { return null; } };
+
+/** A lock file's owner, or null when it holds no record with a pid (empty, unreadable or malformed). */
+function lockOwner(path: string): LockOwner | null {
+  let record: unknown;
+  try { record = readJson(path); } catch { return null; }
+  if (!isRecord(record)) return null;
+  const { pid } = record;
+  if (typeof pid !== 'number' || !Number.isInteger(pid) || pid <= 0) return null;
+  return { pid, host: typeof record.host === 'string' ? record.host : null,
+    acquiredAt: typeof record.acquiredAt === 'number' ? record.acquiredAt : null };
+}
 
 /** The last evening before `now`: 18:00 local, today if that has passed, else yesterday. */
 export function lastEvening(now: Date) {
@@ -143,7 +154,13 @@ type Worktree = ReturnType<typeof parseWorktrees>[number];
 /** A worktree whose block named its path, as git's always does. */
 type Placed = Worktree & { path: string };
 
-/** This host, read from /proc: available memory, resident processes, and each process's working directory. */
+/** How long `lsof` may take to list working directories before the answer is UNKNOWN. */
+const LSOF_TIMEOUT_MS = 10_000;
+
+/**
+ * This host: available memory and resident processes from /proc, each process's working directory
+ * from /proc or, where there is none (macOS), from `lsof`, and a pid's liveness from signal 0.
+ */
 export const PROC_HOST = Object.freeze({
   availableMb() {
     const match = /^MemAvailable:\s+(\d+)\s+kB/m.exec(readFileSync('/proc/meminfo', 'utf8'));
@@ -160,12 +177,28 @@ export const PROC_HOST = Object.freeze({
     }
     return out;
   },
-  cwds() {
-    const out = [];
-    for (const pid of readdirSync('/proc').filter(name => /^\d+$/.test(name))) {
-      try { out.push(readlinkSync(`/proc/${pid}/cwd`)); } catch { /* gone, or another user's */ }
+  /** Every readable process's working directory, or null when this host cannot list them. */
+  cwds(): string[] | null {
+    if (existsSync('/proc/self/cwd')) {
+      const out = [];
+      for (const pid of readdirSync('/proc').filter(name => /^\d+$/.test(name))) {
+        try { out.push(readlinkSync(`/proc/${pid}/cwd`)); } catch { /* gone, or another user's */ }
+      }
+      return out;
     }
-    return out;
+    // A partial listing would call a worktree unused that a process is inside, so anything but a clean exit is no answer.
+    const result = spawnSync('lsof', ['-a', '-d', 'cwd', '-Fn'], { encoding: 'utf8', timeout: LSOF_TIMEOUT_MS, maxBuffer: 64 * 1024 * 1024 });
+    if (result.status !== 0) return null;
+    return result.stdout.split('\n').filter(line => line.startsWith('n')).map(line => line.slice(1));
+  },
+  /** Whether `pid` names a running process; EPERM is a live process another user owns. */
+  alive(pid: number) {
+    try {
+      process.kill(pid, 0);
+      return true;
+    } catch (error) {
+      return (error as NodeJS.ErrnoException).code === 'EPERM';
+    }
   },
 });
 
@@ -319,13 +352,10 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
   function leases() {
     const dir = lockDir();
     const rows = existsSync(dir) ? readdirSync(dir).filter(name => /^device-.*\.lock$/.test(name)).sort().map(name => {
-      let owner: LockOwner | null = null;
-      try { const text = readFileSync(join(dir, name), 'utf8').trim(); owner = text ? JSON.parse(text) : null; } catch { owner = null; }
-      const alive = Boolean(owner?.pid) && existsSync(`/proc/${owner?.pid}`);
-      // A live lease has an owner record.
-      const held = owner as LockOwner;
-      return { file: name, held: alive, pid: alive ? held.pid : null, host: alive ? held.host ?? null : null,
-        acquiredAt: alive && held.acquiredAt ? iso(new Date(held.acquiredAt * 1000)) : null };
+      const owner = lockOwner(join(dir, name));
+      if (!owner || !host.alive(owner.pid)) return { file: name, held: false, pid: null, host: null, acquiredAt: null };
+      return { file: name, held: true, pid: owner.pid, host: owner.host,
+        acquiredAt: owner.acquiredAt === null ? null : iso(new Date(owner.acquiredAt * 1000)) };
     }) : [];
     return { dir, leases: rows, held: rows.filter(row => row.held).length,
       rule: 'a lease is held while the pid its owner record names is alive; the record is read, the lock is never taken' };
@@ -397,15 +427,19 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
     }
 
     // Worktrees: push-gate's orphans, and idle agent worktrees.
-    let cwds: string[] = [];
-    try { cwds = host.cwds(); } catch { cwds = []; }
+    let cwds: string[] | null;
+    try { cwds = host.cwds(); } catch { cwds = null; }
+    const noCwds = unknown('this host lists no process working directories, so no worktree can be called unused');
+    // A worktree whose directory is gone has no process inside; any other is unused only if the listing says so.
+    const unused = (path: string) => (!existsSync(path) ? true : cwds === null ? null : !inUse(cwds, path));
     const worktrees = parseWorktrees(git(['worktree', 'list', '--porcelain']) ?? '');
     const base = pushGateBase();
     const gateDirs = existsSync(base) ? readdirSync(base).filter(name => name.startsWith('fnaf2-push-gate-')).map(name => join(base, name)) : [];
     const gateRegistered = worktrees.filter((row): row is Placed => Boolean(row.path?.startsWith(`${base}/`)));
     const gatePaths = [...new Set([...gateDirs, ...gateRegistered.map(row => row.path)])].sort();
-    const gateOrphans = gatePaths.filter(path => !inUse(cwds, path));
-    check('push-gate-worktrees', `no orphaned push-gate worktree under ${base}`, gateOrphans.length === 0);
+    const gateOrphans = gatePaths.filter(path => unused(path) === true);
+    check('push-gate-worktrees', `no orphaned push-gate worktree under ${base}`,
+      gatePaths.some(path => unused(path) === null) ? noCwds : gateOrphans.length === 0);
     for (const path of gateOrphans) {
       const registered = gateRegistered.find(row => row.path === path);
       find('push-gate-worktrees', `${path} is a push-gate worktree no running process is inside`,
@@ -413,6 +447,7 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
     }
     const agents = worktrees.filter((row): row is Placed => Boolean(row.path && /\/\.claude\/worktrees\/agent-[^/]+$/.test(row.path) && resolve(row.path) !== root));
     const idle: { row: (typeof agents)[number], hours: number | null }[] = [];
+    let undecided = false;
     for (const row of agents) {
       if (row.locked) continue;
       if (row.prunable || !existsSync(row.path)) { idle.push({ row, hours: null }); continue; }
@@ -423,9 +458,12 @@ export function createLab({ root: rootIn, env = process.env, now = () => new Dat
         .filter((time): time is Date => Boolean(time));
       const last = new Date(Math.max(...times.map(time => time.getTime())));
       const hours = hoursBetween(last, at);
-      if (hours > AGENT_WORKTREE_IDLE_HOURS && !inUse(cwds, row.path)) idle.push({ row, hours });
+      if (hours <= AGENT_WORKTREE_IDLE_HOURS) continue;
+      const free = unused(row.path);
+      if (free === null) undecided = true;
+      else if (free) idle.push({ row, hours });
     }
-    check('agent-worktrees', `no unlocked agent worktree idle over ${AGENT_WORKTREE_IDLE_HOURS} h`, idle.length === 0);
+    check('agent-worktrees', `no unlocked agent worktree idle over ${AGENT_WORKTREE_IDLE_HOURS} h`, undecided ? noCwds : idle.length === 0);
     for (const { row, hours } of idle)
       find('agent-worktrees', hours === null ? `${row.path} is registered but gone (prunable)`
         : `${row.path} (${row.branch ?? 'detached'}) is unlocked, idle ${hours} h, and no process is inside`,
