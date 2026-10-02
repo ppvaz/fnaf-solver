@@ -10,6 +10,7 @@
 import { CampaignStateMachine, validateCampaignSpec } from './campaign.ts';
 import type { CampaignSpec, CampaignTarget } from './campaign.ts';
 import { makeAttemptProof } from './campaign-proof.ts';
+import { messageOf } from './port-kit.ts';
 
 /** What one of the machine's accept methods takes: what the matching port returns. */
 type Accepts<Method extends keyof CampaignStateMachine> =
@@ -32,8 +33,6 @@ export interface CampaignPorts {
   cleanup?: (error: unknown) => unknown;
   releaseAll?: () => unknown;
 }
-
-const messageOf = (error: unknown) => error instanceof Error ? error.message : String(error);
 
 const required = (ports: Partial<CampaignPorts>, name: keyof CampaignPorts) => {
   if (typeof ports?.[name] !== 'function') throw new TypeError(`campaign runner requires ${name} port`);

@@ -9,6 +9,7 @@ import { DeviceCampaignRunner } from './campaign-runner.ts';
 import type { CampaignPorts } from './campaign-runner.ts';
 import { validateCampaignSpec } from './campaign.ts';
 import type { ExecutorRequest } from './artifact-executor.ts';
+import { messageOf } from './port-kit.ts';
 
 const required = (value: unknown, name: string) => {
   if (typeof value !== 'function') throw new TypeError(`campaign composition requires ${name} port`);
@@ -49,7 +50,9 @@ export function composeCampaignPorts(options: {spec: unknown, bundle: CampaignBu
     retryReady: args => retryReady(args),
     releaseAll: () => localExecutor.releaseAll(),
     cleanup: async reason => {
-      try { await localExecutor.abort(`campaign-cleanup: ${(reason as Error | undefined)?.message ?? 'campaign stopped'}`); }
+      try {
+        await localExecutor.abort(`campaign-cleanup: ${reason === undefined || reason === null ? 'campaign stopped' : messageOf(reason)}`);
+      }
       finally {
         try { await localExecutor.releaseAll(); }
         finally { await restartAfterAbort?.(reason); }

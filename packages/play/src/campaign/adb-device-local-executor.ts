@@ -28,6 +28,7 @@ import { boundedRemotePath, renderDeviceLocalScript } from './device-shell.ts';
 import type { ArmControl } from './device-shell.ts';
 import { isList } from '@sixam/kernel';
 import { armObservationTimes } from './arm-observation.ts';
+import { messageOf, sleep } from './port-kit.ts';
 
 type GatedSchedule = NonNullable<HidSchedule['gated']>;
 /** One evented fact of a run; the campaign retains every one. */
@@ -194,7 +195,7 @@ const execFile = promisify(execFileCallback);
 
 function fail(message: string): never { throw new TypeError(`adb device-local executor: ${message}`); }
 /** A failure as one bounded line for an event record. */
-const messageOf = (error: unknown) => String(error instanceof Error ? error.message : error).slice(0, 240);
+const eventMessage = (error: unknown) => messageOf(error, 240);
 const isEpipe = (error: unknown) => typeof error === 'object' && error !== null
   && 'code' in error && error.code === 'EPIPE';
 /** What a failed adb call said: its stderr when it wrote one, else the error's message. */
@@ -242,7 +243,7 @@ async function waitForRemoteFile(adb: string, serial: string, path: string, {
       const result = await processResult() as { code?: unknown, stderr?: string, stdout?: string } | null | undefined;
       throw new Error(`machine device program exited before HID readiness (${result?.code ?? 'unknown'}): ${result?.stderr?.trim() || result?.stdout?.trim() || 'no output'}`);
     }
-    await new Promise<void>(resolve => setTimeout(resolve, pollMs));
+    await sleep(pollMs);
   }
   throw new Error(`machine HID readiness marker was not observed before ${timeoutMs}ms`);
 }
@@ -574,7 +575,7 @@ export class AdbDeviceLocalArtifactExecutor {
             }
           }
         } catch (caught) {
-          error = messageOf(caught);
+          error = eventMessage(caught);
         }
         this.onEvent({ type: 'lifecycle.actuation-stopped', at: Date.now(), reason, method,
           ...(error === null ? {} : { error }) });
@@ -753,7 +754,7 @@ export class AdbDeviceLocalArtifactExecutor {
         while (controlStillRunning()) {
           const remainingMs = deadline - Date.now();
           if (remainingMs <= 0) return true;
-          await new Promise<void>(resolve => setTimeout(resolve, Math.min(remainingMs, 50)));
+          await sleep(Math.min(remainingMs, 50));
         }
         return false;
       };
@@ -1067,7 +1068,7 @@ export class AdbDeviceLocalArtifactExecutor {
           return;
         }
         while (controlStillRunning() && nightAnchoredAt === null)
-          await new Promise<void>(resolve => setTimeout(resolve, this.pollMs));
+          await sleep(this.pollMs);
         if (!controlStillRunning() || nightAnchoredAt === null)
           return;
         // Read only where the plan shows the camera map (arm-observation.ts): the
@@ -1160,7 +1161,7 @@ export class AdbDeviceLocalArtifactExecutor {
             elapsedMs: Date.now() - startedAt, reason });
         };
         while (!armVerified && controlStillRunning()) {
-          await new Promise<void>(resolve => setTimeout(resolve, this.pollMs));
+          await sleep(this.pollMs);
           if (!controlStillRunning()) break;
           if (nextCheckAt === Infinity) {
             if (nightAnchoredAt === null) continue;
@@ -1288,7 +1289,7 @@ export class AdbDeviceLocalArtifactExecutor {
               nativeLastNotNightAt = startedAt;
             const spent = Date.now() - startedAt;
             if (spent < NATIVE_ANCHOR_POLL_MS)
-              await new Promise<void>(resolve => setTimeout(resolve, NATIVE_ANCHOR_POLL_MS - spent));
+              await sleep(NATIVE_ANCHOR_POLL_MS - spent);
           }
         })().catch(() => {})
         : Promise.resolve();
@@ -1312,7 +1313,7 @@ export class AdbDeviceLocalArtifactExecutor {
       };
       observer = this.observe ? (async () => {
         while (!stopObserver && this.child === processIdentity && this.running) {
-          await new Promise<void>(resolve => setTimeout(resolve, this.pollMs));
+          await sleep(this.pollMs);
           if (stopObserver || this.child !== processIdentity || !this.running) break;
           const observeStartedAt = Date.now();
           let state: LifecycleState | null = null;
@@ -1341,7 +1342,7 @@ export class AdbDeviceLocalArtifactExecutor {
             // vote rather than destroying the votes already cast. It does not
             // hold a halted run open past its window either.
             try { if (await endAtHaltWindow(observedAt)) break; }
-            catch (error) { this.onEvent({ type: 'lifecycle.stop-failed', at: Date.now(), error: messageOf(error) }); }
+            catch (error) { this.onEvent({ type: 'lifecycle.stop-failed', at: Date.now(), error: eventMessage(error) }); }
             continue;
           }
           try {
@@ -1429,7 +1430,7 @@ export class AdbDeviceLocalArtifactExecutor {
                   } catch (error) {
                     // The drop guard below still governs the run; the record
                     // says why the schedule never started.
-                    this.onEvent({ type: 'hid.night-go-failed', at: Date.now(), error: messageOf(error) });
+                    this.onEvent({ type: 'hid.night-go-failed', at: Date.now(), error: eventMessage(error) });
                   }
                 }
               }
@@ -1500,7 +1501,7 @@ export class AdbDeviceLocalArtifactExecutor {
           } catch (error) {
             // A stop that fails while ending the run leaves the decision
             // already recorded above; teardown still releases the stream.
-            this.onEvent({ type: 'lifecycle.stop-failed', at: Date.now(), error: messageOf(error) });
+            this.onEvent({ type: 'lifecycle.stop-failed', at: Date.now(), error: eventMessage(error) });
           }
         }
       })() : Promise.resolve();

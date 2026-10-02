@@ -14,7 +14,7 @@ import type { ArtifactBlock } from './artifact-executor.ts';
 /** A block placed on the night's timeline: its cycle offset plus the cycle's start. */
 export type ScheduledBlock = ArtifactBlock & { readonly scheduleAtMs: number };
 
-const sleepDefault = (milliseconds: number) => new Promise<void>(resolve => setTimeout(resolve, milliseconds));
+import { sleep as sleepDefault } from './port-kit.ts';
 function fail(message: string): never { throw new TypeError(`device-local executor: ${message}`); }
 
 export function expandNightBlocks(input: unknown, night: number): ScheduledBlock[] {

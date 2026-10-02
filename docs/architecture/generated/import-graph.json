@@ -1305,6 +1305,7 @@
         "./device-shell.ts",
         "./hid-schedule.ts",
         "./lifecycle-state.ts",
+        "./port-kit.ts",
         "@sixam/kernel",
         "@sixam/play",
         "node:child_process",
@@ -1336,7 +1337,8 @@
         "./artifact-executor.ts",
         "./campaign-bundle.ts",
         "./campaign-runner.ts",
-        "./campaign.ts"
+        "./campaign.ts",
+        "./port-kit.ts"
       ]
     },
     {
@@ -1362,7 +1364,8 @@
       "file": "packages/play/src/campaign/campaign-runner.ts",
       "imports": [
         "./campaign-proof.ts",
-        "./campaign.ts"
+        "./campaign.ts",
+        "./port-kit.ts"
       ]
     },
     {
@@ -1398,7 +1401,8 @@
     {
       "file": "packages/play/src/campaign/device-local-executor.ts",
       "imports": [
-        "./artifact-executor.ts"
+        "./artifact-executor.ts",
+        "./port-kit.ts"
       ]
     },
     {
@@ -1439,6 +1443,7 @@
         "./lifecycle-state.ts",
         "./night-anchor.ts",
         "./physical-ports.ts",
+        "./port-kit.ts",
         "./timed-start.ts",
         "./venue.ts",
         "@sixam/kernel",
@@ -1454,18 +1459,26 @@
     {
       "file": "packages/play/src/campaign/night-anchor.ts",
       "imports": [
+        "./port-kit.ts",
         "@sixam/play/phone/night-onset"
       ]
     },
     {
       "file": "packages/play/src/campaign/physical-ports.ts",
       "imports": [
+        "./port-kit.ts",
         "@sixam/play/venues/phone/companion",
         "@sixam/play/venues/phone/companion-status",
         "node:child_process",
         "node:fs",
         "node:net",
         "node:stream"
+      ]
+    },
+    {
+      "file": "packages/play/src/campaign/port-kit.ts",
+      "imports": [
+        "@sixam/kernel"
       ]
     },
     {

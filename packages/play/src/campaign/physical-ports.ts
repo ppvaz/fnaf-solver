@@ -18,8 +18,7 @@ import type { ChildProcessByStdio } from 'node:child_process';
 import type { Readable, Writable } from 'node:stream';
 const HELPER_PACKAGE = 'com.ppvaz.fnafcompanion';
 const READY_DEVICE = 'FNAF Timed Touch';
-const sleep = (milliseconds: number) => new Promise<void>(resolve => setTimeout(resolve, milliseconds));
-const messageOf = (error: unknown) => String((error as { message?: unknown } | null | undefined)?.message ?? error);
+import { messageOf, sleep } from './port-kit.ts';
 
 function endpointError(message: string): never { throw new Error(`Companion endpoint: ${message}`); }
 

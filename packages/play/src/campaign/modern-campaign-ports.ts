@@ -90,8 +90,7 @@ const CUSTOM_NIGHT_READBACK = new URL('../../../../packages/play/bin/probe/custo
 // plus this wait above it.
 export const NIGHT_TERMINAL_WAIT_MS = 120000;
 const AI_DIALS_ALL = ['withfreddy', 'withbonnie', 'withchica', 'foxy', 'toyfreddy', 'toybonnie', 'toychica', 'mangle', 'bb', 'golden'];
-const sleep = (milliseconds: number) => new Promise<void>(resolve => setTimeout(resolve, milliseconds));
-const messageOf = (error: unknown) => String((error as { message?: unknown } | null | undefined)?.message ?? error);
+import { messageOf, sleep } from './port-kit.ts';
 
 async function readJson(url: URL): Promise<unknown> {
   return JSON.parse(await readFile(url, 'utf8'));
@@ -699,7 +698,7 @@ export async function createCampaignPorts(options: CampaignPortOptions) {
         plannedPhoneWallMs: plan?.targetPhoneWallMs ?? null, lateMs: plan ? tapHostMs - plan.targetHostMs : null,
         uncertaintyMs: after.uncertaintyMs });
     } catch (error) {
-      if (residueMs !== null) throw new Error(`${refusal}: ${(error as { message?: unknown } | null | undefined)?.message ?? error}`);
+      if (residueMs !== null) throw new Error(`${refusal}: ${messageOf(error)}`);
       onEvent({ type: `${kind}.start`, status: 'unstamped', reason: messageOf(error) });
       if (!tapped) await tap({ point: target, holdMs });
     } finally {
@@ -1053,7 +1052,7 @@ export async function createCampaignPorts(options: CampaignPortOptions) {
     // Close the shared title process before restarting the target so no stale
     // input can land in the fresh title/menu instance.
     await closeMenuHid();
-    const detail = String((reason as { message?: unknown } | null | undefined)?.message ?? reason ?? 'campaign stopped').slice(0, 240);
+    const detail = reason === undefined || reason === null ? 'campaign stopped' : messageOf(reason, 240);
     onEvent({ type: 'campaign.abort.restart', reason: detail });
     try {
       const restarted = await bridge.restartGame();

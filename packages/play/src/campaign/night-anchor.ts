@@ -34,8 +34,7 @@ import { latchedNightOnsetMs } from '@sixam/play/phone/night-onset';
 export const DEFAULT_LATCH_HOLD_MS = 500;
 export const DEFAULT_MIN_LEAD_MS = 80;
 
-const defaultSleep = (milliseconds: number) => new Promise<void>(resolve => setTimeout(resolve, Math.max(0, milliseconds)));
-const messageOf = (error: unknown) => String((error as { message?: unknown } | null | undefined)?.message ?? error);
+import { messageOf, sleep as defaultSleep } from './port-kit.ts';
 
 /** One device->host clock exchange: the offset, bounded by half its round trip, and the helper's reply fields. */
 interface ClockSample {
