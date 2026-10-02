@@ -469,7 +469,7 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
         inGraph: !recorded ? 'NOT_RECORDED' : canonicalJson(recorded) === canonicalJson(edge) ? 'ALREADY_RECORDED' : 'DIFFERS',
         approval: 'this interface proposes an edge and never writes an attestation or an edge (Plan 28); recording one is ' +
           '`npm run evidence -- promote`, over an attestation a person or the delegated agents wrote' },
-      label: 'DEVICE_MEASURED', target: FNAF2,
+      label: 'DEVICE_MEASURED', target: row.game,
       cite: [...cite, `${where}/${ATTESTATION_FILE}`], status: 'standing', supersededBy: null,
       notMeasured: [ONE_CLEAR, ...derived.custody.lost.map(name => `${name}: lost with this pack's custody (${derived.custody.kind})`)],
       reproducer: `npm run review -- promote ${row.id}`,

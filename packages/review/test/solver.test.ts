@@ -21,7 +21,7 @@ import type { ClaimEnvelope, RefusalEnvelope, Unknown } from '@sixam/kernel';
 import { PACKS_DIR, trackedWinners } from '../src/evidence-pack.ts';
 import { GRAPH_FILE, PROMOTION_EDGE } from '../src/evidence-promotion.ts';
 import { queryPromotions } from '../src/promotions-query.ts';
-import { GAMES, catalogUnknowns, isNegative, readArchivedRoutes, readChronicle, readContracts } from '../src/registers.ts';
+import { GAMES, catalogUnknowns, isNegative, readArchivedRoutes, readChronicle, readContracts, readPackRow } from '../src/registers.ts';
 import { INSTRUMENTS, VERBS, createSolver } from '../src/solver.ts';
 
 type Envelope = (ClaimEnvelope & { readonly refused?: undefined }) | RefusalEnvelope;
@@ -203,6 +203,8 @@ for (const id of packIds) {
     const proposal = claim<{ readonly edge: unknown, readonly inGraph: string }>(answer, `promote ${id}`);
     assert.equal(canonicalJson(proposal.claim.edge), canonicalJson(recorded), `${id}: the proposal is the recorded edge`);
     assert.equal(proposal.claim.inGraph, 'ALREADY_RECORDED');
+    const row = readPackRow(ROOT, id);
+    assert.equal(proposal.target, row.game, `${id}: the proposal targets the game the pack was played on`);
     proposals += 1;
   } else refusal(answer, 'plan12-promotion', `promote ${id}`);
 }
