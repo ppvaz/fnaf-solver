@@ -14,6 +14,24 @@
 export const SEED_PERIOD_MS = 65536;
 
 /**
+ * The phone wall-clock residue a timed start asks for, from its text form
+ * (the operator's FNAF_START_PHONE_WALL_RESIDUE_MS): null when unset or empty,
+ * otherwise an integer in 0..65535, refused before the run is composed.
+ */
+export function startResidueFrom(text: string | undefined): number | null {
+  if (text === undefined || text === '') return null;
+  const residueMs = Number(text);
+  if (!isStartResidue(residueMs))
+    throw new TypeError(`start residue must be an integer in 0..${SEED_PERIOD_MS - 1}, got ${JSON.stringify(text)}`);
+  return residueMs;
+}
+
+/** A residue modulo the 16-bit seed period, in whole milliseconds. */
+export function isStartResidue(value: unknown): value is number {
+  return typeof value === 'number' && Number.isInteger(value) && value >= 0 && value < SEED_PERIOD_MS;
+}
+
+/**
  * The phone's wall clock at a host performance.now() instant, from one clock sample.
  */
 export function phoneWallAt(sample: {offsetMs: number, fields: Record<string, string>}, hostPerfMs: number) {
@@ -29,7 +47,7 @@ export function phoneWallAt(sample: {offsetMs: number, fields: Record<string, st
  * is congruent to residueMs modulo 65 536 ms.
  */
 export function planTimedStart({ sample, residueMs, nowHostMs, minLeadMs = 1500 }: {sample: {offsetMs: number, fields: Record<string, string>}, residueMs: number, nowHostMs: number, minLeadMs?: number}) {
-  if (!Number.isInteger(residueMs) || residueMs < 0 || residueMs >= SEED_PERIOD_MS)
+  if (!isStartResidue(residueMs))
     throw new TypeError(`residueMs must be an integer in 0..${SEED_PERIOD_MS - 1}`);
   if (!(minLeadMs >= 0 && minLeadMs < SEED_PERIOD_MS)) throw new TypeError('minLeadMs must be in [0, 65536)');
   const phoneNowMs = phoneWallAt(sample, nowHostMs);

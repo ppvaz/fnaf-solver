@@ -12,6 +12,7 @@ import { guidedCalibrationSteps, validateCustomNightCalibration } from '@sixam/p
 import { evaluateCampaignPreflight } from '@sixam/play/campaign/campaign-preflight';
 import { validateCampaignBundle } from '@sixam/play/campaign/campaign-bundle';
 import { AdbCompanionPort } from '@sixam/play/campaign/physical-ports';
+import { startResidueFrom } from '@sixam/play/campaign/timed-start';
 import { installCampaignSignalHandlers } from '@sixam/play/campaign/campaign-signal';
 import { bindVenueFromPreflight, dryRunVenue, loadVenueBindings, renderVenueCheck } from '@sixam/play/campaign/venue';
 import { fitClockMap, CompanionControlTransport } from '@sixam/play';
@@ -390,7 +391,8 @@ async function campaign(options: Options, selected: Profile) {
       nightAnchorAimMs: options.nightAnchorAimMs, nightAnchorMaxK: options.nightAnchorMaxK,
       nightAnchorPeriodMs: options.nightAnchorPeriodMs, nightAnchorStrict: options.nightAnchorStrict,
       nightAnchorAuthorizeOnLatch: options.nightAnchorAuthorizeOnLatch,
-      teachOverlay: options.teachOverlay, venueBindings });
+      teachOverlay: options.teachOverlay, venueBindings,
+      startResidueMs: startResidueFrom(process.env.FNAF_START_PHONE_WALL_RESIDUE_MS) });
   }
   const ports = composition?.ports ?? composition;
   // Once a live composition exists, an operator interrupt must release the

@@ -74,6 +74,7 @@
         "@sixam/play/campaign/campaign-signal",
         "@sixam/play/campaign/custom-night",
         "@sixam/play/campaign/physical-ports",
+        "@sixam/play/campaign/timed-start",
         "@sixam/play/campaign/venue",
         "@sixam/source",
         "node:fs",

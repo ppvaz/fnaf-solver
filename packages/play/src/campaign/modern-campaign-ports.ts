@@ -30,7 +30,7 @@ import { makeCampaignExecutionRequest } from './campaign-bundle.ts';
 import { AdbCompanionPort, AdbHidProcess } from './physical-ports.ts';
 import { anchorNightRelease } from './night-anchor.ts';
 import { LESSON_LINE, lessonForNight, lessonLines, lessonOriginLine } from '../coach/cycle-lesson.ts';
-import { phoneWallAt, planTimedStart, waitUntilHostMs } from './timed-start.ts';
+import { SEED_PERIOD_MS, isStartResidue, phoneWallAt, planTimedStart, waitUntilHostMs } from './timed-start.ts';
 import { DeviceCampaignRunner } from './campaign-runner.ts';
 import { venueDriftDuringRun } from './venue.ts';
 import { parseLifecycleLine } from './lifecycle-state.ts';
@@ -68,6 +68,8 @@ interface CampaignPortOptions {
   readonly teachOverlay?: boolean;
   readonly venueBindings?: readonly VenueBound[];
   readonly configReadback?: ConfigReadback;
+  /** The phone wall-clock residue a night's start press waits for (timed-start.ts), or null for an untimed start. */
+  readonly startResidueMs?: number | null;
 }
 
 const TITLE_MODEL = new URL('../../../../packages/play/profiles/fnaf2/moto-g56/title-moto-g56-v207.json', import.meta.url);
@@ -339,7 +341,7 @@ export async function createCampaignPorts(options: CampaignPortOptions) {
     // strategy -- Minus 7 among them -- out of the device lane entirely.
     machineOnly = false, allowSaveReset = false, armMode = undefined, captureRestarted = false,
     nightAnchorAimMs = null, nightAnchorMaxK = null, nightAnchorPeriodMs = 1000, nightAnchorStrict = false, nightAnchorAuthorizeOnLatch = false,
-    teachOverlay = false, venueBindings = [] } = options;
+    teachOverlay = false, venueBindings = [], startResidueMs = null } = options;
   if (typeof teachOverlay !== 'boolean') throw new TypeError('teachOverlay must be boolean');
   // The runner's own preflight compares the venue against the same bindings
   // the CLI's did, so the retained result records the same verdict.
@@ -350,6 +352,8 @@ export async function createCampaignPorts(options: CampaignPortOptions) {
   if (typeof serial !== 'string' || serial.length === 0) throw new TypeError('modern campaign ports require an ADB serial');
   if (typeof allowSaveReset !== 'boolean') throw new TypeError('allowSaveReset must be boolean');
   if (typeof captureRestarted !== 'boolean') throw new TypeError('captureRestarted must be boolean');
+  if (startResidueMs !== null && !isStartResidue(startResidueMs))
+    throw new TypeError(`startResidueMs must be null or an integer in 0..${SEED_PERIOD_MS - 1}`);
   // The aim is a phase of the game timer the route is banded against: the
   // one-second grid on Night 5 (Balloon Boy), the five-second Foxy roll grid
   // on Night 6 (g337). The period travels with the aim from the fact register.
@@ -376,7 +380,7 @@ export async function createCampaignPorts(options: CampaignPortOptions) {
   const evidenceDirectory = resolve('artifacts', `campaign-${new Date().toISOString().replaceAll(':', '-')}`);
   await mkdir(evidenceDirectory, { recursive: false });
   await writeFile(join(evidenceDirectory, 'request.json'), JSON.stringify({ spec, bundle, profile,
-    execution: { armMode } }, null, 2));
+    execution: { armMode, startResidueMs } }, null, 2));
   const onEvent = (event: CampaignEventRow) => {
     const row = JSON.stringify({ at: new Date().toISOString(), ...event });
     appendFileSync(join(evidenceDirectory, 'events.jsonl'), row + '\n');
@@ -663,8 +667,8 @@ export async function createCampaignPorts(options: CampaignPortOptions) {
     });
   };
 
-  // Twin-nights clock seeding. FNAF_START_PHONE_WALL_RESIDUE_MS places the press that
-  // starts a night when the phone's wall clock reaches that residue modulo 65 536 ms.
+  // Twin-nights clock seeding. startResidueMs places the press that starts a
+  // night when the phone's wall clock reaches that residue modulo 65 536 ms.
   // The stock game seeds its 16-bit RNG from (short) System.currentTimeMillis() in
   // CRun.allocRunHeader, the first instruction of CRun.initRunLoop, which the office
   // frame's load reaches a fixed transition after this press: 3612-3614 ms on the
@@ -672,12 +676,8 @@ export async function createCampaignPorts(options: CampaignPortOptions) {
   // (docs/evidence/night6-h-seedlock-census-20260916.json). The press is stamped in
   // phone wall time either way, and a requested timed start never falls back to an
   // untimed tap.
-  const startResidueMs = () => {
-    const text = process.env.FNAF_START_PHONE_WALL_RESIDUE_MS ?? '';
-    return text === '' ? null : Number(text);
-  };
   const stampedStartTap = async ({ point: target, holdMs, kind, refusal }: { point: unknown, holdMs?: number, kind: string, refusal: string }) => {
-    const residueMs = startResidueMs();
+    const residueMs = startResidueMs;
     let clock: ReturnType<AdbCompanionPort['openClock']> | null = null;
     let plan: ReturnType<typeof planTimedStart> | null = null;
     let tapped = false;
@@ -760,7 +760,7 @@ export async function createCampaignPorts(options: CampaignPortOptions) {
     // already shows the night beginning it is used as the entry state and no further read is
     // spent. Whichever press activated, the seed follows a timed instant; timedStartHeld reads
     // back from the seed which one.
-    const residueMs = startResidueMs();
+    const residueMs = startResidueMs;
     const timedStory = residueMs !== null && targetName !== 'customNight';
     let firstSelectionState: string | null;
     if (timedStory) {
@@ -1032,7 +1032,7 @@ export async function createCampaignPorts(options: CampaignPortOptions) {
       readback: dialReadback,
     });
     // Twin-nights test of clock seeding (docs/evidence/night7-k3-wallclock-r1-20260915.json):
-    // FNAF_START_PHONE_WALL_RESIDUE_MS places the Start tap when the phone's wall clock
+    // startResidueMs places the Start tap when the phone's wall clock
     // reaches that residue modulo 65 536 ms (packages/play/src/campaign/timed-start.ts). The tap's
     // phone wall time is logged either way; a requested timed start never falls back to
     // an untimed tap.

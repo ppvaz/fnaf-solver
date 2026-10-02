@@ -1,7 +1,17 @@
 import assert from 'node:assert/strict';
-import { phoneWallAt, planTimedStart, waitUntilHostMs, SEED_PERIOD_MS } from '../src/campaign/timed-start.ts';
+import { phoneWallAt, planTimedStart, startResidueFrom, waitUntilHostMs, SEED_PERIOD_MS } from '../src/campaign/timed-start.ts';
 import { timedStartHeld, PRESS_TO_OFFICE_MS, settledAfterPress, FIRST_PRESS_SETTLE_MS,
   FIRST_PRESS_LAST_READ_MS } from '../src/campaign/modern-campaign-ports.ts';
+
+// A requested residue is read and refused where the run is composed, not at
+// the start tap minutes into a live campaign.
+assert.equal(startResidueFrom(undefined), null, 'no residue asked for is an untimed start');
+assert.equal(startResidueFrom(''), null);
+assert.equal(startResidueFrom('1234'), 1234);
+assert.equal(startResidueFrom('0'), 0);
+assert.throws(() => startResidueFrom('65536'), /start residue must be an integer in 0\.\.65535/);
+assert.throws(() => startResidueFrom('12.5'), /start residue/);
+assert.throws(() => startResidueFrom('soon'), /start residue/);
 
 // Helper sample: snapshot at device mono 5000 ms, host perf = device mono + 1000, wall 1 789 431 000 000 at the snapshot.
 const sample = { offsetMs: 1000, fields: { snapshotNs: String(5000n * 1000000n), wallMs: '1789431000000' } };
