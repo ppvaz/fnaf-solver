@@ -6,9 +6,11 @@
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { score } from './encounter-replay.ts';
 import type { NightCfg } from './encounter-replay.ts';
+import { listOrEmpty, objectOrNull } from '../src/records.ts';
+import type { JsonObject } from '../src/records.ts';
 
 /** A replayed row, as encounter-replay.ts writes it: the fields this record keeps. */
 interface ReplayRow {
@@ -22,8 +24,42 @@ interface ReplayOutput { opts: unknown, cfg: { nights: NightCfg[] }, out: { name
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../..');
 const repoRel = (p: string | undefined) => (p && isAbsolute(p) && !relative(ROOT, p).startsWith('..')) ? relative(ROOT, p) : p;
 
-const [input, output] = process.argv.slice(2);
-if (!input || !output) throw new Error('usage: model-encounter-fidelity.mjs INPUT_DIR OUT.json');
+/**
+ * The numbers this record's prose states, each re-read from the fields the record keeps. The
+ * verdicts are written for the 2026-09-27 inputs: a field that no longer gives its number means
+ * the prose no longer describes the inputs, and the record is refused rather than written.
+ * @param record the assembled record, or the committed one, parsed
+ */
+export function failedPremises(record: JsonObject) {
+  const populations = objectOrNull(record.populations) ?? {};
+  const population = (name: string) => objectOrNull(populations[name]) ?? {};
+  const hits = (rows: unknown) => listOrEmpty(rows).map(row => objectOrNull(objectOrNull(row)?.score))
+    .map(found => `${found?.hits}/${found?.occ}`).join(' and ');
+  const tw04 = listOrEmpty(record.nights).map(objectOrNull).find(night => night?.name === 'tw-04');
+  const lanes = objectOrNull(objectOrNull(record.maskWindowFinding)?.lanes) ?? {};
+  const lane = (name: string) => objectOrNull(listOrEmpty(objectOrNull(lanes[name])?.rows)[0]) ?? {};
+  const premises: [string, unknown, string][] = [
+    ['tw-04 occupied hits at its bracket seeds', hits(objectOrNull(record.reproduction)?.rows), '2/11 and 1/11'],
+    ['tw-04 occupied hits under gated countdowns', hits(tw04?.gated), '2/11 and 1/11'],
+    ['gated null replays that reach 6 AM', `${population('gated-tw04').won} of ${population('gated-tw04').n}`, '480 of 1202'],
+    ['gated mean occupied windows', Number(population('gated-tw04').occMean).toFixed(2), '11.70'],
+    ['CAM 08 ordering mean occupied windows', `${population('base-tw04').occMean} → ${population('xcam8-tw04').occMean}`, '16.85 → 16.54'],
+    ['CAM 08 ordering first-window median', String(population('xcam8-tw04').firstMedian), '7'],
+    ['mask-counter split reaching 6 AM', `${population('sub-xMask').won}/${population('sub-xMask').n}`, '484/1202'],
+    ...['sub-xFoxy', 'sub-xStreak', 'sub-xOther'].map((name): [string, unknown, string] =>
+      [`${name} reaching 6 AM`, `${population(name).won}/${population(name).n}`, '1202/1202']),
+    ['Night 3 BB vent arrivals at the nominal phase', String(lane('n3v-4551-off').bbArrivals), '3240'],
+    ['Night 3 short hold wins, timer off', `${lane('n3v-4551-off').won}/${lane('n3v-4551-off').n}`, '3000/3000'],
+    ['Night 3 short hold wins, timer on', `${lane('n3v-4551-on').won}/${lane('n3v-4551-on').n}`, '2197/3000'],
+    ['Night 3 short hold BB-inside events and Foxy deaths', `${lane('n3v-4551-on').bbInside} and ${objectOrNull(lane('n3v-4551-on').deaths)?.foxy}`, '804 and 803'],
+    ['Night 3 long hold wins, timer on', `${lane('n34-5051-n3-on').won}/${lane('n34-5051-n3-on').n}`, '3000/3000'],
+  ];
+  return premises.filter(([, found, stated]) => found !== stated)
+    .map(([premise, found, stated]) => `${premise}: the inputs give ${found}, the prose states ${stated}`);
+}
+
+function main(input: string | undefined, output: string | undefined) {
+if (!input || !output) throw new Error('usage: model-encounter-fidelity.ts INPUT_DIR OUT.json');
 const sources: { file: string, sha256: string }[] = [];
 const hashFile = (p: string | URL) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const read = (name: string) => {
@@ -77,7 +113,9 @@ for (const name of ['base-tw04', 'base-c201', 'base-slh', 'xcam8-tw04', 'gated-t
 }
 const ownSeedNulls: Record<string, unknown> = {};
 for (const name of ['base', 'rollres', 'gated']) ownSeedNulls[name] = read(`ownseed-${name}.json`);
-const lanes: Record<string, { night: unknown, options: unknown, rows: unknown }> = {};
+/** One lane cell: a binding's seeds at one phase, with its wins, deaths and BB/Mangle arrivals. */
+interface LaneRow { epochMs: number, n: number, won: number, deaths: Record<string, number>, bbArrivals: number, bbInside: number, mangleInside: number }
+const lanes: Record<string, { night: unknown, options: unknown, rows: LaneRow[] }> = {};
 for (const name of ['n3v-4551-off', 'n3v-4551-on', 'n34-5051-n3-on',
   'n5-phase-off', 'n5-phase-on', 'm5p-phase-off', 'm5p-phase-on']) {
   const lane = read(`lane-${name}.json`);
@@ -171,7 +209,8 @@ const record = {
   maskWindowFinding: {
     rule: 'g907 follows mask == 2. Its countdown is reached only while the mask is fully on, loads on first reach, and keeps its remainder between holds. Value 12 is reset each new hold (g293). A 4551 ms hold can therefore contain four or five fires regardless of wall-clock phase; a long-enough hold guarantees five.',
     correction: 'The baseline already produces BB vent arrivals (3240 in the Night 3 diagnostic). At its nominal phase the global-grid approximation clears every one. Gating the timer exposes 804 BB-inside events and 803 Foxy deaths on the same 3000 seeds.',
-    night3: { shortHoldMs: 4551, shortOffWins: 3000, shortOnWins: 2197, n: 3000, longHoldMs: 5051, longOnWins: 3000,
+    night3: { shortHoldMs: 4551, shortOffWins: lanes['n3v-4551-off'].rows[0].won, shortOnWins: lanes['n3v-4551-on'].rows[0].won,
+      n: lanes['n3v-4551-on'].rows[0].n, longHoldMs: 5051, longOnWins: lanes['n34-5051-n3-on'].rows[0].won,
       shortBinding: 'diagnostic copy of campaign-toys-nights3-4-winner.json with maskOffMs=9200; not a committed winner' },
     night5: { binding: 'packages/propose/bindings/fnaf2/retired/campaign-night5-toys-n5-winner.json', shortHoldMs: 4551,
       shortOnWinsAtDeclaredPhase: 317, n: 3000,
@@ -194,5 +233,12 @@ const record = {
   ],
   gates: ['packages/source/test/gated-every.test.ts', 'packages/propose/test/test-encounter-fidelity.ts'],
 };
+const failed = failedPremises(record as unknown as JsonObject);
+if (failed.length) throw new Error(`the inputs no longer support this record's prose; it is not written:\n  ${failed.join('\n  ')}`);
 writeFileSync(output, `${JSON.stringify(record, null, 2)}\n`);
-console.log(`${record.id}: tw-04 2/11 and 1/11 unchanged; short-mask BB/Mangle hazard reproduced MODEL_ONLY; S2 OPEN; census ${census.bindings.length} night-bindings, 3000 design / 0 held-out seeds`);
+const twHits = tw04.baseline.map(row => `${row.score?.hits}/${row.score?.occ}`).join(' and ');
+console.log(`${record.id}: tw-04 ${twHits}; short-mask BB/Mangle hazard reproduced MODEL_ONLY; S2 OPEN; ` +
+  `census ${census.bindings.length} night-bindings, 3000 design / 0 held-out seeds`);
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main(process.argv[2], process.argv[3]);
