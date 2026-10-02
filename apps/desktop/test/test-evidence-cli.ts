@@ -151,7 +151,19 @@ refused(cli('why', 'fnaf1-custom-grid420-420-a-20260925T024452589Z'), 'fnaf1-cus
 assert.ok(refused(cli('show', 'night1-minus7-n1-first'), 'night1-minus7-n1-first')
   .every(id => id.startsWith('night1-minus7-n1-first')), 'an id typed as a prefix suggests the ids it begins');
 refused(cli('attest', typo, '--by', 'agent', '--note', 'test-evidence-cli'), typo, ORIGINAL, 'pack');
+// Flags may come before the pack id: the id is the positional, never the word after `attest`.
+refused(cli('attest', '--by', 'agent', '--note', 'test-evidence-cli', typo), typo, ORIGINAL, 'pack');
 assert.ok(!existsSync(packDir(typo)), 'a refused attestation writes nothing');
+
+// --- arguments: a flag an operation does not take is refused, not ignored ------------------------
+const misspelt = cli('show', ORIGINAL, '--envelop');
+assert.equal(misspelt.status, 2, 'a misspelt flag exits 2');
+assert.equal(misspelt.stdout, '', 'and prints no record that looks like what was asked');
+assert.match(misspelt.stderr, /^evidence: .*--envelop/);
+assert.match(cli('pack', ORIGINAL, '--envelope').stderr, /^evidence: pack takes no --envelope/);
+assert.match(cli('diff', ORIGINAL).stderr, /^evidence: diff needs two ids/);
+assert.match(cli('show', ORIGINAL, ORIGINAL).stderr, /^evidence: show takes one id/);
+assert.match(cli('attest', ORIGINAL, '--by').stderr, /^evidence: .*--by/, 'a flag missing its value is refused');
 
 // --- promotions: byte for byte the library's summary ----------------------------------------------
 const summary = promotionSummary(ROOT, trackedWinners(ROOT));

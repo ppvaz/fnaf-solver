@@ -99,7 +99,8 @@
         "node:fs/promises",
         "node:os",
         "node:path",
-        "node:url"
+        "node:url",
+        "node:util"
       ]
     },
     {

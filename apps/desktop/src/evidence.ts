@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 /** Inspect retained session/result bundles without re-entering measurements. */
 import { createHash } from 'node:crypto';
-import { type Dirent, existsSync } from 'node:fs';
+import { type Dirent, existsSync, realpathSync, writeFileSync } from 'node:fs';
 import { readdir, readFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseArgs } from 'node:util';
 import { isRecord } from '@sixam/kernel';
 import { type SessionManifest, canonicalJson, stableHash, validateArtifactRef } from '@sixam/kernel/contracts';
 import { validateManifest } from '@sixam/kernel/contracts';
@@ -18,7 +19,6 @@ import { GRAPH_FILE, attestPack, derivePromotion, fnaf1PromotionChecks, formatGr
   recordPromotion } from '@sixam/review/evidence-promotion';
 import { computeCohort } from '@sixam/review/evidence-cohort';
 import { FNAF2, promotionSummaryEnvelope, showEnvelope } from '@sixam/review/envelopes';
-import { writeFileSync } from 'node:fs';
 
 const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '../../..'));
 const ARTIFACTS = join(ROOT, 'artifacts');
@@ -55,17 +55,38 @@ type Place = ReturnType<typeof holder>;
 /** A field of a JSON value: `value?.[key]`, read only off an object. */
 const field = (value: unknown, key: string) => (isRecord(value) ? value[key] : undefined);
 
-/** The value after a flag, or null. */
-const flag = (name: string) => {
-  const at = process.argv.indexOf(name);
-  if (at < 0) return null;
-  const value = process.argv[at + 1];
-  if (value === undefined || value.startsWith('--')) throw new Error(`${name} needs a value`);
-  return value;
+/** Every flag any operation takes; `--envelope` prints `show` and `promotions` as a claim-envelope-v1 (Plan 28 step 1). */
+const FLAGS = {
+  envelope: { type: 'boolean' }, replace: { type: 'boolean' }, timeline: { type: 'string' }, prefix: { type: 'string' },
+  by: { type: 'string' }, note: { type: 'string' }, name: { type: 'string' }, help: { type: 'boolean' },
+} as const;
+/** Each operation's positional ids and the flags it takes; anything else is refused rather than ignored. */
+const OPERATIONS: Readonly<Record<string, { readonly ids: readonly string[], readonly flags: readonly string[] }>> = {
+  help: { ids: [], flags: [] }, list: { ids: [], flags: [] }, 'recovery-check': { ids: [], flags: [] },
+  promotions: { ids: [], flags: ['envelope'] },
+  show: { ids: ['RUN_ID'], flags: ['envelope'] }, why: { ids: ['RUN_ID'], flags: [] }, replay: { ids: ['RUN_ID'], flags: [] },
+  promote: { ids: ['RUN_ID'], flags: [] }, diff: { ids: ['LEFT_ID', 'RIGHT_ID'], flags: [] },
+  pack: { ids: ['CAMPAIGN_ID'], flags: ['replace', 'timeline'] }, cohort: { ids: ['PREDECLARATION'], flags: ['prefix'] },
+  attest: { ids: ['PACK_ID'], flags: ['by', 'note', 'name', 'replace'] },
 };
+const NEEDS = { diff: 'diff needs two ids: npm run evidence -- diff LEFT RIGHT', cohort: 'cohort needs a cohort-predeclaration-v1 file' } as const;
 
-/** `--envelope`: `show` and `promotions` print their object as a claim-envelope-v1 (Plan 28 step 1). */
-const envelope = process.argv.includes('--envelope');
+/** One invocation: its operation, its ids in order, and the flags it gave. */
+function parseCommand(argv: readonly string[]) {
+  const { values, positionals } = parseArgs({ args: [...argv], options: FLAGS, allowPositionals: true, strict: true });
+  const [named = 'help', ...ids] = positionals;
+  const operation = values.help ? 'help' : named;
+  const shape = Object.hasOwn(OPERATIONS, operation) ? OPERATIONS[operation] : null;
+  if (!shape) throw new Error(`unknown evidence operation: ${operation}`);
+  for (const given of Object.keys(values))
+    if (given !== 'help' && !shape.flags.includes(given)) throw new Error(`${operation} takes no --${given}`);
+  if (operation === 'attest' && values.by !== 'agent' && values.by !== 'human') throw new Error('--by must be agent or human');
+  if (ids.length > shape.ids.length)
+    throw new Error(`${operation} takes ${shape.ids.length === 1 ? 'one id' : `${shape.ids.length} ids`}, not ${ids.length}: ${ids.join(' ')}`);
+  if (ids.length < shape.ids.length)
+    throw new Error(operation in NEEDS ? NEEDS[operation as keyof typeof NEEDS] : `${operation} needs ${shape.ids.slice(ids.length).join(' ')}`);
+  return { operation, ids, values };
+}
 
 /** What a shown record is about, where it was read, and its own claim level. */
 function showTarget(id: string, loaded: Loaded) {
@@ -255,7 +276,7 @@ async function heldFiles(place: Place, loaded: Held) {
 }
 
 /** The facts two campaigns or packs are compared on, beside their files. */
-function sideView(run: string, loaded: Held, place: Place) {
+function sideView(loaded: Held, place: Place) {
   return { source: place.source, kind: loaded.kind, outcome: loaded.entry.outcome ?? null,
     claimLevel: loaded.entry.claimLevel ?? null, nights: loaded.entry.nights ?? null,
     ...(loaded.packed ? { packSha256: loaded.packed.digest, winnerHash: loaded.packed.pack.bundle?.winnerHash ?? null,
@@ -373,32 +394,24 @@ function assertHeld(id: string, loaded: Loaded): asserts loaded is Held {
     throw new Error(`diff compares two sessions, or two campaigns or packs; ${id} is a ${loaded.kind}`);
 }
 
-async function main([operation = 'help', first, second]: string[]) {
-  if (operation === 'help' || operation === '--help') return help();
+async function main({ operation, ids: [first, second], values }: ReturnType<typeof parseCommand>) {
+  const envelope = values.envelope === true;
+  if (operation === 'help') return help();
   if (operation === 'list') return list();
-  if (operation === 'pack') {
-    const flags = process.argv.slice(process.argv.indexOf('pack') + 2);
-    const timelineAt = flags.indexOf('--timeline');
-    if (timelineAt >= 0 && !flags[timelineAt + 1]) throw new Error('--timeline needs a file');
-    return pack(first, { replace: flags.includes('--replace'),
-      timeline: timelineAt >= 0 ? resolve(flags[timelineAt + 1]) : null });
-  }
+  if (operation === 'pack') return pack(first, { replace: values.replace === true, timeline: values.timeline ? resolve(values.timeline) : null });
   if (operation === 'recovery-check') return console.log(JSON.stringify(recoveryCheck(ROOT), null, 2));
   if (operation === 'cohort') {
-    if (!first) throw new Error('cohort needs a cohort-predeclaration-v1 file');
-    const prefixAt = process.argv.indexOf('--prefix');
     const predeclaration = JSON.parse(await readFile(resolve(first), 'utf8'));
     return console.log(JSON.stringify(computeCohort(predeclaration, PACKS, {
-      source: first, ...(prefixAt > 0 ? { prefix: process.argv[prefixAt + 1] } : {}) }), null, 2));
+      source: first, ...(values.prefix !== undefined ? { prefix: values.prefix } : {}) }), null, 2));
   }
   if (operation === 'attest') {
-    if (first && /^[\w.-]+$/.test(first) && !first.startsWith('.') && !existsSync(join(PACKS, first)))
+    if (/^[\w.-]+$/.test(first) && !first.startsWith('.') && !existsSync(join(PACKS, first)))
       throw await unknownRun(first, { packsOnly: true });
-    const by = flag('--by');
     const derivedFor = trackedWinners(ROOT);
-    // makeAttestation refuses any author but agent or human.
-    const outcome = attestPack(ROOT, first, derivedFor, { by: by as 'agent' | 'human', note: flag('--note') ?? undefined, name: flag('--name') ?? undefined,
-      date: new Date().toISOString().slice(0, 10) }, { replace: process.argv.includes('--replace') });
+    const by = values.by === 'human' ? 'human' : 'agent'; // parseCommand refused any other author
+    const outcome = attestPack(ROOT, first, derivedFor, { by, note: values.note, name: values.name,
+      date: new Date().toISOString().slice(0, 10) }, { replace: values.replace === true });
     const { derived } = outcome;
     console.log(JSON.stringify({ schema: 'plan12-attest-result-v1', evidenceId: first, status: outcome.status,
       packSha256: derived.digest, custody: derived.custody, claim: derived.claim,
@@ -431,7 +444,6 @@ async function main([operation = 'help', first, second]: string[]) {
     return print(loaded);
   }
   if (operation === 'diff') {
-    if (!first || !second) throw new Error('diff needs two ids: npm run evidence -- diff LEFT RIGHT');
     const left = await loadAny(first);
     const right = await loadAny(second);
     if (left.kind === 'session' && right.kind === 'session') {
@@ -455,7 +467,7 @@ async function main([operation = 'help', first, second]: string[]) {
       changed: both.filter(name => leftHeld.get(name) !== rightHeld.get(name)),
       onlyLeft: names.filter(name => !rightHeld.has(name)), onlyRight: names.filter(name => !leftHeld.has(name)),
       unchanged: both.filter(name => leftHeld.get(name) === rightHeld.get(name)),
-      sides: { left: sideView(first, left, leftPlace), right: sideView(second, right, rightPlace) },
+      sides: { left: sideView(left, leftPlace), right: sideView(right, rightPlace) },
       unavailable: [...unavailable(leftPlace, left, leftHeld), ...unavailable(rightPlace, right, rightHeld)] }, null, 2));
   }
   if (operation === 'replay') {
@@ -603,4 +615,8 @@ async function main([operation = 'help', first, second]: string[]) {
   throw new Error(`unknown evidence operation: ${operation}`);
 }
 
-main(process.argv.slice(2)).catch((error: Error) => { console.error(`evidence: ${error.message}`); process.exitCode = 2; });
+const invoked = process.argv[1] && realpathSync(resolve(process.argv[1])) === realpathSync(fileURLToPath(import.meta.url));
+if (invoked) {
+  Promise.resolve().then(() => main(parseCommand(process.argv.slice(2))))
+    .catch((error: Error) => { console.error(`evidence: ${error.message}`); process.exitCode = 2; });
+}
