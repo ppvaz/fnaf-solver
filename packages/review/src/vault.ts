@@ -24,6 +24,7 @@ import { homedir } from 'node:os';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { canonicalJson } from '@sixam/kernel/contracts';
+import { isList, isRecord } from '@sixam/kernel';
 
 const HERE = fileURLToPath(new URL('.', import.meta.url));
 // FNAF2_REPO relocates the tree under test, as FNAF2_CAPTURES does for session-manifest.py.
@@ -34,6 +35,7 @@ const PACK_SCHEMA = 'capture-pack-v1';
 const EXPORTABLE = new Set(['artifacts', 'captures']);
 const UNKNOWN = { kind: 'UNKNOWN', authority: 'UNKNOWN' };
 const KNOWN_FLAGS = new Set(['--label', '--paths', '--force', '--help']);
+const SHA256 = /^[0-9a-f]{64}$/;
 const PATH_PATTERN = /(?:captures|artifacts)\/[A-Za-z0-9._-]+(?:\/[A-Za-z0-9._-]+)*/g;
 
 const usage = 'usage: npm run vault -- <export|import|verify|refs|list> ' +
@@ -124,13 +126,34 @@ function sourceCommit() {
   return { commit: git(['rev-parse', 'HEAD']), dirty: git(['status', '--porcelain']).length > 0 };
 }
 
+/** A path a manifest may name: repository-relative, under an exportable tree, with no `.` or `..` segment. */
+const manifestPath = (path: unknown): path is string => typeof path === 'string'
+  && EXPORTABLE.has(path.split('/')[0]) && path.split('/').every(part => part !== '' && part !== '.' && part !== '..');
+
+/**
+ * A tracked manifest is input to a write: import joins its paths to the repository and its
+ * hashes to the vault, so each is checked here before either is used.
+ */
+function validatePack(value: unknown, id: string): VaultPack {
+  if (!isRecord(value) || value.schema !== PACK_SCHEMA) refuse(`${id} is not a ${PACK_SCHEMA} manifest`);
+  const { objects, files } = value;
+  if (!isList(objects) || !objects.every(hash => typeof hash === 'string' && SHA256.test(hash)))
+    refuse(`${id}: every object must be a sha256 hex digest`);
+  if (!isList(files)) refuse(`${id}: files must be a list`);
+  for (const file of files) {
+    const path = isRecord(file) ? file.path : file;
+    if (!isRecord(file) || !manifestPath(path)) refuse(`${id}: ${JSON.stringify(path)} is not a path under artifacts/ or captures/`);
+    if (!objects.includes(file.sha256)) refuse(`${id}: ${path} names no object of the pack`);
+    if (!Number.isInteger(file.bytes) || Number(file.bytes) < 0) refuse(`${id}: ${path} has no byte count`);
+  }
+  return value as unknown as VaultPack;
+}
+
 function readPack(id: string): VaultPack {
   if (!/^[\w-]+$/.test(id)) refuse('a safe PACK_ID is required');
   const path = join(PACKS, `${id}.json`);
   if (!existsSync(path)) refuse(`no pack manifest ${id}`);
-  const pack: VaultPack = JSON.parse(readFileSync(path, 'utf8'));
-  if (pack.schema !== PACK_SCHEMA) refuse(`${id} is not a ${PACK_SCHEMA} manifest`);
-  return pack;
+  return validatePack(JSON.parse(readFileSync(path, 'utf8')), id);
 }
 
 const packIds = () => (existsSync(PACKS) ? readdirSync(PACKS) : [])

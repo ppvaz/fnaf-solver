@@ -4413,6 +4413,7 @@
     {
       "file": "packages/review/src/vault.ts",
       "imports": [
+        "@sixam/kernel",
         "@sixam/kernel/contracts",
         "node:child_process",
         "node:crypto",

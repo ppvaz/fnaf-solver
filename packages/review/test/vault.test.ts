@@ -149,6 +149,24 @@ try {
   check(readFileSync(join(repo, 'captures', 'run-a.hid'), 'utf8') === 'local edit worth keeping',
     'a corrupt vault still wrote to the working tree');
 
+  // A tracked manifest is input: a path that leaves the two trees, or an object that is not a
+  // sha256, is refused before anything is read or written.
+  const hostilePacks: [string, (manifest: { objects: string[], files: { path: string, sha256: string }[] }) => void, string][] = [
+    ['escape', manifest => { manifest.files[0].path = 'captures/../../escaped.txt'; }, 'not a path under artifacts/ or captures/'],
+    ['absolute', manifest => { manifest.files[0].path = '/tmp/escaped.txt'; }, 'not a path under artifacts/ or captures/'],
+    ['object', manifest => { manifest.objects[0] = '../../../escaped'; manifest.files[0].sha256 = '../../../escaped'; }, 'sha256'],
+    ['unlisted', manifest => { manifest.files[0].sha256 = 'f'.repeat(64); }, 'names no object of the pack'],
+  ];
+  for (const [name, edit, reason] of hostilePacks) {
+    const manifest = JSON.parse(manifestText);
+    edit(manifest);
+    writeFileSync(join(repo, 'docs', 'evidence', 'packs', `hostile-${name}.json`), JSON.stringify(manifest));
+    const answer = refused(['import', `hostile-${name}`, '--force']);
+    check(answer.includes(reason), `expected the ${name} manifest refused for "${reason}":\n${answer}`);
+    check(!existsSync(join(scratch, 'escaped.txt')) && !existsSync('/tmp/escaped.txt'), `the ${name} manifest wrote outside the trees`);
+    rmSync(join(repo, 'docs', 'evidence', 'packs', `hostile-${name}.json`));
+  }
+
   // Refuse anything outside the two exportable trees.
   const outside = refused(['export', '--label', 'stray', '--paths', 'docs/evidence']);
   check(outside.includes('not under artifacts/ or captures/'), `expected a scope refusal:\n${outside}`);
