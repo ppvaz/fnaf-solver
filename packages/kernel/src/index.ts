@@ -9,7 +9,7 @@ export { CLAIM_LEVELS, SOURCE_LABELS, isClaimLevel, isList, isOneOf, isRecord, i
   validateClaimLevel, validateSourceLabel } from './labels.ts';
 export { interval, validateInterval } from './time/interval.ts';
 export { BINDINGS_DIR, WINNER_FILE, winnerTag } from './bindings.ts';
-export { pyFixed } from './pyfmt.ts';
+export { PyFloat, pyDumps, pyFixed, pyRepr, type PyJson } from './pyfmt.ts';
 export { SEED_BELIEFS, SEED_PROVENANCES, validateSeed, validateSeedProvenance } from './seed.ts';
 export { OUTCOME_KINDS, aborted, death, invalid, sixAm, timeout, validateOutcome } from './outcome.ts';
 export { CUSTODY_CLASSES, GAME_RUN_FIELDS, RUN_MODES, validateGameRun } from './game-run.ts';

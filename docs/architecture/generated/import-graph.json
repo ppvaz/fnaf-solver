@@ -686,6 +686,12 @@
       ]
     },
     {
+      "file": "packages/kernel/src/pyfmt.ts",
+      "imports": [
+        "./labels.ts"
+      ]
+    },
+    {
       "file": "packages/kernel/src/seed.ts",
       "imports": [
         "./labels.ts",
@@ -3916,6 +3922,13 @@
         "node:os",
         "node:path",
         "node:url"
+      ]
+    },
+    {
+      "file": "packages/review/bin/recompile/af-tracks.ts",
+      "imports": [
+        "@sixam/kernel",
+        "node:fs"
       ]
     },
     {

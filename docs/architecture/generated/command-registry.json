@@ -2951,9 +2951,9 @@
       "lifecycle": "supported"
     },
     {
-      "id": "packages/review/bin/recompile/af-tracks.py",
-      "invocation": "packages/review/bin/recompile/af-tracks.py",
-      "kind": "Report: which AudioFlinger output thread (name, `AUDIO_OUTPUT_FLAG_*`, standby) carries a pid's tracks (fast or normal, rate), from a saved `dumpsys media.audio_flinger`. `af-tracks.py DUMPSYS.txt PID`. The capture switch's evidence.",
+      "id": "packages/review/bin/recompile/af-tracks.ts",
+      "invocation": "packages/review/bin/recompile/af-tracks.ts",
+      "kind": "Report: which AudioFlinger output thread (name, `AUDIO_OUTPUT_FLAG_*`, standby) carries a pid's tracks (fast or normal, rate), from a saved `dumpsys media.audio_flinger`. `node packages/review/bin/recompile/af-tracks.ts DUMPSYS.txt PID`. The capture switch's evidence.",
       "lifecycle": "supported"
     },
     {

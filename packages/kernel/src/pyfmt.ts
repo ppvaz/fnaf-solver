@@ -3,6 +3,7 @@
  * Python is ported to TypeScript and switched only once its output matches). A record or report a ported
  * tool writes keeps the bytes its Python wrote, so the formatting moves with it.
  */
+import { isList } from './labels.ts';
 
 /**
  * `format(x, '.Nf')`: the exact binary value rounded to N decimals, an exact tie to the even digit.
@@ -37,4 +38,62 @@ export function pyFixed(x: number, digits: number): string {
   }
   const text = scaled.toString().padStart(digits + 1, '0');
   return digits === 0 ? `${sign}${text}` : `${sign}${text.slice(0, -digits)}.${text.slice(-digits)}`;
+}
+
+/**
+ * `repr(x)` of a float: the shortest digits that read back as x, written plainly from 1e-4 up to 1e16
+ * (always with a decimal point: '1.0') and as d.ddde±XX outside it ('1e-05', '1e+16').
+ */
+export function pyRepr(x: number): string {
+  if (Number.isNaN(x)) return 'nan';
+  if (!Number.isFinite(x)) return x > 0 ? 'inf' : '-inf';
+  if (x === 0) return Object.is(x, -0) ? '-0.0' : '0.0';
+  const sign = x < 0 ? '-' : '';
+  const [mantissa, power] = Math.abs(x).toExponential().split('e');
+  const digits = mantissa.replace('.', '');
+  const point = Number(power) + 1;   // |x| = 0.DIGITS * 10^point
+  if (point > -4 && point <= 16) {
+    if (point <= 0) return `${sign}0.${'0'.repeat(-point)}${digits}`;
+    if (point >= digits.length) return `${sign}${digits}${'0'.repeat(point - digits.length)}.0`;
+    return `${sign}${digits.slice(0, point)}.${digits.slice(point)}`;
+  }
+  const exponent = point - 1;
+  return `${sign}${digits[0]}${digits.length > 1 ? `.${digits.slice(1)}` : ''}e${exponent < 0 ? '-' : '+'}${String(Math.abs(exponent)).padStart(2, '0')}`;
+}
+
+/** A value Python held as a float. pyDumps prints a whole number as an int unless it is marked: 1.0, not 1. */
+export class PyFloat {
+  readonly value: number;
+  constructor(value: number) { this.value = value; }
+}
+
+/** What pyDumps writes. An object's integer-like keys come first in JavaScript, so a ported record avoids them. */
+export type PyJson = null | boolean | number | string | PyFloat | readonly PyJson[] | { readonly [key: string]: PyJson };
+
+const pyString = (text: string) =>
+  JSON.stringify(text).replace(/[\u007f-\uffff]/g, char => `\\u${char.charCodeAt(0).toString(16).padStart(4, '0')}`);
+const pyFloatJson = (x: number) => Number.isNaN(x) ? 'NaN' : x === Infinity ? 'Infinity' : x === -Infinity ? '-Infinity' : pyRepr(x);
+
+/**
+ * `json.dumps(value)` with Python's defaults: ', ' and ': ' between items, every character outside space
+ * to ~ escaped, a float as repr writes it. With indent, `json.dumps(value, indent=N)`: one item per line
+ * and ',' at each line's end.
+ */
+export function pyDumps(value: PyJson, indent?: number): string {
+  const write = (item: PyJson, level: number): string => {
+    if (item === null) return 'null';
+    if (typeof item === 'boolean') return item ? 'true' : 'false';
+    if (typeof item === 'string') return pyString(item);
+    if (typeof item === 'number') return Number.isInteger(item) ? BigInt(item).toString() : pyFloatJson(item);
+    if (item instanceof PyFloat) return pyFloatJson(item.value);
+    const list = isList(item);
+    const parts = list ? item.map(entry => write(entry, level + 1))
+      : Object.entries(item).map(([key, entry]) => `${pyString(key)}: ${write(entry, level + 1)}`);
+    const [open, close] = list ? ['[', ']'] : ['{', '}'];
+    if (!parts.length) return open + close;
+    if (indent === undefined) return open + parts.join(', ') + close;
+    const pad = `\n${' '.repeat(indent * (level + 1))}`;
+    return `${open}${pad}${parts.join(`,${pad}`)}\n${' '.repeat(indent * level)}${close}`;
+  };
+  return write(value, 0);
 }

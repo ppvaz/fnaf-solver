@@ -280,7 +280,7 @@ adb shell setprop debug.rebuild.audio_perf none    # or latency | latency-effect
 adb shell am force-stop org.fnaf2rebuild.play      # then relaunch; the properties are read at start
 ```
 
-`dumpsys media.audio_flinger`, parsed with `af-tracks.py`, on the g56:
+`dumpsys media.audio_flinger`, parsed with `af-tracks.ts`, on the g56:
 - **OFF:** the rebuild's track is fast track F1 on `AudioOut_1D`
   (`AUDIO_OUTPUT_FLAG_FAST`), as retail SoundPool cues are; openal logs the
   default mode (granted 2).
