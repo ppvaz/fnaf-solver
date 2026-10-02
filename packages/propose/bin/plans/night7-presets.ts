@@ -37,13 +37,21 @@ import { GOLDEN_MODEL_SEED_SALT, randomSeedCohort, seedCohortDescriptor }
 import { KNOBS0, build, schedule } from './minus-toys-plan.ts';
 import { DeviceActuator } from '../../../play/bin/phone/actuator.ts';
 import { designBlock, forkBlocks, gitState } from '../census/winner-census.ts';
+import type { BlockRow, ForkedChild, Loss } from '../census/winner-census.ts';
 import { heldOutSeeds } from '../../../../packages/propose/bin/census/winner-phase-census.ts';
 import { STRATEGY_REGISTRY, validateWinner } from './bundle.ts';
 
 const MENU_MODEL = new URL('../../../play/profiles/fnaf2/moto-g56/custom-night-moto-g56-v207.json', import.meta.url);
 
-export function loadPresets() {
-  const model = JSON.parse(readFileSync(MENU_MODEL, 'utf8'));
+/** A Custom Night preset: its menu id and label, and its dial vector. */
+export interface Preset { readonly id: string, readonly label: string, readonly dials: Readonly<Record<string, number>> }
+/** A lateness band a lane cites: its lowest and highest lateness (ms), and where it was measured. */
+type CitedBand = readonly [lo: number, hi: number, why: string];
+/** The Minus Toys knobs, every one set. */
+type Knobs = typeof KNOBS0;
+
+export function loadPresets(): Preset[] {
+  const model: { presets: readonly Preset[] } = JSON.parse(readFileSync(MENU_MODEL, 'utf8'));
   return model.presets.map(p => ({ id: p.id, label: p.label, dials: { ...p.dials } }));
 }
 
@@ -121,7 +129,7 @@ export const MEASURED_SPREAD_MS = 82;
 
 // The bands `latenesssweep.ts` can cite, kept in the same words so the two
 // files cannot drift into quoting different numbers for the same probe.
-export const BANDS = {
+export const BANDS: Readonly<Record<string, CitedBand>> = {
   exact: [0, 0, 'perfect actuator (the control: must equal the exact lane)'],
   measured: [0, 100, "the k3 traces' worst per-cycle displacement span (81.5 ms) rounded up with margin"],
   clock: [0, 10, 'fork-free /proc/uptime clock (device probe 2026-08-26)'],
@@ -134,7 +142,10 @@ export const BANDS = {
 // One night. `band === null` is the exact lane: the queue is delivered on its
 // own frames, which is what `minus-toys-plan.replay()` does.
 export function runNight({ preset, seed, worst = false, knobs = KNOBS0,
-                           band = null, epochMs = 0, splitCamera = true }: any = {}) {
+                           band = null, epochMs = 0, splitCamera = true }: {
+  preset: { readonly dials: Readonly<Record<string, number>> }, seed: number, worst?: boolean, knobs?: Knobs,
+  band?: readonly [number, number, ...unknown[]] | null, epochMs?: number, splitCamera?: boolean,
+}) {
   const sim = new Sim({ night: 7, seed, worst, customNight: preset.dials });
   const { opening, loop, finish } = build(knobs);
   const periodMs = knobs.minimal ? knobs.minPeriodMs : knobs.loopPeriodMs;
@@ -158,10 +169,12 @@ export function runNight({ preset, seed, worst = false, knobs = KNOBS0,
 }
 
 export function cohort({ preset, runs, worst = false, knobs = PRESET_KNOBS, band = null,
-                         epochMs = 0, requireSplit = true }: any = {}) {
+                         epochMs = 0, requireSplit = true }: Omit<Parameters<typeof runNight>[0], 'seed'> & {
+  runs: number, requireSplit?: boolean,
+}) {
   const population = randomSeedCohort({ count: runs });
   let wins = 0, armed = 0;
-  const reasons = new Map();
+  const reasons = new Map<string, number>();
   for (const seed of population) {
     const r = runNight({ preset, seed, worst, knobs, band, epochMs });
     if (r.splitAt >= 0) armed++;
@@ -183,12 +196,14 @@ export function cohort({ preset, runs, worst = false, knobs = PRESET_KNOBS, band
 // model's answer about the ROUTE, which is what a P_max is a statement of --
 // with the win condition `cohort()` uses: 6 AM and the split armed.
 export const POPULATION_KIND = 'night7-preset-population-v1';
-const sha256 = (text) => createHash('sha256').update(text).digest('hex');
+const sha256 = (text: string | Buffer) => createHash('sha256').update(text).digest('hex');
+/** A preset's rows from one population block. */
+type PresetRow = BlockRow & { readonly id: string, readonly losses: Loss[] };
 
 /** Losses over [start, end) for each named preset: [seed, reason, frame]. */
-export function populationBlock(ids, start, end) {
+export function populationBlock(ids: readonly string[], start: number, end: number) {
   return loadPresets().filter(p => ids.includes(p.id)).map(preset => {
-    const losses = [];
+    const losses: Loss[] = [];
     for (let seed = start; seed < end; seed++) {
       const { sim, splitAt } = runNight({ preset, seed, knobs: PRESET_KNOBS });
       if (!(sim.won && splitAt >= 0))
@@ -198,14 +213,16 @@ export function populationBlock(ids, start, end) {
   });
 }
 
-export function populationRecord({ rows, start, count, git, date, command }) {
+export function populationRecord({ rows, start, count, git, date, command }: {
+  rows: readonly PresetRow[], start: number, count: number, git: ReturnType<typeof gitState>, date: string, command: string,
+}) {
   const design = designBlock();
   const inDesign = new Set(design.seeds);
   const designIn = design.seeds.filter(seed => seed >= start && seed < start + count).length;
   const exhaustive = start === 0 && count === C.RNG_MODULUS;
   const presets = rows.map(({ id, n, losses }) => {
     const designLosses = losses.filter(([seed]) => inDesign.has(seed)).length;
-    const deaths = {};
+    const deaths: Record<string, number> = {};
     for (const [, reason] of losses) deaths[reason] = (deaths[reason] ?? 0) + 1;
     return { id, wins: n - losses.length, n,
       design: { wins: designIn - designLosses, n: designIn },
@@ -239,8 +256,8 @@ export function populationRecord({ rows, start, count, git, date, command }) {
   };
 }
 
-async function population(argv) {
-  const flag = (name, dflt) => { const i = argv.indexOf(`--${name}`); return i < 0 ? dflt : argv[i + 1]; };
+async function population(argv: string[]) {
+  const flag = <T extends string | null>(name: string, dflt: T): string | T => { const i = argv.indexOf(`--${name}`); return i < 0 ? dflt : argv[i + 1]; };
   const jobs = Number(flag('jobs', '1'));
   const start = Number(flag('start', '0'));
   const count = Number(flag('count', String(C.RNG_MODULUS)));
@@ -249,11 +266,11 @@ async function population(argv) {
     throw new Error(`--start/--count must lie inside 0..${C.RNG_MODULUS - 1}`);
   const ids = loadPresets().map(p => p.id);
   const started = Date.now();
-  const rows = await forkBlocks({ script: fileURLToPath(import.meta.url), args: ids, start, count, jobs });
-  const record = populationRecord({ rows, start, count, git: gitState(),
+  const rows = await forkBlocks<PresetRow>({ script: fileURLToPath(import.meta.url), args: ids, start, count, jobs });
+  const record: ReturnType<typeof populationRecord> & { method: { wallSeconds?: number } } = populationRecord({ rows, start, count, git: gitState(),
     date: flag('date', new Date().toISOString().slice(0, 10)),
     command: `node packages/propose/bin/plans/night7-presets.ts --population --start ${start} --count ${count} --jobs ${jobs}` });
-  (record.method as any).wallSeconds = Math.round((Date.now() - started) / 1000);
+  record.method.wallSeconds = Math.round((Date.now() - started) / 1000);
   const text = `${JSON.stringify(record, null, 2)}\n`;
   const out = flag('out', null);
   if (out) writeFileSync(out, text); else process.stdout.write(text);
@@ -284,48 +301,58 @@ export function planeSchedules() {
   const k3 = validateWinner(JSON.parse(readFileSync(K3_WINNER, 'utf8')));
   return [
     { id: 'preset', knobs: PRESET_KNOBS, epochMs: 0 },
-    { id: 'k3', knobs: STRATEGY_REGISTRY[k3.strategy].emit(k3, 7).knobs, epochMs: k3.anchorEpochMs,
+    // k3 is Minus Toys, whose emitter hands back every Minus Toys knob.
+    { id: 'k3', knobs: STRATEGY_REGISTRY[k3.strategy].emit(k3, 7).knobs as Knobs, epochMs: k3.anchorEpochMs,
       winnerSha256: sha256(readFileSync(K3_WINNER)) },
   ];
 }
 
-export function planeVector(a, b, base, x, y) {
+export function planeVector(a: string, b: string, base: number, x: number, y: number) {
   return { id: `${a}${x}-${b}${y}@${base}`, dials: { ...Object.fromEntries(C.AI_DIALS.map(d => [d, base])), [a]: x, [b]: y } };
 }
 
-export function planeWins(schedule, vector, seed) {
+export function planeWins(schedule: ReturnType<typeof planeSchedules>[number], vector: ReturnType<typeof planeVector>, seed: number) {
   const { sim, splitAt } = runNight({ preset: vector, seed, knobs: schedule.knobs, epochMs: schedule.epochMs });
   return { won: sim.won && splitAt >= 0, reason: sim.won ? 'unarmed' : (sim.death?.reason ?? 'alive'), frame: sim.frame };
 }
 
-function planeBlock(a, b, bases, count, from, to) {
+/** One cell of the dial plane for one schedule and base: its dials and its losses. */
+type PlaneRow = BlockRow & { readonly base: number, readonly schedule: string, readonly x: number, readonly y: number, readonly losses: Loss[] };
+
+function planeBlock(a: string, b: string, bases: readonly number[], count: number, from: number, to: number) {
   const seeds = heldOutSeeds(count).slice(from, to);
-  const rows = [];
+  const rows: PlaneRow[] = [];
   for (const base of bases) for (const schedule of planeSchedules()) {
-    const scored = new Map();
+    const scored = new Map<string, Loss[]>();
     for (let x = 0; x <= 20; x++) for (let y = 0; y <= 20; y++) {
       const key = `${Math.min(x, C.aiCap(a))},${Math.min(y, C.aiCap(b))}`;
       if (!scored.has(key)) {
         const vector = planeVector(a, b, base, x, y);
-        const losses = [];
+        const losses: Loss[] = [];
         for (const seed of seeds) {
           const r = planeWins(schedule, vector, seed);
           if (!r.won) losses.push([seed, r.reason, r.frame]);
         }
         scored.set(key, losses);
       }
-      rows.push({ base, schedule: schedule.id, x, y, n: seeds.length, losses: scored.get(key) });
+      // Scored just above when missing.
+      rows.push({ base, schedule: schedule.id, x, y, n: seeds.length, losses: scored.get(key) as Loss[] });
     }
   }
   return rows;
 }
 
-export function planeRecord({ rows, a, b, bases, count, git, date, command }) {
+export function planeRecord({ rows, a, b, bases, count, git, date, command }: {
+  rows: readonly PlaneRow[], a: string, b: string, bases: readonly number[], count: number,
+  git: ReturnType<typeof gitState>, date: string, command: string,
+}) {
   const schedules = planeSchedules();
-  const grids = [];
+  const grids: { base: number, schedule: string, map: string[], cellsWon: number, cells: number,
+    lost: ({ lost: number, losses: Loss[] } & Record<string, number | Loss[]>)[] }[] = [];
   for (const base of bases) for (const schedule of schedules) {
     const cells = rows.filter(r => r.base === base && r.schedule === schedule.id);
-    const at = (x, y) => cells.find(r => r.x === x && r.y === y);
+    // Every cell of the plane was scored.
+    const at = (x: number, y: number) => cells.find(r => r.x === x && r.y === y) as PlaneRow;
     const map = Array.from({ length: 21 }, (_, x) => Array.from({ length: 21 }, (_, y) => {
       const r = at(x, y);
       return r.losses.length === 0 ? '#' : r.losses.length === r.n ? '.' : '+';
@@ -363,24 +390,24 @@ export function planeRecord({ rows, a, b, bases, count, git, date, command }) {
   };
 }
 
-async function plane(argv) {
-  const flag = (name, dflt) => { const i = argv.indexOf(`--${name}`); return i < 0 ? dflt : argv[i + 1]; };
+async function plane(argv: string[]) {
+  const flag = <T extends string | null>(name: string, dflt: T): string | T => { const i = argv.indexOf(`--${name}`); return i < 0 ? dflt : argv[i + 1]; };
   const [a, b] = flag('plane', 'bb,foxy').split(',');
   const bases = flag('bases', '0,20').split(',').map(Number);
   const count = Number(flag('count', '100'));
   const jobs = Number(flag('jobs', '1'));
-  for (const d of [a, b]) if (!C.AI_DIALS.includes(d)) throw new Error(`--plane names an unknown dial: ${d}`);
+  for (const d of [a, b]) if (!(C.AI_DIALS as readonly string[]).includes(d)) throw new Error(`--plane names an unknown dial: ${d}`);
   if (a === b) throw new Error('--plane needs two different dials');
   if (!bases.every(v => Number.isInteger(v) && v >= 0 && v <= 20)) throw new Error('--bases are dial values 0..20');
   if (!Number.isInteger(count) || count < 1 || !Number.isInteger(jobs) || jobs < 1)
     throw new Error('--count and --jobs must be positive integers');
   const started = Date.now();
-  const rows = await forkBlocks({ script: fileURLToPath(import.meta.url), args: [a, b, bases.join(','), String(count)],
+  const rows = await forkBlocks<PlaneRow>({ script: fileURLToPath(import.meta.url), args: [a, b, bases.join(','), String(count)],
     start: 0, count, jobs, childFlag: '--plane-child' });
-  const record = planeRecord({ rows, a, b, bases, count, git: gitState(),
+  const record: ReturnType<typeof planeRecord> & { method: { wallSeconds?: number } } = planeRecord({ rows, a, b, bases, count, git: gitState(),
     date: flag('date', new Date().toISOString().slice(0, 10)),
     command: `node packages/propose/bin/plans/night7-presets.ts --plane ${a},${b} --bases ${bases.join(',')} --count ${count} --jobs ${jobs}` });
-  (record.method as any).wallSeconds = Math.round((Date.now() - started) / 1000);
+  record.method.wallSeconds = Math.round((Date.now() - started) / 1000);
   const text = `${JSON.stringify(record, null, 2)}\n`;
   const out = flag('out', null);
   if (out) writeFileSync(out, text); else process.stdout.write(text);
@@ -388,10 +415,10 @@ async function plane(argv) {
   console.error(`dial plane: ${record.answer}`);
 }
 
-const why = (reasons) => [...reasons.entries()]
+const why = (reasons: ReadonlyMap<string, number>) => [...reasons.entries()]
   .sort((a, b) => b[1] - a[1]).map(([r, n]) => `${r} ${n}`).join(', ');
 
-function gate(presets, runs, bandName) {
+function gate(presets: readonly Preset[], runs: number, bandName: string) {
   const band = BANDS[bandName];
   if (!band) throw new Error(`unknown band: ${bandName} (have ${Object.keys(BANDS).join(', ')})`);
   let ok = true;
@@ -421,7 +448,7 @@ function gate(presets, runs, bandName) {
   return ok;
 }
 
-function bands(presets, runs) {
+function bands(presets: readonly Preset[], runs: number) {
   const names = Object.keys(BANDS);
   console.log(`Every cited lateness band, ${runs} seeds per cell\n`);
   console.log('  ' + 'preset'.padEnd(20) + names.map(n => n.padStart(12)).join(''));
@@ -442,7 +469,7 @@ function bands(presets, runs) {
 // two answer different questions: a cell where they are EQUAL has lost only
 // arms, which `#arm-verify` re-takes on the phone, while a cell where wins
 // trails armed has lost nights the runner cannot recover.
-function epochs(presets, runs, bandName) {
+function epochs(presets: readonly Preset[], runs: number, bandName: string) {
   const band = BANDS[bandName];
   const step = 1000 / C.FPS;
   const n = Math.round(C.LAST_VIEW_SAMPLE_FRAMES);
@@ -450,7 +477,7 @@ function epochs(presets, runs, bandName) {
   console.log('  ' + 'preset'.padEnd(20) +
     [...Array(n).keys()].map(k => `+${k}f`.padStart(9)).join(''));
   for (const preset of presets) {
-    const cells = [];
+    const cells: string[] = [];
     for (let k = 0; k < n; k++) {
       const r = cohort({ preset, runs, band: band[1] ? band : null, epochMs: k * step });
       cells.push(`${r.wins}/${r.armed}`.padStart(9));
@@ -461,17 +488,17 @@ function epochs(presets, runs, bandName) {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href && process.argv[2] === '--plane-child') {
   const [, , , from, to, a, b, bases, count] = process.argv;
-  process.send(planeBlock(a, b, bases.split(',').map(Number), Number(count), Number(from), Number(to)));
+  (process as ForkedChild).send(planeBlock(a, b, bases.split(',').map(Number), Number(count), Number(from), Number(to)));
 } else if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href && process.argv.includes('--plane')) {
   plane(process.argv.slice(2)).catch((error) => { console.error(error.message); process.exitCode = 1; });
 } else if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href && process.argv[2] === '--child') {
   const [, , , a, b, ...ids] = process.argv;
-  process.send(populationBlock(ids, Number(a), Number(b)));
+  (process as ForkedChild).send(populationBlock(ids, Number(a), Number(b)));
 } else if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href &&
            process.argv.includes('--population')) {
   population(process.argv.slice(2)).catch((error) => { console.error(error.message); process.exitCode = 1; });
 } else if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const arg = (name, dflt) => {
+  const arg = <T extends string | null>(name: string, dflt: T): string | T => {
     const v = process.argv.find(a => a.startsWith(`--${name}=`));
     return v === undefined ? dflt : v.slice(name.length + 3);
   };

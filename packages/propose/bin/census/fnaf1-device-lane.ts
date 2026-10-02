@@ -39,6 +39,39 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { Fnaf1Sim, DOOR_OPEN, DOOR_SHUT, MS_PER_FRAME } from '@sixam/source/fnaf1';
+import type { Fnaf1Winner } from '../../../play/games/fnaf1/fnaf1-winner.ts';
+import type { BlockRow, ForkedChild, Loss } from './winner-census.ts';
+
+/** A side of the office, and the pan that shows its doorway. */
+type Side = 'left' | 'right';
+/** A cost band: drawn triangularly about its mode, or pinned at an end in a bounding lane. */
+interface Band { readonly min: number, readonly mode?: number, readonly max: number }
+/** fnaf1-device-timing-v1: each actuation and observation cost, with its claim. */
+interface Timing {
+  readonly schema: 'fnaf1-device-timing-v1';
+  readonly values: {
+    readonly contactMs: { readonly value: number }, readonly panHoldMs: { readonly value: number },
+    readonly pressLatencyMs: Band, readonly releaseLandingMs: Band, readonly renderLagMs: Band, readonly readMs: Band,
+    readonly epochErrorMs: { readonly max: number },
+  };
+}
+/** A device action a policy yields: a touch, a camera-map tap, a pan hold, a wait, or a read. */
+export type DeviceAction =
+  | { readonly tap: string } | { readonly tapCam: number } | { readonly pan: Side }
+  | { readonly wait: number } | { readonly read: true };
+/** What the executor hands back to a policy: the frame a read delivered (null if none was rendered yet), else nothing. */
+type Sent = Frame | null | undefined;
+/** A policy's night, or one of its steps: device actions out, read results in. */
+export type PolicyRun<R = void> = Generator<DeviceAction, R, Sent>;
+/** What a policy knows: its clock, its origin error, its belief of the roll grid, and its options. */
+export interface LaneContext {
+  now(): number;
+  readonly epochErrorMs: number;
+  believedRollMs(periodMs: number, k: number): number;
+  readonly options: Readonly<Record<string, unknown>> & { readonly debug?: (line: string) => void };
+}
+/** A device policy: a generator of device actions over one night. */
+export type DevicePolicy = (ctx: LaneContext) => PolicyRun;
 
 const HERE = fileURLToPath(new URL('.', import.meta.url));
 export const TIMING_PATH = `${HERE}../../../../packages/play/profiles/fnaf1/moto-g56/fnaf1-device-timing-moto-g56-v207.json`;
@@ -47,17 +80,17 @@ export const FOUR_TWENTY = Object.freeze({ freddy: 20, bonnie: 20, chica: 20, fo
 // Which pan a world-anchored control needs [controls-fnaf1-moto-g56-v207.json:
 // the left pair is measured at pan 0, the right pair at pan 600; the monitor
 // tab and the camera map are screen-pinned].
-const CONTROL_PAN = { leftLight: 'left', leftDoor: 'left', rightLight: 'right', rightDoor: 'right',
+const CONTROL_PAN: Readonly<Record<string, Side | null>> = { leftLight: 'left', leftDoor: 'left', rightLight: 'right', rightDoor: 'right',
                       monitor: null };
 
 export function loadTiming(path = TIMING_PATH) {
-  const model = JSON.parse(readFileSync(path, 'utf8'));
+  const model: Timing = JSON.parse(readFileSync(path, 'utf8'));
   if (model.schema !== 'fnaf1-device-timing-v1') throw new Error(`${path}: not fnaf1-device-timing-v1`);
   return model;
 }
 
 /** mulberry32 -- the lane's own stream, so latency draws never touch the game's RNG. */
-function laneRng(seed) {
+function laneRng(seed: number) {
   let a = (seed ^ 0x9e3779b9) >>> 0;
   return () => {
     a = (a + 0x6d2b79f5) >>> 0;
@@ -69,8 +102,8 @@ function laneRng(seed) {
 }
 
 /** A band `{ min, mode, max }` drawn triangularly, or pinned at `max` in the worst lane. */
-function drawer(rng, lane) {
-  return (band) => {
+function drawer(rng: () => number, lane: string) {
+  return (band: Band) => {
     if (lane === 'worst') return band.max;
     if (lane === 'starved') return band.max * (1 + 3 * rng());   // a capture at a third of its rate
     if (lane === 'best') return band.min;
@@ -89,7 +122,10 @@ function drawer(rng, lane) {
  * classes; the model assumes they classify a visible region correctly and
  * nothing more.
  */
-function render(sim, pan) {
+/** What one rendered frame shows to the helper's native regions. */
+export type Frame = ReturnType<typeof render>;
+
+function render(sim: Fnaf1Sim, pan: Side | 'moving') {
   const monitorUp = sim.viewing > 0 && !sim.flip;
   const officeClear = sim.viewing === 0 && !sim.flip;   // no flip drawing over the room
   // A lit doorway shows its occupant whether the door is open or shut:
@@ -97,7 +133,7 @@ function render(sim, pan) {
   // the right window (operator's play, 2026-09-24). The shut and open views
   // are different images, so a detector needs both calibrated; the class it
   // reports is the same.
-  const door = (side) => {
+  const door = (side: Side) => {
     if (!officeClear || pan !== side) return 'hidden';
     const lit = side === 'left' ? sim.leftLight : sim.rightLight;
     if (!lit) return 'dark';
@@ -134,19 +170,22 @@ function render(sim, pan) {
  * that origin only to `ctx.epochErrorMs`, which the executor draws once.
  */
 export function runDeviceNight({ night = 7, seed = 0, custom = FOUR_TWENTY, timing,
-                                 lane = 'typical', policy, options = {} }) {
+                                 lane = 'typical', policy, options = {} }: {
+  night?: number, seed?: number, custom?: Readonly<Record<string, number>> | null, timing: Timing,
+  lane?: string, policy: DevicePolicy, options?: LaneContext['options'],
+}) {
   const sim = new Fnaf1Sim({ night, seed, custom });
   sim.inputLog = [];
   const rng = laneRng(seed * 7919 + 17);
   const draw = drawer(rng, lane);
   const t = timing.values;
-  let pan = 'left';                         // every game here starts panned left
+  let pan: Side | 'moving' = 'left';        // every game here starts panned left
   let busyUntil = 0;
-  const effects = [];                       // { frame, fn }
-  const history = [];                       // rendered frames, newest last
+  const effects: { frame: number, fn: () => void }[] = [];
+  const history: Frame[] = [];              // rendered frames, newest last
   const epochError = lane === 'typical'
     ? (rng() * 2 - 1) * t.epochErrorMs.max : t.epochErrorMs.max;
-  const ctx = {
+  const ctx: LaneContext = {
     now: () => sim.frame * MS_PER_FRAME,
     epochErrorMs: epochError,
     // The policy's belief of the night origin, in its own ms.
@@ -156,11 +195,11 @@ export function runDeviceNight({ night = 7, seed = 0, custom = FOUR_TWENTY, timi
 
   const gen = policy(ctx);
   let resumeAt = 0;
-  let sendValue;
-  let stats = { presses: 0, refused: 0, reads: 0, pans: 0, policyError: null };
+  let sendValue: Sent;
+  let stats = { presses: 0, refused: 0, reads: 0, pans: 0, policyError: null as string | null };
   let lastDelivered = -1;   // the helper's sequence only grows: never hand back an older frame
 
-  const schedule = (atMs, fn) => {
+  const schedule = (atMs: number, fn: () => void) => {
     effects.push({ frame: Math.ceil(atMs / MS_PER_FRAME), fn });
   };
 
@@ -177,7 +216,7 @@ export function runDeviceNight({ night = 7, seed = 0, custom = FOUR_TWENTY, timi
         const asked = ctx.now();
         const lag = draw(t.renderLagMs);
         const wantFrame = Math.floor((asked - lag) / MS_PER_FRAME);
-        let seen = null;
+        let seen: Frame | null = null;
         for (let i = history.length - 1; i >= 0; i -= 1) {
           if (history[i].frame <= Math.max(wantFrame, lastDelivered)) { seen = history[i]; break; }
         }
@@ -199,7 +238,7 @@ export function runDeviceNight({ night = 7, seed = 0, custom = FOUR_TWENTY, timi
         continue;
       }
       if ('tap' in action || 'tapCam' in action) {
-        const control = action.tap ?? 'cam';
+        const control = (action as { readonly tap?: string }).tap ?? 'cam';
         const needed = 'tap' in action ? CONTROL_PAN[control] : null;
         if (needed === undefined) throw new Error(`unknown control ${control}`);
         if (needed !== null && pan !== needed) {
@@ -215,7 +254,8 @@ export function runDeviceNight({ night = 7, seed = 0, custom = FOUR_TWENTY, timi
         const onRelease = 'tap' in action && control !== 'monitor';
         const landAt = start + draw(onRelease ? t.releaseLandingMs : t.pressLatencyMs);
         schedule(landAt, () => {
-          const ok = 'tap' in action ? sim.press(control) : sim.selectCamera(action.tapCam);
+          // CONTROL_PAN names every control a tap may press.
+          const ok = 'tap' in action ? sim.press(control as Parameters<Fnaf1Sim['press']>[0]) : sim.selectCamera(action.tapCam);
           if (!ok) stats.refused += 1;
         });
         busyUntil = start + t.contactMs.value;
@@ -262,7 +302,7 @@ export function runDeviceNight({ night = 7, seed = 0, custom = FOUR_TWENTY, timi
  * a blocked character leaves on his next roll -- every roll passes -- so a
  * door that has been at 2 for one full roll period has turned him back.
  */
-export function* flick4b(ctx) {
+export function* flick4b(ctx: LaneContext): PolicyRun {
   const o = {
     dwellMs: 120,          // after the camera is seen up: >= one 100 ms attention tick
     leftEvery: 1,          // check the left door every N flicks
@@ -280,8 +320,8 @@ export function* flick4b(ctx) {
     flipConfirmMs: 260,
     ...ctx.options,
   };
-  const read = function* () { return yield { read: true }; };
-  const waitFor = function* (pred, limitMs = 3000) {
+  const read = function* (): PolicyRun<Sent> { return yield { read: true }; };
+  const waitFor = function* (pred: (frame: Frame) => boolean, limitMs = 3000): PolicyRun<Frame | null> {
     const until = ctx.now() + limitMs;
     for (;;) {
       const f = yield* read();
@@ -291,7 +331,7 @@ export function* flick4b(ctx) {
     }
   };
   let lastCooldownPress = -Infinity;
-  const cooldownTap = function* (control) {
+  const cooldownTap = function* (control: string): PolicyRun {
     const gap = lastCooldownPress + o.cooldownGapMs - ctx.now();
     if (gap > 0) yield { wait: gap };
     lastCooldownPress = ctx.now();
@@ -299,7 +339,7 @@ export function* flick4b(ctx) {
   };
   // Drive the monitor to a state, from what the frame shows, never from what
   // was last pressed.
-  const monitorTo = function* (want) {
+  const monitorTo = function* (want: Frame['monitor']): PolicyRun<Frame | null> {
     for (let attempt = 0; attempt < 6; attempt += 1) {
       const f = yield* waitFor((x) => x.monitor !== 'flipping');
       if (!f) return null;
@@ -310,9 +350,9 @@ export function* flick4b(ctx) {
     }
     return null;
   };
-  const door = { left: { shutAt: null }, right: { shutAt: null, check: false } };
-  let pan = 'left';
-  const goPan = function* (side) { if (pan !== side) { yield { pan: side }; pan = side; } };
+  const door: Record<Side, { shutAt: number | null, check?: boolean }> = { left: { shutAt: null }, right: { shutAt: null, check: false } };
+  let pan: Side = 'left';
+  const goPan = function* (side: Side): PolicyRun { if (pan !== side) { yield { pan: side }; pan = side; } };
 
   // Setup: raise, select CAM 4B, lower.
   yield* monitorTo('up');
@@ -323,7 +363,7 @@ export function* flick4b(ctx) {
   let chicaSeen = false;
   for (;;) {
     // Doors due to reopen. A door's reopen needs its own pan and the room.
-    for (const side of ['left', 'right']) {
+    for (const side of ['left', 'right'] as const) {
       const d = door[side];
       if (d.shutAt === null || ctx.now() < d.shutAt + o.reopenMs) continue;
       yield* monitorTo('down');
@@ -349,7 +389,7 @@ export function* flick4b(ctx) {
     yield* monitorTo('down');
     flick += 1;
 
-    const checks = [];
+    const checks: Side[] = [];
     if (door.left.shutAt === null && flick % o.leftEvery === 0) checks.push('left');
     if (door.right.check && door.right.shutAt === null) checks.push('right');
     if (door.right.check && door.right.shutAt !== null) door.right.check = false;
@@ -357,7 +397,7 @@ export function* flick4b(ctx) {
       yield* goPan(side);
       const light = side === 'left' ? 'leftLight' : 'rightLight';
       const key = side === 'left' ? 'leftDoor' : 'rightDoor';
-      let seen = null;
+      let seen: Frame | null = null;
       for (let attempt = 0; attempt < 3 && !seen; attempt += 1) {
         yield* cooldownTap(light);
         seen = yield* waitFor((f) => f[side] === 'occupied' || f[side] === 'clear', o.flipConfirmMs);
@@ -366,8 +406,8 @@ export function* flick4b(ctx) {
       if (occupied) {
         yield* cooldownTap(key);
         const shut = yield* waitFor((f) => f[key] === DOOR_SHUT, 1200);
-        door[side].shutAt = ctx.now();
-        if (!shut) door[side].shutAt -= o.reopenMs / 2;       // re-look sooner
+        const shutAt = ctx.now();
+        door[side].shutAt = shut ? shutAt : shutAt - o.reopenMs / 2;   // re-look sooner
       } else if (o.lightOff) {
         yield* cooldownTap(light);
       }
@@ -403,7 +443,7 @@ export function* flick4b(ctx) {
  * Every instant carries `margin` for the origin error, the 1-82 ms landing
  * spread and the one-frame quantisation of `Every`.
  */
-export function* grid420(ctx) {
+export function* grid420(ctx: LaneContext): PolicyRun {
   const o = {
     marginMs: 150,         // origin error + landing spread + one frame, each side of a roll
     flickEndBeforeMs: 300, // aim the flick's down-press landing this far ahead of Foxy's roll
@@ -430,13 +470,13 @@ export function* grid420(ctx) {
   const PERIOD = { bonnie: 4970, chica: 4980, foxy: 5010 };
   // The first fire is one period after the load on frame 1 [passEvery], and
   // lands on the first frame at or past it.
-  const roll = (who, k) => ctx.believedRollMs(PERIOD[who], k) + 17;
-  const rollIndexBefore = (who, ms) => Math.floor((ms - roll(who, 0)) / PERIOD[who]);
+  const roll = (who: keyof typeof PERIOD, k: number) => ctx.believedRollMs(PERIOD[who], k) + 17;
+  const rollIndexBefore = (who: keyof typeof PERIOD, ms: number) => Math.floor((ms - roll(who, 0)) / PERIOD[who]);
   const DOOR_ANIM = 533;
 
   // --- primitives ----------------------------------------------------------
-  const read = function* () { return yield { read: true }; };
-  const waitFor = function* (pred, limitMs = 3000) {
+  const read = function* (): PolicyRun<Sent> { return yield { read: true }; };
+  const waitFor = function* (pred: (frame: Frame) => boolean, limitMs = 3000): PolicyRun<Frame | null> {
     const until = ctx.now() + limitMs;
     for (;;) {
       const f = yield* read();
@@ -446,7 +486,7 @@ export function* grid420(ctx) {
     }
   };
   let lastCooldownPress = -Infinity;
-  const cooldownTap = function* (control) {
+  const cooldownTap = function* (control: string): PolicyRun {
     const gap = lastCooldownPress + o.cooldownGapMs - ctx.now();
     if (gap > 0) yield { wait: gap };
     lastCooldownPress = ctx.now();
@@ -455,7 +495,7 @@ export function* grid420(ctx) {
   };
   // Bounded as a whole: a monitor that will not settle must not hold the
   // finger for seconds while a door needs it.
-  const monitorTo = function* (want) {
+  const monitorTo = function* (want: Frame['monitor']): PolicyRun<Frame | null> {
     const giveUp = ctx.now() + o.monitorBudgetMs;
     for (let attempt = 0; attempt < 6 && ctx.now() < giveUp; attempt += 1) {
       const f = yield* waitFor((x) => x.monitor !== 'flipping', Math.max(50, giveUp - ctx.now()));
@@ -467,15 +507,15 @@ export function* grid420(ctx) {
     }
     return null;
   };
-  let pan = 'left';
-  const goPan = function* (side) { if (pan !== side) { yield { pan: side }; pan = side; } };
-  const key = (side) => (side === 'left' ? 'leftDoor' : 'rightDoor');
+  let pan: Side = 'left';
+  const goPan = function* (side: Side): PolicyRun { if (pan !== side) { yield { pan: side }; pan = side; } };
+  const key = (side: Side) => (side === 'left' ? 'leftDoor' : 'rightDoor');
 
   // --- Foxy: one flick per roll, which also reads CAM 4B for Chica ---------
-  const chica = { seenAt4B: new Set(), looked: new Set() };
+  const chica = { seenAt4B: new Set<number>(), looked: new Set<number>() };
   let foxK = Math.max(1, rollIndexBefore('foxy', ctx.now()) + 1);
   const flickDue = () => ctx.now() >= roll('foxy', foxK) - o.flickLeadMs;
-  const flick = function* () {
+  const flick = function* (): PolicyRun {
     const f = roll('foxy', foxK);
     log(`flick foxy@${foxK}`);
     foxK += 1;
@@ -504,11 +544,11 @@ export function* grid420(ctx) {
   // goes first -- preemption at the only granularity a finger has. A task
   // resumed after a flick re-reads the room: its light was put out by the
   // put-down [g357], and its loops retry on what the frame shows.
-  const log = (msg) => { if (o.debug) o.debug(`${(ctx.now() / 1000).toFixed(3)} ${msg}`); };
-  const run = function* (task, label = 'task') {
+  const log = (msg: string) => { if (o.debug) o.debug(`${(ctx.now() / 1000).toFixed(3)} ${msg}`); };
+  const run = function* (task: () => PolicyRun<unknown>, label = 'task'): PolicyRun<unknown> {
     log(`run ${label}`);
     const it = task();
-    let v;
+    let v: Sent;
     for (;;) {
       const { value, done } = it.next(v);
       if (done) return value;
@@ -522,15 +562,20 @@ export function* grid420(ctx) {
   // --- the doors --------------------------------------------------------------
   // `free` is the first roll at which the character could be at the door.
   // `turnBack` is the roll the shut door is holding for.
-  const door = {
+  /** A door's bookkeeping: who comes to it, the rolls it is free from and checked through, and what it is holding for. */
+  interface DoorState {
+    who: 'bonnie' | 'chica', free: number, turnBack: number | null, closeAt: number | null,
+    shutSeenMs: number | null, checkedThrough: number,
+  }
+  const door: Record<Side, DoorState> = {
     left: { who: 'bonnie', free: 4, turnBack: null, closeAt: null, shutSeenMs: null, checkedThrough: 3 },
     right: { who: 'chica', free: 5, turnBack: null, closeAt: null, shutSeenMs: null, checkedThrough: 4 },
   };
-  const lookAt = function* (side) {
+  const lookAt = function* (side: Side): PolicyRun<boolean> {
     yield* monitorTo('down');
     yield* goPan(side);
     const light = side === 'left' ? 'leftLight' : 'rightLight';
-    let seen = null;
+    let seen: Frame | null = null;
     for (let attempt = 0; attempt < 3 && !seen; attempt += 1) {
       yield* cooldownTap(light);
       seen = yield* waitFor((f) => f[side] === 'occupied' || f[side] === 'clear', o.releaseConfirmMs);
@@ -541,7 +586,7 @@ export function* grid420(ctx) {
   // A door is driven to a state from frames rendered after the last touch
   // could have landed -- an earlier frame still shows the state that touch
   // is changing, and a second touch on it would undo the first.
-  const setDoorState = function* (side, want) {
+  const setDoorState = function* (side: Side, want: number): PolicyRun<Frame | null> {
     const d = door[side];
     yield* monitorTo('down');
     yield* goPan(side);
@@ -571,11 +616,13 @@ export function* grid420(ctx) {
     }
     return null;
   };
-  const shut = function* (side) { return yield* setDoorState(side, DOOR_SHUT); };
-  const open = function* (side) { return yield* setDoorState(side, DOOR_OPEN); };
+  const shut = function* (side: Side) { return yield* setDoorState(side, DOOR_SHUT); };
+  const open = function* (side: Side) { return yield* setDoorState(side, DOOR_OPEN); };
 
+  /** A door's next task: how urgent it is, its name in the log, and its steps. */
+  type Work = { prio: number, label: string, run: () => PolicyRun<unknown> };
   // What each door wants done now, in priority order.
-  const doorWork = (side) => {
+  const doorWork = (side: Side): Work | null => {
     const d = door[side];
     const now = ctx.now();
     const k = rollIndexBefore(d.who, now - o.marginMs);   // last roll surely behind us
@@ -635,14 +682,15 @@ export function* grid420(ctx) {
   });
   for (;;) {
     if (flickDue()) { yield* flick(); continue; }
-    const work = ['left', 'right'].map(doorWork).filter(Boolean).sort((a, b) => a.prio - b.prio);
+    const work = (['left', 'right'] as const).map(doorWork).filter((w): w is Work => Boolean(w)).sort((a, b) => a.prio - b.prio);
     if (o.debug) log(`state L{free:${door.left.free},thru:${door.left.checkedThrough},tb:${door.left.turnBack}} R{free:${door.right.free},thru:${door.right.checkedThrough},tb:${door.right.turnBack}} work=${work.map(w => w.label).join('|')}`);
     // A pending shut is pulled forward rather than risk it queueing behind a
     // task that would still be running when it falls due.
-    const pending = ['left', 'right'].filter((side) => door[side].closeAt !== null)
-      .sort((a, b) => door[a].closeAt - door[b].closeAt)[0];
+    // A subtraction reads each closeAt as a number, which the filter has made them.
+    const pending = (['left', 'right'] as const).filter((side) => door[side].closeAt !== null)
+      .sort((a, b) => Number(door[a].closeAt) - Number(door[b].closeAt))[0];
     if (pending && (work.length === 0 || work[0].prio > 0)
-        && door[pending].closeAt - ctx.now() < (work.length ? o.taskGuardMs : 0)) {
+        && Number(door[pending].closeAt) - ctx.now() < (work.length ? o.taskGuardMs : 0)) {
       yield* run(function* () { yield* shut(pending); door[pending].closeAt = null; }, `pull-close-${pending}`);
       continue;
     }
@@ -652,7 +700,7 @@ export function* grid420(ctx) {
   }
 }
 
-export const DEVICE_POLICIES = { flick4b, grid420 };
+export const DEVICE_POLICIES: Readonly<Record<string, DevicePolicy>> = { flick4b, grid420 };
 
 // --- the population ------------------------------------------------------
 //
@@ -691,17 +739,23 @@ export const LANE_FILE = 'packages/propose/bin/census/fnaf1-device-lane.ts';
 // Every path the lane has stood at. A winner's pinned tree holds it where it stood at that commit,
 // and its `sources` pin that path (ADR 0002 principle 9): the 2026-09-27 winner names the first.
 export const LANE_FILES = Object.freeze(['tools/fnaf1-device-lane.mjs', 'packages/propose/bin/census/fnaf1-device-lane.ts', LANE_FILE]);
-const pinnedLaneFile = (winner) => LANE_FILES.find((path) => path in winner.sources);
-const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
+/** A route winner as this lane reads it: its pins, and the options and dials its runner resolved. */
+export type RouteWinner = Fnaf1Winner & {
+  readonly resolvedOptions?: Readonly<Record<string, unknown>>,
+  readonly night?: { readonly dials?: Readonly<Record<string, number>> },
+};
+// Every winner pins the lane at one of the paths it has stood at.
+const pinnedLaneFile = (winner: Fnaf1Winner) => LANE_FILES.find((path) => path in winner.sources) as string;
+const sha256 = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex');
 
 /**
  * Where the lane file last hashed to `pinned` in history, and the commits that
  * changed it since. The winner pins whole files, so this names the drift by
  * commit rather than by guessing which change mattered.
  */
-function pinHistory(pinned) {
-  const git = (...args) => execFileSync('git', ['-C', `${HERE}../../../..`, ...args], { encoding: 'utf8' });
-  const since = [];
+function pinHistory(pinned: string) {
+  const git = (...args: string[]) => execFileSync('git', ['-C', `${HERE}../../../..`, ...args], { encoding: 'utf8' });
+  const since: string[] = [];
   for (const entry of git('log', '--format=%x00%h', '--name-only', '--', ...LANE_FILES).split('\0').filter(Boolean)) {
     const [commit, ...paths] = entry.split('\n').filter(Boolean);
     const held = paths.map((path) => { try { return git('show', `${commit}:${path}`); } catch { return null; } })
@@ -713,21 +767,23 @@ function pinHistory(pinned) {
 }
 
 /** The policy a winner's runner ran: its policy options out of resolvedOptions. */
-export function winnerPolicyOptions(winner) {
+export function winnerPolicyOptions(winner: RouteWinner) {
   return Object.fromEntries(POLICY_OPTION_KEYS.map((key) => [key, winner.resolvedOptions?.[key]]));
 }
 
 /** grid420 as the winner's pinned commit holds it, from a tree fnaf1-winner.ts materialized. */
-export async function pinnedGrid420(tree) {
-  const lane = LANE_FILES.find((path) => existsSync(join(tree, path)));
+export async function pinnedGrid420(tree: string): Promise<DevicePolicy> {
+  // fnaf1-winner.ts materialized the pinned lane at one of its paths.
+  const lane = LANE_FILES.find((path) => existsSync(join(tree, path))) as string;
   return (await import(pathToFileURL(join(tree, lane)).href)).grid420;
 }
 
 /** Losses over [start, end) for each lane: [seed, outcome, frames]. */
-export function populationBlock(lanes, start, end, { policy = grid420, options = PHONE_OPTIONS } = {}) {
+export function populationBlock(lanes: readonly string[], start: number, end: number,
+  { policy = grid420, options = PHONE_OPTIONS }: { policy?: DevicePolicy, options?: LaneContext['options'] } = {}) {
   const timing = loadTiming();
   return lanes.map((lane) => {
-    const losses = [];
+    const losses: Loss[] = [];
     for (let seed = start; seed < end; seed += 1) {
       const r = runDeviceNight({ night: 7, seed, custom: FOUR_TWENTY, timing, lane, policy, options: { ...options } });
       if (r.outcome !== '6AM') losses.push([seed, r.outcome, r.frames]);
@@ -736,7 +792,7 @@ export function populationBlock(lanes, start, end, { policy = grid420, options =
   });
 }
 
-const rate = (l) => `${l.lane} ${l.wins}/${l.n}` + (l.wins === l.n ? '' : ` (${(100 * l.wins / l.n).toFixed(3)}%)`);
+const rate = (l: { readonly lane: string, readonly wins: number, readonly n: number }) => `${l.lane} ${l.wins}/${l.n}` + (l.wins === l.n ? '' : ` (${(100 * l.wins / l.n).toFixed(3)}%)`);
 
 /**
  * The evidence record. `route` is null for the tree's route, or the winner
@@ -744,17 +800,29 @@ const rate = (l) => `${l.lane} ${l.wins}/${l.n}` + (l.wins === l.n ? '' : ` (${(
  * `treeRecord` is the newest tree census, which a winner record sets its
  * rates beside.
  */
-export function populationRecord({ rows, start, count, design, git, date, command, route = null, treeRecord = null }) {
+/** The winner whose pinned grid420 ran: its file, its pins' commit and tree, the files that matched, and its options. */
+export interface Route {
+  readonly path: string, readonly winner: RouteWinner, readonly commit: string, readonly tree: string,
+  readonly files: number, readonly options: Readonly<Record<string, unknown>>,
+}
+/** A lane's rows from one population block. */
+export type LaneRow = BlockRow & { readonly lane: string, readonly losses: Loss[] };
+
+export function populationRecord({ rows, start, count, design, git, date, command, route = null, treeRecord = null }: {
+  rows: readonly LaneRow[], start: number, count: number, design: { readonly seeds: readonly number[], readonly components: object },
+  git: { readonly dirtyEnginePaths: readonly string[] }, date: string, command: string, route?: Route | null,
+  treeRecord?: { readonly id: string, readonly method: { readonly options?: unknown }, readonly lanes: readonly Parameters<typeof rate>[0][] } | null,
+}) {
   const inDesign = new Set(design.seeds);
   const designIn = design.seeds.filter((seed) => seed >= start && seed < start + count).length;
   const exhaustive = start === 0 && count === RNG_SEEDS;
-  const winner = route?.winner ?? JSON.parse(readFileSync(WINNER_PATH, 'utf8'));
+  const winner: RouteWinner = route?.winner ?? JSON.parse(readFileSync(WINNER_PATH, 'utf8'));
   const harnessSha256 = sha256(readFileSync(fileURLToPath(import.meta.url)));
   const pinnedPath = pinnedLaneFile(winner);
   const pinned = winner.sources[pinnedPath];
   const lanes = rows.map(({ lane, n, losses }) => {
     const designLosses = losses.filter(([seed]) => inDesign.has(seed)).length;
-    const deaths = {};
+    const deaths: Record<string, number> = {};
     for (const [, outcome] of losses) deaths[outcome] = (deaths[outcome] ?? 0) + 1;
     return { lane, wins: n - losses.length, n,
       design: { wins: designIn - designLosses, n: designIn },
@@ -826,13 +894,13 @@ export function populationRecord({ rows, start, count, design, git, date, comman
 }
 
 /** The newest committed census of the tree's route, or null. */
-export function newestTreeRecord(dir = `${HERE}../../../../docs/evidence/`) {
+export function newestTreeRecord(dir = `${HERE}../../../../docs/evidence/`): NonNullable<Parameters<typeof populationRecord>[0]['treeRecord']> | null {
   const name = readdirSync(dir).filter((n) => /^fnaf1-420-device-lane-population-\d{8}\.json$/.test(n)).sort().pop();
   return name ? JSON.parse(readFileSync(join(dir, name), 'utf8')) : null;
 }
 
-async function population(argv) {
-  const flag = (name, dflt) => { const i = argv.indexOf(`--${name}`); return i < 0 ? dflt : argv[i + 1]; };
+async function population(argv: string[]) {
+  const flag = <T extends string | null>(name: string, dflt: T): string | T => { const i = argv.indexOf(`--${name}`); return i < 0 ? dflt : argv[i + 1]; };
   const jobs = Number(flag('jobs', '1'));
   const start = Number(flag('start', '0'));
   const count = Number(flag('count', String(RNG_SEEDS)));
@@ -843,15 +911,15 @@ async function population(argv) {
   if (kind !== 'tree' && kind !== 'winner') throw new Error('--route is tree or winner');
   const { designBlock, forkBlocks, gitState } = await import('./winner-census.ts');
   const started = Date.now();
-  let route = null;
-  let scratch = null;
+  let route: Route | null = null;
+  let scratch: string | null = null;
   let source = 'tree';
-  let options = { ...PHONE_OPTIONS };
+  let options: Readonly<Record<string, unknown>> = { ...PHONE_OPTIONS };
   const { loadWinner, materialize, removeTree } = await import('../../../play/games/fnaf1/fnaf1-winner.ts');
   try {
     if (kind === 'winner') {
       const path = 'packages/propose/bindings/fnaf1/fnaf1-custom-night7-420-grid420-winner.json';
-      const winner = loadWinner(path);
+      const winner: RouteWinner = loadWinner(path);
       if (winner.resolvedOptions?.policy !== 'grid420' || JSON.stringify(winner.night?.dials) !== JSON.stringify(FOUR_TWENTY))
         throw new Error(`${path} is not a 4/20 grid420 winner`);
       scratch = mkdtempSync(join(tmpdir(), 'fnaf1-lane-winner-'));
@@ -860,15 +928,15 @@ async function population(argv) {
       options = winnerPolicyOptions(winner);
       route = { path, winner, commit: built.commit, tree: built.tree, files: built.files, options };
     }
-    const rows = await forkBlocks({ script: fileURLToPath(import.meta.url),
+    const rows = await forkBlocks<LaneRow>({ script: fileURLToPath(import.meta.url),
       args: [source, JSON.stringify(options), ...POPULATION_LANES], start, count, jobs });
-    const record = populationRecord({ rows, start, count, design: designBlock(), route,
+    const record: ReturnType<typeof populationRecord> & { method: { wallSeconds?: number } } = populationRecord({ rows, start, count, design: designBlock(), route,
       treeRecord: route ? newestTreeRecord() : null,
       git: gitState(['packages/core', 'packages/source', 'packages/kernel', 'tools/device', LANE_FILE]),
       date: flag('date', new Date().toISOString().slice(0, 10)),
       command: `node packages/propose/bin/census/fnaf1-device-lane.ts --population${route ? ' --route winner' : ''} --start ${start} ` +
         `--count ${count} --jobs ${jobs}` });
-    (record.method as any).wallSeconds = Math.round((Date.now() - started) / 1000);
+    record.method.wallSeconds = Math.round((Date.now() - started) / 1000);
     const text = `${JSON.stringify(record, null, 2)}\n`;
     const out = flag('out', null);
     if (out) writeFileSync(out, text); else process.stdout.write(text);
@@ -879,13 +947,16 @@ async function population(argv) {
 }
 
 export function census({ seeds = 3000, start = 0, night = 7, custom = FOUR_TWENTY, lane = 'typical',
-                         policy = 'flick4b', options = {}, timing = loadTiming() } = {}) {
+                         policy = 'flick4b', options = {}, timing = loadTiming() }: {
+  seeds?: number, start?: number, night?: number, custom?: Readonly<Record<string, number>> | null, lane?: string,
+  policy?: string, options?: LaneContext['options'], timing?: Timing,
+} = {}) {
   const make = DEVICE_POLICIES[policy];
   if (!make) throw new Error(`no device policy ${policy}`);
-  const causes = {};
+  const causes: Record<string, number> = {};
   let wins = 0;
-  const power = [];
-  const refused = [];
+  const power: number[] = [];
+  const refused: number[] = [];
   for (let seed = start; seed < start + seeds; seed += 1) {
     const r = runDeviceNight({ night, seed, custom, timing, lane, policy: make, options });
     causes[r.outcome] = (causes[r.outcome] ?? 0) + 1;
@@ -903,11 +974,11 @@ if (process.argv[1] === fileURLToPath(import.meta.url) && process.argv[2] === '-
   // materialized (and already checked) tree whose grid420 runs instead.
   const [, , , a, b, source, options, ...lanes] = process.argv;
   const policy = source === 'tree' ? grid420 : await pinnedGrid420(source);
-  process.send(populationBlock(lanes, Number(a), Number(b), { policy, options: JSON.parse(options) }));
+  (process as ForkedChild).send(populationBlock(lanes, Number(a), Number(b), { policy, options: JSON.parse(options) }));
 } else if (process.argv[1] === fileURLToPath(import.meta.url) && process.argv.includes('--population')) {
   population(process.argv.slice(2)).catch((error) => { console.error(error.message); process.exitCode = 1; });
 } else if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const args = { seeds: 3000, start: 0, lane: 'typical', policy: 'flick4b', night: 7, options: {} };
+  const args = { seeds: 3000, start: 0, lane: 'typical', policy: 'flick4b', night: 7, options: {} as Record<string, number | boolean> };
   const argv = process.argv.slice(2);
   for (let i = 0; i < argv.length; i += 1) {
     const flag = argv[i];

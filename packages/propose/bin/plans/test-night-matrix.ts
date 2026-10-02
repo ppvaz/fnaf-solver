@@ -33,6 +33,7 @@ import { build, capture, devicePlan, replay, resolveAttack, TEMPLATE_NIGHT,
 import { modelGate, GATE_MIN_SURVIVAL, HUMAN_SLACK_MS, GATE_RUNS } from './human-gate.ts';
 import { contractVerdict, formatRate } from '../../../review/src/stat.ts';
 import { pool, closePool } from '../census/pool.ts';
+import type { survivors } from './gate-worker.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const NIGHTS = [1, 2, 3, 4, 5, 6];
@@ -64,7 +65,8 @@ for (const night of NIGHTS)
   for (let from = 1; from <= GATE_RUNS; from += CHUNK)
     chunks.push({ night, from, to: Math.min(from + CHUNK - 1, GATE_RUNS),
                   slackMs: HUMAN_SLACK_MS });
-const gateParts = await pool().map(WORKER, 'survivors', chunks);
+// The pool hands back each chunk's survivors() across a structured clone.
+const gateParts = await pool().map(WORKER, 'survivors', chunks) as ReturnType<typeof survivors>[];
 const gateSurvivors = new Map(NIGHTS.map(n => [n, 0]));
 for (const part of gateParts)
   gateSurvivors.set(part.night, found(gateSurvivors.get(part.night)) + part.won);

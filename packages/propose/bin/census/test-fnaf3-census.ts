@@ -18,15 +18,16 @@ import { GRAPH } from '@sixam/source/fnaf3';
 import { searchOrder as deviceSearchOrder } from '../../../play/games/fnaf3/fnaf3-run.ts';
 import { CLOCK, VENTILATION, SPRINGTRAP } from '@sixam/source/fnaf3';
 
-const failures = [];
+const failures: string[] = [];
 let checks = 0;
-const ok = (what, c) => { checks += 1; if (!c) failures.push(what); };
-const eq = (what, a, b) => {
+const ok = (what: string, c: unknown) => { checks += 1; if (!c) failures.push(what); };
+const eq = (what: string, a: unknown, b: unknown) => {
   checks += 1;
   if (JSON.stringify(a) !== JSON.stringify(b)) failures.push(`${what}: expected ${JSON.stringify(b)}, got ${JSON.stringify(a)}`);
 };
 
-function run(night, makePolicy, seeds, simOptions = {}) {
+function run(night: number, makePolicy: () => Parameters<Fnaf3Sim['run']>[0], seeds: number,
+  simOptions: Omit<NonNullable<ConstructorParameters<typeof Fnaf3Sim>[0]>, 'night' | 'seed'> = {}) {
   const causes = new Map();
   let wins = 0;
   let frames = 0;

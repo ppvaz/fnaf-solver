@@ -22,15 +22,15 @@ import { POLICIES } from '@sixam/propose/games/policy-fnaf4.ts';
 import { MODEL, BLACK_FLASH, BEDROOM, FOXY_CLOSET } from '@sixam/source/fnaf4';
 import { nightSchedule, hourStartMs } from '@sixam/source';
 
-const failures = [];
+const failures: string[] = [];
 let checks = 0;
-const ok = (what, condition) => { checks += 1; if (!condition) failures.push(what); };
-const eq = (what, a, b) => {
+const ok = (what: string, condition: unknown) => { checks += 1; if (!condition) failures.push(what); };
+const eq = (what: string, a: unknown, b: unknown) => {
   checks += 1;
   if (JSON.stringify(a) !== JSON.stringify(b)) failures.push(`${what}: expected ${JSON.stringify(b)}, got ${JSON.stringify(a)}`);
 };
 
-function run(night, makePolicy, seeds) {
+function run(night: number, makePolicy: () => Parameters<Fnaf4Sim['run']>[0], seeds: number) {
   let wins = 0;
   const causes = new Map();
   for (let seed = 0; seed < seeds; seed += 1) {
@@ -99,7 +99,7 @@ for (const night of [1, 2, 3, 4, 5, 6, 7, 8]) {
 // Deterministic: same seeds, same draws, same result every run. The 3000-seed
 // figures are the reported ones; this block pins the shape.
 {
-  const expected = { 1: 100, 2: 100, 3: 100, 4: 100 };
+  const expected: Readonly<Record<number, number>> = { 1: 100, 2: 100, 3: 100, 4: 100 };
   for (const night of [1, 2, 3, 4, 5, 6, 7, 8]) {
     const r = run(night, POLICIES['community-loop'], 100);
     if (expected[night] !== undefined) {
@@ -159,7 +159,7 @@ eq('foxy got-you at AV2 10', FOXY_CLOSET.av2GotYou, 10);
   const sim = new Fnaf4Sim({ night: 3, seed: 1 });   // night 3: Foxy 10, all rolls pass
   // Run 100 s with a player standing at the closet holding it shut: Foxy
   // arrives, charges while unviewed, and decays under the hold.
-  const pol = (s) => { s.follow = 29; s.closetShut = 1; };
+  const pol = (s: Fnaf4Sim) => { s.follow = 29; s.closetShut = 1; };
   let frames = 0;
   while (!sim.over && frames < 100 * 60) { pol(sim); sim.step(); frames += 1; }
   ok('foxy charged and was held below got-you at the closet', sim.foxy === 'closet' && sim.foxyAv2 < 10);

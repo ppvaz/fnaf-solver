@@ -39,11 +39,14 @@ const batchArg = () => {
   return n;
 };
 
+/** A worker's reply to one batch: its values in the batch's order, or the error that stopped it. */
+type Reply = { readonly id: number, readonly values?: unknown[], readonly error?: string };
+
 export class SimPool {
   declare size: number;
-  declare workers: Worker[];
+  declare workers: Worker[] | null;
   declare nextId: number;
-  constructor({ workers = DEFAULT_WORKERS } = {}) {
+  constructor({ workers = DEFAULT_WORKERS }: { workers?: number } = {}) {
     this.size = Math.max(1, workers);
     this.workers = null;   // spawned on first use
     this.nextId = 0;
@@ -64,37 +67,39 @@ export class SimPool {
   // candidate's Night 7 jobs often finish much sooner than a survivor's.
   // `--pool-batch=1` is useful when each option is itself a large seed batch;
   // the default amortizes IPC for ordinary short jobs.
-  async map(mod, fn, optsList) {
+  async map(mod: string, fn: string, optsList: readonly unknown[]): Promise<unknown[]> {
     if (!optsList.length) return [];
     if (this.size === 1) return runSerial(mod, fn, optsList);
     this.spawn();
     const batchSize = batchArg();
-    const jobs = [];
+    const jobs: { start: number, batch: readonly unknown[] }[] = [];
     for (let start = 0; start < optsList.length; start += batchSize)
       jobs.push({ start, batch: optsList.slice(start, start + batchSize) });
-    const out = new Array(optsList.length);
+    const out = new Array<unknown>(optsList.length);
     let next = 0;
-    const runWorker = async (worker) => {
+    const runWorker = async (worker: Worker) => {
       while (next < jobs.length) {
         const job = jobs[next++];
         const values = await this.send(worker, mod, fn, job.batch);
         values.forEach((v, i) => { out[job.start + i] = v; });
       }
     };
-    await Promise.all(this.workers.map(runWorker));
+    // Spawned above.
+    await Promise.all((this.workers as Worker[]).map(runWorker));
     return out;
   }
 
-  send(worker, mod, fn, batch) {
+  send(worker: Worker, mod: string, fn: string, batch: readonly unknown[]) {
     const id = ++this.nextId;
-    return new Promise<any>((resolve, reject) => {
-      const onMessage = (m) => {
+    return new Promise<unknown[]>((resolve, reject) => {
+      const onMessage = (m: Reply) => {
         if (m.id !== id) return;
         worker.off('message', onMessage);
         worker.off('error', onError);
-        m.error ? reject(new Error(m.error)) : resolve(m.values);
+        // A reply without an error carries its values.
+        m.error ? reject(new Error(m.error)) : resolve(m.values as unknown[]);
       };
-      const onError = (err) => {
+      const onError = (err: Error) => {
         worker.off('message', onMessage);
         worker.off('error', onError);
         reject(err);
@@ -113,14 +118,14 @@ export class SimPool {
   }
 }
 
-async function runSerial(mod, fn, optsList) {
-  const m = await import(mod);
+async function runSerial(mod: string, fn: string, optsList: readonly unknown[]) {
+  const m: Readonly<Record<string, (options: unknown) => unknown>> = await import(mod);
   return optsList.map(o => m[fn](o));
 }
 
 // The process-wide pool the search tools share. `--serial` forces one thread,
 // which is the way to check that a parallel result matches the old one.
-let shared = null;
+let shared = null as SimPool | null;
 export function pool() {
   if (!shared) {
     shared = new SimPool({

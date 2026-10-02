@@ -1835,6 +1835,7 @@
         "../../../play/games/fnaf1/fnaf1-winner.ts",
         "./fnaf1-device-lane.ts",
         "./winner-census.ts",
+        "@sixam/kernel",
         "node:crypto",
         "node:fs",
         "node:os",
@@ -1931,6 +1932,7 @@
       "file": "packages/propose/bin/census/test-policy-census.ts",
       "imports": [
         "./policy-census.ts",
+        "./winner-census.ts",
         "@sixam/kernel/contracts",
         "@sixam/propose/census",
         "node:assert/strict",
@@ -2300,6 +2302,7 @@
       "imports": [
         "../../../review/src/stat.ts",
         "../census/pool.ts",
+        "./gate-worker.ts",
         "./human-gate.ts",
         "./recipe.ts",
         "@sixam/source/fnaf2",

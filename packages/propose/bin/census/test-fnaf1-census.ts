@@ -22,17 +22,20 @@ import { communityLoop, rollGrid, sealed, doNothing, CAM }
   from '@sixam/propose/games/policy-fnaf1.ts';
 import { POWER, ROLLS, FOXY } from '@sixam/source/fnaf1';
 
-const failures = [];
+const failures: string[] = [];
 let checks = 0;
-const ok = (what, condition) => { checks += 1; if (!condition) failures.push(what); };
-const eq = (what, a, b) => {
+const ok = (what: string, condition: unknown) => { checks += 1; if (!condition) failures.push(what); };
+const eq = (what: string, a: unknown, b: unknown) => {
   checks += 1;
   if (JSON.stringify(a) !== JSON.stringify(b)) failures.push(`${what}: expected ${JSON.stringify(b)}, got ${JSON.stringify(a)}`);
 };
 
 const FOUR_TWENTY = { freddy: 20, bonnie: 20, chica: 20, foxy: 20 };
 
-function run(night, makePolicy, seeds, custom = null) {
+/** A FNaF 1 policy, as Fnaf1Sim.run takes it. */
+type Policy = Parameters<Fnaf1Sim['run']>[0];
+
+function run(night: number, makePolicy: () => Policy, seeds: number, custom: Readonly<Record<string, number>> | null = null) {
   const causes = new Map();
   let wins = 0;
   for (let seed = 0; seed < seeds; seed += 1) {
@@ -103,7 +106,7 @@ eq('roll-grid clears 4/20', run(7, () => rollGrid(), 400, FOUR_TWENTY).wins, 400
 // as brittle in the other direction -- 400 seeds usually clear.
 {
   const HELD_OUT = 3000;
-  const rate = (makePolicy) => {
+  const rate = (makePolicy: () => Policy) => {
     let wins = 0;
     const causes = new Map();
     for (let seed = HELD_OUT; seed < HELD_OUT + 3000; seed += 1) {

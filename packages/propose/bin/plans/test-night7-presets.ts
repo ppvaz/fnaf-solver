@@ -55,8 +55,15 @@ import { designBlock } from '../census/winner-census.ts';
 import { FIELD_KIND, FIELD_FRAMES, MASK_FLOOR_MS, fieldSchedules, fieldEvents, playField }
   from './night7-robustness-field.ts';
 import { DeviceActuator } from '../../../play/bin/phone/actuator.ts';
+import type { planeRecord, populationRecord } from './night7-presets.ts';
+import type { buildRobustnessRecord } from '../../../../packages/propose/bin/plans/night7-robustness.ts';
+import type { buildFieldRecord } from './night7-robustness-field.ts';
+import type { Loss } from '../census/winner-census.ts';
 
-const check = (ok, message) => { if (!ok) throw new Error(message); };
+const check: (ok: unknown, message: string) => asserts ok = (ok, message) => { if (!ok) throw new Error(message); };
+/** A value the test reads where the tree or the record has it; a missing one fails the check that reads it. */
+const found = <T>(value: T | null | undefined) => value as T;
+const sha256 = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex');
 
 // --- 1. the presets are the phone's presets ---------------------------------
 {
@@ -67,11 +74,11 @@ const check = (ok, message) => { if (!ok) throw new Error(message); };
     check(ids.has(id), `preset ${id} is missing from the menu model`);
   for (const p of presets)
     for (const dial of Object.keys(p.dials))
-      check(C.AI_DIALS.includes(dial), `preset ${p.id} names an unknown dial: ${dial}`);
+      check((C.AI_DIALS as readonly string[]).includes(dial), `preset ${p.id} names an unknown dial: ${dial}`);
 
   // The control: every dial at 20 IS night 7 once the caps clamp, so the
   // customNight path must produce the same AI vector the night-7 table does.
-  const gf = presets.find(p => p.id === 'golden-freddy');
+  const gf = found(presets.find(p => p.id === 'golden-freddy'));
   check(C.AI_DIALS.every(d => gf.dials[d] === 20),
     'golden-freddy is no longer all-20; it is the 10/20 control for this file');
 }
@@ -82,7 +89,7 @@ const check = (ok, message) => { if (!ok) throw new Error(message); };
 // actuator is not wired in and every device figure this file prints is the
 // exact lane wearing a band's name.
 {
-  const gf = loadPresets().find(p => p.id === 'golden-freddy');
+  const gf = found(loadPresets().find(p => p.id === 'golden-freddy'));
   const runs = 120;
   const tight = cohort({ preset: gf, runs, band: BANDS.measured });
   check(tight.wins === runs,
@@ -131,11 +138,10 @@ const check = (ok, message) => { if (!ok) throw new Error(message); };
 // --- 4. the population record still describes the tree ---------------------
 let populationLine;
 {
-  const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
   const dir = new URL('../../../../docs/evidence/', import.meta.url);
   const name = readdirSync(dir).filter(n => /^night7-preset-population-\d{8}\.json$/.test(n)).sort().pop();
   check(name, 'no docs/evidence/night7-preset-population-YYYYMMDD.json is committed');
-  const record = JSON.parse(readFileSync(new URL(name, dir), 'utf8'));
+  const record: ReturnType<typeof populationRecord> = JSON.parse(readFileSync(new URL(name, dir), 'utf8'));
   check(record.kind === POPULATION_KIND, `${name} is not a ${POPULATION_KIND}`);
   check(record.method.knobsSha256 === sha256(JSON.stringify(PRESET_KNOBS)),
     `PRESET_KNOBS changed since ${name}; re-run night7-presets.ts --population`);
@@ -152,7 +158,7 @@ let populationLine;
   const { start, count } = record.method.population;
   let replays = 0;
   for (const row of record.presets) {
-    const preset = presets.find(p => p.id === row.id);
+    const preset = found(presets.find(p => p.id === row.id));
     check(row.wins + row.losses.length === row.n && row.design.n + row.heldOut.n === row.n,
       `${row.id}: the record's counts do not add up`);
     for (const [seed, reason, frame] of row.losses.slice(0, 20)) {
@@ -178,39 +184,40 @@ let populationLine;
 // --- 5. every dial-plane record still describes the tree ---------------------
 let planeLine = '';
 {
-  const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
   const dir = new URL('../../../../docs/evidence/', import.meta.url);
   const names = readdirSync(dir).filter(n => /^night7-dial-plane-[a-z]+-[a-z]+-\d{8}\.json$/.test(n)).sort();
   const schedules = planeSchedules();
   let replays = 0;
   for (const name of names) {
-    const record = JSON.parse(readFileSync(new URL(name, dir), 'utf8'));
+    const record: ReturnType<typeof planeRecord> = JSON.parse(readFileSync(new URL(name, dir), 'utf8'));
     check(record.kind === PLANE_KIND, `${name} is not a ${PLANE_KIND}`);
     const seeds = heldOutSeeds(record.method.seeds.n);
     check(record.method.seeds.sha256 === sha256(JSON.stringify(seeds)), `${name}: the held-out seed block no longer rebuilds`);
     for (const recorded of record.method.schedules) {
       const now = schedules.find(s => s.id === recorded.id);
       check(now, `${name} names a schedule ${recorded.id} the scorer no longer has`);
-      if (recorded.knobsSha256) check(recorded.knobsSha256 === sha256(JSON.stringify(PRESET_KNOBS)), `PRESET_KNOBS changed since ${name}`);
-      if (recorded.winnerSha256) check(recorded.winnerSha256 === now.winnerSha256, `the k3 winner changed since ${name}`);
+      // The preset's row names its knobs, a binding's its winner.
+      const digests: { knobsSha256?: string, winnerSha256?: string } = recorded;
+      if (digests.knobsSha256) check(digests.knobsSha256 === sha256(JSON.stringify(PRESET_KNOBS)), `PRESET_KNOBS changed since ${name}`);
+      if (digests.winnerSha256) check(digests.winnerSha256 === now.winnerSha256, `the k3 winner changed since ${name}`);
     }
     const { a, b } = record.method.plane;
     for (const grid of record.grids) {
-      const schedule = schedules.find(s => s.id === grid.schedule);
+      const schedule = found(schedules.find(s => s.id === grid.schedule));
       const probes = [[0, 0], [0, 20], [20, 0], [20, 20], [10, 10]];
       for (const [x, y] of probes) {
         const cell = grid.map[x][y];
         const listed = grid.lost.find(c => c[a] === x && c[b] === y);
         check(cell === '#' || listed?.losses?.length,
           `${name} ${grid.schedule}@${grid.base} ${a}${x}/${b}${y} is recorded '${cell}' with no listed loss`);
-        const seed = cell === '#' ? seeds[(x * 21 + y) % seeds.length] : listed.losses[0][0];
+        const seed = cell === '#' ? seeds[(x * 21 + y) % seeds.length] : found(listed).losses[0][0];
         const { won } = planeWins(schedule, planeVector(a, b, grid.base, x, y), seed);
         replays++;
         check(won === (cell === '#'), `${name} ${grid.schedule}@${grid.base} ${a}${x}/${b}${y} seed ${seed}: recorded '${cell}', replays ${won ? 'won' : 'lost'}`);
       }
       for (const lost of grid.lost) {
         const [seed, reason, frame] = lost.losses[0];
-        const r = planeWins(schedule, planeVector(a, b, grid.base, lost[a], lost[b]), seed);
+        const r = planeWins(schedule, planeVector(a, b, grid.base, lost[a] as number, lost[b] as number), seed);
         replays++;
         check(!r.won && r.reason === reason && r.frame === frame, `${name} ${grid.schedule}@${grid.base} ${a}${lost[a]}/${b}${lost[b]} seed ${seed} no longer dies as recorded`);
       }
@@ -223,27 +230,29 @@ let planeLine = '';
 // --- 6. the robustness record still describes the tree ------------------------
 let robustLine = '';
 {
-  const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
   const dir = new URL('../../../../docs/evidence/', import.meta.url);
   const name = readdirSync(dir).filter(n => /^night7-robustness-\d{8}\.json$/.test(n)).sort().pop();
   check(name, 'no docs/evidence/night7-robustness-YYYYMMDD.json is committed');
-  const record = JSON.parse(readFileSync(new URL(name, dir), 'utf8'));
+  const record: ReturnType<typeof buildRobustnessRecord> = JSON.parse(readFileSync(new URL(name, dir), 'utf8'));
   check(record.kind === ROBUSTNESS_KIND, `${name} is not a ${ROBUSTNESS_KIND}`);
   const seeds = heldOutSeeds(record.method.seeds.n);
   check(record.method.seeds.sha256 === sha256(JSON.stringify(seeds)), `${name}: the held-out seed block no longer rebuilds`);
   const now = robustSchedules();
   check(now.length === record.schedules.length, `${name} covers ${record.schedules.length} schedules, the tree has ${now.length}`);
   let replays = 0;
-  const lostAs = (schedule, opts, [seed, reason, frame], what) => {
+  const lostAs = (schedule: ReturnType<typeof robustSchedules>[number], opts: Parameters<typeof robustWins>[2],
+    [seed, reason, frame]: Loss, what: string) => {
     const r = robustWins(schedule, seed, opts);
     replays++;
     check(!r.won && r.reason === reason && r.frame === frame, `${name} ${schedule.id} ${what} seed ${seed} no longer dies as recorded`);
   };
   for (const rec of record.schedules) {
-    const schedule: any = now.find(x => x.id === rec.id);
+    const schedule = now.find(x => x.id === rec.id);
     check(schedule, `${name} names ${rec.id}, which the tree no longer has`);
-    if (rec.knobsSha256) check(rec.knobsSha256 === schedule.knobsSha256, `PRESET_KNOBS changed since ${name}`);
-    if (rec.winnerSha256) check(rec.winnerSha256 === schedule.winnerSha256, `${rec.binding} changed since ${name}`);
+    // The preset's row names its knobs, a binding's its winner.
+    const digests: { knobsSha256?: string, winnerSha256?: string } = rec;
+    if (digests.knobsSha256) check(digests.knobsSha256 === schedule.knobsSha256, `PRESET_KNOBS changed since ${name}`);
+    if (digests.winnerSha256) check(digests.winnerSha256 === schedule.winnerSha256, `${rec.binding} changed since ${name}`);
     const L = rec.lateness.maxAllWinMs;
     if (L !== null) for (const seed of seeds.slice(0, 2)) {
       replays++;
@@ -279,10 +288,10 @@ let fieldLine = '';
   // The floor itself: lower the monitor, then press the mask one frame inside
   // the floor and one frame past it.
   const floorFrames = Math.round(MASK_FLOOR_MS / 1000 * C.FPS);
-  const probe = (gapFrames) => {
-    const sim = new C.Sim({ night: 7, seed: 1, customNight: loadPresets().find(p => p.id === 'golden-freddy').dials });
+  const probe = (gapFrames: number) => {
+    const sim = new C.Sim({ night: 7, seed: 1, customNight: found(loadPresets().find(p => p.id === 'golden-freddy')).dials });
     const act = new DeviceActuator(sim, { seed: 1, lateMinMs: 0, lateMaxMs: 0, maskFloorMs: MASK_FLOOR_MS });
-    const at = { 1: 'monitor', 40: 'monitor', [40 + gapFrames]: 'mask' };
+    const at: Record<number, string> = { 1: 'monitor', 40: 'monitor', [40 + gapFrames]: 'mask' };
     for (let f = 0; f <= 40 + gapFrames + 2; f++) { if (at[f]) act.press(at[f]); act.deliver(); sim.tick(); }
     return { drops: act.maskFloorDrops, masked: sim.maskOn };
   };
@@ -290,34 +299,35 @@ let fieldLine = '';
   check(inside.drops === 1 && !inside.masked, `a mask press ${floorFrames - 1} frames after a lowering press was not dropped by the ${MASK_FLOOR_MS} ms floor`);
   check(past.drops === 0 && past.masked, `a mask press ${floorFrames} frames after a lowering press was dropped (floor ${MASK_FLOOR_MS} ms)`);
 
-  const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
   const dir = new URL('../../../../docs/evidence/', import.meta.url);
   const name = readdirSync(dir).filter(n => /^night7-robustness-field-\d{8}\.json$/.test(n)).sort().pop();
   check(name, 'no docs/evidence/night7-robustness-field-YYYYMMDD.json is committed');
-  const record = JSON.parse(readFileSync(new URL(name, dir), 'utf8'));
+  const record: ReturnType<typeof buildFieldRecord> = JSON.parse(readFileSync(new URL(name, dir), 'utf8'));
   check(record.kind === FIELD_KIND, `${name} is not a ${FIELD_KIND}`);
   check(record.method.maskFloorMs === MASK_FLOOR_MS, `${name} used a ${record.method.maskFloorMs} ms mask floor, the tree has ${MASK_FLOOR_MS}`);
   const fieldSeeds = heldOutSeeds(record.method.seeds.field.n);
   const laneSeeds = heldOutSeeds(record.method.seeds.lanes.n);
   check(record.method.seeds.field.sha256 === sha256(JSON.stringify(fieldSeeds)), `${name}: the field seed block no longer rebuilds`);
   check(record.method.seeds.lanes.sha256 === sha256(JSON.stringify(laneSeeds)), `${name}: the lane seed block no longer rebuilds`);
-  const preset = loadPresets().find(p => p.id === 'golden-freddy');
+  const preset = found(loadPresets().find(p => p.id === 'golden-freddy'));
   const step = 1000 / C.FPS;
   let replays = 0;
   for (const rec of record.schedules) {
-    const s: any = fieldSchedules().find(x => x.id === rec.id);
+    const s = fieldSchedules().find(x => x.id === rec.id);
     check(s, `${name} names ${rec.id}, which the tree no longer has`);
-    if (rec.knobsSha256) check(rec.knobsSha256 === sha256(JSON.stringify(s.knobs)), `${rec.id}'s knobs changed since ${name}`);
-    if (rec.winnerSha256) check(rec.winnerSha256 === s.winnerSha256, `${rec.binding} changed since ${name}`);
+    // The preset's row names its knobs, a binding's its winner.
+    const digests: { knobsSha256?: string, winnerSha256?: string } = rec;
+    if (digests.knobsSha256) check(digests.knobsSha256 === sha256(JSON.stringify(s.knobs)), `${rec.id}'s knobs changed since ${name}`);
+    if (digests.winnerSha256) check(digests.winnerSha256 === s.winnerSha256, `${rec.binding} changed since ${name}`);
     const events = fieldEvents(s.knobs, s.epochMs);
     // A '#' cell must win on every field seed and a '.' cell lose on its first;
     // replay the cells on each side of every transition of the axes that matter.
-    const cell = (axis, d, expect) => {
+    const cell = (axis: string, d: number, expect: string) => {
       const seeds = expect === '#' ? fieldSeeds : fieldSeeds.slice(0, 1);
       const won = seeds.every(seed => { replays++; return playField({ seed, events, shifts: { [axis]: d * step }, preset }).won; });
       check(won === (expect === '#'), `${name} ${rec.id} ${axis} ${d >= 0 ? '+' : ''}${d}f: recorded '${expect}', replays ${won ? 'all won' : 'a loss'}`);
     };
-    const edges = (axis) => {
+    const edges = (axis: string) => {
       const map = rec.field[axis].map;
       for (let i = 1; i < map.length; i++) {
         if (map[i] === map[i - 1]) continue;
@@ -326,10 +336,11 @@ let fieldLine = '';
     };
     edges('ALL');
     if (rec.worst) edges(rec.worst.event);
-    const seamAxis = Object.keys(rec.field).find(t => /^loop#\d+:mask$/.test(t) && rec.field[t].atMs > (rec.field[Object.keys(rec.field).find(u => /camdrop\/monitor$/.test(u) && u.startsWith('loop'))]?.atMs ?? Infinity));
+    // A schedule without a loop camdrop indexes the field by undefined, which reads no cell, as it always has.
+    const seamAxis = Object.keys(rec.field).find(t => /^loop#\d+:mask$/.test(t) && rec.field[t].atMs > (rec.field[Object.keys(rec.field).find(u => /camdrop\/monitor$/.test(u) && u.startsWith('loop')) as string]?.atMs ?? Infinity));
     if (seamAxis && rec.camdropMaskSeam) edges(seamAxis);
-    for (const [lane, key, opts] of [['jitter', 'jitter', (J) => ({ shifts: { ALL: -J }, band: J > 0 ? [0, 2 * J] : null })],
-      ['lateness', 'late', (L) => ({ band: L > 0 ? [0, L] : null })]]) {
+    for (const [lane, key, opts] of [['jitter', 'jitter', (J: number) => ({ shifts: { ALL: -J }, band: J > 0 ? [0, 2 * J] as const : null })],
+      ['lateness', 'late', (L: number) => ({ band: L > 0 ? [0, L] as const : null })]] as const) {
       const data = rec[lane];
       if (data.maxAllWinMs !== null) for (const seed of laneSeeds.slice(0, 2)) {
         replays++;

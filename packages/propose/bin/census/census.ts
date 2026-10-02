@@ -31,7 +31,29 @@ import { Fnaf4Sim } from '@sixam/source/fnaf4';
 import { POLICIES as FNAF4_POLICIES } from '@sixam/propose/games/policy-fnaf4.ts';
 import { SimPool } from './pool.ts';
 
-const SIMS = {
+/** A game's simulator as the census drives it: built from a night and a seed, run under one policy. */
+interface CensusGame {
+  readonly Sim: new (options: { night: number, seed: number, custom: Readonly<Record<string, number>> | null, hyper: boolean }) =>
+    { run(policy: unknown): { readonly outcome: string, readonly frames: number } };
+  readonly policies: Readonly<Record<string, (options: Readonly<Record<string, number>>) => unknown>>;
+  readonly nights: readonly number[];
+  readonly modelOnlyPolicies?: readonly string[];
+  readonly incomplete?: string;
+}
+/** One census: the game, night and policy, how many seeds from where, and the policy's and simulator's options. */
+interface CensusParams {
+  readonly game: string, readonly night: number, readonly policy: string, readonly seeds: number, readonly start?: number,
+  readonly options?: Readonly<Record<string, number>>, readonly custom?: Readonly<Record<string, number>> | null,
+  readonly hyper?: boolean, readonly sim?: Readonly<Record<string, unknown>>,
+}
+/** One census result: the wins over the seeds, the mean time survived, and the outcomes by count. */
+interface CensusRow {
+  readonly game: string, readonly night: number, readonly policy: string, readonly seeds: number, readonly start?: number,
+  readonly wins: number, readonly custom: Readonly<Record<string, number>> | null, readonly hyper?: boolean,
+  readonly rate: number, readonly meanSurvivedS: number, readonly causes: Readonly<Record<string, number>>,
+}
+
+const SIMS: Readonly<Record<string, CensusGame>> = {
   fnaf1: { Sim: Fnaf1Sim, policies: FNAF1_POLICIES, nights: [1, 2, 3, 4, 5, 6],
            // `roll-grid` scores perfectly and is not a device route: the two
            // doors are never both on screen, so its 333 ms windows would need
@@ -50,15 +72,15 @@ const SIMS = {
 // both. Its census runs through that machinery rather than beside it, so the
 // figures this prints are the same engine every other FNaF 2 number in the
 // repository comes from.
-async function censusFnaf2({ night, policy, seeds, start }) {
+async function censusFnaf2({ night, policy, seeds, start }: CensusParams): Promise<CensusRow> {
   if (start !== 0) throw new Error('fnaf2 census does not support --start');
   const [{ sweep }, { POLICIES }] = await Promise.all([
     import('../../parked/minus7/policy.ts'), import('../../parked/minus7/policybaselines.ts')]);
-  const make = POLICIES[policy];
+  const make = (POLICIES as Readonly<Record<string, (typeof POLICIES)[keyof typeof POLICIES]>>)[policy];
   if (!make) {
     throw new Error(`no fnaf2 policy ${policy}; have ${Object.keys(POLICIES).join(', ')}`);
   }
-  const result = sweep((seed, slack, model) => make(seed, slack, model),
+  const result = sweep((seed: number, slack: number, model: unknown) => make(seed, slack, model),
                        { runs: seeds, night });
   return {
     game: 'fnaf2', night, policy, seeds, wins: result.survived, custom: null,
@@ -68,9 +90,10 @@ async function censusFnaf2({ night, policy, seeds, start }) {
   };
 }
 
-function parseArgs(argv) {
-  const args = { game: 'fnaf1', policy: null, seeds: 3000, night: null, workers: 1,
-                 start: 0, all: false, json: false, options: {}, custom: null, hyper: false, sim: {} };
+function parseArgs(argv: string[]) {
+  const args = { game: 'fnaf1', policy: null as string | null, seeds: 3000, night: null as number | null, workers: 1,
+                 start: 0, all: false, json: false, options: {} as Record<string, number>,
+                 custom: null as Record<string, number> | null, hyper: false, sim: {} as Record<string, number | boolean> };
   for (let i = 0; i < argv.length; i += 1) {
     const flag = argv[i];
     if (flag === '--game') args.game = argv[++i];
@@ -101,11 +124,11 @@ function parseArgs(argv) {
   return args;
 }
 
-function checkStart({ start = 0 }) {
+function checkStart({ start = 0 }: { start?: number }) {
   if (!Number.isInteger(start) || start < 0) throw new Error('--start must be a non-negative integer');
 }
 
-function checkGame({ game, policy, hyper = false }) {
+function checkGame({ game, policy, hyper = false }: { game: string, policy: string, hyper?: boolean }) {
   if (hyper && game !== 'fnaf3') throw new Error('--hyper is FNaF 3\'s Aggressive cheat');
   const entry = SIMS[game];
   if (!entry) throw new Error(`no simulator for ${game}`);
@@ -115,16 +138,17 @@ function checkGame({ game, policy, hyper = false }) {
 }
 
 /** One seed of a FNaF 1, 3 or 4 census as [outcome, frames]: plain data, so it is also pool.ts's task. */
-export function censusSeed({ game, night, policy, seed, options = {}, custom = null, hyper = false, sim = {} }) {
+export function censusSeed({ game, night, policy, seed, options = {}, custom = null, hyper = false, sim = {} }:
+  Omit<CensusParams, 'seeds' | 'start'> & { readonly seed: number }): [outcome: string, frames: number] {
   const entry = SIMS[game];
   const result = new entry.Sim({ night, seed, custom, hyper, ...sim }).run(entry.policies[policy](options));
   return [result.outcome, result.frames];
 }
 
-const seedList = ({ game, night, policy, seeds, start = 0, options = {}, custom = null, hyper = false, sim = {} }) =>
+const seedList = ({ game, night, policy, seeds, start = 0, options = {}, custom = null, hyper = false, sim = {} }: CensusParams) =>
   Array.from({ length: seeds }, (_, i) => ({ game, night, policy, seed: start + i, options, custom, hyper, sim }));
 
-export function census(params) {
+export function census(params: CensusParams) {
   checkStart(params);
   if (params.game === 'fnaf2') return censusFnaf2(params);
   checkGame(params);
@@ -132,18 +156,20 @@ export function census(params) {
 }
 
 /** census() with the seeds spread over a pool.ts pool; the same result, tallied in seed order. */
-export async function censusOnPool(params, pool) {
+export async function censusOnPool(params: CensusParams, pool: SimPool) {
   checkStart(params);
   if (params.game === 'fnaf2') return censusFnaf2(params);
   checkGame(params);
-  return tally(params, await pool.map(import.meta.url, 'censusSeed', seedList(params)));
+  // The pool hands back each seed's censusSeed() across a structured clone.
+  return tally(params, await pool.map(import.meta.url, 'censusSeed', seedList(params)) as ReturnType<typeof censusSeed>[]);
 }
 
 // Seed order, always: the causes keep their first-seen order among equal
 // counts and the survived time is one floating sum, so a different order
 // would change the result.
-function tally({ game, night, policy, seeds, start = 0, custom = null, hyper = false, sim = {} }, rows) {
-  const causes = new Map();
+function tally({ game, night, policy, seeds, start = 0, custom = null, hyper = false, sim = {} }: CensusParams,
+  rows: readonly ReturnType<typeof censusSeed>[]): CensusRow {
+  const causes = new Map<string, number>();
   let wins = 0;
   let survivedMs = 0;
   for (const [outcome, frames] of rows) {
@@ -160,7 +186,7 @@ function tally({ game, night, policy, seeds, start = 0, custom = null, hyper = f
   };
 }
 
-function report(row) {
+function report(row: CensusRow) {
   const pct = (row.rate * 100).toFixed(2).padStart(6);
   const dials = row.custom ? ` [${Object.values(row.custom).join('/')}]` : row.hyper ? ' [aggressive]' : '';
   const mean = Number.isFinite(row.meanSurvivedS)
@@ -188,7 +214,7 @@ async function main() {
     : (fnaf2 ? [1, 2, 3, 4, 5, 6, 7] : entry.nights);
   const policies = args.all && !fnaf2 ? Object.keys(entry.policies) : [args.policy];
   const pool = new SimPool({ workers: args.workers });
-  const rows = [];
+  const rows: CensusRow[] = [];
   try {
     for (const policy of policies) {
       for (const night of nights) {

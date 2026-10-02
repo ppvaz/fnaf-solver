@@ -39,8 +39,11 @@ import { FNAF2_CONTROL_VOCABULARY as V, MODEL_CONTEXT_LIGHT } from '@sixam/sourc
 import { DeviceActuator } from '../../../play/bin/phone/actuator.ts';
 import { SEAM_FLOORS } from './artifact-commands.ts';
 import { build } from './minus-toys-plan.ts';
+import type { KNOBS0 } from './minus-toys-plan.ts';
 import { loadPresets, PRESET_KNOBS } from './night7-presets.ts';
+import type { Preset } from './night7-presets.ts';
 import { forkBlocks, gitState } from '../census/winner-census.ts';
+import type { BlockRow, ForkedChild, Loss } from '../census/winner-census.ts';
 import { heldOutSeeds, nightBindings } from '../../../../packages/propose/bin/census/winner-phase-census.ts';
 import { winnerTag } from '@sixam/kernel';
 
@@ -50,9 +53,20 @@ export const MASK_FLOOR_MS = SEAM_FLOORS.maskButtonFullyVisibleAfterMonitorDownM
 export const JITTER_MS = Object.freeze([0, 10, 20, 30, 40, 50, 60]);
 export const LATENESS_MS = Object.freeze([0, 30, 50, 60, 70, 80, 90, 100]);
 const STEP_MS = 1000 / FPS;
-const frame = (ms) => Math.round(ms * FPS / 1000);
-const sha256 = (text) => createHash('sha256').update(text).digest('hex');
-const actionFor = (a) => (/^cam\d+$/.test(a) ? `cam:${a.slice(3)}`
+const frame = (ms: number) => Math.round(ms * FPS / 1000);
+const sha256 = (text: string) => createHash('sha256').update(text).digest('hex');
+/** Every Minus Toys knob, set. */
+type Knobs = typeof KNOBS0;
+/** A schedule the field scans: its knobs and declared epoch, and its winner where it is a binding. */
+interface FieldSchedule { readonly id: string, readonly path?: string, readonly knobs: Knobs, readonly epochMs: number, readonly winnerSha256?: string }
+/** One event of a schedule's queue: its unit, the axes that move it, its cycle, and when it presses or releases what. */
+interface FieldEvent {
+  readonly unit: string, readonly axes: readonly string[], readonly cycle: number, readonly ms: number,
+  readonly op: 'press' | 'release', readonly action: string,
+}
+/** One (schedule, lane or axis, offset) row: its losses over its seeds. */
+type FieldRow = BlockRow & { readonly subject: string, readonly losses: Loss[] };
+const actionFor = (a: string) => (/^cam\d+$/.test(a) ? `cam:${a.slice(3)}`
   : a === V.cameraFeedLight || a === 'ventl' ? MODEL_CONTEXT_LIGHT : a);
 
 // The preset schedule re-timed to a deliverable epoch. PRESET_KNOBS is timed
@@ -67,18 +81,18 @@ const actionFor = (a) => (/^cam\d+$/.test(a) ? `cam:${a.slice(3)}`
 // opening wind reaches its 50 ms floor. RETIME_EPOCH_MS is the centre of the
 // first such band at or past the anchor's earliest epoch (566.67-700 ms).
 export const RETIME_LOOP_KNOBS = Object.freeze(['maskOffMs', 'maskOnMs', 'hallOffsetMs', 'raiseMs',
-  'stunRefreshMs', 'windLeadMs', 'camdropMs']);
+  'stunRefreshMs', 'windLeadMs', 'camdropMs'] as const);
 export const RETIME_EPOCH_MS = 633.33;
 export function retimedPreset(epochMs = RETIME_EPOCH_MS) {
-  const knobs = { ...PRESET_KNOBS };
+  const knobs: Knobs = { ...PRESET_KNOBS };
   for (const key of RETIME_LOOP_KNOBS) knobs[key] = +(PRESET_KNOBS[key] - epochMs).toFixed(2);
   knobs.openWindMs = +(PRESET_KNOBS.openWindMs - epochMs).toFixed(2);
   if (knobs.openWindMs < 50) throw new Error(`retimedPreset: epoch ${epochMs} ms leaves the opening wind under 50 ms`);
   return knobs;
 }
 
-const tag = (path) => winnerTag(path).replace(/^campaign-night7-/, '');
-export function fieldSchedules() {
+const tag = (path: string) => winnerTag(path).replace(/^campaign-night7-/, '');
+export function fieldSchedules(): FieldSchedule[] {
   return [
     { id: 'preset', knobs: PRESET_KNOBS, epochMs: 0 },
     { id: 'preset-retimed', knobs: retimedPreset(), epochMs: RETIME_EPOCH_MS },
@@ -97,14 +111,15 @@ export function fieldSchedules() {
  * hold's press alone would only shorten its contact: the hall contact is two
  * frames, and one frame of it is not a light the model sees.
  */
-export function fieldEvents(knobs, epochMs) {
+export function fieldEvents(knobs: Knobs, epochMs: number) {
   const { opening, loop, finish } = build(knobs);
-  const out = [];
-  const add = (scope, cycle, base, row, index) => {
-    const [at, kind, a, b, cc] = row;
+  const out: FieldEvent[] = [];
+  const add = (scope: string, cycle: number, base: number, row: (typeof opening)[number], index: number) => {
+    // A row's fields by kind: a contact names its control and length, a hall pulse its length, a camdrop its lead, contact and tail.
+    const [at, kind, a, b, cc] = row as [number, string, string & number, number, number];
     const t = base + at + epochMs;
     const unit = `${scope}#${index}:${kind === 'hold' || kind === 'tap' ? a : kind}`;
-    const ev = (ms, op, action, part = null) => ({ unit, axes: part ? [unit, `${unit}/${part}`] : [unit], cycle, ms, op, action });
+    const ev = (ms: number, op: FieldEvent['op'], action: string, part: string | null = null): FieldEvent => ({ unit, axes: part ? [unit, `${unit}/${part}`] : [unit], cycle, ms, op, action });
     if (kind === 'tap') out.push(ev(t, 'press', actionFor(a)));
     else if (kind === 'hold' || kind === 'hall') {
       const action = kind === 'hall' ? MODEL_CONTEXT_LIGHT : actionFor(a);
@@ -121,9 +136,9 @@ export function fieldEvents(knobs, epochMs) {
 }
 
 /** The frame-stamped queue of `events` with `shifts` (axis -> ms, or ALL) applied, in schedule() order. */
-export function fieldQueue(events, shifts: any = {}) {
+export function fieldQueue(events: readonly FieldEvent[], shifts: Readonly<Record<string, number>> = {}) {
   const all = shifts.ALL ?? 0;
-  return events.map((e) => [frame(e.ms + all + e.axes.reduce((sum, axis) => sum + (shifts[axis] ?? 0), 0)), e.op, e.action])
+  return events.map((e): [number, FieldEvent['op'], string] => [frame(e.ms + all + e.axes.reduce((sum, axis) => sum + (shifts[axis] ?? 0), 0)), e.op, e.action])
     .sort((x, y) => x[0] - y[0]);
 }
 
@@ -131,7 +146,10 @@ export function fieldQueue(events, shifts: any = {}) {
  * One night of `events` through the device actuator with the phone's mask
  * floor: exact (band null), or with the presses drawn late from band.
  */
-export function playField({ seed, events, shifts = {}, band = null, preset }) {
+export function playField({ seed, events, shifts = {}, band = null, preset }: {
+  seed: number, events: readonly FieldEvent[], shifts?: Readonly<Record<string, number>>,
+  band?: readonly [number, number] | null, preset: Pick<Preset, 'dials'>,
+}) {
   const sim = new Sim({ night: 7, seed, customNight: preset.dials });
   const queue = fieldQueue(events, shifts);
   const actuator = new DeviceActuator(sim, { seed, lateMinMs: band ? band[0] : 0, lateMaxMs: band ? band[1] : 0,
@@ -148,34 +166,37 @@ export function playField({ seed, events, shifts = {}, band = null, preset }) {
     maskFloorDrops: actuator.maskFloorDrops };
 }
 
-const tenTwenty = () => loadPresets().find((p) => p.id === 'golden-freddy');
-const eventTags = (events) => ['ALL', ...new Set(events.flatMap((e) => e.axes))];
+// The menu model names golden-freddy, the 10/20 preset.
+const tenTwenty = () => loadPresets().find((p) => p.id === 'golden-freddy') as Preset;
+const eventTags = (events: readonly FieldEvent[]) => ['ALL', ...new Set(events.flatMap((e) => e.axes))];
 
 /** Every (schedule, axis) the field scans, in a fixed order. */
-function fieldCells(only) {
-  const cells = [];
+function fieldCells(only: readonly string[] | null) {
+  const cells: [string, string][] = [];
   for (const s of fieldSchedules().filter((x) => !only || only.includes(x.id)))
     for (const t of eventTags(fieldEvents(s.knobs, s.epochMs))) cells.push([s.id, t]);
   return cells;
 }
 
 /** The field for every (schedule, axis) whose index is `part` mod `parts`, over all field seeds. */
-function fieldPart(fieldCount, part, parts, only) {
+function fieldPart(fieldCount: number, part: number, parts: number, only: readonly string[] | null) {
   const preset = tenTwenty();
   const seeds = heldOutSeeds(fieldCount);
   const schedules = new Map(fieldSchedules().map((s) => [s.id, s]));
-  const events = new Map();
-  const rows = [];
+  const events = new Map<string, FieldEvent[]>();
+  const rows: FieldRow[] = [];
   fieldCells(only).forEach(([id, t], index) => {
     if (index % parts !== part) return;
-    const s = schedules.get(id);
+    // fieldCells names only these schedules, and the events are set just below when missing.
+    const s = schedules.get(id) as FieldSchedule;
     if (!events.has(id)) events.set(id, fieldEvents(s.knobs, s.epochMs));
-    const ev = events.get(id);
+    const ev = events.get(id) as FieldEvent[];
     for (let d = -FIELD_FRAMES; d <= FIELD_FRAMES; d += 1) {
-      const losses = [];
+      const losses: Loss[] = [];
       for (const seed of seeds) {
         const r = playField({ seed, events: ev, shifts: { [t]: d * STEP_MS }, preset });
-        if (!r.won) losses.push([seed, r.reason, r.frame]);
+        // A lost night names what lost it.
+        if (!r.won) losses.push([seed, r.reason as string, r.frame]);
       }
       rows.push({ subject: `${id}|field|${t}|${d}`, n: seeds.length, losses });
     }
@@ -184,40 +205,42 @@ function fieldPart(fieldCount, part, parts, only) {
 }
 
 /** The jitter and lateness lanes for the lane seeds from..to. */
-function laneBlock(laneCount, from, to, only) {
+function laneBlock(laneCount: number, from: number, to: number, only: readonly string[] | null) {
   const preset = tenTwenty();
   const seeds = heldOutSeeds(laneCount).slice(from, to);
-  const rows = [];
-  const push = (subject, test) => {
-    const losses = [];
-    for (const seed of seeds) { const r = test(seed); if (!r.won) losses.push([seed, r.reason, r.frame]); }
+  const rows: FieldRow[] = [];
+  const push = (subject: string, test: (seed: number) => ReturnType<typeof playField>) => {
+    const losses: Loss[] = [];
+    // A lost night names what lost it.
+    for (const seed of seeds) { const r = test(seed); if (!r.won) losses.push([seed, r.reason as string, r.frame]); }
     rows.push({ subject, n: seeds.length, losses });
   };
   for (const s of fieldSchedules().filter((x) => !only || only.includes(x.id))) {
     const events = fieldEvents(s.knobs, s.epochMs);
     for (const J of JITTER_MS)
-      push(`${s.id}|jitter|${J}`, (seed) => playField({ seed, events, shifts: { ALL: -J }, band: J > 0 ? [0, 2 * J] : null, preset }));
+      push(`${s.id}|jitter|${J}`, (seed) => playField({ seed, events, shifts: { ALL: -J }, band: J > 0 ? [0, 2 * J] as const : null, preset }));
     for (const L of LATENESS_MS)
-      push(`${s.id}|late|${L}`, (seed) => playField({ seed, events, band: L > 0 ? [0, L] : null, preset }));
+      push(`${s.id}|late|${L}`, (seed) => playField({ seed, events, band: L > 0 ? [0, L] as const : null, preset }));
   }
   return rows;
 }
 
 /** Run `node <this> --field-child part parts ...` for every part and gather the rows. */
-function fieldForks(fieldCount, jobs, only) {
+function fieldForks(fieldCount: number, jobs: number, only: string | null) {
   const script = fileURLToPath(import.meta.url);
-  return Promise.all(Array.from({ length: jobs }, (_, part) => new Promise<any>((done, reject) => {
+  return Promise.all(Array.from({ length: jobs }, (_, part) => new Promise<FieldRow[]>((done, reject) => {
     const child = fork(script, ['--field-child', String(part), String(jobs), String(fieldCount), only ?? '-'],
       { stdio: ['ignore', 'inherit', 'inherit', 'ipc'], serialization: 'advanced' });
-    let result = null;
+    let result: unknown = null;
     child.on('message', (message) => { result = message; });
     child.on('error', reject);
-    child.on('exit', (code) => (code === 0 && result ? done(result) : reject(new Error(`field part ${part} exited ${code}`))));
+    // A part sends back the rows fieldPart returns.
+    child.on('exit', (code) => (code === 0 && result ? done(result as FieldRow[]) : reject(new Error(`field part ${part} exited ${code}`))));
   }))).then((parts) => parts.flat());
 }
 
 /** The fully won run of offsets around 0 in a +-FIELD_FRAMES map, as early/late margins in ms. */
-export function windowOf(map) {
+export function windowOf(map: string) {
   const zero = FIELD_FRAMES;
   if (map[zero] !== '#') return null;
   let lo = zero; let hi = zero;
@@ -227,61 +250,74 @@ export function windowOf(map) {
     capped: lo === 0 || hi === map.length - 1 };
 }
 
-export function buildFieldRecord({ rows, fieldCount, laneCount, only, git, date, command }) {
-  const schedules = fieldSchedules().filter((x) => !only || only.includes(x.id)).map((s: any) => {
-    const row = (...parts) => rows.find((r) => r.subject === `${s.id}|${parts.join('|')}`);
+/** A field cell: where the axis's event sits, its map over the offsets, and its fully won window around 0. */
+interface FieldCell { readonly atMs: number, readonly map: string, readonly window: ReturnType<typeof windowOf> }
+
+export function buildFieldRecord({ rows, fieldCount, laneCount, only, git, date, command }: {
+  rows: readonly FieldRow[], fieldCount: number, laneCount: number, only: readonly string[] | null,
+  git: ReturnType<typeof gitState>, date: string, command: string,
+}) {
+  const schedules = fieldSchedules().filter((x) => !only || only.includes(x.id)).map((s) => {
+    // Every (schedule, lane or axis, offset) ran.
+    const row = (...parts: (string | number)[]) => rows.find((r) => r.subject === `${s.id}|${parts.join('|')}`) as FieldRow;
     const events = fieldEvents(s.knobs, s.epochMs);
-    const field = {};
+    const field: Record<string, FieldCell> = {};
     for (const t of eventTags(events)) {
       // An /end axis moved past its own press is no longer a hold (the release
       // would come first and leave the control held): 'x', and no window crosses it.
       let minD = -Infinity;
-      if ((t as any).endsWith('/end')) {
-        const unit = (t as any).slice(0, -'/end'.length);
-        const press = events.find((e) => e.axes.length === 1 && e.axes[0] === unit);
-        const release = events.find((e) => e.axes.includes(t));
+      if (t.endsWith('/end')) {
+        const unit = t.slice(0, -'/end'.length);
+        // An /end axis is a hold's release, whose press carries the unit alone.
+        const press = events.find((e) => e.axes.length === 1 && e.axes[0] === unit) as FieldEvent;
+        const release = events.find((e) => e.axes.includes(t)) as FieldEvent;
         minD = -(frame(release.ms) - frame(press.ms));
       }
-      const cells = [];
+      const cells: string[] = [];
       for (let d = -FIELD_FRAMES; d <= FIELD_FRAMES; d += 1) {
         const r = row('field', t, d);
         cells.push(d < minD ? 'x' : r.losses.length === 0 ? '#' : r.losses.length === r.n ? '.' : '+');
       }
       const map = cells.join('');
       // An axis is placed where the event it moves last sits (a hold's /end at its release).
-      const first = [...events].reverse().find((e) => e.cycle <= 0 && e.axes[e.axes.length - 1] === t) ?? events.find((e) => e.axes.includes(t));
+      // Every axis moves some event.
+      const first = ([...events].reverse().find((e) => e.cycle <= 0 && e.axes[e.axes.length - 1] === t) ?? events.find((e) => e.axes.includes(t))) as FieldEvent;
       const atMs = t === 'ALL' ? s.epochMs : +(first.ms - (first.cycle > 0 ? first.cycle * s.knobs.loopPeriodMs : 0)).toFixed(2);
       field[t] = { atMs, map, window: windowOf(map) };
     }
     // Timing axes move a whole unit, as the jitter lane does; an `/end` axis is a
     // hold's duration, which no lane here varies, so it is ranked on its own.
-    const margin = (w) => (w ? Math.min(w.earlyMs, w.lateMs) : -Infinity);
-    const rank = (keep) => Object.entries(field).filter(([t]) => t !== 'ALL' && keep(t))
-      .sort(([, a], [, b]) => margin((a as any).window) - margin((b as any).window));
+    const margin = (w: FieldCell['window']) => (w ? Math.min(w.earlyMs, w.lateMs) : -Infinity);
+    const rank = (keep: (t: string) => boolean) => Object.entries(field).filter(([t]) => t !== 'ALL' && keep(t))
+      .sort(([, a], [, b]) => margin(a.window) - margin(b.window));
     const worst = rank((t) => !t.endsWith('/end'))[0];
     const shortestHold = rank((t) => t.endsWith('/end'))[0];
     // The camdrop -> mask seam, as the gap the mask-ON press may sit at after the camdrop's monitor press.
-    const monitor: any = Object.entries(field).find(([t]) => /^loop#\d+:camdrop\/monitor$/.test(t))?.[1] ?? null;
+    const monitor = Object.entries(field).find(([t]) => /^loop#\d+:camdrop\/monitor$/.test(t))?.[1] ?? null;
     const maskOn = Object.entries(field).find(([t]) => /^loop#\d+:mask$/.test(t) && field[t].atMs > (monitor?.atMs ?? Infinity));
     // On the frame grid both presses actually land on, not the nominal ms.
-    const gap = monitor && maskOn ? (frame((maskOn[1] as any).atMs) - frame(monitor.atMs)) * STEP_MS : null;
-    const seam = gap !== null && (maskOn[1] as any).window
-      ? { gapMs: +gap.toFixed(2), fromMs: +(gap - (maskOn[1] as any).window.earlyMs).toFixed(2),
-          toMs: +(gap + (maskOn[1] as any).window.lateMs).toFixed(2) }
+    const gap = monitor && maskOn ? (frame(maskOn[1].atMs) - frame(monitor.atMs)) * STEP_MS : null;
+    // A gap exists only where both presses do.
+    const maskWindow = maskOn ? maskOn[1].window : null;
+    const seam = gap !== null && maskWindow
+      ? { gapMs: +gap.toFixed(2), fromMs: +(gap - maskWindow.earlyMs).toFixed(2),
+          toMs: +(gap + maskWindow.lateMs).toFixed(2) }
       : null;
-    const lane = (axis, values) => Object.fromEntries(values.map((v) => { const r = row(axis, v); return [v, r.n - r.losses.length]; }));
+    const lane = (axis: string, values: readonly number[]): Record<string, number> =>
+      Object.fromEntries(values.map((v) => { const r = row(axis, v); return [v, r.n - r.losses.length]; }));
     const jitter = lane('jitter', JITTER_MS);
     const lateness = lane('late', LATENESS_MS);
-    const allUpTo = (wins, values) => { let best = null; for (const v of values) { if (wins[v] === laneCount) best = v; else break; } return best; };
-    const firstLoss = (axis, values, wins) => {
+    const allUpTo = (wins: Readonly<Record<string, number>>, values: readonly number[]) => {
+      let best: number | null = null; for (const v of values) { if (wins[v] === laneCount) best = v; else break; } return best; };
+    const firstLoss = (axis: string, values: readonly number[], wins: Readonly<Record<string, number>>) => {
       const v = values.find((x) => wins[x] < laneCount);
       return v === undefined ? null : { at: v, losses: row(axis, v).losses.slice(0, 12) };
     };
     return {
       id: s.id, binding: s.path ?? null, declaredEpochMs: s.epochMs,
       ...(s.path ? { winnerSha256: s.winnerSha256 } : { knobsSha256: sha256(JSON.stringify(s.knobs)) }),
-      field, worst: worst ? { event: worst[0], window: (worst[1] as any).window, marginMs: margin((worst[1] as any).window) } : null,
-      shortestHold: shortestHold ? { event: shortestHold[0], window: (shortestHold[1] as any).window } : null,
+      field, worst: worst ? { event: worst[0], window: worst[1].window, marginMs: margin(worst[1].window) } : null,
+      shortestHold: shortestHold ? { event: shortestHold[0], window: shortestHold[1].window } : null,
       camdropMaskSeam: seam,
       jitter: { wins: jitter, n: laneCount, maxAllWinMs: allUpTo(jitter, JITTER_MS), firstLoss: firstLoss('jitter', JITTER_MS, jitter) },
       lateness: { wins: lateness, n: laneCount, maxAllWinMs: allUpTo(lateness, LATENESS_MS), firstLoss: firstLoss('late', LATENESS_MS, lateness) },
@@ -323,18 +359,18 @@ export function buildFieldRecord({ rows, fieldCount, laneCount, only, git, date,
   };
 }
 
-async function main(argv) {
+async function main(argv: string[]) {
   if (argv[0] === '--child') {
     const [, from, to, laneCount, only] = argv;
-    process.send(laneBlock(Number(laneCount), Number(from), Number(to), only === '-' ? null : only.split(',')));
+    (process as ForkedChild).send(laneBlock(Number(laneCount), Number(from), Number(to), only === '-' ? null : only.split(',')));
     return;
   }
   if (argv[0] === '--field-child') {
     const [, part, parts, fieldCount, only] = argv;
-    process.send(fieldPart(Number(fieldCount), Number(part), Number(parts), only === '-' ? null : only.split(',')));
+    (process as ForkedChild).send(fieldPart(Number(fieldCount), Number(part), Number(parts), only === '-' ? null : only.split(',')));
     return;
   }
-  const flag = (name, dflt) => { const i = argv.indexOf(`--${name}`); return i < 0 ? dflt : argv[i + 1]; };
+  const flag = <T extends string | null>(name: string, dflt: T): string | T => { const i = argv.indexOf(`--${name}`); return i < 0 ? dflt : argv[i + 1]; };
   const fieldCount = Number(flag('count', '100'));
   const laneCount = Number(flag('lane-count', '500'));
   const jobs = Number(flag('jobs', '1'));
@@ -348,20 +384,20 @@ async function main(argv) {
   // alone leaves most workers idle (all 100 field seeds sat in two of nine
   // seed blocks on the first run).
   const field = await fieldForks(fieldCount, jobs, only);
-  const lanes = await forkBlocks({ script: fileURLToPath(import.meta.url), args: [String(laneCount), only ?? '-'],
+  const lanes = await forkBlocks<FieldRow>({ script: fileURLToPath(import.meta.url), args: [String(laneCount), only ?? '-'],
     start: 0, count: laneCount, jobs });
   const rows = [...field, ...lanes];
-  const record = buildFieldRecord({ rows, fieldCount, laneCount, only: onlyList, git: gitState(),
+  const record: ReturnType<typeof buildFieldRecord> & { method: { wallSeconds?: number } } = buildFieldRecord({ rows, fieldCount, laneCount, only: onlyList, git: gitState(),
     date: flag('date', new Date().toISOString().slice(0, 10)),
     command: `node packages/propose/bin/plans/night7-robustness-field.ts --count ${fieldCount} --lane-count ${laneCount} --jobs ${jobs}${only ? ` --schedules ${only}` : ''}` });
-  (record.method as any).wallSeconds = Math.round((Date.now() - started) / 1000);
+  record.method.wallSeconds = Math.round((Date.now() - started) / 1000);
   const text = `${JSON.stringify(record, null, 2)}\n`;
   const out = flag('out', null);
   if (out) writeFileSync(out, text); else process.stdout.write(text);
   for (const s of record.schedules) {
     console.error(`== ${s.id}  worst ${s.worst?.event} ${JSON.stringify(s.worst?.window)}  seam ${JSON.stringify(s.camdropMaskSeam)}`);
     console.error(`   jitter ${JSON.stringify(s.jitter.wins)}  late ${JSON.stringify(s.lateness.wins)}`);
-    for (const [t, f] of Object.entries(s.field)) console.error(`   ${t.padEnd(34)} @${String((f as any).atMs).padStart(8)} ${(f as any).map} ${(f as any).window ? `${(f as any).window.earlyMs}/${(f as any).window.lateMs}` : 'NOT WON AT 0'}`);
+    for (const [t, f] of Object.entries(s.field)) console.error(`   ${t.padEnd(34)} @${String(f.atMs).padStart(8)} ${f.map} ${f.window ? `${f.window.earlyMs}/${f.window.lateMs}` : 'NOT WON AT 0'}`);
   }
 }
 

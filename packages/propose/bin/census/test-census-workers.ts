@@ -22,7 +22,7 @@ const pool = new SimPool({ workers: 3 });
 try {
   for (const params of CASES) {
     const run = { seeds: 90, start: 1000, ...params };
-    const serial = census(run);
+    const serial = await census(run);
     assert.ok(Object.keys(serial.causes).some((cause) => cause !== '6AM'), `${params.game}: the case must have deaths`);
     const pooled = await censusOnPool(run, pool);
     assert.equal(JSON.stringify(pooled), JSON.stringify(serial), `${params.game} night ${params.night}: pooled != serial`);

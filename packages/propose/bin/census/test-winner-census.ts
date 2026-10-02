@@ -25,19 +25,21 @@ import { stableHash } from '@sixam/kernel/contracts';
 import { RNG_MODULUS } from '@sixam/source/fnaf2';
 import { STRATEGY_REGISTRY, validateWinner } from '../plans/bundle.ts';
 import { CENSUS_KIND, committedWinners, designBlock } from './winner-census.ts';
+import type { buildRecord } from './winner-census.ts';
 import { currentPath } from '@sixam/review/renamed-path';
 import { PHASE_KIND, heldOutSeeds, nightBindings, phaseWins } from '../../../../packages/propose/bin/census/winner-phase-census.ts';
+import type { buildPhaseRecord } from '../../../../packages/propose/bin/census/winner-phase-census.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
 // A binding as a committed record names it, where the file lives now (records keep their paths).
-const current = (path) => currentPath(ROOT, path) ?? path;
+const current = (path: string) => currentPath(ROOT, path) ?? path;
 const EVIDENCE = join(ROOT, 'docs/evidence');
 const HELD_OUT_SAMPLE = 4;
-const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
+const sha256 = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex');
 
 const recordName = readdirSync(EVIDENCE).filter((name) => /^fnaf2-winner-census-\d{8}\.json$/.test(name)).sort().pop();
 assert.ok(recordName, 'no docs/evidence/fnaf2-winner-census-YYYYMMDD.json is committed');
-const record = JSON.parse(readFileSync(join(EVIDENCE, recordName), 'utf8'));
+const record: ReturnType<typeof buildRecord> = JSON.parse(readFileSync(join(EVIDENCE, recordName), 'utf8'));
 assert.equal(record.kind, CENSUS_KIND);
 assert.equal(record.claimLevel, 'MODEL_ONLY');
 
@@ -99,9 +101,10 @@ const phaseName = readdirSync(EVIDENCE).filter((name) => /^fnaf2-night\d-phase-c
 assert.ok(phaseName, 'no docs/evidence/fnaf2-night<N>-phase-census-YYYYMMDD.json is committed');
 let phaseReplays = 0;
 {
-  const phase = JSON.parse(readFileSync(join(EVIDENCE, phaseName), 'utf8'));
+  const phase: ReturnType<typeof buildPhaseRecord> = JSON.parse(readFileSync(join(EVIDENCE, phaseName), 'utf8'));
   assert.equal(phase.kind, PHASE_KIND);
-  const night = Number(phaseName.match(/night(\d)/)[1]);
+  // The name matched night<N> above.
+  const night = Number((phaseName.match(/night(\d)/) as RegExpMatchArray)[1]);
   const seeds = heldOutSeeds(phase.method.seeds.n);
   assert.equal(sha256(JSON.stringify(seeds)), phase.method.seeds.sha256, `${phaseName}: the held-out seed block no longer rebuilds`);
   const frames = (phase.method.phases.frames - 1) / 2;
@@ -116,7 +119,9 @@ let phaseReplays = 0;
       if (row.map[i] !== row.map[i - 1]) { probes.add(i - frames); probes.add(i - 1 - frames); }
     for (const f of probes) {
       const cell = row.map[f + frames];
-      const seed = cell === '+' ? row.partial.find((p) => p.frame === f).losses[0][0] : seeds[(f + frames) % seeds.length];
+      // A partly won cell lists its losses.
+      const seed = cell === '+' ? (row.partial.find((p) => p.frame === f) as (typeof row.partial)[number]).losses[0][0]
+        : seeds[(f + frames) % seeds.length];
       const { won } = phaseWins(binding, night, seed, f);
       phaseReplays += 1;
       assert.equal(won, cell === '#', `${row.binding} frame ${f} seed ${seed} ${won ? 'wins' : 'loses'}; ${phaseName} records '${cell}'`);

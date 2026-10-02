@@ -3,17 +3,19 @@
 // batch.
 import { parentPort } from 'node:worker_threads';
 
-const modules = new Map();
+const modules = new Map<string, Readonly<Record<string, unknown>>>();
+// A worker thread always has its parent's port.
+const port = parentPort as NonNullable<typeof parentPort>;
 
-parentPort.on('message', async ({ id, mod, fn, batch }) => {
+port.on('message', async ({ id, mod, fn, batch }: { id: number, mod: string, fn: string, batch: unknown[] }) => {
   try {
     let m = modules.get(mod);
-    if (!m) { m = await import(mod); modules.set(mod, m); }
+    if (!m) { m = await import(mod) as Readonly<Record<string, unknown>>; modules.set(mod, m); }
     const task = m[fn];
     if (typeof task !== 'function')
       throw new Error(`${mod} does not export a function named ${fn}`);
-    parentPort.postMessage({ id, values: batch.map(o => task(o)) });
+    port.postMessage({ id, values: batch.map(o => task(o)) });
   } catch (err) {
-    parentPort.postMessage({ id, error: err.stack || String(err) });
+    port.postMessage({ id, error: (err as Error).stack || String(err) });
   }
 });

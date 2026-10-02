@@ -26,6 +26,7 @@
 // re-rolls, and it cannot be promoted as a device claim.
 import { execFileSync, fork } from 'node:child_process';
 import { createHash } from 'node:crypto';
+import type { BinaryLike } from 'node:crypto';
 import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
@@ -49,7 +50,18 @@ export const MAX_LISTED_LOSSES = 1000;
 const SWEEP_STRIDE = 2246822519;
 const TUNING_COUNT = 3000;
 
-const sha256 = (text) => createHash('sha256').update(text).digest('hex');
+const sha256 = (text: BinaryLike) => createHash('sha256').update(text).digest('hex');
+
+/** A lost night: its seed, what ended it, and the frame it ended on. */
+export type Loss = [seed: number, reason: string, frame: number];
+/** The rows a forked block sends back: per subject, how many seeds it ran and which it lost. */
+export type BlockRow = { readonly n: number, readonly losses: readonly Loss[] };
+/** A Sim whose tick this census has patched: its options, and whether the patch has applied them yet. */
+type PatchedSim = InstanceType<typeof Sim> & { censusSimOpts?: boolean };
+/** The simulator's tick as the patch wraps it, marked once it is applied. */
+type Tick = ((this: PatchedSim) => unknown) & { simOptsApplied?: boolean };
+/** A forked block, which has its parent's IPC channel. */
+export type ForkedChild = NodeJS.Process & { send: NonNullable<NodeJS.Process['send']> };
 
 // `--sim-opt NAME` censuses the same lane with a default-off simulator option
 // switched on. The emitters build their own Sim, so the option is set on each
@@ -58,14 +70,14 @@ const sha256 = (text) => createHash('sha256').update(text).digest('hex');
 // is a comparison against the default census, never the default census: its
 // record id carries the option names.
 export const TICK_TIME_SIM_OPTS = new Set(['sourcedGatedEvery']);
-export function applySimOpts(names) {
+export function applySimOpts(names: readonly string[]) {
   if (!names.length) return;
   for (const name of names)
     if (!TICK_TIME_SIM_OPTS.has(name)) throw new Error(`winner-census: --sim-opt ${name} is not a tick-time option`);
   const extra = Object.fromEntries(names.map((name) => [name, true]));
-  const tick: any = Sim.prototype.tick;
+  const tick = Sim.prototype.tick as Tick;
   if (tick.simOptsApplied) throw new Error('winner-census: simulator options already applied');
-  const patched = function () {
+  const patched: Tick = function (this: PatchedSim) {
     if (!this.censusSimOpts) { Object.assign(this.opts, extra); this.censusSimOpts = true; }
     return tick.call(this);
   };
@@ -107,7 +119,13 @@ export function designBlock() {
  * keyed by the winner hash they name, so a binding's population rate sits
  * beside what the phone did with the same binding.
  */
-export function phoneCohorts() {
+/** A phone cohort as `npm run evidence -- cohort` computed it: its binding and night, and what the phone won. */
+interface PhoneCohort {
+  readonly record: string, readonly binding: string, readonly night: number, readonly wins: number,
+  readonly counted: number, readonly size: number, readonly status: string,
+}
+
+export function phoneCohorts(): PhoneCohort[] {
   return readdirSync(EVIDENCE_DIR).filter((name) => /-cohort-.*-computed-\d{8}\.json$/.test(name)).sort()
     .map((name) => ({ record: `docs/evidence/${name}`, ...JSON.parse(readFileSync(join(EVIDENCE_DIR, name), 'utf8')) }))
     .filter((cohort) => cohort.schema === 'cohort-result-v2')
@@ -115,8 +133,9 @@ export function phoneCohorts() {
 }
 
 /** One replay per (binding, night): the emitter the bundle gate uses. */
-function loadBindings(paths) {
-  const out = [];
+function loadBindings(paths: readonly string[]) {
+  const out: { path: string, night: number, winner: ReturnType<typeof validateWinner>, text: string,
+    emitted: ReturnType<(typeof STRATEGY_REGISTRY)[keyof typeof STRATEGY_REGISTRY]['emit']> }[] = [];
   for (const path of paths) {
     const text = readFileSync(join(ROOT, path), 'utf8');
     const winner = validateWinner(JSON.parse(text));
@@ -129,10 +148,10 @@ function loadBindings(paths) {
 }
 
 /** Losses over [start, end) for every binding: [seed, reason, frame]. */
-function censusBlock(paths, start, end) {
+function censusBlock(paths: readonly string[], start: number, end: number) {
   const bindings = loadBindings(paths);
   return bindings.map(({ path, night, emitted }) => {
-    const losses = [];
+    const losses: Loss[] = [];
     for (let seed = start; seed < end; seed += 1) {
       const { sim } = emitted.replay(seed);
       if (!sim.won) losses.push([seed, sim.death?.reason ?? 'alive', sim.frame]);
@@ -141,11 +160,11 @@ function censusBlock(paths, start, end) {
   });
 }
 
-function runChild(script, args, start, end, childFlag) {
-  return new Promise<any>((resolveChild, reject) => {
+function runChild(script: string, args: readonly string[], start: number, end: number, childFlag: string) {
+  return new Promise<unknown>((resolveChild, reject) => {
     const child = fork(script, [childFlag, String(start), String(end), ...args],
       { stdio: ['ignore', 'inherit', 'inherit', 'ipc'], serialization: 'advanced' });
-    let result = null;
+    let result: unknown = null;
     child.on('message', (message) => { result = message; });
     child.on('error', reject);
     child.on('exit', (code) => (code === 0 && result ? resolveChild(result)
@@ -160,11 +179,13 @@ function runChild(script, args, start, end, childFlag) {
  * ...}) in a fixed order. Rows are merged in that order; the other fields are
  * taken from the first block.
  */
-export async function forkBlocks({ script, args, start, count, jobs, childFlag = '--child' }) {
+export async function forkBlocks<R extends BlockRow>({ script, args, start, count, jobs, childFlag = '--child' }:
+  { script: string, args: readonly string[], start: number, count: number, jobs: number, childFlag?: string }) {
   const size = Math.ceil(count / jobs);
-  const blocks = [];
+  const blocks: [number, number][] = [];
   for (let a = start; a < start + count; a += size) blocks.push([a, Math.min(a + size, start + count)]);
-  const parts = await Promise.all(blocks.map(([a, b]) => runChild(script, args, a, b, childFlag)));
+  // Each child sends back the rows its block function returns: R, the caller names which.
+  const parts = await Promise.all(blocks.map(([a, b]) => runChild(script, args, a, b, childFlag))) as R[][];
   return parts[0].map((row, i) => ({
     ...row,
     n: parts.reduce((sum, part) => sum + part[i].n, 0),
@@ -172,21 +193,25 @@ export async function forkBlocks({ script, args, start, count, jobs, childFlag =
   }));
 }
 
-export function gitState(enginePaths = ['packages/core', 'packages/source', 'packages/kernel', 'packages/propose']) {
-  const git = (...args) => execFileSync('git', ['-C', ROOT, ...args], { encoding: 'utf8' }).trim();
+export function gitState(enginePaths: readonly string[] = ['packages/core', 'packages/source', 'packages/kernel', 'packages/propose']) {
+  const git = (...args: string[]) => execFileSync('git', ['-C', ROOT, ...args], { encoding: 'utf8' }).trim();
   return { commit: git('rev-parse', 'HEAD'),
     dirtyEnginePaths: git('status', '--porcelain', '--', ...enginePaths).split('\n').filter(Boolean) };
 }
 
 /** The evidence record: per binding, per block, per night. */
-export function buildRecord({ rows, start, count, design, git, date, command, winnerHashes, cohorts }) {
+export function buildRecord({ rows, start, count, design, git, date, command, winnerHashes, cohorts }: {
+  rows: ReturnType<typeof censusBlock>, start: number, count: number, design: ReturnType<typeof designBlock>,
+  git: ReturnType<typeof gitState>, date: string, command: string, winnerHashes: Readonly<Record<string, string>>,
+  cohorts: readonly PhoneCohort[],
+}) {
   const inDesign = new Set(design.seeds);
   const population = count === RNG_MODULUS && start === 0;
   const designIn = design.seeds.filter((seed) => seed >= start && seed < start + count).length;
   const bindings = rows.map(({ path, night, planSha256, n, losses }) => {
     const winner = JSON.parse(readFileSync(join(ROOT, path), 'utf8'));
     const designLosses = losses.filter(([seed]) => inDesign.has(seed)).length;
-    const deaths = {};
+    const deaths: Record<string, number> = {};
     for (const [, reason] of losses) deaths[reason] = (deaths[reason] ?? 0) + 1;
     return {
       binding: path, night, strategy: winner.strategy,
@@ -203,19 +228,19 @@ export function buildRecord({ rows, start, count, design, git, date, command, wi
         .map(({ record, wins, counted, size, status }) => ({ record, wins, counted, size, status })),
     };
   });
-  const nights = {};
+  const nights: Record<number, { binding: string, wins: number, n: number, lowerBound?: number, pMaxExactLane?: 1 | null }> = {};
   for (const row of bindings) {
     const best = nights[row.night];
     if (!best || row.wins > best.wins) nights[row.night] = { binding: row.binding, wins: row.wins, n: row.n };
   }
   for (const entry of Object.values(nights)) {
-    (entry as any).lowerBound = (entry as any).wins / (entry as any).n;
-    (entry as any).pMaxExactLane = population && (entry as any).wins === (entry as any).n ? 1 : null;
+    entry.lowerBound = entry.wins / entry.n;
+    entry.pMaxExactLane = population && entry.wins === entry.n ? 1 : null;
   }
   // When every night has a binding that wins the whole population, the exact
   // lane has no ceiling left to find, and a phone cohort short of it is short
   // for a reason this lane cannot see.
-  const saturated = population && Object.values(nights).every((e: any) => e.wins === e.n);
+  const saturated = population && Object.values(nights).every((e) => e.wins === e.n);
   const short = bindings.flatMap((row) => row.phone.filter((c) => c.wins < c.counted)
     .map((c) => `${winnerTag(row.binding)} ${row.wins}/${row.n} here, ` +
       `${c.wins}/${c.counted} on the phone (${c.record})`));
@@ -225,10 +250,11 @@ export function buildRecord({ rows, start, count, design, git, date, command, wi
       (short.length ? `The phone falls short with bindings this lane scores perfect: ${short.join('; ')}. ` +
         'That gap is not the seed: it is how the schedule is delivered (the frame phase the phone re-rolls, press ' +
         'lateness and loss) and the model\'s encounter fidelity (S2), none of which this lane prices.' : '');
-  const answer = Object.entries(nights).map(([night, e]) => `Night ${night}: ${(e as any).wins}/${(e as any).n}` +
+  const answer = Object.entries(nights).map(([night, e]) => `Night ${night}: ${e.wins}/${e.n}` +
     (!population ? ' (a block, not the population)'
-      : (e as any).pMaxExactLane === 1 ? ' (P_max = 1 in the exact lane)' : ` (P_max >= ${(e as any).lowerBound.toFixed(6)})`) +
-    ` by ${winnerTag((e as any).binding)}`).join('; ');
+      // Set for every night above.
+      : e.pMaxExactLane === 1 ? ' (P_max = 1 in the exact lane)' : ` (P_max >= ${(e.lowerBound as number).toFixed(6)})`) +
+    ` by ${winnerTag(e.binding)}`).join('; ');
   return {
     schema: RECORD_SCHEMA, kind: CENSUS_KIND,
     id: `fnaf2-winner-census-${date.replace(/-/g, '')}`,
@@ -252,8 +278,9 @@ export function buildRecord({ rows, start, count, design, git, date, command, wi
   };
 }
 
-function parseArgs(argv) {
-  const args = { winners: [], jobs: 1, start: 0, count: RNG_MODULUS, out: null, date: new Date().toISOString().slice(0, 10), simOpts: [] };
+function parseArgs(argv: string[]) {
+  const args = { winners: [] as string[], jobs: 1, start: 0, count: RNG_MODULUS, out: null as string | null,
+    date: new Date().toISOString().slice(0, 10), simOpts: [] as string[] };
   for (let i = 0; i < argv.length; i += 1) {
     const flag = argv[i];
     if (flag === '--winner') args.winners.push(argv[++i]);
@@ -272,11 +299,11 @@ function parseArgs(argv) {
   return args;
 }
 
-async function main(argv) {
+async function main(argv: string[]) {
   if (argv[0] === '--child') {
     const [, a, b, ...rest] = argv;
     applySimOpts(rest.filter((x) => x.startsWith('--sim-opt=')).map((x) => x.slice('--sim-opt='.length)));
-    process.send(censusBlock(rest.filter((x) => !x.startsWith('--sim-opt=')), Number(a), Number(b)));
+    (process as ForkedChild).send(censusBlock(rest.filter((x) => !x.startsWith('--sim-opt=')), Number(a), Number(b)));
     return;
   }
   const args = parseArgs(argv);
@@ -287,7 +314,7 @@ async function main(argv) {
   const paths = args.winners.length ? args.winners.map((path) => relative(ROOT, resolve(process.cwd(), path)))
     : committedWinners();
   const scratch = mkdtempSync(join(tmpdir(), 'winner-census-'));
-  const winnerHashes = {};
+  const winnerHashes: Record<string, string> = {};
   try {
     for (const path of paths) {
       const built = compileBundle(JSON.parse(readFileSync(join(ROOT, path), 'utf8')), join(scratch, path.replace(/\//g, '_')));
@@ -295,16 +322,17 @@ async function main(argv) {
     }
   } finally { rmSync(scratch, { recursive: true, force: true }); }
   const started = Date.now();
-  const rows = await forkBlocks({ script: fileURLToPath(import.meta.url), args: [...args.simOpts.map((o) => `--sim-opt=${o}`), ...paths],
+  const rows = await forkBlocks<ReturnType<typeof censusBlock>[number]>({ script: fileURLToPath(import.meta.url), args: [...args.simOpts.map((o) => `--sim-opt=${o}`), ...paths],
     start: args.start, count: args.count, jobs: args.jobs });
   const command = `node packages/propose/bin/census/winner-census.ts${args.winners.map((w) => ` --winner ${w}`).join('')}` +
     ` --start ${args.start} --count ${args.count} --jobs ${args.jobs}` + args.simOpts.map((o) => ` --sim-opt ${o}`).join('');
-  const record = buildRecord({ rows, start: args.start, count: args.count, design: designBlock(),
-    git: gitState(), date: args.date, command, winnerHashes, cohorts: phoneCohorts() });
-  (record.method as any).wallSeconds = Math.round((Date.now() - started) / 1000);
+  const record: ReturnType<typeof buildRecord> & { method: { wallSeconds?: number, simOpts?: string[] } } =
+    buildRecord({ rows, start: args.start, count: args.count, design: designBlock(),
+      git: gitState(), date: args.date, command, winnerHashes, cohorts: phoneCohorts() });
+  record.method.wallSeconds = Math.round((Date.now() - started) / 1000);
   if (args.simOpts.length) {
     record.id += `-${args.simOpts.join('-')}`;
-    (record.method as any).simOpts = args.simOpts;
+    record.method.simOpts = args.simOpts;
     record.method.lane += `; with ${args.simOpts.join(', ')} switched on at each replay's first tick (a comparison, not the default census)`;
   }
   const text = `${JSON.stringify(record, null, 2)}\n`;

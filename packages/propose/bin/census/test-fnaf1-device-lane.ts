@@ -24,18 +24,19 @@ import { Fnaf1Sim, DOOR_OPEN, DOOR_SHUT, DOOR_CLOSING, DOOR_OPENING, INPUT }
   from '@sixam/source/fnaf1';
 import { runDeviceNight, loadTiming, grid420, FOUR_TWENTY, TIMING_PATH, POPULATION_KIND, POPULATION_LANES }
   from './fnaf1-device-lane.ts';
+import type { populationRecord } from './fnaf1-device-lane.ts';
 import { designBlock } from './winner-census.ts';
 
-const failures = [];
+const failures: string[] = [];
 let checks = 0;
-const ok = (what, condition) => { checks += 1; if (!condition) failures.push(what); };
-const eq = (what, a, b) => {
+const ok = (what: string, condition: unknown) => { checks += 1; if (!condition) failures.push(what); };
+const eq = (what: string, a: unknown, b: unknown) => {
   checks += 1;
   if (JSON.stringify(a) !== JSON.stringify(b)) failures.push(`${what}: expected ${JSON.stringify(b)}, got ${JSON.stringify(a)}`);
 };
 
 const quiet = () => new Fnaf1Sim({ night: 1, seed: 0 });
-const steps = (sim, n) => { for (let i = 0; i < n; i += 1) sim.step(); };
+const steps = (sim: Fnaf1Sim, n: number) => { for (let i = 0; i < n; i += 1) sim.step(); };
 
 // --- 1. acceptance -----------------------------------------------------------
 {
@@ -135,12 +136,12 @@ const timing = loadTiming();
 // --- 4. the population record ---------------------------------------------------
 let population = '';
 {
-  const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
+  const sha256 = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex');
   const dir = new URL('../../../../docs/evidence/', import.meta.url);
   const name = readdirSync(dir).filter((n) => /^fnaf1-420-device-lane-population-\d{8}\.json$/.test(n)).sort().pop();
   ok('a fnaf1-420-device-lane-population record is committed', Boolean(name));
   if (name) {
-    const record = JSON.parse(readFileSync(new URL(name, dir), 'utf8'));
+    const record: ReturnType<typeof populationRecord> = JSON.parse(readFileSync(new URL(name, dir), 'utf8'));
     eq(`${name} kind`, record.kind, POPULATION_KIND);
     eq(`${name} lanes`, record.lanes.map((l) => l.lane), [...POPULATION_LANES]);
     ok(`${name}: the timing model changed since; re-run --population`,

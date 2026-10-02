@@ -27,54 +27,72 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { FPS } from '@sixam/source/fnaf2';
 import { STRATEGY_REGISTRY, compileBundle, validateWinner } from '../plans/bundle.ts';
 import { replay as replayToys } from '../plans/minus-toys-plan.ts';
+import type { KNOBS0 } from '../plans/minus-toys-plan.ts';
 import { committedWinners, designBlock, forkBlocks, gitState } from './winner-census.ts';
+import type { ForkedChild, Loss } from './winner-census.ts';
 import { winnerTag } from '@sixam/kernel';
 
 const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '../../../..');
 // The anchor aims packages/propose/bindings/fact-register.ts declares, as `npm run catalog` writes them out
 // (CI refuses a stale register), so a census never imports the device tools.
-const { anchorAims: ANCHOR_AIMS } = JSON.parse(readFileSync(join(ROOT, 'docs/architecture/generated/anchor-aims.json'), 'utf8'));
+/** An anchor aim: its night, where it aims the release, the onset bias, the measured latency band, and whether a run refuted it. */
+export interface AnchorAim {
+  readonly night?: number, readonly aimMs: number, readonly onsetBiasMs?: number, readonly latencyMs: { readonly min: number, readonly max: number },
+  readonly refuted?: unknown,
+}
+const { anchorAims: ANCHOR_AIMS }: { anchorAims: Readonly<Record<string, AnchorAim>> } =
+  JSON.parse(readFileSync(join(ROOT, 'docs/architecture/generated/anchor-aims.json'), 'utf8'));
 export const PHASE_KIND = 'fnaf2-winner-phase-census-v1';
 export const STEP_MS = 1000 / FPS;
 // A phase cell some seeds win and some lose is where the seed matters; its
 // losses are listed so a gate can replay them. Cells are few, lists short.
 const MAX_LISTED_PARTIAL = 200;
-const sha256 = (text) => createHash('sha256').update(text).digest('hex');
+const sha256 = (text: string) => createHash('sha256').update(text).digest('hex');
+/** Every Minus Toys knob, as the emitter fills them. */
+type ToysKnobs = typeof KNOBS0;
+/** A night's phase-aware binding: its file and plan digests, its replay knobs and its declared epoch. */
+interface NightBinding {
+  readonly path: string, readonly winnerSha256: string, readonly planSha256: string,
+  readonly knobs: ToysKnobs, readonly epochMs: number,
+}
+/** One (subject, phase) row of a block: a binding's or the oracle's losses at frame offset f. */
+type PhaseRow = { readonly subject: string, readonly f: number, readonly n: number, readonly losses: Loss[] };
 
 /** The first `count` seeds, ascending, that no tuning cohort reaches. */
-export function heldOutSeeds(count) {
+export function heldOutSeeds(count: number) {
   const design = new Set(designBlock().seeds);
-  const out = [];
+  const out: number[] = [];
   for (let seed = 0; out.length < count && seed < 0x10000; seed += 1) if (!design.has(seed)) out.push(seed);
   return out;
 }
 
 /** The night's phase-aware committed bindings, each with its declared epoch and replay knobs. */
-export function nightBindings(night) {
-  return committedWinners().map((path) => {
+export function nightBindings(night: number) {
+  return committedWinners().map((path): NightBinding | null => {
     const text = readFileSync(join(ROOT, path), 'utf8');
     const winner = validateWinner(JSON.parse(text));
     if (!winner.nights.includes(night) || !STRATEGY_REGISTRY[winner.strategy].phaseAware) return null;
     const emitted = STRATEGY_REGISTRY[winner.strategy].emit(winner, night);
-    return { path, winnerSha256: sha256(text), planSha256: sha256(emitted.text), knobs: emitted.knobs,
+    // A phase-aware binding is Minus Toys, whose emitter hands back Minus Toys knobs.
+    return { path, winnerSha256: sha256(text), planSha256: sha256(emitted.text), knobs: emitted.knobs as ToysKnobs,
       epochMs: (winner.anchorEpochMs ?? 0) + (winner.phaseOffsetMs ?? 0) };
-  }).filter(Boolean);
+  }).filter((binding): binding is NightBinding => Boolean(binding));
 }
 
 /** One replay: does `binding` win `seed` with its epoch moved by `frame` frames? */
-export function phaseWins(binding, night, seed, frame) {
+export function phaseWins(binding: NightBinding, night: number, seed: number, frame: number) {
   const r = replayToys({ night, seed, knobs: binding.knobs, epochMs: binding.epochMs + frame * STEP_MS });
   return { won: r.sim.won && r.splitAt >= 0, reason: r.sim.won ? 'unarmed' : (r.sim.death?.reason ?? 'alive'), frame: r.sim.frame };
 }
 
 /** Rows for seed indices [a, b): one per (binding, phase) and one per phase for the oracle. */
-function phaseBlock(night, frames, count, a, b) {
+function phaseBlock(night: number, frames: number, count: number, a: number, b: number) {
   const seeds = heldOutSeeds(count).slice(a, b);
   const bindings = nightBindings(night);
-  const rows = [];
+  const rows: PhaseRow[] = [];
   for (let f = -frames; f <= frames; f += 1) {
-    const oracleLosses = [];
-    const lost = bindings.map(() => []);
+    const oracleLosses: Loss[] = [];
+    const lost = bindings.map((): Loss[] => []);
     for (const seed of seeds) {
       let any = false;
       bindings.forEach((binding, i) => {
@@ -90,25 +108,28 @@ function phaseBlock(night, frames, count, a, b) {
 }
 
 /** Contiguous runs of fully won phases, in the epoch the game sees. */
-function wonBands(epochMs, frames, wins, n) {
-  const bands = [];
-  let open = null;
+function wonBands(epochMs: number, frames: number, wins: readonly number[], n: number) {
+  const bands: [number, number][] = [];
+  let open: number | null = null;
   for (let f = -frames; f <= frames; f += 1) {
     const full = wins[f + frames] === n;
     if (full && open === null) open = f;
     if (!full && open !== null) { bands.push([open, f - 1]); open = null; }
   }
   if (open !== null) bands.push([open, frames]);
-  const at = (f) => +(epochMs + f * STEP_MS).toFixed(2);
+  const at = (f: number) => +(epochMs + f * STEP_MS).toFixed(2);
   return bands.map(([a, b]) => ({ fromMs: at(a), toMs: at(b), frames: b - a + 1 }));
 }
 
-export function buildPhaseRecord({ rows, night, frames, count, bindings, winnerHashes, git, date, command }) {
+export function buildPhaseRecord({ rows, night, frames, count, bindings, winnerHashes, git, date, command }: {
+  rows: readonly PhaseRow[], night: number, frames: number, count: number, bindings: readonly NightBinding[],
+  winnerHashes: Readonly<Record<string, string>>, git: ReturnType<typeof gitState>, date: string, command: string,
+}) {
   const width = 2 * frames + 1;
   const n = count;
-  const series = (subject) => {
-    const wins = new Array(width).fill(0);
-    const partial = [];
+  const series = (subject: string) => {
+    const wins = new Array<number>(width).fill(0);
+    const partial: { frame: number, losses: Loss[], lost: number }[] = [];
     for (const row of rows.filter((r) => r.subject === subject)) {
       wins[row.f + frames] = row.n - row.losses.length;
       if (row.losses.length > 0 && row.losses.length < row.n)
@@ -120,7 +141,7 @@ export function buildPhaseRecord({ rows, night, frames, count, bindings, winnerH
   const out = bindings.map((binding) => {
     const { wins, partial } = series(binding.path);
     const aim = ANCHOR_AIMS[winnerHashes[binding.path]];
-    const effective = aim ? [aim.aimMs + (aim.onsetBiasMs ?? 0) + aim.latencyMs.min,
+    const effective: [number, number] | null = aim ? [aim.aimMs + (aim.onsetBiasMs ?? 0) + aim.latencyMs.min,
       aim.aimMs + (aim.onsetBiasMs ?? 0) + aim.latencyMs.max] : null;
     // Every frame phase whose epoch falls inside the effective interval.
     const inside = effective ? wins.map((w, i) => ({ w, ms: binding.epochMs + (i - frames) * STEP_MS }))
@@ -138,10 +159,10 @@ export function buildPhaseRecord({ rows, night, frames, count, bindings, winnerH
   const voi = oracle.wins.map((w, i) => w - bestFixed[i]);
   const cells = out.flatMap((b) => b.wins);
   const decided = cells.filter((w) => w === 0 || w === n).length;
-  const differ = [];
+  const differ: { a: string, b: string, epochMs: number, phasesThatDiffer: number[] }[] = [];
   for (let x = 0; x < out.length; x += 1) for (let y = x + 1; y < out.length; y += 1) {
     if (out[x].declaredEpochMs !== out[y].declaredEpochMs) continue;
-    const at = out[x].wins.map((w, i) => (w !== out[y].wins[i] ? i - frames : null)).filter((f) => f !== null);
+    const at = out[x].wins.map((w, i) => (w !== out[y].wins[i] ? i - frames : null)).filter((f): f is number => f !== null);
     differ.push({ a: out[x].binding, b: out[y].binding, epochMs: out[x].declaredEpochMs, phasesThatDiffer: at });
   }
   const tag = winnerTag;
@@ -151,7 +172,9 @@ export function buildPhaseRecord({ rows, night, frames, count, bindings, winnerH
     `${voi.filter((v) => v > 0).length} of ${width} phases, by at most ${Math.max(...voi)} seeds. ` +
     differ.map((d) => `${tag(d.a)} and ${tag(d.b)} (both declared at ${d.epochMs} ms) differ at ` +
       `${d.phasesThatDiffer.length} phase(s)${d.phasesThatDiffer.length ? ` (frames ${d.phasesThatDiffer.join(', ')})` : ''}`).join('; ') + '. ' +
-    out.filter((b) => b.anchor).map((b) => `${tag(b.binding)}'s effective interval [${b.anchor.effectiveMs.join(', ')}] ms ` +
+    out.flatMap((b) => (b.anchor ? [{ binding: b.binding, anchor: b.anchor }] : []))
+      // An anchor exists only where an aim does, so its effective interval is set.
+      .map((b) => `${tag(b.binding)}'s effective interval [${(b.anchor.effectiveMs as [number, number]).join(', ')}] ms ` +
       `${b.anchor.effectivePhasesWon ? 'lies inside a fully won band' : 'is not fully won'}`).join('; ') + '.';
   return {
     schema: 'evidence-record-v1', kind: PHASE_KIND, id: `fnaf2-night${night}-phase-census-${date.replace(/-/g, '')}`,
@@ -176,13 +199,13 @@ export function buildPhaseRecord({ rows, night, frames, count, bindings, winnerH
   };
 }
 
-async function main(argv) {
+async function main(argv: string[]) {
   if (argv[0] === '--child') {
     const [, a, b, night, frames, count] = argv;
-    process.send(phaseBlock(Number(night), Number(frames), Number(count), Number(a), Number(b)));
+    (process as ForkedChild).send(phaseBlock(Number(night), Number(frames), Number(count), Number(a), Number(b)));
     return;
   }
-  const flag = (name, dflt) => { const i = argv.indexOf(`--${name}`); return i < 0 ? dflt : argv[i + 1]; };
+  const flag = <T extends string | null>(name: string, dflt: T): string | T => { const i = argv.indexOf(`--${name}`); return i < 0 ? dflt : argv[i + 1]; };
   const night = Number(flag('night', '7'));
   const count = Number(flag('count', '1000'));
   const windowMs = Number(flag('window', '1000'));
@@ -193,19 +216,19 @@ async function main(argv) {
   const bindings = nightBindings(night);
   if (bindings.length === 0) throw new Error(`winner-phase-census: no phase-aware committed winner plays night ${night}`);
   const scratch = mkdtempSync(join(tmpdir(), 'winner-phase-census-'));
-  const winnerHashes = {};
+  const winnerHashes: Record<string, string> = {};
   try {
     for (const { path } of bindings)
       winnerHashes[path] = compileBundle(JSON.parse(readFileSync(join(ROOT, path), 'utf8')),
         join(scratch, path.replace(/\//g, '_'))).manifest.winnerHash;
   } finally { rmSync(scratch, { recursive: true, force: true }); }
   const started = Date.now();
-  const rows = await forkBlocks({ script: fileURLToPath(import.meta.url),
+  const rows = await forkBlocks<PhaseRow>({ script: fileURLToPath(import.meta.url),
     args: [String(night), String(frames), String(count)], start: 0, count, jobs });
-  const record = buildPhaseRecord({ rows, night, frames, count, bindings, winnerHashes, git: gitState(),
+  const record: ReturnType<typeof buildPhaseRecord> & { method: { wallSeconds?: number } } = buildPhaseRecord({ rows, night, frames, count, bindings, winnerHashes, git: gitState(),
     date: flag('date', new Date().toISOString().slice(0, 10)),
     command: `node packages/propose/bin/census/winner-phase-census.ts --night ${night} --count ${count} --window ${windowMs} --jobs ${jobs}` });
-  (record.method as any).wallSeconds = Math.round((Date.now() - started) / 1000);
+  record.method.wallSeconds = Math.round((Date.now() - started) / 1000);
   const text = `${JSON.stringify(record, null, 2)}\n`;
   const out = flag('out', null);
   if (out) writeFileSync(out, text); else process.stdout.write(text);

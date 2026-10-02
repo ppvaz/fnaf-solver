@@ -9,17 +9,17 @@ import { checkpointedBlocks } from './fnaf1-population-checkpoints.ts';
 
 const scratch = mkdtempSync(join(tmpdir(), 'test-fnaf1-checkpoints-'));
 const lanes = ['typical', 'worst', 'starved'];
-const rows = (a, b) => lanes.map((lane, i) => ({ lane, n: b - a,
+const rows = (a: number, b: number) => lanes.map((lane, i) => ({ lane, n: b - a,
   losses: Array.from({ length: b - a }, (_, k) => a + k).filter((s) => s % 3 === i).map((s) => [s, 'fixture-loss', 100 + s]) }));
 const base = { dir: join(scratch, 'resume'), identity: { commit: 'fixture-source', options: { chicaByCamera: false } },
   start: 10, count: 11, blockSize: 3, jobs: 1 };
 try {
-  const first = [];
+  const first: number[] = [];
   await assert.rejects(checkpointedBlocks({ ...base, runBlock: async (a, b) => {
     first.push(a); if (a === 16) throw new Error('fixture interruption'); return rows(a, b);
   } }), /fixture interruption/);
   assert.deepEqual(first, [10, 13, 16]);
-  const resumed = [];
+  const resumed: number[] = [];
   const result = await checkpointedBlocks({ ...base, runBlock: async (a, b) => { resumed.push(a); return rows(a, b); } });
   assert.deepEqual(resumed, [16, 19], 'already completed blocks are not rerun');
   assert.equal(result.reused, 2);
@@ -43,7 +43,7 @@ try {
   let active = 0, peak = 0;
   const parallel = await checkpointedBlocks({ ...base, dir: join(scratch, 'parallel'), jobs: 3, runBlock: async (a, b) => {
     active += 1; peak = Math.max(peak, active);
-    await new Promise<any>((done) => setTimeout(done, 10));
+    await new Promise<void>((done) => setTimeout(done, 10));
     active -= 1; return rows(a, b);
   } });
   assert.equal(peak, 3);

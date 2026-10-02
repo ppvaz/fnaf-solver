@@ -40,7 +40,10 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { FPS } from '@sixam/source/fnaf2';
 import { compileBundle } from './bundle.ts';
 import { runNight, loadPresets, PRESET_KNOBS } from './night7-presets.ts';
+import type { Preset } from './night7-presets.ts';
 import { forkBlocks, gitState } from '../census/winner-census.ts';
+import type { BlockRow, ForkedChild, Loss } from '../census/winner-census.ts';
+import type { AnchorAim } from '../census/winner-phase-census.ts';
 import { DEFAULT_LATCH_HOLD_MS, DEFAULT_MIN_LEAD_MS } from '../../../play/src/campaign/night-anchor.ts';
 import { heldOutSeeds, nightBindings } from '../census/winner-phase-census.ts';
 import { winnerTag } from '@sixam/kernel';
@@ -48,7 +51,8 @@ import { winnerTag } from '@sixam/kernel';
 const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '../../../..');
 // The anchor aims packages/propose/bindings/fact-register.ts declares, as `npm run catalog` writes them out
 // (CI refuses a stale register), so a census never imports the device tools.
-const { anchorAims: ANCHOR_AIMS } = JSON.parse(readFileSync(join(ROOT, 'docs/architecture/generated/anchor-aims.json'), 'utf8'));
+const { anchorAims: ANCHOR_AIMS }: { anchorAims: Readonly<Record<string, AnchorAim>> } =
+  JSON.parse(readFileSync(join(ROOT, 'docs/architecture/generated/anchor-aims.json'), 'utf8'));
 export const ROBUSTNESS_KIND = 'night7-robustness-v1';
 export const LATENESS_MS = Object.freeze([0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 120, 150]);
 export const HUMAN_MS = 60;
@@ -56,11 +60,19 @@ export const PHASE_FRAMES = 30;
 export const SPAN_FRAMES = 600;
 export const SPAN_SEEDS = 16;
 const STEP_MS = 1000 / FPS;
-const sha256 = (text) => createHash('sha256').update(text).digest('hex');
-const tag = (path) => winnerTag(path).replace(/^campaign-night7-/, '');
+const sha256 = (text: string) => createHash('sha256').update(text).digest('hex');
+const tag = (path: string) => winnerTag(path).replace(/^campaign-night7-/, '');
+
+/** A schedule the comparison scores: the preset's or a committed binding's, with its knobs and declared epoch. */
+interface Schedule {
+  readonly id: string, readonly path?: string, readonly knobs: NonNullable<Parameters<typeof runNight>[0]['knobs']>, readonly epochMs: number,
+  readonly knobsSha256?: string, readonly winnerSha256?: string,
+}
+/** One (schedule, axis, value) row of a block: its losses over the block's seeds. */
+type RobustRow = BlockRow & { readonly subject: string, readonly losses: Loss[] };
 
 /** The preset schedule and every committed phase-aware Night 7 binding. */
-export function schedules() {
+export function schedules(): Schedule[] {
   return [
     { id: 'preset', knobs: PRESET_KNOBS, epochMs: 0, knobsSha256: sha256(JSON.stringify(PRESET_KNOBS)) },
     ...nightBindings(7).map((b) => ({ id: tag(b.path), path: b.path, knobs: b.knobs, epochMs: b.epochMs,
@@ -68,27 +80,29 @@ export function schedules() {
   ];
 }
 
-const tenTwenty = () => loadPresets().find((p) => p.id === 'golden-freddy');
+// The menu model names golden-freddy, the 10/20 preset.
+const tenTwenty = () => loadPresets().find((p) => p.id === 'golden-freddy') as Preset;
 
 /** The earliest epoch the anchored release can deliver on Night 7, from the anchor's own defaults and the register. */
 export function earliestDeliveredMs() {
-  const night7 = Object.values(ANCHOR_AIMS).filter((a: any) => a.night === 7);
-  return DEFAULT_LATCH_HOLD_MS + DEFAULT_MIN_LEAD_MS + Math.min(...night7.map((a: any) => (a.onsetBiasMs ?? 0) + a.latencyMs.min));
+  const night7 = Object.values(ANCHOR_AIMS).filter((a) => a.night === 7);
+  return DEFAULT_LATCH_HOLD_MS + DEFAULT_MIN_LEAD_MS + Math.min(...night7.map((a) => (a.onsetBiasMs ?? 0) + a.latencyMs.min));
 }
 
 /** One night: does `schedule` win `seed` with its epoch moved (or set) and presses late by up to `lateMs`? */
-export function robustWins(schedule, seed, { frame = 0, lateMs = 0, earlyMs = 0, epochMs = null, preset = tenTwenty() } = {}) {
+export function robustWins(schedule: Schedule, seed: number, { frame = 0, lateMs = 0, earlyMs = 0, epochMs = null, preset = tenTwenty() }:
+  { frame?: number, lateMs?: number, earlyMs?: number, epochMs?: number | null, preset?: Preset } = {}) {
   const r = runNight({ preset, seed, knobs: schedule.knobs, epochMs: (epochMs ?? schedule.epochMs + frame * STEP_MS) - earlyMs,
-    band: lateMs > 0 ? [0, lateMs] : null });
+    band: lateMs > 0 ? [0, lateMs] as const : null });
   return { won: r.sim.won && r.splitAt >= 0, reason: r.sim.won ? 'unarmed' : (r.sim.death?.reason ?? 'alive'), frame: r.sim.frame };
 }
 
-function block(count, from, to) {
+function block(count: number, from: number, to: number) {
   const seeds = heldOutSeeds(count).slice(from, to);
   const preset = tenTwenty();
-  const rows = [];
-  const push = (subject, test) => {
-    const losses = [];
+  const rows: RobustRow[] = [];
+  const push = (subject: string, test: (seed: number) => ReturnType<typeof robustWins>) => {
+    const losses: Loss[] = [];
     for (const seed of seeds) {
       const r = test(seed);
       if (!r.won) losses.push([seed, r.reason, r.frame]);
@@ -103,7 +117,7 @@ function block(count, from, to) {
     // its rows (n may be 0) so the merged rows line up.
     const spanSeeds = seeds.filter((_, i) => from + i < SPAN_SEEDS);
     for (let f = 0; f < SPAN_FRAMES; f += 1) {
-      const losses = [];
+      const losses: Loss[] = [];
       for (const seed of spanSeeds) {
         const r = robustWins(s, seed, { epochMs: f * STEP_MS, preset });
         if (!r.won) losses.push([seed, r.reason, r.frame]);
@@ -114,23 +128,27 @@ function block(count, from, to) {
   return rows;
 }
 
-export function buildRobustnessRecord({ rows, count, winnerHashes, git, date, command }) {
-  const out = schedules().map((s: any) => {
-    const row = (axis, value) => rows.find((r) => r.subject === `${s.id}|${axis}|${value}`);
-    const wins = (r) => r.n - r.losses.length;
-    const phaseWins = [];
+export function buildRobustnessRecord({ rows, count, winnerHashes, git, date, command }: {
+  rows: readonly RobustRow[], count: number, winnerHashes: Readonly<Record<string, string>>,
+  git: ReturnType<typeof gitState>, date: string, command: string,
+}) {
+  const out = schedules().map((s) => {
+    // Every (schedule, axis, value) ran in every block.
+    const row = (axis: string, value: number) => rows.find((r) => r.subject === `${s.id}|${axis}|${value}`) as RobustRow;
+    const wins = (r: RobustRow) => r.n - r.losses.length;
+    const phaseWins: number[] = [];
     for (let f = -PHASE_FRAMES; f <= PHASE_FRAMES; f += 1) phaseWins.push(wins(row('phase', f)));
-    const at = (f) => +(s.epochMs + f * STEP_MS).toFixed(2);
+    const at = (f: number) => +(s.epochMs + f * STEP_MS).toFixed(2);
     const aim = s.path ? ANCHOR_AIMS[winnerHashes[s.path]] : null;
-    const delivered = aim
+    const delivered: [number, number] = aim
       ? [aim.aimMs + (aim.onsetBiasMs ?? 0) + aim.latencyMs.min, aim.aimMs + (aim.onsetBiasMs ?? 0) + aim.latencyMs.max]
       : [s.epochMs, s.epochMs];
     // The fully won run of frames containing the delivered interval, if one does.
-    const inside = (f) => at(f) >= delivered[0] - STEP_MS / 2 && at(f) <= delivered[1] + STEP_MS / 2;
-    const full = (f) => phaseWins[f + PHASE_FRAMES] === count;
-    const covering = [];
+    const inside = (f: number) => at(f) >= delivered[0] - STEP_MS / 2 && at(f) <= delivered[1] + STEP_MS / 2;
+    const full = (f: number) => phaseWins[f + PHASE_FRAMES] === count;
+    const covering: number[] = [];
     for (let f = -PHASE_FRAMES; f <= PHASE_FRAMES; f += 1) if (inside(f)) covering.push(f);
-    let band = null;
+    let band: { fromMs: number, toMs: number, earlyMarginMs: number, lateMarginMs: number, reachesWindowEdge: boolean } | null = null;
     if (covering.length && covering.every(full)) {
       let lo = Math.min(...covering); let hi = Math.max(...covering);
       while (lo - 1 >= -PHASE_FRAMES && full(lo - 1)) lo -= 1;
@@ -139,19 +157,19 @@ export function buildRobustnessRecord({ rows, count, winnerHashes, git, date, co
         lateMarginMs: +(at(hi) - delivered[1]).toFixed(2), reachesWindowEdge: lo === -PHASE_FRAMES || hi === PHASE_FRAMES };
     }
     const lateness = Object.fromEntries(LATENESS_MS.map((L) => [L, wins(row('late', L))]));
-    let maxLateMs = null;
+    let maxLateMs: number | null = null;
     for (const L of LATENESS_MS) { if (lateness[L] === count) maxLateMs = L; else break; }
     const firstLoss = LATENESS_MS.find((L) => lateness[L] < count);
     const human = row('human', HUMAN_MS);
     const earliest = earliestDeliveredMs();
-    const spanCells = [];
+    const spanCells: string[] = [];
     for (let f = 0; f < SPAN_FRAMES; f += 1) {
       const r = row('span', f);
       spanCells.push(r.losses.length === 0 ? '#' : r.losses.length === r.n ? '.' : '+');
     }
     const spanFull = spanCells.map((c) => c === '#');
-    const spanBands = [];
-    for (let f = 0, open = null; f <= SPAN_FRAMES; f += 1) {
+    const spanBands: [number, number][] = [];
+    for (let f = 0, open = null as number | null; f <= SPAN_FRAMES; f += 1) {
       const full = f < SPAN_FRAMES && spanFull[f];
       if (full && open === null) open = f;
       if (!full && open !== null) { spanBands.push([+(open * STEP_MS).toFixed(2), +((f - 1) * STEP_MS).toFixed(2)]); open = null; }
@@ -170,7 +188,7 @@ export function buildRobustnessRecord({ rows, count, winnerHashes, git, date, co
         earliestDeliveredMs: earliest, deliverableBands, deliverable: deliverableBands.length > 0 },
     };
   });
-  const minPhase = (s) => (s.phase.band ? Math.min(s.phase.band.earlyMarginMs, s.phase.band.lateMarginMs) : -Infinity);
+  const minPhase = (s: (typeof out)[number]) => (s.phase.band ? Math.min(s.phase.band.earlyMarginMs, s.phase.band.lateMarginMs) : -Infinity);
   const byLate = [...out].sort((a, b) => (b.lateness.maxAllWinMs ?? -1) - (a.lateness.maxAllWinMs ?? -1));
   const byPhase = [...out].sort((a, b) => minPhase(b) - minPhase(a));
   const answer = out.map((s) => `${s.id}: lateness to ${s.lateness.maxAllWinMs ?? 'none'} ms, ` +
@@ -204,30 +222,30 @@ export function buildRobustnessRecord({ rows, count, winnerHashes, git, date, co
   };
 }
 
-async function main(argv) {
+async function main(argv: string[]) {
   if (argv[0] === '--child') {
     const [, from, to, count] = argv;
-    process.send(block(Number(count), Number(from), Number(to)));
+    (process as ForkedChild).send(block(Number(count), Number(from), Number(to)));
     return;
   }
-  const flag = (name, dflt) => { const i = argv.indexOf(`--${name}`); return i < 0 ? dflt : argv[i + 1]; };
+  const flag = <T extends string | null>(name: string, dflt: T): string | T => { const i = argv.indexOf(`--${name}`); return i < 0 ? dflt : argv[i + 1]; };
   const count = Number(flag('count', '300'));
   const jobs = Number(flag('jobs', '1'));
   if (!Number.isInteger(count) || count < 1 || !Number.isInteger(jobs) || jobs < 1)
     throw new Error('night7-robustness: --count and --jobs must be positive integers');
   const scratch = mkdtempSync(join(tmpdir(), 'night7-robustness-'));
-  const winnerHashes = {};
+  const winnerHashes: Record<string, string> = {};
   try {
-    for (const s of schedules().filter((x: any) => x.path))
-      winnerHashes[(s as any).path] = compileBundle(JSON.parse(readFileSync(join(ROOT, (s as any).path), 'utf8')),
-        join(scratch, (s as any).path.replace(/\//g, '_'))).manifest.winnerHash;
+    for (const s of schedules().filter((x): x is Schedule & { path: string } => Boolean(x.path)))
+      winnerHashes[s.path] = compileBundle(JSON.parse(readFileSync(join(ROOT, s.path), 'utf8')),
+        join(scratch, s.path.replace(/\//g, '_'))).manifest.winnerHash;
   } finally { rmSync(scratch, { recursive: true, force: true }); }
   const started = Date.now();
-  const rows = await forkBlocks({ script: fileURLToPath(import.meta.url), args: [String(count)], start: 0, count, jobs });
-  const record = buildRobustnessRecord({ rows, count, winnerHashes, git: gitState(),
+  const rows = await forkBlocks<RobustRow>({ script: fileURLToPath(import.meta.url), args: [String(count)], start: 0, count, jobs });
+  const record: ReturnType<typeof buildRobustnessRecord> & { method: { wallSeconds?: number } } = buildRobustnessRecord({ rows, count, winnerHashes, git: gitState(),
     date: flag('date', new Date().toISOString().slice(0, 10)),
     command: `node packages/propose/bin/plans/night7-robustness.ts --count ${count} --jobs ${jobs}` });
-  (record.method as any).wallSeconds = Math.round((Date.now() - started) / 1000);
+  record.method.wallSeconds = Math.round((Date.now() - started) / 1000);
   const text = `${JSON.stringify(record, null, 2)}\n`;
   const out = flag('out', null);
   if (out) writeFileSync(out, text); else process.stdout.write(text);
