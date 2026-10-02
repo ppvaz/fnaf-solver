@@ -16,7 +16,7 @@ import { join } from 'node:path';
 import { controlCatalogFor } from '@sixam/source';
 import { NO_LOCAL_DUMP, VAULT_ENV, VAULT_FILE, createTruth } from '@sixam/source/truth';
 import { canonicalJson } from '@sixam/kernel/contracts';
-import { REPOSITORY_TARGET, claimEnvelope, isRecord, isRefusal, isUnknown, refusalEnvelope, unknown, validateClaimEnvelope } from '@sixam/kernel';
+import { REPOSITORY_TARGET, claimEnvelope, isList, isRecord, isRefusal, isUnknown, refusalEnvelope, unknown, validateClaimEnvelope } from '@sixam/kernel';
 import type { EnvelopeLabel } from '@sixam/kernel';
 import { videoTerminal } from './evidence-cohort.ts';
 import { ATTESTATION_FILE, PACKS_DIR, packPromotionChecks, readPack, trackedWinners, winnerFiles } from './evidence-pack.ts';
@@ -118,11 +118,11 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
         registered, emitters: ENVELOPE_EMITTERS,
         commandsWithoutEnvelope: registry.commands.filter(id => !emitterIds.has(id)).length, commands: registry.commands.length,
         holds: !registered ? true : 'partly' },
-      { gap: 2, name: 'Truth has no programmatic surface',
-        query: `a truth.* or rulebook verb in this surface's VERBS; this game's local dump in ${VAULT_FILE} or $${VAULT_ENV}`,
-        verbs: VERBS, localDump: local.configured, holds: !VERBS.some(verb => verb === 'rulebook' || verb.startsWith('truth')),
-        ...(local.configured ? {} : { notMeasured: [NO_LOCAL_DUMP] }) },
-      { gap: 3, name: 'No coverage map', query: 'describe in this surface\'s VERBS', holds: !VERBS.includes('describe') },
+      // Gaps 2 and 3 were closed by building this surface: they are not measured, they are this code.
+      { gap: 2, name: 'Truth has no programmatic surface', holds: false,
+        closedBy: `the truth verb of this surface; this game's local dump is read from ${VAULT_FILE} or $${VAULT_ENV}`,
+        localDump: local.configured, ...(local.configured ? {} : { notMeasured: [NO_LOCAL_DUMP] }) },
+      { gap: 3, name: 'No coverage map', holds: false, closedBy: 'the describe verb of this surface, which is answering' },
       { gap: 4, name: 'Custody is incomplete and promotion is empty',
         query: `this game's packs in ${PACKS_DIR} by custody kind, and its ${PROMOTION_EDGE} edges in ${GRAPH_FILE}`,
         packs: gamePacks.length, custody: sorted(custody), promotionEdges: graphEdges,
@@ -193,7 +193,11 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
     const graphEdges = graph.edges.filter(edge => edge.type === PROMOTION_EDGE);
     const gameEdges = graphEdges.filter(edge => gamePacks.some(pack => `run.${pack.id}` === edge.to));
     const outcomes = tally(gamePacks.flatMap(pack => {
-      try { return liftPack(root, pack.id).runs; } catch { return []; }
+      try { return liftPack(root, pack.id).runs; } catch (error) {
+        // A pack that does not lift is named, not left out of the counts in silence.
+        notMeasured.push(`${pack.id}'s outcome: the pack does not lift (${(error as Error).message})`);
+        return [];
+      }
     }), run => run.reportedOutcome.kind);
     let phone;
     if (!gamePacks.length) {
@@ -220,8 +224,15 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
         ...result.open.untrackedWinnerDebt.entries.filter(item => !item.committed)
           .map(item => `a committed winner for the Night ${item.night ?? 'UNKNOWN'} anchor binding ${item.hash}`));
     } else {
-      let gate;
-      try { derivePromotion(root, gamePacks[0].id, new Map()); gate = null; } catch (error) { gate = (error as Error).message; }
+      // Why this game's unpromoted packs are refused: each one's failing checks, re-derived.
+      const refusals = tally(gamePacks.filter(pack => !pack.promoted).flatMap(pack => {
+        try {
+          return [...new Set(derivePromotion(root, pack.id, winners()).verified.filter(item => !item.pass)
+            .flatMap(item => isList(item.detail.failed) ? item.detail.failed.map(reason => String(reason)) : [`${item.check} fails`]))];
+        } catch (error) { return [`${pack.id}: ${(error as Error).message}`]; }
+      }), reason => reason);
+      const gate = Object.keys(refusals).length ? Object.entries(refusals).sort((a, b) => b[1] - a[1])
+        .map(([reason, packs]) => `${reason} (${packs} pack${packs === 1 ? '' : 's'})`).join('; ') : null;
       const promotedHere = gamePacks.filter(pack => pack.promoted);
       phone = {
         packs: gamePacks.length, reportedOutcomes: sorted(outcomes),

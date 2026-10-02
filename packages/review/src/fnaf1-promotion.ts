@@ -113,7 +113,7 @@ export function deriveFnaf1Promotion(root: string, id: string, dir: string, load
   const game = runnerGame(pack);
   if (game !== 'fnaf1') {
     // Every runner's pack carries this kind; another game's is refused by name, not judged by FNaF 1's checks.
-    const failed = [`a ${game ?? 'unregistered game'}'s runner pack: no promotion gate reads ${game ?? 'it'} runner packs yet`];
+    const failed = [`a ${game ?? 'unregistered game'} runner pack: no promotion gate reads ${game ?? 'its'} runner packs yet`];
     return { id, dir, loaded, digest, custody: packCustody(pack), claim: null,
       verified: ['offlineEvidence', 'terminalPass', 'manifestComplete', 'winnerCommitted', 'claimIdentity']
         .map((check) => ({ check, pass: false, inputs: [], detail: { game, failed } as Readonly<Record<string, unknown>> })),

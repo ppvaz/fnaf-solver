@@ -131,6 +131,8 @@ for (const game of GAMES) {
     // n5b and n3c (packed 2026-10-02): runner packs attributed by target.package, none promoted.
     assert.equal(phone.packs, packIds.filter(id => id.startsWith('fnaf4-')).length, 'every fnaf4 runner pack is attributed to fnaf4');
     assert.ok(isUnknown(phone.promotion), 'no FNaF 4 pack is promoted');
+    assert.match(phone.promotion.reason, /no promotion gate reads fnaf4 runner packs yet \(2 packs\)/,
+      'and the refusal is each pack\'s own re-derived reason, not FNaF 1\'s checks or the first pack\'s');
   }
   if (game.alias === 'fnaf1') {
     assert.ok(!isUnknown(phone.promotion) && phone.promotion?.promotedRuns.includes('fnaf1-custom-grid420-420-a-20260925T024452598Z'),
