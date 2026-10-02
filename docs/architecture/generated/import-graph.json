@@ -2550,6 +2550,20 @@
       ]
     },
     {
+      "file": "packages/propose/bin/recompile/phone-release-latency.ts",
+      "imports": [
+        "../../../source/recompile/model-draw-trace.ts",
+        "./phone-encounter-replay.ts",
+        "./phone-stream-census.ts",
+        "./schedule-to-input.ts",
+        "./sweep-common.ts",
+        "@sixam/review/renamed-path",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "packages/propose/bin/recompile/phone-seed-readout.ts",
       "imports": [
         "../../../source/recompile/model-draw-trace.ts",

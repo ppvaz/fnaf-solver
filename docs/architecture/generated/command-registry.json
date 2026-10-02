@@ -2549,6 +2549,12 @@
       "lifecycle": "supported"
     },
     {
+      "id": "packages/propose/bin/recompile/phone-release-latency.ts",
+      "invocation": "packages/propose/bin/recompile/phone-release-latency.ts [--out FILE]",
+      "kind": "report (exploratory; MODEL_ONLY replays over DEVICE_MEASURED clocks and outcomes)",
+      "lifecycle": "supported"
+    },
+    {
       "id": "packages/propose/bin/recompile/test-phone-encounter-replay.ts",
       "invocation": "packages/propose/bin/recompile/test-phone-encounter-replay.ts",
       "kind": "FIXTURE for the clock, press rules, landing latency, native response attribution/UNKNOWN/readiness/brackets, occupant, window codes and scoring; then the retained phone comparison and `results/full06-responses-20260928.json` re-derived from their rows, including the reproduced control, coverage, focused conclusion and generated evidence record. In `npm run test:unit`; no private inputs or binary required.",

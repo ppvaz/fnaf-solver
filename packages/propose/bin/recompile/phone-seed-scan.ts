@@ -61,7 +61,11 @@ export function tracedNight(spec, inputs, root = ROOT) {
   const shift = inputs.releasedAimMs - originMs;
   const sends = sched.queueMs.filter(([, kind, action]) => kind === 'press' && action === 'monitor').map(([ms]) => ms + shift);
   const latency = landingLatency(cols, first, sends);
-  const contacts = modelContacts(mapSchedule(sched, (ms) => traceTick(ms + shift + latency.medianMs, clock)).contacts);
+  // A release lands `spec.releaseLatencyMs` after its send when the spec names it, else as late as the press: on the
+  // 0/20 night and on full-06 the press's latency on releases makes the model drop a monitor the phone kept
+  // (docs/evidence/phone-release-latency-20261001.json).
+  const releaseMs = Number.isFinite(spec.releaseLatencyMs) ? spec.releaseLatencyMs : latency.medianMs;
+  const contacts = modelContacts(mapSchedule(sched, (ms, kind) => traceTick(ms + shift + (kind === 'release' ? releaseMs : latency.medianMs), clock)).contacts);
   const modelOptions = JSON.parse(readFileSync(resolve(root, currentPath(root, cfg.modelOptions)), 'utf8'));
   const rows = readFileSync(resolve(root, inputs.readout.path));
   if (sha256(rows) !== inputs.readout.sha256) throw new Error(`${inputs.readout.path}: not the recorded readout`);

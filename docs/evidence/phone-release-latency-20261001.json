@@ -1,0 +1,178 @@
+{
+ "schema": "evidence-record-v1",
+ "date": "2026-10-01",
+ "step": "ROADMAP S2 (release acceptance, an open item; the model killing Night 7 nights the phone wins)",
+ "claimLevel": "MODEL_ONLY replays over DEVICE_MEASURED clocks, landings and outcomes",
+ "exploratory": "A sweep run after the 0/20 night's replay lost its glitch view in cycle 3; it tests no predeclared rule. Its bound is used, named, in the superseding 10/20 seed-scan predeclaration.",
+ "question": "How late after its send can a contact's release land for the model to play a phone-won night the way the phone played it?",
+ "tool": {
+  "path": "packages/propose/bin/recompile/phone-release-latency.ts",
+  "sha256": "9ec23b9360f0b4bf73a733273a0a11d0297483f89666b3ff507def5fec8c5003"
+ },
+ "sweepMs": [
+  70,
+  60,
+  50,
+  40,
+  30,
+  20,
+  10,
+  0
+ ],
+ "nights": [
+  {
+   "night": "night7-k3-0of20-sr01-20261001T221003Z",
+   "dials": "0/20",
+   "seed": 23712,
+   "seedSource": "docs/evidence/s2-seed-scan-night7-0of20-20261001.json",
+   "phone": "6am",
+   "pressLandingMs": 85.5,
+   "rows": [
+    {
+     "releaseMs": 85.5,
+     "outcome": "death:puppet@54.5",
+     "stretched": 1
+    },
+    {
+     "releaseMs": 70,
+     "outcome": "death:puppet@300.7",
+     "stretched": 1
+    },
+    {
+     "releaseMs": 60,
+     "outcome": "death:puppet@300.7",
+     "stretched": 24
+    },
+    {
+     "releaseMs": 50,
+     "outcome": "6am",
+     "stretched": 49
+    },
+    {
+     "releaseMs": 40,
+     "outcome": "6am",
+     "stretched": 50
+    },
+    {
+     "releaseMs": 30,
+     "outcome": "6am",
+     "stretched": 50
+    },
+    {
+     "releaseMs": 20,
+     "outcome": "6am",
+     "stretched": 50
+    },
+    {
+     "releaseMs": 10,
+     "outcome": "6am",
+     "stretched": 50
+    },
+    {
+     "releaseMs": 0,
+     "outcome": "6am",
+     "stretched": 56
+    }
+   ]
+  },
+  {
+   "night": "night7-night7-k3-full-06-20260915T225056Z",
+   "dials": "10/20",
+   "seed": 47593,
+   "seedSource": "docs/evidence/night6-h-seedlock-census-20260916.json reDerived: k3 full-06 20260915 14 -> 1: 47593",
+   "phone": "6am",
+   "phoneWindows": "...BC..BC.BC.BC..BC.BCF.BCFBC.B.CBC.BC.CBC",
+   "pressLandingMs": 81.6,
+   "rows": [
+    {
+     "releaseMs": 81.6,
+     "outcome": "death:inside-office@378.3",
+     "prefix": 6,
+     "agree": 14,
+     "compared": 38,
+     "codes": "...BC.BC.BC.BC.C..BC.BC.BC.BC.BC..BC.B????",
+     "stretched": 0
+    },
+    {
+     "releaseMs": 70,
+     "outcome": "death:inside-office@378.3",
+     "prefix": 6,
+     "agree": 14,
+     "compared": 38,
+     "codes": "...BC.BC.BC.BC.C..BC.BC.BC.BC.BC..BC.B????",
+     "stretched": 2
+    },
+    {
+     "releaseMs": 60,
+     "outcome": "6am",
+     "prefix": 6,
+     "agree": 16,
+     "compared": 42,
+     "codes": "...BC.BC.BC.BC.C..BC.BC.BC.BC.BC..BC.BC.BC",
+     "stretched": 12
+    },
+    {
+     "releaseMs": 50,
+     "outcome": "6am",
+     "prefix": 6,
+     "agree": 16,
+     "compared": 42,
+     "codes": "...BC.BC.BC.BC.C..BC.BC.BC.BC.BC..BC.BC.BC",
+     "stretched": 44
+    },
+    {
+     "releaseMs": 40,
+     "outcome": "6am",
+     "prefix": 6,
+     "agree": 16,
+     "compared": 42,
+     "codes": "...BC.BC.BC.BC.C..BC.BC.BC.BC.BC..BC.BC.BC",
+     "stretched": 49
+    },
+    {
+     "releaseMs": 30,
+     "outcome": "6am",
+     "prefix": 6,
+     "agree": 16,
+     "compared": 42,
+     "codes": "...BC.BC.BC.BC.C..BC.BC.BC.BC.BC..BC.BC.BC",
+     "stretched": 49
+    },
+    {
+     "releaseMs": 20,
+     "outcome": "6am",
+     "prefix": 6,
+     "agree": 16,
+     "compared": 42,
+     "codes": "...BC.BC.BC.BC.C..BC.BC.BC.BC.BC..BC.BC.BC",
+     "stretched": 49
+    },
+    {
+     "releaseMs": 10,
+     "outcome": "6am",
+     "prefix": 6,
+     "agree": 16,
+     "compared": 42,
+     "codes": "...BC.BC.BC.BC.C..BC.BC.BC.BC.BC..BC.BC.BC",
+     "stretched": 49
+    },
+    {
+     "releaseMs": 0,
+     "outcome": "6am",
+     "prefix": 6,
+     "agree": 16,
+     "compared": 42,
+     "codes": "...BC.BC.BC.BC.C..BC.BC.BC.BC.BC..BC.BC.BC",
+     "stretched": 50
+    }
+   ]
+  }
+ ],
+ "reading": {
+  "zeroOfTwenty": "On the 0/20 night (seed 23712, read off the static) the model dies to the Puppet at release latencies of 60 ms and more (at the press's 85.5 ms, 54.5 s in): a monitor still held when its raise completes is read again (Office g618/g619, contact-input.ts heldDropTouch) and drops the glitch view, so the box drains. At 50 ms and less it reaches 6 AM, as the phone did.",
+  "fullSix": "On full-06 at 10/20 (its measured seed 47593) the model died inside the office at 378.3 s at the press's 81.6 ms and at 70 ms; at 60 ms and less it reaches 6 AM, as the phone did. Its window agreement does not change (16 of 42, first disagreement at window 6): the release explains the outcome gap of this night, not its encounter divergence.",
+  "bound": "Both nights admit releases at 50 ms and less after the send, and neither admits the press's own latency. With the input-registration record's hall flash ending 3-5 updates before a release landed at 81.6 ms (docs/evidence/full06-input-registration-20260928.json), a release lands about 15-30 ms after its send: 50-70 ms sooner than a press.",
+  "consequence": "Every encounter replay that lands releases at the press latency (the landed variant) carries spurious held-contact drops; S2's \"the model kills Night 7 nights the phone wins\" is at least partly this. The 10/20 seed-scan predeclaration is superseded before its night to land releases at 20 ms."
+ },
+ "id": "phone-release-latency-4dd971d24ad952a1"
+}

@@ -211,6 +211,18 @@ Details:
     ([realignment](../docs/evidence/full06-audio-realignment-20261001.json),
     `s2-audio-realignment-f61f47d56098beb2`). DEVICE_MEASURED audio against
     MODEL_ONLY replays.
+  - **A release lands much sooner than a press (2026-10-01, MODEL_ONLY,
+    exploratory).** Landing each release at its press's latency (81.6-85.5
+    ms), as the encounter replays do, makes the model drop a monitor still
+    held when its raise completes (g618/g619) and lose two nights the phone
+    won: the 0/20 night (Puppet, 54.5 s) and full-06 at 10/20 (378.3 s). With
+    releases at 50 ms or less both reach 6 AM; full-06's windows stay 16 of 42
+    (first disagreement at 6), so this closes its outcome gap, not its
+    encounter gap. With the hall flash ending 3-5 updates early, a release
+    lands about 15-30 ms after its send
+    ([release latency](../docs/evidence/phone-release-latency-20261001.json),
+    `phone-release-latency-4dd971d24ad952a1`). The 10/20 seed-scan
+    pre-registration was superseded before its night to land releases at 20 ms.
   - **The phone's office random stream is read state by state (2026-10-01,
     pre-registered, SUPPORTED).** On a k3 Night 7 with every Custom Night dial
     at 0, the Companion 16 native static readout (no frame trace) identified

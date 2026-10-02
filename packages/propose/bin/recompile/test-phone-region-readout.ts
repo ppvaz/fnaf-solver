@@ -119,6 +119,22 @@ assert.equal(identifySeed(seedRule, []).verdict, 'UNIDENTIFIED', 'no seed scored
   assert.equal(id, `s2-seed-scan-night7-0of20-${sha(canon(body)).slice(0, 16)}`, 'seed scan record id');
 }
 
+// --- the release-latency bound (docs/evidence/phone-release-latency-20261001.json): each night's outcomes split by
+// release latency, every 6 AM at a lower latency than every death, and the bound the v2 predeclaration names inside it
+{
+  const rel = JSON.parse(readFileSync(join(ROOT, 'docs/evidence/phone-release-latency-20261001.json'), 'utf8'));
+  for (const n of rel.nights) {
+    const won = n.rows.filter((r: { outcome: string }) => r.outcome === '6am').map((r: { releaseMs: number }) => r.releaseMs);
+    const lost = n.rows.filter((r: { outcome: string }) => r.outcome !== '6am').map((r: { releaseMs: number }) => r.releaseMs);
+    assert.ok(won.length && lost.length && Math.max(...won) < Math.min(...lost), `${n.night}: outcomes split by release latency`);
+    assert.ok(lost.includes(n.pressLandingMs), `${n.night}: the press's own latency on releases loses the night`);
+  }
+  const v2 = JSON.parse(readFileSync(join(ROOT, 'docs/evidence/s2-seed-scan-night7-1020-v2-predeclaration-20261001.json'), 'utf8'));
+  for (const n of rel.nights) assert.ok(n.rows.find((r: { releaseMs: number }) => r.releaseMs === v2.releaseLatencyMs)?.outcome === '6am', `${n.night}: the v2 release latency plays the night as the phone did`);
+  const { id, ...body } = rel;
+  assert.equal(id, `phone-release-latency-${sha(canon(body)).slice(0, 16)}`, 'release latency record id');
+}
+
 // --- the records
 const records = readdirSync(join(ROOT, 'docs/evidence')).filter((f) => /^s2-region-readout.*\.json$/.test(f) && !f.includes('-predeclaration-'));
 for (const file of records) {
