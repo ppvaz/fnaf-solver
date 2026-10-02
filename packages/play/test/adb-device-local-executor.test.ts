@@ -586,7 +586,7 @@ try {
   const lostGo = new AdbDeviceLocalArtifactExecutor({ serial: 'fixture-device', adb: nightGoLostAdb,
     readyDelayMs: 1, pollMs: 250, observe: async () => ++lostGoObservations > 20 ? 'gameover' : 'night',
     onEvent: event => lostGoLog.push(event),
-    timing: { pollMs: 1, armSettleMs: 0, armObservationWindowMs: 500, gateRetryGapMs: 0, maskSettleMs: 0,
+    timing: { pollMs: 1, armSettleMs: 0, armObservationWindowMs: 500, gateRetryGapMs: 0,
       gateMinSlackMs: 10, gateBudgetMinMs: 10, gateBudgetMaxMs: 20, gateBudgetReserveMs: 40 },
     observeArm: async () => ({ sequence: ++lostGoSequence + 500, highlights: ['cam:8', 'cam:11'], viewing: null }),
     observeControlState: async () => ({ sequence: ++lostGoSequence, ageUs: 10,
@@ -609,7 +609,7 @@ try {
   const refuted = new AdbDeviceLocalArtifactExecutor({ serial: 'fixture-device', adb: gateAdb,
     readyDelayMs: 1, pollMs: 250, observe: refuteLifecycle.observe,
     onEvent: refuteLifecycle.onEvent,
-    timing: { pollMs: 1, armSettleMs: 0, armObservationWindowMs: 500, gateRetryGapMs: 0, maskSettleMs: 0,
+    timing: { pollMs: 1, armSettleMs: 0, armObservationWindowMs: 500, gateRetryGapMs: 0,
       gateMinSlackMs: 10, gateBudgetMinMs: 10, gateBudgetMaxMs: 20, gateBudgetReserveMs: 40 },
     observeArm: async () => ({ sequence: ++refuteSequence + 500,
       highlights: ['cam:8', 'cam:11'], viewing: null }),
@@ -639,9 +639,9 @@ try {
   // +200 ms, +400 ms and +800 ms. The gate was reliably killing the cycle it
   // existed to rescue.
   //
-  // The fixture above cannot see this because it sets maskSettleMs to 0 -- it
-  // zeroes the exact constant that caused the defect. This one makes the settle
-  // enormous: if the release is still anchored to it, the delay is unmissable.
+  // The settle that caused it (MASK_SETTLE_MS, 750 ms: the mask effect's
+  // measured 358-712 ms) is gone with the read-back that used it, so a release
+  // still anchored to a settle would show here as a gap of that order.
   const settleLog: ExecutorEvent[] = [];
   const settleLifecycle = finishAfter(settleLog, event => event.type === 'control.gate');
   let settleSequence = 0;
@@ -649,7 +649,6 @@ try {
     readyDelayMs: 1, pollMs: 250, observe: settleLifecycle.observe,
     onEvent: settleLifecycle.onEvent,
     timing: { pollMs: 1, armSettleMs: 0, armObservationWindowMs: 500, gateRetryGapMs: 0,
-      maskSettleMs: 4000,
       gateMinSlackMs: 10, gateBudgetMinMs: 10, gateBudgetMaxMs: 20, gateBudgetReserveMs: 40 },
     observeArm: async () => ({ sequence: ++settleSequence + 500,
       highlights: ['cam:8', 'cam:11'], viewing: null }),
@@ -661,19 +660,15 @@ try {
   assert.ok(settledGates.length > 0, 'the settle fixture must reach a gate');
   const correctedGate = settledGates.find(event => event.status === 'CORRECTED');
   assert.ok(correctedGate, 'the settle fixture must produce a correction to measure');
-  assert.ok(Number(correctedGate.releaseAt) - Number(correctedGate.reachedAt) < 4000,
+  assert.ok(Number(correctedGate.releaseAt) - Number(correctedGate.reachedAt) < 750,
     'a correction must not anchor the release to the mask settle: the schedule ' +
-    'tolerates ~200 ms of shift and the settle is measured in seconds');
+    'tolerates ~200 ms of shift and the settle was 750 ms');
 
-  // The verification is no longer part of the gate event: it cannot be, since
-  // the gate no longer waits for it.
+  // No verification rides on the gate event, and none is read after it.
   assert.ok(!correctedGate.verify,
-    'the gate event must no longer carry a verification it waited for');
-  // It is deliberately NOT asserted to have fired here. This fixture ends the
-  // night on the first gate, so the read-back correctly finds the run already
-  // stopped and emits nothing -- best-effort is the contract, and a
-  // verification that cannot run must never be a night failure. What is
-  // asserted is that it was not paid for on the critical path, above.
+    'the gate event must not carry a verification it waited for');
+  assert.ok(!settleLog.some(event => event.type === 'control.gate.verify'),
+    'a correction is not read back: that read would sit beside the release');
 
   // Darkness stays unknown: mask-on and a blacked-out office read alike.
   const darkLog: ExecutorEvent[] = [];
@@ -682,7 +677,7 @@ try {
   const dark = new AdbDeviceLocalArtifactExecutor({ serial: 'fixture-device', adb: gateAdb,
     readyDelayMs: 1, pollMs: 250, observe: darkLifecycle.observe,
     onEvent: darkLifecycle.onEvent,
-    timing: { pollMs: 1, armSettleMs: 0, armObservationWindowMs: 500, gateRetryGapMs: 0, maskSettleMs: 0,
+    timing: { pollMs: 1, armSettleMs: 0, armObservationWindowMs: 500, gateRetryGapMs: 0,
       gateMinSlackMs: 10, gateBudgetMinMs: 10, gateBudgetMaxMs: 20, gateBudgetReserveMs: 40 },
     observeArm: async () => ({ sequence: ++darkSequence + 500,
       highlights: ['cam:8', 'cam:11'], viewing: null }),
@@ -704,7 +699,7 @@ try {
   const armLifecycle = new Promise<void>(resolve => { releaseArmLifecycle = resolve; });
   const armPass = new AdbDeviceLocalArtifactExecutor({ serial: 'fixture-device', adb: fakeAdb,
     readyDelayMs: 1, pollMs: 250,
-    timing: { pollMs: 1, armSettleMs: 0, armObservationWindowMs: 2000, gateRetryGapMs: 0, maskSettleMs: 0 },
+    timing: { pollMs: 1, armSettleMs: 0, armObservationWindowMs: 2000, gateRetryGapMs: 0 },
     observe: async () => {
       if (armLifecycleCalls++ === 0) return 'night';
       await armLifecycle;
@@ -735,7 +730,7 @@ try {
   const observeOnceLifecycle = finishAfter(observeOnceLog, event => event.type === 'arm.verified');
   const observeOncePass = new AdbDeviceLocalArtifactExecutor({ serial: 'fixture-device', adb: fakeAdb,
     readyDelayMs: 1, pollMs: 250,
-    timing: { pollMs: 1, armSettleMs: 0, armObservationWindowMs: 20, gateRetryGapMs: 0, maskSettleMs: 0 },
+    timing: { pollMs: 1, armSettleMs: 0, armObservationWindowMs: 20, gateRetryGapMs: 0 },
     observe: observeOnceLifecycle.observe,
     onEvent: observeOnceLifecycle.onEvent,
     observeArm: async () => ({ sequence: 1, highlights: ['cam:8', 'cam:11'], viewing: null }) });
@@ -753,7 +748,7 @@ try {
   const observeOnceFailLog: ExecutorEvent[] = [];
   const observeOnceFail = new AdbDeviceLocalArtifactExecutor({ serial: 'fixture-device', adb: fakeAdb,
     readyDelayMs: 1, pollMs: 250,
-    timing: { pollMs: 1, armSettleMs: 0, armObservationWindowMs: 0, gateRetryGapMs: 0, maskSettleMs: 0 },
+    timing: { pollMs: 1, armSettleMs: 0, armObservationWindowMs: 0, gateRetryGapMs: 0 },
     observe: async () => 'night',
     onEvent: event => observeOnceFailLog.push(event),
     observeArm: async () => ({ sequence: 1, highlights: ['cam:9'], viewing: null }) });
@@ -772,7 +767,7 @@ try {
     event => event.type === 'arm.unresolved');
   const observeOnceUnknown = new AdbDeviceLocalArtifactExecutor({ serial: 'fixture-device', adb: fakeAdb,
     readyDelayMs: 1, pollMs: 250,
-    timing: { pollMs: 1, armSettleMs: 0, armObservationWindowMs: 0, gateRetryGapMs: 0, maskSettleMs: 0 },
+    timing: { pollMs: 1, armSettleMs: 0, armObservationWindowMs: 0, gateRetryGapMs: 0 },
     observe: observeOnceUnknownLifecycle.observe,
     onEvent: observeOnceUnknownLifecycle.onEvent,
     observeArm: async () => ({ sequence: 1, highlights: null, reason: 'ambiguous-threshold' }) });
@@ -792,7 +787,7 @@ try {
   const laterWindowLifecycle = finishAfter(laterWindowLog, event => event.type === 'arm.verified' || event.type === 'arm.unresolved');
   const laterWindow = new AdbDeviceLocalArtifactExecutor({ serial: 'fixture-device', adb: fakeAdb,
     readyDelayMs: 1, pollMs: 250,
-    timing: { pollMs: 1, armSettleMs: 0, armObservationWindowMs: 0, gateRetryGapMs: 0, maskSettleMs: 0 },
+    timing: { pollMs: 1, armSettleMs: 0, armObservationWindowMs: 0, gateRetryGapMs: 0 },
     observe: laterWindowLifecycle.observe,
     onEvent: laterWindowLifecycle.onEvent,
     observeArm: async () => (++laterWindowReads === 1
@@ -813,7 +808,7 @@ try {
   let unknownRetryStarted = false;
   const unknownThenPass = new AdbDeviceLocalArtifactExecutor({ serial: 'fixture-device', adb: fakeAdb,
     readyDelayMs: 1, pollMs: 250, observe: async () => 'night',
-    timing: { pollMs: 1, armSettleMs: 0, armObservationWindowMs: 500, gateRetryGapMs: 0, maskSettleMs: 0 },
+    timing: { pollMs: 1, armSettleMs: 0, armObservationWindowMs: 500, gateRetryGapMs: 0 },
     onEvent: event => {
       unknownRetryLog.push(event);
       if (event.type === 'arm.retry') unknownRetryStarted = true;
@@ -838,7 +833,7 @@ try {
 
   const armFail = new AdbDeviceLocalArtifactExecutor({ serial: 'fixture-device', adb: fakeAdb,
     readyDelayMs: 1, pollMs: 250,
-    timing: { pollMs: 1, armSettleMs: 0, armObservationWindowMs: 0, gateRetryGapMs: 0, maskSettleMs: 0 },
+    timing: { pollMs: 1, armSettleMs: 0, armObservationWindowMs: 0, gateRetryGapMs: 0 },
     observe: async () => 'night',
     observeArm: async () => ({ sequence: ++armSequence, highlights: ['cam:9', 'cam:11'], viewing: null }) });
   await assert.rejects(() => armFail.execute(runtimeArmRequest),

@@ -18,7 +18,7 @@ import type { ArmVerification } from './artifact-executor.ts';
 import { buttonStrokeState } from '@sixam/play';
 import {
   DEFAULT_READY_DELAY_MS, GATE_BUDGET_MAX_MS, GATE_BUDGET_MIN_MS, GATE_BUDGET_RESERVE_MS, GATE_MIN_SLACK_MS,
-  SHARED_HID_RELEASE, compileDeviceLocalHidSchedule, line, sharedScheduleBody,
+  SHARED_HID_RELEASE, compileDeviceLocalHidSchedule, sharedScheduleBody,
 } from './hid-schedule.ts';
 import type { HidSchedule } from './hid-schedule.ts';
 import { compactControlSample, controlEffectVerdict, effectTransitions } from './control-effect.ts';
@@ -49,7 +49,6 @@ interface ExecutorTiming {
   readonly armSettleMs?: number;
   readonly armObservationWindowMs?: number;
   readonly gateRetryGapMs?: number;
-  readonly maskSettleMs?: number;
   readonly pollMs?: number;
   readonly gateMinSlackMs?: number;
   readonly gateBudgetMinMs?: number;
@@ -171,11 +170,6 @@ const NIGHT_HANDOFF_BUDGET_MS = 100;
 // missing effect may spend, since reads are serialised and the next
 // transition's sampling waits behind them.
 const CONTROL_EFFECT_MAX_SAMPLES = 6;
-// The mask effect appeared 358-712 ms after contact across 15 transitions in
-// the 2026-09-09 runs. Verifying before that measures the old state: the
-// first gated run recorded CORRECTION-UNCONFIRMED from a frame captured
-// ~200 ms after the corrective press, which could not have shown it yet.
-const MASK_SETTLE_MS = 750;
 // A single 10 fps frame can be ambiguous without the state being unreadable.
 // UNKNOWN still stops the night, but only once it has survived resampling.
 // Measured over both 2026-09-09 gated runs: given one ambiguous read, the
@@ -229,32 +223,6 @@ function runAdbScript(adb: string, serial: string, script: string, onOutput: (ch
   });
   child.stdin.end(script);
   return { child, promise };
-}
-
-async function pushFile(adb: string, serial: string, source: string, destination: string) {
-  try {
-    await execFile(adb, ['-s', serial, 'push', source, destination], { timeout: 30000, maxBuffer: 1024 * 1024 });
-  } catch (error) {
-    throw new Error(`could not push ${source}: ${adbFailure(error)}`);
-  }
-}
-
-async function remoteHash(adb: string, serial: string, path: string) {
-  try {
-    const result = await execFile(adb, ['-s', serial, 'shell', 'sha256sum', path], {
-      timeout: 10000, maxBuffer: 1024 * 1024,
-    });
-    return result.stdout.trim().split(/\s+/)[0] ?? '';
-  } catch (error) {
-    throw new Error(`could not hash remote asset ${path}: ${adbFailure(error)}`);
-  }
-}
-
-async function removeRemoteFiles(adb: string, serial: string, paths: readonly unknown[]) {
-  const safe = paths.filter((value): value is string => typeof value === 'string' && /^\/data\/local\/tmp\/fnaf2-[A-Za-z0-9._-]+$/.test(value));
-  if (!safe.length) return;
-  try { await execFile(adb, ['-s', serial, 'shell', 'rm', '-f', ...safe], { timeout: 10000, maxBuffer: 1024 * 1024 }); }
-  catch { /* cleanup is best effort; the active HID process is handled separately */ }
 }
 
 async function waitForRemoteFile(adb: string, serial: string, path: string, {
@@ -317,7 +285,6 @@ export class AdbDeviceLocalArtifactExecutor {
   declare armSettleMs: number;
   declare armObservationWindowMs: number;
   declare gateRetryGapMs: number;
-  declare maskSettleMs: number;
   declare staticTerminalWaitMs: number;
   declare observerGapBoundMs: number;
   declare gateTiming: { minSlackMs: number; budgetMinMs: number; budgetMaxMs: number; budgetReserveMs: number; };
@@ -329,7 +296,6 @@ export class AdbDeviceLocalArtifactExecutor {
   /** The running process (the shell or the shared HID), compared by identity only. */
   declare child: object | null;
   declare running: boolean;
-  declare aborted: boolean;
   declare stopProcess: (() => Promise<void>) | null;
   declare nightReleaseResolve: (() => void) | null;
   declare nightReleaseAction: ((requestedAt: number) => Promise<void>) | null;
@@ -364,7 +330,6 @@ export class AdbDeviceLocalArtifactExecutor {
       armSettleMs: timing.armSettleMs ?? ARM_SETTLE_MS,
       armObservationWindowMs: timing.armObservationWindowMs ?? ARM_OBSERVATION_WINDOW_MS,
       gateRetryGapMs: timing.gateRetryGapMs ?? GATE_RETRY_GAP_MS,
-      maskSettleMs: timing.maskSettleMs ?? MASK_SETTLE_MS,
       pollMs: timing.pollMs ?? pollMs,
       gateMinSlackMs: timing.gateMinSlackMs ?? GATE_MIN_SLACK_MS,
       gateBudgetMinMs: timing.gateBudgetMinMs ?? GATE_BUDGET_MIN_MS,
@@ -383,7 +348,6 @@ export class AdbDeviceLocalArtifactExecutor {
     this.armSettleMs = timingValues.armSettleMs;
     this.armObservationWindowMs = timingValues.armObservationWindowMs;
     this.gateRetryGapMs = timingValues.gateRetryGapMs;
-    this.maskSettleMs = timingValues.maskSettleMs;
     this.staticTerminalWaitMs = timingValues.staticTerminalWaitMs;
     this.observerGapBoundMs = timingValues.observerGapBoundMs;
     this.gateTiming = { minSlackMs: timingValues.gateMinSlackMs,
@@ -402,7 +366,7 @@ export class AdbDeviceLocalArtifactExecutor {
     // (night-anchor.js). Unshared runs ignore it.
     this.nightReleaseOwner = nightReleaseOwner;
     this.onEvent = onEvent; this.onOutput = onOutput;
-    this.child = null; this.running = false; this.aborted = false;
+    this.child = null; this.running = false;
     this.stopProcess = null;
     this.nightReleaseResolve = null;
     this.nightReleaseAction = null;
@@ -475,7 +439,7 @@ export class AdbDeviceLocalArtifactExecutor {
     // attempts to remove the measured 26-30 s office-to-marker latency each
     // claimed success that the evidence did not support.
     this.onEvent({ type: 'hid.execute-entered', at: Date.now() });
-    this.running = true; this.aborted = false;
+    this.running = true;
     const sharedHid = this.sharedHid?.() ?? null;
     const sharedMode = sharedHid !== null;
     if (sharedMode && typeof sharedHid.write !== 'function')
@@ -670,10 +634,6 @@ export class AdbDeviceLocalArtifactExecutor {
     let observer = Promise.resolve();
     let armObserver = Promise.resolve();
     const effectObservers: Promise<void>[] = [];
-    // Correction read-backs, deliberately OFF the schedule's critical path:
-    // they are awaited at teardown so a night never ends with one in flight,
-    // but they never hold a gate release. See the gate body for why.
-    const verifyTasks: (() => Promise<void>)[] = [];
     let completionTimer: ReturnType<typeof setTimeout> | null = null;
     let startControlEffectLedger: (phase: string, originAt: number, monitorTransitions: readonly MonitorTransition[],
       maskTransitions: readonly MaskTransition[], options?: LedgerOptions) => void = (): void => {};
@@ -974,7 +934,6 @@ export class AdbDeviceLocalArtifactExecutor {
                 : !strokes.available && sample.maskOn !== null ? 'mask-rule'
                   : refutesMaskOn ? 'grid-luma-refutation'
                     : strokes.available ? 'stroke-signature-absent' : 'stroke-unavailable';
-            let corrected = false;
             let monitorCorrected = false;
             let correctedAt: number | null = null;
             let status;
@@ -988,7 +947,6 @@ export class AdbDeviceLocalArtifactExecutor {
               entry.believedMonitorUp === false && sample.monitorUp === true;
             if (monitorInverted && gated.monitorCorrection) {
               status = 'CORRECTED';
-              corrected = true;
               monitorCorrected = true;
               if (sharedMode) await feedShared(gated.monitorCorrection);
               else await touchArm('gateFix');
@@ -1009,7 +967,6 @@ export class AdbDeviceLocalArtifactExecutor {
               status = 'AGREED';
             } else {
               status = 'CORRECTED';
-              corrected = true;
               if (sharedMode) await feedShared(gated.maskCorrection ?? []);
               else await touchArm('gateFix');
               correctedAt = Date.now();
@@ -1036,42 +993,12 @@ export class AdbDeviceLocalArtifactExecutor {
             // was reliably killing it instead.
             //
             // The corrective contact is already delivered above; the game does
-            // not care whether anyone watched. So release on schedule and read
-            // the verification frame afterwards, off the critical path. The
-            // diagnostic survives as a `control.gate.verify` event; only its
-            // bill to the schedule is gone.
-            if (corrected && correctedAt !== null) {
-              const correctionAt = correctedAt;
-              const believed = entry.believedMaskOn;
-              const gateAt = entry.gateAtMs;
-              const priorSequence = sample.sequence;
-              // Pushed without being called since a0188751 (2026-09-13): this
-              // read-back has not run on the phone since, and no run pack after
-              // night7-anchoredj7-aim2315-20260913T223235Z retains a
-              // control.gate.verify event. Calling it adds a synchronous control
-              // read beside the gate's release, which changes what the phone does.
-              verifyTasks.push((async () => {
-                try {
-                  await waitUntil(correctionAt + this.maskSettleMs);
-                  if (!controlStillRunning()) return;
-                  const verify = compactControlSample((await readControlState()).sample);
-                  const staleFrame = verify !== null && verify.sequence !== null &&
-                    String(verify.sequence) === String(priorSequence);
-                  const unresolved = monitorCorrected
-                    ? verify === null || verify.monitorUp === null
-                    : verify === null || verify.maskOn === null;
-                  const mismatched = monitorCorrected
-                    ? verify !== null && verify.monitorUp === true
-                    : verify !== null && verify.maskOn !== null && verify.maskOn !== believed;
-                  this.onEvent({ type: 'control.gate.verify', gateAtMs: gateAt,
-                    outcome: staleFrame ? 'CORRECTION-UNREAD'
-                      : unresolved ? 'CORRECTION-UNCONFIRMED'
-                        : mismatched ? 'CORRECTION-UNCONFIRMED' : 'CORRECTION-CONFIRMED',
-                    ...(monitorCorrected ? { monitorCorrected: true } : {}),
-                    correctedAt: correctionAt, verify });
-                } catch { /* a verification that cannot run is not a night failure */ }
-              }));
-            }
+            // not care whether anyone watched. So release on schedule. The
+            // read-back that replaced the wait (a `control.gate.verify` event
+            // off the critical path) was pushed without being called from
+            // a0188751 (2026-09-13) and is gone: calling it would add a control
+            // read beside the release, which changes what the phone does. Packs
+            // before that commit keep their verify events.
             this.onEvent({ type: 'control.gate', gateAtMs: entry.gateAtMs,
               cycle: entry.cycle, nextActionId: entry.nextActionId,
               believedMaskOn: entry.believedMaskOn, observedMaskOn,
@@ -1623,7 +1550,7 @@ export class AdbDeviceLocalArtifactExecutor {
       if (completionTimer !== null) clearTimeout(completionTimer);
       this.nightReleaseAction = null;
       this.unblockNightRelease();
-      await Promise.all([observer, armObserver, actuationStop, ...effectObservers, ...verifyTasks]);
+      await Promise.all([observer, armObserver, actuationStop, ...effectObservers]);
       const anr = await readAnrEvents(this.adb, this.serial);
       if (anr !== null) this.onEvent({ type: 'device.anr', count: anr.length, lines: anr });
       this.child = null; this.running = false;
@@ -1635,7 +1562,6 @@ export class AdbDeviceLocalArtifactExecutor {
   }
 
   async abort(reason = 'aborted') {
-    this.aborted = true;
     if (this.stopProcess) await this.stopProcess();
     return { status: 'ABORTED', reason: String(reason) };
   }

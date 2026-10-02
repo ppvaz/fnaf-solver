@@ -87,7 +87,7 @@ function controlPoint(request: ExecutorRequest, control: string) {
   return point(request.profile.controlMap?.[control], control);
 }
 
-export function line(command: string, fields: Record<string, unknown> = {}) {
+function line(command: string, fields: Record<string, unknown> = {}) {
   return JSON.stringify({ id: HID_ID, command, ...fields });
 }
 

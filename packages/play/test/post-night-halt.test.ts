@@ -114,7 +114,7 @@ const gatedRequest = {
     block('t-wind', 300, [action('t-wind', 'hold', 'wind', 300, { durationMs: 33 })]),
   ],
 };
-const gateTiming = { pollMs: 1, armSettleMs: 0, armObservationWindowMs: 500, gateRetryGapMs: 0, maskSettleMs: 0,
+const gateTiming = { pollMs: 1, armSettleMs: 0, armObservationWindowMs: 500, gateRetryGapMs: 0,
   gateMinSlackMs: 10, gateBudgetMinMs: 10, gateBudgetMaxMs: 20, gateBudgetReserveMs: 40 };
 // An observe-once arm compiles to a gated schedule.
 const gatedSchedule = compileDeviceLocalHidSchedule(gatedRequest, { readyDelayMs: 1,
