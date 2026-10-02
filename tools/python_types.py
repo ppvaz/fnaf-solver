@@ -22,6 +22,16 @@ from mypy import api
 
 ROOT = Path(os.environ.get('PYTHON_TYPES_ROOT') or Path(__file__).resolve().parent.parent)
 SHARED = ['packages/play/src/sensors/screencap', 'packages/play/src/safety', 'packages/play/test/testdata']
+# Sources that run under Python 2.7, which mypy cannot check, each with what runs it.
+PYTHON2 = {
+    'packages/source/recompile/fnaf2-config.py': 'a Chowdren --config, loaded by the pinned converter under Python 2.7',
+    'packages/source/recompile/game-config.py': 'a Chowdren --config, loaded by the pinned converter under Python 2.7',
+    'packages/source/recompile/probe-onloop.py': 'a probe run under Python 2.7 against the patched mmfparser',
+    'packages/source/recompile/probe-sounds.py': 'a probe run under Python 2.7 against the patched mmfparser',
+    'packages/source/recompile/probe-unknown-params.py': 'a probe run under Python 2.7 against the patched mmfparser',
+    'packages/source/recompile/test-child-events.py': 'a fixture run under Python 2.7 through the patched Chowdren emitter',
+    'packages/source/recompile/test-mobile-parser.py': 'a fixture run under Python 2.7 against the patched mmfparser',
+}
 # Linux, whatever the host: mypy checks the branches of the platform it is told, and CI is Linux.
 # Counted on the Mac, os.sched_setaffinity (Linux-only) was one more error than CI saw, and every
 # push since 8e6d03fa failed on a baseline the Mac had written.
@@ -41,7 +51,7 @@ def area_of(path: str) -> str:
 
 def tracked() -> list[str]:
     out = subprocess.run(['git', 'ls-files', '-z', '--', '*.py'], cwd=ROOT, capture_output=True, text=True, check=True)
-    return sorted(path for path in out.stdout.split('\0') if path)
+    return sorted(path for path in out.stdout.split('\0') if path and path not in PYTHON2)
 
 
 def check(directory: str, files: list[str]) -> list[str]:

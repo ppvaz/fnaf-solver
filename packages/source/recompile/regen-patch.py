@@ -27,21 +27,22 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_PATCH = os.path.join(HERE, 'mmfparser-chowdren-mobile.patch')
 
 
-def sections(text):
+def sections(text: str) -> list[tuple[str, str]]:
     out = []
     for part in re.split(r'(?m)^(?=diff --git )', text):
         if not part.startswith('diff --git '):
             continue
         m = re.match(r'diff --git a/(\S+) b/', part)
+        assert m is not None  # every section starts with its diff header
         out.append((m.group(1), part))
     return out
 
 
-def git(tree, *args):
+def git(tree: str, *args: str) -> str:
     return subprocess.run(['git', '-C', tree] + list(args), check=True, capture_output=True).stdout.decode('utf-8', 'surrogateescape')
 
 
-def verify(patch_text, paths, pristine, tree):
+def verify(patch_text: str, paths: list[str], pristine: str, tree: str) -> tuple[bool, str]:
     work = tempfile.mkdtemp(prefix='regen-patch-')
     try:
         copy = os.path.join(work, 'base')
@@ -61,7 +62,7 @@ def verify(patch_text, paths, pristine, tree):
         shutil.rmtree(work, ignore_errors=True)
 
 
-def main():
+def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument('--tree', required=True)
     ap.add_argument('--pristine', required=True)

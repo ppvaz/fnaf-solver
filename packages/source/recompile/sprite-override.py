@@ -33,7 +33,7 @@ import zlib
 from PIL import Image, ImageChops
 
 
-def read_asset_image(path, handle, image_count):
+def read_asset_image(path: str, handle: int, image_count: int) -> Image.Image:
     with open(path, 'rb') as f:
         f.seek(image_count * 2 + handle * 4)
         (offset,) = struct.unpack('<I', f.read(4))
@@ -45,7 +45,7 @@ def read_asset_image(path, handle, image_count):
     return Image.frombytes('RGBA', (w, h), data)
 
 
-def parse_gain(text):
+def parse_gain(text: str) -> tuple[float, ...]:
     parts = [float(v) for v in text.split(',')]
     if len(parts) == 1:
         parts *= 3
@@ -54,7 +54,7 @@ def parse_gain(text):
     return tuple(parts)
 
 
-def diff_box(a, b, threshold=30):
+def diff_box(a: Image.Image, b: Image.Image, threshold: int = 30) -> tuple[int, int, int, int]:
     """Bounding box (x, y, w, h) of pixels whose RGB differs by more than threshold (sum of channels)."""
     d = ImageChops.difference(a.convert('RGB'), b.convert('RGB'))
     r, g, bl = d.split()
@@ -66,7 +66,8 @@ def diff_box(a, b, threshold=30):
     return bbox[0], bbox[1], bbox[2] - bbox[0], bbox[3] - bbox[1]
 
 
-def fit(cutout, size, box, mode='contain', gain=(1.0, 1.0, 1.0)):
+def fit(cutout: Image.Image, size: tuple[int, int], box: tuple[int, ...], mode: str = 'contain',
+        gain: tuple[float, ...] = (1.0, 1.0, 1.0)) -> tuple[Image.Image, tuple[int, int, int, int]]:
     """The cutout scaled into box (x, y, w, h) of a transparent canvas of size, anchored bottom-centre."""
     cut = cutout.convert('RGBA')
     trim = cut.getchannel('A').getbbox()
@@ -82,14 +83,14 @@ def fit(cutout, size, box, mode='contain', gain=(1.0, 1.0, 1.0)):
     else:
         scale = min(bw / cut.width, bh / cut.height)
     w, h = max(1, round(cut.width * scale)), max(1, round(cut.height * scale))
-    scaled = cut.convert('RGBa').resize((w, h), Image.LANCZOS).convert('RGBA')
+    scaled = cut.convert('RGBa').resize((w, h), Image.Resampling.LANCZOS).convert('RGBA')
     x, y = bx + (bw - w) // 2, by + bh - h
     layer = Image.new('RGBA', size, (0, 0, 0, 0))
     layer.paste(scaled, (x, y))
     return layer, (x, y, w, h)
 
 
-def main(argv=None):
+def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split('\n\n')[0])
     ap.add_argument('cutout', help='RGBA PNG; its transparent margin is trimmed')
     ap.add_argument('--out', required=True, help='PNG to write (keep it outside the repository)')
@@ -130,6 +131,7 @@ def main(argv=None):
     if base is not None and base.size != size:
         ap.error(f'the base is {base.size[0]}x{base.size[1]}, the sprite {size[0]}x{size[1]}')
 
+    box: tuple[int, ...]
     if args.box is None:
         box = (0, 0) + size
     elif args.box == 'diff':

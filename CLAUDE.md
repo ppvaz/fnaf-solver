@@ -166,11 +166,17 @@ longer rebuilds.
   `isList`, `isOneOf`, `isText`, `fail(): never`, `@sixam/kernel` labels) and
   ends with `return value as unknown as T`: the one assertion where a checked
   record becomes its type. `Array.isArray` narrows to `any[]`; use `isList`.
-- Python follows the same rule, alongside TypeScript: `mypy --strict
+- Python stays only where Chowdren, numpy or Pillow forces it (Pedro,
+  2026-10-02: "treat the unforced Python the way you are treating the host
+  shell"; Pillow: "Keep Pillow in Python"). Every other script is characterized,
+  ported to TypeScript, compared and switched, as the host shell scripts are
+  (ported one at a time, their dry runs characterized and compared); seedpin
+  moves into the Companion. The Python that stays is held to `mypy --strict
   --disallow-any-explicit` per script directory (`tools/python_types.py`),
-  counted per area by `tools/test-python-types.ts` against `pythonTypes`. Host
-  shell scripts are ported to TypeScript one at a time (their dry runs
-  characterized and compared); seedpin moves into the Companion.
+  counted per area by `tools/test-python-types.ts` against `pythonTypes`. A
+  Python 2 source stops mypy for its whole directory (its count was 1 while six
+  Python 3 scripts beside it went unchecked), so each file that runs under 2.7
+  is named in `python_types.py`'s `PYTHON2` with what runs it.
 - Types never name `HidWireTransport` outside the device runners
   `tools/architecture-test.ts` lists, not even in `import type`: that gate
   counts the identifier. Type a contact port by the methods it calls.

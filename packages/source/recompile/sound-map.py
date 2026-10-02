@@ -31,16 +31,102 @@ import os
 import re
 import subprocess
 import wave
+from collections.abc import Sequence
+from typing import TYPE_CHECKING, Literal, NotRequired, TypedDict, Union, cast
+
+if TYPE_CHECKING:
+    import numpy as np
+    import numpy.typing as npt
 
 SCHEMA = 'recompile-sound-map-v1'
 LENGTH_TOLERANCE_MS = 30
 
+# A mono mix: a numpy array where numpy imports, else a list.
+Samples = Union['npt.NDArray[np.float64]', list[float]]
 
-def sha256(path):
+
+class FileInfo(TypedDict):
+    """What ffprobe reports of a sound file."""
+    codec: str | None
+    rate: int
+    channels: int
+    durationMs: float
+
+
+class Audition(TypedDict, total=False):
+    """A bank record's audition: the length the runtime decoded, and how its output correlates with each file."""
+    decodedLengthMs: float
+    nccHandleFile: float | None
+    nccIndexFile: float | None
+
+
+class Row(TypedDict):
+    """One sound-bank record's mapping."""
+    handle: int
+    bankIndex: int
+    name: str
+    flags: int
+    declaredLengthMs: float
+    declaredRate: int
+    file: str | None
+    fileSha256: str | None
+    fileDurationMs: float | None
+    fileRate: int | None
+    fileChannels: int | None
+    fileCodec: str | None
+    indexFile: str | None
+    declaredMatchesHandleFile: bool
+    declaredMatchesIndexFile: bool
+    assetId: int
+    define: str | None
+    sampleParameters: int
+    events: list[str | None]
+    audition: NotRequired[Audition]
+
+
+class Anchor(TypedDict):
+    """A phone-measured pair the table must reproduce."""
+    handle: int
+    file: str
+    note: str
+    mappedFile: str | None
+    reproduced: bool
+
+
+class Summary(TypedDict):
+    """The table's counts."""
+    records: int
+    handleNotIndex: int
+    declaredLengthMatchesHandleFile: int
+    declaredLengthMatchesIndexFile: int
+    auditionBetterOnHandleFile: int
+    auditionScored: int
+    anchorsReproduced: int
+    anchors: int
+
+
+class SoundMap(TypedDict):
+    """A recompile-sound-map-v1 record."""
+    schema: str
+    game: str
+    claimLevel: str
+    fidelity: str
+    rule: str
+    lengthToleranceMs: int
+    handleCount: int
+    scope: dict[str, str]
+    rows: list[Row]
+    anchors: list[Anchor]
+    soloCaptures: dict[str, dict[str, object]]
+    summary: NotRequired[Summary]
+    evidenceId: NotRequired[str]
+
+
+def sha256(path: str) -> str:
     return hashlib.sha256(open(path, 'rb').read()).hexdigest()
 
 
-def ffprobe(path):
+def ffprobe(path: str) -> FileInfo:
     out = subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'stream=codec_name,sample_rate,channels:format=duration',
                           '-of', 'json', path], capture_output=True, text=True, check=True).stdout
     j = json.loads(out)
@@ -49,7 +135,7 @@ def ffprobe(path):
             'durationMs': round(float(j['format']['duration']) * 1000.0, 1)}
 
 
-def decode(path, rate):
+def decode(path: str, rate: int) -> 'array.array[int]':
     raw = subprocess.run(['ffmpeg', '-v', 'error', '-i', path, '-f', 's16le', '-ac', '1', '-ar', str(rate), '-'],
                          capture_output=True, check=True).stdout
     a = array.array('h')
@@ -57,7 +143,7 @@ def decode(path, rate):
     return a
 
 
-def mono_mix(path):
+def mono_mix(path: str) -> tuple[int, Samples]:
     with wave.open(path, 'rb') as w:
         rate, ch = w.getframerate(), w.getnchannels()
         a = array.array('h')
@@ -70,83 +156,105 @@ def mono_mix(path):
         return rate, [sum(a[i:i + ch]) / float(ch) for i in range(0, len(a) - ch + 1, ch)]
 
 
-def best_ncc(mix, start, ref, lag, step):
-    try:
-        import numpy as np
-    except ImportError:
-        np = None
+def _ncc_numpy(mix: 'npt.NDArray[np.float64]', start: int, ref: Sequence[int], lag: int, step: int) -> float:
+    import numpy as np
     top = -1.0
-    if not len(ref):
-        return None
-    r = (np.asarray(ref, dtype=float) if np else list(ref))
-    if np is not None:
-        r = r - r.mean()
-        rn = float((r * r).sum())
+    r = np.asarray(ref, dtype=float)
+    r = r - r.mean()
+    rn = float((r * r).sum())
     for off in range(-lag, lag + 1, step):
         a = start + off
         if a < 0 or a + len(ref) > len(mix):
             continue
         x = mix[a:a + len(ref)]
-        if np is not None:
-            x = x - x.mean()
-            den = math.sqrt(float((x * x).sum()) * rn)
-            c = float((x * r).sum()) / den if den else 0.0
-        else:
-            mx, mr = sum(x) / len(x), sum(r) / len(r)
-            num = sum((p - mx) * (q - mr) for p, q in zip(x, r))
-            den = math.sqrt(sum((p - mx) ** 2 for p in x) * sum((q - mr) ** 2 for q in r))
-            c = num / den if den else 0.0
+        x = x - x.mean()
+        den = math.sqrt(float((x * x).sum()) * rn)
+        c = float((x * r).sum()) / den if den else 0.0
         top = max(top, c)
-    return round(top, 3)
+    return top
 
 
-def evidence_id(result):
+def _ncc_lists(mix: list[float], start: int, ref: Sequence[int], lag: int, step: int) -> float:
+    top = -1.0
+    r = list(ref)
+    for off in range(-lag, lag + 1, step):
+        a = start + off
+        if a < 0 or a + len(ref) > len(mix):
+            continue
+        x = mix[a:a + len(ref)]
+        mx, mr = sum(x) / len(x), sum(r) / len(r)
+        num = sum((p - mx) * (q - mr) for p, q in zip(x, r))
+        den = math.sqrt(sum((p - mx) ** 2 for p in x) * sum((q - mr) ** 2 for q in r))
+        c = num / den if den else 0.0
+        top = max(top, c)
+    return top
+
+
+def best_ncc(mix: Samples, start: int, ref: Sequence[int], lag: int, step: int) -> float | None:
+    """The best normalised correlation of ref against mix around start, with numpy where it imports."""
+    try:
+        import numpy  # noqa: F401 -- the path follows the import, as mono_mix's does
+        have_numpy = True
+    except ImportError:
+        have_numpy = False
+    if not len(ref):
+        return None
+    # mono_mix built the mix with numpy exactly when numpy imports.
+    if not have_numpy:
+        return round(_ncc_lists(cast(list[float], mix), start, ref, lag, step), 3)
+    return round(_ncc_numpy(cast('npt.NDArray[np.float64]', mix), start, ref, lag, step), 3)
+
+
+def evidence_id(result: SoundMap) -> str:
     body = dict(result)
     body.pop('evidenceId', None)
     text = json.dumps(body, separators=(',', ':'), ensure_ascii=False, sort_keys=True)
     return 'recompile-sound-map-%s' % hashlib.sha256(text.encode('utf-8')).hexdigest()[:16]
 
 
-def summarize(rows, anchors):
+def summarize(rows: list[Row], anchors: list[Anchor]) -> Summary:
+    def better(audition: Audition) -> bool:
+        handle = audition.get('nccHandleFile')
+        return handle is not None and handle > (audition.get('nccIndexFile') or 0)
+
     return {
         'records': len(rows),
         'handleNotIndex': sum(1 for r in rows if r['handle'] != r['bankIndex']),
         'declaredLengthMatchesHandleFile': sum(1 for r in rows if r['declaredMatchesHandleFile']),
         'declaredLengthMatchesIndexFile': sum(1 for r in rows if r['declaredMatchesIndexFile']),
-        'auditionBetterOnHandleFile': sum(1 for r in rows if r['audition'].get('nccHandleFile') is not None
-                                          and r['audition']['nccHandleFile'] > (r['audition'].get('nccIndexFile') or 0)),
+        'auditionBetterOnHandleFile': sum(1 for r in rows if better(r['audition'])),
         'auditionScored': sum(1 for r in rows if r['audition'].get('nccHandleFile') is not None),
         'anchorsReproduced': sum(1 for a in anchors if a['reproduced']),
         'anchors': len(anchors),
     }
 
 
-def cmd_record(opts):
+def cmd_record(opts: argparse.Namespace) -> None:
     probe = json.loads(open(opts.probe).read().strip().splitlines()[-1])
-    defines = {}
+    defines: dict[int, str] = {}
     for line in open(os.path.join(opts.gamesrc, 'assets.h')):
         m = re.match(r'#define (SOUND_\w+) (\d+)\s*$', line)
         if m:
             defines[int(m.group(2))] = m.group(1)
-    sites = {}
+    sites: dict[str | None, list[str | None]] = {}  # read by a define that may be absent
     for path in sorted(glob.glob(os.path.join(opts.gamesrc, 'events_*.cpp'))):
-        event = None
+        event: str | None = None
         for line in open(path, errors='replace'):
             m = re.match(r'\s*// event (\d+_\d+)', line)
             if m:
                 event = m.group(1)
             for m in re.finditer(r'media\.play_id\((SOUND_\w+)', line):
                 sites.setdefault(m.group(1), []).append(event)
-    params = {}
+    params: dict[int, int] = {}
     for u in probe['uses']:
         params[u['handle']] = params.get(u['handle'], 0) + 1
-    files = {}
+    files: dict[int, str] = {}
     for path in glob.glob(os.path.join(opts.raw_dir, 's[0-9][0-9][0-9][0-9].*')):
         files[int(os.path.basename(path)[1:5])] = path
     trace, wav = opts.audition.split(':', 1)
     rate, mix = mono_mix(wav)
-    windows = {}
-    starts = {}
+    windows: dict[int, tuple[float, float, float]] = {}
+    starts: dict[int, tuple[float, float, float]] = {}
     for line in open(trace):
         f = line.split()
         if len(f) > 5 and f[3] == 'audition':
@@ -156,13 +264,13 @@ def cmd_record(opts):
             elif f[5] == 'end' and int(f[4]) in starts:
                 windows[int(f[4])] = starts.pop(int(f[4]))
     lag, step = int(0.08 * rate), max(1, rate // 4000)
-    rows = []
+    rows: list[Row] = []
     for b in probe['bank']:
         h, i = b['handle'], b['index']
         fh, fi = files.get(h), files.get(i)
         infoh = ffprobe(fh) if fh else None
         infoi = ffprobe(fi) if fi else None
-        row = {
+        row: Row = {
             'handle': h, 'bankIndex': i, 'name': b['name'], 'flags': b['flags'],
             'declaredLengthMs': b['lengthField'], 'declaredRate': b['rate'],
             'file': os.path.basename(fh) if fh else None, 'fileSha256': sha256(fh) if fh else None,
@@ -174,17 +282,19 @@ def cmd_record(opts):
             'assetId': i, 'define': defines.get(i), 'sampleParameters': params.get(h, 0),
             'events': sites.get(defines.get(i), []),
         }
-        aud = {}
+        aud: Audition = {}
         if i in windows:
             wall, length, hold = windows[i]
             aud['decodedLengthMs'] = round(length, 1)
             # the first 250 ms of sound after the file's own leading silence
             ref_len = int(min(hold / 1000.0, 0.25) * rate)
-            for key, path in (('nccHandleFile', fh), ('nccIndexFile', fi)):
-                if path is None:
+            files_heard: tuple[tuple[Literal['nccHandleFile', 'nccIndexFile'], str | None], ...] = (
+                ('nccHandleFile', fh), ('nccIndexFile', fi))
+            for key, source in files_heard:
+                if source is None:
                     aud[key] = None
                     continue
-                ref = decode(path, rate)
+                ref = decode(source, rate)
                 lead = next((k for k, v in enumerate(ref) if abs(v) >= 16), 0)
                 if lead / float(rate) * 1000.0 > hold - 50:
                     aud[key] = None      # the audition window ends before this file makes a sound
@@ -192,20 +302,20 @@ def cmd_record(opts):
                 aud[key] = best_ncc(mix, int((wall + lead / float(rate)) * rate), ref[lead:lead + ref_len], lag, step)
         row['audition'] = aud
         rows.append(row)
-    anchors = []
+    anchors: list[Anchor] = []
     for spec in opts.anchor or []:
         handle, rest = spec.split('=', 1)
         fname, note = rest.split(':', 1)
-        row = next((r for r in rows if r['handle'] == int(handle)), None)
+        mapped = next((r for r in rows if r['handle'] == int(handle)), None)
         anchors.append({'handle': int(handle), 'file': fname, 'note': note,
-                        'mappedFile': row['file'] if row else None,
-                        'reproduced': bool(row and row['file'] and row['file'].split('.')[0] == fname.split('.')[0])})
-    solos = {}
+                        'mappedFile': mapped['file'] if mapped else None,
+                        'reproduced': bool(mapped and mapped['file'] and mapped['file'].split('.')[0] == fname.split('.')[0])})
+    solos: dict[str, dict[str, object]] = {}
     for spec in opts.solo or []:
         name, path = spec.split('=', 1)
         s = json.load(open(path))
         solos[name] = {'asset': s['asset'], 'plays': s['plays'], 'summary': s['summary']}
-    result = {'schema': SCHEMA, 'game': opts.game, 'claimLevel': 'MODEL_ONLY', 'fidelity': 'rebuilt-runtime',
+    result: SoundMap = {'schema': SCHEMA, 'game': opts.game, 'claimLevel': 'MODEL_ONLY', 'fidelity': 'rebuilt-runtime',
               'rule': 'res/raw/s%04d formatted with the bank record\'s handle (SoundPoolSounds.load, '
                       'MediaSound.setSoundSettings); a Sample parameter names that handle',
               'lengthToleranceMs': LENGTH_TOLERANCE_MS, 'handleCount': probe['handleCount'],
@@ -213,14 +323,14 @@ def cmd_record(opts):
               'rows': rows, 'anchors': anchors, 'soloCaptures': solos}
     result['summary'] = summarize(rows, anchors)
     result['evidenceId'] = evidence_id(result)
-    with open(opts.out, 'w') as f:
-        json.dump(result, f, indent=1, sort_keys=True, ensure_ascii=False)
-        f.write('\n')
+    with open(opts.out, 'w') as out:
+        json.dump(result, out, indent=1, sort_keys=True, ensure_ascii=False)
+        out.write('\n')
     print('%s: %s' % (result['evidenceId'], json.dumps(result['summary'], sort_keys=True)))
 
 
-def check(path):
-    result = json.load(open(path))
+def check(path: str) -> SoundMap:
+    result: SoundMap = json.load(open(path))
     if result.get('schema') != SCHEMA:
         raise AssertionError('%s: schema %r' % (path, result.get('schema')))
     tol = result['lengthToleranceMs']
@@ -246,7 +356,7 @@ def check(path):
     return result
 
 
-def main():
+def main() -> None:
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest='cmd', required=True)
     r = sub.add_parser('record')

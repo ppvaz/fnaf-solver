@@ -26,6 +26,7 @@ import argparse
 import json
 import os
 import sys
+from typing import cast
 
 from PIL import Image
 
@@ -33,30 +34,33 @@ NATIVE = (2400, 1080)
 GAME = (1024, 768)
 
 
-def scale(path, size=NATIVE):
+def scale(path: str, size: tuple[int, int] = NATIVE) -> Image.Image:
     im = Image.open(path).convert('RGB')
     if im.size != GAME:
         raise SystemExit('%s: expected a %dx%d game frame, got %dx%d' % ((path,) + GAME + im.size))
-    return im.resize(size, Image.BILINEAR)
+    return im.resize(size, Image.Resampling.BILINEAR)
 
 
 BRIGHT = 200  # luma (PIL 'L', ITU-R 601-2) above which a pixel counts as glyph
+RGB = tuple[int, int, int]
 
 
-def rect_stats(a, b, box):
+def rect_stats(a: Image.Image, b: Image.Image, box: tuple[int, int, int, int]) -> dict[str, float | int | None]:
     ca, cb = a.crop(box), b.crop(box)
     pa, pb = ca.load(), cb.load()
     la, lb = ca.convert('L').load(), cb.convert('L').load()
+    assert pa is not None and pb is not None and la is not None and lb is not None  # load() of an image in memory
     w, h = ca.size
     total = 0
     worst = 0
     both = either = 0
     for y in range(h):
         for x in range(w):
-            d = sum(abs(pa[x, y][k] - pb[x, y][k]) for k in range(3))
+            # An RGB image's pixel is its three channels; an 'L' image's is its luma.
+            d = sum(abs(cast(RGB, pa[x, y])[k] - cast(RGB, pb[x, y])[k]) for k in range(3))
             total += d
             worst = max(worst, d)
-            ba, bb = la[x, y] > BRIGHT, lb[x, y] > BRIGHT
+            ba, bb = cast(int, la[x, y]) > BRIGHT, cast(int, lb[x, y]) > BRIGHT
             both += ba and bb
             either += ba or bb
     n = w * h * 3
@@ -66,21 +70,21 @@ def rect_stats(a, b, box):
             'brightIoU': round(both / either, 4) if either else None}
 
 
-def sha256(path):
+def sha256(path: str) -> str:
     import hashlib
     with open(path, 'rb') as fp:
         return hashlib.sha256(fp.read()).hexdigest()
 
 
-def parse_rect(text):
+def parse_rect(text: str) -> tuple[str, tuple[int, int, int, int]]:
     name, coords = text.split(':', 1)
     box = tuple(int(v) for v in coords.split(','))
     if len(box) != 4 or box[2] <= box[0] or box[3] <= box[1]:
         raise SystemExit('bad --rect %r: name:x0,y0,x1,y1' % text)
-    return name, box
+    return name, (box[0], box[1], box[2], box[3])
 
 
-def main():
+def main() -> None:
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest='cmd', required=True)
     s = sub.add_parser('scale')

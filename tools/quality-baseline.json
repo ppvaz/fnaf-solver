@@ -186,8 +186,7 @@
       "py:packages/play/test": 56,
       "py:packages/propose/parked": 381,
       "py:packages/review/bin": 877,
-      "py:packages/source/decompile": 349,
-      "py:packages/source/recompile": 1
+      "py:packages/source/decompile": 349
     }
   },
   "typeDebt": {

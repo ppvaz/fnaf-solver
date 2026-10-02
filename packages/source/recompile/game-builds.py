@@ -23,6 +23,8 @@ import json
 import os
 import re
 import sys
+from collections.abc import Mapping
+from typing import NotRequired, TypedDict, cast
 
 SCHEMA = 'recompile-game-builds-v1'
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -30,7 +32,97 @@ RESULTS = os.path.join(HERE, '..', '..', '..', 'tools', 'recompile', 'results') 
 STEPS = ('conversion', 'host', 'boot', 'apk')
 
 
-def sha256(path):
+class Status(TypedDict):
+    """A step that did not run or was not built."""
+    status: str
+
+
+class Conversion(TypedDict):
+    """The converter's run over the CCN."""
+    status: str
+    exitCode: int | None
+    ccnSha256: str
+    frames: int
+    eventFiles: int
+    truncatedFramesSkipped: int
+    omittedActions: int
+    mp3Decoded: int
+    silencedSounds: int
+    playSites: dict[str, int]
+
+
+class Host(TypedDict):
+    """The host build: its binary and assets, and the pinned tree it came from."""
+    status: str
+    binarySha256: NotRequired[str]
+    assetsSha256: NotRequired[str]
+    pinned: NotRequired[str | None]
+
+
+class Visit(TypedDict):
+    """One frame the booted runtime entered, and the updates it ran there."""
+    frame: int
+    name: str
+    updates: int
+
+
+class Boot(TypedDict):
+    """A harness boot without input."""
+    status: str
+    exitCode: int | None
+    env: dict[str, str]
+    updates: int
+    stop: str | None
+    visits: list[Visit]
+    reachedTitle: str
+    audioInitialized: bool
+    glErrors: int
+    samplePlays: int
+
+
+class Apk(TypedDict):
+    """The packaged Android build."""
+    status: str
+    file: str
+    sha256: str
+    bytes: int
+    package: str | None
+    libmainSha256: NotRequired[str]
+    libmainBytes: NotRequired[int]
+
+
+class AudioRef(TypedDict):
+    """The game's recompile-audio-v1 record, by id, and its answer."""
+    evidenceId: str
+    record: str
+    declared: int
+    resolvedFiles: int
+    auditionNonSilent: int
+
+
+class Row(TypedDict):
+    """One game's build, step by step."""
+    game: str
+    conversion: Conversion
+    host: NotRequired[Host]
+    boot: NotRequired[Boot | Status]
+    apk: NotRequired[Apk | Status]
+    audio: NotRequired[AudioRef | str]
+    firstFailedStep: NotRequired[str | None]
+    blocker: NotRequired[str | None]
+
+
+class GameBuilds(TypedDict):
+    """A recompile-game-builds-v1 record."""
+    schema: str
+    claimLevel: str
+    fidelity: str
+    question: str
+    rows: list[Row]
+    evidenceId: NotRequired[str]
+
+
+def sha256(path: str) -> str:
     h = hashlib.sha256()
     with open(path, 'rb') as f:
         for block in iter(lambda: f.read(1 << 20), b''):
@@ -38,8 +130,8 @@ def sha256(path):
     return h.hexdigest()
 
 
-def frame_names(gamesrc):
-    names = {}
+def frame_names(gamesrc: str) -> dict[int, str]:
+    names: dict[int, str] = {}
     for path in glob.glob(os.path.join(gamesrc, 'frame*_1.cpp')):
         m = re.search(r'frame(\d+)_1\.cpp$', path)
         text = open(path, errors='replace').read()
@@ -49,7 +141,7 @@ def frame_names(gamesrc):
     return names
 
 
-def conversion(opts):
+def conversion(opts: argparse.Namespace) -> Conversion:
     log = open(opts.convert_log, errors='replace').read()
     m = re.search(r'^convert exit (\d+)', log, re.M)
     code = int(m.group(1)) if m else None
@@ -73,13 +165,14 @@ def conversion(opts):
     }
 
 
-def boot(opts, names):
+def boot(opts: argparse.Namespace, names: dict[int, str]) -> Boot:
     d = opts.boot
     log = open(os.path.join(d, 'run.log'), errors='replace').read()
     m = re.findall(r'^exit (\d+)', log, re.M)
     code = int(m[-1]) if m else None
-    visits, rows, stop = [], 0, None
-    last = None
+    visits: list[Visit] = []
+    rows, stop = 0, None
+    last: Visit | None = None
     for line in open(os.path.join(d, 'trace'), errors='replace'):
         seeded = re.match(r'# frame (-?\d+) seeded', line)
         if seeded:
@@ -96,7 +189,7 @@ def boot(opts, names):
     at = os.path.join(d, 'audio-trace')
     if os.path.exists(at):
         plays = sum(1 for l in open(at) if not l.startswith('#') and l.split()[3:4] == ['play'])
-    env = {}
+    env: dict[str, str] = {}
     for line in open(os.path.join(d, 'env')):
         if '=' in line:
             k, v = line.rstrip('\n').split('=', 1)
@@ -115,8 +208,8 @@ def boot(opts, names):
     }
 
 
-def apk(opts):
-    out = {'status': 'OK', 'file': os.path.basename(opts.apk), 'sha256': sha256(opts.apk),
+def apk(opts: argparse.Namespace) -> Apk:
+    out: Apk = {'status': 'OK', 'file': os.path.basename(opts.apk), 'sha256': sha256(opts.apk),
            'bytes': os.path.getsize(opts.apk), 'package': opts.package}
     if opts.libmain:
         out['libmainSha256'] = sha256(opts.libmain)
@@ -124,14 +217,14 @@ def apk(opts):
     return out
 
 
-def evidence_id(result):
+def evidence_id(result: Mapping[str, object]) -> str:
     body = dict(result)
     body.pop('evidenceId', None)
     text = json.dumps(body, separators=(',', ':'), ensure_ascii=False, sort_keys=True)
     return 'recompile-game-builds-%s' % hashlib.sha256(text.encode('utf-8')).hexdigest()[:16]
 
 
-def first_blocker(row):
+def first_blocker(row: Mapping[str, object]) -> str | None:
     for step in STEPS:
         s = row.get(step)
         if not isinstance(s, dict) or s.get('status') != 'OK':
@@ -139,14 +232,14 @@ def first_blocker(row):
     return None
 
 
-def cmd_record(opts):
-    result = json.load(open(opts.out)) if os.path.exists(opts.out) else {
+def cmd_record(opts: argparse.Namespace) -> None:
+    result: GameBuilds = json.load(open(opts.out)) if os.path.exists(opts.out) else {
         'schema': SCHEMA, 'claimLevel': 'MODEL_ONLY', 'fidelity': 'rebuilt-runtime',
         'question': 'Does each build-296 game convert, build for the host, boot under the harness '
                     'without input, and package as an Android APK, with its sounds reaching the mixer?',
         'rows': []}
     names = frame_names(opts.gamesrc) if os.path.isdir(opts.gamesrc) else {}
-    row = {'game': opts.game, 'conversion': conversion(opts)}
+    row: Row = {'game': opts.game, 'conversion': conversion(opts)}
     if opts.binary:
         row['host'] = {'status': 'OK', 'binarySha256': sha256(opts.binary), 'assetsSha256': sha256(opts.assets),
                        'pinned': os.path.basename(os.path.normpath(opts.pinned)) if opts.pinned else None}
@@ -169,12 +262,13 @@ def cmd_record(opts):
     with open(opts.out, 'w') as f:
         json.dump(result, f, indent=1, sort_keys=True)
         f.write('\n')
+    statuses = cast(Mapping[str, Status], row)  # every step is set above, each with its status
     print('%s: %s %s' % (result['evidenceId'], opts.game,
-                          ', '.join('%s %s' % (s, row[s]['status']) for s in STEPS)))
+                          ', '.join('%s %s' % (s, statuses[s]['status']) for s in STEPS)))
 
 
-def check(path, results_dir=RESULTS):
-    result = json.load(open(path))
+def check(path: str, results_dir: str = RESULTS) -> GameBuilds:
+    result: GameBuilds = json.load(open(path))
     if result.get('schema') != SCHEMA:
         raise AssertionError('%s: schema %r' % (path, result.get('schema')))
     for row in result['rows']:
@@ -182,10 +276,11 @@ def check(path, results_dir=RESULTS):
             raise AssertionError('%s: %s firstFailedStep %r is not %r' % (path, row['game'], row['firstFailedStep'], first_blocker(row)))
         b = row['boot']
         if b.get('status') in ('OK', 'CRASH', 'NO_STOP_LINE'):
-            if sum(v['updates'] for v in b['visits']) != b['updates']:
+            ran = cast(Boot, b)  # a boot that ran carries its visits
+            if sum(v['updates'] for v in ran['visits']) != ran['updates']:
                 raise AssertionError('%s: %s boot visits do not sum to its updates' % (path, row['game']))
         a = row['apk']
-        if a.get('status') == 'OK' and not re.match(r'^[0-9a-f]{64}$', a['sha256']):
+        if a.get('status') == 'OK' and not re.match(r'^[0-9a-f]{64}$', cast(Apk, a)['sha256']):  # a built APK has its hash
             raise AssertionError('%s: %s apk sha256 malformed' % (path, row['game']))
         if isinstance(row['audio'], dict):
             rec = os.path.join(results_dir, row['audio']['record'])
@@ -198,7 +293,7 @@ def check(path, results_dir=RESULTS):
     return result
 
 
-def main():
+def main() -> None:
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest='cmd', required=True)
     r = sub.add_parser('record')

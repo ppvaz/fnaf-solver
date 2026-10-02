@@ -31,7 +31,7 @@ CHARSET = [chr(c) for c in range(32, 127)] + ['©', 'é']
 BOLD = 1
 
 
-def font_bytes(path, size, bold):
+def font_bytes(path: str, size: int, bold: bool) -> bytes:
     font = ImageFont.truetype(path, size)
     ascent, descent = font.getmetrics()
     glyphs = []
@@ -58,7 +58,7 @@ def font_bytes(path, size, bold):
     return header + b''.join(glyphs)
 
 
-def main():
+def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument('--regular', required=True)
     ap.add_argument('--bold', required=True)
