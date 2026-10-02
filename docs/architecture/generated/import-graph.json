@@ -2806,6 +2806,7 @@
       "imports": [
         "./phone-region-readout.ts",
         "./phone-seed-readout.ts",
+        "./phone-seed-scan.ts",
         "node:assert/strict",
         "node:crypto",
         "node:fs",

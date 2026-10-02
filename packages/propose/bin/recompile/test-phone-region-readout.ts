@@ -11,6 +11,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { deriveInputs, identifyReading, measuredNight, periodValue, readoutStrength, regionImages, updateOf } from './phone-region-readout.ts';
 import { anchorIndex, back, seedCandidates } from './phone-seed-readout.ts';
+import { identifySeed } from './phone-seed-scan.ts';
 
 const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '../../../..');
 const sha = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex');
@@ -100,6 +101,13 @@ assert.equal(anchorIndex([{ differ: 0 }, { differ: 99 }, { differ: 0 }], 10), nu
 
 const canon = (v: unknown): string => Array.isArray(v) ? `[${v.map(canon).join(',')}]`
   : v && typeof v === 'object' ? `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${canon((v as Record<string, unknown>)[k])}`).join(',')}}` : JSON.stringify(v);
+// --- the seed-scan rule (phone-seed-scan.ts): a clear top seed, never a close pair or a weak fit
+const seedRule = { minR: 0.85, minMargin: 0.2 };
+assert.equal(identifySeed(seedRule, [{ seed: 23712, r: 0.973 }, { seed: 13488, r: 0.585 }]).verdict, 'IDENTIFIED');
+assert.equal(identifySeed(seedRule, [{ seed: 1, r: 0.95 }, { seed: 2, r: 0.8 }]).verdict, 'UNIDENTIFIED', 'a lead under 0.2');
+assert.equal(identifySeed(seedRule, [{ seed: 1, r: 0.84 }]).verdict, 'UNIDENTIFIED', 'r under 0.85');
+assert.equal(identifySeed(seedRule, []).verdict, 'UNIDENTIFIED', 'no seed scored');
+
 // --- the whole-seed scan agrees with the injection analysis (docs/evidence/s2-seed-scan-night7-0of20-20261001.json)
 {
   const scan = JSON.parse(readFileSync(join(ROOT, 'docs/evidence/s2-seed-scan-night7-0of20-20261001.json'), 'utf8'));

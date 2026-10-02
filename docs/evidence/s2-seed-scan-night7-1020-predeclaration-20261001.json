@@ -1,0 +1,406 @@
+{
+ "schema": "experiment-spec-v2",
+ "id": "s2-seed-scan-night7-1020",
+ "kind": "confirm",
+ "purpose": "pre-registered: read a 10/20 phone night's office seed in-night off its native static readout (Stage A of the 10/20 measurement)",
+ "claimLevel": "DEVICE_MEASURED frames, frame trace and clock against MODEL_ONLY replays",
+ "date": "2026-10-01",
+ "step": "ROADMAP S2a (a valid seed measurement, at the primary target's dials) and S4 (seed-aware control)",
+ "question": "On a k3 Night 7 at 10/20, recorded with a frame trace and the native static readout, does exactly one office seed, replayed from the night's first update on its measured clock with its landed presses, reproduce the camera static in the first two winding windows?",
+ "hypothesis": {
+  "source": "docs/evidence/s2-seed-scan-night7-0of20-20261001.json: on the 0/20 night this replay picks one seed of 65,536 from wind-1 and wind-2 (mean r 0.973 against 0.585), the seed the pre-registered injection analysis implies (s2-region-readout-night7-0of20-6daba88865e81f6a). At 10/20 a window's draws depend on game state (docs/evidence/full06-draw-sensitivity-20261001.json), which a whole-seed replay carries; the first two windows end at 23.7 s, before most game-state divergence the encounter records show.",
+  "statement": "E-seed-read: one seed's replay reproduces wind-1 and wind-2 at 10/20 as at 0/20.",
+  "alternatives": [
+   "E-diverged: the model's stream at 10/20 already differs from the phone's by wind-1 or wind-2 (game-state draws the model spends differently), so no seed fits: NOT_SUPPORTED with the power check passing.",
+   "E-blind: the night's own readout cannot resolve the static: the power check fails, UNINFORMATIVE."
+  ]
+ },
+ "winner": "packages/propose/bindings/fnaf2/campaign-night7-k3-winner.json",
+ "night": 7,
+ "customNight": {
+  "withfreddy": 20,
+  "withbonnie": 20,
+  "withchica": 20,
+  "foxy": 20,
+  "toyfreddy": 20,
+  "toybonnie": 20,
+  "toychica": 20,
+  "mangle": 20,
+  "bb": 20,
+  "golden": 20
+ },
+ "seedToFirstFrameMs": 83.2,
+ "region": "static_view",
+ "robust": {
+  "above": 250,
+  "below": 5,
+  "statistic": "median"
+ },
+ "windows": [
+  {
+   "name": "wind-1",
+   "fromMs": 10400,
+   "toMs": 13700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-2",
+   "fromMs": 20400,
+   "toMs": 23700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  }
+ ],
+ "reportWindows": [
+  {
+   "name": "wind-1",
+   "fromMs": 10400,
+   "toMs": 13700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-2",
+   "fromMs": 20400,
+   "toMs": 23700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-3",
+   "fromMs": 30400,
+   "toMs": 33700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-4",
+   "fromMs": 40400,
+   "toMs": 43700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-5",
+   "fromMs": 50400,
+   "toMs": 53700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-6",
+   "fromMs": 60400,
+   "toMs": 63700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-7",
+   "fromMs": 70400,
+   "toMs": 73700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-8",
+   "fromMs": 80400,
+   "toMs": 83700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-9",
+   "fromMs": 90400,
+   "toMs": 93700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-10",
+   "fromMs": 100400,
+   "toMs": 103700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-11",
+   "fromMs": 110400,
+   "toMs": 113700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-12",
+   "fromMs": 120400,
+   "toMs": 123700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-13",
+   "fromMs": 130400,
+   "toMs": 133700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-14",
+   "fromMs": 140400,
+   "toMs": 143700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-15",
+   "fromMs": 150400,
+   "toMs": 153700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-16",
+   "fromMs": 160400,
+   "toMs": 163700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-17",
+   "fromMs": 170400,
+   "toMs": 173700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-18",
+   "fromMs": 180400,
+   "toMs": 183700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-19",
+   "fromMs": 190400,
+   "toMs": 193700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-20",
+   "fromMs": 200400,
+   "toMs": 203700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-21",
+   "fromMs": 210400,
+   "toMs": 213700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-22",
+   "fromMs": 220400,
+   "toMs": 223700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-23",
+   "fromMs": 230400,
+   "toMs": 233700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-24",
+   "fromMs": 240400,
+   "toMs": 243700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-25",
+   "fromMs": 250400,
+   "toMs": 253700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-26",
+   "fromMs": 260400,
+   "toMs": 263700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-27",
+   "fromMs": 270400,
+   "toMs": 273700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-28",
+   "fromMs": 280400,
+   "toMs": 283700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-29",
+   "fromMs": 290400,
+   "toMs": 293700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-30",
+   "fromMs": 300400,
+   "toMs": 303700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-31",
+   "fromMs": 310400,
+   "toMs": 313700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-32",
+   "fromMs": 320400,
+   "toMs": 323700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-33",
+   "fromMs": 330400,
+   "toMs": 333700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-34",
+   "fromMs": 340400,
+   "toMs": 343700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-35",
+   "fromMs": 350400,
+   "toMs": 353700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-36",
+   "fromMs": 360400,
+   "toMs": 363700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-37",
+   "fromMs": 370400,
+   "toMs": 373700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-38",
+   "fromMs": 380400,
+   "toMs": 383700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-39",
+   "fromMs": 390400,
+   "toMs": 393700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  },
+  {
+   "name": "wind-40",
+   "fromMs": 400400,
+   "toMs": 403700,
+   "cam": 9,
+   "viewing": 11,
+   "detrendK": 5
+  }
+ ],
+ "decisionRule": {
+  "minR": 0.85,
+  "minMargin": 0.2,
+  "text": "Every seed 0..65535 is replayed and scored by its mean detrended r over wind-1 and wind-2 (robust median period values; frames mapped to updates through the trace's image clock). IDENTIFIED when the top seed's r is at least 0.85 and leads the next seed by at least 0.2 (on the 0/20 night: 0.973 and 0.388). SUPPORTED when IDENTIFIED and the power check passes; NOT_SUPPORTED when not IDENTIFIED and the power check passes; UNINFORMATIVE when the power check fails."
+ },
+ "powerCheck": {
+  "seeds": [
+   12345,
+   777
+  ],
+  "referenceSeed": 1,
+  "rule": "The night's noise and gain are estimated from its own window frames without the flash and black frames (nightStrength); each seed is planted at that strength on the night's own frame times and updates and the whole scan repeated: unless both come back IDENTIFIED as themselves, UNINFORMATIVE."
+ },
+ "reported": [
+  "The identified seed's r in each of the 40 winding windows (reportWindows), one replay through the night: where the model's stream stops reproducing the phone's static at 10/20 (descriptive, the S2 fidelity horizon).",
+  "The wall-clock relation as in docs/evidence/s2-seed-readout-night7-0of20-predeclaration-20261001.json (bracket 55..90 ms, the c each x needs), reported only."
+ ],
+ "nightCommand": "packages/play/bin/phone/night-run.sh --live --confirm-live --label k3-1020-ss01 --bundle <device:emit of the k3 winner> --night 7 --serial <the local profile's> --profile hid-mediaprojection --frame-trace --static-readout --no-video --no-grade --venue-binding docs/evidence/venue-binding-hid-mediaprojection-20260930.json --qualification docs/evidence/qualification-hid-mediaprojection-night7-k3-20260915.json",
+ "inputs": "After the night: phone-seed-scan.ts --derive-inputs <run> --spec <this file> --out <inputs> (onset and release from the committed pack, the recorder rows and the frame trace hashed; nothing chosen).",
+ "stoppingRule": {
+  "kind": "fixed-sample",
+  "text": "One night. A night that dies before 23.7 s, whose recorder or frame trace fails, or with fewer than 20 readout frames in either scanned window is not a measurement: its pack is kept and the night re-run under this predeclaration. No window, threshold or detrend changes after the night."
+ },
+ "tool": "node packages/propose/bin/recompile/phone-seed-scan.ts --night-inputs <inputs> --spec <this file> --power-check --workers 8 --out <result>",
+ "toolCheck": "The same path run on the 0/20 night under a draft of this rule (artifacts/s2-region-readout-20261001/draft-seedscan-*): IDENTIFIED 23712 (0.973 vs 0.585), both planted seeds recovered (0.999, 0.998), SUPPORTED.",
+ "resultRecord": "docs/evidence/s2-seed-scan-night7-1020-20261001.json",
+ "rung": "None. SUPPORTED makes the static readout a 10/20 in-night seed measurement for S2a and the input S4's seed-aware policies need; the encounter comparison at the read seed (S2's closing test) is Stage B, pre-registered separately once a native eyehole region exists."
+}
