@@ -90,7 +90,7 @@ export async function loadCorpus() {
   const problems = checkCorpus(checkpoints);
   if (problems.length) throw new Error(`chronicle: invalid corpus\n${problems.map((problem) => `  ${problem}`).join('\n')}`);
   // v1 entries read as fnaf2, and an entry a v2 correction supersedes reads as
-  // superseded although its frozen file still says standing (chronicle-schema.mjs).
+  // superseded although its frozen file still says standing (packages/review/src/chronicle-schema.ts).
   // checkCorpus passed, so each file is a checkpoint.
   const corpus = checkpoints as unknown as ChronicleCheckpoint[];
   const entries = readEntries(corpus);

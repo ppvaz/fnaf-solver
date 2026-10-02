@@ -1,5 +1,5 @@
 /**
- * The Companion's MCP surface (./companion-mcp.mjs): setup and
+ * The Companion's MCP surface (./companion-mcp.ts): setup and
  * the device-work queue, as a closed vocabulary. Raw coordinates, HID input
  * and arbitrary shell are absent. It queues bounded jobs and never runs a
  * control loop; the campaign executor is the one path onto a phone.

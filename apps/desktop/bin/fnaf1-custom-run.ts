@@ -13,7 +13,7 @@
  * only while the tree holds the winner's pinned route byte for byte
  * (routeStatus below); a drifted tree is refused unless `--route tree` says
  * the night runs the tree's route as a new one. The winner itself is re-run
- * from its pinned commit by fnaf1-winner.mjs.
+ * from its pinned commit by fnaf1-winner.ts.
  *
  * The menu path is the probe's measured one (fnaf1-menu-probe.ts): three
  * identical confident title reads, the Custom Night row, the settled screen,
@@ -61,7 +61,7 @@ const CONTROLS_PATH = join(HERE, '../../../packages/play/profiles/fnaf1/moto-g56
 const REGIONS_PATH = join(HERE, '../../../packages/play/profiles/fnaf1/moto-g56/regions-fnaf1-moto-g56-v207.json');
 const CONTACT_MS = 160;
 const MODES = Object.freeze(['calibrate-empty', 'grid420']);
-const NIGHT_MS = 535000;                 // 90 s + 5 x 89 s (fnaf1.js CLOCK)
+const NIGHT_MS = 535000;                 // 90 s + 5 x 89 s (fnaf1.ts CLOCK)
 const STALE_FRAME_MS = 400;              // frame age p95 82 ms, max 111 ms measured; 400 is a stall
 /**
  * Consecutive distinct region frames that read neither the office nor a camera before the night

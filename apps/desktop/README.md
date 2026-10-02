@@ -3,10 +3,10 @@
 The one composition root of the final layout ([ADR 0002](../../docs/decisions/0002-kernel-contexts-vocabulary.md)).
 It composes; it does not decide. It holds three doors onto the contexts:
 
-- the **device command line** (`src/device-cli.js`, `npm run device:*`), the
+- the **device command line** (`src/device-cli.ts`, `npm run device:*`), the
   only path onto a phone;
-- the **`fnaf-solver` MCP server** (`src/companion-mcp.mjs`, `npm run
-  device:mcp`), with the Companion tools (`src/mcp.js`), the solver
+- the **`fnaf-solver` MCP server** (`src/companion-mcp.ts`, `npm run
+  device:mcp`), with the Companion tools (`src/mcp.ts`), the solver
   interface's verbs and the lab's read-only verbs;
 - the **operator verbs**, `npm run lab -- <verb>`: status, next, start,
   commit, end, morning and doctor ([`docs/operations/LAB.md`](../../docs/operations/LAB.md)).
@@ -23,7 +23,7 @@ and their readers follow the file through git's renames.
 
 ## The device command line
 
-`device-cli.js campaign` chooses the profile, loads the default ports module
+`device-cli.ts campaign` chooses the profile, loads the default ports module
 (`packages/play/src/campaign/modern-campaign-ports.ts`), and plays a validated
 bundle only with `--live --confirm-live`. `packages/play/bin/phone/night-run.sh` drives it
 for every night, and forwards that pair only when it is itself given `--live
@@ -95,8 +95,8 @@ idempotency key so retries from several agents do not duplicate jobs.
 
 ## The lab
 
-The pure queries are in `@sixam/review` (`consequence.mjs`, `mistakes.mjs`,
-`roadmap.mjs`, the promotions query), and the lab joins them with git, this
+The pure queries are in `@sixam/review` (`consequence.ts`, `mistakes.ts`,
+`roadmap.ts`, the promotions query), and the lab joins them with git, this
 host's `/proc`, the Companion queue and the push-gate record. The MCP server
 serves `status`, `next` and `doctor` from the same functions as `lab.status`,
 `lab.next` and `lab.doctor`. Every answer is a `claim-envelope-v1`. The lab
@@ -106,11 +106,11 @@ prints every remedy without running it, and never writes the owner's override.
 
 | File | Kind | Purpose and interface |
 |---|---|---|
-| `src/device-cli.js` | CLI | `npm run device:campaign`, `device:preflight`, `device:clockmap`, `device:grade` (the `fnaf2-device` bin): the campaign's command line, above. `tools/architecture-test.ts` holds its `--confirm-live` gate and refuses a second live command. |
-| `src/mcp.js` | module | `createCompanionMcp()`: the Companion tools over `packages/play/bin/companion/companion-setup.sh` and `companion-queue.sh`, a closed vocabulary with no coordinates, HID or shell. |
-| `src/companion-mcp.mjs` | MCP server | The `fnaf-solver` stdio server (`npm run device:mcp`): the four `cue.*` tools, the solver verbs of `@sixam/review/solver` (`describe`, `query`, `review`, `promote`, `check`), `jobs`, `truth` and `lab.status`, `lab.next`, `lab.doctor`, fourteen tools in all, every answer a `claim-envelope-v1`. Was `tools/device/companion-mcp.mjs`. |
-| `src/lab.mjs` | module | `createLab({root})`: the seven verbs over one checkout, each returning a validated envelope, and `LAB_VERBS`, the verb table every door reads. `status` joins HEAD and its push-gate record (`tools/push-gate.ts` appends `push-gate-run-v1` lines to the main checkout's `artifacts/lab/push-gate.jsonl`), sync with origin as of the last fetch, each ROADMAP step's state, the promotions query, the lease (the owner record, never the lock), the queue (`companion-queue.py list --json`), the overnight window's records, ADRs still proposed, and the doctor's count. `next` ranks an open session, doctor findings that stop every commit, each step not closed whose needs are closed (ROADMAP order), pending decisions and the push gate. `start` writes the session and prints the matching mistake-register entries. `commit --dry` runs `.githooks/commit-msg` itself on the staged set and message, and classes the stage. `end` classes each first-parent commit since the session's base (or `--since`) and closes the session. `morning` reads windows, queue activity and packs since the last 18:00. `doctor` checks hooks, stale PENDING jobs (72 h), orphaned push-gate worktrees, idle unlocked agent worktrees (24 h), the `@sixam` scope, the local profile, generated-catalog drift at HEAD (in a throwaway worktree, as push-gate builds one), memory under 1536 MB beside a process over 1 GB, and untracked winners. Tests replace the promotions query, packs, queue and host. |
-| `src/cli.mjs` | CLI | `npm run lab -- <verb> [--json]`: text, or the envelope with `--json`. Exit 0 for a claim, 1 for a refusal or a predicted hook refusal, 2 on a usage error. |
+| `src/device-cli.ts` | CLI | `npm run device:campaign`, `device:preflight`, `device:clockmap`, `device:grade` (the `fnaf2-device` bin): the campaign's command line, above. `tools/architecture-test.ts` holds its `--confirm-live` gate and refuses a second live command. |
+| `src/mcp.ts` | module | `createCompanionMcp()`: the Companion tools over `packages/play/bin/companion/companion-setup.sh` and `companion-queue.sh`, a closed vocabulary with no coordinates, HID or shell. |
+| `src/companion-mcp.ts` | MCP server | The `fnaf-solver` stdio server (`npm run device:mcp`): the four `cue.*` tools, the solver verbs of `@sixam/review/solver` (`describe`, `query`, `review`, `promote`, `check`), `jobs`, `truth` and `lab.status`, `lab.next`, `lab.doctor`, fourteen tools in all, every answer a `claim-envelope-v1`. Was `tools/device/companion-mcp.mjs`. |
+| `src/lab.ts` | module | `createLab({root})`: the seven verbs over one checkout, each returning a validated envelope, and `LAB_VERBS`, the verb table every door reads. `status` joins HEAD and its push-gate record (`tools/push-gate.ts` appends `push-gate-run-v1` lines to the main checkout's `artifacts/lab/push-gate.jsonl`), sync with origin as of the last fetch, each ROADMAP step's state, the promotions query, the lease (the owner record, never the lock), the queue (`companion-queue.py list --json`), the overnight window's records, ADRs still proposed, and the doctor's count. `next` ranks an open session, doctor findings that stop every commit, each step not closed whose needs are closed (ROADMAP order), pending decisions and the push gate. `start` writes the session and prints the matching mistake-register entries. `commit --dry` runs `.githooks/commit-msg` itself on the staged set and message, and classes the stage. `end` classes each first-parent commit since the session's base (or `--since`) and closes the session. `morning` reads windows, queue activity and packs since the last 18:00. `doctor` checks hooks, stale PENDING jobs (72 h), orphaned push-gate worktrees, idle unlocked agent worktrees (24 h), the `@sixam` scope, the local profile, generated-catalog drift at HEAD (in a throwaway worktree, as push-gate builds one), memory under 1536 MB beside a process over 1 GB, and untracked winners. Tests replace the promotions query, packs, queue and host. |
+| `src/cli.ts` | CLI | `npm run lab -- <verb> [--json]`: text, or the envelope with `--json`. Exit 0 for a claim, 1 for a refusal or a predicted hook refusal, 2 on a usage error. |
 | `test/device-cli.test.ts` | check | The device CLI's grammar: help is side-effect free; unknown, missing and retired commands (`dry-run`, `live`, `calibrate`) and malformed `clockmap` calls fail closed; a one-attempt diagnostic campaign is accepted and zero attempts refused. `test:contracts`. |
 | `test/companion-mcp.test.ts` | check | Stdio MCP regression: initialize, the tool catalog (the four `cue.*` names first and unchanged, at most fifteen tools, none an actuator, every schema closed), queue persistence and refusals, every verb and resource in `claim-envelope-v1`, `truth` over a synthetic local dump and refused without one, a refused promote, and no write under `docs/evidence`. `test:contracts`. Was `tools/device/test-companion-mcp.mjs`. |
 | `test/lab.test.ts` | check | Every verb against temporary git repositories that copy the real hook, register and ROADMAP: status without and with a push-gate record, a proposed ADR pending until a commit carries the override; `commit --dry` refusing a docs-only stage, accepting it with a prior-evidence reference (still bookkeeping), an evidence record (consequential) and controller code alone (UNKNOWN); a session over docs-only, evidence and code-with-gate commits giving 2:1; `next` ranking a fix, then S1's queue command, then S2, with S3 blocked; eleven planted doctor findings, each with its remedy, then none once fixed; `morning` over a window record, a failed night job and an uncommitted win pack. `test:unit`. |

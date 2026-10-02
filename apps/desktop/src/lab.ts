@@ -1,11 +1,11 @@
 // The operator verbs: status, next, start, commit, end, morning and doctor.
 //
 // ADR 0002 wants one verb table and one set of query functions for every door. This is that table
-// for the operator's questions: `npm run lab -- <verb>` (cli.mjs) and the fnaf-solver MCP server
+// for the operator's questions: `npm run lab -- <verb>` (cli.ts) and the fnaf-solver MCP server
 // (`lab.status`, `lab.next`, `lab.doctor`) both call createLab(). It lives in apps/desktop, the
 // final layout's composition root, because it composes: git, this host's processes, the Companion
 // queue, the push-gate record and the review package's queries. The pure queries are in
-// packages/review (consequence.mjs, mistakes.mjs, roadmap.mjs, promotions-query.mjs).
+// packages/review (consequence.ts, mistakes.ts, roadmap.ts, promotions-query.ts).
 //
 // Every answer is a claim-envelope-v1, derived from files and git and never written by hand (ADR
 // 0002 principle 4). What the lab writes is its own untracked state: `start` writes
@@ -202,7 +202,7 @@ export const PROC_HOST = Object.freeze({
   },
 });
 
-/** Stat fingerprint of the committed winners, to know when a cached compile is stale (as solver.mjs keeps it). */
+/** Stat fingerprint of the committed winners, to know when a cached compile is stale (as solver.ts keeps it). */
 function winnersKey(root: string) {
   return winnerFiles(root)
     .map(file => { const stat = statSync(join(root, file)); return `${file}:${stat.size}:${stat.mtimeMs}`; }).join('|');
