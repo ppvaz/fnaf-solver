@@ -43,7 +43,7 @@ def main() -> int:
           f"{src_path.stat().st_size / 1024:.0f} KiB")
     for out, px in TARGETS:
         before = out.stat().st_size if out.exists() else 0
-        src.resize((px, px), Image.LANCZOS).save(out, "PNG", optimize=True)
+        src.resize((px, px), Image.Resampling.LANCZOS).save(out, "PNG", optimize=True)
         after = out.stat().st_size
         print(f"  {out.relative_to(HERE)}: {px}x{px}, "
               f"{before / 1024:.0f} -> {after / 1024:.0f} KiB")

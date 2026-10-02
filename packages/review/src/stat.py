@@ -6,11 +6,45 @@ interval.
 """
 
 import math
+from typing import TypedDict
 
 DEFAULT_Z = 1.959963984540054
 
 
-def _counts(successes, trials):
+class Interval(TypedDict):
+    """A Wilson interval for successes out of trials, at z."""
+    successes: int
+    trials: int
+    rate: float
+    low: float
+    high: float
+    half_width: float
+    z: float
+
+
+class Verdict(Interval):
+    """An interval held against a contract bar."""
+    bar: float
+    status: str
+    ok: bool
+
+
+class ProportionTest(TypedDict):
+    """Two observed rates compared under a pooled-variance z test."""
+    successes_a: int
+    trials_a: int
+    successes_b: int
+    trials_b: int
+    rate_a: float
+    rate_b: float
+    difference: float
+    pooled: float
+    z: float
+    p_value: float
+    critical_z: float
+
+
+def _counts(successes: int, trials: int) -> None:
     if (not isinstance(successes, int) or not isinstance(trials, int) or
             trials <= 0 or successes < 0 or successes > trials):
         raise ValueError(
@@ -19,19 +53,19 @@ def _counts(successes, trials):
         )
 
 
-def _z(z):
+def _z(z: float) -> float:
     if not math.isfinite(z) or z <= 0:
         raise ValueError("z must be finite and greater than zero")
     return z
 
 
-def _half_width(rate, trials, z):
+def _half_width(rate: float, trials: int, z: float) -> float:
     zz = z * z
     denominator = 1 + zz / trials
     return z * math.sqrt(rate * (1 - rate) / trials + zz / (4 * trials * trials)) / denominator
 
 
-def wilson_interval(successes, trials, z=DEFAULT_Z):
+def wilson_interval(successes: int, trials: int, z: float = DEFAULT_Z) -> Interval:
     _counts(successes, trials)
     z = _z(z)
     rate = successes / trials
@@ -50,7 +84,7 @@ def wilson_interval(successes, trials, z=DEFAULT_Z):
     }
 
 
-def required_n(rate, half_width, z=DEFAULT_Z):
+def required_n(rate: float, half_width: float, z: float = DEFAULT_Z) -> int:
     if not math.isfinite(rate) or not 0 <= rate <= 1:
         raise ValueError("rate must be in [0, 1]")
     if not math.isfinite(half_width) or not 0 < half_width < 1:
@@ -70,7 +104,8 @@ def required_n(rate, half_width, z=DEFAULT_Z):
     return lo
 
 
-def two_proportion_test(successes_a, trials_a, successes_b, trials_b, z=DEFAULT_Z):
+def two_proportion_test(successes_a: int, trials_a: int, successes_b: int, trials_b: int,
+                        z: float = DEFAULT_Z) -> ProportionTest:
     _counts(successes_a, trials_a)
     _counts(successes_b, trials_b)
     z = _z(z)
@@ -97,7 +132,7 @@ def two_proportion_test(successes_a, trials_a, successes_b, trials_b, z=DEFAULT_
     }
 
 
-def contract_verdict(successes, trials, bar, z=DEFAULT_Z):
+def contract_verdict(successes: int, trials: int, bar: float, z: float = DEFAULT_Z) -> Verdict:
     if not math.isfinite(bar) or not 0 <= bar <= 1:
         raise ValueError("bar must be in [0, 1]")
     interval = wilson_interval(successes, trials, z)
@@ -106,8 +141,10 @@ def contract_verdict(successes, trials, bar, z=DEFAULT_Z):
     return {**interval, "bar": bar, "status": status, "ok": status == "PASS"}
 
 
-def format_rate(successes, trials, digits=1, label="rate", z=DEFAULT_Z):
+def format_rate(successes: int, trials: int, digits: int = 1, label: str = "rate", z: float = DEFAULT_Z) -> str:
     result = wilson_interval(successes, trials, z)
-    percent = lambda value: f"{100 * value:.{digits}f}"
+
+    def percent(value: float) -> str:
+        return f"{100 * value:.{digits}f}"
     return (f"{label} {percent(result['rate'])}% "
             f"[{percent(result['low'])}%, {percent(result['high'])}%] n={trials}")

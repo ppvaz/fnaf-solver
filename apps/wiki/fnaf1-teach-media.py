@@ -26,11 +26,11 @@ from pathlib import Path
 PANEL = (560, 110, 1340, 330)
 
 
-def run(cmd):
+def run(cmd: list[str]) -> None:
     subprocess.run(cmd, check=True)
 
 
-def probe_size(video):
+def probe_size(video: Path) -> tuple[int, int]:
     out = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",
                           "stream=width,height", "-of", "csv=p=0", str(video)],
                          check=True, capture_output=True, text=True).stdout.strip()
@@ -38,7 +38,7 @@ def probe_size(video):
     return w, h
 
 
-def office_onset(video, limit_s=25.0):
+def office_onset(video: Path, limit_s: float = 25.0) -> float:
     """Seconds into the video of the first bright office frame after the card."""
     w, h = 96, 44
     raw = subprocess.run(["ffmpeg", "-v", "error", "-t", str(limit_s), "-i", str(video), "-vf",
@@ -53,7 +53,7 @@ def office_onset(video, limit_s=25.0):
     raise SystemExit("fnaf1-teach-media: no office onset found in the first %.0f s" % limit_s)
 
 
-def bonnie_visit(events):
+def bonnie_visit(events: list[dict[str, str]]) -> tuple[float, float]:
     """(start, end) night seconds of the first left check that shut the door, to its reopen."""
     logs = []
     for e in events:
@@ -74,7 +74,7 @@ def bonnie_visit(events):
     raise SystemExit("fnaf1-teach-media: no Bonnie visit in the policy log")
 
 
-def main():
+def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--run", required=True)
     ap.add_argument("--video", required=True)
