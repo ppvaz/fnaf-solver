@@ -325,6 +325,7 @@
     {
       "file": "apps/trainer/src/curriculum.ts",
       "imports": [
+        "@sixam/kernel",
         "@sixam/source/fnaf2"
       ]
     },
@@ -358,6 +359,7 @@
         "./lane.ts",
         "./report.ts",
         "./route-facts.ts",
+        "./settings.ts",
         "./ui.ts",
         "@sixam/source/fnaf2"
       ]
@@ -392,6 +394,12 @@
       ]
     },
     {
+      "file": "apps/trainer/src/settings.ts",
+      "imports": [
+        "@sixam/kernel"
+      ]
+    },
+    {
       "file": "apps/trainer/src/training/activity-gate.ts",
       "imports": [
         "../validate.ts"
@@ -417,6 +425,8 @@
         "./dom.ts",
         "./lane.ts",
         "./report.ts",
+        "./settings.ts",
+        "@sixam/kernel",
         "@sixam/source/fnaf2"
       ]
     },
@@ -582,6 +592,15 @@
         "node:assert/strict",
         "node:fs",
         "node:url"
+      ]
+    },
+    {
+      "file": "apps/trainer/test/storage.test.ts",
+      "imports": [
+        "../src/curriculum.ts",
+        "../src/settings.ts",
+        "node:assert/strict",
+        "node:test"
       ]
     },
     {

@@ -13,6 +13,7 @@ import { LESSONS, LESSON_FRAMES, MINUS7_CYCLE, byId, lessonSim, loadProgress, sa
 import { ArcadeLab } from './arcade-ui.ts';
 import { REPOSITORY, factById, factText } from './route-facts.ts';
 import { byId as element } from './dom.ts';
+import { parseSettings } from './settings.ts';
 
 type Lesson = (typeof LESSONS)[number];
 /** The calibration session: a mode with no lesson, so every lesson field is absent. */
@@ -700,9 +701,7 @@ function note(msg: string) {
 }
 
 function loadSettings() {
-  let s = { sound: true, coach: true, speed: 1, haptics: true, metronome: true };
-  try { Object.assign(s, JSON.parse(localStorage.getItem('m7.settings') || '{}')); } catch { /* defaults */ }
-  return s;
+  try { return parseSettings(localStorage.getItem('m7.settings')); } catch { return parseSettings(null); }   // storage blocked
 }
 function saveSettings(s: Settings) { try { localStorage.setItem('m7.settings', JSON.stringify(s)); } catch { /* ignore */ } }
 

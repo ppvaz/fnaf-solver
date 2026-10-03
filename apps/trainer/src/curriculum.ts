@@ -1,3 +1,4 @@
+import { isRecord } from '@sixam/kernel';
 import * as C from '@sixam/source/fnaf2';
 
 // A ladder of lessons. Each one adds exactly one new thing, hides every control
@@ -282,11 +283,34 @@ const KEY = 'm7.progress';
 /** Each lesson's progress, as saveProgress writes it to this device. */
 type Progress = Record<string, { passed: boolean, best: number } | undefined>;
 
-export function loadProgress(): Progress {
-  try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch { return {}; }
+/**
+ * Progress from its stored JSON text (null when nothing is stored), keeping each
+ * well-formed lesson entry. Anything else -- `null`, a list, an entry of another
+ * shape -- is no progress for that lesson; until 2026-10-02 a stored `null`
+ * made markPassed throw at the moment a lesson was passed.
+ */
+export function parseProgress(text: string | null): Progress {
+  let stored: unknown;
+  try { stored = JSON.parse(text || '{}'); } catch { return {}; }
+  const progress: Progress = {};
+  if (!isRecord(stored)) return progress;
+  for (const [id, entry] of Object.entries(stored))
+    if (isRecord(entry) && typeof entry.passed === 'boolean' && typeof entry.best === 'number' && Number.isFinite(entry.best))
+      progress[id] = { passed: entry.passed, best: entry.best };
+  return progress;
 }
+export function loadProgress(): Progress {
+  try { return parseProgress(localStorage.getItem(KEY)); } catch { return {}; }   // storage blocked: no progress here
+}
+/** Save progress on this device; false, with a warning, when the device refuses it. */
 export function saveProgress(p: Progress) {
-  try { localStorage.setItem(KEY, JSON.stringify(p)); } catch { /* ignore */ }
+  try {
+    localStorage.setItem(KEY, JSON.stringify(p));
+    return true;
+  } catch (error) {
+    console.warn(`lesson progress could not be saved on this device: ${error instanceof Error ? error.message : String(error)}`);
+    return false;
+  }
 }
 export function markPassed(id: string, bestCombo: number) {
   const p = loadProgress();

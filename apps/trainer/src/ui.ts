@@ -1,5 +1,7 @@
+import { isRecord } from '@sixam/kernel';
 import * as C from '@sixam/source/fnaf2';
 import { fmtTime } from './report.ts';
+import { takeStoredRects } from './settings.ts';
 import { Lane } from './lane.ts';
 import { find } from './dom.ts';
 import type { Coach, DuelTimer } from './coach.ts';
@@ -647,22 +649,13 @@ const clone = <T>(o: T): T => JSON.parse(JSON.stringify(o));
 
 function loadLayout() {
   const out: Layout = { map: clone(C.DEFAULT_MAP), widgets: clone(C.DEFAULT_WIDGETS) };
-  try {
-    const raw = localStorage.getItem('m7.layout');
-    if (raw) {
-      // What saveLayout wrote on this device; a file that does not read so falls to the defaults.
-      const saved = JSON.parse(raw) as Partial<{ map: Record<string, Partial<Rect>>, widgets: Record<string, Partial<Rect>> }>;
-      for (const k of Object.keys(out.map)) if (saved.map?.[k]) Object.assign(out.map[k], saved.map[k]);
-      for (const k of Object.keys(out.widgets)) if (saved.widgets?.[k]) {
-        // `space` is structural, not user data: never let a saved file change it.
-        const v = saved.widgets[k];
-        for (const f of ['x', 'y', 'w', 'h'] as const) {
-          const n = v?.[f];
-          if (typeof n === 'number') out.widgets[k][f] = n;
-        }
-      }
-    }
-  } catch { /* fall back to defaults */ }
+  let saved: unknown = null;
+  try { saved = JSON.parse(localStorage.getItem('m7.layout') || 'null'); } catch { /* the defaults stand */ }
+  // What saveLayout wrote on this device, rectangle by rectangle.
+  if (isRecord(saved)) {
+    takeStoredRects(saved.map, out.map);
+    takeStoredRects(saved.widgets, out.widgets);
+  }
   return out;
 }
 

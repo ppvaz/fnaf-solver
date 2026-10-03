@@ -215,6 +215,7 @@
       "apps/trainer/test/lessons.test.ts",
       "apps/trainer/test/route-facts.test.ts",
       "apps/trainer/test/bundle.test.ts",
+      "apps/trainer/test/storage.test.ts",
       "packages/play/test/phase-clock.test.ts",
       "packages/play/test/observer-entropy.test.ts",
       "packages/propose/test/observationlanguagetest.ts",
