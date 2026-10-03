@@ -74,6 +74,7 @@ ROOT = HERE.parents[1]
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parents[1] / "packages/play/src/safety"))  # the serial lease: Play's
 import night_jobs  # noqa: E402
+import process_tree  # noqa: E402
 from companion_device_lock import DeviceBusy, DeviceLock, state_dir  # noqa: E402
 
 
@@ -877,19 +878,18 @@ class Window:
         child = self.child
         if child is None:
             return
-        for signum, grace in ((signal.SIGINT, STOP_GRACE_S), (signal.SIGTERM, TERM_GRACE_S),
-                              (signal.SIGKILL, KILL_GRACE_S)):
+
+        # The queue child leads its own session (start_new_session), so its group is its whole tree.
+        def send(signum: signal.Signals) -> None:
             if child.poll() is not None:
-                return
-            try:
-                os.killpg(child.pid, signum)
-            except ProcessLookupError:
-                return
+                raise ProcessLookupError
+            os.killpg(child.pid, signum)
+
+        def note(signum: signal.Signals) -> None:
             self.child_signals.append(signum.name)
             self.event("child.signal", signal=signum.name, why=why)
-            until = mono() + grace
-            while child.poll() is None and mono() < until:
-                time.sleep(0.05)
+
+        process_tree.stop(child, send, (STOP_GRACE_S, TERM_GRACE_S, KILL_GRACE_S), on_signal=note)
 
     # -- the body
     def run(self) -> int:
