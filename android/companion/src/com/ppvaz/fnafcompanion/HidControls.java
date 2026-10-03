@@ -115,6 +115,15 @@ public final class HidControls {
                 + "," + (point[1] & 255) + "," + ((point[1] >> 8) & 255) + "]";
     }
 
+    /**
+     * The second finger's record in a two-contact report: contact id 1 (flag
+     * bit 2), down 7 and up 4, as {@code packages/play/src/campaign/hid-schedule.ts}
+     * sends it. The first finger is {@link #contact} with 3 and 0.
+     */
+    public static String secondContact(boolean down, int[] point) {
+        return contact(down ? 7 : 4, point);
+    }
+
     /** Lowercase hex sha256 of some bytes, as the host names a profile. */
     public static String sha256Hex(byte[] bytes) {
         try {

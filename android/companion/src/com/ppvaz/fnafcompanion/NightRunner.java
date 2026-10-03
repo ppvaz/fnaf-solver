@@ -454,9 +454,9 @@ public final class NightRunner {
             int duration) throws IOException {
         int[] first = point(firstControl);
         int[] second = point(secondControl);
-        lines.add(reportTwo(active(first), active(second)));
+        lines.add(reportTwo(active(first), HidControls.secondContact(true, second)));
         addDelay(lines, duration);
-        lines.add(reportTwo(released(first), released(second)));
+        lines.add(reportTwo(released(first), HidControls.secondContact(false, second)));
         return duration;
     }
 
@@ -467,13 +467,13 @@ public final class NightRunner {
         lines.add(reportSingle(released(mask)));
         addDelay(lines, action.first);
         if ("hall".equals(action.control)) {
-            lines.add(reportTwo(active(point("hallLight")), active(point("monitor"))));
+            lines.add(reportTwo(active(point("hallLight")), HidControls.secondContact(true, point("monitor"))));
         } else {
             lines.add(reportSingle(active(point("monitor"))));
         }
         addDelay(lines, action.second);
         if ("hall".equals(action.control)) {
-            lines.add(reportTwo(released(point("hallLight")), released(point("monitor"))));
+            lines.add(reportTwo(released(point("hallLight")), HidControls.secondContact(false, point("monitor"))));
         } else {
             lines.add(reportSingle(released(point("monitor"))));
         }
@@ -485,11 +485,11 @@ public final class NightRunner {
         int[] monitor = point("monitor");
         lines.add(reportSingle(active(light)));
         addDelay(lines, action.first);
-        lines.add(reportTwo(active(light), active(monitor)));
+        lines.add(reportTwo(active(light), HidControls.secondContact(true, monitor)));
         addDelay(lines, action.second);
-        lines.add(reportTwo(active(light), released(monitor)));
+        lines.add(reportTwo(active(light), HidControls.secondContact(false, monitor)));
         addDelay(lines, action.third);
-        lines.add(reportTwo(released(light), released(monitor)));
+        lines.add(reportTwo(released(light), HidControls.secondContact(false, monitor)));
         return action.first + action.second + action.third;
     }
 

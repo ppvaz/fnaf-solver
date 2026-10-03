@@ -51,6 +51,13 @@ public final class HidControlsTest {
         check("the mask's raw point", Arrays.equals(controls.raw("mask"), new int[] {188, 270}));
         check("a pressed contact's bytes", "[3,188,0,14,1]".equals(HidControls.contact(3, controls.raw("mask"))));
         check("a released contact's bytes", "[0,188,0,14,1]".equals(HidControls.contact(0, controls.raw("mask"))));
+        // A second finger is contact id 1 (flag bit 2), as the host's
+        // hid-schedule.ts sends it: 7 down, 4 up. Two records both at id 0
+        // are one finger reported twice.
+        check("a second finger down carries contact id 1",
+                "[7,188,0,14,1]".equals(HidControls.secondContact(true, controls.raw("mask"))));
+        check("a second finger up carries contact id 1",
+                "[4,188,0,14,1]".equals(HidControls.secondContact(false, controls.raw("mask"))));
         controls.requireAll(Arrays.asList("mask", "monitor", "hallLight", "cam:9", "cam:11"));
         refused("a plan control the file does not name", "cam:12, sofa",
                 () -> controls.requireAll(Arrays.asList("mask", "sofa", "cam:12")));
