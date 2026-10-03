@@ -23,8 +23,8 @@ import { fileURLToPath } from 'node:url';
 import { validateExperimentResultV2, validateExperimentSpecV2 } from '@sixam/kernel/contracts';
 import { SEED_FLOOR, decideExperiment, resolveCensusCohort } from '@sixam/propose/census';
 import {
-  CENSUS_KIND, DEVICE_MASK_FLOOR_MS, anchorBandBindings, deviceNight, exactNight, observe, pMaxRate, scheduleClasses,
-  selectPolicy,
+  CENSUS_KIND, DEVICE_MASK_FLOOR_MS, anchorBandBindings, deviceNight, exactNight, identified, observe, pMaxRate,
+  scheduleClasses, selectPolicy,
 } from './policy-census.ts';
 import { SEAM_FLOORS } from '../plans/artifact-commands.ts';
 import type { CensusSpec, buildRecord } from './policy-census.ts';
@@ -48,9 +48,20 @@ const records = readdirSync(EVIDENCE).filter((name) => /-census-\d{8}\.json$/.te
 assert.ok(records.length, `no ${CENSUS_KIND} record under docs/evidence`);
 const { name, record } = found(records.at(-1));
 assert.equal(record.claimLevel, 'MODEL_ONLY', `${name}: a census is MODEL_ONLY`);
+// How a run went -- its command, workers and wall time -- is stated in `runFacts`, outside the id, so two runs of one
+// census on one tree name the same record; records before 2026-10-02 stated it inside `method`, and hashed it.
+type RunStated = { readonly command: string, readonly jobs: number, readonly wallSeconds: number };
+const ranOf = (r: ReturnType<typeof buildRecord>): RunStated => r.runFacts ?? (r.method as unknown as RunStated);
 // The worker count a record states is the one its command ran with (until 2026-10-01 it stated the cap).
 for (const { name: each, record: r } of records)
-  assert.equal(r.method.jobs, Number(/--jobs (\d+)/.exec(r.method.command)?.[1] ?? 1), `${each}: method.jobs is not its command's --jobs`);
+  assert.equal(ranOf(r).jobs, Number(/--jobs (\d+)/.exec(ranOf(r).command)?.[1] ?? 1), `${each}: jobs is not its command's --jobs`);
+{
+  const body = { kind: CENSUS_KIND, counts: [1, 2] };
+  const one = identified('spec', body, { command: 'node x --jobs 1', jobs: 1, wallSeconds: 2181 });
+  const six = identified('spec', body, { command: 'node x --jobs 6', jobs: 6, wallSeconds: 412 });
+  assert.equal(one.evidenceId, six.evidenceId, 'the worker count and wall time are not part of what the record names');
+  assert.notEqual(identified('spec', { ...body, counts: [1, 3] }, one.runFacts).evidenceId, one.evidenceId);
+}
 
 // The pre-registration, byte for byte, committed alone and never edited, and before the record.
 const git = (...args: string[]) => execFileSync('git', ['-C', ROOT, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
@@ -82,7 +93,7 @@ const cohort = resolveCensusCohort(spec);
 for (const block of ['development', 'heldOut'] as const) assert.ok(cohort[block].length >= SEED_FLOOR, `${block} under the floor`);
 
 // Identity and decision, re-derived from the record's own counts.
-const { evidenceId, ...unsigned } = record;
+const { evidenceId, runFacts: _runFacts, ...unsigned } = record;
 assert.equal(evidenceId, `${spec.id}-${sha256(JSON.stringify(unsigned)).slice(0, 16)}`, `${name}: evidenceId does not re-derive`);
 for (const binding of record.bindings)
   for (const cls of binding.classes) {

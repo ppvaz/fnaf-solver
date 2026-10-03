@@ -281,6 +281,17 @@ export function pMaxRate(selected: { readonly name: string, readonly classes: re
     worst.heldOut.wins, worst.heldOut.n, { method: 'wilson-bonferroni', confidence: 0.95, comparisons: selected.classes.length });
 }
 
+/** How one run of a census went: the command it ran with, its workers and its wall time. */
+interface RunFacts { readonly command: string, readonly jobs: number, readonly wallSeconds: number }
+
+/**
+ * A record with its id: the spec's id and the sha256 of what the record states. How the run went sits beside it in
+ * `runFacts`, outside the hash, so two runs of one census on one tree -- any worker count, any wall time -- name one record.
+ */
+export function identified<B extends object>(specId: string, body: B, run: RunFacts) {
+  return { ...body, runFacts: run, evidenceId: `${specId}-${sha256(JSON.stringify(body)).slice(0, 16)}` };
+}
+
 /** One lane's rows per block: a subject's losses over the block's seeds. */
 type LaneRows = Readonly<Record<BlockName, readonly (BlockRow & { readonly subject: string })[]>>;
 
@@ -347,7 +358,7 @@ export function buildRecord({ spec, reg, bindings, classes, exactRows, deviceRow
       perturbation: 'exact lane: the delivered epoch, every integer ms of each binding\'s band; device lane: per-press lateness drawn from the latency band',
       constants: Object.fromEntries(bindings.map((b) => [b.name, { winnerSha256: b.winnerSha256, planSha256: b.planSha256 }])),
     },
-    method: { tool: 'packages/propose/bin/census/policy-census.ts', command, git, jobs, wallSeconds,
+    method: { tool: 'packages/propose/bin/census/policy-census.ts', git,
       win: 'sim.won AND splitAt >= 0 (a 6 AM with the split armed), as winner-phase-census.ts scores it',
       exactLane: 'minus-toys-plan.ts replay({night, seed, knobs, epochMs}) at each class\'s representative epoch',
       deviceLane: 'the same queue at aim + onsetBias, each press through actuator.ts DeviceActuator (perPress, lateness U[latency.min, latency.max] ms, ' +
@@ -359,7 +370,7 @@ export function buildRecord({ spec, reg, bindings, classes, exactRows, deviceRow
       rate: pMax },
     result,
   };
-  return { ...unsigned, evidenceId: `${spec.id}-${sha256(JSON.stringify(unsigned)).slice(0, 16)}` };
+  return identified(spec.id, unsigned, { command, jobs, wallSeconds });
 }
 
 // ---- main -------------------------------------------------------------------------------------
