@@ -11,6 +11,7 @@ import { stripTypeScriptTypes } from 'node:module';
 import { basename, dirname, extname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pyFixed } from '@sixam/kernel/py';
+import { Script } from 'node:vm';
 
 // Node 22.13 added it; the @types/node this repository pins (22.10) does not declare it yet.
 declare module 'node:module' {
@@ -204,6 +205,15 @@ const shim = 'const __m={};const __def=(n,f)=>__m[n]={f,x:null};'
 const order = resolveOrder();
 const bundle = shim + order.map(name => transform(name, join(ROOT, name), sourceOf(join(ROOT, name)))).join('')
   + `__req('${moduleName(canonicalPath(realish(join(ROOT, ENTRY))))}');\n`;
+// The bundle is a classic script: compile it (never run it) so a rewrite the regexes get wrong fails the
+// build, not a visitor's phone. On 2026-10-03 `export { fail as failContract }` came out as an object
+// literal entry, and the published trainer would have loaded blank.
+try {
+  new Script(bundle, { filename: 'dist/index.html (bundle)' });
+} catch (error) {
+  console.error(`the bundle does not parse: ${error instanceof Error ? error.message : String(error)}`);
+  process.exit(1);
+}
 
 html = html.replaceAll('<link rel="stylesheet" href="apps/trainer/src/fonts.css">\n', '');
 html = html.replaceAll('<link rel="stylesheet" href="apps/trainer/src/style.css">', () => `<style>\n${css}\n</style>`);
