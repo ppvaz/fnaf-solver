@@ -317,6 +317,18 @@
       "lifecycle": "supported"
     },
     {
+      "id": "tools/test-workspace-deps.ts",
+      "invocation": "tools/test-workspace-deps.ts",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "tools/module-refs.ts",
+      "invocation": "tools/module-refs.ts",
+      "kind": "module",
+      "lifecycle": "supported"
+    },
+    {
       "id": "tools/test-mistake-register.ts",
       "invocation": "tools/test-mistake-register.ts [--explain]",
       "kind": "check",

@@ -2649,44 +2649,6 @@
       ]
     },
     {
-      "file": "packages/propose/bin/plans/test-night7-presets.ts",
-      "imports": [
-        "../../../../packages/propose/bin/census/winner-phase-census.ts",
-        "../../../../packages/propose/bin/plans/night7-robustness.ts",
-        "../../../play/bin/phone/actuator.ts",
-        "../census/winner-census.ts",
-        "../lookup.ts",
-        "../recompile/model-options.ts",
-        "../recompile/sweep-common.ts",
-        "./minus-toys-plan.ts",
-        "./night7-presets.ts",
-        "./night7-robustness-field.ts",
-        "@sixam/review/renamed-path",
-        "@sixam/source/fnaf2",
-        "node:fs",
-        "node:url"
-      ]
-    },
-    {
-      "file": "packages/propose/bin/plans/test-night7-presets.ts",
-      "imports": [
-        "../../../../packages/propose/bin/census/winner-phase-census.ts",
-        "../../../../packages/propose/bin/plans/night7-robustness.ts",
-        "../../../play/bin/phone/actuator.ts",
-        "../census/winner-census.ts",
-        "../lookup.ts",
-        "../recompile/model-options.ts",
-        "../recompile/sweep-common.ts",
-        "./minus-toys-plan.ts",
-        "./night7-presets.ts",
-        "./night7-robustness-field.ts",
-        "@sixam/review/renamed-path",
-        "@sixam/source/fnaf2",
-        "node:fs",
-        "node:url"
-      ]
-    },
-    {
       "file": "packages/propose/bin/policy/closed-families.ts",
       "imports": [
         "./policy-grammar.ts",
@@ -5759,6 +5721,7 @@
         "../src/index.ts",
         "./clockwork/index.ts",
         "./labels.js",
+        "./module-refs.ts",
         "./phone/clocks.js",
         "@sixam/core/contracts",
         "@sixam/core/control",
@@ -5791,6 +5754,7 @@
     {
       "file": "tools/change-locality.ts",
       "imports": [
+        "./commit-identity.ts",
         "node:child_process",
         "node:fs",
         "node:url"
@@ -5860,6 +5824,12 @@
       ]
     },
     {
+      "file": "tools/module-refs.ts",
+      "imports": [
+        "typescript"
+      ]
+    },
+    {
       "file": "tools/push-gate.ts",
       "imports": [
         "../packages/play/bin/phone/local-profile.ts",
@@ -5894,7 +5864,10 @@
       "imports": [
         "./change-locality.ts",
         "node:assert/strict",
-        "node:fs"
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path"
       ]
     },
     {
@@ -6091,6 +6064,21 @@
         "node:fs",
         "node:path",
         "typescript"
+      ]
+    },
+    {
+      "file": "tools/test-workspace-deps.ts",
+      "imports": [
+        "./gate-kit.ts",
+        "./module-refs.ts",
+        "@sixam/a",
+        "@sixam/a/y",
+        "@sixam/b",
+        "@sixam/kernel",
+        "node:assert/strict",
+        "node:fs",
+        "node:os",
+        "node:path"
       ]
     },
     {

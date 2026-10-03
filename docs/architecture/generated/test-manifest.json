@@ -2663,42 +2663,6 @@
       }
     },
     {
-      "id": "packages/propose/bin/plans/test-night7-presets.ts",
-      "lane": "test:unit",
-      "owner": "@sixam/propose",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.ts per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": true,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
-      "id": "packages/propose/bin/plans/test-night7-presets.ts",
-      "lane": "test:unit",
-      "owner": "@sixam/propose",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.ts per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": true,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
       "id": "packages/propose/bin/policy/policy-inspect.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
@@ -5539,7 +5503,7 @@
       "determinismSignals": [],
       "fixedSleeps": [],
       "sharedResources": [],
-      "subprocesses": false,
+      "subprocesses": true,
       "measurement": {
         "status": "NOT_MEASURED",
         "runs": 0,
@@ -5847,6 +5811,24 @@
     },
     {
       "id": "tools/test-type-debt.ts",
+      "lane": "test:unit",
+      "owner": "legacy migration",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.ts per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "tools/test-workspace-deps.ts",
       "lane": "test:unit",
       "owner": "legacy migration",
       "timeoutMs": 180000,
