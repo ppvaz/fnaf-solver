@@ -24,7 +24,7 @@ import { matchMistakes, readMistakes, stepFamily } from '@sixam/review/mistakes'
 import { queryPromotions } from '@sixam/review/promotions-query';
 import { readPacks } from '@sixam/review/registers';
 import { ORDER, ORDER_OF, ROADMAP, STEPS, stateKey, stepStatus } from '@sixam/review/roadmap';
-import { runRecordPath } from '../../../tools/push-gate.ts';
+import { runRecordPath } from './lane-kit.ts';
 import { CATALOG_COMMANDS, type Check, runDoctor as doctorChecks } from './lab-doctor.ts';
 import { PROC_HOST, QUEUE_TOOL, type QueueJob, iso, labContext, lines, mtime, phoneState, readJson } from './lab-host.ts';
 

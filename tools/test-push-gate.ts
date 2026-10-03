@@ -14,7 +14,8 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { mainCheckout } from '../packages/play/bin/phone/local-profile.ts';
-import { DEFAULT_MEMORY_MAX, LANES, RUN_RECORD_SCHEMA, failureReport, laneCommand, recordRun, reproduceCommand, runRecordPath } from './push-gate.ts';
+import { LANES, failureReport, reproduceCommand } from './push-gate.ts';
+import { DEFAULT_MEMORY_MAX, RUN_RECORD_SCHEMA, laneCommand, recordRun, runRecordPath } from '../apps/desktop/src/lane-kit.ts';
 
 const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '..'));
 const BYPASS = /--no-verify|\bcommit\s+-n\b/;

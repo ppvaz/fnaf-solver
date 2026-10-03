@@ -109,8 +109,8 @@
       "file": "apps/desktop/src/lab-doctor.ts",
       "imports": [
         "../../../packages/play/bin/phone/local-profile.ts",
-        "../../../tools/push-gate.ts",
         "./lab-host.ts",
+        "./lane-kit.ts",
         "@sixam/kernel",
         "node:child_process",
         "node:fs",
@@ -132,9 +132,9 @@
     {
       "file": "apps/desktop/src/lab.ts",
       "imports": [
-        "../../../tools/push-gate.ts",
         "./lab-doctor.ts",
         "./lab-host.ts",
+        "./lane-kit.ts",
         "@sixam/kernel",
         "@sixam/review/consequence",
         "@sixam/review/evidence-pack",
@@ -146,6 +146,17 @@
         "node:fs",
         "node:os",
         "node:path"
+      ]
+    },
+    {
+      "file": "apps/desktop/src/lane-kit.ts",
+      "imports": [
+        "../../../packages/play/bin/phone/local-profile.ts",
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url"
       ]
     },
     {
@@ -208,9 +219,9 @@
     {
       "file": "apps/desktop/test/lab.test.ts",
       "imports": [
-        "../../../tools/push-gate.ts",
         "../src/cli.ts",
         "../src/lab.ts",
+        "../src/lane-kit.ts",
         "@sixam/kernel",
         "node:assert/strict",
         "node:child_process",
@@ -5716,6 +5727,8 @@
         "../../../apps/device/src/campaign.js",
         "../../../apps/device/src/cli.js",
         "../../../tools/device/bundle.ts",
+        "../../../tools/lanes.ts",
+        "../../../tools/push-gate.ts",
         "../../core/src/sensing/observer.js",
         "../../review/src/pack-lift.mjs",
         "../src/index.ts",
@@ -5832,7 +5845,7 @@
     {
       "file": "tools/push-gate.ts",
       "imports": [
-        "../packages/play/bin/phone/local-profile.ts",
+        "../apps/desktop/src/lane-kit.ts",
         "../packages/review/src/lanes.ts",
         "node:child_process",
         "node:fs",
@@ -6001,6 +6014,7 @@
     {
       "file": "tools/test-push-gate.ts",
       "imports": [
+        "../apps/desktop/src/lane-kit.ts",
         "../packages/play/bin/phone/local-profile.ts",
         "./push-gate.ts",
         "node:assert/strict",

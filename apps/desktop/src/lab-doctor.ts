@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { BINDINGS_DIR, type Unknown, isUnknown, unknown } from '@sixam/kernel';
 import { PROFILE_PATH, profilePaths } from '../../../packages/play/bin/phone/local-profile.ts';
-import { laneCommand, linkDependencies } from '../../../tools/push-gate.ts';
+import { laneCommand, linkDependencies } from './lane-kit.ts';
 import { type LabContext, type Placed, type QueueView, QUEUE_TOOL, STALE_PENDING_HOURS, hoursBetween, lines, mtime,
   parseWorktrees } from './lab-host.ts';
 

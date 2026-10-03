@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { isUnknown, validateClaimEnvelope } from '@sixam/kernel';
 import type { RefusalEnvelope, Unknown } from '@sixam/kernel';
-import { recordRun, runRecordPath } from '../../../tools/push-gate.ts';
+import { recordRun, runRecordPath } from '../src/lane-kit.ts';
 import { main, parse } from '../src/cli.ts';
 import { LAB_VERBS, PROC_HOST, SESSION_FILE, STALE_PENDING_HOURS, createLab, lastEvening, parseWorktrees, runStamp } from '../src/lab.ts';
 

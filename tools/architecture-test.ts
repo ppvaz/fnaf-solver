@@ -278,6 +278,12 @@ const RULES: readonly Rule[] = [
       ref.unit.startsWith('apps/'),
     why: 'review never imports play or propose (ADR 0002): no packages/play, packages/propose or application',
   },
+  {
+    id: 'tools-importers', scope: path => path.startsWith('packages/') || /^apps\/[^/]+\/src\//.test(path),
+    refuse: ref => ref.unit === 'tools',
+    why: 'tools/ holds the gates and the operator scripts; no package and no application\'s production code imports it ' +
+      '(the lab once reached the push gate\'s plumbing there, now apps/desktop/src/lane-kit.ts)',
+  },
 ];
 
 /**
@@ -360,7 +366,7 @@ assert.deepEqual(planted(PROPOSE, "import { spawn } from 'node:child_process';")
 assert.deepEqual(planted(PROPOSE, "import { cli } from '@sixam/desktop';"), ['propose'], 'propose must not import the composition root');
 assert.deepEqual(planted('packages/play/src/planted.js', "import { createLab } from '@sixam/desktop/package.json';"), ['play'],
   'play must not import the composition root');
-assert.deepEqual(planted(PROPOSE, "export const load = () => import('../../../tools/device/bundle.ts');"), ['propose'],
+assert.deepEqual(planted(PROPOSE, "export const load = () => import('../../../tools/device/bundle.ts');"), ['propose', 'tools-importers'],
   'propose must not reach tools/, even by a dynamic import');
 assert.deepEqual(planted(PROPOSE, "import { NightPolicy } from '@sixam/core/control';"), ['propose'],
   'propose must not import the core shim that re-exports it');
@@ -385,7 +391,7 @@ assert.deepEqual(planted(PLAY, "import { stableHash } from '@sixam/kernel/contra
 'play may import itself, the kernel, source and node:');
 assert.deepEqual(planted(PLAY, "import { readPack } from '@sixam/review/evidence-pack';"), ['play'], 'play must not import review');
 assert.deepEqual(planted(PLAY, "import { Observer } from '@sixam/core/sensing';"), ['play'], 'play must not import core');
-assert.deepEqual(planted(PLAY, "export const load = () => import('../../../tools/device/bundle.ts');"), ['play'],
+assert.deepEqual(planted(PLAY, "export const load = () => import('../../../tools/device/bundle.ts');"), ['play', 'tools-importers'],
   'play must not reach tools/, even by a dynamic import');
 assert.deepEqual(planted(PLAY, "export { cli } from '../../../apps/desktop/src/lab.ts';"), ['play'], 'play must not import an application');
 assert.deepEqual(planted(PLAY, "const where = './phone/clocks.js';\nexport const load = () => import(where);"), ['play'],
@@ -404,6 +410,13 @@ assert.deepEqual(planted(REVIEW, "export const load = () => import('../../../app
   'review must not import an application');
 assert.deepEqual(planted(REVIEW, "import { NightPolicy } from '@sixam/propose';"), ['propose-importers', 'review'],
   'review must not import propose');
+// tools/ is imported by nothing in a package or an application's src (its tests and bins may drive a tool).
+assert.deepEqual(planted('apps/desktop/src/planted.ts', "import { laneCommand } from '../../../tools/push-gate.ts';"), ['tools-importers'],
+  'an application\'s production code must not import tools/');
+assert.deepEqual(planted('packages/review/bin/planted.ts', "export const load = () => import('../../../tools/lanes.ts');"),
+  ['tools-importers'], 'a package must not import tools/, even by a dynamic import');
+assert.deepEqual(planted('apps/desktop/test/planted.test.ts', "import { LANES } from '../../../tools/push-gate.ts';"), [],
+  'an application\'s test may drive a tool');
 const globalsOf = (source: string) => hostGlobals(parse('packages/source/src/planted.js', source));
 assert.deepEqual(globalsOf('const host = window;'), ['window'],
   'architecture guard must recognize host-global access in module bodies');
@@ -506,6 +519,12 @@ for (const path of production) {
   if (/^packages\/[^/]+\/test\//.test(repoPath(path))) continue;
   const reports = moduleReferences(file).filter(ref => ref.specifier !== null && /(?:test|report)/.test(ref.specifier));
   assert.equal(reports.length, 0, `${path} imports a test/report module: ${reports.map(ref => ref.specifier).join(', ')}`);
+}
+// The applications answer to the rules that scope them (tools-importers), as the packages do.
+const applications = await files(join(ROOT, 'apps'));
+for (const path of applications) {
+  const found = violations(repoPath(path), await tree(path));
+  assert.equal(found.length, 0, describe(repoPath(path), found));
 }
 for (const path of hostFree) {
   const globals = hostGlobals(await tree(path));
