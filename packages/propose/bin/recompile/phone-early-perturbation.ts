@@ -16,7 +16,8 @@ import { LEDGERS } from './compare-schedule-replay.ts';
 import { inputs } from './phone-stream-census.ts';
 import type { Inputs } from './phone-stream-census.ts';
 import { fanOut, predeclared, sweepArgs } from './sweep-common.ts';
-import type { SweepPredeclaration } from './sweep-common.ts';
+import type { DeclaredFields, SweepPredeclaration } from './sweep-common.ts';
+import { isRecord } from '@sixam/kernel';
 import type { Sim } from '@sixam/source/fnaf2';
 import { drawTrace } from '../../../source/recompile/model-draw-trace.ts';
 import { RNG_INCREMENT, RNG_MASK, RNG_MULTIPLIER } from '../../../source/src/games/fnaf2/rng.ts';
@@ -32,6 +33,14 @@ export type Member = { kind: 'shift', index: number, control?: string, d: number
   | { kind: 'drop', index: number, control?: string } | { kind: 'draws', update: number, k: number } | { kind: 'none' };
 /** An early-perturbation predeclaration: its rule. */
 interface EarlyPre extends SweepPredeclaration { readonly decisionRule: { readonly minAgree: number } }
+
+/** An early-perturbation predeclaration's own field: the agreement a member needs to fit. */
+export function earlyPredeclaration(fields: DeclaredFields, where: string): EarlyPre {
+  const rule = fields.decisionRule;
+  if (!isRecord(rule) || !Number.isInteger(rule.minAgree) || Number(rule.minAgree) < 0)
+    throw new Error(`${where}: decisionRule.minAgree must be a whole number of windows`);
+  return fields as unknown as EarlyPre;
+}
 /** One member's night (playMember). */
 type MemberRow = ReturnType<typeof playMember>;
 
@@ -103,13 +112,14 @@ export function playMember(inp: Inputs, member: Member) {
 
 /** The predeclared rule: SUPPORTED when some member meets both fingerprints. */
 export function decide(rule: EarlyPre['decisionRule'], rows: readonly Pick<MemberRow, 'audioFits' | 'agree' | 'member'>[]) {
+  if (!rows.length) throw new Error('no member was scored, so the rule decides nothing');
   const fits = rows.filter((r) => r.audioFits && r.agree >= rule.minAgree);
   return fits.length ? { verdict: 'SUPPORTED', fits: fits.map((r) => r.member) } : { verdict: 'NOT_SUPPORTED', fits: [] };
 }
 
 async function main(argv: string[]) {
   const args = sweepArgs(argv);
-  const { pre, inp, record } = predeclared<EarlyPre, Inputs>(args.predeclaration, inputs);
+  const { pre, inp, record } = predeclared<EarlyPre, Inputs>(args.predeclaration, inputs, earlyPredeclaration);
   const firstMask = maskPresses(inp.queue)[0].tick;
   const members = family(inp.contacts, firstMask);
   const t0 = Date.now();

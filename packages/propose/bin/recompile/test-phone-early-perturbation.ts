@@ -4,11 +4,13 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import type { BinaryLike } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { isList } from '@sixam/kernel';
-import { decide, family, memberContacts, stepState } from './phone-early-perturbation.ts';
+import { decide, earlyPredeclaration, family, memberContacts, stepState } from './phone-early-perturbation.ts';
+import { fanOut, predeclared, sweepArgs } from './sweep-common.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
 const read = (path: string) => readFileSync(join(ROOT, path));
@@ -31,10 +33,39 @@ const fit = { member: { kind: 'none' as const }, audioFits: true, agree: 30 };
 assert.equal(decide({ minAgree: 30 }, [fit]).verdict, 'SUPPORTED');
 assert.equal(decide({ minAgree: 30 }, [{ ...fit, agree: 29 }, { ...fit, audioFits: false, agree: 40 }]).verdict, 'NOT_SUPPORTED');
 
+assert.throws(() => decide({ minAgree: 30 }, []), /no member/, 'a verdict over no members is refused, not NOT_SUPPORTED');
+
+// --- the predeclaration: every input the sweep reads is pinned by sha256 and still matches
+{
+  const dir = mkdtempSync(join(tmpdir(), 'sweep-predeclaration-'));
+  let written = 0;
+  const file = (body: object) => { const path = join(dir, `${written += 1}.json`); writeFileSync(path, JSON.stringify(body)); return path; };
+  const reads = () => ({ measuredSeed: 7, hashes: { config: 'a'.repeat(64), contacts: 'b'.repeat(64), frameTimes: null } });
+  const declared = { id: 'x', night: 'full-06', seed: 7, decisionRule: { minAgree: 30 },
+    inputs: { config: 'a'.repeat(64), contacts: 'b'.repeat(64) } };
+  assert.equal(predeclared(file(declared), reads, earlyPredeclaration).pre.decisionRule.minAgree, 30);
+  assert.throws(() => predeclared(file({ ...declared, inputs: undefined }), reads, earlyPredeclaration), /inputs must pin/,
+    'a predeclaration that pins no input cannot show its inputs held');
+  assert.throws(() => predeclared(file({ ...declared, inputs: { config: 'a'.repeat(64) } }), reads, earlyPredeclaration),
+    /reads contacts, which the predeclaration does not pin/, 'an input the sweep reads and the predeclaration does not pin is refused');
+  assert.throws(() => predeclared(file({ ...declared, inputs: { ...declared.inputs, contacts: 'c'.repeat(64) } }), reads,
+    earlyPredeclaration), /input contacts changed/);
+  assert.throws(() => predeclared(file({ ...declared, seed: 8 }), reads, earlyPredeclaration), /measured seed is 7/);
+  assert.throws(() => predeclared(file({ ...declared, decisionRule: {} }), reads, earlyPredeclaration), /minAgree/);
+  assert.throws(() => predeclared(file({ ...declared, seed: '7' }), reads, earlyPredeclaration), /seed must be an integer/);
+  rmSync(dir, { recursive: true, force: true });
+}
+assert.throws(() => sweepArgs(['--predeclaration', 'x', '--workers', '0']), /--workers/, 'zero workers would score nothing');
+assert.throws(() => sweepArgs(['--predeclaration', 'x', '--workers', 'six']), /--workers/);
+await assert.rejects(fanOut(import.meta.url, 'none', {}, [1, 2], 0), /workers/, 'a pool of no workers scores nothing');
+
 // --- the full-06 record
 const rec = json('docs/evidence/full06-early-perturbation-20261001.json');
 const pre = json(rec.predeclaration.path);
 assert.equal(rec.predeclaration.sha256, sha256(read(rec.predeclaration.path)), 'the predeclaration is the committed one');
+// It pins none of the inputs it read (its record states their hashes after the fact), so it is not re-run as it stands.
+assert.throws(() => predeclared(join(ROOT, rec.predeclaration.path), () => ({ measuredSeed: pre.seed, hashes: {} }),
+  earlyPredeclaration), /inputs must pin/);
 assert.equal(rec.seed, pre.seed);
 /** A committed distinct outcome, as the checks below read it. */
 type Outcome = { readonly members: number, readonly firstHopUpdate: number | null, readonly vocals: readonly (number | string)[], readonly agree: number };

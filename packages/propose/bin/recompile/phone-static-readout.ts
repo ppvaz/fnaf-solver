@@ -22,7 +22,8 @@ import type { NightConfig } from './phone-encounter-replay.ts';
 import { inputs } from './phone-stream-census.ts';
 import type { Inputs } from './phone-stream-census.ts';
 import { fanOut, predeclared, sha256, sweepArgs } from './sweep-common.ts';
-import type { SweepArgs, SweepPredeclaration } from './sweep-common.ts';
+import type { DeclaredFields, SweepArgs, SweepPredeclaration } from './sweep-common.ts';
+import { isList, isRecord } from '@sixam/kernel';
 import type { Sim } from '@sixam/source/fnaf2';
 import { drawTrace } from '../../../source/recompile/model-draw-trace.ts';
 import { RNG_INCREMENT, RNG_MASK, RNG_MULTIPLIER } from '../../../source/src/games/fnaf2/rng.ts';
@@ -38,10 +39,31 @@ export interface Win {
   readonly name: string, readonly injectAt: number, readonly endFrame: number, readonly fromMs: number, readonly toMs: number;
   readonly cam: number, readonly viewing: number, readonly detrendK?: number,
 }
-/** A static-readout predeclaration: its windows and the rule that scores them. */
-interface StaticPre extends SweepPredeclaration {
-  readonly kind?: string, readonly windows: readonly Win[];
-  readonly decisionRule: { readonly minR: number, readonly minMargin: number, readonly radius: number, readonly alpha: number, readonly minHits: number };
+/** The identification rule: the top state's r floor and its lead over the second. */
+export interface IdentifyRule { readonly minR: number, readonly minMargin: number }
+/** The confirmation rule: the neighbourhood's radius in steps, a hit's p-value bound, and the hits it needs. */
+export interface ConfirmRule { readonly radius: number, readonly alpha: number, readonly minHits: number }
+/** A static-readout predeclaration: its windows and, by kind, the rule that scores them. */
+type StaticPre = SweepPredeclaration & { readonly windows: readonly Win[] } & (
+  { readonly kind?: undefined, readonly decisionRule: IdentifyRule } | { readonly kind: 'confirm', readonly decisionRule: ConfirmRule });
+
+/** A static-readout predeclaration's own fields: its windows, and the rule its kind scores with. */
+export function staticPredeclaration(fields: DeclaredFields, where: string): StaticPre {
+  const refuse = (why: string): never => { throw new Error(`${where}: ${why}`); };
+  const number = (value: unknown) => typeof value === 'number' && Number.isFinite(value);
+  if (fields.kind !== undefined && fields.kind !== 'confirm') refuse(`kind must be absent or 'confirm', not ${JSON.stringify(fields.kind)}`);
+  if (!isList(fields.windows) || !fields.windows.length) refuse('windows must list at least one window');
+  for (const win of fields.windows as readonly unknown[]) {
+    if (!isRecord(win) || typeof win.name !== 'string') return refuse('a window is an object with a name');
+    for (const key of ['injectAt', 'endFrame', 'fromMs', 'toMs', 'cam', 'viewing'])
+      if (!number(win[key])) refuse(`window ${win.name}: ${key} must be a number`);
+    if (win.detrendK !== undefined && !number(win.detrendK)) refuse(`window ${win.name}: detrendK must be a number`);
+  }
+  const rule = fields.decisionRule;
+  const keys = fields.kind === 'confirm' ? ['radius', 'alpha', 'minHits'] : ['minR', 'minMargin'];
+  if (!isRecord(rule)) return refuse('decisionRule must be an object');
+  for (const key of keys) if (!number(rule[key])) refuse(`decisionRule.${key} must be a number`);
+  return fields as unknown as StaticPre;
 }
 /** The static's draws as the wired Sim keeps them: v0..v3, the coefficient and the g58 period count. */
 export interface StaticState { v0: number, v1: number, v2: number, v3: number, alpha: number, block: number }
@@ -204,7 +226,7 @@ export function cycleIndex(from: number) {
 }
 
 /** The predeclared rule over one window's scores. */
-export function identify<S extends { readonly state: number, readonly r: number | null }>(rule: Pick<StaticPre['decisionRule'], 'minR' | 'minMargin'>,
+export function identify<S extends { readonly state: number, readonly r: number | null }>(rule: IdentifyRule,
   scores: readonly S[]) {
   const ranked = scores.filter((s): s is S & { r: number } => s.r !== null).sort((a, b) => b.r - a.r || a.state - b.state);
   const [top, second] = ranked;
@@ -222,7 +244,7 @@ export function neighbourhoodP(scanRs: readonly number[], bestR: number, size: n
   return 1 - below ** size;
 }
 
-async function confirm(pre: StaticPre, record: object, args: SweepArgs, inp: Inputs, fr: Frames, workers: number, all: readonly number[],
+async function confirm(pre: StaticPre & { readonly kind: 'confirm' }, record: object, args: SweepArgs, inp: Inputs, fr: Frames, workers: number, all: readonly number[],
   t0: number) {
   const { radius, alpha, minHits } = pre.decisionRule;
   const windows = [];
@@ -256,7 +278,7 @@ async function confirm(pre: StaticPre, record: object, args: SweepArgs, inp: Inp
 
 async function main(argv: string[]) {
   const args = sweepArgs(argv);
-  const { pre, inp, record } = predeclared<StaticPre, Inputs>(args.predeclaration, inputs);
+  const { pre, inp, record } = predeclared<StaticPre, Inputs>(args.predeclaration, inputs, staticPredeclaration);
   const fr = frames(pre.night);
   const { workers } = args;
   const all = Array.from({ length: 0x10000 }, (_, s) => s);

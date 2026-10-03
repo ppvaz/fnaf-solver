@@ -9,7 +9,8 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { isList } from '@sixam/kernel';
-import { cycleIndex, detrend, identify, lumaByImage, pearson, regionMeanLuma } from './phone-static-readout.ts';
+import { cycleIndex, detrend, identify, lumaByImage, pearson, regionMeanLuma, staticPredeclaration } from './phone-static-readout.ts';
+import { checkSweepPredeclaration } from './sweep-common.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
 const read = (path: string) => readFileSync(join(ROOT, path));
@@ -19,6 +20,22 @@ const canon = (v: unknown): string => isList(v) ? `[${v.map(canon).join(',')}]`
   : v && typeof v === 'object' ? `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${canon((v as Readonly<Record<string, unknown>>)[k])}`).join(',')}}` : JSON.stringify(v);
 const step = (s: number) => (s * 31415 + 1) & 0xffff;
 const along = (from: number, n: number) => { let s = from; for (let i = 0; i < n; i += 1) s = step(s); return s; };
+
+// --- the predeclaration: each kind carries its own rule, and a window list
+{
+  const shared = { id: 'x', night: 'full-06', seed: 7, inputs: { config: 'a'.repeat(64) } };
+  const win = { name: 'w', injectAt: 1, endFrame: 2, fromMs: 0, toMs: 1, cam: 9, viewing: 11 };
+  const check = (body: object) => staticPredeclaration(checkSweepPredeclaration({ ...shared, ...body }, 'p'), 'p');
+  const identifying = check({ windows: [win], decisionRule: { minR: 0.85, minMargin: 0.1 } });
+  assert.ok(identifying.kind === undefined && identifying.decisionRule.minR === 0.85);
+  assert.throws(() => check({ kind: 'confirm', windows: [win], decisionRule: { alpha: 0.01, minHits: 2 } }), /decisionRule\.radius/,
+    'a confirmation needs its radius');
+  assert.throws(() => check({ windows: [win], decisionRule: { radius: 100, alpha: 0.01, minHits: 2 } }), /decisionRule\.minR/,
+    'an identification needs its floor');
+  assert.throws(() => check({ windows: [], decisionRule: { minR: 0.85, minMargin: 0.1 } }), /at least one window/);
+  assert.throws(() => check({ windows: [{ ...win, endFrame: '2' }], decisionRule: { minR: 0.85, minMargin: 0.1 } }), /endFrame/);
+  assert.throws(() => check({ kind: 'scan', windows: [win], decisionRule: { minR: 0.85, minMargin: 0.1 } }), /kind/);
+}
 
 // --- fixtures
 assert.equal(pearson([1, 2, 3], [2, 4, 6]), 1);
@@ -52,6 +69,8 @@ for (const path of recs) {
   const rec = json(path);
   const pre = json(rec.predeclaration.path);
   assert.equal(rec.predeclaration.sha256, sha256(read(rec.predeclaration.path)), `${path}: the predeclaration is the committed one`);
+  // Its shared fields, its pinned inputs and its kind's rule all check (the drift check needs the night's inputs).
+  staticPredeclaration(checkSweepPredeclaration(pre, rec.predeclaration.path), rec.predeclaration.path);
   assert.deepEqual(rec.inputs, pre.inputs);
   const seedCycle = cycleIndex(rec.seed);
   for (const w of rec.windows) {
