@@ -8,6 +8,7 @@
  * print the usage and exit 0 (argparse's help listed every option; this prints the usage line only).
  */
 import { pyFloat, pyInt } from './pyfmt.ts';
+import { pyStrRepr } from './pyjson.ts';
 
 /** One long option: a flag (store_true), or one that takes a value. */
 export interface PyOption {
@@ -74,7 +75,7 @@ export function pyArgs(argv: readonly string[], prog: string, options: readonly 
     const option = options.find(item => item.name === flag);
     if (!option) continue;
     if (option.takes === 'flag') {
-      if (inline !== undefined) return refuse(`argument ${flag}: ignored explicit argument '${inline}'`);
+      if (inline !== undefined) return refuse(`argument ${flag}: ignored explicit argument ${pyStrRepr(inline)}`);
       given[flag] = true;
       continue;
     }
@@ -83,10 +84,10 @@ export function pyArgs(argv: readonly string[], prog: string, options: readonly 
       if (inline === undefined || (inline.startsWith('-') && inline !== '-' && !NEGATIVE.test(inline))) return refuse(`argument ${flag}: expected one argument`);
       k += 1;
     }
-    if (option.type === 'int' && pyInt(inline) === null) return refuse(`argument ${flag}: invalid int value: '${inline}'`);
-    if (option.type === 'float' && pyFloat(inline) === null) return refuse(`argument ${flag}: invalid float value: '${inline}'`);
+    if (option.type === 'int' && pyInt(inline) === null) return refuse(`argument ${flag}: invalid int value: ${pyStrRepr(inline)}`);
+    if (option.type === 'float' && pyFloat(inline) === null) return refuse(`argument ${flag}: invalid float value: ${pyStrRepr(inline)}`);
     if (option.choices && !option.choices.includes(inline))
-      return refuse(`argument ${flag}: invalid choice: '${inline}' (choose from ${option.choices.join(', ')})`);
+      return refuse(`argument ${flag}: invalid choice: ${pyStrRepr(inline)} (choose from ${option.choices.join(', ')})`);
     if (option.append) {
       const values = given[flag];
       given[flag] = [...(Array.isArray(values) ? values : []), inline];

@@ -819,7 +819,8 @@
     {
       "file": "packages/kernel/src/pyargs.ts",
       "imports": [
-        "./pyfmt.ts"
+        "./pyfmt.ts",
+        "./pyjson.ts"
       ]
     },
     {

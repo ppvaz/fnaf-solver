@@ -23,6 +23,10 @@ const refusals: [string[], string][] = [
   [['a', '--out', 'o', '--start-ns', 'x'], "argument --start-ns: invalid int value: 'x'"],
   [['a', '--out', 'o', '--only', 'mp4'], "argument --only: invalid choice: 'mp4' (choose from gif, all)"],
   [['a', '--out', 'o', '--json=1'], "argument --json: ignored explicit argument '1'"],
+  // The value is named by its repr(): a quote inside picks the other quote, a backslash is doubled.
+  [['a', '--out', 'o', "--start-ns=x'y"], 'argument --start-ns: invalid int value: "x\'y"'],
+  [['a', '--out', 'o', '--only', 'a\\b'], "argument --only: invalid choice: 'a\\\\b' (choose from gif, all)"],
+  [['a', '--out', 'o', "--json=it's"], 'argument --json: ignored explicit argument "it\'s"'],
   [['a', '--o', 'x'], 'ambiguous option: --o could match --only, --out'],
   [['a', '--out', 'o', '-x'], 'unrecognized arguments: -x'],
   [['a', '--out'], 'argument --out: expected one argument'],
