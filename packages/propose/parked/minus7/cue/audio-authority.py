@@ -24,6 +24,7 @@ import argparse
 import base64
 import collections
 import hashlib
+import json
 import math
 import os
 import pathlib
@@ -37,7 +38,6 @@ import time
 
 FACT_SCHEMA = "fact-message-v1"
 MAX_FACT_BYTES = 1024
-DEFAULT_MAC = "10:2B:1C:DA:18:2C"
 PCM_RATE = 48_000
 PCM_CHANNELS = 2
 PCM_BYTES_PER_FRAME = 4 * PCM_CHANNELS
@@ -50,6 +50,21 @@ DEFAULT_LATENCY_MAX_MS = 250
 DEFAULT_PROFILE = "g56-bluealsa-a2dp-v1"
 DEFAULT_SOURCE = "audio-authority"
 REPO = pathlib.Path(__file__).resolve().parents[5]
+
+
+def default_mac() -> str | None:
+    """The phone's Bluetooth address: FNAF_BT_MAC, else the untracked local profile's btMac.
+
+    The order local-profile.ts's btMac() reads them in; the handset's address is
+    not committed (ADR 0002 decision 8)."""
+    mac = os.environ.get("FNAF_BT_MAC")
+    if mac:
+        return mac
+    try:
+        value = json.loads((REPO / "tools/device/local-profile.json").read_text(encoding="utf-8")).get("btMac")
+    except (OSError, ValueError, AttributeError):
+        return None
+    return value if isinstance(value, str) else None
 
 
 def monotonic_ms():
@@ -510,7 +525,7 @@ def arguments():
     parser.add_argument("--check", action="store_true",
                         help="check the BlueALSA route and exit")
     parser.add_argument("--socket", help="Unix stream socket for fact messages")
-    parser.add_argument("--mac", default=DEFAULT_MAC)
+    parser.add_argument("--mac", default=default_mac())
     parser.add_argument("--model", help="ignored cue-model-v1 exported from held-out data")
     parser.add_argument("--shadow-cue", action="append", dest="shadow_cues", default=[],
                         help="enable a named model template for shadow measurement only")
@@ -526,6 +541,8 @@ def arguments():
     parser.add_argument("--raw-output",
                         help="also retain the authoritative S32LE PCM outside the repository")
     args = parser.parse_args()
+    if not args.mac:
+        parser.error("no Bluetooth address: pass --mac, set FNAF_BT_MAC, or run node packages/play/bin/phone/local-profile.ts set-bt-mac <mac>")
     if not 0 <= args.latency_min <= args.latency_max:
         parser.error("latency bounds must be ordered and non-negative")
     if args.quiet and not args.socket:

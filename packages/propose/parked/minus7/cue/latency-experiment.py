@@ -41,10 +41,24 @@ import time
 
 HERE = pathlib.Path(__file__).resolve().parent
 REPO = HERE.parents[4]
+
+
+def default_mac() -> str | None:
+    """The phone's Bluetooth address: FNAF_BT_MAC, else the untracked local profile's btMac.
+
+    The order local-profile.ts's btMac() reads them in; the handset's address is
+    not committed (ADR 0002 decision 8)."""
+    mac = os.environ.get("FNAF_BT_MAC")
+    if mac:
+        return mac
+    try:
+        value = json.loads((REPO / "tools/device/local-profile.json").read_text(encoding="utf-8")).get("btMac")
+    except (OSError, ValueError, AttributeError):
+        return None
+    return value if isinstance(value, str) else None
 QUERY = REPO / "packages/play/bin/companion/query-companion.sh"
 AUTHORITY = HERE / "audio-authority.py"
 COLLECT_FACTS = HERE / "collect-facts.py"
-DEFAULT_MAC = "10:2B:1C:DA:18:2C"
 DEFAULT_REFS = pathlib.Path("/private/tmp/fnaf2-cue-refs")
 DEFAULT_OUT = pathlib.Path.home() / "fnaf-apks" / "fnaf2-latency-experiments"
 PCM_RATE = 48_000
@@ -913,7 +927,7 @@ def command_analyze(args: argparse.Namespace) -> int:
 
 def parser() -> argparse.ArgumentParser:
     common = argparse.ArgumentParser(add_help=False)
-    common.add_argument("--mac", default=DEFAULT_MAC)
+    common.add_argument("--mac", default=default_mac())
     common.add_argument("--connect", action="store_true",
                         help="try to connect the paired phone to the configured receiver")
     command = argparse.ArgumentParser(description=__doc__,
@@ -957,6 +971,8 @@ def parser() -> argparse.ArgumentParser:
 
 def main() -> int:
     args = parser().parse_args()
+    if not args.mac:
+        raise SystemExit("no Bluetooth address: pass --mac, set FNAF_BT_MAC, or run node packages/play/bin/phone/local-profile.ts set-bt-mac <mac>")
     try:
         if args.command == "preflight":
             return command_preflight(args)

@@ -14,6 +14,8 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 SPEC = importlib.util.spec_from_file_location("audio_authority", HERE / "audio-authority.py")
 authority = importlib.util.module_from_spec(SPEC)
+# A fixture address: the handset's own is read from FNAF_BT_MAC or the local profile, never committed.
+MAC = "00:11:22:33:44:55"
 SPEC.loader.exec_module(authority)
 
 
@@ -56,7 +58,7 @@ def check_fact_contract():
 
 def check_decode_and_matcher():
     args = type("Args", (), {
-        "mac": authority.DEFAULT_MAC,
+        "mac": MAC,
         "socket": None,
         "quiet": True,
         "source": "audio-authority",
@@ -164,16 +166,16 @@ def check_bluealsa_route_gate():
         previous = os.environ.get("PATH", "")
         try:
             os.environ["PATH"] = temp + os.pathsep + previous
-            path = authority.pcm_path(authority.DEFAULT_MAC)
+            path = authority.pcm_path(MAC)
             os.environ["MOCK_BLUEALSA_ROUTE"] = "ready"
             assert authority.route_ready(path)
-            assert "transport=bluealsa" in authority.route_status(path, authority.DEFAULT_MAC)
+            assert "transport=bluealsa" in authority.route_status(path, MAC)
             os.environ["MOCK_BLUEALSA_ROUTE"] = "stopped"
             assert not authority.route_ready(path)
-            assert "a2dp-stream-not-running" in authority.route_status(path, authority.DEFAULT_MAC)
+            assert "a2dp-stream-not-running" in authority.route_status(path, MAC)
             os.environ["MOCK_BLUEALSA_ROUTE"] = "missing"
             assert not authority.route_ready(path)
-            assert "a2dp-source-not-connected" in authority.route_status(path, authority.DEFAULT_MAC)
+            assert "a2dp-source-not-connected" in authority.route_status(path, MAC)
         finally:
             os.environ["PATH"] = previous
             os.environ.pop("MOCK_BLUEALSA_ROUTE", None)
@@ -204,7 +206,7 @@ def check_raw_capture_metadata():
             os.environ["PATH"] = str(root) + os.pathsep + previous
             result = subprocess.run([
                 sys.executable, str(HERE / "audio-authority.py"),
-                "--mac", authority.DEFAULT_MAC, "--once", "--quiet",
+                "--mac", MAC, "--once", "--quiet",
                 "--socket", str(root / "unused.sock"), "--raw-output", str(raw),
             ], text=True, capture_output=True, timeout=3)
         finally:

@@ -27,6 +27,10 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 // The concrete serial of the campaign handset, assembled so this file does not
 // itself carry it.
 const SERIAL = ['ZF525', 'F5BH5'].join('');
+// The same handset's Bluetooth address (the A2DP capture's target), assembled the same way. Code reads it from
+// FNAF_BT_MAC or the local profile's btMac (local-profile.ts); no record pins it, so nothing outside the frozen set
+// may name it, in either case.
+const BT_MAC = ['10:2B:1C', ':DA:18:2C'].join('');
 const PROFILE = 'tools/device/local-profile.json';
 
 // Records frozen byte for byte (CLAUDE.md, ADR 0002): never edited, never scanned.
@@ -68,6 +72,7 @@ const count = (buffer: Buffer, needle: Buffer) => {
 const git = (args: string[]) => execFileSync('git', args, { cwd: ROOT, encoding: 'utf8', maxBuffer: 1 << 28 });
 const files = git(['ls-files', '-z', '--cached', '--others', '--exclude-standard']).split('\0').filter(Boolean);
 const needle = Buffer.from(SERIAL);
+const macNeedles = [Buffer.from(BT_MAC), Buffer.from(BT_MAC.toLowerCase())];
 const refused = [];
 const allowlisted = [];
 let frozen = 0;
@@ -77,7 +82,10 @@ for (const file of [...new Set(files)].sort()) {
   const path = join(ROOT, file);
   if (!existsSync(path) || !statSync(path).isFile()) continue;   // deleted in the working tree
   scanned += 1;
-  const found = count(readFileSync(path), needle);
+  const bytes = readFileSync(path);
+  const found = count(bytes, needle);
+  const macs = macNeedles.reduce((sum, mac) => sum + count(bytes, mac), 0);
+  if (macs) refused.push(`${file}: names the phone's Bluetooth address ${macs} time(s)`);
   const allowed = ALLOWLIST[file];
   if (allowed && found === allowed[0]) allowlisted.push(file);
   else if (allowed) refused.push(`${file}: ${found} occurrence(s), allowlisted at ${allowed[0]} -- update the entry only if a record changed`);
@@ -91,7 +99,7 @@ try { git(['check-ignore', '-q', '--no-index', PROFILE]); } catch { problems.pus
 if (git(['ls-files', '--', PROFILE]).trim()) problems.push(`${PROFILE} is tracked: remove it from the index (git rm --cached), never commit it`);
 
 if (refused.length || problems.length) {
-  console.error(`no-serial: FAILED -- the handset serial must come from FNAF_SERIAL or ${PROFILE}, never a tracked file.`);
+  console.error(`no-serial: FAILED -- the handset serial and Bluetooth address must come from FNAF_SERIAL/FNAF_BT_MAC or ${PROFILE}, never a tracked file.`);
   if (refused.length) {
     console.error('Files that name it (use <serial> in docs, a fake such as FAKE0001 in fixtures, and '
       + 'packages/play/bin/phone/local-profile.ts in code):');
@@ -100,5 +108,5 @@ if (refused.length || problems.length) {
   for (const line of problems) console.error(`  ${line}`);
   process.exit(1);
 }
-console.log(`no-serial: ${scanned} files scanned, none names the handset serial; ${frozen} frozen files not scanned, `
+console.log(`no-serial: ${scanned} files scanned, none names the handset serial or Bluetooth address; ${frozen} frozen files not scanned, `
   + `${allowlisted.length} allowlisted records at their counts; ${PROFILE} is ignored and untracked`);
