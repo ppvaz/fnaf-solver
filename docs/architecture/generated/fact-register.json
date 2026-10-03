@@ -34,16 +34,16 @@
           ]
         },
         {
-          "file": "packages/play/src/campaign/adb-device-local-executor.ts",
-          "evidence": [
-            "native-stroke",
-            "grid-luma-fallback"
-          ]
-        },
-        {
           "file": "packages/play/src/campaign/control-effect.ts",
           "evidence": [
             "native-stroke"
+          ]
+        },
+        {
+          "file": "packages/play/src/campaign/gate-evidence.ts",
+          "evidence": [
+            "native-stroke",
+            "grid-luma-fallback"
           ]
         },
         {

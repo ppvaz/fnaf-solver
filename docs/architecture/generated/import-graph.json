@@ -1303,11 +1303,11 @@
         "./artifact-executor.ts",
         "./control-effect.ts",
         "./device-shell.ts",
+        "./gate-evidence.ts",
         "./hid-schedule.ts",
         "./lifecycle-state.ts",
         "./port-kit.ts",
         "@sixam/kernel",
-        "@sixam/play",
         "node:child_process",
         "node:util"
       ]
@@ -1410,6 +1410,12 @@
       "imports": [
         "./hid-schedule.ts",
         "@sixam/kernel"
+      ]
+    },
+    {
+      "file": "packages/play/src/campaign/gate-evidence.ts",
+      "imports": [
+        "@sixam/play"
       ]
     },
     {
@@ -1768,6 +1774,7 @@
     {
       "file": "packages/play/test/control-exclusion.test.ts",
       "imports": [
+        "../src/campaign/gate-evidence.ts",
         "../src/phone/control-exclusion.ts",
         "node:assert/strict"
       ]

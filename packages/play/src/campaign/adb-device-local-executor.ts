@@ -15,7 +15,7 @@ import { execFile as execFileCallback, spawn } from 'node:child_process';
 import { promisify } from 'node:util';
 import { validateExecutorRequest } from './artifact-executor.ts';
 import type { ArmVerification } from './artifact-executor.ts';
-import { buttonStrokeState } from '@sixam/play';
+import { gateMaskEvidence } from './gate-evidence.ts';
 import {
   DEFAULT_READY_DELAY_MS, GATE_BUDGET_MAX_MS, GATE_BUDGET_MIN_MS, GATE_BUDGET_RESERVE_MS, GATE_MIN_SLACK_MS, GATE_READ_WORST_MS,
   SHARED_HID_RELEASE, compileDeviceLocalHidSchedule, sharedScheduleBody,
@@ -193,14 +193,6 @@ const CONTROL_EFFECT_MAX_SAMPLES = 6;
 // one that finishes.
 const GATE_READ_ATTEMPTS = 5;
 const GATE_RETRY_GAP_MS = 600;
-// Measured over 82 frames the fitted rule read confidently across today's
-// Night 5 runs: whole-grid mean luma reaches 10 at most with the mask on
-// (n=52) and 25 at least with it off (n=30) -- a gap with no overlap. That
-// bound refutes mask-on and nothing else. Asserting mask-on from darkness is
-// exactly what `mask-calibrate.py` forbids, because a blacked-out office
-// reads the same; refuting it is safe, and resolves 71% of the frames the
-// anchors refuse.
-const MASK_OFF_GRID_LUMA_FLOOR = 25;
 const execFile = promisify(execFileCallback);
 
 function fail(message: string): never { throw new TypeError(`adb device-local executor: ${message}`); }
@@ -897,68 +889,18 @@ export class AdbDeviceLocalArtifactExecutor {
               const read = await readControlState();
               reads.push({ startedAt: read.readStartedAt, finishedAt: read.readFinishedAt });
               sample = compactControlSample(read.sample);
-              // Keep reading until the STROKES answer. A grid answer on a
-              // frame with no button signature is what produced the spurious
-              // corrections; it is no longer a reason to stop looking.
-              const strokeRead = buttonStrokeState(sample);
-              if (strokeRead.maskOn !== null) break;
-              if (strokeRead.office && sample.maskOn !== null) break;
-              // No stroke source AT ALL is a different thing from a stroke
-              // source that sees no signature. A helper build that does not
-              // publish the chevrons must still be gradeable by the grid rule;
-              // what is removed is the luma GUESS, not the grid opinion.
-              if (!strokeRead.available && sample.maskOn !== null) break;
-              if ((!strokeRead.available || strokeRead.office) &&
-                entry.believedMaskOn === true && sample.gridLuma !== undefined &&
-                sample.gridLuma >= MASK_OFF_GRID_LUMA_FLOOR) break;
+              // Keep reading until the evidence answers (gate-evidence.ts). A
+              // grid answer on a frame with no button signature is what
+              // produced the spurious corrections; it is no longer a reason to
+              // stop looking.
+              if (gateMaskEvidence(sample, entry.believedMaskOn).observedMaskOn !== null) break;
             }
             if (!sample) break;
             // A halt during the reads: no correction, no release, no abort.
             if (actuationHalt) break;
-            // The helper's fixed button chevrons decide this, not the 20x9 grid.
-            //
-            // Each state hides one button and keeps the other, so the pair is a
-            // direct read of both facts: both drawn is the office, a missing
-            // mask button is the monitor up, and a missing MONITOR button is
-            // the mask on -- the mirror the operator named on 2026-09-12, whose
-            // game fact actuator.ts already records ("while the mask is up or
-            // coming off, the monitor bar is not drawn").
-            //
-            // The grid rule stays as a SECOND opinion and only where the
-            // strokes already say the office is drawn, or where no stroke
-            // source exists at all. The grid-luma refutation of mask-on is
-            // limited the same way: it no longer decides a frame whose stroke
-            // source is present and shows no signature -- the frame the
-            // classifier could not even identify. On the 2026-09-12T02-20 run
-            // every single correction was made on such a frame (71% across all
-            // runs, against 30% of gates that agreed), and a correction ACTS --
-            // it presses the mask -- so a wrong one does not report an
-            // inversion, it creates one.
-            // `packages/play/bin/probe/intersection-state-gate.ts` has stated this rule
-            // all along: a missing stroke score is a refusal, never a luma
-            // fallback.
-            //
-            // Where it may still decide, the refutation stays: it is the abort
-            // case, and without it a night ends instead of correcting. It reads
-            // the 20x9 grid, a discontinued sensor, and its floor was measured
-            // there; moving it to native-region pixels waits on a floor
-            // measured on those pixels.
-            const strokes = buttonStrokeState(sample);
-            const lumaMayDecide = !strokes.available || strokes.office;
-            const refutesMaskOn = lumaMayDecide && sample.maskOn === null &&
-              entry.believedMaskOn === true && sample.gridLuma !== undefined &&
-              sample.gridLuma >= MASK_OFF_GRID_LUMA_FLOOR;
-            const observedMaskOn = strokes.maskOn !== null ? strokes.maskOn
-              : strokes.office && sample.maskOn !== null ? sample.maskOn
-                : !strokes.available && sample.maskOn !== null ? sample.maskOn
-                  : refutesMaskOn ? false
-                    : null;
-            let maskEvidenceSource = strokes.maskOn !== null
-              ? `button-stroke:${strokes.signature}`
-              : strokes.office && sample.maskOn !== null ? 'office-stroke+mask-rule'
-                : !strokes.available && sample.maskOn !== null ? 'mask-rule'
-                  : refutesMaskOn ? 'grid-luma-refutation'
-                    : strokes.available ? 'stroke-signature-absent' : 'stroke-unavailable';
+            const evidence = gateMaskEvidence(sample, entry.believedMaskOn);
+            const observedMaskOn = evidence.observedMaskOn;
+            let maskEvidenceSource = evidence.source;
             let monitorCorrected = false;
             let correctedAt: number | null = null;
             let status;
@@ -1028,7 +970,7 @@ export class AdbDeviceLocalArtifactExecutor {
               cycle: entry.cycle, nextActionId: entry.nextActionId,
               believedMaskOn: entry.believedMaskOn, observedMaskOn,
               maskEvidence: maskEvidenceSource,
-              strokeSignature: strokes.signature,
+              strokeSignature: evidence.strokeSignature,
               status, reachedAt, releaseAt, reads, sample,
               ...(monitorCorrected ? { monitorCorrected: true } : {}),
               ...(correctedAt === null ? {} : { correctedAt }) });
