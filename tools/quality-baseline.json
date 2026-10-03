@@ -191,5 +191,15 @@
     "entries": {
       "debt:tools": 10
     }
+  },
+  "pythonCasts": {
+    "recorded": "2026-10-03",
+    "why": "typing.cast calls per area: an assertion mypy takes on trust, the Python form of the as-casts TypeScript's type-debt gate counts. Counted from 2026-10-03 (tools/python_types.py); an entry only shrinks.",
+    "entries": {
+      "py-cast:packages/source/recompile": {
+        "count": 9,
+        "why": "narrowings mypy cannot see when the count began: Pillow pixel access returns a union for every image mode while native-frame.py reads one RGB and one L image (4 calls); game-builds.py narrows rows its earlier steps filled in (3); sound-map.py passes a list or an ndarray its caller chose (2)"
+      }
+    }
   }
 }

@@ -19,7 +19,7 @@ import { ROOT, loadBaseline, ratchet, report } from './gate-kit.ts';
 const DRIVER = join(ROOT, 'tools', 'python_types.py');
 
 /** Run the driver over a repository. */
-function check(root: string): { areas: Record<string, number>, errors: string[] } {
+function check(root: string): { areas: Record<string, number>, errors: string[], casts: Record<string, number> } {
   const run = spawnSync('python3', [DRIVER], { cwd: root, encoding: 'utf8', env: { ...process.env, PYTHON_TYPES_ROOT: root },
     maxBuffer: 64 * 1024 * 1024 });
   if (run.status !== 0)
@@ -47,10 +47,15 @@ function check(root: string): { areas: Record<string, number>, errors: string[] 
     writeFileSync(join(repo, 'packages/demo/bin/gone/deleted.py'), 'VALUE = 1\n');
     git('add', '.');
     rmSync(join(repo, 'packages/demo/bin/gone/deleted.py'));
-    const { areas, errors } = check(repo);
-    assert.deepEqual(areas, { 'packages/demo/bin': 3 },
-      `an untyped def and a signature with explicit Any are counted, beside a deleted file too:\n${errors.join('\n')}`);
-    assert.ok(errors.every(line => /^packages\/demo\/bin\/(?:loose\/tool|gone\/kept)\.py:/.test(line)), 'the typed file is clean');
+    // An untracked script is checked as a tracked one is, and its typing.cast calls are counted.
+    mkdirSync(join(repo, 'packages/demo/src'), { recursive: true });
+    writeFileSync(join(repo, 'packages/demo/src/new.py'), 'import typing\nfrom typing import cast\n\n\n'
+      + 'def half(value):\n    return value / 2\n\n\ndef narrow(value: object) -> int:\n    return cast(int, value) + typing.cast(int, value)\n');
+    const { areas, errors, casts } = check(repo);
+    assert.deepEqual(areas, { 'packages/demo/bin': 3, 'packages/demo/src': 1 },
+      `an untyped def and a signature with explicit Any are counted, beside a deleted file and in an untracked one:\n${errors.join('\n')}`);
+    assert.ok(errors.every(line => /^packages\/demo\/(?:bin\/(?:loose\/tool|gone\/kept)|src\/new)\.py:/.test(line)), 'the typed file is clean');
+    assert.deepEqual(casts, { 'packages/demo/src': 2 }, 'both spellings of typing.cast are counted');
   } finally {
     rmSync(repo, { recursive: true, force: true });
   }
@@ -73,9 +78,11 @@ function check(root: string): { areas: Record<string, number>, errors: string[] 
   }
 }
 
-const { areas } = check(ROOT);
+const { areas, casts } = check(ROOT);
 const found = new Map(Object.entries(areas).map(([area, count]) => [`py:${area}`, { count, detail: `${count} mypy --strict errors` }]));
-if (process.argv.includes('--list')) for (const [key, { count }] of [...found].sort()) console.log(`${count}\t${key}`);
+const castFound = new Map(Object.entries(casts).map(([area, count]) => [`py-cast:${area}`, { count, detail: `${count} typing.cast calls` }]));
+if (process.argv.includes('--list')) for (const [key, { count }] of [...found, ...castFound].sort()) console.log(`${count}\t${key}`);
 const total = [...found.values()].reduce((sum, { count }) => sum + count, 0);
-report('python-types', ratchet(found, loadBaseline('pythonTypes')),
-  `${found.size} areas carry ${total} mypy --strict errors, none growing`);
+const castTotal = [...castFound.values()].reduce((sum, { count }) => sum + count, 0);
+report('python-types', [...ratchet(found, loadBaseline('pythonTypes')), ...ratchet(castFound, loadBaseline('pythonCasts'))],
+  `${found.size} areas carry ${total} mypy --strict errors and ${castTotal} typing.cast calls, none growing`);

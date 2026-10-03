@@ -7,10 +7,16 @@ checked on its own, with itself and those three shared directories as its import
 module names never meet another's (two `overnight-window.py` exist). Strict mode with explicit Any refused is
 Pedro's rule of 2026-10-01 ("real types everywhere") applied to Python.
 
-    python3 tools/python_types.py            one JSON object: {"areas": {area: errors}, "errors": [...]}
+Every .py the tree holds is checked, tracked or not (a script is typed before it is added), unless git ignores
+it. typing.cast is counted beside the errors: it is an assertion mypy takes on trust, the Python form of the `as`
+TypeScript's gates count.
+
+    python3 tools/python_types.py            one JSON object: {"areas": {area: errors}, "errors": [...],
+                                             "casts": {area: typing.cast calls}}
     python3 tools/python_types.py --list     one line per error
     PYTHON_TYPES_ROOT=DIR                    check another repository (the gate's planted fixture)
 """
+import ast
 import json
 import os
 import subprocess
@@ -49,10 +55,21 @@ def area_of(path: str) -> str:
     return '/'.join(parts[:2])
 
 
-def tracked() -> list[str]:
-    out = subprocess.run(['git', 'ls-files', '-z', '--', '*.py'], cwd=ROOT, capture_output=True, text=True, check=True)
+def python_files() -> list[str]:
+    """Tracked .py files and the untracked ones git does not ignore, as tools/gate-kit.ts's repoFiles lists code."""
+    out = subprocess.run(['git', 'ls-files', '-z', '--cached', '--others', '--exclude-standard', '--', '*.py'],
+                         cwd=ROOT, capture_output=True, text=True, check=True)
     # A tracked file deleted from the working tree is not Python to check, and mypy cannot read it.
-    return sorted(path for path in out.stdout.split('\0') if path and path not in PYTHON2 and (ROOT / path).is_file())
+    return sorted({path for path in out.stdout.split('\0') if path and path not in PYTHON2 and (ROOT / path).is_file()})
+
+
+def casts(path: str) -> int:
+    """typing.cast calls in one file, as `cast(...)` or `typing.cast(...)`."""
+    tree = ast.parse((ROOT / path).read_text(encoding='utf-8'), path)
+    return sum(1 for node in ast.walk(tree) if isinstance(node, ast.Call) and (
+        (isinstance(node.func, ast.Name) and node.func.id == 'cast')
+        or (isinstance(node.func, ast.Attribute) and node.func.attr == 'cast'
+            and isinstance(node.func.value, ast.Name) and node.func.value.id == 'typing')))
 
 
 def check(directory: str, files: list[str]) -> list[str]:
@@ -72,7 +89,8 @@ def check(directory: str, files: list[str]) -> list[str]:
 def main() -> None:
     os.chdir(ROOT)
     by_directory: defaultdict[str, list[str]] = defaultdict(list)
-    for path in tracked():
+    every = python_files()
+    for path in every:
         by_directory[str(Path(path).parent)].append(path)
     errors: list[str] = []
     for directory, files in sorted(by_directory.items()):
@@ -81,7 +99,11 @@ def main() -> None:
         print('\n'.join(errors))
         return
     areas = Counter(area_of(line.split(':', 1)[0]) for line in errors)
-    print(json.dumps({'areas': dict(sorted(areas.items())), 'errors': errors}))
+    cast_areas: Counter[str] = Counter()
+    for path in every:
+        cast_areas[area_of(path)] += casts(path)
+    print(json.dumps({'areas': dict(sorted(areas.items())), 'errors': errors,
+                      'casts': {area: count for area, count in sorted(cast_areas.items()) if count}}))
 
 
 if __name__ == '__main__':
