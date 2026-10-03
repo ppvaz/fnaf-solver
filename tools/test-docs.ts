@@ -191,7 +191,9 @@ for (const [index, entries] of entriesOf) {
 }
 
 // --- 5. the rename resolver the record pages lean on, against planted history:
-// a committed move, a chain of two, a staged move, and a deletion.
+// a committed move, a chain of two, a staged move, and a deletion; a port to
+// another language after a move, a staged port, and a deletion beside two
+// files of its name, which is no port.
 {
   const repo = mkdtempSync(join(tmpdir(), 'renamed-path-'));
   const git = (...args: string[]) => execFileSync('git', ['-C', repo, '-c', 'user.name=t', '-c', 'user.email=t@t', ...args], { stdio: 'ignore' });
@@ -199,13 +201,19 @@ for (const [index, entries] of entriesOf) {
     git('init', '-q');
     mkdirSync(join(repo, 'a'));
     for (const name of ['one', 'two', 'three', 'gone']) writeFileSync(join(repo, 'a', `${name}.txt`), `${name} ${'x'.repeat(40)}\n`);
+    for (const name of ['port.py', 'both.py', 'staged.sh']) writeFileSync(join(repo, 'a', name), `${name} ${'y'.repeat(40)}\n`);
     git('add', '.'); git('commit', '-qm', 'base');
     mkdirSync(join(repo, 'b'));
-    git('mv', 'a/one.txt', 'b/one.txt'); git('mv', 'a/two.txt', 'b/two.txt'); git('rm', '-q', 'a/gone.txt');
+    git('mv', 'a/one.txt', 'b/one.txt'); git('mv', 'a/two.txt', 'b/two.txt'); git('rm', '-q', 'a/gone.txt'); git('mv', 'a/port.py', 'b/port.py');
     git('commit', '-qm', 'move');
     git('mv', 'b/two.txt', 'c.txt'); git('commit', '-qm', 'again');
+    git('rm', '-q', 'b/port.py', 'a/both.py');
+    for (const name of ['b/port.ts', 'a/both.ts', 'a/both.json']) writeFileSync(join(repo, name), `${name.length}\n`);
+    git('add', '.'); git('commit', '-qm', 'port');
     git('mv', 'a/three.txt', 'b/three.txt');
-    const cases: [string, string | null][] = [['a/one.txt', 'b/one.txt'], ['a/two.txt', 'c.txt'], ['a/three.txt', 'b/three.txt'], ['a/gone.txt', null], ['b/one.txt', 'b/one.txt']];
+    git('rm', '-q', 'a/staged.sh'); writeFileSync(join(repo, 'a/staged.ts'), '0\n'); git('add', 'a/staged.ts');
+    const cases: [string, string | null][] = [['a/one.txt', 'b/one.txt'], ['a/two.txt', 'c.txt'], ['a/three.txt', 'b/three.txt'], ['a/gone.txt', null], ['b/one.txt', 'b/one.txt'],
+      ['a/port.py', 'b/port.ts'], ['a/staged.sh', 'a/staged.ts'], ['a/both.py', null]];
     for (const [from, to] of cases)
       if (currentPath(repo, from) !== to) complain(`renamed-path: ${from} resolved to ${currentPath(repo, from)}, not ${to}`);
   } finally { rmSync(repo, { recursive: true, force: true }); }

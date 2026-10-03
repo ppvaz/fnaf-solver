@@ -5,8 +5,11 @@
 // file it names moves. Its readers follow the move instead, through git's own
 // rename history plus the renames staged for the commit being made, so the
 // link check and the chronicle keep resolving what the record meant without
-// rewriting it. A path that was deleted, or never tracked, resolves to null
-// and stays a failure.
+// rewriting it. A port is a move too: a commit that deletes a file and adds
+// one beside it with the same name under another extension (inputtrace.py ->
+// inputtrace.ts) moved it to another language, which git cannot see as a
+// rename because the text changed. A path that was deleted, or never tracked,
+// resolves to null and stays a failure.
 import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
@@ -18,13 +21,23 @@ function renames(root: string) {
   if (known) return known;
   const map = new Map<string, string>();
   const git = (args: string[]) => execFileSync('git', args, { cwd: root, encoding: 'utf8', maxBuffer: 1 << 28 });
-  const lines = [
-    ...git(['log', '--reverse', '-M', '--diff-filter=R', '--name-status', '--format=']).split('\n'),
-    ...git(['diff', '--cached', '-M', '--diff-filter=R', '--name-status']).split('\n'),
+  const changes = [
+    ...git(['log', '--reverse', '-M', '--diff-filter=RAD', '--name-status', '--format=%x00']).split('\0'),
+    git(['diff', '--cached', '-M', '--diff-filter=RAD', '--name-status']),
   ];
-  for (const line of lines) {
-    const [status, from, to] = line.split('\t');
-    if (status?.startsWith('R') && from && to) map.set(from, to);
+  const stem = (path: string) => path.replace(/\.[^./]+$/, '');
+  for (const change of changes) {
+    const added: string[] = [], deleted: string[] = [];
+    for (const line of change.split('\n')) {
+      const [status, from, to] = line.split('\t');
+      if (status?.startsWith('R') && from && to) map.set(from, to);
+      else if (status === 'A' && from) added.push(from);
+      else if (status === 'D' && from) deleted.push(from);
+    }
+    for (const from of deleted) {
+      const ported = added.filter(path => path !== from && stem(path) === stem(from));
+      if (ported.length === 1) map.set(from, ported[0]);
+    }
   }
   maps.set(root, map);
   return map;
