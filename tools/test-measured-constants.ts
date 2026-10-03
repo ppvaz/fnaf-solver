@@ -9,6 +9,7 @@
 //
 //   node tools/test-measured-constants.ts     exit 0 when no copy grew, 1 naming each
 import assert from 'node:assert/strict';
+import { test } from 'node:test';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import ts from 'typescript';
@@ -52,32 +53,34 @@ export function literalDefinitions(path: string, text: string, names: ReadonlySe
   return found;
 }
 
-// Planted: a literal copy is refused in TypeScript and Java; an import, a derivation and the owner are not.
-{
-  const names = new Set(['FUSION_POLL_MS', 'READY_DELAY_MS']);
-  assert.deepEqual(literalDefinitions('a.ts', 'export const FUSION_POLL_MS = 33;\nconst READY_DELAY_MS = 7_000;', names),
-    [[1, 'FUSION_POLL_MS'], [2, 'READY_DELAY_MS']]);
-  assert.deepEqual(literalDefinitions('a.ts', "import { FUSION_POLL_MS } from 'x';\nconst READY_DELAY_MS = DEFAULT_READY_DELAY_MS;\n" +
-    'const FUSION_POLL_MS = Math.round(1000 / 30);', names), []);
-  assert.deepEqual(literalDefinitions('A.java', 'private static final int READY_DELAY_MS = 7_000;', names), [[1, 'READY_DELAY_MS']]);
-}
-
-const owners = register(ROOT);
-const copies = new Map<string, { count: number, detail: string }>();
-for (const [alias, { file }] of owners)
-  if (!existsSync(join(ROOT, file))) throw new Error(`${REGISTER}: ${alias} names ${file}, which does not exist`);
-const names = new Set(owners.keys());
-const owned = new Set<string>();
-for (const path of repoFiles(ROOT).filter(file => /\.(?:m?js|cjs|ts|mts|java)$/.test(file) && !file.endsWith('.d.ts'))) {
-  for (const [line, name] of literalDefinitions(path, readFileSync(join(ROOT, path), 'utf8'), names)) {
-    const owner = owners.get(name) as { name: string, file: string };   // names are the register's keys
-    if (path === owner.file) { owned.add(owner.name); continue; }
-    const key = `copy:${owner.name}`;
-    const entry = copies.get(key) ?? { count: 0, detail: '' };
-    copies.set(key, { count: entry.count + 1, detail: `${entry.detail ? `${entry.detail}, ` : ''}${path}:${line}` });
+test('each measured constant is defined once, in its registered file', async () => {
+  // Planted: a literal copy is refused in TypeScript and Java; an import, a derivation and the owner are not.
+  {
+    const names = new Set(['FUSION_POLL_MS', 'READY_DELAY_MS']);
+    assert.deepEqual(literalDefinitions('a.ts', 'export const FUSION_POLL_MS = 33;\nconst READY_DELAY_MS = 7_000;', names),
+      [[1, 'FUSION_POLL_MS'], [2, 'READY_DELAY_MS']]);
+    assert.deepEqual(literalDefinitions('a.ts', "import { FUSION_POLL_MS } from 'x';\nconst READY_DELAY_MS = DEFAULT_READY_DELAY_MS;\n" +
+      'const FUSION_POLL_MS = Math.round(1000 / 30);', names), []);
+    assert.deepEqual(literalDefinitions('A.java', 'private static final int READY_DELAY_MS = 7_000;', names), [[1, 'READY_DELAY_MS']]);
   }
-}
-const unowned = [...new Set([...owners.values()].map(owner => owner.name))].filter(name => !owned.has(name));
-report('measured-constants', [...unowned.map(name => `${name}: ${owners.get(name)?.file} does not define it as a number`),
-  ...ratchet(copies, loadBaseline('measuredConstants'))],
-`${owned.size} measured constants each defined once, in its registered file; ${[...copies.values()].reduce((sum, item) => sum + item.count, 0)} recorded copies, none growing`);
+
+  const owners = register(ROOT);
+  const copies = new Map<string, { count: number, detail: string }>();
+  for (const [alias, { file }] of owners)
+    if (!existsSync(join(ROOT, file))) throw new Error(`${REGISTER}: ${alias} names ${file}, which does not exist`);
+  const names = new Set(owners.keys());
+  const owned = new Set<string>();
+  for (const path of repoFiles(ROOT).filter(file => /\.(?:m?js|cjs|ts|mts|java)$/.test(file) && !file.endsWith('.d.ts'))) {
+    for (const [line, name] of literalDefinitions(path, readFileSync(join(ROOT, path), 'utf8'), names)) {
+      const owner = owners.get(name) as { name: string, file: string };   // names are the register's keys
+      if (path === owner.file) { owned.add(owner.name); continue; }
+      const key = `copy:${owner.name}`;
+      const entry = copies.get(key) ?? { count: 0, detail: '' };
+      copies.set(key, { count: entry.count + 1, detail: `${entry.detail ? `${entry.detail}, ` : ''}${path}:${line}` });
+    }
+  }
+  const unowned = [...new Set([...owners.values()].map(owner => owner.name))].filter(name => !owned.has(name));
+  report('measured-constants', [...unowned.map(name => `${name}: ${owners.get(name)?.file} does not define it as a number`),
+    ...ratchet(copies, loadBaseline('measuredConstants'))],
+  `${owned.size} measured constants each defined once, in its registered file; ${[...copies.values()].reduce((sum, item) => sum + item.count, 0)} recorded copies, none growing`);
+});

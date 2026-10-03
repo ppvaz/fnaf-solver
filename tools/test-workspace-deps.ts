@@ -7,6 +7,7 @@
 //
 //   node tools/test-workspace-deps.ts     exit 0 when every import is declared, 1 naming each that is not
 import assert from 'node:assert/strict';
+import { test } from 'node:test';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { isRecord } from '@sixam/kernel';
@@ -64,31 +65,33 @@ export function undeclared(root: string, files: readonly string[]) {
   return missing;
 }
 
-// Planted: a package importing a sibling it does not declare, one that declares it, a self-import and a
-// root-held tool, over a throwaway tree.
-{
-  const { mkdtempSync, mkdirSync, rmSync, writeFileSync } = await import('node:fs');
-  const { tmpdir } = await import('node:os');
-  const dir = mkdtempSync(join(tmpdir(), 'workspace-deps-'));
-  try {
-    const write = (path: string, text: string) => { mkdirSync(join(dir, path, '..'), { recursive: true }); writeFileSync(join(dir, path), text); };
-    write('package.json', JSON.stringify({ name: 'root', workspaces: ['packages/*'], dependencies: { '@sixam/a': '*' } }));
-    write('packages/a/package.json', JSON.stringify({ name: '@sixam/a' }));
-    write('packages/b/package.json', JSON.stringify({ name: '@sixam/b', dependencies: { '@sixam/a': '*' } }));
-    write('packages/c/package.json', JSON.stringify({ name: '@sixam/c' }));
-    write('packages/a/src/x.ts', "import { y } from '@sixam/a/y';\nexport const x = y;\n");
-    write('packages/b/src/x.ts', "export { a } from '@sixam/a';\n");
-    write('packages/c/src/x.ts', "const a = await import('@sixam/a');\nimport type { B } from '@sixam/b';\n");
-    write('tools/t.ts', "import { a } from '@sixam/a';\nimport { b } from '@sixam/b';\n");
-    const files = ['packages/a/src/x.ts', 'packages/b/src/x.ts', 'packages/c/src/x.ts', 'tools/t.ts'];
-    assert.deepEqual(undeclared(dir, files).map(line => line.split(' (')[0]),
-      ['packages/c/src/x.ts -> @sixam/a', 'packages/c/src/x.ts -> @sixam/b', 'tools/t.ts -> @sixam/b'],
-      'an undeclared dynamic import, an undeclared type import and an undeclared root import are refused; a declared one and a self-import pass');
-  } finally {
-    rmSync(dir, { recursive: true, force: true });
+test('every @sixam/* import is declared by its workspace', async () => {
+  // Planted: a package importing a sibling it does not declare, one that declares it, a self-import and a
+  // root-held tool, over a throwaway tree.
+  {
+    const { mkdtempSync, mkdirSync, rmSync, writeFileSync } = await import('node:fs');
+    const { tmpdir } = await import('node:os');
+    const dir = mkdtempSync(join(tmpdir(), 'workspace-deps-'));
+    try {
+      const write = (path: string, text: string) => { mkdirSync(join(dir, path, '..'), { recursive: true }); writeFileSync(join(dir, path), text); };
+      write('package.json', JSON.stringify({ name: 'root', workspaces: ['packages/*'], dependencies: { '@sixam/a': '*' } }));
+      write('packages/a/package.json', JSON.stringify({ name: '@sixam/a' }));
+      write('packages/b/package.json', JSON.stringify({ name: '@sixam/b', dependencies: { '@sixam/a': '*' } }));
+      write('packages/c/package.json', JSON.stringify({ name: '@sixam/c' }));
+      write('packages/a/src/x.ts', "import { y } from '@sixam/a/y';\nexport const x = y;\n");
+      write('packages/b/src/x.ts', "export { a } from '@sixam/a';\n");
+      write('packages/c/src/x.ts', "const a = await import('@sixam/a');\nimport type { B } from '@sixam/b';\n");
+      write('tools/t.ts', "import { a } from '@sixam/a';\nimport { b } from '@sixam/b';\n");
+      const files = ['packages/a/src/x.ts', 'packages/b/src/x.ts', 'packages/c/src/x.ts', 'tools/t.ts'];
+      assert.deepEqual(undeclared(dir, files).map(line => line.split(' (')[0]),
+        ['packages/c/src/x.ts -> @sixam/a', 'packages/c/src/x.ts -> @sixam/b', 'tools/t.ts -> @sixam/b'],
+        'an undeclared dynamic import, an undeclared type import and an undeclared root import are refused; a declared one and a self-import pass');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   }
-}
 
-const files = repoFiles(ROOT).filter(file => CODE.test(file));
-report('workspace-deps', undeclared(ROOT, files),
-  `${files.length} modules; every @sixam/* import is declared by the workspace that holds it (planted refusals fire)`);
+  const files = repoFiles(ROOT).filter(file => CODE.test(file));
+  report('workspace-deps', undeclared(ROOT, files),
+    `${files.length} modules; every @sixam/* import is declared by the workspace that holds it (planted refusals fire)`);
+});

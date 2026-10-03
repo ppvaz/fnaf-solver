@@ -329,6 +329,12 @@
       "lifecycle": "supported"
     },
     {
+      "id": "tools/test-node-tests.ts",
+      "invocation": "tools/test-node-tests.ts [--list]",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
       "id": "tools/module-refs.ts",
       "invocation": "tools/module-refs.ts",
       "kind": "module",

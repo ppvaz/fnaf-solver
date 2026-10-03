@@ -5986,6 +5986,7 @@
         "node:assert/strict",
         "node:fs",
         "node:path",
+        "node:test",
         "typescript",
         "x"
       ]
@@ -6026,6 +6027,19 @@
         "node:fs",
         "node:path",
         "node:url"
+      ]
+    },
+    {
+      "file": "tools/test-node-tests.ts",
+      "imports": [
+        "./gate-kit.ts",
+        "./module-refs.ts",
+        "@sixam/review/lanes",
+        "node:assert/strict",
+        "node:fs",
+        "node:path",
+        "node:test",
+        "typescript"
       ]
     },
     {
@@ -6109,7 +6123,8 @@
         "node:assert/strict",
         "node:fs",
         "node:os",
-        "node:path"
+        "node:path",
+        "node:test"
       ]
     },
     {

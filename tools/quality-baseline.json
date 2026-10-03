@@ -241,5 +241,67 @@
         "why": "test-hid-trace.ts, in the parallel Propose fixer's files under E15, beside its released floor of 20 that cycle-library.ts states as 33"
       }
     }
+  },
+  "nodeTests": {
+    "recorded": "2026-10-03",
+    "why": "Lane node files (tools/lanes.json) that register no node:test test, per area, when tools/test-node-tests.ts landed; an entry only shrinks, and a new lane file registers its tests.",
+    "entries": {
+      "no-test:apps/desktop/test": {
+        "count": 9,
+        "why": "these predate the lanes running under node --test (2026-10-02): each asserts at top level with node:assert and fails by its exit code, so a failure is still caught, but the lane reports the file as one opaque test. Converting a file means wrapping its checks in test() with their own names"
+      },
+      "no-test:apps/trainer/test": {
+        "count": 9,
+        "why": "these predate the lanes running under node --test (2026-10-02): each asserts at top level with node:assert and fails by its exit code, so a failure is still caught, but the lane reports the file as one opaque test. Converting a file means wrapping its checks in test() with their own names; the trainer fixer is converting its browser tests to a shared node:test harness"
+      },
+      "no-test:apps/wiki/test": {
+        "count": 1,
+        "why": "these predate the lanes running under node --test (2026-10-02): each asserts at top level with node:assert and fails by its exit code, so a failure is still caught, but the lane reports the file as one opaque test. Converting a file means wrapping its checks in test() with their own names"
+      },
+      "no-test:packages/kernel/test": {
+        "count": 7,
+        "why": "these predate the lanes running under node --test (2026-10-02): each asserts at top level with node:assert and fails by its exit code, so a failure is still caught, but the lane reports the file as one opaque test. Converting a file means wrapping its checks in test() with their own names"
+      },
+      "no-test:packages/play/bin": {
+        "count": 13,
+        "why": "these predate the lanes running under node --test (2026-10-02): each asserts at top level with node:assert and fails by its exit code, so a failure is still caught, but the lane reports the file as one opaque test. Converting a file means wrapping its checks in test() with their own names"
+      },
+      "no-test:packages/play/games": {
+        "count": 4,
+        "why": "these predate the lanes running under node --test (2026-10-02): each asserts at top level with node:assert and fails by its exit code, so a failure is still caught, but the lane reports the file as one opaque test. Converting a file means wrapping its checks in test() with their own names"
+      },
+      "no-test:packages/play/test": {
+        "count": 32,
+        "why": "these predate the lanes running under node --test (2026-10-02): each asserts at top level with node:assert and fails by its exit code, so a failure is still caught, but the lane reports the file as one opaque test. Converting a file means wrapping its checks in test() with their own names"
+      },
+      "no-test:packages/propose/bin": {
+        "count": 28,
+        "why": "these predate the lanes running under node --test (2026-10-02): each asserts at top level with node:assert and fails by its exit code, so a failure is still caught, but the lane reports the file as one opaque test. Converting a file means wrapping its checks in test() with their own names; a parallel Propose fixer holds these files today"
+      },
+      "no-test:packages/propose/bindings": {
+        "count": 2,
+        "why": "these predate the lanes running under node --test (2026-10-02): each asserts at top level with node:assert and fails by its exit code, so a failure is still caught, but the lane reports the file as one opaque test. Converting a file means wrapping its checks in test() with their own names; a parallel Propose fixer holds these files today"
+      },
+      "no-test:packages/propose/test": {
+        "count": 23,
+        "why": "these predate the lanes running under node --test (2026-10-02): each asserts at top level with node:assert and fails by its exit code, so a failure is still caught, but the lane reports the file as one opaque test. Converting a file means wrapping its checks in test() with their own names; a parallel Propose fixer holds these files today"
+      },
+      "no-test:packages/review/bin": {
+        "count": 8,
+        "why": "these predate the lanes running under node --test (2026-10-02): each asserts at top level with node:assert and fails by its exit code, so a failure is still caught, but the lane reports the file as one opaque test. Converting a file means wrapping its checks in test() with their own names"
+      },
+      "no-test:packages/review/test": {
+        "count": 14,
+        "why": "these predate the lanes running under node --test (2026-10-02): each asserts at top level with node:assert and fails by its exit code, so a failure is still caught, but the lane reports the file as one opaque test. Converting a file means wrapping its checks in test() with their own names"
+      },
+      "no-test:packages/source/test": {
+        "count": 48,
+        "why": "these predate the lanes running under node --test (2026-10-02): each asserts at top level with node:assert and fails by its exit code, so a failure is still caught, but the lane reports the file as one opaque test. Converting a file means wrapping its checks in test() with their own names"
+      },
+      "no-test:tools": {
+        "count": 20,
+        "why": "these predate the lanes running under node --test (2026-10-02): each asserts at top level with node:assert and fails by its exit code, so a failure is still caught, but the lane reports the file as one opaque test. Converting a file means wrapping its checks in test() with their own names"
+      }
+    }
   }
 }
