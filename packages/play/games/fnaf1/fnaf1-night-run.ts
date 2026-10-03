@@ -437,19 +437,20 @@ async function detectorScore(modelPath: string, frame: string, side: Side, recor
   return payload;
 }
 
-async function captureNative(bridge: Bridge, record: RunRecord, name: string) {
+/** A full-display adb screencap, retained: the FNaF 1 door-light rule is fitted on these frames (the run records its sensor as screencap-2400x1080). */
+async function captureScreencap(bridge: Bridge, record: RunRecord, name: string) {
   const png = await bridge.capturePng(bridge.serial);
-  if (!png) fail(`native capture failed: ${name}`);
+  if (!png) fail(`screencap failed: ${name}`);
   return record.capture(name, png);
 }
 
 async function calibrateSide(side: Side, control: Fnaf1Controls, record: RunRecord) {
   await control.panTo(side);
-  await captureNative(control.bridge, record, `${side}-before-calibration`);
+  await captureScreencap(control.bridge, record, `${side}-before-calibration`);
   await control.toggleLight(side);
-  const a = await captureNative(control.bridge, record, `${side}-toggle-a`);
+  const a = await captureScreencap(control.bridge, record, `${side}-toggle-a`);
   await control.toggleLight(side);
-  const b = await captureNative(control.bridge, record, `${side}-toggle-b`);
+  const b = await captureScreencap(control.bridge, record, `${side}-toggle-b`);
   const firstModel = join(record.captureDir, `${side}-try-a-bright.json`);
   const first = await detectorCalibrate(side, b, [a], firstModel, record);
   if (first) {
@@ -457,7 +458,7 @@ async function calibrateSide(side: Side, control: Fnaf1Controls, record: RunReco
     // a normal lit-frame variation band rather than treating zero variance as
     // a portable fact.
     await control.toggleLight(side);
-    const c = await captureNative(control.bridge, record, `${side}-on-2`);
+    const c = await captureScreencap(control.bridge, record, `${side}-on-2`);
     await control.toggleLight(side);
     const model = join(record.captureDir, `${side}-door-light.json`);
     const final = await detectorCalibrate(side, b, [a, c], model, record);
@@ -470,9 +471,9 @@ async function calibrateSide(side: Side, control: Fnaf1Controls, record: RunReco
   if (!second) fail(`${side} door-light transition could not be established`);
   // b is lit now.  C is off, D is on, and E restores the known-off state.
   await control.toggleLight(side);
-  const c = await captureNative(control.bridge, record, `${side}-off-2`);
+  const c = await captureScreencap(control.bridge, record, `${side}-off-2`);
   await control.toggleLight(side);
-  const d = await captureNative(control.bridge, record, `${side}-on-2`);
+  const d = await captureScreencap(control.bridge, record, `${side}-on-2`);
   const model = join(record.captureDir, `${side}-door-light.json`);
   const final = await detectorCalibrate(side, c, [b, d], model, record);
   if (!final) fail(`${side} door-light model refused after its reverse transition`);
@@ -489,7 +490,7 @@ async function scanDoor(side: Side, modelPath: string, control: Fnaf1Controls, r
   }
   if (door.closed) await control.setDoor(side, false, 'closed-interval-complete');
   await control.toggleLight(side);
-  const frame = await captureNative(control.bridge, record, `${side}-scan-${String(cycle).padStart(3, '0')}`);
+  const frame = await captureScreencap(control.bridge, record, `${side}-scan-${String(cycle).padStart(3, '0')}`);
   const verdict = await detectorScore(modelPath, frame, side, record);
   await control.toggleLight(side); // every score is from an explicitly lit frame; leave it off
   if (verdict.state !== 'clear') await control.setDoor(side, true, `door-light-${verdict.state}`);
@@ -550,7 +551,7 @@ async function stageNight1({ route, record, bridge, control, nightEpochMs, shoul
   await record.event('night1-stage-start', { stage: 'right-monitor-calibration', deadlineMonotonicMs: Math.round(rightDeadline) });
   const rightModel = await calibrateSide('right', control, record);
   await control.monitorFlick('monitor-up-calibration');
-  await captureNative(bridge, record, 'monitor-down-calibration');
+  await captureScreencap(bridge, record, 'monitor-down-calibration');
   if (performance.now() > rightDeadline)
     fail('Night 1 right/monitor calibration exceeded its 3 AM readiness budget');
   await record.event('night1-stage-complete', { stage: 'right-monitor-calibration', completedAtMonotonicMs: Math.round(performance.now()) });
@@ -726,7 +727,7 @@ async function main(argv: string[]) {
     teachVisible = true;
     (record.document.teachingOverlay as Overlay).status = 'VISIBLE';
     (record.document.teachingOverlay as Overlay).stage = initialTeachStage;
-    await captureNative(bridge, record, `teach-overlay-${initialTeachStage}`);
+    await captureScreencap(bridge, record, `teach-overlay-${initialTeachStage}`);
     const teachStage = async (stage: string) => {
       await teachOverlay(serial, record, '--update', { night: options.night, stage, runId: id });
       (record.document.teachingOverlay as Overlay).status = 'VISIBLE';
@@ -736,7 +737,7 @@ async function main(argv: string[]) {
     // the Night 1 hands-off clock continues; its later light transition is the
     // first proof that office controls are live.
     await sleep(route.timing.officeReadyDelayMs);
-    await captureNative(bridge, record, 'office-before-calibration');
+    await captureScreencap(bridge, record, 'office-before-calibration');
     const staging = options.night === 1 ? night1Staging(route) : null;
     const control = new Fnaf1Controls({ hid, record, route, controls, bridge,
       notBeforeControlMs: staging === null ? null : nightEpochMs + staging.leftCalibrationAtMs });
@@ -757,7 +758,7 @@ async function main(argv: string[]) {
       leftModel = await calibrateSide('left', control, record);
       rightModel = await calibrateSide('right', control, record);
       await control.monitorFlick('monitor-up-calibration');
-      await captureNative(bridge, record, 'monitor-down-calibration');
+      await captureScreencap(bridge, record, 'monitor-down-calibration');
     }
     record.document.doorSensors = { left: leftModel, right: rightModel };
     if (!stageTerminal && !stopRequested && leftModel && rightModel) {
