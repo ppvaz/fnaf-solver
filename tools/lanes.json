@@ -61,7 +61,6 @@
       "tools/test-type-debt.ts",
       "tools/test-python-types.ts",
       "tools/test-change-locality.ts",
-      "tools/test-ts-migrate.ts",
       "packages/propose/test/policy-game.test.ts",
       "packages/propose/test/mechanic-constraints.test.ts",
       "packages/propose/bin/census/test-policy-census.ts",

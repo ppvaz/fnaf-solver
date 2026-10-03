@@ -6160,21 +6160,6 @@
       ]
     },
     {
-      "file": "tools/test-ts-migrate.ts",
-      "imports": [
-        "./lib.js",
-        "./types.ts",
-        "\\.\\/lib\\.ts",
-        "\\.\\/types\\.ts",
-        "node:assert/strict",
-        "node:child_process",
-        "node:fs",
-        "node:os",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
       "file": "tools/test-type-debt.ts",
       "imports": [
         "./gate-kit.ts",
@@ -6209,19 +6194,6 @@
         "node:child_process",
         "node:path",
         "node:url"
-      ]
-    },
-    {
-      "file": "tools/ts-migrate.ts",
-      "imports": [
-        "${spec}",
-        "...",
-        "m",
-        "node:child_process",
-        "node:fs",
-        "node:path",
-        "node:url",
-        "typescript"
       ]
     },
     {

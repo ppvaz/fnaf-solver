@@ -281,18 +281,6 @@
       "lifecycle": "supported"
     },
     {
-      "id": "tools/ts-migrate.ts",
-      "invocation": "tools/ts-migrate.ts DIR [--dry]",
-      "kind": "migration",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "tools/test-ts-migrate.ts",
-      "invocation": "tools/test-ts-migrate.ts",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
       "id": "tools/test-docs.ts",
       "invocation": "tools/test-docs.ts",
       "kind": "check",
