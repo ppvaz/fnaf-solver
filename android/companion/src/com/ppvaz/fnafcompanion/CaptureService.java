@@ -1199,22 +1199,29 @@ public final class CaptureService extends Service {
         controlToken = null;
         controlSocketName = null;
 
+        // The capture thread may be inside onImageAvailable, reading an acquired
+        // Image's buffer; closing the reader closes that Image under it, which
+        // ImageReader documents as undefined. So: no new callbacks, let the one
+        // in flight finish, stop the display drawing into the reader, and only
+        // then close the reader.
         ImageReader reader = imageReader;
         imageReader = null;
         if (reader != null) {
             reader.setOnImageAvailableListener(null, null);
-            reader.close();
-        }
-        VirtualDisplay display = virtualDisplay;
-        virtualDisplay = null;
-        if (display != null) {
-            display.release();
         }
         HandlerThread handlerThread = visualThread;
         visualThread = null;
         if (handlerThread != null) {
             handlerThread.quitSafely();
             joinWorker(handlerThread);
+        }
+        VirtualDisplay display = virtualDisplay;
+        virtualDisplay = null;
+        if (display != null) {
+            display.release();
+        }
+        if (reader != null) {
+            reader.close();
         }
 
         MediaProjection activeProjection = projection;

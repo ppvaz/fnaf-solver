@@ -57,8 +57,8 @@ mkdir -p "$CLASSES_DIR" "$DEX_DIR"
     --auto-add-overlay \
     --min-sdk-version 29 \
     --target-sdk-version 36 \
-    --version-code 16 \
-    --version-name 0.2.0 \
+    --version-code 17 \
+    --version-name 0.2.1 \
     -o "$BUILD_DIR/base-unsigned.apk"
 
 # Every source under src/, never a hand list: HidControls.java joined the tree on
