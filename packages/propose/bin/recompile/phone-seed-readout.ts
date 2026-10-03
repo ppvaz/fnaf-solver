@@ -19,13 +19,11 @@ import { drawTrace } from '../../../source/recompile/model-draw-trace.ts';
 import { cycleIndex } from './phone-static-readout.ts';
 import { measuredNight, nightInputs, windowRunner, windowUpdates } from './phone-region-readout.ts';
 import type { RegionPre } from './phone-region-readout.ts';
-import { sha256 } from './sweep-common.ts';
+import { sha256, stepRng } from './sweep-common.ts';
 
 const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '../../../..');
 export const SCHEMA = 'phone-seed-readout-v1';
 
-/** The generator `k` steps back from `s` (33543 is 31415's inverse mod 65,536). */
-export const back = (s: number, k: number) => { let x = s; for (let i = 0; i < k; i += 1) x = (((x - 1) & 0xffff) * 33543) & 0xffff; return x; };
 
 /** The earliest window index whose pair and the next pair are both consistent within `tolerance`, or null. */
 export function anchorIndex(pairs: readonly { differ: number | null }[], tolerance: number) {
@@ -73,7 +71,7 @@ function main(argv: string[]) {
   const first = windowUpdates(windows[0], method).injectAt;
   const at = windowUpdates(windows[k], method).injectAt;
   const between = k === 0 ? 0 : (windowRunner(base, first)(0, at).at(-1)?.draws ?? 0);
-  const s1 = back(anchor.reading.top.state, between);
+  const s1 = stepRng(anchor.reading.top.state, -between);
   const d1 = (drawTrace({ night: base.night, seed: 0, frames: first, modelOptions: base.modelOptions,
     // The replay plays at least its first frame.
     ...(base.customNight ? { customNight: base.customNight } : {}), contacts: base.contacts }).out.at(-1) as { draws: number }).draws;

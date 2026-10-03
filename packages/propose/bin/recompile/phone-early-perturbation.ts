@@ -15,16 +15,14 @@ import { cumulative, maskPresses, scoreWindows, windowCodes, WINDOW_MS } from '.
 import { LEDGERS } from './compare-schedule-replay.ts';
 import { inputs } from './phone-stream-census.ts';
 import type { Inputs } from './phone-stream-census.ts';
-import { fanOut, predeclared, sweepArgs } from './sweep-common.ts';
+import { fanOut, predeclared, stepRng, sweepArgs } from './sweep-common.ts';
 import type { DeclaredFields, SweepPredeclaration } from './sweep-common.ts';
 import { isRecord } from '@sixam/kernel';
 import type { Sim } from '@sixam/source/fnaf2';
 import { drawTrace } from '../../../source/recompile/model-draw-trace.ts';
-import { RNG_INCREMENT, RNG_MASK, RNG_MULTIPLIER } from '../../../source/src/games/fnaf2/rng.ts';
 
 export const SCHEMA = 'phone-early-perturbation-v1';
 const CODE: Readonly<Record<string, string>> = { withbonnie: 'B', withchica: 'C', withfreddy: 'F', toybonnie: 'b', toychica: 'c', toyfreddy: 'f', mangle: 'M', bb: 'x' };
-const INVERSE = (() => { for (let m = 1; m < 0x10000; m += 2) if (((RNG_MULTIPLIER * m) & RNG_MASK) === 1) return m; throw new Error('no inverse'); })();
 /** The generator's state `k` draws on (k < 0: back). */
 /** A contact as the family reads it: its control (or Sim action) and its updates. */
 type FamilyContact = { readonly control?: string, readonly action?: string, readonly downFrame: number, readonly upFrame: number };
@@ -44,12 +42,6 @@ export function earlyPredeclaration(fields: DeclaredFields, where: string): Earl
 /** One member's night (playMember). */
 type MemberRow = ReturnType<typeof playMember>;
 
-export function stepState(state: number, k: number) {
-  let s = state;
-  for (let i = 0; i < Math.abs(k); i += 1)
-    s = k > 0 ? (s * RNG_MULTIPLIER + RNG_INCREMENT) & RNG_MASK : (((s - RNG_INCREMENT) & RNG_MASK) * INVERSE) & RNG_MASK;
-  return s;
-}
 
 /** Every member of the predeclared family, as plain data. */
 export function family(contacts: readonly FamilyContact[], firstMaskTick: number, lastDrawUpdate = 300) {
@@ -91,7 +83,7 @@ export function playMember(inp: Inputs, member: Member) {
       const emit = sim.emit.bind(sim) as (kind: string, detail?: { readonly vocal?: number }) => void;
       sim.emit = ((kind: string, detail?: { readonly vocal?: number }) => { if (kind === 'laugh') vocals.push({ update: sim.frame, vocal: detail?.vocal ?? 'redraw' }); return emit(kind, detail); }) as Sim['emit'];
     }
-    if (member.kind === 'draws' && sim.frame === member.update) sim.rng.state = stepState(sim.rng.state, member.k);
+    if (member.kind === 'draws' && sim.frame === member.update) sim.rng.state = stepRng(sim.rng.state, member.k);
     if (firstHop === null && sim.bb.stage > 0) firstHop = sim.frame;
     return { mask: LEDGERS.mask.model(sim), unit: sim.blackout.active ? sim.blackout.unitId : null };
   };

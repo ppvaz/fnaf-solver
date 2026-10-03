@@ -10,9 +10,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { deriveInputs, identifyReading, measuredNight, periodValue, readoutStrength, regionImages, updateOf } from './phone-region-readout.ts';
-import { anchorIndex, back, seedCandidates } from './phone-seed-readout.ts';
+import { anchorIndex, seedCandidates } from './phone-seed-readout.ts';
 import { identifySeed } from './phone-seed-scan.ts';
-import { powerCheckPassed, recordId } from './sweep-common.ts';
+import { powerCheckPassed, recordId, stepRng } from './sweep-common.ts';
 import { check as checkEncounters } from './phone-encounter-replay.ts';
 
 const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '../../../..');
@@ -87,7 +87,7 @@ assert.equal(identifyReading(rule, [{ state: top, r: null }]).verdict, 'UNIDENTI
 }
 
 // --- the seed from a read stream (phone-seed-readout.ts)
-for (const s of [0, 12345, 57136]) assert.equal(back(along(s, 289), 289), s, `stepping back undoes stepping forward from ${s}`);
+for (const s of [0, 12345, 57136]) assert.equal(stepRng(stepRng(s, 289), -289), s, `stepping back undoes stepping forward from ${s}`);
 assert.equal(anchorIndex([{ differ: null }, { differ: 0 }, { differ: 3 }, { differ: 0 }], 10), 1, 'the earliest of two consecutive consistent pairs');
 assert.equal(anchorIndex([{ differ: 0 }, { differ: 99 }, { differ: 0 }], 10), null, 'no two consecutive consistent pairs');
 {
@@ -119,7 +119,7 @@ assert.equal(powerCheckPassed([1, -2], (n) => n > 0), false, 'one planted state 
   const rs = scan.top20.map((s: { r: number }) => s.r);
   assert.deepEqual(rs, [...rs].sort((a: number, b: number) => b - a), 'the scan ranks by mean r');
   assert.ok(scan.top20.every((s: { r: number, perWindow: number[] }) => Math.abs(s.r - s.perWindow.reduce((a, b) => a + b, 0) / s.perWindow.length) < 1e-12), 'a seed scores its windows\' mean r');
-  assert.equal(scan.top20[0].seed, back(57136, 284), 'the scanned seed is wind-1\'s read state stepped back by the model\'s draws');
+  assert.equal(scan.top20[0].seed, stepRng(57136, -284), 'the scanned seed is wind-1\'s read state stepped back by the model\'s draws');
   assert.equal(scan.id, recordId('s2-seed-scan-night7-0of20', scan), 'seed scan record id');
 }
 

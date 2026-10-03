@@ -2697,11 +2697,11 @@
       "file": "packages/propose/bin/recompile/phone-draw-sensitivity.ts",
       "imports": [
         "../../../source/recompile/model-draw-trace.ts",
-        "../../../source/src/games/fnaf2/rng.ts",
         "./phone-encounter-replay.ts",
         "./phone-static-readout.ts",
         "./phone-stream-census.ts",
         "./schedule-to-input.ts",
+        "./sweep-common.ts",
         "@sixam/source/fnaf2",
         "node:crypto",
         "node:fs",
@@ -2713,7 +2713,6 @@
       "file": "packages/propose/bin/recompile/phone-early-perturbation.ts",
       "imports": [
         "../../../source/recompile/model-draw-trace.ts",
-        "../../../source/src/games/fnaf2/rng.ts",
         "./compare-schedule-replay.ts",
         "./phone-encounter-replay.ts",
         "./phone-stream-census.ts",
@@ -2832,7 +2831,6 @@
       "file": "packages/propose/bin/recompile/phone-static-readout.ts",
       "imports": [
         "../../../source/recompile/model-draw-trace.ts",
-        "../../../source/src/games/fnaf2/rng.ts",
         "./phone-encounter-replay.ts",
         "./phone-stream-census.ts",
         "./sweep-common.ts",
@@ -3004,6 +3002,7 @@
     {
       "file": "packages/propose/bin/recompile/sweep-common.ts",
       "imports": [
+        "../../../source/src/games/fnaf2/rng.ts",
         "@sixam/kernel",
         "node:crypto",
         "node:fs",
@@ -3057,6 +3056,7 @@
       "imports": [
         "./phone-draw-sensitivity.ts",
         "./sweep-common.ts",
+        "@sixam/source/fnaf2",
         "node:assert/strict",
         "node:fs",
         "node:path",

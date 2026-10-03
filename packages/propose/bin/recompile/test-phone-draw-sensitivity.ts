@@ -3,18 +3,24 @@
 // comparison), then docs/evidence/full06-draw-sensitivity-20261001.json re-derived from its own rows: every MOVES
 // flag from its draw counts and first moved updates, every window score inside 0..1 at a shift within the range,
 // and the record id. No model run. In `npm run test:unit`.
+import { nextRngState, rngStateAfterDraws } from '@sixam/source/fnaf2';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { agreement, along, compareSites } from './phone-draw-sensitivity.ts';
-import { recordId } from './sweep-common.ts';
+import { agreement, compareSites } from './phone-draw-sensitivity.ts';
+import { recordId, stepRng } from './sweep-common.ts';
 
 const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '../../../..');
 
 // --- fixtures
-assert.equal(along(47593, 1), (47593 * 31415 + 1) & 0xffff);
-for (const s of [0, 1, 12345, 47593, 65535]) assert.equal(along(along(s, 7), -7), s, `stepping back undoes stepping forward from ${s}`);
+assert.equal(stepRng(47593, 1), (47593 * 31415 + 1) & 0xffff);
+for (const s of [0, 1, 12345, 47593, 65535]) assert.equal(stepRng(stepRng(s, 7), -7), s, `stepping back undoes stepping forward from ${s}`);
+// The readouts' generator is Source's: one step forward is nextRngState, n steps rngStateAfterDraws.
+for (const s of [0, 1, 12345, 47593, 65535]) {
+  assert.equal(stepRng(s, 1), nextRngState(s));
+  assert.equal(stepRng(s, 597), rngStateAfterDraws(s, 597));
+}
 assert.equal(agreement([1, 2, 3, 4], [1, 2, 3, 4]), 1);
 assert.equal(agreement([1, 2, 3, 4], [9, 1, 2, 3, 4]), 1, 'one period of offset is aligned away');
 assert.equal(agreement([1, 2, 3, 4], [5, 6, 7, 8]), 0);

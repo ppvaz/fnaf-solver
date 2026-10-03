@@ -8,8 +8,8 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { decide, earlyPredeclaration, family, memberContacts, stepState } from './phone-early-perturbation.ts';
-import { fanOut, predeclared, recordId, sweepArgs } from './sweep-common.ts';
+import { decide, earlyPredeclaration, family, memberContacts } from './phone-early-perturbation.ts';
+import { fanOut, predeclared, recordId, stepRng, sweepArgs } from './sweep-common.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
 const read = (path: string) => readFileSync(join(ROOT, path));
@@ -24,8 +24,8 @@ assert.equal(fam.filter((m) => m.kind === 'draws').length, 16, 'four draw change
 assert.deepEqual(memberContacts(contacts, { kind: 'shift', index: 0, d: -3 })[0], { control: 'monitor', downFrame: 1, upFrame: 2 }, 'nothing before update 1; release after press');
 assert.deepEqual(memberContacts(contacts, { kind: 'shift', index: 1, d: 2 }).map((c) => c.downFrame), [2, 12, 20]);
 assert.equal(memberContacts(contacts, { kind: 'drop', index: 1 }).length, 2);
-for (const s of [0, 1, 47593, 65535]) for (const k of [1, 2]) assert.equal(stepState(stepState(s, k), -k), s, 'the LCG steps back exactly');
-assert.equal(stepState(47593, 1), 61328);
+for (const s of [0, 1, 47593, 65535]) for (const k of [1, 2]) assert.equal(stepRng(stepRng(s, k), -k), s, 'the LCG steps back exactly');
+assert.equal(stepRng(47593, 1), 61328);
 
 // --- the rule
 const fit = { member: { kind: 'none' as const }, audioFits: true, agree: 30 };

@@ -24,6 +24,7 @@
 // Explanations it characterizes, not tests (the record is exploratory, made after the sweeps were first run by
 // hand): E-press, the readout's window prediction depends on press landing through press-anchored draw sites;
 // E-clock, a trace-free night's 60 Hz clock keeps the window's draw interleaving.
+import { stepRng } from './sweep-common.ts';
 import { createHash } from 'node:crypto';
 import type { BinaryLike } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -38,7 +39,6 @@ import type { NightConfig } from './phone-encounter-replay.ts';
 import type { Sim } from '@sixam/source/fnaf2';
 import { modelContacts } from './schedule-to-input.ts';
 import { drawTrace, MODEL_SOURCES } from '../../../source/recompile/model-draw-trace.ts';
-import { RNG_INCREMENT, RNG_MASK, RNG_MULTIPLIER } from '../../../source/src/games/fnaf2/rng.ts';
 
 export const SCHEMA = 'phone-draw-sensitivity-v1';
 const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '../../../..');
@@ -54,12 +54,6 @@ type TracedNight = NightConfig & { readonly trace: NonNullable<NightConfig['trac
 /** A clock variant: the update deltas and the contacts mapped onto them. */
 type Variant = { name: string, what: string, deltas: number[], contacts: Inputs['contacts'] };
 
-/** The generator `k` steps along its cycle from `s` (k < 0 steps back; 33543 is 31415's inverse mod 65536). */
-export function along(s: number, k: number) {
-  let x = s;
-  for (let i = 0; i < Math.abs(k); i += 1) x = k > 0 ? (x * RNG_MULTIPLIER + RNG_INCREMENT) & RNG_MASK : (((x - RNG_INCREMENT) & RNG_MASK) * 33543) & RNG_MASK;
-  return x;
-}
 
 /** The share of a reference sequence matched by `s` at its best alignment within two periods either way. */
 export function agreement(ref: readonly number[], s: readonly number[]) {
@@ -169,7 +163,7 @@ async function main(argv: string[]) {
     const scores = variants.slice(1).map((v) => {
       let best = { k: null as number | null, agreement: -1 };
       for (let k = -SHIFT; k <= SHIFT && best.agreement < 1; k += 1) {
-        const a = agreement(ref, windowSequence(base, v, w, cumRef, along(INJECTED, k)));
+        const a = agreement(ref, windowSequence(base, v, w, cumRef, stepRng(INJECTED, k)));
         if (a > best.agreement) best = { k, agreement: a };
       }
       return { variant: v.name, ...best };

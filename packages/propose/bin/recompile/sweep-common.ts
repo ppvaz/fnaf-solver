@@ -7,8 +7,23 @@ import { cpus } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { Worker } from 'node:worker_threads';
 import { isList, isRecord } from '@sixam/kernel';
+import { RNG_INCREMENT, RNG_MASK, RNG_MODULUS, RNG_MULTIPLIER } from '../../../source/src/games/fnaf2/rng.ts';
 
 export const sha256 = (bytes: BinaryLike) => createHash('sha256').update(bytes).digest('hex');
+
+/** The multiplier's inverse mod 2^16 (33543): one step back undoes one step forward. */
+const RNG_INVERSE = (() => {
+  for (let m = 1; m < RNG_MODULUS; m += 2) if (((RNG_MULTIPLIER * m) & RNG_MASK) === 1) return m;
+  throw new Error('the generator multiplier has no inverse');
+})();
+
+/** Fusion's generator (Source's rng.ts) `k` steps along its cycle from `state`; k < 0 steps back. */
+export function stepRng(state: number, k: number) {
+  let s = state;
+  for (let i = 0; i < Math.abs(k); i += 1)
+    s = k > 0 ? (s * RNG_MULTIPLIER + RNG_INCREMENT) & RNG_MASK : (((s - RNG_INCREMENT) & RNG_MASK) * RNG_INVERSE) & RNG_MASK;
+  return s;
+}
 
 /** JSON with every object's keys sorted, compact: the bytes a record's id hashes. */
 export const canonical = (value: unknown): string => isList(value) ? `[${value.map(canonical).join(',')}]`

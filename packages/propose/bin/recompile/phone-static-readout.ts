@@ -21,12 +21,11 @@ import { loadConfig, officeClock, traceColumns } from './phone-encounter-replay.
 import type { NightConfig } from './phone-encounter-replay.ts';
 import { inputs } from './phone-stream-census.ts';
 import type { Inputs } from './phone-stream-census.ts';
-import { fanOut, predeclared, sha256, sweepArgs } from './sweep-common.ts';
+import { fanOut, predeclared, sha256, stepRng, sweepArgs } from './sweep-common.ts';
 import type { DeclaredFields, SweepArgs, SweepPredeclaration } from './sweep-common.ts';
 import { isList, isRecord } from '@sixam/kernel';
 import type { Sim } from '@sixam/source/fnaf2';
 import { drawTrace } from '../../../source/recompile/model-draw-trace.ts';
-import { RNG_INCREMENT, RNG_MASK, RNG_MULTIPLIER } from '../../../source/src/games/fnaf2/rng.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
 const CONFIG = 'packages/propose/bin/recompile/phone-encounter-nights.json';
@@ -221,7 +220,7 @@ export function scoreState(inp: Inputs, fr: Frames, win: Win, state: number) {
 /** The generator's cycle through `from`: state -> steps from `from` (the LCG splits 65,536 states into 4 cycles). */
 export function cycleIndex(from: number) {
   const index = new Map<number, number>(); let s = from;
-  for (let k = 0; !index.has(s); k += 1) { index.set(s, k); s = (s * RNG_MULTIPLIER + RNG_INCREMENT) & RNG_MASK; }
+  for (let k = 0; !index.has(s); k += 1) { index.set(s, k); s = stepRng(s, 1); }
   return index;
 }
 
@@ -256,9 +255,9 @@ async function confirm(pre: StaticPre & { readonly kind: 'confirm' }, record: ob
     const rs = scores.map((s) => s.r).filter((r) => r !== null).sort((a, b) => a - b);
     const byState = new Map(scores.map((s) => [s.state, s.r]));
     let s = pre.seed;
-    for (let i = 0; i < atInject.draws - radius; i += 1) s = (s * RNG_MULTIPLIER + RNG_INCREMENT) & RNG_MASK;
+    s = stepRng(s, Math.max(0, atInject.draws - radius));
     const offsets: { d: number, state: number, r: number | null | undefined }[] = [];
-    for (let d = -radius; d <= radius; d += 1) { offsets.push({ d, state: s, r: byState.get(s) }); s = (s * RNG_MULTIPLIER + RNG_INCREMENT) & RNG_MASK; }
+    for (let d = -radius; d <= radius; d += 1) { offsets.push({ d, state: s, r: byState.get(s) }); s = stepRng(s, 1); }
     const best = offsets.reduce((a, b) => (Number(b.r) > Number(a.r) ? b : a));
     // The scan scored every state of the neighbourhood.
     const bestR = best.r as number;
