@@ -131,12 +131,19 @@ fi
 
 # ---- the serial: --serial, FNAF_SERIAL, the local profile, or a refusal ------
 # A dry run proceeds without one: it never addresses the phone.
+# The serial is stdout alone: Node's own warnings go to stderr, and a capture
+# that merged the two read them as part of the serial. The refusal is
+# local-profile's own line on stderr.
 if [ -z "$SERIAL" ]; then
-  if serial_out="$(node "$HERE/local-profile.ts" serial 2>&1)"; then
+  serial_err="$(mktemp "${TMPDIR:-/tmp}/night-run-serial.XXXXXX")"
+  if serial_out="$(node "$HERE/local-profile.ts" serial 2>"$serial_err")"; then
     SERIAL="$serial_out"
   elif [ "$DRY" = 0 ]; then
-    die "live night refused: ${serial_out#local-profile: }"
+    serial_reason="$(grep '^local-profile: ' "$serial_err" | tail -n 1 || true)"
+    rm -f "$serial_err"
+    die "live night refused: ${serial_reason#local-profile: }"
   fi
+  rm -f "$serial_err"
 fi
 
 # ---- the serial lease --------------------------------------------------------
