@@ -20,6 +20,7 @@ import { dirname, resolve } from 'node:path';
 import { CompanionControlTransport, measureMaskOn, measureMonitorUp,
   parseMaskRule, parseMonitorRule } from '@sixam/play';
 import { AdbCompanionPort } from '../../src/campaign/physical-ports.ts';
+import { SERIAL_TOKEN } from '../phone/local-profile.ts';
 
 /** A Companion GET or FRAME reply's fields, or a fixture of one. */
 type Fields = Readonly<Record<string, unknown>>;
@@ -215,9 +216,11 @@ function writeLogger(path: string | null) {
 }
 
 async function run({ target, timeoutMs, pollMs, log }: ReturnType<typeof parseArguments>) {
+  // The probe's shell addresses the phone with bare adb, so the gate reads the same ANDROID_SERIAL, checked as every
+  // runner checks a serial.
   const serial = process.env.ANDROID_SERIAL;
-  if (typeof serial !== 'string' || serial.length === 0)
-    throw new Error('ANDROID_SERIAL must be selected before the state gate starts');
+  if (typeof serial !== 'string' || !SERIAL_TOKEN.test(serial))
+    throw new Error(`ANDROID_SERIAL must name a device serial before the state gate starts (got ${JSON.stringify(serial ?? null)})`);
   const logger = writeLogger(log);
   const monitorRule = parseMonitorRule(JSON.parse(await readFile(
     new URL('../../profiles/fnaf2/moto-g56/monitor-rule-moto-g56-v207.json', import.meta.url), 'utf8')));

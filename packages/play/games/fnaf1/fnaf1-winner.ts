@@ -40,7 +40,7 @@ import { type Stats, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync
 import { homedir, tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { mainCheckout, resolveSerial } from '../../bin/phone/local-profile.ts';
+import { SERIAL_TOKEN, mainCheckout, resolveSerial } from '../../bin/phone/local-profile.ts';
 import { BINDINGS_DIR } from '@sixam/kernel';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -56,7 +56,6 @@ export const OUTPUT_LINKS = Object.freeze(['artifacts', 'captures']);
 const FULL_SHA = /^[0-9a-f]{40}$/;
 const SHA256 = /^[0-9a-f]{64}$/;
 const SAFE_TOKEN = /^[A-Za-z0-9._,/~:=+-]+$/;
-const SERIAL = /^[A-Za-z0-9._:-]+$/;
 const LABEL = /^[a-z0-9][a-z0-9-]{0,40}$/;
 
 /** A fnaf1-route-winner-v1: its route pinned by sha256 as the files stood at sourcesAtCommit. */
@@ -285,7 +284,7 @@ export function sharedLockDir(root = ROOT, env = process.env) {
 
 export function replayInvocation(winner: Fnaf1Winner, { root = ROOT, tree, serial, label, env = process.env, home = homedir() }:
   { root?: string, tree: string, serial: string, label?: string, env?: NodeJS.ProcessEnv, home?: string }) {
-  if (!SERIAL.test(String(serial))) fail('the serial is invalid');
+  if (!SERIAL_TOKEN.test(String(serial))) fail('the serial is invalid');
   const lockDir = sharedLockDir(root, env);
   const args = replayArguments(winner, { label, home });
   return {
