@@ -3884,7 +3884,8 @@
     {
       "file": "packages/propose/test/androidstalltest.ts",
       "imports": [
-        "../parked/minus7/reactive-pilot.ts"
+        "../parked/minus7/reactive-pilot.ts",
+        "@sixam/propose/seeds"
       ]
     },
     {

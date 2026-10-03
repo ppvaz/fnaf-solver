@@ -8,8 +8,13 @@
 //              timer" hypothesis, kept as a control)
 import { run } from '../parked/minus7/reactive-pilot.ts';
 import type { PilotOptions } from '../parked/minus7/reactive-pilot.ts';
+import { randomSeedCohort } from '@sixam/propose/seeds';
 
-const SEED = (i: number) => (i * 2246822519) >>> 0;
+// The project's seed cohort, not a private stream: this report's seeds were
+// (i * 2246822519) >>> 0, a multiplier no other tool used, so its rates could
+// not be read beside any other model result.
+const COHORT = randomSeedCohort({ count: 200 });
+const SEED = (i: number) => COHORT[i];
 const models = {
   sourced: {},
   legacy: {
