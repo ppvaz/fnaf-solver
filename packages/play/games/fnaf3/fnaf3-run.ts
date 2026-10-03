@@ -508,6 +508,243 @@ export function teachFeed(port: AdbCompanionPort, record: RunRecord) {
 type Teach = ReturnType<typeof teachFeed>;
 const QUIET: Teach = { origin() {}, night() {}, step() {}, look() {}, seen() {}, sealed() {}, lure() {}, sys() {}, sight() {}, lures() {}, async clear() {} };
 
+/** The tracking loop's own state: what it last saw, sealed, flashed and timed. */
+interface LoopState {
+  clockAt: number;
+  flashSeq: number;
+  scareAt: number | null;
+  look: number | null;
+  seen: { cam: number, atMs: number } | null;
+  sealed: number | null;
+  titleSince: number | null;
+  lostSinceMs: number | null;
+}
+
+/** What the tracking loop's helpers read: the hands and detectors, the run record, the clock and the loop state. */
+interface NightLoop extends Hands {
+  readonly record: RunRecord;
+  readonly det: Detectors;
+  readonly teach: Teach;
+  readonly stats: Stats;
+  readonly clock: SystemsClock;
+  readonly pairs: ReturnType<typeof loadPairs> | null;
+  readonly st: LoopState;
+  readonly pt: (k: string) => Point;
+  readonly camKey: (n: number) => string;
+  readonly nightMs: () => number;
+  readonly log: (m: string, f?: object) => Promise<unknown>;
+  readonly current: () => number | null;
+  readonly cut: (n: number) => number;
+  readonly templates: () => DetectorsV1['templates'];
+  readonly TEACH_SYS: Readonly<Record<string, string>>;
+}
+
+/** Raise the monitor and read which camera it shows. */
+async function loopMonitorUp(nl: NightLoop) {
+  const { act, c, eyes, reader, st, teach } = nl;
+  const r = await raiseMonitor({ act, c, eyes, reader });
+  st.look = r ? reader.selected(r.frame) : null;
+  if (st.look !== null) teach.look(st.look);
+  return !!r;
+}
+
+/** Put camera n on screen: toggle the map if n is on the other one. */
+async function loopView(nl: NightLoop, n: number) {
+  const { act, camKey, current, eyes, pt, reader, st, teach } = nl;
+  const onVents = (m: number | null) => m !== null && m >= 11;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    st.look = current();
+    if (st.look === n) return true;
+    if (st.look === null) { if (!await loopMonitorUp(nl)) continue; st.look = current(); }
+    if (onVents(st.look) !== (n >= 11)) {
+      const at = performance.now();
+      await act.press('mapToggle', pt('mapToggle'));
+      const f = await eyes.until((fr) => { const s = reader.selected(fr); return s !== null && onVents(s) === (n >= 11); }, at, 1200);
+      st.look = f ? reader.selected(f) : current();
+      if (st.look === n) return true;
+    }
+    const at = performance.now();
+    await act.press(camKey(n), pt(camKey(n)));
+    const f = await eyes.until((fr) => reader.selected(fr) === n, at, 1000);
+    if (f) { st.look = n; teach.look(n); return true; }
+  }
+  st.look = current();
+  return false;
+}
+
+/** The vent map on screen (any vent label green). */
+async function loopVentMap(nl: NightLoop) {
+  const { act, current, eyes, pt, reader, st } = nl;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    st.look = current();
+    if (st.look !== null && st.look >= 11) return true;
+    if (st.look === null) { if (!await loopMonitorUp(nl)) continue; st.look = current(); if (st.look !== null && st.look >= 11) return true; }
+    const at = performance.now();
+    await act.press('mapToggle', pt('mapToggle'));
+    const f = await eyes.until((fr) => (reader.selected(fr) ?? 0) >= 11, at, 1200);
+    if (f) { st.look = reader.selected(f); return true; }
+  }
+  return false;
+}
+
+/**
+ * What camera n shows, over the settled frames of one look: v2 scores each
+ * frame against the game's own pictures of that camera (empty, alternate,
+ * Springtrap) and averages; v1 compares a temporal median with the camera's
+ * empty template.
+ */
+async function loopScore(nl: NightLoop, n: number, frames = nl.det.window ?? 5): Promise<Score | null> {
+  const { det, eyes, pairs, reader, stats, templates } = nl;
+  if (pairs ? !pairs[n] : !templates()[n]) return null;
+  const since = performance.now() + (det.settleMs ?? 400);
+  const feeds: Uint32Array[] = [];
+  let seq = -1;
+  const until = since + 1500;
+  while (performance.now() < until && feeds.length < frames) {
+    const f = eyes.now();
+    if (f && f.seq !== seq && f.imageHostMs >= since && reader.selected(f) === n) {
+      seq = f.seq; feeds.push(f.regions.feed.pixels);
+    }
+    await sleep(10);
+  }
+  if (feeds.length < Math.min(3, frames)) return null;
+  stats.looks += 1;
+  if (!pairs) return { ...occupancy(medianLuma(feeds), templates()[n]), v: 1 };
+  let C = 0; let B = 0; let nB = 0; let P = 0; let nP = 0;
+  for (const feed of feeds) {
+    const r = stateScore(pairs[n], boxLuma(feed));
+    C += r.C ?? 0;
+    if (r.B !== null) { B += r.B; nB += 1; }
+    if (r.P !== null) { P += r.P; nP += 1; }
+  }
+  return { C: C / feeds.length, B: nB ? B / nB : null, P: nP ? P / nP : null, v: 2 };
+}
+
+/** Whether a score shows him on camera n, a better-fitting phantom excepted. */
+function loopOccupied(nl: NightLoop, n: number, s: Score) {
+  const { cut, det } = nl;
+  if (s.v === 1) return s.over > cut(n);
+  const cam = (det as DetectorsV2).cams[n];   // a v2 score comes only from a v2 file
+  const him = s.C > cam.cut || (cam.cutB !== null && s.B !== null && s.B > cam.cutB);
+  // A phantom's picture that fits better than his is a phantom, not him.
+  if (him && s.P !== null && s.P > 2 && s.P > Math.max(s.C, s.B ?? -Infinity)) { s.phantom = true; return false; }
+  return him;
+}
+
+/** Look at camera n: whether he is there, and the score that says so; a sighting is recorded. */
+async function loopHere(nl: NightLoop, n: number) {
+  const { log, nightMs, st, stats, teach } = nl;
+  if (!await loopView(nl, n)) return null;
+  const s = await loopScore(nl, n);
+  if (!s) return null;
+  const occ = loopOccupied(nl, n, s);
+  if (s.phantom) {
+    stats.phantoms = (stats.phantoms ?? 0) + 1;
+    teach.step('PHANTOM');
+    await log(`a phantom on ${n}, not him: looking away`, { C: s.C, B: s.B, P: s.P });
+  }
+  if (occ) {
+    stats.sightings += 1;
+    st.seen = { cam: n, atMs: nightMs() };
+    teach.seen(n);
+  }
+  return { occ, ...s };
+}
+
+/** Seal vent v: double-tap its label on the vent map and keep the map open until the bar is red. */
+async function loopSeal(nl: NightLoop, v: number) {
+  const { act, camKey, eyes, log, pt, reader, st, stats, teach } = nl;
+  teach.step('SEAL');
+  // The vent map, without a single press on v first: a lone press just
+  // before the double tap could pair with its first tap.
+  if (!await loopVentMap(nl)) { stats.sealFails += 1; return false; }
+  // A double tap right after the map toggles lost its first tap (n2a 16.9 s).
+  await sleep(250);
+  const at = performance.now();
+  await act.double(camKey(v), pt(camKey(v)), SEAL_GAP_MS);
+  st.look = v; teach.look(v);
+  // The mobile seal charges 100 + Random(100) frames (g635; PC's button is
+  // 50 + Random(50), g572), up to 3.3 s: waiting 2.6 s gave up on charges
+  // still running, and the retry's double tap restarted them (n2b 49-58 s).
+  const f = await eyes.until((fr) => reader.sealed(fr) === v, at, 4000);
+  if (!f) { stats.sealFails += 1; await log(`seal ${v}: bar never read red`); return false; }
+  st.sealed = v; stats.seals += 1; teach.sealed(v);
+  await log(`sealed ${v}`, { ms: Math.round(f.imageHostMs - at) });
+  return true;
+}
+
+/** True when the loop left the monitor to reboot something (its picture of him is stale). */
+async function loopService(nl: NightLoop) {
+  const { TEACH_SYS, act, c, clock, current, eyes, log, reader, st, stats, teach } = nl;
+  const f = eyes.now();
+  let force: string[] = [];
+  if (st.scareAt !== null) {
+    // Let the scare's frozen state pass (g890-g894 clear it) before the menu.
+    await log('a white flash: a phantom scare broke ventilation; rebooting it');
+    teach.step('PHANTOM');
+    st.scareAt = null;
+    await sleep(1200);
+    force = ['VENT'];
+  } else {
+    if (!f || reader.selected(f) === null) return false;
+    if (reader.errorLines(f).size === 0) return false;
+  }
+  const r = await serviceSystems({ act, c, eyes, reader, clock, force, onMenu: async (words, which) => {
+    for (const w of words) teach.sys(TEACH_SYS[w], 'ERROR');
+    teach.look(null);
+    // No reboot indexes as the key 'null', which names no step.
+    teach.step(({ ALL: 'REBOOT_ALL', VENT: 'REBOOT_VENT', VIDEO: 'REBOOT_CAMERA', AUDIO: 'REBOOT_AUDIO' } as Readonly<Record<string, string>>)[String(which)] ?? 'SWEEP');
+    for (const w of which === 'ALL' ? ['AUDIO', 'VIDEO', 'VENT'] : which ? [which] : []) teach.sys(TEACH_SYS[w], 'REBOOT');
+  } });
+  if (!r || !r.rebooted) return false;
+  if (r.ok) clock.rebooted(r.rebooted);
+  st.look = current();
+  if (st.look !== null) teach.look(st.look);
+  if (r.rebooted) stats.reboots += 1;
+  await log(`systems: lines ${r.lines.join('+')}, menu ${(r.words ?? []).join('+') || '-'}, rebooted ${r.rebooted ?? 'nothing'}: ${r.why}`,
+    { rebootMs: Math.round(r.rebootMs ?? 0), awayMs: Math.round(r.awayMs ?? 0) });
+  if (r.ok) for (const w of r.rebooted === 'ALL' ? ['AUDIO', 'VIDEO', 'VENT'] : [r.rebooted]) teach.sys(TEACH_SYS[w], 'OK');
+  return true;
+}
+
+/** The night is over: the title is up (a dim title held for a second counts). */
+function loopOver(nl: NightLoop) {
+  const { eyes, reader, st } = nl;
+  const f = eyes.now();
+  if (!f) return false;
+  const t = reader.title(f);
+  if (t >= 0.2) return true;
+  if (t >= 0.05 && reader.selected(f) === null && !reader.menuOpen(f)) {
+    st.titleSince ??= performance.now();
+    return performance.now() - st.titleSince > 1000;
+  }
+  st.titleSince = null;
+  return false;
+}
+
+/**
+ * Play audio on camera n: it pulls him onto n from any camera the lure
+ * table pairs with it (g319-g341; cam 02 also from attack stage 1, cam 01
+ * from stage 4) after Random(100) frames, and resets his move counter
+ * (g343-g352). It needs the camera map, Play Audio ready (not dashes) and
+ * no audio error, and costs AI audio points (g301).
+ */
+async function loopLureAt(nl: NightLoop, n: number, why: string) {
+  const { act, clock, eyes, log, pt, reader, stats, teach } = nl;
+  if (!await loopView(nl, n)) return false;
+  await sleep(150);
+  const f = eyes.now();
+  if (!f || reader.errorLines(f).has('AUDIO') || !reader.playReady(f)) {
+    await log(`no lure at ${n} (${why}): audio ${f && reader.errorLines(f).has('AUDIO') ? 'broken' : 'not ready'}`);
+    return false;
+  }
+  teach.step('LURE');
+  await act.press('playAudio', pt('playAudio'));
+  clock.lured(); stats.lures += 1; teach.lure(n);
+  await log(`lure at ${n}: ${why}`, { luresLeft: clock.luresLeft() });
+  return true;
+}
+
 /**
  * The tracking loop. The monitor stays up. While he is seen, the loop stays
  * on his camera; when he arrives beside a vent it seals that vent (the seal
@@ -526,224 +763,45 @@ async function loopNight({ act, c, record, eyes, reader, det, epochHostMs, stopA
   const stats: Stats = { looks: 0, sightings: 0, seals: 0, sealFails: 0, reboots: 0, lost: 0, recoveries: 0, lures: 0 };
   const ai = night <= 1 ? 0 : night <= 5 ? night : 7;
   const clock = new SystemsClock(ai);
-  let clockAt = performance.now();
-  let flashSeq = -1;
-  let scareAt = null as number | null;
+  const st: LoopState = {
+    clockAt: performance.now(),
+    flashSeq: -1,
+    scareAt: null,
+    look: null,
+    seen: null,
+    sealed: null,
+    // The title after a death carries static that dims the logo to 0.06-0.15
+    // (n2c 158-175 s) against the office's 0.00: a second of it is the title.
+    titleSince: null,
+    lostSinceMs: null,
+  };
   const clockTimer = setInterval(() => {
     const now = performance.now();
     const f = eyes.now();
-    if (f && reader.selected(f) !== null) clock.addMonitorMs(now - clockAt);
+    if (f && reader.selected(f) !== null) clock.addMonitorMs(now - st.clockAt);
     // Every phantom's scare ends in the white flash (g686/g687/g744/g745),
     // which breaks ventilation and sets the blackout past the chain's
     // threshold (g704): the screen darkens and he advances every frame
     // until ventilation is rebooted (n2d 209.5 s, dead at 231 s).
-    if (f && f.seq !== flashSeq) {
-      flashSeq = f.seq;
+    if (f && f.seq !== st.flashSeq) {
+      st.flashSeq = f.seq;
       let sum = 0; const px = f.regions.feed.pixels;
       for (let i = 0; i < px.length; i += 7) sum += (px[i] >> 8) & 255;
-      if (sum / Math.ceil(px.length / 7) > 200) scareAt = now;
+      if (sum / Math.ceil(px.length / 7) > 200) st.scareAt = now;
     }
-    clockAt = now;
+    st.clockAt = now;
     teach.sight(clock.cameraLeftS());
     teach.lures(clock.luresLeft());
   }, 200);
-  let look = null as number | null;                         // the camera on screen, as its green label says
-  let seen = null as { cam: number, atMs: number } | null;  // where he was last seen
-  let sealed = null as number | null;                       // the vent whose bar last read red
   // main refuses a v1 file with neither a cut per camera nor one cut.
   const cut = (n: number) => (det.cuts?.[n] ?? det.occupied) as number;
 
   const current = () => { const f = eyes.now(); return f ? reader.selected(f) : null; };
-  const monitorUp = async () => {
-    const r = await raiseMonitor({ act, c, eyes, reader });
-    look = r ? reader.selected(r.frame) : null;
-    if (look !== null) teach.look(look);
-    return !!r;
-  };
-  /** Put camera n on screen: toggle the map if n is on the other one. */
-  const view = async (n: number) => {
-    const onVents = (m: number | null) => m !== null && m >= 11;
-    for (let attempt = 0; attempt < 2; attempt += 1) {
-      look = current();
-      if (look === n) return true;
-      if (look === null) { if (!await monitorUp()) continue; look = current(); }
-      if (onVents(look) !== (n >= 11)) {
-        const at = performance.now();
-        await act.press('mapToggle', pt('mapToggle'));
-        const f = await eyes.until((fr) => { const s = reader.selected(fr); return s !== null && onVents(s) === (n >= 11); }, at, 1200);
-        look = f ? reader.selected(f) : current();
-        if (look === n) return true;
-      }
-      const at = performance.now();
-      await act.press(camKey(n), pt(camKey(n)));
-      const f = await eyes.until((fr) => reader.selected(fr) === n, at, 1000);
-      if (f) { look = n; teach.look(n); return true; }
-    }
-    look = current();
-    return false;
-  };
-  /** The vent map on screen (any vent label green). */
-  const ventMap = async () => {
-    for (let attempt = 0; attempt < 2; attempt += 1) {
-      look = current();
-      if (look !== null && look >= 11) return true;
-      if (look === null) { if (!await monitorUp()) continue; look = current(); if (look !== null && look >= 11) return true; }
-      const at = performance.now();
-      await act.press('mapToggle', pt('mapToggle'));
-      const f = await eyes.until((fr) => (reader.selected(fr) ?? 0) >= 11, at, 1200);
-      if (f) { look = reader.selected(f); return true; }
-    }
-    return false;
-  };
   const pairs = det.schema === 'fnaf3-detectors-v2' ? loadPairs(det) : null;
-  /**
-   * What camera n shows, over the settled frames of one look: v2 scores each
-   * frame against the game's own pictures of that camera (empty, alternate,
-   * Springtrap) and averages; v1 compares a temporal median with the camera's
-   * empty template.
-   */
   // pairs is null exactly for a v1 file.
   const templates = () => (det as DetectorsV1).templates;
-  const score = async (n: number, frames = det.window ?? 5): Promise<Score | null> => {
-    if (pairs ? !pairs[n] : !templates()[n]) return null;
-    const since = performance.now() + (det.settleMs ?? 400);
-    const feeds: Uint32Array[] = [];
-    let seq = -1;
-    const until = since + 1500;
-    while (performance.now() < until && feeds.length < frames) {
-      const f = eyes.now();
-      if (f && f.seq !== seq && f.imageHostMs >= since && reader.selected(f) === n) {
-        seq = f.seq; feeds.push(f.regions.feed.pixels);
-      }
-      await sleep(10);
-    }
-    if (feeds.length < Math.min(3, frames)) return null;
-    stats.looks += 1;
-    if (!pairs) return { ...occupancy(medianLuma(feeds), templates()[n]), v: 1 };
-    let C = 0; let B = 0; let nB = 0; let P = 0; let nP = 0;
-    for (const feed of feeds) {
-      const r = stateScore(pairs[n], boxLuma(feed));
-      C += r.C ?? 0;
-      if (r.B !== null) { B += r.B; nB += 1; }
-      if (r.P !== null) { P += r.P; nP += 1; }
-    }
-    return { C: C / feeds.length, B: nB ? B / nB : null, P: nP ? P / nP : null, v: 2 };
-  };
-  const occupied = (n: number, s: Score) => {
-    if (s.v === 1) return s.over > cut(n);
-    const cam = (det as DetectorsV2).cams[n];   // a v2 score comes only from a v2 file
-    const him = s.C > cam.cut || (cam.cutB !== null && s.B !== null && s.B > cam.cutB);
-    // A phantom's picture that fits better than his is a phantom, not him.
-    if (him && s.P !== null && s.P > 2 && s.P > Math.max(s.C, s.B ?? -Infinity)) { s.phantom = true; return false; }
-    return him;
-  };
-  const here = async (n: number) => {
-    if (!await view(n)) return null;
-    const s = await score(n);
-    if (!s) return null;
-    const occ = occupied(n, s);
-    if (s.phantom) {
-      stats.phantoms = (stats.phantoms ?? 0) + 1;
-      teach.step('PHANTOM');
-      await log(`a phantom on ${n}, not him: looking away`, { C: s.C, B: s.B, P: s.P });
-    }
-    if (occ) {
-      stats.sightings += 1;
-      seen = { cam: n, atMs: nightMs() };
-      teach.seen(n);
-    }
-    return { occ, ...s };
-  };
-  /** Seal vent v: double-tap its label on the vent map and keep the map open until the bar is red. */
-  const seal = async (v: number) => {
-    teach.step('SEAL');
-    // The vent map, without a single press on v first: a lone press just
-    // before the double tap could pair with its first tap.
-    if (!await ventMap()) { stats.sealFails += 1; return false; }
-    // A double tap right after the map toggles lost its first tap (n2a 16.9 s).
-    await sleep(250);
-    const at = performance.now();
-    await act.double(camKey(v), pt(camKey(v)), SEAL_GAP_MS);
-    look = v; teach.look(v);
-    // The mobile seal charges 100 + Random(100) frames (g635; PC's button is
-    // 50 + Random(50), g572), up to 3.3 s: waiting 2.6 s gave up on charges
-    // still running, and the retry's double tap restarted them (n2b 49-58 s).
-    const f = await eyes.until((fr) => reader.sealed(fr) === v, at, 4000);
-    if (!f) { stats.sealFails += 1; await log(`seal ${v}: bar never read red`); return false; }
-    sealed = v; stats.seals += 1; teach.sealed(v);
-    await log(`sealed ${v}`, { ms: Math.round(f.imageHostMs - at) });
-    return true;
-  };
   const TEACH_SYS: Readonly<Record<string, string>> = { VENT: 'VENT', VIDEO: 'CAMERA', AUDIO: 'AUDIO' };
-  /** True when the loop left the monitor to reboot something (its picture of him is stale). */
-  const service = async () => {
-    const f = eyes.now();
-    let force: string[] = [];
-    if (scareAt !== null) {
-      // Let the scare's frozen state pass (g890-g894 clear it) before the menu.
-      await log('a white flash: a phantom scare broke ventilation; rebooting it');
-      teach.step('PHANTOM');
-      scareAt = null;
-      await sleep(1200);
-      force = ['VENT'];
-    } else {
-      if (!f || reader.selected(f) === null) return false;
-      if (reader.errorLines(f).size === 0) return false;
-    }
-    const r = await serviceSystems({ act, c, eyes, reader, clock, force, onMenu: async (words, which) => {
-      for (const w of words) teach.sys(TEACH_SYS[w], 'ERROR');
-      teach.look(null);
-      // No reboot indexes as the key 'null', which names no step.
-      teach.step(({ ALL: 'REBOOT_ALL', VENT: 'REBOOT_VENT', VIDEO: 'REBOOT_CAMERA', AUDIO: 'REBOOT_AUDIO' } as Readonly<Record<string, string>>)[String(which)] ?? 'SWEEP');
-      for (const w of which === 'ALL' ? ['AUDIO', 'VIDEO', 'VENT'] : which ? [which] : []) teach.sys(TEACH_SYS[w], 'REBOOT');
-    } });
-    if (!r || !r.rebooted) return false;
-    if (r.ok) clock.rebooted(r.rebooted);
-    look = current();
-    if (look !== null) teach.look(look);
-    if (r.rebooted) stats.reboots += 1;
-    await log(`systems: lines ${r.lines.join('+')}, menu ${(r.words ?? []).join('+') || '-'}, rebooted ${r.rebooted ?? 'nothing'}: ${r.why}`,
-      { rebootMs: Math.round(r.rebootMs ?? 0), awayMs: Math.round(r.awayMs ?? 0) });
-    if (r.ok) for (const w of r.rebooted === 'ALL' ? ['AUDIO', 'VIDEO', 'VENT'] : [r.rebooted]) teach.sys(TEACH_SYS[w], 'OK');
-    return true;
-  };
-  // The title after a death carries static that dims the logo to 0.06-0.15
-  // (n2c 158-175 s) against the office's 0.00: a second of it is the title.
-  let titleSince = null as number | null;
-  const over = () => {
-    const f = eyes.now();
-    if (!f) return false;
-    const t = reader.title(f);
-    if (t >= 0.2) return true;
-    if (t >= 0.05 && reader.selected(f) === null && !reader.menuOpen(f)) {
-      titleSince ??= performance.now();
-      return performance.now() - titleSince > 1000;
-    }
-    titleSince = null;
-    return false;
-  };
 
-  /**
-   * Play audio on camera n: it pulls him onto n from any camera the lure
-   * table pairs with it (g319-g341; cam 02 also from attack stage 1, cam 01
-   * from stage 4) after Random(100) frames, and resets his move counter
-   * (g343-g352). It needs the camera map, Play Audio ready (not dashes) and
-   * no audio error, and costs AI audio points (g301).
-   */
-  const lureAt = async (n: number, why: string) => {
-    if (!await view(n)) return false;
-    await sleep(150);
-    const f = eyes.now();
-    if (!f || reader.errorLines(f).has('AUDIO') || !reader.playReady(f)) {
-      await log(`no lure at ${n} (${why}): audio ${f && reader.errorLines(f).has('AUDIO') ? 'broken' : 'not ready'}`);
-      return false;
-    }
-    teach.step('LURE');
-    await act.press('playAudio', pt('playAudio'));
-    clock.lured(); stats.lures += 1; teach.lure(n);
-    await log(`lure at ${n}: ${why}`, { luresLeft: clock.luresLeft() });
-    return true;
-  };
   // Cameras whose lost occupant may be on attack stage 1, where only a lure on
   // cam 02 reaches him (g320): cam 02 itself (pic random 0), cam 03 (g251),
   // vent 13 or 15 unsealed.
@@ -751,81 +809,82 @@ async function loopNight({ act, c, record, eyes, reader, det, epochHostMs, stopA
   // Where to lure him from each office-side camera: one step further out.
   const HERD: Readonly<Record<number, number>> = { 2: 5, 3: 2, 4: 2, 5: 6 };
 
-  if (!await monitorUp()) await monitorUp();
-  let lostSinceMs = null as number | null;
-  while (nightMs() < stopAfterMs && !over() && !STOP.requested) {
-    await service();
+  const nl: NightLoop = { act, c, record, eyes, reader, det, teach, stats, clock, pairs, st, pt, camKey, nightMs,
+    log, current, cut, templates, TEACH_SYS };
+  if (!await loopMonitorUp(nl)) await loopMonitorUp(nl);
+  while (nightMs() < stopAfterMs && !loopOver(nl) && !STOP.requested) {
+    await loopService(nl);
     if (current() === null) {
       // The monitor is down and we did not put it down: a scare, or the night is over.
       await sleep(400);
-      if (over()) break;
-      if (scareAt !== null) { await service(); continue; }
+      if (loopOver(nl)) break;
+      if (st.scareAt !== null) { await loopService(nl); continue; }
       if (current() === null) {
         if (nightMs() > (night <= 1 ? 235000 : 355000)) { await log('monitor gone at the end of the night'); break; }
         stats.recoveries += 1;
         await log('monitor down unasked: raising it');
-        if (!await monitorUp()) { await sleep(500); continue; }
+        if (!await loopMonitorUp(nl)) { await sleep(500); continue; }
       }
     }
-    if (seen && lostSinceMs === null) {
+    if (st.seen && st.lostSinceMs === null) {
       teach.step('WATCH');
-      const r = await here(seen.cam);
+      const r = await loopHere(nl, st.seen.cam);
       if (r && r.occ) {
         // The office side feeds attack stage 1 (cam 02's and cam 03's exits)
         // and vents 13 and 15: a lure one camera further out pulls him off it
         // and resets his move counter (the lure table, g319-g341).
-        const target = HERD[seen.cam];
-        if (target && clock.luresLeft() >= 1 && await lureAt(target, `herding him off cam ${seen.cam}`)) {
+        const target = HERD[st.seen.cam];
+        if (target && clock.luresLeft() >= 1 && await loopLureAt(nl, target, `herding him off cam ${st.seen.cam}`)) {
           await sleep(1800);
-          seen = { cam: target, atMs: seen.atMs };
+          st.seen = { cam: target, atMs: st.seen.atMs };
           continue;
         }
         // Cam 02 and cam 05 show him plainly with `pic random` 0 and as their
         // alternate with 1, and the same coin picks his action-4 exit
         // (g242/g243, g246/g247): plainly there, his exit is attack stage 1
         // or cam 04, not the vent, and a seal buys nothing.
-        const plain = r.v === 2 && (seen.cam === 2 || seen.cam === 5) && r.C > (det as DetectorsV2).cams[seen.cam].cut;
-        const v = VENT_OF[seen.cam];
-        if (v && sealed !== v && !plain) {
-          await log(`he is at ${seen.cam} beside vent ${v}: sealing it`, { C: r.C ?? r.over, B: r.B ?? null });
-          await seal(v);
+        const plain = r.v === 2 && (st.seen.cam === 2 || st.seen.cam === 5) && r.C > (det as DetectorsV2).cams[st.seen.cam].cut;
+        const v = VENT_OF[st.seen.cam];
+        if (v && st.sealed !== v && !plain) {
+          await log(`he is at ${st.seen.cam} beside vent ${v}: sealing it`, { C: r.C ?? r.over, B: r.B ?? null });
+          await loopSeal(nl, v);
         }
         continue;
       }
       if (!r) continue;
       // One weak look is not a departure (n2d: cam 9 read left, found, left,
       // found within 4 s): a second look must miss too.
-      const again = await here(seen.cam);
+      const again = await loopHere(nl, st.seen.cam);
       if (again && again.occ) continue;
-      await log(`he left ${seen.cam}`, { C: r.C ?? r.over, B: r.B ?? null });
-      lostSinceMs = nightMs();
-      const v = VENT_OF[seen.cam];
-      if (v && sealed !== v && seen.cam !== 2) await seal(v);
-      if (NEAR_OFFICE.has(seen.cam) && await lureAt(2, `lost at ${seen.cam}: attack stage 1 is one step away`)) {
+      await log(`he left ${st.seen.cam}`, { C: r.C ?? r.over, B: r.B ?? null });
+      st.lostSinceMs = nightMs();
+      const v = VENT_OF[st.seen.cam];
+      if (v && st.sealed !== v && st.seen.cam !== 2) await loopSeal(nl, v);
+      if (NEAR_OFFICE.has(st.seen.cam) && await loopLureAt(nl, 2, `lost at ${st.seen.cam}: attack stage 1 is one step away`)) {
         await sleep(1800);
-        seen = { cam: 2, atMs: seen.atMs };
+        st.seen = { cam: 2, atMs: st.seen.atMs };
       }
     }
     // Look for him, nearest ring first; a sighting ends the search.
     teach.step('SWEEP');
     let found = false;
-    for (const n of searchOrder(seen?.cam ?? null)) {
-      if (over()) break;
-      if (await service()) break;
-      if (n >= 11 && sealed === n) continue;
-      const r = await here(n);
+    for (const n of searchOrder(st.seen?.cam ?? null)) {
+      if (loopOver(nl)) break;
+      if (await loopService(nl)) break;
+      if (n >= 11 && st.sealed === n) continue;
+      const r = await loopHere(nl, n);
       if (r && r.occ) {
-        await log(`found at ${n}`, { C: r.C ?? r.over, B: r.B ?? null, lostMs: lostSinceMs === null ? null : Math.round(nightMs() - lostSinceMs) });
-        if (n >= 11 && sealed !== n) await seal(n);
-        found = true; lostSinceMs = null;
+        await log(`found at ${n}`, { C: r.C ?? r.over, B: r.B ?? null, lostMs: st.lostSinceMs === null ? null : Math.round(nightMs() - st.lostSinceMs) });
+        if (n >= 11 && st.sealed !== n) await loopSeal(nl, n);
+        found = true; st.lostSinceMs = null;
         break;
       }
     }
     if (!found) {
       stats.lost += 1;
       await log('not found in a full search');
-      if (seen && NEAR_OFFICE.has(seen.cam)) await lureAt(2, 'not found and last seen near the office');
-      if (seen && nightMs() - seen.atMs > 15000) seen = null;
+      if (st.seen && NEAR_OFFICE.has(st.seen.cam)) await loopLureAt(nl, 2, 'not found and last seen near the office');
+      if (st.seen && nightMs() - st.seen.atMs > 15000) st.seen = null;
     }
   }
   clearInterval(clockTimer);

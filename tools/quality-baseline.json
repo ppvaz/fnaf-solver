@@ -337,8 +337,8 @@
         "why": "the probes’ and audits’ reads of capture traces, region models and stroke traces (tap-stall-audit 20, intersection-state-gate 13); validators over unknown at that boundary replace them (CLAUDE.md, Types)"
       },
       "cast:packages/play/games": {
-        "count": 212,
-        "why": "the FNaF 1/3/4 runners’ reads of Companion replies and detector models (fnaf4-run 44, fnaf3-run 38, fnaf1-night-run 21); their profile reads were checked in audit PG14, and validators over unknown at that boundary replace them (CLAUDE.md, Types)"
+        "count": 206,
+        "why": "the FNaF 1/3/4 runners’ reads of Companion replies and detector models (fnaf4-run 44, fnaf3-run 32, fnaf1-night-run 21); their profile reads were checked in audit PG14, and validators over unknown at that boundary replace them (CLAUDE.md, Types)"
       },
       "cast:packages/play/src": {
         "count": 55,
@@ -417,10 +417,6 @@
       "fn:apps/desktop/src/lab.ts#createLab": {
         "count": 385,
         "why": "the lab’s composition root (status, next, doctor, morning, sessions); audit D3 moved the host readers and the doctor out (593 to 385 lines), and the session and morning verbs are the next split"
-      },
-      "fn:packages/play/games/fnaf3/fnaf3-run.ts#loopNight": {
-        "count": 314,
-        "why": "the FNaF 3 night loop (Springtrap search, ventilation, audio lure) over live frames; splitting the policy step from the device step needs a live FNaF 3 night"
       },
       "fn:packages/play/games/fnaf4/fnaf4-run.ts#loopNight": {
         "count": 559,
