@@ -10,12 +10,18 @@
 // frame by the caller-owned queue below.
 import * as C from '@sixam/source/fnaf2';
 import { Sim, Rng } from '@sixam/source/fnaf2';
-import { Observer } from '@sixam/play/sim';
+import { OBSERVE_INTERVAL, Observer } from '@sixam/play/sim';
 import { CycleController, makeUnknownFacts, getCycle, NightPolicy,
          NIGHT_POLICY_CYCLES } from '@sixam/propose/fnaf2';
 import type { Cycle, DeferredAction, Hypothesis } from '@sixam/propose/fnaf2';
 
 export const LIBRARY_IDS = NIGHT_POLICY_CYCLES;
+/** Fresh copies of the library's cycles for one night; an id the library does not hold is refused, not dropped. */
+const libraryCycles = (): Cycle[] => LIBRARY_IDS.map((id) => {
+  const cycle = getCycle(id);
+  if (!cycle) throw new Error(`nightloop: the cycle library holds no ${id}`);
+  return cycle;
+});
 const REVIEWED = new Set(LIBRARY_IDS);
 
 export const seedOf = (index: number) => (index * 2654435761) >>> 0;
@@ -106,11 +112,8 @@ export function runNight(options: NightOptions = {}) {
   } = options;
   const seed = seedOf(seedIndex);
   const sim = new Sim({ night, seed });
-  // Source's FNaF 2 module exports no OBSERVE_INTERVAL, so this reads 4.
-  const observer = new Observer({ interval: (C as unknown as { OBSERVE_INTERVAL?: number }).OBSERVE_INTERVAL ?? 4,
-    rng: new Rng(seed ^ 0x9e3779b9), ...observerOptions });
-  // Each id names a library cycle.
-  const controller = new CycleController({ cycles: LIBRARY_IDS.map(getCycle) as Cycle[] });
+  const observer = new Observer({ interval: OBSERVE_INTERVAL, rng: new Rng(seed ^ 0x9e3779b9), ...observerOptions });
+  const controller = new CycleController({ cycles: libraryCycles() });
   controller.reduced.night = night;
   const nightPolicy = policy === 'night'
     ? new NightPolicy({ night, ...policyOptions }) : null;
