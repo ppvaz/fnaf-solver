@@ -63,11 +63,12 @@ jobs:
       # The repository has sourced mksh fragments as well as executable bash
       # scripts. ShellCheck's critical tier catches unknown shell context and
       # parse/expansion errors without pretending the existing warning backlog
-      # is already resolved. The image tag is the toolchain pin.
+      # is already resolved. The image tag is the toolchain pin. The git hooks
+      # carry no .sh suffix and enforce the consequence lock, so they are named.
       - name: ShellCheck critical diagnostics
         run: |
           docker run --rm -v "$PWD:/mnt:ro" koalaman/shellcheck-alpine:v0.10.0 \
-            sh -c 'find /mnt -type f -name "*.sh" -not -path "/mnt/.git/*" \
+            sh -c 'find /mnt -type f \( -name "*.sh" -o -path "/mnt/.githooks/*" \) -not -path "/mnt/.git/*" \
               -not -path "/mnt/captures/*" -not -path "/mnt/dist/*" \
               -not -path "/mnt/android/companion/build/*" -print0 |
               xargs -0 shellcheck -S error'
