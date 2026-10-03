@@ -469,7 +469,7 @@ public final class CaptureService extends Service {
                 }
                 if (callbackNs - lastVisualReportNs >= VISUAL_REPORT_INTERVAL_NS) {
                     lastVisualReportNs = callbackNs;
-                    reportVisual(imageNs, callbackNs);
+                    reportVisual(imageNs, callbackNs, generation);
                 }
                 if (drainFrames) {
                     image.close();
@@ -486,8 +486,14 @@ public final class CaptureService extends Service {
         }
     }
 
-    /** The once-a-second visual line of the combined status. */
-    private void reportVisual(long imageNs, long callbackNs) {
+    /**
+     * The once-a-second visual line of the combined status. Computed here on
+     * the capture thread; published from the main thread, because building
+     * the status line makes about seven binder calls (package, overlay
+     * permission, battery, thermal) and a broadcast, which do not fit the
+     * 16.7 ms a frame callback has.
+     */
+    private void reportVisual(long imageNs, long callbackNs, long generation) {
         long frames = framesProcessed;
         if (lastFpsReportNs > 0L && callbackNs > lastFpsReportNs) {
             lastFps = (frames - framesAtLastReport) * 1e9 / (callbackNs - lastFpsReportNs);
@@ -507,7 +513,9 @@ public final class CaptureService extends Service {
                         + " content=" + content + " screen=" + screen
                 : "visual=UNKNOWN seq=" + frames + " reason=" + invalidReason
                         + " ageUs=" + ageUs + " content=" + content + " screen=UNKNOWN";
-        publishCombinedStatus("RUNNING");
+        mainHandler.post(() -> {
+            if (sessionActive(generation)) publishCombinedStatus("RUNNING");
+        });
     }
 
     private static boolean validCaptureSize(int width, int height) {
