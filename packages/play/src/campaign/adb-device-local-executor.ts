@@ -915,22 +915,25 @@ export class AdbDeviceLocalArtifactExecutor {
             // coming off, the monitor bar is not drawn").
             //
             // The grid rule stays as a SECOND opinion and only where the
-            // strokes already say the office is drawn. What is gone is the
-            // grid-luma refutation: it let a gate correct on a frame whose
-            // screen the classifier could not even identify, and on the
-            // 2026-09-12T02-20 run every single correction did exactly that
-            // (71% across all runs, against 30% of gates that agreed). A
-            // correction ACTS -- it presses the mask -- so a wrong one does not
-            // report an inversion, it creates one.
+            // strokes already say the office is drawn, or where no stroke
+            // source exists at all. The grid-luma refutation of mask-on is
+            // limited the same way: it no longer decides a frame whose stroke
+            // source is present and shows no signature -- the frame the
+            // classifier could not even identify. On the 2026-09-12T02-20 run
+            // every single correction was made on such a frame (71% across all
+            // runs, against 30% of gates that agreed), and a correction ACTS --
+            // it presses the mask -- so a wrong one does not report an
+            // inversion, it creates one.
             // `packages/play/bin/probe/intersection-state-gate.ts` has stated this rule
             // all along: a missing stroke score is a refusal, never a luma
             // fallback.
+            //
+            // Where it may still decide, the refutation stays: it is the abort
+            // case, and without it a night ends instead of correcting. It reads
+            // the 20x9 grid, a discontinued sensor, and its floor was measured
+            // there; moving it to native-region pixels waits on a floor
+            // measured on those pixels.
             const strokes = buttonStrokeState(sample);
-            // The bright-grid refutation is KEPT -- it is the abort case, and
-            // without it a night ends instead of correcting -- but it may no
-            // longer decide a frame whose stroke source is present and shows no
-            // signature. That is the unreadable frame, and it is where the
-            // spurious corrections came from.
             const lumaMayDecide = !strokes.available || strokes.office;
             const refutesMaskOn = lumaMayDecide && sample.maskOn === null &&
               entry.believedMaskOn === true && sample.gridLuma !== undefined &&
