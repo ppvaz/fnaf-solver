@@ -389,13 +389,20 @@ function trackedFiles() {
   }
 }
 
-/** The fully qualified classes a test.sh hands to `java`, not just to `javac`. */
+/**
+ * The fully qualified classes a test.sh hands to `java`, not just to `javac`.
+ * A test.sh that finds every `*Test.java` and hands `java` the class through a
+ * variable (`"pkg.$class"`) runs each one it finds: that is `pkg.*`.
+ */
 export function javaExecuted(shellText: string) {
   const run = new Set<string>();
+  const findsTests = /\bfind\s[^\n]*-name\s+['"]?\*Test\.java\b/.test(shellText);
   for (const line of shellText.replace(/\\\r?\n/g, ' ').split('\n')) {
     if (/^\s*#/.test(line)) continue;
     if (!/(?:^|[\s"])\$\{?JAVA\b\}?"?\s|(?:^|\s)java\s/.test(line)) continue;
     for (const m of line.matchAll(/\b((?:[a-z_]\w*\.)+[A-Z]\w*)\b/g)) run.add(m[1]);
+    const each = line.match(/\b((?:[a-z_]\w*\.)+)\$\{?\w+\}?/);
+    if (findsTests && each) run.add(`${each[1]}*`);
   }
   return run;
 }
@@ -422,7 +429,8 @@ export function coverage({ files, reached, backlog, exempt, readText }: {
       if (!executedBy.has(runner)) executedBy.set(runner, javaExecuted(readText(runner)));
       const pkg = readText(path).match(/^\s*package\s+([\w.]+)\s*;/m)?.[1];
       const fqcn = pkg ? `${pkg}.${java[2]}` : java[2];
-      if (!(executedBy.get(runner) as Set<string>).has(fqcn)) { // set just above when missing
+      const executed = executedBy.get(runner) as Set<string>; // set just above when missing
+      if (!executed.has(fqcn) && !(pkg && executed.has(`${pkg}.*`))) {
         verdicts.set(path, exempt.has(path) ? { ok: true, exempt: exempt.get(path) }
           : { ok: false, why: `${runner} never executes ${fqcn} (compiling a test is not running it)` });
         continue;
@@ -517,16 +525,22 @@ export function missingPaths({ scripts, ciText, exists, lanes = LANES }: {
   // item 13: an unregistered test, a compiled-but-never-run Java test, and a stale exemption.
   const shell = '"$JAVAC" -d "$T" "$HERE/test/a/b/RunTest.java" "$HERE/test/a/b/IdleTest.java"\n'
     + '"$JAVA" -cp "$T" a.b.RunTest\n# "$JAVA" -cp "$T" a.b.IdleTest\n';
+  // A test.sh that finds its tests and runs each one it found, by a variable class name.
+  const loop = 'while IFS= read -r t; do TESTS+=("$t"); done < <(find "$HERE/test" -name \'*Test.java\')\n'
+    + 'for test in "${TESTS[@]}"; do\n  class="$(basename "$test" .java)"\n'
+    + '  "$JAVA" -cp "$T" "c.d.$class"\ndone\n';
   const texts: Readonly<Record<string, string>> = {
     'android/x/test.sh': shell,
     'android/x/test/a/b/RunTest.java': 'package a.b;\n',
     'android/x/test/a/b/IdleTest.java': 'package a.b;\n',
+    'android/y/test.sh': loop,
+    'android/y/test/c/d/FoundTest.java': 'package c.d;\n',
   };
   const files = ['tools/device/test-planted-orphan.mjs', 'tools/test-registered.mjs',
     'android/x/test.sh', 'android/x/test/a/b/RunTest.java', 'android/x/test/a/b/IdleTest.java',
-    'tools/device/test-stale.mjs'];
+    'android/y/test.sh', 'android/y/test/c/d/FoundTest.java', 'tools/device/test-stale.mjs'];
   const reached = new Map([['tools/test-registered.mjs', 'ci'], ['android/x/test.sh', 'ci'],
-    ['tools/device/test-stale.mjs', 'ci']]);
+    ['android/y/test.sh', 'ci'], ['tools/device/test-stale.mjs', 'ci']]);
   const { verdicts, stale } = coverage({ files, reached, backlog: new Map(),
     exempt: new Map([['tools/device/test-stale.mjs', 'planted']]), readText: path => texts[path] });
   if (verdicts.get('tools/device/test-planted-orphan.mjs')?.ok !== false)
@@ -537,6 +551,8 @@ export function missingPaths({ scripts, ciText, exists, lanes = LANES }: {
     fail('control: a Java test that test.sh compiles but never executes was not caught');
   if (verdicts.get('android/x/test/a/b/RunTest.java')?.ok !== true)
     fail('control: a Java test that test.sh executes was reported as an orphan');
+  if (verdicts.get('android/y/test/c/d/FoundTest.java')?.ok !== true)
+    fail('control: a Java test that test.sh finds and runs in its loop was reported as an orphan');
   if (!stale.some(s => s.startsWith('tools/device/test-stale.mjs')))
     fail('control: an exemption for a test a CI step runs was not reported stale');
 

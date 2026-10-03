@@ -9,7 +9,22 @@ elif [[ -d "${HOME}/.local/toolchains/android-sdk" ]]; then
 else
     SDK_ROOT="${HOME}/Library/Android/sdk"
 fi
-JDK_ROOT="${JAVA_HOME:-/opt/homebrew/opt/openjdk}"
+# The JDK the way test.sh finds it: JAVA_HOME, then a javac on PATH that
+# actually runs (macOS ships a /usr/bin/javac stub), then the Homebrew prefix.
+JDK_ROOT=""
+for candidate in "${JAVA_HOME:-}" \
+                 "$(dirname "$(dirname "$(command -v javac 2>/dev/null || echo /nonexistent/bin/javac)")")" \
+                 /opt/homebrew/opt/openjdk /usr/lib/jvm/default-java; do
+    [[ -n "$candidate" ]] || continue
+    [[ -x "$candidate/bin/javac" ]] || continue
+    "$candidate/bin/javac" -version >/dev/null 2>&1 || continue
+    JDK_ROOT="$candidate"
+    break
+done
+if [[ -z "$JDK_ROOT" ]]; then
+    echo "no working JDK found: set JAVA_HOME or put a real javac on PATH" >&2
+    exit 1
+fi
 BUILD_TOOLS="${ANDROID_BUILD_TOOLS_VERSION:-36.0.0}"
 PLATFORM="${ANDROID_PLATFORM_VERSION:-36}"
 export JAVA_HOME="$JDK_ROOT"
@@ -65,10 +80,12 @@ mkdir -p "$CLASSES_DIR" "$DEX_DIR"
 # 2026-09-30 without joining a list here, and the Companion stopped building.
 SOURCES=()
 while IFS= read -r source; do SOURCES+=("$source"); done < <(find "$SCRIPT_DIR/src" -name '*.java' | sort)
+# --release 17, not -source/-target: those compile java.* against the running
+# JDK (27 on this Mac), so an API newer than 17 would build and fail on the
+# phone. --release holds java.* to 17; android.* comes from android.jar.
 "$JAVAC" \
     -encoding UTF-8 \
-    -source 17 \
-    -target 17 \
+    --release 17 \
     -classpath "$ANDROID_JAR" \
     -d "$CLASSES_DIR" \
     "${SOURCES[@]}"

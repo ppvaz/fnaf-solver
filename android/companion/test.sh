@@ -37,63 +37,38 @@ JAVA="$JDK_ROOT/bin/java"
 
 # --release, not -source/-target: the latter compiles against the running JDK's
 # system modules and warns that the result may not run on 17.
-"$JAVAC" -encoding UTF-8 --release 17 -d "$TEST_TMP" \
-  "$HERE/src/com/ppvaz/fnafcompanion/NativeFrame.java" \
-  "$HERE/src/com/ppvaz/fnafcompanion/Targets.java" \
-  "$HERE/src/com/ppvaz/fnafcompanion/CompanionStatus.java" \
-  "$HERE/src/com/ppvaz/fnafcompanion/AudioProbeAnalysis.java" \
-  "$HERE/src/com/ppvaz/fnafcompanion/PixelWatch.java" \
-  "$HERE/src/com/ppvaz/fnafcompanion/Fnaf2Legacy.java" \
-  "$HERE/src/com/ppvaz/fnafcompanion/MonitorStateDetector.java" \
-  "$HERE/src/com/ppvaz/fnafcompanion/ScreenIdentity.java" \
-  "$HERE/src/com/ppvaz/fnafcompanion/NightOnsetLatch.java" \
-  "$HERE/src/com/ppvaz/fnafcompanion/CycleLesson.java" \
-  "$HERE/src/com/ppvaz/fnafcompanion/TeachPanel.java" \
-  "$HERE/src/com/ppvaz/fnafcompanion/NativeRegions.java" \
-  "$HERE/src/com/ppvaz/fnafcompanion/Fnaf1Lesson.java" \
-  "$HERE/src/com/ppvaz/fnafcompanion/Fnaf1Strip.java" \
-  "$HERE/src/com/ppvaz/fnafcompanion/Fnaf3Lesson.java" \
-  "$HERE/src/com/ppvaz/fnafcompanion/Fnaf4Lesson.java" \
-  "$HERE/src/com/ppvaz/fnafcompanion/HidControls.java" \
-  "$HERE/test/com/ppvaz/fnafcompanion/PixelWatchTest.java" \
-  "$HERE/test/com/ppvaz/fnafcompanion/ScreenIdentityTest.java" \
-  "$HERE/test/com/ppvaz/fnafcompanion/NightOnsetLatchTest.java" \
-  "$HERE/test/com/ppvaz/fnafcompanion/CycleLessonTest.java" \
-  "$HERE/test/com/ppvaz/fnafcompanion/TeachPanelTest.java" \
-  "$HERE/test/com/ppvaz/fnafcompanion/NativeRegionsTest.java" \
-  "$HERE/test/com/ppvaz/fnafcompanion/NativeFrameTest.java" \
-  "$HERE/test/com/ppvaz/fnafcompanion/Fnaf2LegacyTest.java" \
-  "$HERE/test/com/ppvaz/fnafcompanion/CompanionStatusTest.java" \
-  "$HERE/test/com/ppvaz/fnafcompanion/TargetsTest.java" \
-  "$HERE/test/com/ppvaz/fnafcompanion/AudioProbeAnalysisTest.java" \
-  "$HERE/test/com/ppvaz/fnafcompanion/Fnaf1LessonTest.java" \
-  "$HERE/test/com/ppvaz/fnafcompanion/Fnaf1StripTest.java" \
-  "$HERE/test/com/ppvaz/fnafcompanion/Fnaf3LessonTest.java" \
-  "$HERE/test/com/ppvaz/fnafcompanion/Fnaf4LessonTest.java" \
-  "$HERE/test/com/ppvaz/fnafcompanion/HidControlsTest.java"
-"$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.NativeRegionsTest
-"$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.NativeFrameTest
-"$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.Fnaf2LegacyTest
-"$JAVA" -Dstatus.vector="$HERE/../../packages/play/test/testdata/companion-status-v1.txt" \
-  -cp "$TEST_TMP" com.ppvaz.fnafcompanion.CompanionStatusTest
-"$JAVA" -Dtargets.model="$HERE/../../packages/play/profiles/fnaf2/moto-g56/companion-targets-v1.json" \
-  -cp "$TEST_TMP" com.ppvaz.fnafcompanion.TargetsTest
-"$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.AudioProbeAnalysisTest
-"$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.Fnaf1LessonTest
-"$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.Fnaf1StripTest
-"$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.Fnaf3LessonTest
-"$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.Fnaf4LessonTest
-"$JAVA" -Dhid.bundle="$HERE/assets/runners/generated/minus-toys" \
-  -cp "$TEST_TMP" com.ppvaz.fnafcompanion.HidControlsTest
-$JAVA -cp "$TEST_TMP" com.ppvaz.fnafcompanion.PixelWatchTest
-# Compiled above since 2026-09-01 and never executed until 2026-09-27: a test
-# that is only compiled asserts nothing (tools/test-mistake-register.ts).
-$JAVA -cp "$TEST_TMP" com.ppvaz.fnafcompanion.ScreenIdentityTest
-"$JAVA" -cp "$TEST_TMP" com.ppvaz.fnafcompanion.NightOnsetLatchTest
-"$JAVA" -Dteach.vector="$HERE/../../packages/play/test/testdata/teach-lesson-night7-k3.txt" \
-  -cp "$TEST_TMP" com.ppvaz.fnafcompanion.CycleLessonTest
-"$JAVA" -Dteach.model="$HERE/../../packages/play/profiles/fnaf2/moto-g56/teach-panel-v1.json" \
-  -cp "$TEST_TMP" com.ppvaz.fnafcompanion.TeachPanelTest
+#
+# Every source that imports no Android class, and every *Test.java, found
+# rather than listed: a hand list here let a new test sit uncompiled and
+# unrun, the same drift that broke build.sh when HidControls.java joined src/.
+SOURCES=()
+while IFS= read -r source; do SOURCES+=("$source"); done \
+  < <(grep -L '^import android\.' "$HERE"/src/com/ppvaz/fnafcompanion/*.java | sort)
+TESTS=()
+while IFS= read -r test; do TESTS+=("$test"); done < <(find "$HERE/test" -name '*Test.java' | sort)
+if [ "${#TESTS[@]}" -eq 0 ]; then
+  echo "no host tests found under $HERE/test" >&2
+  exit 1
+fi
+"$JAVAC" -encoding UTF-8 --release 17 -d "$TEST_TMP" "${SOURCES[@]}" "${TESTS[@]}"
+
+# A test that is only compiled asserts nothing (tools/test-mistake-register.ts):
+# each one found is run, with the fixture its class reads.
+TESTDATA="$HERE/../../packages/play/test/testdata"
+PROFILES="$HERE/../../packages/play/profiles/fnaf2/moto-g56"
+for test in "${TESTS[@]}"; do
+  class="$(basename "$test" .java)"
+  props=()
+  case "$class" in
+    CompanionStatusTest) props=("-Dstatus.vector=$TESTDATA/companion-status-v1.txt") ;;
+    TargetsTest) props=("-Dtargets.model=$PROFILES/companion-targets-v1.json") ;;
+    HidControlsTest) props=("-Dhid.bundle=$HERE/assets/runners/generated/minus-toys") ;;
+    CycleLessonTest) props=("-Dteach.vector=$TESTDATA/teach-lesson-night7-k3.txt") ;;
+    TeachPanelTest) props=("-Dteach.model=$PROFILES/teach-panel-v1.json") ;;
+  esac
+  # bash 3.2 (macOS) treats "${empty[@]}" as unbound under set -u.
+  "$JAVA" ${props[@]+"${props[@]}"} -cp "$TEST_TMP" "com.ppvaz.fnafcompanion.$class"
+done
 
 # Video capture is independent of the optional audio receiver. Keep this
 # source-level guard beside the host tests because MainActivity itself needs
