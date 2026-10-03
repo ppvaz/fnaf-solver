@@ -11,9 +11,6 @@ import { CycleController, getCycle, makeUnknownFacts } from '@sixam/propose/fnaf
 import type { Cycle, DeferredAction, Hypothesis } from '@sixam/propose/fnaf2';
 import { withModelOptions } from '../bin/recompile/rebuild-options-census.ts';
 import { simOptionsFrom } from '../../source/recompile/model-draw-trace.ts';
-// Its fixtures and expectations were computed on the legacy model (fnaf2-legacy, the default before
-// 2026-10-02), so the Sims built here run that model until the legacy branches go.
-withModelOptions(simOptionsFrom({}), () => {
 type ObserverOptions = ConstructorParameters<typeof Observer>[0];
 
 const check = (condition: unknown, message: string) => { if (!condition) throw new Error(message); };
@@ -34,57 +31,59 @@ function choose(controller: CycleController, wanted: string) {
 // ---------------------------------------------------------------- contacts
 // A cycle id names a reusable primitive, not one invocation. Releases survive
 // preemption only for the exact invocation that put that exact contact down.
-const contact = new CycleController({
-  cycles: [getCycle('vent-stall-right') as Cycle, getCycle('mask-now') as Cycle], // library ids, so never null
-});
-contact.observe({ blackout: O(false), monitorUp: O(false), maskOn: O(false) },
-  { frame: 0 });
-const contactCommit = contact.commit(choose(contact, 'vent-stall-right'), { frame: 0 });
-check(contact.outstandingHolds().length === 1,
-  'committing a held primitive did not record its physical contact');
-contact.observe({ blackout: O(true), monitorUp: O(false), maskOn: O(false) },
-  { frame: 4 });
-check(choose(contact, 'mask-now').selected === 'mask-now',
-  'a blackout did not preempt the held idle primitive');
-const preemptedRelease = contact.releaseDeferred(contactCommit.deferred[0], {
-  frame: contactCommit.deferred[0].dueFrame,
-});
-check(preemptedRelease.accepted && contact.outstandingHolds().length === 0,
-  'a preempted invocation could not release the contact it actually held');
-check(!contact.releaseDeferred(contactCommit.deferred[0], {
-  frame: contactCommit.deferred[0].dueFrame,
-}).accepted, 'a duplicate release was accepted after its contact was already lifted');
+function contactChecks() {
+  const contact = new CycleController({
+    cycles: [getCycle('vent-stall-right') as Cycle, getCycle('mask-now') as Cycle], // library ids, so never null
+  });
+  contact.observe({ blackout: O(false), monitorUp: O(false), maskOn: O(false) },
+    { frame: 0 });
+  const contactCommit = contact.commit(choose(contact, 'vent-stall-right'), { frame: 0 });
+  check(contact.outstandingHolds().length === 1,
+    'committing a held primitive did not record its physical contact');
+  contact.observe({ blackout: O(true), monitorUp: O(false), maskOn: O(false) },
+    { frame: 4 });
+  check(choose(contact, 'mask-now').selected === 'mask-now',
+    'a blackout did not preempt the held idle primitive');
+  const preemptedRelease = contact.releaseDeferred(contactCommit.deferred[0], {
+    frame: contactCommit.deferred[0].dueFrame,
+  });
+  check(preemptedRelease.accepted && contact.outstandingHolds().length === 0,
+    'a preempted invocation could not release the contact it actually held');
+  check(!contact.releaseDeferred(contactCommit.deferred[0], {
+    frame: contactCommit.deferred[0].dueFrame,
+  }).accepted, 'a duplicate release was accepted after its contact was already lifted');
 
-const emergency = new CycleController({ cycles: [getCycle('vent-stall-right') as Cycle] }); // a library id, so never null
-emergency.observe({ blackout: O(false), monitorUp: O(false), maskOn: O(false) },
-  { frame: 0 });
-const emergencyCommit = emergency.commit(choose(emergency, 'vent-stall-right'), { frame: 0 });
-check(emergency.releaseDeferred(emergencyCommit.deferred[0], {
-  frame: 4, emergency: true,
-}).accepted && emergency.outstandingHolds().length === 0,
-  'terminal cleanup could not release a held contact before its scheduled due frame');
+  const emergency = new CycleController({ cycles: [getCycle('vent-stall-right') as Cycle] }); // a library id, so never null
+  emergency.observe({ blackout: O(false), monitorUp: O(false), maskOn: O(false) },
+    { frame: 0 });
+  const emergencyCommit = emergency.commit(choose(emergency, 'vent-stall-right'), { frame: 0 });
+  check(emergency.releaseDeferred(emergencyCommit.deferred[0], {
+    frame: 4, emergency: true,
+  }).accepted && emergency.outstandingHolds().length === 0,
+    'terminal cleanup could not release a held contact before its scheduled due frame');
 
-// A later release from the same multi-action primitive must not match a
-// contact that an earlier press/release pair already closed.
-const stale = new CycleController({
-  cycles: [getCycle('sweep-routes') as Cycle, getCycle('lower-monitor') as Cycle], // library ids, so never null
-});
-stale.observe({ blackout: O(false), monitorUp: O(true), maskOn: O(false) },
-  { frame: 0 });
-const sweep = stale.commit(choose(stale, 'sweep-routes'), { frame: 0 });
-for (const atFrame of [2, 4, 6]) {
-  const action = sweep.deferred.find(candidate => candidate.atFrame === atFrame);
-  check(stale.releaseDeferred(action as DeferredAction, { frame: atFrame }).accepted, // the sweep defers one at each
-    `sweep action at ${atFrame} was unexpectedly refused`);
+  // A later release from the same multi-action primitive must not match a
+  // contact that an earlier press/release pair already closed.
+  const stale = new CycleController({
+    cycles: [getCycle('sweep-routes') as Cycle, getCycle('lower-monitor') as Cycle], // library ids, so never null
+  });
+  stale.observe({ blackout: O(false), monitorUp: O(true), maskOn: O(false) },
+    { frame: 0 });
+  const sweep = stale.commit(choose(stale, 'sweep-routes'), { frame: 0 });
+  for (const atFrame of [2, 4, 6]) {
+    const action = sweep.deferred.find(candidate => candidate.atFrame === atFrame);
+    check(stale.releaseDeferred(action as DeferredAction, { frame: atFrame }).accepted, // the sweep defers one at each
+      `sweep action at ${atFrame} was unexpectedly refused`);
+  }
+  stale.observe({ blackout: O(true), monitorUp: O(true), maskOn: O(false) },
+    { frame: 8 });
+  check(choose(stale, 'lower-monitor').selected === 'lower-monitor',
+    'a blackout did not preempt the multi-action sweep');
+  const staleRelease = sweep.deferred.find(action =>
+    action.kind === 'release' && action.action === 'light' && action.atFrame === 18);
+  check(!stale.releaseDeferred(staleRelease as DeferredAction, { frame: 18 }).accepted, // the sweep defers its light release to 18
+    'a stale future release was allowed to lift a contact it never opened');
 }
-stale.observe({ blackout: O(true), monitorUp: O(true), maskOn: O(false) },
-  { frame: 8 });
-check(choose(stale, 'lower-monitor').selected === 'lower-monitor',
-  'a blackout did not preempt the multi-action sweep');
-const staleRelease = sweep.deferred.find(action =>
-  action.kind === 'release' && action.action === 'light' && action.atFrame === 18);
-check(!stale.releaseDeferred(staleRelease as DeferredAction, { frame: 18 }).accepted, // the sweep defers its light release to 18
-  'a stale future release was allowed to lift a contact it never opened');
 
 function score(cycle: Cycle, hypothesis: Hypothesis) {
   if (hypothesis.hazard === 'active') {
@@ -197,38 +196,43 @@ function cohort(mode: string, options: ObserverOptions = {}) {
   return result;
 }
 
-const oracle = cohort('oracle');
-const openLoop = cohort('open-loop');
-const disabled = cohort('disabled');
-const estimator = cohort('estimator', { readDelayFrames: 8, dropRate: 0.2 });
-// An intentionally harsh but finite observation control demonstrates that the
-// estimator's result is not silently being equated with the oracle's upper
-// bound. It is a sensitivity result, not a device calibration claim.
-const stress = cohort('estimator', { readDelayFrames: 70, dropRate: 0.8 });
+// Its fixtures and expectations were computed on the legacy model (fnaf2-legacy, the default before
+// 2026-10-02), so the Sims built here run that model until the legacy branches go.
+withModelOptions(simOptionsFrom({}), () => {
+  contactChecks();
 
-console.log(`cycle controller: ${RUNS} exact-engine blackout scenarios`);
-for (const result of [openLoop, disabled, estimator, stress, oracle]) {
-  console.log(`  ${result.mode.padEnd(9)} ${String(result.won).padStart(3)}/${RUNS}` +
-    ` won, ${String(result.maskPresses).padStart(4)} mask presses,` +
-    ` ${String(result.exactChecks).padStart(5)} exact checks`);
-}
+  const oracle = cohort('oracle');
+  const openLoop = cohort('open-loop');
+  const disabled = cohort('disabled');
+  const estimator = cohort('estimator', { readDelayFrames: 8, dropRate: 0.2 });
+  // An intentionally harsh but finite observation control demonstrates that the
+  // estimator's result is not silently being equated with the oracle's upper
+  // bound. It is a sensitivity result, not a device calibration claim.
+  const stress = cohort('estimator', { readDelayFrames: 70, dropRate: 0.8 });
 
-check(oracle.won === RUNS, 'truth-state oracle failed its upper-bound scenario');
-check(openLoop.won === 0 && openLoop.maskPresses === 0,
-  'fixed open-loop control acted or survived without a reaction');
-check(disabled.won === 0 && disabled.maskPresses === 0,
-  'observation-disabled control acted or survived without observations');
-check(estimator.won > disabled.won,
-  `estimator did not beat disabled control (${estimator.won} <= ${disabled.won})`);
-check(estimator.exactChecks > 0 && estimator.decisions > 0,
-  'estimator never exercised the planner or exact proof gate');
-check(stress.won > disabled.won && stress.won < oracle.won,
-  `stress result did not remain between disabled and oracle (${stress.won})`);
-check(!/\bSim\b|engine\.js/.test(
-  readFileSync(new URL('../src/games/fnaf2/cycle-controller.ts', import.meta.url), 'utf8')),
-  'production cycle controller contains a privileged exact-engine read');
+  console.log(`cycle controller: ${RUNS} exact-engine blackout scenarios`);
+  for (const result of [openLoop, disabled, estimator, stress, oracle]) {
+    console.log(`  ${result.mode.padEnd(9)} ${String(result.won).padStart(3)}/${RUNS}` +
+      ` won, ${String(result.maskPresses).padStart(4)} mask presses,` +
+      ` ${String(result.exactChecks).padStart(5)} exact checks`);
+  }
 
-console.log(`cycle controller: disabled ${disabled.won}/${RUNS}, ` +
-  `estimator ${estimator.won}/${RUNS}, stress ${stress.won}/${RUNS}, ` +
-  `oracle ${oracle.won}/${RUNS}; no privileged engine read in controller`);
+  check(oracle.won === RUNS, 'truth-state oracle failed its upper-bound scenario');
+  check(openLoop.won === 0 && openLoop.maskPresses === 0,
+    'fixed open-loop control acted or survived without a reaction');
+  check(disabled.won === 0 && disabled.maskPresses === 0,
+    'observation-disabled control acted or survived without observations');
+  check(estimator.won > disabled.won,
+    `estimator did not beat disabled control (${estimator.won} <= ${disabled.won})`);
+  check(estimator.exactChecks > 0 && estimator.decisions > 0,
+    'estimator never exercised the planner or exact proof gate');
+  check(stress.won > disabled.won && stress.won < oracle.won,
+    `stress result did not remain between disabled and oracle (${stress.won})`);
+  check(!/\bSim\b|engine\.js/.test(
+    readFileSync(new URL('../src/games/fnaf2/cycle-controller.ts', import.meta.url), 'utf8')),
+    'production cycle controller contains a privileged exact-engine read');
+
+  console.log(`cycle controller: disabled ${disabled.won}/${RUNS}, ` +
+    `estimator ${estimator.won}/${RUNS}, stress ${stress.won}/${RUNS}, ` +
+    `oracle ${oracle.won}/${RUNS}; no privileged engine read in controller`);
 });

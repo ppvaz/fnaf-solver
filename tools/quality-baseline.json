@@ -434,10 +434,6 @@
         "count": 296,
         "why": "the FNaF 2 night policy’s decision (priorities, deadlines, mask timing); a behaviour-critical controller, so a split first needs replay equivalence over the committed winners (audit E23)"
       },
-      "fn:packages/propose/test/cycle-controller.test.ts#withModelOptions callback": {
-        "count": 219,
-        "why": "the cycle controller’s checks: a run of independent checks under one model-options scope; they become node:test cases with the lanes’ move to node:test (audit G6)"
-      },
       "fn:packages/source/decompile/truth.ts#createTruth": {
         "count": 346,
         "why": "the truth surface over the caller’s own event-sheet dump (parse, index, query in one closure); split when the dump format gets the schema it lacks (castDebt names the same boundary)"
