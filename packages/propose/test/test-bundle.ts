@@ -33,19 +33,17 @@ const expectFailure = (fn: () => unknown, message: string) => {
     `${message} -- it threw, but not a bundle or executor refusal: ${refusal instanceof Error ? refusal.message : String(refusal)}`);
 };
 
-// The fixtures were tuned to the legacy model (KNOBS0 loses Nights 2 and 7 under fnaf2-sourced, and a PASS
-// gate must win its replay), and the compiler's contract does not depend on the model, so the Sims built
-// here run fnaf2-legacy until the legacy branches go.
 const root = mkdtempSync(join(tmpdir(), 'fnaf2-device-bundle-'));
-withModelOptions(simOptionsFrom({}), () => { try {
-  const winner = {
-    schema: 'winner-v1', strategy: 'minus-toys', knobs: 'KNOBS0', nights: [2, 7],
-    engineHash: 'minus-toys-engine-fixture-v1', seeds: [1, 2],
-    profile: 'fixture-hid-screencap',
-    gate: { status: 'PASS', claimLevel: 'MODEL_ONLY' },
-  };
-  const bundlePath = join(root, 'minus-toys');
+const winner = {
+  schema: 'winner-v1', strategy: 'minus-toys', knobs: 'KNOBS0', nights: [2, 7],
+  engineHash: 'minus-toys-engine-fixture-v1', seeds: [1, 2],
+  profile: 'fixture-hid-screencap',
+  gate: { status: 'PASS', claimLevel: 'MODEL_ONLY' },
+};
+const bundlePath = join(root, 'minus-toys');
 
+/** A DEATH_TARGETED gate compiles only with a valid prediction; a plain FAIL gate never does. */
+function deathTargetedChecks() {
   // A death-targeting bundle: the gate is honestly not PASS and carries the
   // prediction the run will be read against. Without the prediction it is
   // refused; with it the manifest carries it verbatim.
@@ -70,7 +68,10 @@ withModelOptions(simOptionsFrom({}), () => { try {
   check(validateBundle(targetedPath).plans.length === 1, 'a death-targeted bundle must validate like any other');
   expectFailure(() => compileBundle({ ...winner, gate: { status: 'FAIL' } }, join(root, 'fail-gate')),
     'a plain FAIL gate is still refused');
+}
 
+/** gate.planSha256 binds the gate to the exact plans it was measured against. */
+function planShaChecks() {
   // A gate may name the plan it was measured against, because gate.replayHash
   // cannot: that hash is over the MODEL's event traces, so two plans the model
   // scores identically share it. On 2026-09-20 binding h and a copy with the
@@ -93,6 +94,10 @@ withModelOptions(simOptionsFrom({}), () => { try {
   boundPath).status === 'READY', 'a gate.planSha256 that matches every emitted plan must compile');
   check(validateBundle(boundPath).plans.length === 2,
     'a plan-bound bundle must validate from disk, where the check runs against the re-emission');
+}
+
+/** The minus-toys bundle compiles, validates from disk and binds every night's semantic plan. */
+function compiledBundleChecks() {
   const compiled = compileBundle(winner, bundlePath);
   check(compiled.status === 'READY', 'compiler did not return READY');
   check(readFileSync(join(bundlePath, 'manifest.json'), 'utf8').includes('device-bundle-v1'),
@@ -133,7 +138,11 @@ withModelOptions(simOptionsFrom({}), () => { try {
   check(allNightBundle.manifest.nights.join(',') === '1,2,3,4,5,6,7' &&
     allNightBundle.compiled?.length === 7,
   'bundle compiler did not bind one semantic plan for every night');
+  return { ready, compiledArtifactText };
+}
 
+/** device:emit builds a valid bundle in its own process, under the model the Sim runs. */
+function emitCliCheck() {
   const cliWinner = join(root, 'winner-input.json');
   const cliBundle = join(root, 'cli-bundle');
   // device:emit runs in its own process, on the model the Sim runs, so it emits a winner that wins there:
@@ -144,7 +153,10 @@ withModelOptions(simOptionsFrom({}), () => { try {
   check(cliOutput.includes('device bundle READY') &&
     JSON.parse(readFileSync(join(cliBundle, 'manifest.json'), 'utf8')).model === FNAF2_MODEL,
   'device:emit CLI did not create a valid bundle under the current model');
+}
 
+/** A hand edit to a plan, the artifact, the controls or the stored winner is refused, and restoring it recovers. */
+function tamperChecks(compiledArtifactText: string) {
   const planPath = join(bundlePath, 'night-2.plan');
   const originalPlan = readFileSync(planPath, 'utf8');
   writeFileSync(planPath, `${originalPlan}#manual-edit\n`);
@@ -193,7 +205,10 @@ withModelOptions(simOptionsFrom({}), () => { try {
   const malformed = originalPlan.replace('tap cam11 33', 'tap unsupported 33');
   expectFailure(() => parsePlan(malformed, { strategy: 'minus-toys', night: 2 }),
     'plan parser accepted an unsupported interpreter control');
+}
 
+/** minus7 and minus3 compile only what the device executor can honour. */
+function strategyChecks() {
   // minus7 authors two steady cycles (`clear` and `attack`) and lets the
   // left-opening read choose between them.  The device executor cannot
   // branch -- expandNightBlocks() sends every cycle that is not
@@ -245,7 +260,10 @@ withModelOptions(simOptionsFrom({}), () => { try {
   check(minus3Actions.some(action => action.compound === 'hallvent' &&
     action.control === 'hallLight' && action.ventControl === 'rightVentLight'),
   'minus3 did not compile the hall/right-vent compound');
+}
 
+/** What crosses into the device executor: compiled blocks and bound hashes, never the strategy. */
+function executorBoundaryChecks(ready: ReturnType<typeof validateBundle>) {
   // What crosses into the device executor is the compiled semantic blocks and
   // bound hashes, never the strategy or its plan interpreter. (This was checked
   // through artifact-runner.mjs until that second lane onto the phone was
@@ -259,7 +277,10 @@ withModelOptions(simOptionsFrom({}), () => { try {
     'the strategy leaked into the executor request');
   expectFailure(() => makeExecutorRequest({ manifest: ready.manifest, profile: ready.profile,
     compiledPlans: ready.compiled, mode: 'machine' }), 'executor request accepted an unknown mode');
+}
 
+/** A phase offset or anchor epoch reaches the replay that gates it, and a strategy that cannot replay one refuses it. */
+function phaseChecks() {
   // A phase offset rotates the whole emitted stream against the game's own
   // frame grid, so the replay that gates the winner has to score it. The
   // 2026-09-11 Night 5 bundle shipped `#phase-offset 333` while its replay ran
@@ -308,7 +329,10 @@ withModelOptions(simOptionsFrom({}), () => { try {
   } catch (error) { phaseRefusal = (error as Error).message; }
   check(phaseRefusal.includes('minus3 cannot replay a phase offset'),
     `a strategy whose replay cannot evaluate a phase offset still accepted one (${phaseRefusal})`);
+}
 
+/** A committed winner's replay is checked against its model's gate, and PASS must win its replay. */
+function gateRegisterChecks() {
   // A committed winner's replay is checked against its gate under the model the Sim runs (gates.json),
   // and its identity carries the replay of the first model that measured it, so a model change never
   // re-hashes it. Registers are injected here; the fixture winner is in none of the real ones.
@@ -353,7 +377,21 @@ withModelOptions(simOptionsFrom({}), () => { try {
   const losing = refusal(() => compileBundle({ ...winner, nights: [7], knobs: { windMs: 300 } }, join(root, 'pass-but-loses')));
   check(losing.includes('a PASS gate needs every replay to win: night 7 seed 1 puppet'),
     `a PASS gate compiled over a replay that loses (${losing || 'READY'})`);
+}
 
+// The fixtures were tuned to the legacy model (KNOBS0 loses Nights 2 and 7 under fnaf2-sourced, and a PASS
+// gate must win its replay), and the compiler's contract does not depend on the model, so the Sims built
+// here run fnaf2-legacy until the legacy branches go.
+withModelOptions(simOptionsFrom({}), () => { try {
+  deathTargetedChecks();
+  planShaChecks();
+  const { ready, compiledArtifactText } = compiledBundleChecks();
+  emitCliCheck();
+  tamperChecks(compiledArtifactText);
+  strategyChecks();
+  executorBoundaryChecks(ready);
+  phaseChecks();
+  gateRegisterChecks();
   console.log('device bundle: winner-v1 -> manifest/plans/profile, hash+syntax+control+replay validation, and the executor boundary pass');
 } finally {
   rmSync(root, { recursive: true, force: true });
