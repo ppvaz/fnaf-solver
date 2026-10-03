@@ -25,8 +25,7 @@ ClockTrace enter the kernel; `GameRun.venue` carries the preflight's
 The sources are TypeScript that Node runs by type stripping (Pedro,
 2026-09-30: "runtime .ts"; the kernel moved first, on that day). Shapes other
 contexts read are in `src/types.ts` and `src/contracts/types.ts`, checked by the
-strict `typecheck:ts` lane; the modules are checked at the strictness they had
-as JavaScript (`typecheck:js`), to be tightened later;
+strict `typecheck` lane, as the modules are;
 the frozen enums, constructors (`unknown`, `interval`, `sixAm`, `death`,
 `timeout`, `aborted`, `invalid`) and validators (`validateClaimLevel`,
 `validateSourceLabel`, `validateInterval`, `validateOutcome`,

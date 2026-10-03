@@ -204,9 +204,6 @@ gates that pin it, until the legacy branches are deleted.
 - A `let` that only a callback assigns is narrowed to its initializer: declare
   it `let x = null as T | null`, or every later read is `null` (or `never`) to
   the checker.
-- A module both lanes check (the lenient `tsconfig.js.json` reaches it through
-  an importer) must also type-check without `strictNullChecks`, where
-  `x === null` narrows nothing: return the literal (`return null`).
 - Data two modules share is exported and imported, never read out of the
   other's source text: Review's `roadmap.ts` once regexed
   `const REGISTER_GATES = [` in `tools/test-mistake-register.ts`, and an

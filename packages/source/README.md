@@ -22,8 +22,8 @@ for a caller that wants one module's exact namespace (propose's controllers read
 FNaF 2's `config.ts` that way).
 
 **TypeScript.** Since 2026-09-30 the sources are TypeScript that Node runs
-by type stripping (Pedro: "runtime .ts"; the one-shot `tools/ts-migrate.ts`, removed once nothing was left to migrate), checked at the
-strictness they had as JavaScript (`typecheck:js`), to be tightened later. The
+by type stripping (Pedro: "runtime .ts"; the one-shot `tools/ts-migrate.ts`, removed once nothing was left to migrate), checked by the
+strict `typecheck` lane. The
 browser gets them with their types erased by Node's own stripper (`apps/trainer/test/build.ts` and `serve.ts`).
 
 **The model sources.** `src/games/fnaf2/plant-model.ts`, `config.ts`

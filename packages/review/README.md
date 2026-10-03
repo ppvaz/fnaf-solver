@@ -42,8 +42,7 @@ evidence` (verbs `list`, `show`, `diff`, `replay`, `why`, `pack`, `attest`,
 `promote`, `promotions`, `recovery-check`, `cohort`) and `npm run review --
 query promotions [--envelope] [--write FILE --date YYYY-MM-DD]`, beside the solver interface's
 verbs `npm run review -- describe|query|review|promote|check|resource`. Tests: the root `test:unit`
-lane runs `test/`. The modules are `.mjs`, outside the JS typecheck lane, because
-checking them would pull in the untyped `tools/device` modules they import.
+lane runs `test/`; the strict `typecheck` lane checks the modules.
 
 The campaign reader and packer also preserve the CLI's retained `ERROR`
 envelope when no validated result was returned. That row has an `UNKNOWN`

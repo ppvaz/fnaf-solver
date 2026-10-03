@@ -29,17 +29,7 @@
     },
     {
       "id": "typecheck",
-      "command": "npm run typecheck:ts && npm run typecheck:js",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "typecheck:ts",
       "command": "tsc --noEmit -p tsconfig.json",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "typecheck:js",
-      "command": "tsc --noEmit -p tsconfig.js.json",
       "lifecycle": "supported"
     },
     {
