@@ -76,32 +76,41 @@ const controlsOf = (row: ParsedRow) => {
   if (row.kind === 'sweep') return ['cameraFeedLight'];
   return [];
 };
-const rows = [];
+// Each shipped winner's plan per night, parsed once. A winner that does not
+// validate, has no emitter, or emits a plan that does not parse is a finding,
+// never a skipped row: a characterization that drops what it cannot read
+// passes over nothing.
+const messageOf = (error: unknown) => error instanceof Error ? error.message : String(error);
+const plans: { file: string, night: number, parsed: ReturnType<typeof parsePlan> }[] = [];
 for (const file of winners) {
   let winner;
   try { winner = validateWinner(JSON.parse(readFileSync(join(WINNERS, file), 'utf8'))); }
-  catch { continue; }
+  catch (error) { fail(`${file} does not validate: ${messageOf(error)}`); continue; }
   const emit = STRATEGY_REGISTRY[winner.strategy]?.emit;
-  if (typeof emit !== 'function') continue;
+  if (typeof emit !== 'function') { fail(`${file} names strategy ${winner.strategy}, which has no emitter`); continue; }
   for (const night of winner.nights) {
-    const idle = threatIdleUntilMs(night);
-    if (idle === 0) continue;
-    let parsed;
-    try { parsed = parsePlan(emit(winner, night).text, { strategy: winner.strategy, night, profile }); }
-    catch { continue; }
-    const period = parsed.period;
-    const loopStart = Math.max(parsed.loopStart, Number(parsed.headers['idle-until'] ?? 0));
-    let total = 0, box = 0;
-    for (const [name, cycle] of Object.entries(parsed.cycles)) {
-      if (name === 'opening' || name === 'finish') {
-        for (const row of cycle.rows) if (row.at < idle) { total += 1; box += isBoxWork(row) ? 1 : 0; }
-        continue;
-      }
-      for (let base = loopStart; base < idle; base += period)
-        for (const row of cycle.rows) if (base + row.at < idle) { total += 1; box += isBoxWork(row) ? 1 : 0; }
-    }
-    rows.push({ file, night, idle, total, box, idleContacts: total - box });
+    try { plans.push({ file, night, parsed: parsePlan(emit(winner, night).text, { strategy: winner.strategy, night, profile }) }); }
+    catch (error) { fail(`${file} night ${night} emits a plan that does not parse: ${messageOf(error)}`); }
   }
+}
+if (!plans.length) fail('no shipped plan parsed, so nothing below was characterized');
+
+const rows = [];
+for (const { file, night, parsed } of plans) {
+  const idle = threatIdleUntilMs(night);
+  if (idle === 0) continue;
+  const period = parsed.period;
+  const loopStart = Math.max(parsed.loopStart, Number(parsed.headers['idle-until'] ?? 0));
+  let total = 0, box = 0;
+  for (const [name, cycle] of Object.entries(parsed.cycles)) {
+    if (name === 'opening' || name === 'finish') {
+      for (const row of cycle.rows) if (row.at < idle) { total += 1; box += isBoxWork(row) ? 1 : 0; }
+      continue;
+    }
+    for (let base = loopStart; base < idle; base += period)
+      for (const row of cycle.rows) if (base + row.at < idle) { total += 1; box += isBoxWork(row) ? 1 : 0; }
+  }
+  rows.push({ file, night, idle, total, box, idleContacts: total - box });
 }
 
 // --- 3. how much of each plan is tapped at a coordinate the view can move ---
@@ -120,31 +129,21 @@ for (const file of winners) {
     process.stdout.write(`\ncontacts tapped at a coordinate the view can move ` +
       `(${scroll.maxPanPx} px of pan, ${scroll.panObservation ? 'pan observation: ' +
       String(scroll.panObservation).split(':')[0] : 'no pan observation'}):\n`);
-    for (const file of winners) {
-      let winner;
-      try { winner = validateWinner(JSON.parse(readFileSync(join(WINNERS, file), 'utf8'))); }
-      catch { continue; }
-      const emit = STRATEGY_REGISTRY[winner.strategy]?.emit;
-      if (typeof emit !== 'function') continue;
-      for (const night of winner.nights) {
-        let parsed;
-        try { parsed = parsePlan(emit(winner, night).text, { strategy: winner.strategy, night, profile }); }
-        catch { continue; }
-        const counts = new Map();
-        for (const cycle of Object.values(parsed.cycles))
-          for (const row of cycle.rows) {
-            for (const control of controlsOf(row)) {
-              // `true` only. An UNKNOWN control is not counted as pan-dependent and
-              // not counted as safe either; it is listed separately below.
-              if (scroll.panDependent?.[control] !== true) continue;
-              counts.set(control, (counts.get(control) ?? 0) + 1);
-            }
+    for (const { file, night, parsed } of plans) {
+      const counts = new Map();
+      for (const cycle of Object.values(parsed.cycles))
+        for (const row of cycle.rows) {
+          for (const control of controlsOf(row)) {
+            // `true` only. An UNKNOWN control is not counted as pan-dependent and
+            // not counted as safe either; it is listed separately below.
+            if (scroll.panDependent?.[control] !== true) continue;
+            counts.set(control, (counts.get(control) ?? 0) + 1);
           }
-        const total = [...counts.values()].reduce((a, b) => a + b, 0);
-        if (!total) continue;
-        process.stdout.write(`  ${file} night ${night}: ${total} per cycle-set -- ` +
-          `${[...counts.entries()].map(([c, n]) => `${c} x${n}`).join(', ')}\n`);
-      }
+        }
+      const total = [...counts.values()].reduce((a, b) => a + b, 0);
+      if (!total) continue;
+      process.stdout.write(`  ${file} night ${night}: ${total} per cycle-set -- ` +
+        `${[...counts.entries()].map(([c, n]) => `${c} x${n}`).join(', ')}\n`);
     }
   }
 }
