@@ -273,6 +273,27 @@
       }
     },
     {
+      "id": "apps/lab/test/test-process-tree.py",
+      "lane": "test:unit",
+      "owner": "legacy migration",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.ts per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [
+        "time.sleep(0.02",
+        "time.sleep(30"
+      ],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
       "id": "apps/trainer/test/activity-gate.test.ts",
       "lane": "test:unit",
       "owner": "legacy migration",

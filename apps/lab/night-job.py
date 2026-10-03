@@ -57,6 +57,7 @@ ROOT = HERE.parents[1]
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parents[1] / "packages/play/src/safety"))  # the serial lease: Play's
 import night_jobs  # noqa: E402
+import process_tree  # noqa: E402
 from companion_device_lock import DeviceBusy, DeviceLock, lock_dir  # noqa: E402
 
 SETUP_COMMAND = [str(HERE / "../../packages/play/bin/companion/companion-setup.sh")]
@@ -71,6 +72,7 @@ SNAP_TIMEOUT_S = 30.0
 SNAP_INTERVAL_S = 3.0
 RUNNER_STOP_GRACE_S = 120.0
 RUNNER_TERM_GRACE_S = 20.0
+RUNNER_KILL_GRACE_S = 10.0
 SERIAL = re.compile(r"^[A-Za-z0-9._:-]{1,96}$")
 SHA = re.compile(r"^[0-9a-f]{64}$")
 HELD_SIGNALS = frozenset({signal.SIGINT, signal.SIGTERM, signal.SIGHUP})
@@ -90,26 +92,6 @@ def write_json(path: Path, value: object) -> None:
         json.dump(value, output, indent=2, sort_keys=True)
         output.write("\n")
     os.replace(name, path)
-
-
-def tree_signal(pid: int, signum: int) -> None:
-    """`pid` and its descendants (from /proc): the runner, not this process."""
-    children: dict[int, list[int]] = {}
-    for entry in os.listdir("/proc"):
-        if entry.isdigit():
-            try:
-                stat = Path(f"/proc/{entry}/stat").read_text(encoding="utf-8")
-                children.setdefault(int(stat.rsplit(")", 1)[1].split()[1]), []).append(int(entry))
-            except (OSError, ValueError, IndexError):
-                continue
-    frontier = [pid]
-    while frontier:
-        current = frontier.pop()
-        frontier.extend(children.get(current, []))
-        try:
-            os.kill(current, signum)
-        except (ProcessLookupError, PermissionError):
-            pass
 
 
 class NightJob:
@@ -383,15 +365,10 @@ class NightJob:
             child.wait(timeout=timeout_s)
         except subprocess.TimeoutExpired:
             stopped = "timeout"
-            for signum, grace in ((signal.SIGINT, RUNNER_STOP_GRACE_S), (signal.SIGTERM, RUNNER_TERM_GRACE_S),
-                                  (signal.SIGKILL, 10.0)):
-                tree_signal(child.pid, signum)
-                self.event("runner-signal", signal=signum.name)
-                try:
-                    child.wait(timeout=grace)
-                    break
-                except subprocess.TimeoutExpired:
-                    continue
+            # The runner shares this process group, so it is stopped by its tree, not by killpg.
+            process_tree.stop(child, lambda signum: process_tree.signal_tree(child.pid, signum),
+                              (RUNNER_STOP_GRACE_S, RUNNER_TERM_GRACE_S, RUNNER_KILL_GRACE_S),
+                              on_signal=lambda signum: self.event("runner-signal", signal=signum.name))
         text = log.read_text(encoding="utf-8", errors="replace")
         tail = "\n".join(text.splitlines()[-40:])
         if tail:

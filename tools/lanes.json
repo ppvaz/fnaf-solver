@@ -232,6 +232,7 @@
       ["python3","packages/play/bin/companion/test-companion-setup.py"],
       ["python3","packages/play/test/test-companion-device-lock.py"],
       ["python3","apps/lab/test/test-companion-queue.py"],
+      ["python3","apps/lab/test/test-process-tree.py"],
       ["python3","packages/play/bin/companion/test-teach-panel-clearance.py"],
       ["python3","packages/review/bin/grade/test-death-cause.py"],
       ["packages/play/bin/phone/test-game-teardown.sh"],

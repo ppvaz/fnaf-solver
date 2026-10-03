@@ -797,6 +797,18 @@
       "lifecycle": "supported"
     },
     {
+      "id": "apps/lab/process_tree.py",
+      "invocation": "apps/lab/process_tree.py",
+      "kind": "internal module",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "apps/lab/test/test-process-tree.py",
+      "invocation": "apps/lab/test/test-process-tree.py",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
       "id": "apps/lab/night_jobs.py",
       "invocation": "apps/lab/night_jobs.py",
       "kind": "internal module",
