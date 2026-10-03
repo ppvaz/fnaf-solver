@@ -1,0 +1,143 @@
+# The refusal vocabulary and the REGION limits of cue-helper-control-v1,
+# held from both sides.
+#
+# A refused request is answered `ERROR <word>`, sometimes with ` key=value`
+# detail after it. The host passes the word through as the error's message
+# and acts on none of them, so what both sides must agree on is the set itself.
+#
+# ControlErrorsTest.java scans the Companion's sources for the three forms a
+# word reaches the wire in -- an `"ERROR <word>` literal, a refusal helper's
+# `return "<word>";` (NativeRegions.set, setTarget, AudioProbe.start,
+# Fnaf1Strip.apply), and a lesson parser's
+# `IllegalArgumentException("<word>")` sent as `"ERROR " + message` -- and the
+# words it finds must be exactly the `error:` and `capture-reason:` rows below.
+# A capture reason is not an error word: capturedContentInvalidReason's value,
+# carried as `reason=` or `capture=` detail. The `limit:` rows are
+# NativeRegions' MAX_REGIONS, MAX_TOTAL_SAMPLES and MAX_STEP.
+#
+# companion-errors.test.ts holds the host: its REGION_LIMITS must equal the
+# `limit:` rows, and every quoted `ERROR <word>` in Play's and the desktop's
+# code, tests and mocks -- the host's copies of what the Companion says --
+# must be an `error:` row.
+
+limit: regions 16
+limit: samples 8192
+limit: step 64
+
+capture-reason: aspect-mismatch
+capture-reason: content-hidden
+capture-reason: content-invariants-unavailable
+capture-reason: size-pending
+capture-reason: visibility-pending
+
+error: audio-no-projection
+error: audio-probe-busy
+error: audio-probe-scope
+error: audio-probe-seconds
+error: audio-probe-usage
+error: audio-record-permission
+error: audio-usage
+error: f1-origin-usage
+error: f1-side
+error: f1-side-usage
+error: f1-step-usage
+error: f1-usage
+error: f1strip-night
+error: f1strip-run
+error: f1strip-stage
+error: f1strip-usage
+error: f3-night-usage
+error: f3-origin-usage
+error: f3-step-usage
+error: f3-sys-usage
+error: f3-usage
+error: f4-bed-usage
+error: f4-closet-usage
+error: f4-cover-range
+error: f4-cover-usage
+error: f4-door-usage
+error: f4-fb-heard
+error: f4-fb-usage
+error: f4-level-range
+error: f4-level-usage
+error: f4-origin-usage
+error: f4-side
+error: f4-step-usage
+error: f4-usage
+error: frame-usage
+error: get-usage
+error: lease-label
+error: lease-usage
+error: legacy-inactive
+error: lesson-begin-usage
+error: lesson-bounds
+error: lesson-cams-under-mask
+error: lesson-drop-without-cams
+error: lesson-id
+error: lesson-incomplete
+error: lesson-mask-over-cams
+error: lesson-needs-opening-and-steady
+error: lesson-no-cycle-before-stop
+error: lesson-not-armed
+error: lesson-not-begun
+error: lesson-not-periodic
+error: lesson-null
+error: lesson-onset-mismatch
+error: lesson-onset-not-latched
+error: lesson-opening-after-steady
+error: lesson-opening-overlaps-cycle
+error: lesson-origin-range
+error: lesson-origin-usage
+error: lesson-row-camdrop
+error: lesson-row-cycle
+error: lesson-row-duplicate
+error: lesson-row-order
+error: lesson-row-usage
+error: lesson-row-verb
+error: lesson-steady-exceeds-period
+error: lesson-unmask-without-mask
+error: lesson-usage
+error: overlay-unavailable
+error: overlay-usage
+error: read-usage
+error: region-bounds
+error: region-count
+error: region-name
+error: region-native-resolution-required
+error: region-number
+error: region-samples
+error: region-set-usage
+error: region-step
+error: region-usage
+error: request-too-long
+error: snap-directory
+error: snap-encode
+error: snap-interrupted
+error: snap-native-resolution-required
+error: snap-no-frame
+error: snap-usage
+error: snap-write
+error: status-usage
+error: target-busy-trace
+error: target-not-installed
+error: target-unknown
+error: target-usage
+error: teach-capture-inactive
+error: teach-permission
+error: teach-release-build
+error: trace-already-active
+error: trace-directory
+error: trace-label
+error: trace-native-resolution-required
+error: trace-not-active
+error: trace-start-usage
+error: trace-status-usage
+error: trace-stop-usage
+error: trace-usage
+error: trace-write
+error: unauthorized
+error: unknown-verb
+error: watch-native-resolution-required
+error: watch-not-loaded
+error: watch-spec-mismatch
+error: watch-usage

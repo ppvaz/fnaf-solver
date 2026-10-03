@@ -1890,6 +1890,17 @@
       ]
     },
     {
+      "file": "packages/play/test/companion-errors.test.ts",
+      "imports": [
+        "../src/venues/phone/companion.ts",
+        "node:assert/strict",
+        "node:fs",
+        "node:path",
+        "node:test",
+        "node:url"
+      ]
+    },
+    {
       "file": "packages/play/test/companion-region-read.test.ts",
       "imports": [
         "../src/venues/phone/companion.ts",

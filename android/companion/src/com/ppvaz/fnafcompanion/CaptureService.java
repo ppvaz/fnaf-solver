@@ -530,8 +530,11 @@ public final class CaptureService extends Service {
         if (Build.VERSION.SDK_INT < 34) {
             return "content-invariants-unavailable";
         }
+        if (capturedContentVisibility == 0) {
+            return "content-hidden";
+        }
         if (capturedContentVisibility != 1) {
-            return capturedContentVisibility == 0 ? "content-hidden" : "visibility-pending";
+            return "visibility-pending";
         }
         int width = capturedContentWidth;
         int height = capturedContentHeight;

@@ -261,6 +261,13 @@
     {
       "id": "contract.cue-helper-control-v1",
       "kind": "CONTRACT",
+      "path": "packages/play/test/companion-errors.test.ts",
+      "line": 8,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.cue-helper-control-v1",
+      "kind": "CONTRACT",
       "path": "packages/play/test/companion-region-read.test.ts",
       "line": 6,
       "relation": "REFERENCES"

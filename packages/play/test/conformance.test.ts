@@ -23,7 +23,7 @@ assert.equal(lines.at(-1)?.report?.[1], 2, 'abort must emit a two-contact releas
 assert.deepEqual(parseCueResponse('OK snapshotNs=3 ageUs=17 monitorUp=true'),
   { snapshotNs: '3', ageUs: '17', monitorUp: 'true' });
 const cue = new CompanionControlTransport({ token: '0123456789abcdef0123456789abcdef', request: request =>
-  request.startsWith('GET ') ? 'OK snapshotNs=3 ageUs=17 monitorUp=true' : 'ERROR unsupported' });
+  request.startsWith('GET ') ? 'OK snapshotNs=3 ageUs=17 monitorUp=true' : 'ERROR unknown-verb' });
 assert.deepEqual(cue.monitorMeasurement(await cue.snapshot()),
   { signal: 'monitorUp', state: 'OBSERVED', value: true, confidence: 1 });
 assert.equal(cue.monitorMeasurement({ ageUs: '900000', monitorUp: 'true' }).state, 'UNKNOWN');
@@ -44,7 +44,7 @@ const runBody = runCells.map(cell => cell.toString(16).padStart(6, '0')).join(''
 const framed = new CompanionControlTransport({ token: '0123456789abcdef0123456789abcdef',
   request: request => request.startsWith('FRAME ')
     ? `OK snapshotNs=3 seq=42 ageUs=17 screen=FNAF2_NIGHT grid=20x9 cells=${runBody}`
-    : 'ERROR unsupported' });
+    : 'ERROR unknown-verb' });
 const oneRead = framed.frame();
 assert.equal(oneRead.cells.length, 180);
 assert.deepEqual([...oneRead.cells], runCells);

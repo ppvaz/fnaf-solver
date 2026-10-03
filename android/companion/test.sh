@@ -65,6 +65,8 @@ for test in "${TESTS[@]}"; do
     CompanionStatusTest) props=("-Dstatus.vector=$TESTDATA/companion-status-v1.txt") ;;
     NativeRegionsTest) props=("-Dregion.vector=$TESTDATA/companion-region-read-v1.txt") ;;
     SnapReplyTest) props=("-Dsnap.vector=$TESTDATA/companion-snap-v1.txt") ;;
+    ControlErrorsTest) props=("-Derrors.vector=$TESTDATA/companion-errors-v1.txt"
+                              "-Dcompanion.src=$HERE/src/com/ppvaz/fnafcompanion") ;;
     TargetsTest) props=("-Dtargets.model=$PROFILES/companion-targets-v1.json") ;;
     HidControlsTest) props=("-Dhid.bundle=$HERE/assets/runners/generated/minus-toys") ;;
     CycleLessonTest) props=("-Dteach.vector=$TESTDATA/teach-lesson-night7-k3.txt") ;;
