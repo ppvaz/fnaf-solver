@@ -26,7 +26,6 @@
 import { createHash } from 'node:crypto';
 import { access, copyFile, mkdir, readFile, stat, writeFile, appendFile } from 'node:fs/promises';
 import { constants as fsConstants } from 'node:fs';
-import { homedir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { performance } from 'node:perf_hooks';
@@ -34,7 +33,7 @@ import { AdbDeviceBridge } from '../../src/campaign/adb-bridge.ts';
 import { AdbHidProcess } from '../../src/campaign/physical-ports.ts';
 import { HidWireTransport } from '../../src/venues/phone/hid.ts';
 import { isList, isRecord } from '@sixam/kernel';
-import { resolveSerial } from '../../bin/phone/local-profile.ts';
+import { captureRoot, resolveSerial } from '../../bin/phone/local-profile.ts';
 import { onStopSignal, releaseContacts, runProcess as run } from '../../bin/phone/night-kit.ts';
 import { type TitleRead, titleConsensus, titleRead } from './fnaf1-menu-probe.ts';
 
@@ -568,7 +567,7 @@ async function startAudio(serial: string, id: string, record: RunRecord) {
   await record.event('audio-link', { code: link.code, state: linkState, output: `${link.stdout}${link.stderr}`.trim() });
   if (linkState === 'UNAVAILABLE')
     fail(`Bluetooth audio route is not connected: ${(link.stdout || link.stderr).trim().split('\n').at(-1)}`);
-  const base = join(homedir(), 'fnaf-apks', 'bt-audio-captures', id);
+  const base = captureRoot('bt-audio-captures', id);
   await mkdir(dirname(base), { recursive: true });
   const capture = await run('bash', [AUDIO_CAPTURE, '--start', base], { timeoutMs: 30000, env });
   await writeFile(join(record.outdir, 'bt-audio-start.txt'), `${capture.stdout}${capture.stderr}`);
@@ -672,7 +671,7 @@ async function main(argv: string[]) {
   try { ({ serial } = resolveSerial()); } catch (error) { fail((error as Error).message); }
   const id = `fnaf1-night${options.night}-${options.label ?? 'community-loop'}-${stamp()}`;
   const outdir = join(ROOT, 'artifacts', 'runs', id);
-  const captureDir = join(homedir(), 'fnaf-apks', 'fnaf1-device-runs', id);
+  const captureDir = captureRoot('fnaf1-device-runs', id);
   await Promise.all([mkdir(outdir, { recursive: true }), mkdir(captureDir, { recursive: true })]);
   const record = new RunRecord({ id, outdir, captureDir, options, bindings });
   await record.save('PREFLIGHT');

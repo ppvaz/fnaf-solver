@@ -35,7 +35,7 @@ BACK_TO = {"bed": "roomL", "doorL": "hub", "doorR": "hub", "closet": "hub"}
 
 
 def load(run):
-    cap = os.path.expanduser(f"~/fnaf-apks/fnaf4-device-runs/{run}")
+    cap = os.path.join(os.environ.get("FNAF_CAPTURE_ROOT") or os.path.expanduser("~/fnaf-apks"), "fnaf4-device-runs", run)
     art = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../../../artifacts/runs", run)
     frames, shapes = [], None
     for line in gzip.open(os.path.join(cap, "regions.ndjson.gz"), "rt"):

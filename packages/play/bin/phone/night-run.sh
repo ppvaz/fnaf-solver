@@ -812,7 +812,7 @@ fi
 # repository; the capture goes beside the other Bluetooth captures and the run
 # directory keeps its sidecar (host-clock stamps) and a pointer.
 if [ "$BT_AUDIO" = 1 ]; then
-  BT_AUDIO_BASE="$HOME/fnaf-apks/bt-audio-captures/$RUNID"
+  BT_AUDIO_BASE="${FNAF_CAPTURE_ROOT:-$HOME/fnaf-apks}/bt-audio-captures/$RUNID"
   mkdir -p "$(dirname "$BT_AUDIO_BASE")"
   # The link is not assumed up: after a host reboot the bond survives and the
   # transport does not. bt-audio-link.sh connects the A2DP profile from this

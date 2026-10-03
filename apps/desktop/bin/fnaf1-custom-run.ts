@@ -32,7 +32,7 @@
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { mkdir, readFile } from 'node:fs/promises';
-import { homedir, tmpdir } from 'node:os';
+import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { performance } from 'node:perf_hooks';
@@ -49,7 +49,7 @@ import type { DeviceFrame } from '../../../packages/play/games/fnaf1/fnaf1-detec
 import { listWinners, routeDrift } from '../../../packages/play/games/fnaf1/fnaf1-winner.ts';
 import { grid420, PHONE_OPTIONS } from '../../../packages/propose/bin/census/fnaf1-device-lane.ts';
 import type { DeviceAction, DevicePolicy, Frame, LaneContext, RouteWinner } from '../../../packages/propose/bin/census/fnaf1-device-lane.ts';
-import { resolveSerial } from '../../../packages/play/bin/phone/local-profile.ts';
+import { captureRoot, resolveSerial } from '../../../packages/play/bin/phone/local-profile.ts';
 import type { RegionRead } from '../../../packages/play/bin/phone/night-kit.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -432,7 +432,7 @@ async function main(argv: string[]) {
 
   const id = `fnaf1-custom-${options.mode}-${options.label ?? 'run'}-${stamp()}`;
   const outdir = join(ROOT, 'artifacts', 'runs', id);
-  const captureDir = join(homedir(), 'fnaf-apks', 'fnaf1-device-runs', id);
+  const captureDir = captureRoot('fnaf1-device-runs', id);
   await Promise.all([mkdir(outdir, { recursive: true }), mkdir(captureDir, { recursive: true })]);
   const record = new ProbeRecord({ id, outdir, captureDir, options, bindings });
   const doc: typeof record.document & RunFields = record.document;
@@ -533,7 +533,7 @@ async function main(argv: string[]) {
     }
     if (video) {
       try {
-        const dir = join(homedir(), 'fnaf-apks', 'fnaf1-videos');
+        const dir = captureRoot('fnaf1-videos');
         await mkdir(dir, { recursive: true });
         doc.video = await video.stop(dir);
       } catch (e) { doc.video = `FAILED: ${(e as Error).message}`; }

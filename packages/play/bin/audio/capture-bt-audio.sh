@@ -53,7 +53,7 @@ elif [ "${1:-}" = "--stop" ]; then
   BASE=${2:?usage: capture-bt-audio.sh --stop OUT_BASENAME}
 else
   SECS=${1:?usage: capture-bt-audio.sh <seconds> [outdir] [bt-mac]}
-  OUT=${2:-$HOME/fnaf-apks/bt-audio-captures}
+  OUT=${2:-${FNAF_CAPTURE_ROOT:-$HOME/fnaf-apks}/bt-audio-captures}
   MAC=${3:-}
   case "$SECS" in *[!0-9]*) echo "seconds must be a whole number" >&2; exit 2 ;; esac
 fi

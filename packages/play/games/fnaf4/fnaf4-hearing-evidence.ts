@@ -17,11 +17,11 @@
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
-import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { type CueEvent, type Grid, type Hearing, type Onset, HEARING_PATH, hasOnset, loadHearing, sideGrid, laughGrid, landings, laughs, shadowOf }
   from './fnaf4-fredbear.ts';
+import { captureRoot } from '../../bin/phone/local-profile.ts';
 
 /** An events.jsonl row; an input row names its control and both host clocks. */
 interface RunEvent {
@@ -243,7 +243,7 @@ function main(argv: string[]) {
   const runDir = join(o.artifacts, o.run);
   const runJson: RunJson = JSON.parse(readFileSync(join(runDir, 'run.json'), 'utf8'));
   const events = jsonl<RunEvent>(join(runDir, 'events.jsonl'));
-  const cap = runJson.capture?.directory ?? join(homedir(), 'fnaf-apks', 'fnaf4-device-runs', o.run);
+  const cap = runJson.capture?.directory ?? captureRoot('fnaf4-device-runs', o.run);
   const cuesPath = o.cues ?? join(cap, 'cues.jsonl');
   const cueEvents = jsonl<CueRow>(cuesPath);
   const hearing = loadHearing();

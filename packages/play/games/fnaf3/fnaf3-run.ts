@@ -17,7 +17,7 @@
 import { createHash } from 'node:crypto';
 import { mkdir, readFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
-import { homedir, tmpdir } from 'node:os';
+import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { performance } from 'node:perf_hooks';
@@ -29,7 +29,7 @@ import {
 } from '../../bin/phone/night-kit.ts';
 import { Reader, type StoredPair, boxLuma, loadPairs, medianLuma, occupancy, stateScore } from './fnaf3-detectors.ts';
 import { isList, isRecord } from '@sixam/kernel';
-import { resolveSerial } from '../../bin/phone/local-profile.ts';
+import { captureRoot, resolveSerial } from '../../bin/phone/local-profile.ts';
 
 /** The measured FNaF 3 control map, with the pans' hold times. */
 type Controls = Readonly<Record<string, Point>> & { readonly panLeft: Point & { readonly holdMs: number },
@@ -848,7 +848,7 @@ async function main(argv: string[]) {
 
   const id = `fnaf3-${options.mode}-${options.label ?? 'run'}-${stamp()}`;
   const outdir = join(ROOT, 'artifacts', 'runs', id);
-  const captureDir = join(homedir(), 'fnaf-apks', 'fnaf3-device-runs', id);
+  const captureDir = captureRoot('fnaf3-device-runs', id);
   await Promise.all([mkdir(outdir, { recursive: true }), mkdir(captureDir, { recursive: true })]);
   const record = new RunRecord({ schema: 'fnaf3-run-v1', pkg: PACKAGE, id, outdir, captureDir, options, bindings,
     claimLevel: 'DEVICE_MEASURED helper native frames and regions; no detector or route is promoted by this record',
@@ -946,7 +946,7 @@ async function main(argv: string[]) {
     }
     if (video) {
       try {
-        const dir = join(homedir(), 'fnaf-apks', 'fnaf3-videos');
+        const dir = captureRoot('fnaf3-videos');
         await mkdir(dir, { recursive: true });
         record.document.video = await video.stop(dir);
       } catch (e) { record.document.video = `FAILED: ${(e as Error).message}`; }

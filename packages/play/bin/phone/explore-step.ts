@@ -23,13 +23,12 @@
 import { appendFile, mkdir, readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
-import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { performance } from 'node:perf_hooks';
 import { AdbCompanionPort, AdbHidProcess } from '../../src/campaign/physical-ports.ts';
 import { HidWireTransport } from '../../src/venues/phone/hid.ts';
-import { resolveSerial } from './local-profile.ts';
+import { captureRoot, resolveSerial } from './local-profile.ts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../../..');
 let SERIAL: string;                 // FNAF_SERIAL, else the local profile: resolved under the lease below
@@ -56,7 +55,7 @@ const [verb, ...args] = rest;
 // operator's explicit --confirm-live on top of the lease; a snap only reads.
 if (verb !== 'snap' && !confirmLive) fail(`${verb} touches the phone: pass --confirm-live`);
 const outdir = join(ROOT, 'artifacts', 'runs', session);
-const framedir = join(homedir(), 'fnaf-apks', 'explore', session);
+const framedir = captureRoot('explore', session);
 await mkdir(outdir, { recursive: true });
 await mkdir(framedir, { recursive: true });
 const event = async (type: string, fields: object) => appendFile(join(outdir, 'events.jsonl'),

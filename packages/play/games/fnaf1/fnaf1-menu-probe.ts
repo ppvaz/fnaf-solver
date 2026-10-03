@@ -49,14 +49,13 @@
 import { createHash } from 'node:crypto';
 import { access, appendFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { constants as fsConstants } from 'node:fs';
-import { homedir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { performance } from 'node:perf_hooks';
 import { AdbDeviceBridge } from '../../src/campaign/adb-bridge.ts';
 import { AdbHidProcess } from '../../src/campaign/physical-ports.ts';
 import { HidWireTransport } from '../../src/venues/phone/hid.ts';
-import { resolveSerial } from '../../bin/phone/local-profile.ts';
+import { captureRoot, resolveSerial } from '../../bin/phone/local-profile.ts';
 import { runProcess as run } from '../../bin/phone/night-kit.ts';
 import { isList } from '@sixam/kernel';
 
@@ -545,7 +544,7 @@ async function main(argv: string[]) {
   const mode = options.sweep ? '-sweep' : options.set ? '-set' : '';
   const id = `fnaf1-menu-${options.stage}${mode}-${options.label ?? 'probe'}-${stamp()}`;
   const outdir = join(ROOT, 'artifacts', 'runs', id);
-  const captureDir = join(homedir(), 'fnaf-apks', 'fnaf1-device-runs', id);
+  const captureDir = captureRoot('fnaf1-device-runs', id);
   await Promise.all([mkdir(outdir, { recursive: true }), mkdir(captureDir, { recursive: true })]);
   const record = new ProbeRecord({ id, outdir, captureDir, options, bindings });
   await record.save('PREFLIGHT');

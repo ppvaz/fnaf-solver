@@ -26,6 +26,7 @@
  * frozen set and its allowlist.
  */
 import { existsSync, lstatSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { isRecord } from '@sixam/kernel';
@@ -40,6 +41,15 @@ export const PROFILE_PATH = 'tools/device/local-profile.json';
 export const SERIAL_TOKEN = /^[A-Za-z0-9._:-]{1,96}$/;
 export const HOW_TO = 'set FNAF_SERIAL=<serial> for this command, or write the untracked local profile once per host: '
   + `node packages/play/bin/phone/local-profile.ts set <serial> (\`adb devices -l\` lists it; ${PROFILE_PATH} is gitignored, never commit it)`;
+
+/**
+ * Where this host keeps what never enters the repository (game frames, recordings, audio): FNAF_CAPTURE_ROOT, else
+ * ~/fnaf-apks. `parts` name a directory under it.
+ */
+export function captureRoot(...parts: string[]) {
+  const root = process.env.FNAF_CAPTURE_ROOT ? resolve(process.env.FNAF_CAPTURE_ROOT) : join(homedir(), 'fnaf-apks');
+  return join(root, ...parts);
+}
 
 /** A device detail the profile should hold is not set: the caller refuses with this message. */
 export class ProfileUnset extends Error {}

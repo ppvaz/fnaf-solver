@@ -914,7 +914,6 @@
         "node:child_process",
         "node:fs",
         "node:fs/promises",
-        "node:os",
         "node:path",
         "node:perf_hooks",
         "node:url"
@@ -932,6 +931,7 @@
       "imports": [
         "@sixam/kernel",
         "node:fs",
+        "node:os",
         "node:path",
         "node:url"
       ]
@@ -1149,7 +1149,6 @@
         "node:crypto",
         "node:fs",
         "node:fs/promises",
-        "node:os",
         "node:path",
         "node:perf_hooks",
         "node:url"
@@ -1168,7 +1167,6 @@
         "node:crypto",
         "node:fs",
         "node:fs/promises",
-        "node:os",
         "node:path",
         "node:perf_hooks",
         "node:url"
@@ -1268,10 +1266,10 @@
     {
       "file": "packages/play/games/fnaf4/fnaf4-hearing-evidence.ts",
       "imports": [
+        "../../bin/phone/local-profile.ts",
         "./fnaf4-fredbear.ts",
         "node:crypto",
         "node:fs",
-        "node:os",
         "node:path",
         "node:url",
         "node:zlib"
