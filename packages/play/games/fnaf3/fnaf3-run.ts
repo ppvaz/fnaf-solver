@@ -23,7 +23,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { performance } from 'node:perf_hooks';
 import { AdbCompanionPort, AdbHidProcess } from '../../src/campaign/physical-ports.ts';
 import { HidWireTransport } from '../../src/venues/phone/hid.ts';
-import { loadRegionSet, registerSet } from '../../bin/phone/native-regions.ts';
+import { loadRegionSet, regionOpener } from '../../bin/phone/native-regions.ts';
 import { Actor, type Point, type RegionRead, RegionRecorder, RunRecord, onStopSignal, startVideo } from '../../bin/phone/night-kit.ts';
 import { Reader, type StoredPair, boxLuma, loadPairs, medianLuma, occupancy, stateScore } from './fnaf3-detectors.ts';
 import { resolveSerial } from '../../bin/phone/local-profile.ts';
@@ -832,7 +832,7 @@ async function main(argv: string[]) {
     await record.event('snap-ms', { name, ms: Math.round(performance.now() - at) });
   };
   let hidProcess = null as AdbHidProcess | null; let recorder = null as RegionRecorder | null;
-  let channel = null as ReturnType<AdbCompanionPort['openRegions']> | null; let entered = false; let error = null as Error | null;
+  let entered = false; let error = null as Error | null;
   let video = null as ReturnType<typeof startVideo> | null;
   try {
     await snapTo('title-before');
@@ -841,10 +841,9 @@ async function main(argv: string[]) {
     const hid = new HidWireTransport({ write: (l) => adbHid.write(l), ready: () => adbHid.ready(), contactMs: CONTACT_MS });
     await hid.start();
     const act = new Actor(hid, record, CONTACT_MS);
-    channel = port.openRegions({ timeoutMs: 1500 });
-    await registerSet(channel, regionModel.set);
-    recorder = new RegionRecorder(channel, join(captureDir, 'regions.ndjson.gz'));
-    recorder.start();
+    recorder = new RegionRecorder(regionOpener(serial, regionModel.set, { port }), join(captureDir, 'regions.ndjson.gz'),
+      { onReopen: (row) => { record.event('regions-reopened', { ...row }).catch(() => {}); } });
+    await recorder.start();
     const eyes = new Eyes(recorder, reader);
     await sleep(500);
     const t = eyes.now();
@@ -901,10 +900,9 @@ async function main(argv: string[]) {
     try { await hidProcess?.close(); } catch { /* the lease bounds cleanup */ }
     if (recorder) {
       await recorder.stop();
-      record.document.regions = { frames: recorder.frames, errors: recorder.errors, path: join(captureDir, 'regions.ndjson.gz') };
+      record.document.regions = { frames: recorder.frames, reopened: recorder.reopened, failure: recorder.failure,
+        path: join(captureDir, 'regions.ndjson.gz') };
     }
-    try { await channel?.clear(); } catch { /* the helper drops regions with its session */ }
-    channel?.close();
     if (video) {
       try {
         const dir = join(homedir(), 'fnaf-apks', 'fnaf3-videos');

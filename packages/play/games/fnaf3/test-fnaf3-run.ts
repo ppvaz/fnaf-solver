@@ -1,13 +1,18 @@
 #!/usr/bin/env node
 // The FNaF 3 runner's refusals, its template-free readers on synthetic
-// frames, its search order along Springtrap's source edges, and the
-// occupancy score's two jobs: static alone stays low, a figure does not.
-import { readFileSync } from 'node:fs';
+// frames, its search order along Springtrap's source edges, the
+// occupancy score's two jobs: static alone stays low, a figure does not,
+// and the region recorder it reads its night through (night-kit.ts), across
+// the ways a night took the CLI's recorder on 2026-10-01.
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { gunzipSync } from 'node:zlib';
 import { parseArgs, searchOrder, NEXT, VENT_OF, SystemsClock, chooseReboot, teachFeed, raiseMonitor } from './fnaf3-run.ts';
 import { FEED, PICTURE_MASK, Reader, boxSamples, medianLuma, occupancy, decodePng, sampleBlocks, boxLuma, stateScore, IMAGE_GEOMETRY, CAMERA_FRAMES } from './fnaf3-detectors.ts';
 import { pngFromRegion } from '../../bin/phone/native-regions.ts';
 import type { AdbCompanionPort } from '../../src/campaign/physical-ports.ts';
-import type { RunRecord } from '../../bin/phone/night-kit.ts';
+import { RegionRecorder, type RegionRead, type RunRecord } from '../../bin/phone/night-kit.ts';
 
 const failures: string[] = [];
 let checks = 0;
@@ -230,6 +235,77 @@ ok('cams 8, 6, 4 and 3 lead into no vent', [8, 6, 4, 3].every((n) => NEXT[n].eve
   presses.length = 0; label = 4;
   await raiseMonitor(fakeOf<Hands>({ act, c: controls, eyes, reader: fake }));
   ok('a raised monitor is left alone', presses.length === 0);
+}
+
+// --- the region recorder crosses a still intro and a capture restart -----------------------
+/**
+ * A simulated helper on a fake clock: a session copies frame k at 33 ms intervals once the screen moves, or
+ * nothing while it is still; a capture restart at `restartAt` replaces the session (new endpoint, seq from 1) and
+ * leaves an old channel reading its last frame. The run ends when the clock passes `endAt`.
+ */
+async function recorderRun({ endAt = 10000, stillUntil = 0, restartAt = Infinity, freshFails = false }) {
+  let clock = 0;
+  const now = () => clock;
+  const pixels = new Uint32Array([0x808080]);
+  const sessionAt = (t: number) => (t >= restartAt ? 1 : 0);
+  let endpoint = 0;
+  const calls = { cached: 0, fresh: 0, closed: 0, cleared: 0 };
+  let recorder = null as RegionRecorder | null;
+  const channelOn = (session: number) => {
+    let lastSeq = -1;
+    return {
+      read: async () => {
+        clock += 15;
+        if (clock > endAt) void recorder?.stop();
+        const live = sessionAt(clock) === session;
+        if (live) {
+          const start = session === 0 ? stillUntil : restartAt;
+          lastSeq = clock < start ? -1 : Math.floor((clock - start) / 33) + 1;
+        }
+        return { seq: lastSeq, imageNs: BigInt(Math.round(clock * 1e6)), imageHostMs: clock, rttMs: 15,
+          regions: { v: { cols: 1, rows: 1, step: 1, pixels } } } as unknown as RegionRead;
+      },
+      close: () => { calls.closed += 1; },
+      clear: async () => { calls.cleared += 1; },
+    };
+  };
+  const open = async (fresh: boolean) => {
+    clock += 200;
+    if (fresh) { calls.fresh += 1; if (freshFails) throw new Error('Companion endpoint: no READY or DEGRADED endpoint'); endpoint = sessionAt(clock); }
+    else { calls.cached += 1; if (endpoint !== sessionAt(clock)) throw new Error('Companion exchange timed out'); }
+    return channelOn(endpoint);
+  };
+  const dir = mkdtempSync(join(tmpdir(), 'night-kit-'));
+  const reopens: number[] = [];
+  try {
+    recorder = new RegionRecorder(open, join(dir, 'regions.ndjson.gz'), { now, onReopen: (row) => { reopens.push(row.reopened); } });
+    const seen: number[] = [];
+    recorder.onFrame((r) => { seen.push(r.imageHostMs as number); });
+    await recorder.start();
+    await recorder.loop;
+    await recorder.stop();
+    const rows = gunzipSync(readFileSync(join(dir, 'regions.ndjson.gz'))).toString('utf8').trim().split('\n').filter(Boolean)
+      .map((line) => JSON.parse(line) as { seq: number, imageHostMs: number });
+    return { recorder, seen, rows, calls, reopens };
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+}
+
+{
+  // night7-k3-sr01: capture restarts 2 s in; the old channel repeats its last frame and its endpoint is gone.
+  const restart = await recorderRun({ restartAt: 2000 });
+  const after = restart.seen.filter((t) => t > 5000).length;
+  ok(`a capture restart is crossed: frames after it are recorded (${after})`, after > 100);
+  ok('the stopped session is reached by rediscovery after the cached endpoint fails', restart.calls.fresh >= 1);
+  ok('each reopen is reported', restart.reopens.length === restart.recorder.reopened && restart.recorder.reopened >= 1);
+  ok('the file holds only frame rows', restart.rows.every((row) => typeof row.seq === 'number' && row.seq >= 1));
+  ok('stop clears and closes the live channel', restart.calls.cleared === 1 && restart.calls.closed >= 1);
+  // night7-k3-sr02: a still intro card is waited through on the cached endpoint.
+  const still = await recorderRun({ stillUntil: 5000 });
+  ok(`a still intro does not end the recording (${still.seen.length} frames)`, still.seen.length > 100 && still.calls.fresh === 0);
+  // Both ways failing ends the recorder and says so, instead of reading a dead channel forever.
+  const dead = await recorderRun({ restartAt: 2000, freshFails: true });
+  ok(`a restart with no reachable endpoint is a named failure (${dead.recorder.failure})`,
+    /could not be reopened/.test(dead.recorder.failure ?? ''));
 }
 
 if (failures.length) {

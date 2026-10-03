@@ -2,10 +2,11 @@
  * What every night runner on the handset shares: the native-region recorder
  * and the demonstration video. Game rules stay in each game's runner.
  */
-import { createWriteStream, existsSync } from 'node:fs';
+import { type WriteStream, createWriteStream, existsSync } from 'node:fs';
 import { appendFile, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { type ChildProcess, spawn, execFileSync } from 'node:child_process';
+import { finished } from 'node:stream/promises';
 import { type Gzip, createGzip } from 'node:zlib';
 import { join } from 'node:path';
 import { performance } from 'node:perf_hooks';
@@ -160,54 +161,139 @@ export class Actor {
   }
 }
 
-/** Every distinct native-region frame, gzipped NDJSON, stamped on the host clock. */
+/** What a region reader reads and gives up; a recorder's channel also clears its regions. */
+interface ReadChannel { read(): Promise<RegionRead>, close(): void }
+type RecorderChannel = Pick<RegionChannel, 'read' | 'clear' | 'close'>;
+/** One reopen of a stalled or dead channel, on the host clock. */
+export interface RegionReopen { readonly reopened: number, readonly afterSeq: number, readonly atHostMs: number }
+// How long a reader waits without a new frame before reopening its channel.
+export const REGION_STALL_MS = 3000;
+
+/**
+ * Distinct native-region frames from a channel that reopens itself. `open(fresh)` registers the set on a new
+ * channel; `fresh` rediscovers the helper's endpoint.
+ *
+ * Three ways a night took the recorder on 2026-10-01, each held here:
+ *   - a still screen copies no frame (the intro card: seq -1, then the same seq): it waits, reopening through the
+ *     cached endpoint after REGION_STALL_MS without a new frame (night7-k3-sr02 gave up within a second);
+ *   - a capture restart leaves the channel on a stopped session whose last frame never changes and whose endpoint
+ *     is gone: the cached reopen fails, and a fresh one reaches the new session (night7-k3-sr01 kept two frames);
+ *   - rediscovery can fail mid-night (the endpoint's logcat line rotates out), so it is tried only after the cached
+ *     endpoint fails (night7-k3-sr03 lost the recorder rediscovering through a still intro).
+ * A read the session no longer answers forces a reopen; a reopen that fails both ways throws.
+ */
+export class RegionStream<C extends ReadChannel> {
+  declare channel: C;
+  declare open: (fresh: boolean) => Promise<C>;
+  declare now: () => number;
+  declare stallMs: number;
+  declare last: number;
+  declare reopened: number;
+  declare advancedAt: number;
+  constructor(channel: C, open: (fresh: boolean) => Promise<C>, { now = () => performance.now(), stallMs = REGION_STALL_MS }:
+    { now?: () => number, stallMs?: number } = {}) {
+    this.channel = channel; this.open = open; this.now = now; this.stallMs = stallMs;
+    this.last = -1; this.reopened = 0; this.advancedAt = now();
+  }
+  /** The next distinct frame, the reopen that replaced a stalled channel, or null once `done()` holds. */
+  async next(done: () => boolean): Promise<{ frame: RegionRead } | { reopen: RegionReopen } | null> {
+    while (!done()) {
+      if (this.now() - this.advancedAt > this.stallMs) {
+        try { this.channel.close(); } catch { /* the stopped session may already be gone */ }
+        let next: C;
+        try { next = await this.open(false); }
+        catch {
+          try { next = await this.open(true); }
+          catch (error) { throw new Error(`frames stopped at seq ${this.last} and the channel could not be reopened: ${(error as Error).message}`); }
+        }
+        this.channel = next; this.reopened += 1; this.advancedAt = this.now();
+        return { reopen: { reopened: this.reopened, afterSeq: this.last, atHostMs: this.now() } };
+      }
+      let r: RegionRead;
+      try { r = await this.channel.read(); }
+      catch { this.advancedAt = -Infinity; continue; }   // a read the session no longer answers: reopen now
+      if (r.seq < 0 || r.seq === this.last) continue;
+      this.last = r.seq; this.advancedAt = this.now();
+      return { frame: r };
+    }
+    return null;
+  }
+}
+
+/**
+ * Every distinct native-region frame, gzipped NDJSON, stamped on the host clock, through a RegionStream: a still
+ * screen, a capture restart and a dead read reopen the channel instead of reading it forever. A reopen that fails
+ * both ways ends the recorder and names itself in `failure`.
+ */
 export class RegionRecorder {
-  declare channel: Pick<RegionChannel, 'read'>;
+  declare open: (fresh: boolean) => Promise<RecorderChannel>;
   declare path: string;
+  declare now: () => number;
+  declare onReopen: (row: RegionReopen) => void;
+  declare stream: RegionStream<RecorderChannel> | null;
   declare running: boolean;
   declare frames: number;
-  declare errors: number;
+  declare reopened: number;
+  declare failure: string | null;
   declare gzip: Gzip;
-  declare last: number;
+  declare file: WriteStream;
   declare latest: RegionRead | null;
   declare listeners: Set<(read: RegionRead) => void>;
   declare loop: Promise<void>;
-  constructor(channel: Pick<RegionChannel, 'read'>, path: string) {
-    this.channel = channel; this.path = path; this.running = false; this.frames = 0; this.errors = 0;
-    this.gzip = createGzip(); this.gzip.pipe(createWriteStream(path));
-    this.last = -1; this.latest = null;
+  declare stopping: Promise<void> | null;
+  constructor(open: (fresh: boolean) => Promise<RecorderChannel>, path: string,
+    { now = () => performance.now(), onReopen = () => {} }: { now?: () => number, onReopen?: (row: RegionReopen) => void } = {}) {
+    this.open = open; this.path = path; this.now = now; this.onReopen = onReopen;
+    this.stream = null; this.running = false; this.frames = 0; this.reopened = 0; this.failure = null;
+    this.gzip = createGzip(); this.file = createWriteStream(path); this.gzip.pipe(this.file);
+    this.latest = null;
     this.listeners = new Set();
+    this.loop = Promise.resolve();
+    this.stopping = null;
   }
+  /** The channel the recorder reads now: a reopen replaces the one it was started on. */
+  get channel() { return this.stream?.channel ?? null; }
   /** Called with each new frame, in order, before the next read. */
   onFrame(fn: (read: RegionRead) => void) { this.listeners.add(fn); return () => this.listeners.delete(fn); }
-  start() {
+  /** Open the first channel through the cached endpoint and start reading. */
+  async start() {
+    const stream = new RegionStream(await this.open(false), this.open, { now: this.now });
+    this.stream = stream;
     this.running = true;
     this.loop = (async () => {
       while (this.running) {
-        try {
-          const r = await this.channel.read();
-          if (r.seq < 0 || r.seq === this.last) continue;
-          this.last = r.seq;
-          this.latest = r;
-          const regions = Object.fromEntries(Object.entries(r.regions).map(([k, v]) =>
-            [k, Buffer.from(new Uint8Array(v.pixels.buffer)).toString('base64')]));
-          // null adds as 0, as it did untyped.
-          this.gzip.write(`${JSON.stringify({ seq: r.seq, imageHostMs: r.imageHostMs,
-            imageWallMs: performance.timeOrigin + (r.imageHostMs as number), sentAt: r.sentAt,
-            receivedAt: r.receivedAt, regions })}\n`);
-          this.frames += 1;
-          for (const fn of this.listeners) fn(r);
-        } catch {
-          this.errors += 1;
-          await sleep(20);
-        }
+        let next: Awaited<ReturnType<typeof stream.next>>;
+        try { next = await stream.next(() => !this.running); }
+        catch (error) { this.failure = (error as Error).message; this.running = false; break; }
+        if (next === null) break;
+        if ('reopen' in next) { this.reopened = next.reopen.reopened; this.onReopen(next.reopen); continue; }
+        const r = next.frame;
+        this.latest = r;
+        const regions = Object.fromEntries(Object.entries(r.regions).map(([k, v]) =>
+          [k, Buffer.from(new Uint8Array(v.pixels.buffer)).toString('base64')]));
+        // null adds as 0, as it did untyped.
+        this.gzip.write(`${JSON.stringify({ seq: r.seq, imageHostMs: r.imageHostMs,
+          imageWallMs: performance.timeOrigin + (r.imageHostMs as number), sentAt: r.sentAt,
+          receivedAt: r.receivedAt, regions })}\n`);
+        this.frames += 1;
+        for (const fn of this.listeners) fn(r);
       }
     })();
   }
-  async stop() {
-    this.running = false;
-    await this.loop;
-    await new Promise<void>((r) => this.gzip.end(r));
+  /** Stop reading, finish the file, and clear and close the live channel; every call waits for the one stop. */
+  stop() {
+    this.stopping ??= (async () => {
+      this.running = false;
+      await this.loop;
+      this.gzip.end();
+      await finished(this.file);
+      const channel = this.channel;
+      this.stream = null;
+      if (!channel) return;
+      try { await channel.clear(); } catch { /* the helper drops regions with its session */ }
+      channel.close();
+    })();
+    return this.stopping;
   }
 }
 

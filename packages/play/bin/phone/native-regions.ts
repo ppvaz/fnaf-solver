@@ -24,11 +24,11 @@ import { join } from 'node:path';
 import { deflateSync } from 'node:zlib';
 import { AdbCompanionPort } from '../../src/campaign/physical-ports.ts';
 import { resolveSerial } from './local-profile.ts';
+import { REGION_STALL_MS, RegionStream } from './night-kit.ts';
 
 /** A registered rectangle of native display pixels, sampled every `step`. */
 interface Rect { readonly x: number, readonly y: number, readonly width: number, readonly height: number, readonly step?: number }
 type RegionChannel = ReturnType<AdbCompanionPort['openRegions']>;
-type RegionRead = Awaited<ReturnType<RegionChannel['read']>>;
 /** What `record` needs of a channel. */
 type RecordChannel = Pick<RegionChannel, 'read' | 'close'>;
 
@@ -84,54 +84,44 @@ export function pngFromRegion(region: { readonly cols: number, readonly rows: nu
 }
 
 const quantile = (sorted: number[], q: number) => sorted[Math.min(sorted.length - 1, Math.floor(q * sorted.length))];
-// How long `record` waits without a new frame before reopening its channel.
-const RECORD_STALL_MS = 3000;
+
+/**
+ * Open a region channel with `set` registered on it: through the port's cached endpoint, or with `fresh` on a new
+ * port that rediscovers the helper's endpoint (a capture restart leaves the cached one gone).
+ */
+export function regionOpener(serial: string, set: Readonly<Record<string, Rect>>,
+  { port = new AdbCompanionPort({ serial }), timeoutMs = 1500 }: { port?: AdbCompanionPort, timeoutMs?: number } = {}) {
+  let current = port;
+  return async (fresh: boolean) => {
+    if (fresh) current = new AdbCompanionPort({ serial });
+    const opened = current.openRegions({ timeoutMs });
+    try { await registerSet(opened, set); } catch (error) { opened.close(); throw error; }
+    return opened;
+  };
+}
 
 /**
  * Record every distinct copied frame for `seconds`, appending one row per frame (its pixels as base64 0xRRGGBB words,
  * its image clock) and one row per reopen. `open(fresh)` registers the set on a channel and returns
- * `{opened, read}`; `fresh` rediscovers the helper's endpoint.
- *
- * Three ways a night took the recorder on 2026-10-01, each held here:
- *   - a still screen copies no frame (the intro card: seq -1, then the same seq): it waits, reopening through the
- *     cached endpoint after RECORD_STALL_MS without a new frame (night7-k3-sr02 gave up within a second);
- *   - a capture restart leaves the channel on a stopped session whose last frame never changes and whose endpoint
- *     is gone: the cached reopen fails, and a fresh one reaches the new session (night7-k3-sr01 kept two frames);
- *   - rediscovery can fail mid-night (the endpoint's logcat line rotates out), so it is tried only after the cached
- *     endpoint fails (night7-k3-sr03 lost the recorder rediscovering through a still intro).
- * A read the session no longer answers forces a reopen; a reopen that fails both ways throws.
+ * `{opened, read}`; the channel reopens itself the ways RegionStream holds (night-kit.ts), and a reopen that fails
+ * both ways throws.
  */
-export async function recordFrames<C extends RecordChannel>({ open, seconds, append, now = () => performance.now(), stallMs = RECORD_STALL_MS }:
+export async function recordFrames<C extends RecordChannel>({ open, seconds, append, now = () => performance.now(), stallMs = REGION_STALL_MS }:
   { open: (fresh: boolean) => Promise<{ opened: C }>, seconds: number, append: (row: object) => void, now?: () => number,
     stallMs?: number }) {
-  let channel = (await open(false)).opened;
+  const stream = new RegionStream((await open(false)).opened, async (fresh) => (await open(fresh)).opened, { now, stallMs });
   const until = now() + seconds * 1000;
-  let last = -1; let rows = 0; let reopened = 0;
-  let advancedAt = now();
-  while (now() < until) {
-    if (now() - advancedAt > stallMs) {
-      try { channel.close(); } catch { /* the stopped session may already be gone */ }
-      let next: { opened: C };
-      try { next = await open(false); }
-      catch {
-        try { next = await open(true); }
-        catch (error) { throw new Error(`frames stopped at seq ${last} and the channel could not be reopened: ${(error as Error).message}`); }
-      }
-      channel = next.opened; reopened += 1; advancedAt = now();
-      append({ reopened, afterSeq: last, atHostMs: now() });
-      continue;
-    }
-    let r: RegionRead;
-    try { r = await channel.read(); }
-    catch { advancedAt = -Infinity; continue; }   // a read the session no longer answers: reopen now
-    if (r.seq < 0 || r.seq === last) continue;
-    last = r.seq; advancedAt = now();
+  const done = () => now() >= until;
+  let rows = 0;
+  for (let next = await stream.next(done); next; next = await stream.next(done)) {
+    if ('reopen' in next) { append(next.reopen); continue; }
+    const r = next.frame;
     const regions = Object.fromEntries(Object.entries(r.regions).map(([k, v]) =>
       [k, { cols: v.cols, rows: v.rows, step: v.step, hex: Buffer.from(new Uint8Array(v.pixels.buffer)).toString('base64') }]));
     append({ seq: r.seq, imageNs: r.imageNs === null ? null : String(r.imageNs), imageHostMs: r.imageHostMs, rttMs: r.rttMs, regions });
     rows += 1;
   }
-  return { rows, reopened, channel };
+  return { rows, reopened: stream.reopened, channel: stream.channel };
 }
 
 async function main(argv: string[]) {
@@ -157,11 +147,9 @@ async function main(argv: string[]) {
   // A channel on this port reuses its cached endpoint. `fresh` rediscovers it, which a capture restart needs (the
   // stopped session's endpoint is gone) and which a long night can fail (its logcat line rotates out: 2026-10-01,
   // night7-k3-sr03 lost its recorder that way while merely waiting through the intro card).
-  let port = new AdbCompanionPort({ serial });
+  const openSet = regionOpener(serial, set);
   const open = async (fresh = false) => {
-    if (fresh) port = new AdbCompanionPort({ serial });
-    const opened = port.openRegions({ timeoutMs: 1500 });
-    await registerSet(opened, set);
+    const opened = await openSet(fresh);
     // The first read after registration is seq -1 until a frame is copied.
     let read = await opened.read();
     for (let i = 0; i < 50 && read.seq < 0; i += 1) read = await opened.read();
@@ -206,7 +194,7 @@ async function main(argv: string[]) {
         done = await recordFrames({ open, seconds: opt.seconds, append: (row) => appendFileSync(out, `${JSON.stringify(row)}\n`) });
       } catch (error) { fail((error as Error).message); }
       channel = done.channel;
-      console.log(`recorded ${done.rows} frames to ${opt.out} (${done.reopened} reopen(s) after ${RECORD_STALL_MS} ms without a frame)`);
+      console.log(`recorded ${done.rows} frames to ${opt.out} (${done.reopened} reopen(s) after ${REGION_STALL_MS} ms without a frame)`);
     }
   } finally {
     try { await channel.clear(); } catch { /* the helper drops regions with its session */ }

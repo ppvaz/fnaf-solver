@@ -25,7 +25,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { performance } from 'node:perf_hooks';
 import { AdbCompanionPort, AdbHidProcess } from '../../src/campaign/physical-ports.ts';
 import { HidWireTransport } from '../../src/venues/phone/hid.ts';
-import { loadRegionSet, registerSet } from '../../bin/phone/native-regions.ts';
+import { loadRegionSet, regionOpener } from '../../bin/phone/native-regions.ts';
 import {
   Actor, type Point, type RegionRead, RegionRecorder, RunRecord, interruptibleSleep, onStopSignal, startVideo,
 } from '../../bin/phone/night-kit.ts';
@@ -1058,7 +1058,7 @@ async function main(argv: string[]) {
     await record.capture(name, await readFile(target));
   };
   let hidProcess = null as AdbHidProcess | null; let recorder = null as RegionRecorder | null;
-  let channel = null as ReturnType<AdbCompanionPort['openRegions']> | null; let cues = null as ReturnType<typeof startCues> | null;
+  let cues = null as ReturnType<typeof startCues> | null;
   let entered = false; let error = null as (Error & { refused?: boolean }) | null; let video = null as ReturnType<typeof startVideo> | null;
   try {
     const link = execFileSync(join(ROOT, 'packages/play/bin/audio/bt-audio-link.sh'), ['--ensure', '--game-package', PACKAGE],
@@ -1086,11 +1086,10 @@ async function main(argv: string[]) {
     cues = live;
     for (let i = 0; i < 50 && !live.started(); i += 1) await sleep(100);
     if (!live.started()) fail(`audio detector did not start: ${live.errors.slice(-3).join(' | ')}`);
-    channel = port.openRegions({ timeoutMs: 1500 });
-    await registerSet(channel, regionModel.set);
-    const frames = new RegionRecorder(channel, join(captureDir, 'regions.ndjson.gz'));
+    const frames = new RegionRecorder(regionOpener(serial, regionModel.set, { port }), join(captureDir, 'regions.ndjson.gz'),
+      { onReopen: (row) => { record.event('regions-reopened', { ...row }).catch(() => {}); } });
     recorder = frames;
-    frames.start();
+    await frames.start();
     await sleep(500);
 
     if (options.video) video = startVideo(serial, id);
@@ -1147,10 +1146,9 @@ async function main(argv: string[]) {
     try { await hidProcess?.close(); } catch { /* the lease bounds cleanup */ }
     if (recorder) {
       await recorder.stop();
-      record.document.regions = { frames: recorder.frames, errors: recorder.errors, path: join(captureDir, 'regions.ndjson.gz') };
+      record.document.regions = { frames: recorder.frames, reopened: recorder.reopened, failure: recorder.failure,
+        path: join(captureDir, 'regions.ndjson.gz') };
     }
-    try { await channel?.clear(); } catch { /* the helper drops regions with its session */ }
-    channel?.close();
     if (cues) {
       await cues.stop();
       record.document.audio = { events: cues.events.length, onsets: cues.events.filter(e => e.onsetMs).length,

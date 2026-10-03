@@ -945,6 +945,7 @@
       "imports": [
         "../../src/campaign/physical-ports.ts",
         "./local-profile.ts",
+        "./night-kit.ts",
         "node:fs",
         "node:path",
         "node:zlib"
@@ -960,6 +961,7 @@
         "node:fs/promises",
         "node:path",
         "node:perf_hooks",
+        "node:stream/promises",
         "node:zlib"
       ]
     },
@@ -1232,7 +1234,10 @@
         "../../src/campaign/physical-ports.ts",
         "./fnaf3-detectors.ts",
         "./fnaf3-run.ts",
-        "node:fs"
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:zlib"
       ]
     },
     {

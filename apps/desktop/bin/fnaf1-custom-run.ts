@@ -42,7 +42,7 @@ import { HidWireTransport } from '../../../packages/play/src/venues/phone/hid.ts
 import { BINDINGS_DIR } from '@sixam/kernel';
 import { ProbeRecord, ensureTitle, titleRead, titleConsensus, settleCustomNight, setDials, restartToTitle,
   DIALS, LEAVE_WAIT_MS } from '../../../packages/play/games/fnaf1/fnaf1-menu-probe.ts';
-import { loadRegionSet, registerSet } from '../../../packages/play/bin/phone/native-regions.ts';
+import { loadRegionSet, regionOpener } from '../../../packages/play/bin/phone/native-regions.ts';
 import { RegionRecorder, startVideo } from '../../../packages/play/bin/phone/night-kit.ts';
 import { loadDetectors, makeClassifier } from '../../../packages/play/games/fnaf1/fnaf1-detectors.ts';
 import type { DeviceFrame } from '../../../packages/play/games/fnaf1/fnaf1-detectors.ts';
@@ -94,7 +94,7 @@ interface RunFields {
   night?: { officeImageHostMs: number, officeAfterReadyMs: number, epochHostMs: number, originOffsetMs: number,
     ended?: string, endedAtNightMs?: number };
   teach?: boolean;
-  regions?: { frames: number, errors: number, path: string };
+  regions?: { frames: number, reopened: number, failure: string | null, path: string };
   video?: unknown;
 }
 
@@ -450,7 +450,7 @@ async function main(argv: string[]) {
   const bridge = new HelperFrameBridge(serial, port, adbBridge);
   const snapTo = async (name: string) => { const png = await bridge.capturePng(); await record.capture(name, png); };
   let hidProcess = null as AdbHidProcess | null; let hid = null as HidWireTransport | null;
-  let recorder = null as RegionRecorder | null; let channel = null as ReturnType<AdbCompanionPort['openRegions']> | null;
+  let recorder = null as RegionRecorder | null;
   let entered = false; let error: unknown = null; let video = null as ReturnType<typeof startVideo> | null;
   try {
     await ensureTitle(bridge, record, { requireHid: true });
@@ -474,10 +474,10 @@ async function main(argv: string[]) {
     doc.dialsAtEntry = start.dials;
     doc.dialsSet = await setDials(bridge, record, hid, customNight, CONTACT_MS, options.dials as NonNullable<typeof options.dials>, 'set'); // parseArgs refuses a live night without dials
 
-    channel = port.openRegions({ timeoutMs: 1500 });
-    await registerSet(channel, regionModel.set as NonNullable<typeof regionModel.set>); // loadRegionSet refuses a missing set
-    recorder = new RegionRecorder(channel, join(captureDir, 'regions.ndjson.gz'));
-    recorder.start();
+    // loadRegionSet refuses a missing set
+    recorder = new RegionRecorder(regionOpener(serial, regionModel.set as NonNullable<typeof regionModel.set>, { port }),
+      join(captureDir, 'regions.ndjson.gz'), { onReopen: (row) => { record.event('regions-reopened', { ...row }).catch(() => {}); } });
+    await recorder.start();
     await sleep(500);
     if (options.video) video = startVideo(serial, id);
     await press(hid, record, 'ready', { x: ready[0], y: ready[1] });
@@ -530,10 +530,8 @@ async function main(argv: string[]) {
     try { await hidProcess?.close(); } catch { /* the lease bounds cleanup */ }
     if (recorder) {
       await recorder.stop();
-      doc.regions = { frames: recorder.frames, errors: recorder.errors, path: join(captureDir, 'regions.ndjson.gz') };
+      doc.regions = { frames: recorder.frames, reopened: recorder.reopened, failure: recorder.failure, path: join(captureDir, 'regions.ndjson.gz') };
     }
-    try { await channel?.clear(); } catch { /* the helper drops regions with its session */ }
-    channel?.close();
     if (video) {
       try {
         const dir = join(homedir(), 'fnaf-apks', 'fnaf1-videos');
