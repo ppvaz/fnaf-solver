@@ -25,6 +25,7 @@ import { Fnaf1Sim, DOOR_OPEN, DOOR_SHUT, DOOR_CLOSING, DOOR_OPENING, INPUT }
 import { runDeviceNight, loadTiming, grid420, FOUR_TWENTY, TIMING_PATH, POPULATION_KIND, POPULATION_LANES }
   from './fnaf1-device-lane.ts';
 import type { populationRecord } from './fnaf1-device-lane.ts';
+import { populationArgs } from './fnaf1-device-lane.ts';
 import { designBlock } from './winner-census.ts';
 
 const failures: string[] = [];
@@ -185,4 +186,10 @@ if (failures.length) {
   for (const f of failures) console.error(`  - ${f}`);
   process.exit(1);
 }
+// The population command line: its own flags read, any other refused rather than ignored.
+ok('population --count is read', populationArgs(['--count', '3000'])('count', '65536') === '3000');
+ok('population --route defaults to tree', populationArgs([])('route', 'tree') === 'tree');
+ok('population refuses a flag it does not read', (() => {
+  try { populationArgs(['--seeds', '3000']); return false; } catch (error) { return /Unknown option '--seeds'/.test((error as Error).message); }
+})());
 console.log(`fnaf1 device lane: all ${checks} checks passed${population}`);

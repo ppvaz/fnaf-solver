@@ -12,6 +12,7 @@
 // night frame. The fit is the least-squares phase of t = zero + 70000 k. Content-free: times, luma and
 // counts only. The reads are DEVICE_MEASURED observations from the retained capture; nothing here replays
 // or promotes anything.
+import { parseArgs } from 'node:util';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import type { BinaryLike } from 'node:crypto';
@@ -102,9 +103,17 @@ export function check(result: Checked, { traceBytes = null }: { traceBytes?: Buf
   return { found: result.fit.found, zero: result.fit.zeroMsAfterFirst, maxResidualMs, zeroMinusAnchorFireMs, evidenceId };
 }
 
-const flag = (name: string) => { const i = process.argv.indexOf(`--${name}`); return i < 0 ? null : process.argv[i + 1]; };
+const HOUR_GRID_FLAGS = ['trace', 'out', 'first', 'release-after-first', 'anchor-fire-after-first', 'anchor-fire-tolerance',
+  'hours', 'label'] as const;
+/** The command line's flags, refusing any this tool does not read (a misspelled one would silently take its default). */
+export function hourGridArgs(argv: readonly string[]) {
+  const { values } = parseArgs({ args: [...argv], strict: true,
+    options: Object.fromEntries(HOUR_GRID_FLAGS.map((name) => [name, { type: 'string' as const }])) });
+  return (name: (typeof HOUR_GRID_FLAGS)[number]) => { const value = values[name]; return typeof value === 'string' ? value : null; };
+}
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const flag = hourGridArgs(process.argv.slice(2));
   const tracePath = flag('trace');
   const out = flag('out');
   if (!tracePath || !flag('first') || !flag('release-after-first') || !out) throw new Error('see usage at top of file');

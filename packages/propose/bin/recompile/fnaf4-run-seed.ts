@@ -17,6 +17,7 @@
 // The roll rule: in an update that holds a 3000 ms roll, g229's four draws come first and his direction is the
 // fourth (Random(2), 1 = right); the roll (g286, Random(20) + 1 <= AI) is the next draw, or the eighth when the
 // 5000 ms group's three draws share the update. MODEL_ONLY over a DEVICE_MEASURED night. Host-only.
+import { parseArgs } from 'node:util';
 import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -118,13 +119,20 @@ export function decide(rule: { ticks: string, deathWindow: [number, number] }, r
   return { verdict, matches, landingsOnly, kept, errors, prefixBroken };
 }
 
-function args(argv: string[]) {
-  const o: Record<string, string> = {};
-  for (let i = 1; i < argv.length; i += 2) {
-    if (!argv[i].startsWith('--') || argv[i + 1] === undefined) throw new Error('see usage at top of file');
-    o[argv[i].slice(2)] = argv[i + 1];
-  }
-  return o;
+/** Each subcommand's flags; any other is refused (it used to be accepted and ignored). */
+const SUBCOMMAND_FLAGS: Readonly<Record<string, readonly string[]>> = {
+  rows: ['run', 'press-ms', 'release-ms', 'out'],
+  scan: ['predeclaration', 'binary', 'assets', 'out', 'jobs'],
+  decide: ['predeclaration', 'results', 'out'],
+};
+
+/** A subcommand's flags as text, refusing an unknown subcommand or a flag that subcommand does not read. */
+export function runSeedArgs(argv: readonly string[]): Readonly<Record<string, string>> {
+  const flags = SUBCOMMAND_FLAGS[argv[0]];
+  if (!flags) throw new Error('see usage at top of file');
+  const { values } = parseArgs({ args: argv.slice(1), strict: true,
+    options: Object.fromEntries(flags.map((name) => [name, { type: 'string' as const }])) });
+  return Object.fromEntries(Object.entries(values).filter((entry): entry is [string, string] => typeof entry[1] === 'string'));
 }
 
 async function runSeed(pre: Predeclaration, o: Readonly<Record<string, string>>, rowsPath: string, seed: number) {
@@ -179,7 +187,7 @@ async function scan(o: Readonly<Record<string, string>>) {
 }
 
 function main(argv: string[]) {
-  const o = args(argv);
+  const o = runSeedArgs(argv);
   if (argv[0] === 'rows') {
     const text = phoneRows(resolve(o.run), Number(o['press-ms'] ?? 82), Number(o['release-ms'] ?? 20));
     if (o.out) writeFileSync(o.out, text); else process.stdout.write(text);

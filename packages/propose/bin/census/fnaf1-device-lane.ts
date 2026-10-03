@@ -32,6 +32,7 @@
 //   node packages/propose/bin/census/fnaf1-device-lane.ts --population [--route tree|winner] [--jobs 7] [--out FILE]
 //        # grid420, every seed, three lanes: the tree's, or the committed winner's pinned one
 
+import { parseArgs } from 'node:util';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
@@ -899,8 +900,19 @@ export function newestTreeRecord(dir = `${HERE}../../../../docs/evidence/`): Non
   return name ? JSON.parse(readFileSync(join(dir, name), 'utf8')) : null;
 }
 
+const POPULATION_FLAGS = ['jobs', 'start', 'count', 'route', 'date', 'out'] as const;
+/** The population command line's flags, refusing any it does not read (a misspelled one would silently take its default). */
+export function populationArgs(argv: readonly string[]) {
+  const { values } = parseArgs({ args: [...argv], strict: true,
+    options: Object.fromEntries(POPULATION_FLAGS.map((name) => [name, { type: 'string' as const }])) });
+  return <T extends string | null>(name: (typeof POPULATION_FLAGS)[number], dflt: T): string | T => {
+    const value = values[name];
+    return typeof value === 'string' ? value : dflt;
+  };
+}
+
 async function population(argv: string[]) {
-  const flag = <T extends string | null>(name: string, dflt: T): string | T => { const i = argv.indexOf(`--${name}`); return i < 0 ? dflt : argv[i + 1]; };
+  const flag = populationArgs(argv);
   const jobs = Number(flag('jobs', '1'));
   const start = Number(flag('start', '0'));
   const count = Number(flag('count', String(RNG_SEEDS)));

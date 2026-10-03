@@ -2019,7 +2019,8 @@
         "node:fs",
         "node:os",
         "node:path",
-        "node:url"
+        "node:url",
+        "node:util"
       ]
     },
     {
@@ -2186,7 +2187,8 @@
         "node:fs",
         "node:os",
         "node:path",
-        "node:url"
+        "node:url",
+        "node:util"
       ]
     },
     {
@@ -2662,7 +2664,8 @@
         "./sweep-common.ts",
         "node:fs",
         "node:path",
-        "node:url"
+        "node:url",
+        "node:util"
       ]
     },
     {
@@ -2671,7 +2674,8 @@
         "./phone-encounter-replay.ts",
         "node:crypto",
         "node:fs",
-        "node:url"
+        "node:url",
+        "node:util"
       ]
     },
     {

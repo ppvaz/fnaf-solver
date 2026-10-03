@@ -27,7 +27,7 @@ import { STRATEGY_REGISTRY, validateWinner } from '../plans/bundle.ts';
 import { CENSUS_KIND, committedWinners, designBlock } from './winner-census.ts';
 import type { buildRecord } from './winner-census.ts';
 import { currentPath } from '@sixam/review/renamed-path';
-import { PHASE_KIND, heldOutSeeds, nightBindings, phaseWins } from '../../../../packages/propose/bin/census/winner-phase-census.ts';
+import { PHASE_KIND, heldOutSeeds, nightBindings, phaseCensusArgs, phaseWins } from '../../../../packages/propose/bin/census/winner-phase-census.ts';
 import type { buildPhaseRecord } from '../../../../packages/propose/bin/census/winner-phase-census.ts';
 
 import { withModelOptions } from '../recompile/rebuild-options-census.ts';
@@ -137,6 +137,9 @@ let phaseReplays = 0;
 
 const censused = new Set(record.bindings.map((row) => current(row.binding)));
 const uncensused = committedWinners().filter((path) => !censused.has(path));
+// The phase census's command line refuses a flag it does not read: `--seeds 3000` used to run its default count.
+assert.equal(phaseCensusArgs(['--count', '3000'])('count', '1000'), '3000');
+assert.throws(() => phaseCensusArgs(['--seeds', '3000']), /Unknown option '--seeds'/);
 console.log(`winner census ${recordName}: ${record.bindings.length} night-bindings still match the tree ` +
   `(${replays} replays), ${phaseName} still maps the phases (${phaseReplays} replays); ` +
   `UNCENSUSED_WINNERS ${uncensused.length}${uncensused.length ? `: ${uncensused.join(', ')}` : ''}`);

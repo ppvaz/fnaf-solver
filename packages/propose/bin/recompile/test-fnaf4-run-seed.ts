@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { decide, phoneRows, prefilter, readNight, roll, stream } from './fnaf4-run-seed.ts';
+import { decide, phoneRows, prefilter, readNight, roll, runSeedArgs, stream } from './fnaf4-run-seed.ts';
 import { sha256 } from './sweep-common.ts';
 
 const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)), '../../../..');
@@ -74,4 +74,9 @@ if (existsSync(resultPath)) {
   const { id, ...body } = rec;
   assert.equal(id, `fnaf4-n5b-rebuild-seed-${sha256(JSON.stringify(body)).slice(0, 16)}`);
 }
+// The command line: each subcommand's flags, any other refused.
+assert.deepEqual(runSeedArgs(['decide', '--predeclaration', 'p', '--results', 'r']), { predeclaration: 'p', results: 'r' });
+assert.throws(() => runSeedArgs(['scan', '--predeclaration', 'p', '--job', '3']), /Unknown option '--job'/);
+assert.throws(() => runSeedArgs(['rows', '--results', 'r']), /Unknown option '--results'/, 'rows reads no results');
+assert.throws(() => runSeedArgs(['sweep']), /usage/);
 console.log(`fnaf4-run-seed: n5b rows from the pack, ${ticks} development ticks, stage 1 ${kept.size} seeds, reader and rule fixtures${existsSync(resultPath) ? ', and the result re-derived' : ''}`);

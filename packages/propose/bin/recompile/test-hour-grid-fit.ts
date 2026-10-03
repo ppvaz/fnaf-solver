@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import type { BinaryLike } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { check, fitHourGrid, hourTransitions, SCHEMA } from './hour-grid-fit.ts';
+import { check, fitHourGrid, hourGridArgs, hourTransitions, SCHEMA } from './hour-grid-fit.ts';
 import type { Checked, Transition } from './hour-grid-fit.ts';
 
 const read = (rel: string) => readFileSync(new URL(`../../../../${rel}`, import.meta.url), 'utf8');
@@ -69,4 +69,8 @@ const sha256 = (value: BinaryLike) => createHash('sha256').update(value).digest(
   }
 }
 
+// The command line: its own flags read, any other refused rather than ignored.
+assert.equal(hourGridArgs(['--trace', 't', '--hours', '1,2'])('hours'), '1,2');
+assert.equal(hourGridArgs(['--trace', 't'])('label'), null);
+assert.throws(() => hourGridArgs(['--trace', 't', '--hour', '1,2']), /Unknown option '--hour'/);
 console.log('hour-grid-fit: fixtures and both hash-bound phone records rechecked');

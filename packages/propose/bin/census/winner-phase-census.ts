@@ -19,6 +19,7 @@
 //   node packages/propose/bin/census/winner-phase-census.ts --night 7 --count 1000 --window 1000 --jobs 7 --out FILE
 //
 // MODEL_ONLY, exact lane: the phase is the only thing moved.
+import { parseArgs } from 'node:util';
 import { createHash } from 'node:crypto';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -201,13 +202,24 @@ export function buildPhaseRecord({ rows, night, frames, count, bindings, winnerH
   };
 }
 
+const PHASE_CENSUS_FLAGS = ['night', 'count', 'window', 'jobs', 'date', 'out'] as const;
+/** The command line's flags, refusing any it does not read: `--seeds 3000` used to run the default count unremarked. */
+export function phaseCensusArgs(argv: readonly string[]) {
+  const { values } = parseArgs({ args: [...argv], strict: true,
+    options: Object.fromEntries(PHASE_CENSUS_FLAGS.map((name) => [name, { type: 'string' as const }])) });
+  return <T extends string | null>(name: (typeof PHASE_CENSUS_FLAGS)[number], dflt: T): string | T => {
+    const value = values[name];
+    return typeof value === 'string' ? value : dflt;
+  };
+}
+
 async function main(argv: string[]) {
   if (argv[0] === '--child') {
     const [, a, b, night, frames, count] = argv;
     (process as ForkedChild).send(phaseBlock(Number(night), Number(frames), Number(count), Number(a), Number(b)));
     return;
   }
-  const flag = <T extends string | null>(name: string, dflt: T): string | T => { const i = argv.indexOf(`--${name}`); return i < 0 ? dflt : argv[i + 1]; };
+  const flag = phaseCensusArgs(argv);
   const night = Number(flag('night', '7'));
   const count = Number(flag('count', '1000'));
   const windowMs = Number(flag('window', '1000'));
