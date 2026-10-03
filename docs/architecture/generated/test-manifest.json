@@ -1614,9 +1614,13 @@
       "determinismSignals": [
         "Date.now",
         "Date.now",
+        "Date.now",
+        "Date.now",
+        "Date.now",
         "Date.now"
       ],
       "fixedSleeps": [
+        "setTimeout(resolve, Math.max(0, ms",
         "setTimeout((",
         "setTimeout(resolve, 125",
         "setTimeout(("

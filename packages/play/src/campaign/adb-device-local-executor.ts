@@ -47,6 +47,15 @@ interface SharedHid {
   close?(): unknown;
 }
 /** Measured settles and gate knobs; fixtures shorten them, production keeps the defaults. */
+/**
+ * The host wall clock every instant the executor records and every wait it
+ * makes are read from, in ms. A test runs a night on its own.
+ */
+interface ExecutorClock {
+  now(): number;
+  sleep(milliseconds: number): Promise<void>;
+}
+const HOST_CLOCK: ExecutorClock = Object.freeze({ now: () => Date.now(), sleep });
 interface ExecutorTiming {
   readonly armSettleMs?: number;
   readonly armObservationWindowMs?: number;
@@ -228,12 +237,12 @@ function runAdbScript(adb: string, serial: string, script: string, onOutput: (ch
   return { child, promise };
 }
 
-async function waitForRemoteFile(adb: string, serial: string, path: string, {
+async function waitForRemoteFile(adb: string, serial: string, path: string, clock: ExecutorClock, {
   timeoutMs = 15000, pollMs = 100,
   processDone = () => false, processResult = async () => null,
 }: { timeoutMs?: number, pollMs?: number, processDone?: () => boolean, processResult?: () => Promise<unknown> } = {}) {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
+  const deadline = clock.now() + timeoutMs;
+  while (clock.now() < deadline) {
     try {
       await execFile(adb, ['-s', serial, 'shell', 'test', '-e', path], {
         timeout: 3000, maxBuffer: 1024 * 1024,
@@ -244,7 +253,7 @@ async function waitForRemoteFile(adb: string, serial: string, path: string, {
       const result = await processResult() as { code?: unknown, stderr?: string, stdout?: string } | null | undefined;
       throw new Error(`machine device program exited before HID readiness (${result?.code ?? 'unknown'}): ${result?.stderr?.trim() || result?.stdout?.trim() || 'no output'}`);
     }
-    await sleep(pollMs);
+    await clock.sleep(pollMs);
   }
   throw new Error(`machine HID readiness marker was not observed before ${timeoutMs}ms`);
 }
@@ -308,15 +317,16 @@ export class AdbDeviceLocalArtifactExecutor {
   declare nightAuthorizedListeners: Set<(at: number) => void>;
   declare nightAuthorizedAt: number | null;
   declare deviceLocal: boolean;
+  declare clock: ExecutorClock;
   constructor(options: { serial?: string, adb?: string, readyDelayMs?: number,
     observe?: (() => Promise<LifecycleState | null>) | null, observeArm?: (() => ArmSample | Promise<ArmSample>) | null,
     observeControlState?: (() => unknown) | null, sharedHid?: (() => SharedHid | null) | null,
     closeSharedHid?: (() => unknown) | null, pollMs?: number, onEvent?: (event: ExecutorEvent) => void,
-    onOutput?: (chunk: string) => void, timing?: ExecutorTiming, nightReleaseOwner?: string } = {}) {
+    onOutput?: (chunk: string) => void, timing?: ExecutorTiming, nightReleaseOwner?: string, clock?: ExecutorClock } = {}) {
     const { serial, adb = 'adb', readyDelayMs = DEFAULT_READY_DELAY_MS,
       observe = null, observeArm = null, observeControlState = null,
       sharedHid = null, closeSharedHid = null, pollMs = 1000, onEvent = () => {}, onOutput = () => {}, timing = {},
-      nightReleaseOwner = 'observer' } = options;
+      nightReleaseOwner = 'observer', clock = HOST_CLOCK } = options;
     if (typeof serial !== 'string' || serial.length === 0) throw new TypeError('device-local executor requires an ADB serial');
     if (observe !== null && typeof observe !== 'function') throw new TypeError('device-local executor observe must be a function');
     if (observeArm !== null && typeof observeArm !== 'function') throw new TypeError('device-local executor observeArm must be a function');
@@ -347,7 +357,7 @@ export class AdbDeviceLocalArtifactExecutor {
       if (!Number.isInteger(value) || value < 0)
         throw new TypeError(`device-local executor ${name} must be a non-negative integer`);
     }
-    this.serial = serial; this.adb = adb; this.readyDelayMs = readyDelayMs;
+    this.serial = serial; this.adb = adb; this.readyDelayMs = readyDelayMs; this.clock = clock;
     this.observe = observe; this.observeArm = observeArm;
     this.observeControlState = observeControlState; this.pollMs = timingValues.pollMs;
     this.armSettleMs = timingValues.armSettleMs;
@@ -413,7 +423,7 @@ export class AdbDeviceLocalArtifactExecutor {
   // screen. The intro calls this after its setup tap; a retry that starts
   // after intro consumes the already-granted release immediately.
   releaseNight() {
-    const grantedAt = Date.now();
+    const grantedAt = this.clock.now();
     this.nightReleaseGranted = true;
     this.nightReleaseGrantedAt = grantedAt;
     this.nightReleaseResolve?.();
@@ -444,7 +454,7 @@ export class AdbDeviceLocalArtifactExecutor {
     // entry and the first action was the start marker, so two separate
     // attempts to remove the measured 26-30 s office-to-marker latency each
     // claimed success that the evidence did not support.
-    this.onEvent({ type: 'hid.execute-entered', at: Date.now() });
+    this.onEvent({ type: 'hid.execute-entered', at: this.clock.now() });
     this.running = true;
     const sharedHid = this.sharedHid?.() ?? null;
     const sharedMode = sharedHid !== null;
@@ -456,7 +466,7 @@ export class AdbDeviceLocalArtifactExecutor {
     this.nightReleaseGrantedAt = null;
     this.nightAuthorizedAt = null;
     this.nightReleaseAction = null;
-    const tag = `${globalThis.process.pid}-${Date.now()}`;
+    const tag = `${globalThis.process.pid}-${this.clock.now()}`;
     const startMarker = `/data/local/tmp/fnaf2-modern-start-${tag}`;
     const armControl = schedule.gated ? {
       go: `/data/local/tmp/fnaf2-modern-go-${tag}`,
@@ -486,7 +496,7 @@ export class AdbDeviceLocalArtifactExecutor {
           await sharedHid.write(value);
           if (first) {
             first = false;
-            onFirstWrite?.(Date.now());
+            onFirstWrite?.(this.clock.now());
           }
         }
       });
@@ -503,8 +513,8 @@ export class AdbDeviceLocalArtifactExecutor {
         })
       : spawned.promise;
     this.onEvent(sharedMode
-      ? { type: 'hid.handoff-reused', at: Date.now(), source: 'menu', readyDelayMs: 0 }
-      : { type: 'hid.shell-spawned', at: Date.now(), readyDelayMs: schedule.readyDelayMs });
+      ? { type: 'hid.handoff-reused', at: this.clock.now(), source: 'menu', readyDelayMs: 0 }
+      : { type: 'hid.shell-spawned', at: this.clock.now(), readyDelayMs: schedule.readyDelayMs });
     this.child = spawned === null ? sharedHid : spawned.child;
     const processIdentity = this.child;
     // Declared here so a stop can end a halted run's observation (see below).
@@ -581,7 +591,7 @@ export class AdbDeviceLocalArtifactExecutor {
         } catch (caught) {
           error = eventMessage(caught);
         }
-        this.onEvent({ type: 'lifecycle.actuation-stopped', at: Date.now(), reason, method,
+        this.onEvent({ type: 'lifecycle.actuation-stopped', at: this.clock.now(), reason, method,
           ...(error === null ? {} : { error }) });
       })();
     };
@@ -736,12 +746,12 @@ export class AdbDeviceLocalArtifactExecutor {
       // ADB connection setup against the plan-relative ready delay and arm
       // deadline. A shared title HID is already past that boundary, so its
       // schedule starts as soon as this executor is handed the ready process.
-      if (!sharedMode) await waitForRemoteFile(this.adb, this.serial, startMarker, {
+      if (!sharedMode) await waitForRemoteFile(this.adb, this.serial, startMarker, this.clock, {
         timeoutMs: 60000,
         processDone: () => processDone,
         processResult: () => observedProcessPromise,
       });
-      const startedAt = Date.now();
+      const startedAt = this.clock.now();
       this.onEvent({ type: 'hid.schedule-start', startedAt, actionCount: schedule.actionCount,
         phaseOffsetMs: schedule.phaseOffsetMs });
       const startupDeadline = startedAt + STARTUP_GRACE_MS;
@@ -756,22 +766,22 @@ export class AdbDeviceLocalArtifactExecutor {
         this.child === processIdentity && this.running;
       const waitUntil = async (deadline: number) => {
         while (controlStillRunning()) {
-          const remainingMs = deadline - Date.now();
+          const remainingMs = deadline - this.clock.now();
           if (remainingMs <= 0) return true;
-          await sleep(Math.min(remainingMs, 50));
+          await this.clock.sleep(Math.min(remainingMs, 50));
         }
         return false;
       };
       const readControlState = () => {
         let readStartedAt: number | null = null;
         const read = controlReadTail.then(async () => {
-          if (!controlStillRunning()) return { sample: null, readStartedAt, readFinishedAt: Date.now() };
-          readStartedAt = Date.now();
+          if (!controlStillRunning()) return { sample: null, readStartedAt, readFinishedAt: this.clock.now() };
+          readStartedAt = this.clock.now();
           try {
             const sample = await this.#observeControlState();
-            return { sample, readStartedAt, readFinishedAt: Date.now() };
+            return { sample, readStartedAt, readFinishedAt: this.clock.now() };
           } catch {
-            return { sample: null, readStartedAt, readFinishedAt: Date.now() };
+            return { sample: null, readStartedAt, readFinishedAt: this.clock.now() };
           }
         });
         // A bad diagnostic read must not poison later, independent samples.
@@ -804,7 +814,7 @@ export class AdbDeviceLocalArtifactExecutor {
               originAt, originUncertaintyMs, ...(attempt === null ? {} : { attempt }) });
             const reads: { sample: unknown, readStartedAt: number | null, readFinishedAt: number }[] = [];
             if (!await waitUntil(contactAt)) break;
-            while (reads.length < CONTROL_EFFECT_MAX_SAMPLES && Date.now() < windowEndAt) {
+            while (reads.length < CONTROL_EFFECT_MAX_SAMPLES && this.clock.now() < windowEndAt) {
               if (!controlStillRunning()) break;
               const read = await readControlState();
               if (read.readStartedAt === null) break;
@@ -828,7 +838,7 @@ export class AdbDeviceLocalArtifactExecutor {
               : 'calibrated';
             this.onEvent({ type: 'control.effect.result', phase, actionId: transition.actionId,
               cycle: transition.cycle, signal: transition.signal, target: transition.target,
-              contactAt, windowEndAt, resultAt: Date.now(), status: verdict.status,
+              contactAt, windowEndAt, resultAt: this.clock.now(), status: verdict.status,
               reason: verdict.reason, latency: verdict.latency, sampleCount: reads.length,
               evidence, samples: verdict.samples, ...(attempt === null ? {} : { attempt }) });
           }
@@ -881,8 +891,8 @@ export class AdbDeviceLocalArtifactExecutor {
                 // A re-read whose answer, and the correction it may call for,
                 // would land after the release would release late, and that
                 // lag moves every later contact. Unresolved by then is UNKNOWN.
-                if (Date.now() + this.gateRetryGapMs + this.gateReadWorstMs + gated.correctionMs > releaseAt) break;
-                await waitUntil(Date.now() + this.gateRetryGapMs);
+                if (this.clock.now() + this.gateRetryGapMs + this.gateReadWorstMs + gated.correctionMs > releaseAt) break;
+                await waitUntil(this.clock.now() + this.gateRetryGapMs);
               }
               const read = await readControlState();
               reads.push({ startedAt: read.readStartedAt, finishedAt: read.readFinishedAt });
@@ -965,7 +975,7 @@ export class AdbDeviceLocalArtifactExecutor {
               monitorCorrected = true;
               if (sharedMode) await feedShared(gated.monitorCorrection);
               else await touchArm('gateFix');
-              correctedAt = Date.now();
+              correctedAt = this.clock.now();
             } else if (entry.believedMaskOn === null && gated.maskCorrection === null) {
               // A plan that authors no mask press anywhere (the minimal 4/20
               // route) has no mask parity to verify. The gate still parks the
@@ -984,7 +994,7 @@ export class AdbDeviceLocalArtifactExecutor {
               status = 'CORRECTED';
               if (sharedMode) await feedShared(gated.maskCorrection ?? []);
               else await touchArm('gateFix');
-              correctedAt = Date.now();
+              correctedAt = this.clock.now();
             }
             // The correction's read-back USED TO hold the stream:
             //
@@ -1034,7 +1044,7 @@ export class AdbDeviceLocalArtifactExecutor {
             // last one cost. Without this each gate paid its own adb latency
             // again and the night drifted 50-130 ms per cycle.
             if (!await waitUntil(releaseAt - releaseTouchMs)) break;
-            const touchStartedAt = Date.now();
+            const touchStartedAt = this.clock.now();
             if (sharedMode) {
               // A ready process has no ADB marker round trip to hide. The next
               // segment must be written at the release instant; writing it
@@ -1043,9 +1053,9 @@ export class AdbDeviceLocalArtifactExecutor {
               releaseTouchMs = 0;
             } else {
               await touchArm('gateGo');
-              releaseTouchMs = Math.min(entry.budgetMs / 2, Date.now() - touchStartedAt);
+              releaseTouchMs = Math.min(entry.budgetMs / 2, this.clock.now() - touchStartedAt);
             }
-            lagMs += Math.max(0, Date.now() - releaseAt);
+            lagMs += Math.max(0, this.clock.now() - releaseAt);
           }
         })().catch(async () => {
           // After a halt the stream is already stopped and the observer owns
@@ -1068,7 +1078,7 @@ export class AdbDeviceLocalArtifactExecutor {
           { phaseEndMs: schedule.plannedUntilMs });
       }
       if (sharedMode && releaseAlreadyGranted)
-        void startSharedSchedule(releaseAlreadyGrantedAt ?? Date.now());
+        void startSharedSchedule(releaseAlreadyGrantedAt ?? this.clock.now());
       // Native camera reads must not wait behind a full screencap + Python
       // lifecycle classification. An UNKNOWN frame is a reason to leave the
       // one-shot observation unresolved, not permission to destroy a
@@ -1081,7 +1091,7 @@ export class AdbDeviceLocalArtifactExecutor {
           return;
         }
         while (controlStillRunning() && nightAnchoredAt === null)
-          await sleep(this.pollMs);
+          await this.clock.sleep(this.pollMs);
         if (!controlStillRunning() || nightAnchoredAt === null)
           return;
         // Read only where the plan shows the camera map (arm-observation.ts): the
@@ -1109,7 +1119,7 @@ export class AdbDeviceLocalArtifactExecutor {
           // A halt while the camera was being read: the arm stays unresolved and
           // a mismatch may no longer stop a run the observer now owns.
           if (actuationHalt) return;
-          elapsedMs = Date.now() - startedAt;
+          elapsedMs = this.clock.now() - startedAt;
           this.onEvent({ type: 'arm.sample', mode: 'observe-once', elapsedMs, attempt, planAtMs: readAtMs, sample });
           lastArmObservation = sample;
           highlights = sample?.highlights;
@@ -1158,7 +1168,7 @@ export class AdbDeviceLocalArtifactExecutor {
         const retryArm = async (reason: string) => {
           if (sharedMode) await feedShared(gate.rearm);
           else await touchArm('retry');
-          const rearmAt = Date.now();
+          const rearmAt = this.clock.now();
           armAttempt += 1;
           startControlEffectLedger('rearm', rearmAt,
             gate.monitorTransitions.rearm, gate.maskTransitions.rearm,
@@ -1166,28 +1176,28 @@ export class AdbDeviceLocalArtifactExecutor {
               phaseEndMs: gate.rearmDurationMs });
           // Anchor to the actual retry signal, not a theoretical first-attempt
           // timeline that observation latency can outrun.
-          nextCheckAt = Date.now() + gate.rearmDurationMs + this.armSettleMs;
+          nextCheckAt = this.clock.now() + gate.rearmDurationMs + this.armSettleMs;
           deadlineAt = nextCheckAt + this.armObservationWindowMs;
           candidate = null;
           confirmations = 0;
           this.onEvent({ type: 'arm.retry', attempt: armAttempt,
-            elapsedMs: Date.now() - startedAt, reason });
+            elapsedMs: this.clock.now() - startedAt, reason });
         };
         while (!armVerified && controlStillRunning()) {
-          await sleep(this.pollMs);
+          await this.clock.sleep(this.pollMs);
           if (!controlStillRunning()) break;
           if (nextCheckAt === Infinity) {
             if (nightAnchoredAt === null) continue;
             nextCheckAt = (nightReleasedAt ?? nightAnchoredAt) + gate.armReadyAtMs + this.armSettleMs;
             deadlineAt = nextCheckAt + this.armObservationWindowMs;
           }
-          if (Date.now() < nextCheckAt) continue;
+          if (this.clock.now() < nextCheckAt) continue;
           let sample: ArmSample | null = null;
           try { sample = await this.#observeArm(); }
           catch { /* an unavailable frame remains UNKNOWN */ }
           // No arm release, retry or failure stop after a halt.
           if (actuationHalt) break;
-          const elapsedMs = Date.now() - startedAt;
+          const elapsedMs = this.clock.now() - startedAt;
           this.onEvent({ type: 'arm.sample', elapsedMs, attempt: armAttempt, sample });
           lastArmObservation = sample;
           const highlights = sample?.highlights ?? sample?.cameraHighlights;
@@ -1204,7 +1214,7 @@ export class AdbDeviceLocalArtifactExecutor {
                   if (stopObserver || actuationHalt) break;
                   let armGoAt: number | null = null;
                   if (armControl) {
-                    armGoAt = Date.now();
+                    armGoAt = this.clock.now();
                     if (sharedMode) {
                       await feedShared(gate.remainderSegments[0]);
                       if (!gate.gates.length) {
@@ -1247,14 +1257,14 @@ export class AdbDeviceLocalArtifactExecutor {
               } else if (armAttempt < MAX_ARM_ATTEMPTS) {
                   await retryArm('camera-pair-mismatch');
               } else {
-                  deadlineAt = Date.now();
+                  deadlineAt = this.clock.now();
               }
             }
           } else {
             candidate = null;
             confirmations = 0;
           }
-          if (!armVerified && Date.now() >= deadlineAt) {
+          if (!armVerified && this.clock.now() >= deadlineAt) {
               // A native watch can return a fresh sequence while the camera
               // panel is still between frames. That is not evidence that the
               // authored arm is wrong, but waiting longer on the same raised
@@ -1289,7 +1299,7 @@ export class AdbDeviceLocalArtifactExecutor {
         ? (async () => {
           while (!stopObserver && this.child === processIdentity && this.running &&
                  nativeNightAt === null && !nightObserved) {
-            const startedAt = Date.now();
+            const startedAt = this.clock.now();
             let sample: unknown = null;
             try { ({ sample } = await readControlState()); } catch { sample = null; }
             nativeAnchorSamples += 1;
@@ -1300,9 +1310,9 @@ export class AdbDeviceLocalArtifactExecutor {
             // names nothing and must not move it.
             if (typeof screen === 'string' && screen !== 'UNKNOWN')
               nativeLastNotNightAt = startedAt;
-            const spent = Date.now() - startedAt;
+            const spent = this.clock.now() - startedAt;
             if (spent < NATIVE_ANCHOR_POLL_MS)
-              await sleep(NATIVE_ANCHOR_POLL_MS - spent);
+              await this.clock.sleep(NATIVE_ANCHOR_POLL_MS - spent);
           }
         })().catch(() => {})
         : Promise.resolve();
@@ -1326,14 +1336,14 @@ export class AdbDeviceLocalArtifactExecutor {
       };
       observer = this.observe ? (async () => {
         while (!stopObserver && this.child === processIdentity && this.running) {
-          await sleep(this.pollMs);
+          await this.clock.sleep(this.pollMs);
           if (stopObserver || this.child !== processIdentity || !this.running) break;
-          const observeStartedAt = Date.now();
+          const observeStartedAt = this.clock.now();
           let state: LifecycleState | null = null;
           let unreadable = false;
           try { state = this.observe ? await this.observe() : null; }
           catch { unreadable = true; }
-          const observedAt = Date.now();
+          const observedAt = this.clock.now();
           const gapMs = previousReadAt === null ? null : observedAt - previousReadAt;
           previousReadAt = observedAt;
           // The window assumes reads at most one observer interval apart. From
@@ -1355,7 +1365,7 @@ export class AdbDeviceLocalArtifactExecutor {
             // vote rather than destroying the votes already cast. It does not
             // hold a halted run open past its window either.
             try { if (await endAtHaltWindow(observedAt)) break; }
-            catch (error) { this.onEvent({ type: 'lifecycle.stop-failed', at: Date.now(), error: eventMessage(error) }); }
+            catch (error) { this.onEvent({ type: 'lifecycle.stop-failed', at: this.clock.now(), error: eventMessage(error) }); }
             continue;
           }
           try {
@@ -1407,7 +1417,7 @@ export class AdbDeviceLocalArtifactExecutor {
                   // the placed instant, not this classifier sample.
                   // `at` stays the sample's start for the timeline; the gate
                   // opens only when the classification returned.
-                  const authorizedAt = Date.now();
+                  const authorizedAt = this.clock.now();
                   this.nightAuthorizedAt = authorizedAt;
                   this.onEvent({ type: 'hid.night-authorized', at: observeStartedAt,
                     sampleStartedAt: observeStartedAt, authorizedAt, owner: 'port' });
@@ -1420,7 +1430,7 @@ export class AdbDeviceLocalArtifactExecutor {
                   /* the composition's releaseNight() starts the schedule */
                 } else if (sharedMode) {
                   try {
-                    if (!sharedReleaseInFlight) await startSharedSchedule(Date.now());
+                    if (!sharedReleaseInFlight) await startSharedSchedule(this.clock.now());
                     if (stopObserver) break;
                     await sharedReleaseTask;
                     if (handoffFailure || stopObserver) break;
@@ -1432,7 +1442,7 @@ export class AdbDeviceLocalArtifactExecutor {
                 } else if (armControl?.nightGo && schedule.gated) {
                   try {
                     await touchRemote(this.adb, this.serial, armControl.nightGo);
-                    const nightGoAt = Date.now();
+                    const nightGoAt = this.clock.now();
                     nightReleasedAt = nightGoAt;
                     startControlEffectLedger('prefix', nightGoAt,
                       schedule.gated.monitorTransitions.prefix, schedule.gated.maskTransitions.prefix,
@@ -1443,7 +1453,7 @@ export class AdbDeviceLocalArtifactExecutor {
                   } catch (error) {
                     // The drop guard below still governs the run; the record
                     // says why the schedule never started.
-                    this.onEvent({ type: 'hid.night-go-failed', at: Date.now(), error: eventMessage(error) });
+                    this.onEvent({ type: 'hid.night-go-failed', at: this.clock.now(), error: eventMessage(error) });
                   }
                 }
               }
@@ -1496,7 +1506,7 @@ export class AdbDeviceLocalArtifactExecutor {
             }
             const staticWithheld = actuationHalt !== null && state === 'static';
             const startupTransition = !nightObserved &&
-              (state === 'intro' || state === 'newspaper') && Date.now() < startupDeadline;
+              (state === 'intro' || state === 'newspaper') && this.clock.now() < startupDeadline;
             if (startupTransition) {
               nonNightSamples = 0;
             } else if (staticWithheld) {
@@ -1514,7 +1524,7 @@ export class AdbDeviceLocalArtifactExecutor {
           } catch (error) {
             // A stop that fails while ending the run leaves the decision
             // already recorded above; teardown still releases the stream.
-            this.onEvent({ type: 'lifecycle.stop-failed', at: Date.now(), error: eventMessage(error) });
+            this.onEvent({ type: 'lifecycle.stop-failed', at: this.clock.now(), error: eventMessage(error) });
           }
         }
       })() : Promise.resolve();

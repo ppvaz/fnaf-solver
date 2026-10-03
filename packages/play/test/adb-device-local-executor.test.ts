@@ -379,6 +379,26 @@ try {
   assert.equal(terminalObservations, 2,
     'game-over must not spend the non-night confirmation window');
 
+  // The executor reads one injected clock. One a whole day ahead of the host
+  // runs the same night, and every instant it records is on that clock: a
+  // stray host read beside it would put a deadline a day away and the night
+  // would never end, or end at once.
+  const DAY_MS = 86_400_000;
+  let offsetObservations = 0;
+  const offsetEvents: ExecutorEvent[] = [];
+  const offsetClock = new AdbDeviceLocalArtifactExecutor({ serial: 'fixture-device', adb: fakeAdb,
+    readyDelayMs: 1, pollMs: 250, timing: { pollMs: 1 },
+    clock: { now: () => Date.now() + DAY_MS, sleep: ms => new Promise<void>(resolve => setTimeout(resolve, Math.max(0, ms))) },
+    observe: async () => offsetObservations++ === 0 ? 'night' : 'gameover',
+    onEvent: event => offsetEvents.push(event) });
+  const offsetResult = await offsetClock.execute(request);
+  assert.equal(offsetResult.terminal, 'gameover', 'an offset clock runs the same night');
+  const stamped = offsetEvents.filter(event => typeof event.at === 'number');
+  assert.ok(stamped.length > 0, 'the night records instants');
+  assert.ok(stamped.every(event => Number(event.at) > Date.now() + DAY_MS / 2),
+    `every recorded instant is on the injected clock (${stamped.filter(event =>
+      Number(event.at) <= Date.now() + DAY_MS / 2).map(event => event.type).join(', ')})`);
+
   // A title HID is already registered and InputReader-ready. The gameplay
   // handoff must append only the authored body to that process: a second
   // register/ready prefix would recreate the opening delay this path removes.
