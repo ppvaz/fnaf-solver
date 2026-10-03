@@ -223,5 +223,23 @@
         "why": "apps/desktop/src/lane-kit.ts (the desktop has no exports map) and bin modules of review, play and propose that their packages do not export"
       }
     }
+  },
+  "measuredConstants": {
+    "recorded": "2026-10-03",
+    "why": "Literal copies of a measured constant outside its registered file (tools/measured-constants.json), when tools/test-measured-constants.ts landed; an entry only shrinks.",
+    "entries": {
+      "copy:DEFAULT_READY_DELAY_MS": {
+        "count": 1,
+        "why": "NightRunner.java, the Companion's local runner, which Pedro is asked to delete or redesign (its start gate can never pass); the copy goes with that decision"
+      },
+      "copy:FUSION_POLL_MS": {
+        "count": 2,
+        "why": "device-lane.ts is in the files the parallel Propose fixer holds for this same finding (E15, floors restated); recipe.ts is a bundle-hashed source, so an edit changes engine.sourceSha256 and refuses every bundle built before it"
+      },
+      "copy:MIN_CONTACT_MS": {
+        "count": 1,
+        "why": "test-hid-trace.ts, in the parallel Propose fixer's files under E15, beside its released floor of 20 that cycle-library.ts states as 33"
+      }
+    }
   }
 }

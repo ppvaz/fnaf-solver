@@ -47,6 +47,7 @@
       "tools/test-companion-name.ts",
       "tools/test-sibling-paths.ts",
       "tools/test-workspace-deps.ts",
+      "tools/test-measured-constants.ts",
       "packages/propose/bin/recompile/pilot/test-pilot.ts",
       "packages/propose/bin/recompile/test-fnaf4-run-seed.ts",
       "packages/propose/bin/recompile/test-calib-replay.ts",

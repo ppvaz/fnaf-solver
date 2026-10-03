@@ -323,6 +323,12 @@
       "lifecycle": "supported"
     },
     {
+      "id": "tools/test-measured-constants.ts",
+      "invocation": "tools/test-measured-constants.ts",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
       "id": "tools/module-refs.ts",
       "invocation": "tools/module-refs.ts",
       "kind": "module",

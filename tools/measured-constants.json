@@ -1,0 +1,36 @@
+{
+  "schema": "measured-constants-v1",
+  "why": "A number that decides behaviour and was measured on the phone (CLAUDE.md mistake register 9) is defined once and imported. tools/test-measured-constants.ts refuses a second definition of a registered name, or of one of its aliases, as a numeric literal in TypeScript, JavaScript or Java: re-measuring one copy left the others stale.",
+  "constants": {
+    "DEFAULT_READY_DELAY_MS": {
+      "file": "packages/play/src/campaign/hid-schedule.ts",
+      "aliases": ["READY_DELAY_MS"],
+      "measured": "the delay from the start press to the night's first scheduled report"
+    },
+    "FUSION_POLL_MS": {
+      "file": "packages/play/bin/phone/actuator.ts",
+      "aliases": [],
+      "measured": "Fusion's touch poll period, one frame at 30 fps"
+    },
+    "MIN_CONTACT_MS": {
+      "file": "packages/propose/bin/plans/recipe.ts",
+      "aliases": [],
+      "measured": "the shortest contact the phone delivers as a tap (docs/evidence/qualification-hid-mediaprojection-night5-20260912-contact200.json)"
+    },
+    "CUE_READ_MS": {
+      "file": "packages/play/bin/phone/actuator.ts",
+      "aliases": [],
+      "measured": "one Companion visual read; observation-language.ts prices the same read as VISUAL_READ_COST_MS 59.5, a DECISION until one is re-measured on Companion 17"
+    },
+    "VISUAL_READ_COST_MS": {
+      "file": "packages/propose/src/policy/observation-language.ts",
+      "aliases": [],
+      "measured": "the model's price of one visual read (see CUE_READ_MS)"
+    },
+    "SEED_FLOOR": {
+      "file": "packages/review/src/refusals.ts",
+      "aliases": ["GOLDEN_MODEL_SEEDS"],
+      "measured": "not a measurement: the project's 3000-seed standard for a census or a gate"
+    }
+  }
+}

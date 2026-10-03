@@ -5978,6 +5978,19 @@
       ]
     },
     {
+      "file": "tools/test-measured-constants.ts",
+      "imports": [
+        "./gate-kit.ts",
+        "./module-refs.ts",
+        "@sixam/kernel",
+        "node:assert/strict",
+        "node:fs",
+        "node:path",
+        "typescript",
+        "x"
+      ]
+    },
+    {
       "file": "tools/test-media.ts",
       "imports": [
         "node:assert/strict",
