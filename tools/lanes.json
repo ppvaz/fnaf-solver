@@ -19,6 +19,7 @@
       "packages/propose/bin/recompile/test-hour-grid-fit.ts",
       "packages/propose/bin/recompile/test-phone-input-bracket-sweep.ts",
       "packages/propose/test/policyequivalencetest.ts",
+      "packages/propose/bin/policy/test-closed-families.ts",
       "packages/propose/test/test-seam-slack.ts",
       "packages/propose/test/test-terminal-deadline.ts",
       "packages/propose/test/test-arm-observation.ts",

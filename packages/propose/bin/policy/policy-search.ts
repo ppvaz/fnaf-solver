@@ -98,7 +98,7 @@ interface Accepted {
 }
 /** One evaluated candidate, with its family classification and what it depends on. */
 type Evaluated = (ReturnType<typeof reject> | Accepted) & {
-  knownFamily?: string | null, closedFamilies?: ReturnType<typeof closedFamilyMatches>,
+  knownFamily?: string | null, closedFamilies?: ReturnType<typeof closedFamilyMatches> | null,
   dependencies?: { sourceDependencies: unknown[], calibrationProfile: unknown },
 };
 
@@ -120,10 +120,11 @@ export function evaluateCandidate(policy: PolicyProgram, {
   }
   // The duplicate control runs before any expensive gate: re-running a family
   // Plans 05/06/16 already closed by negative costs seeds and proves nothing.
-  const closedFamilies = (() => {
-    try { return closedFamilyMatches(policy); } catch { return []; }
-  })();
-  if (!reasons.length && closedFamilyPolicy === 'reject' && closedFamilies.length)
+  // A program the grammar refused has no shape to classify, so its closed
+  // families are unknown (null), never "outside every family" ([]).
+  const grammatical = !reasons.length;
+  const closedFamilies = grammatical ? closedFamilyMatches(policy) : null;
+  if (!reasons.length && closedFamilyPolicy === 'reject' && closedFamilies?.length)
     reasons.push(...closedFamilies.map(match => `closed-family:${match.id}:${match.detail}`));
   if (!reasons.length) {
     const contact = contactGate(policy, minContactMs);
@@ -140,9 +141,7 @@ export function evaluateCandidate(policy: PolicyProgram, {
     if (normal.survived !== seeds)
       reasons.push(`exact-survival:${normal.survived}/${seeds}`);
   }
-  const classification = (() => {
-    try { return classifyPolicy(policy); } catch { return { known: false, family: null }; }
-  })();
+  const classification = grammatical ? classifyPolicy(policy) : { known: false, family: null };
   const metric = normal ? {
     survival: normal.survival,
     presses: compilePolicy(policy, { untilMs: phaseOf(policy, 'observe').endMs })

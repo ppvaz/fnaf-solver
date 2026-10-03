@@ -2153,6 +2153,12 @@
       "lifecycle": "supported"
     },
     {
+      "id": "packages/propose/bin/policy/test-closed-families.ts",
+      "invocation": "packages/propose/bin/policy/test-closed-families.ts",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
       "id": "packages/propose/bin/policy/test-policy-interpreter.ts",
       "invocation": "packages/propose/bin/policy/test-policy-interpreter.ts",
       "kind": "check",

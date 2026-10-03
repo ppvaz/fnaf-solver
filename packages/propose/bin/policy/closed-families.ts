@@ -10,17 +10,10 @@
 // admit one as a declared control (that is what `mode: 'record'` is for), but
 // it may not admit one by accident.
 import { readFileSync } from 'node:fs';
+import { isList, isRecord } from '@sixam/kernel';
 import { OBSERVATION_BUDGET } from '@sixam/propose/policy';
 import type { PolicyProgram } from '@sixam/propose/policy';
 import { knownPolicyShapes, policyBranches, structuralShape } from './policy-grammar.ts';
-
-/** A family closed by recorded negative: the rule that recognises it and the plans that closed it. */
-interface ClosedFamily { readonly id: string, readonly rule: string, readonly plans: readonly string[] }
-const REGISTER: { schema: string, families: ClosedFamily[] } = JSON.parse(readFileSync(
-  new URL('../../bindings/closed-families.json', import.meta.url), 'utf8'));
-
-export const CLOSED_FAMILIES_SCHEMA = REGISTER.schema;
-export const CLOSED_FAMILIES = Object.freeze(REGISTER.families.map(family => Object.freeze(family)));
 
 /** What a rule is told besides the program: the timing-free shapes of the known families. */
 interface RuleContext { readonly knownShapes: ReadonlyMap<string, string> }
@@ -50,6 +43,34 @@ const RULES: Readonly<Record<string, (program: PolicyProgram, context: RuleConte
   },
 };
 
+/** A family closed by recorded negative: the rule that recognises it and the plans that closed it. */
+interface ClosedFamily { readonly id: string, readonly rule: string, readonly plans: readonly string[] }
+const SCHEMA = 'closed-policy-families-v1';
+
+/**
+ * The register, checked: its schema, and each family's id, implemented rule and closing plans. A rule nobody
+ * implemented is refused here, when the register loads, rather than when a candidate first meets it.
+ */
+export function parseClosedFamilies(value: unknown, where: string): { readonly schema: string, readonly families: readonly ClosedFamily[] } {
+  const refuse = (why: string): never => { throw new Error(`${where}: ${why}`); };
+  if (!isRecord(value) || value.schema !== SCHEMA) return refuse(`schema must be ${SCHEMA}`);
+  if (!isList(value.families)) return refuse('families must be a list');
+  for (const family of value.families) {
+    if (!isRecord(family) || typeof family.id !== 'string' || !family.id) return refuse('a family needs an id');
+    if (typeof family.rule !== 'string' || !Object.hasOwn(RULES, family.rule))
+      refuse(`family ${family.id} names unimplemented rule ${String(family.rule)}`);
+    if (!isList(family.plans) || !family.plans.every((plan) => typeof plan === 'string'))
+      refuse(`family ${family.id}: plans must list the plans that closed it`);
+  }
+  return value as unknown as { readonly schema: string, readonly families: readonly ClosedFamily[] };
+}
+
+const REGISTER_URL = new URL('../../bindings/closed-families.json', import.meta.url);
+const REGISTER = parseClosedFamilies(JSON.parse(readFileSync(REGISTER_URL, 'utf8')), 'closed-families.json');
+
+export const CLOSED_FAMILIES_SCHEMA = REGISTER.schema;
+export const CLOSED_FAMILIES = Object.freeze(REGISTER.families.map(family => Object.freeze(family)));
+
 /**
  * Classify a candidate against every recorded closure.
  *
@@ -60,9 +81,7 @@ const RULES: Readonly<Record<string, (program: PolicyProgram, context: RuleConte
 export function closedFamilyMatches(program: PolicyProgram, { knownShapes = knownPolicyShapes() }: Partial<RuleContext> = {}): {id: string, rule: string, plans: string[], detail: string}[] {
   const matches = [];
   for (const entry of CLOSED_FAMILIES) {
-    const rule = RULES[entry.rule];
-    if (!rule) throw new Error(`closed family ${entry.id} names unimplemented rule ${entry.rule}`);
-    const detail = rule(program, { knownShapes });
+    const detail = RULES[entry.rule](program, { knownShapes });
     if (detail) matches.push({ id: entry.id, rule: entry.rule, plans: [...entry.plans], detail });
   }
   return matches;

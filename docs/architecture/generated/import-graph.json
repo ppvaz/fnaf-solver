@@ -2530,6 +2530,7 @@
       "file": "packages/propose/bin/policy/closed-families.ts",
       "imports": [
         "./policy-grammar.ts",
+        "@sixam/kernel",
         "@sixam/propose/policy",
         "node:fs"
       ]
@@ -2599,6 +2600,16 @@
         "@sixam/propose/policy",
         "node:crypto",
         "node:fs"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/policy/test-closed-families.ts",
+      "imports": [
+        "./closed-families.ts",
+        "./policy-ir.ts",
+        "./policy-search.ts",
+        "@sixam/propose/policy",
+        "node:assert/strict"
       ]
     },
     {
