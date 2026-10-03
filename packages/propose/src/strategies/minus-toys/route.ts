@@ -14,7 +14,7 @@ export const CYCLE = Object.freeze({
   unmaskMin: 540,
 });
 
-export const ROUTE = Object.freeze({
+const ROUTE = Object.freeze({
   id: 'minus-toys',
   night: '2..7',
   split: Object.freeze({ viewing: 11, marker: 9 }),

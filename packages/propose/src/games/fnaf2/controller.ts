@@ -68,12 +68,12 @@ export function guardIntents(intents: readonly Intent[], scheduled: readonly (nu
 // the animation has to finish AND the ~59 ms sensor read has to reflect it, or
 // the controller presses again on a stale observation and reverses itself
 // (engine.js setMonitor toggles on MON_RAISING/MON_LOWERING).
-export const PRESS_COOLDOWN = GUARD_FRAMES + C.s(0.15);
+const PRESS_COOLDOWN = GUARD_FRAMES + C.s(0.15);
 
 /** A controller's fields a decision snapshot leaves out (the `_` bookkeeping fields are left out too). */
 const NOT_DECISION_STATE = new Set(['opts', 'log', 'threat', 'phaseClock']);
 
-export class ReactiveController {
+class ReactiveController {
   declare opts: ControllerOptions;
   declare log: { frame: number, what: string }[];
   declare lastAnimPress: { action: string | null; at: number; };
@@ -702,7 +702,3 @@ export class MangleThreatReactive extends VentThreatReactive {
       threatValue: true, clearValue: false });
   }
 }
-
-// Short alias for policy callers that name the character rather than the
-// threat source.
-export const MangleReactive = MangleThreatReactive;

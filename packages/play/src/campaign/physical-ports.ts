@@ -555,11 +555,3 @@ export class AdbHidProcess {
     throw new Error(`ADB HID process ${child.pid} did not exit after SIGKILL`);
   }
 }
-
-/** Construct the two named ports consumed by composeModernDevice. */
-export function createAdbModernPorts(options: {serial: string, adb?: string}) {
-  const { serial, adb = 'adb' } = options ?? {};
-  const hid = new AdbHidProcess({ serial, adb });
-  const cue = new AdbCompanionPort({ serial, adb });
-  return Object.freeze({ hid, cue, close: () => hid.close() });
-}

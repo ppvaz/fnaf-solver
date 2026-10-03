@@ -8,11 +8,11 @@ import { isList, isRecord } from '../labels.ts';
 
 export const FACT_MESSAGE_SCHEMA = 'fact-message-v1';
 export const MAX_FACT_MESSAGE_BYTES = 1024;
-export const MAX_FACT_TYPE_LENGTH = 64;
-export const MAX_FACT_SOURCE_LENGTH = 64;
-export const MAX_CALIBRATION_PROFILE_LENGTH = 96;
+const MAX_FACT_TYPE_LENGTH = 64;
+const MAX_FACT_SOURCE_LENGTH = 64;
+const MAX_CALIBRATION_PROFILE_LENGTH = 96;
 export const MAX_CYCLE_ACTIONS = 16;
-export const MAX_CYCLE_HORIZON_MS = 15000;
+const MAX_CYCLE_HORIZON_MS = 15000;
 
 const UINT32_MAX = 0xffffffff;
 const clone = <T>(value: T): T => structuredClone(value);

@@ -60,7 +60,7 @@ const FRAME_MS = 1000 / 60;
  * bed-watch (g594/g595)
  * @param knobs.doorCycles number of left/right passes per detour
  */
-export function communityLoop({ listenMs = 600, holdMs = 3400, rearmMs = 200,
+function communityLoop({ listenMs = 600, holdMs = 3400, rearmMs = 200,
                                 flashMs = 120, closetMs = 12000, bedMs = 1500,
                                 doorCycles = 1 }: { listenMs?: number; holdMs?: number; rearmMs?: number; flashMs?: number; closetMs?: number; bedMs?: number; doorCycles?: number; } = {}) {
   // Doors, then the closet, then the bed -- with `doorCycles` L/R passes per
@@ -187,7 +187,7 @@ export function communityLoop({ listenMs = 600, holdMs = 3400, rearmMs = 200,
  * 20/s against a fill of `AI / 4` per second
  * @param knobs.closetMs dwell at the closet, which resets Foxy
  */
-export function noAudioRotation({ holdMs = 3200, rearmMs = 200, bedMs = 700,
+function noAudioRotation({ holdMs = 3200, rearmMs = 200, bedMs = 700,
                                   closetMs = 400 }: { holdMs?: number; rearmMs?: number; bedMs?: number; closetMs?: number; } = {}) {
   const TOUR = [S.leftDoor, S.rightDoor, S.bed, S.closet];
   let leg = 0;
@@ -237,13 +237,13 @@ export function noAudioRotation({ holdMs = 3200, rearmMs = 200, bedMs = 700,
 }
 
 /** The null control: never move, never act. */
-export const doNothing = () => () => {};
+const doNothing = () => () => {};
 
 /**
  * The control that must die of the rule the audio cue exists to prevent:
  * flash the hall on every visit, with no idea whether they are near.
  */
-export function flashBlind({ holdMs = 600 }: { holdMs?: number } = {}) {
+function flashBlind({ holdMs = 600 }: { holdMs?: number } = {}) {
   const TOUR = [S.leftDoor, S.rightDoor];
   let leg = 0; let dwell = 0;
   return (sim: Fnaf4Sim) => {
@@ -261,7 +261,7 @@ export function flashBlind({ holdMs = 600 }: { holdMs?: number } = {}) {
  * to the 15 s bed-watch (g594/g595) or to the Freddle fill's 80 cap
  * (g464/g468) -- never to a door or a flash.
  */
-export const bedStare = () => (sim: Fnaf4Sim) => {
+const bedStare = () => (sim: Fnaf4Sim) => {
   if (sim.over || sim.walking) return;
   if (sim.follow !== S.bed) { sim.goTo(S.bed); return; }
   sim.viewingBed = 1;

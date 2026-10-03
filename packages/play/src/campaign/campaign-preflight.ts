@@ -18,7 +18,7 @@ import { validateCustomNightCalibration } from './custom-night.ts';
 import { validateCampaignSpec } from './campaign.ts';
 import { isList, isRecord } from '@sixam/kernel';
 
-export const CAMPAIGN_PREFLIGHT_SCHEMA = 'device-campaign-preflight-v1';
+const CAMPAIGN_PREFLIGHT_SCHEMA = 'device-campaign-preflight-v1';
 /** One gate of the campaign preflight; the device preflight's own checks are copied in with the same shape. */
 interface CampaignCheck {
   readonly id: string;

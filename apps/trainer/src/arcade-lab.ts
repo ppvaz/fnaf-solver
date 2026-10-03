@@ -27,8 +27,8 @@ interface ArcadeProgress {
   completed: number;
 }
 
-export const ARCADE_PROGRESS_SCHEMA = 'arcade-lab-progress-v1';
-export const ARCADE_SET_SCHEMA = 'arcade-lab-set-v1';
+const ARCADE_PROGRESS_SCHEMA = 'arcade-lab-progress-v1';
+const ARCADE_SET_SCHEMA = 'arcade-lab-set-v1';
 
 const clone = <T>(value: T) => structuredClone(value);
 

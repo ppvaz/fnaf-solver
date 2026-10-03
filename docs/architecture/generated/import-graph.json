@@ -343,10 +343,7 @@
     {
       "file": "apps/trainer/src/index.ts",
       "imports": [
-        "./arcade-lab.ts",
-        "./coach.ts",
-        "./microtrainer.ts",
-        "./renderers.ts"
+        "./coach.ts"
       ]
     },
     {
@@ -435,7 +432,6 @@
         "./coach.ts",
         "./dom.ts",
         "./lane.ts",
-        "./report.ts",
         "./settings.ts",
         "@sixam/kernel",
         "@sixam/source/fnaf2"
@@ -3818,13 +3814,6 @@
       ]
     },
     {
-      "file": "packages/propose/src/index.ts",
-      "imports": [
-        "./games/fnaf2/index.ts",
-        "./policy/index.ts"
-      ]
-    },
-    {
       "file": "packages/propose/src/policy/index.ts",
       "imports": [
         "./observation-language.ts",
@@ -5017,7 +5006,6 @@
       "file": "packages/source/src/clockwork/vocabulary.ts",
       "imports": [
         "./control-registry.ts",
-        "@sixam/kernel",
         "@sixam/kernel/contracts"
       ]
     },

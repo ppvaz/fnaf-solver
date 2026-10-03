@@ -416,8 +416,3 @@ export class AdbDeviceBridge {
     });
   }
 }
-
-export const devicePreflightSchema = PRELIGHT_SCHEMA;
-export const devicePreflightSchemas = PRELIGHT_SCHEMAS;
-export const deviceClockSampleSchema = CLOCK_SAMPLE_SCHEMA;
-export const deviceUptimeSampleSchema = UPTIME_SAMPLE_SCHEMA;

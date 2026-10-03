@@ -16,5 +16,3 @@ export const MANIFEST = Object.freeze({
     'Night 6 is outside this original story-night route; use Minus Toys there.',
   ],
 });
-
-export default MANIFEST;

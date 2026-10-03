@@ -56,9 +56,9 @@ export type Tap = (request: { readonly point: Point, readonly holdMs: number, re
 /** The visual read port: what the dial screen shows now. */
 type Readback = (request: Readonly<Record<string, unknown>>) => Promise<unknown> | unknown;
 
-export const CUSTOM_NIGHT_SCHEMA = 'custom-night-config-v1';
-export const CUSTOM_NIGHT_CALIBRATION_SCHEMA = 'custom-night-calibration-v1';
-export const CUSTOM_NIGHT_MODEL_SCHEMA = 'custom-night-model-v1';
+const CUSTOM_NIGHT_SCHEMA = 'custom-night-config-v1';
+const CUSTOM_NIGHT_CALIBRATION_SCHEMA = 'custom-night-calibration-v1';
+const CUSTOM_NIGHT_MODEL_SCHEMA = 'custom-night-model-v1';
 // The measured Custom Night controls accept one rendered frame of contact at
 // 60 fps.  This is a UI contact default; the separately qualified gameplay
 // timing constants remain owned by the night-driver calibration.

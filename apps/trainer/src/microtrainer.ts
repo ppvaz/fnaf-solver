@@ -26,15 +26,15 @@ const fail: (message: string) => never = kit.fail;
 const { object, text } = kit;
 type Fields = Readonly<Record<string, unknown>>;
 
-export const MICROTRAINER_SESSION_SCHEMA = 'microtrainer-session-v1';
-export const MICROTRAINER_EVENT_SCHEMA = 'microtrainer-event-v1';
-export const REPLAY_SNAPSHOT_SCHEMA = 'replay-snapshot-v1';
+const MICROTRAINER_SESSION_SCHEMA = 'microtrainer-session-v1';
+const MICROTRAINER_EVENT_SCHEMA = 'microtrainer-event-v1';
+const REPLAY_SNAPSHOT_SCHEMA = 'replay-snapshot-v1';
 export const RETAINED_CROP_SCHEMA = 'retained-crop-v1';
 export const EXACT_SIMULATOR_CASE_SCHEMA = 'exact-simulator-case-v1';
 export const TIMING_BUCKET_SCHEMA = 'timing-buckets-v1';
 export const UNKNOWN_CHOICE = 'UNKNOWN';
-export const MICROTRAINER_SPLITS = Object.freeze(['calibration', 'holdout', 'practice', 'replay']);
-export const MICROTRAINER_SURFACES = Object.freeze(['campaign', 'rhythm-highway', 'threat-constellation', 'replay']);
+const MICROTRAINER_SPLITS = Object.freeze(['calibration', 'holdout', 'practice', 'replay']);
+const MICROTRAINER_SURFACES = Object.freeze(['campaign', 'rhythm-highway', 'threat-constellation', 'replay']);
 
 /** The retained, pre-prompt state every exercise is built from. */
 interface ReplaySnapshot {
@@ -117,7 +117,7 @@ interface ExerciseOptions {
 }
 
 const clone = <T>(value: T) => structuredClone(value);
-export class MicrotrainerIneligibleError extends Error {
+class MicrotrainerIneligibleError extends Error {
   declare name: string;
   declare reason: string;
   constructor(reason: string) {
@@ -165,7 +165,7 @@ function validateScheduler(input: unknown) {
 }
 
 /** Validate the retained, pre-prompt source snapshot used by all exercise families. */
-export function validateReplaySnapshot(input: unknown): ReplaySnapshot {
+function validateReplaySnapshot(input: unknown): ReplaySnapshot {
   const value = object('snapshot', input);
   if (value.schema !== REPLAY_SNAPSHOT_SCHEMA) fail(`snapshot schema must be ${REPLAY_SNAPSHOT_SCHEMA}`);
   const allowed = new Set(['schema', 'id', 'sessionId', 'beliefSequence', 'clock', 'atMs',
@@ -640,7 +640,7 @@ function validateSessionHeader(input: unknown) {
 }
 
 /** Validate and freeze the complete offline session artifact. */
-export function validateMicrotrainerSession(input: unknown) {
+function validateMicrotrainerSession(input: unknown) {
   const value = object('session record', input);
   if (value.schema !== MICROTRAINER_SESSION_SCHEMA)
     fail(`session schema must be ${MICROTRAINER_SESSION_SCHEMA}`);

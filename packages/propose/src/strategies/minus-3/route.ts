@@ -144,7 +144,7 @@ export const REACTIVE_KNOBS = Object.freeze({
 
 export const MINUS3_STORY_NIGHTS: readonly number[] = Object.freeze([3, 4, 5]);
 
-export function reactiveRoute(night: number, overrides: Partial<typeof REACTIVE_KNOBS> = {}) {
+function reactiveRoute(night: number, overrides: Partial<typeof REACTIVE_KNOBS> = {}) {
   if (!Number.isInteger(night) || !MINUS3_STORY_NIGHTS.includes(night))
     throw new Error('Minus 3 reactive route requires story night 3..5');
   const k = { ...REACTIVE_KNOBS, ...overrides };

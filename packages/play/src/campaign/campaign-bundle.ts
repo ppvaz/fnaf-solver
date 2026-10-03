@@ -7,7 +7,7 @@ import { validateExecutorRequest } from './artifact-executor.ts';
 import type { ArmVerification } from './artifact-executor.ts';
 import { isList, isOneOf, isRecord } from '@sixam/kernel';
 
-export const CAMPAIGN_BUNDLE_SCHEMA = 'device-campaign-bundle-v1';
+const CAMPAIGN_BUNDLE_SCHEMA = 'device-campaign-bundle-v1';
 function fail(message: string): never { throw new TypeError(`campaign bundle: ${message}`); }
 
 /** A compiled night bound to its campaign target; its blocks are validated when a request is made of them. */

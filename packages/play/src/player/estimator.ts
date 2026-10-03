@@ -11,7 +11,7 @@ import {
 import type { Belief, Fact } from './belief-state.ts';
 import { plainClone, appendLog, shareLog } from './plain-clone.ts';
 
-export const ESTIMATOR_SCHEMA = 'estimator-v1';
+const ESTIMATOR_SCHEMA = 'estimator-v1';
 
 type Control = 'monitor' | 'mask';
 /** A fact as a sensor hands it in: the belief's envelope, with the age it may still be used at. */
@@ -75,7 +75,7 @@ function timeOf(fact: IncomingFact, key: 'receivedAtMs' | 'observedAtMs', fallba
  * run quadratic and unrunnable. Dropped entries are counted, never silently
  * discarded.
  */
-export const TRACE_LIMIT = 4096;
+const TRACE_LIMIT = 4096;
 
 function appendTrace(state: Estimator, entry: Readonly<Record<string, unknown>>) {
   appendLog(state.trace, entry);

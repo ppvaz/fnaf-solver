@@ -156,7 +156,7 @@ export function communityLoop({
  * positions are unobservable, so this shuts a door whenever the last camera
  * look showed that character one step away, and pays for the camera time.
  */
-export function noLights({ camFrames = 20, doorFrames = 360, idleFrames = 40 } = {}) {
+function noLights({ camFrames = 20, doorFrames = 360, idleFrames = 40 } = {}) {
   const sweep = [CAM.westCorner, CAM.supply, CAM.eastCorner, CAM.eastHall, CAM.pirate];
   let index = 0;
   let phaseFrame = 0;

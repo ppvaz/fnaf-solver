@@ -13,7 +13,6 @@
     "fnaf2-research": "src/experiment/cli.ts"
   },
   "exports": {
-    ".": "./src/index.ts",
     "./policy": "./src/policy/index.ts",
     "./fnaf2": "./src/games/fnaf2/index.ts",
     "./games/*": "./src/games/*",

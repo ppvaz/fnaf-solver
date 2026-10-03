@@ -1,6 +1,5 @@
 import { isRecord } from '@sixam/kernel';
 import * as C from '@sixam/source/fnaf2';
-import { fmtTime } from './report.ts';
 import { takeStoredRects } from './settings.ts';
 import { Lane } from './lane.ts';
 import { find } from './dom.ts';
@@ -662,5 +661,3 @@ function loadLayout() {
 function saveLayout(map: Layout['map'], widgets: Layout['widgets']) {
   try { localStorage.setItem('m7.layout', JSON.stringify({ map, widgets })); } catch { /* ignore */ }
 }
-
-export { fmtTime };

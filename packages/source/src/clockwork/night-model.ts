@@ -104,7 +104,7 @@ export const rollChance = (bound: number, level: number) =>
   level <= 0 ? 0 : Math.min(level, bound) / bound;
 
 /** Hour 0 reads 12 AM on every clock face in the series. */
-export const clockLabel = (hour: number) => (hour === 0 ? 12 : hour);
+const clockLabel = (hour: number) => (hour === 0 ? 12 : hour);
 
 /**
  * How long one hour lasts, in ms, for a resolved clock.
@@ -114,7 +114,7 @@ export const clockLabel = (hour: number) => (hour === 0 ? 12 : hour);
  * rather than 0, which makes hour 0 ninety ticks and every later hour
  * eighty-nine. `wallclock` clocks have no such seam.
  */
-export function hourDurationMs(clock: NightClock, hour: number, { fastNights = false }: HourOptions = {}) {
+function hourDurationMs(clock: NightClock, hour: number, { fastNights = false }: HourOptions = {}) {
   if (clock.kind === 'wallclock') {
     const base = typeof clock.hourMs === 'function' ? clock.hourMs(clock.night) : clock.hourMs;
     return fastNights && clock.fastHourMs !== undefined
@@ -146,7 +146,7 @@ export const nightLengthMs = (clock: NightClock, options: HourOptions = {}) =>
  * night list, because two rows can admit the same night and the sheet's own
  * order decides which wins -- an expansion loses that.
  */
-export function nightMatches(comparison: NightComparison, night: number) {
+function nightMatches(comparison: NightComparison, night: number) {
   const { op, value } = comparison;
   switch (op) {
     case '=': return night === value;

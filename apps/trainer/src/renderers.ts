@@ -24,9 +24,9 @@ interface Renderer {
 }
 
 export const RENDERER_SCHEMA = 'exercise-renderer-v1';
-export const RENDERER_VIEW_SCHEMA = 'exercise-render-view-v1';
-export const RENDERER_IDS = Object.freeze(['campaign', 'rhythm-highway', 'threat-constellation']);
-export const RENDERER_CAPABILITIES = Object.freeze([
+const RENDERER_VIEW_SCHEMA = 'exercise-render-view-v1';
+const RENDERER_IDS = Object.freeze(['campaign', 'rhythm-highway', 'threat-constellation']);
+const RENDERER_CAPABILITIES = Object.freeze([
   'keyboard', 'switch', 'reduced-motion', 'muted-audio', 'haptics-off',
   'non-color-labels', 'scalable-text', 'precision-pointer-optional',
 ]);

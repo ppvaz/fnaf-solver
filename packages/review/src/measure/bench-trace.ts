@@ -12,11 +12,11 @@ import type { BenchTraceSample, BenchTransportTrace } from '@sixam/kernel/contra
 
 export const BENCH_TRACE_SCHEMA = 'bench-transport-trace-v1';
 export const BENCH_TRACE_SUMMARY_SCHEMA = 'bench-transport-summary-v1';
-export const BENCH_TRACE_PATHS = Object.freeze(['visual', 'audio'] as const);
-export const BENCH_TRACE_CLOCKS = Object.freeze([
+const BENCH_TRACE_PATHS = Object.freeze(['visual', 'audio'] as const);
+const BENCH_TRACE_CLOCKS = Object.freeze([
   'device-monotonic-ms', 'host-monotonic-ms',
 ] as const);
-export const BENCH_TRACE_MAX_SAMPLES = 100000;
+const BENCH_TRACE_MAX_SAMPLES = 100000;
 
 const STAGES = Object.freeze([
   'sourceEvent', 'fact', 'executorReceipt', 'actuatorCommand', 'observedResult',

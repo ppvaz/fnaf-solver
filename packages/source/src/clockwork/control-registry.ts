@@ -15,8 +15,7 @@ import { FNAF4_CONTROL_CATALOG, FNAF4_PACKAGE } from '../games/fnaf4/controls.ts
 import type { ControlCatalog, GamePackage } from '@sixam/kernel/contracts';
 
 export * from './control-catalog.ts';
-export { FNAF1_CONTROL_CATALOG, FNAF1_PACKAGE, FNAF2_ARTIFACT_ACTIONS, FNAF2_CONTROL_CATALOG, FNAF2_PACKAGE,
-  FNAF3_CONTROL_CATALOG, FNAF3_PACKAGE, FNAF4_CONTROL_CATALOG, FNAF4_PACKAGE };
+export { FNAF2_ARTIFACT_ACTIONS, FNAF2_CONTROL_CATALOG, FNAF2_PACKAGE };
 
 export const CONTROL_CATALOGS = Object.freeze({
   [FNAF1_PACKAGE]: FNAF1_CONTROL_CATALOG,

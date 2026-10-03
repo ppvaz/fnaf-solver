@@ -8,14 +8,14 @@ import { among, isList } from '../validate.ts';
 
 export const ACTIVITY_GATE_SCHEMA = 'activity-gate-v1';
 export const ACTIVITY_GATE_PROFILE_SCHEMA = 'activity-gate-profile-v1';
-export const ACTIVITY_GATE_DECISION_SCHEMA = 'activity-gate-decision-v1';
-export const ACTIVITY_GATE_CAPABILITIES = Object.freeze([
+const ACTIVITY_GATE_DECISION_SCHEMA = 'activity-gate-decision-v1';
+const ACTIVITY_GATE_CAPABILITIES = Object.freeze([
   'overlay', 'capture', 'response',
 ]);
-export const ACTIVITY_GATE_SCREEN_IDENTITIES = Object.freeze([
+const ACTIVITY_GATE_SCREEN_IDENTITIES = Object.freeze([
   'FNAF2_NIGHT', 'OTHER', 'UNKNOWN',
 ]);
-export const ACTIVITY_GATE_QUALIFICATIONS = Object.freeze([
+const ACTIVITY_GATE_QUALIFICATIONS = Object.freeze([
   'QUALIFIED', 'UNQUALIFIED', 'UNKNOWN',
 ]);
 

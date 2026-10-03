@@ -14,11 +14,7 @@
  * controls up by accident.
  * CONTRACT:semantic-control-v1.
  */
-import {
-  CONTROL_CATALOGS, FNAF1_CONTROL_CATALOG, FNAF2_CONTROL_CATALOG, FNAF3_CONTROL_CATALOG,
-  FNAF4_CONTROL_CATALOG, controlCatalogFor, controlIds,
-} from './control-registry.ts';
-import { isList } from '@sixam/kernel';
+import { CONTROL_CATALOGS, FNAF2_CONTROL_CATALOG, controlCatalogFor, controlIds } from './control-registry.ts';
 import type { ControlCatalog, GameControl, GamePackage } from '@sixam/kernel/contracts';
 
 /** `{ id: id }` for one catalog, in catalog order. */
@@ -29,9 +25,6 @@ const vocabularyOf = <G extends GamePackage>(catalog: ControlCatalog<G>) =>
 export const controlVocabularyFor = (game: unknown) => vocabularyOf(controlCatalogFor(game));
 
 export const FNAF2_CONTROL_VOCABULARY = vocabularyOf(FNAF2_CONTROL_CATALOG);
-export const FNAF3_CONTROL_VOCABULARY = vocabularyOf(FNAF3_CONTROL_CATALOG);
-export const FNAF4_CONTROL_VOCABULARY = vocabularyOf(FNAF4_CONTROL_CATALOG);
-export const FNAF1_CONTROL_VOCABULARY = vocabularyOf(FNAF1_CONTROL_CATALOG);
 
 /** FNaF 2's vocabulary under its original, game-less name. */
 export const CONTROL_VOCABULARY = FNAF2_CONTROL_VOCABULARY;
@@ -60,19 +53,3 @@ export const GAME_CONTROLS = Object.freeze(Object.fromEntries(Object.entries(CON
     controls: catalog === FNAF2_CONTROL_CATALOG ? DEVICE_CONTROL_NAMES : Object.freeze(controlIds(catalog)),
     cameraRange: catalog.cameras.range,
   })])));
-
-/** Every control name any registered game accepts. */
-export const ALL_GAME_CONTROL_NAMES = Object.freeze([
-  ...new Set(Object.values(GAME_CONTROLS).flatMap(game => game.controls)),
-]);
-
-/**
- * The widest camera index any registered game addresses.  Games without
- * cameras register no range and are skipped rather than counted as zero.
- */
-export const MAX_GAME_CAMERA_INDEX = Math.max(
-  ...Object.values(GAME_CONTROLS)
-    // A stated range only. FNaF 4 registers `null` (no cameras exist) and
-    // FNaF 1 an `UNKNOWN(...)` string (cameras exist, ids unmapped); a truthy
-    // test would have indexed that string and produced NaN for every game.
-    .flatMap(game => isList(game.cameraRange) ? [game.cameraRange[1]] : []));

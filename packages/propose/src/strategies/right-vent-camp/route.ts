@@ -16,7 +16,7 @@ export const CYCLE = Object.freeze({
   openingFirstWindFrames: C.MONITOR_ANIM_UP + 4,
 });
 
-export const ROUTE = Object.freeze({
+const ROUTE = Object.freeze({
   id: 'right-vent-camp',
   night: 7,
   clock: '15-second-loop',

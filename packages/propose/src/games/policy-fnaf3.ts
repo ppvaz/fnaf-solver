@@ -30,11 +30,6 @@ import type { Fnaf3Sim } from '@sixam/source/games/fnaf3/sim-fnaf3.ts';
 // Sealing is one vent at a time, so this is a priority function, not a set.
 export const VENT_FROM: Readonly<Record<number, number>> = { 10: 14, 2: 15, 9: 11, 7: 12, 5: 13 };
 
-// The danger order the vent topology implies: 14 and 15 bypass the attack
-// chain and kill outright, 11 and 12 enter it two steps from the end, 13 with
-// the full chain left. No public account states this ordering.
-export const SEAL_PRIORITY = [14, 15, 11, 12, 13];
-
 /**
  * The published line, with the knobs it leaves implicit.
  *

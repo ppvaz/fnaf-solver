@@ -10,7 +10,7 @@ import { REDUCED_SCHEMA, advanceReduced, applyReduced } from '@sixam/source/game
 import type { ReducedState } from '@sixam/source/games/fnaf2/reduced-model.ts';
 import { isList, isRecord } from '@sixam/kernel';
 
-export const CYCLE_SCHEMA = 'cycle-v1';
+const CYCLE_SCHEMA = 'cycle-v1';
 export const DEVICE_CONSTRAINTS = Object.freeze({
   // The g56 runner's accepted contact floor and released Fusion poll are
   // measured device constraints; callers may provide a stricter profile.
@@ -91,7 +91,7 @@ function validateAction(action: unknown, index: number): CycleAction {
   return action as unknown as CycleAction;
 }
 
-export function validateCycle(cycle: unknown): Cycle {
+function validateCycle(cycle: unknown): Cycle {
   if (!isRecord(cycle) || cycle.schema !== CYCLE_SCHEMA || typeof cycle.id !== 'string')
     fail('schema or id is invalid');
   if (!finiteInt(cycle.durationFrames) || cycle.durationFrames <= 0)

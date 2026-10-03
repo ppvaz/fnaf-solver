@@ -21,11 +21,11 @@ export const CONTROL_CATALOG_SCHEMA = 'control-catalog-v1';
 export const ARTIFACT_ACTION_TABLE_SCHEMA = 'artifact-action-table-v1';
 
 /** `binding.anchor`, in the adapter's words (`control-anchor.js` ANCHOR_KINDS). */
-export const BINDING_ANCHORS = Object.freeze(['screen', 'world'] as const);
+const BINDING_ANCHORS = Object.freeze(['screen', 'world'] as const);
 /** `binding.contact`: how one activation reaches the game. */
-export const BINDING_CONTACTS = Object.freeze(['tap', 'hold', 'double'] as const);
+const BINDING_CONTACTS = Object.freeze(['tap', 'hold', 'double'] as const);
 /** The state a control may require before it is pressed. */
-export const PRECONDITION_VALUES: Readonly<Record<string, readonly string[]>> = Object.freeze({
+const PRECONDITION_VALUES: Readonly<Record<string, readonly string[]>> = Object.freeze({
   monitor: Object.freeze(['up', 'down']),
   mask: Object.freeze(['off']),
 });
@@ -204,7 +204,7 @@ export function defineControlCatalog<G extends GamePackage>(input: { readonly ga
 export const controlIds = (catalog: ControlCatalog) => catalog.controls.map(control => control.id);
 
 /** The `cam:N` index when `control` is one of this game's cameras, else null. */
-export const catalogCamera = (catalog: ControlCatalog, control: unknown) => cameraIndex(catalog.cameras.range, control);
+const catalogCamera = (catalog: ControlCatalog, control: unknown) => cameraIndex(catalog.cameras.range, control);
 
 /**
  * Generated `semantic-control-v1` membership for one game: a canonical id, one

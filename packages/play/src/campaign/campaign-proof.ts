@@ -8,7 +8,7 @@ import { isRecord } from '@sixam/kernel';
 import { makeCustomNightConfig, validateCustomNightConfig } from './custom-night.ts';
 import type { Dials } from './custom-night.ts';
 
-export const CAMPAIGN_PROOF_SCHEMA = 'campaign-proof-v1';
+const CAMPAIGN_PROOF_SCHEMA = 'campaign-proof-v1';
 
 /** What a proof is checked against: the night, its mode, and Night 7's configuration. */
 interface ProofTarget {
@@ -25,7 +25,7 @@ function exactDials(value: unknown, expected: Dials) {
 }
 
 /** Reject death, disappearance, and generic "finished" statuses. */
-export function validateSixAmProof(value: unknown, target: ProofTarget | null | undefined) {
+function validateSixAmProof(value: unknown, target: ProofTarget | null | undefined) {
   if (!isRecord(value) || value.outcome !== 'sixam' || value.sixAm !== true)
     fail('terminal proof is not a positive 6 AM observation');
   if (value.night !== target?.night) fail('terminal proof has the wrong night identity');
@@ -34,12 +34,7 @@ export function validateSixAmProof(value: unknown, target: ProofTarget | null | 
   return value;
 }
 
-// The save-proof validator lives in kernel/contracts (core/contracts from 2026-09-29), so the
-// evidence index re-derives a promotion without importing this app; it is
-// re-exported here unchanged.
-export { validateSaveProof };
-
-export function validateCustomReadback(value: unknown, target: ProofTarget | null | undefined) {
+function validateCustomReadback(value: unknown, target: ProofTarget | null | undefined) {
   const expected = validateCustomNightConfig(target?.custom ?? makeCustomNightConfig());
   if (!isRecord(value) || value.status !== 'PASS' || value.puppet !== PUPPET_AI ||
       !exactDials(value.dials, expected.dials))

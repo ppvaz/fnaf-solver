@@ -14,18 +14,18 @@ export const CANCELLATION_SCHEMA = 'exercise-cancellation-v1';
 export const EXERCISE_EVENT_SCHEMA = 'exercise-event-v1';
 export const EXERCISE_ATTEMPT_SCHEMA = 'exercise-attempt-v1';
 
-export const EXERCISE_KINDS = Object.freeze([
+const EXERCISE_KINDS = Object.freeze([
   'prediction', 'recognition', 'timing', 'strategy',
 ]);
-export const EXERCISE_DISPOSITIONS = Object.freeze([
+const EXERCISE_DISPOSITIONS = Object.freeze([
   'COMPLETED', 'CANCELLED', 'EXPIRED', 'UNRESOLVED',
 ]);
-export const CANCELLATION_REASONS = Object.freeze([
+const CANCELLATION_REASONS = Object.freeze([
   'critical-cue', 'capture-loss', 'belief-conflict', 'stale-sensor',
   'target-interrupted', 'session-ended', 'renderer-lost', 'activity-gate',
   'ambiguous-outcome', 'commit-deadline', 'resolution-deadline', 'manual-abort',
 ]);
-export const EXERCISE_EVENT_TYPES = Object.freeze([
+const EXERCISE_EVENT_TYPES = Object.freeze([
   'PROMPTED', 'COMMITTED', 'RESOLVED', 'CANCELLED', 'EXPIRED',
 ]);
 export const EXERCISE_CLOCKS = Object.freeze([
