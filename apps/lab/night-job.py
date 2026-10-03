@@ -40,6 +40,7 @@ interrupted. The record is `artifacts/night-jobs/<job>/job.json`.
 from __future__ import annotations
 
 import argparse
+import contextlib
 import hashlib
 import json
 import os
@@ -422,12 +423,13 @@ def main(argv: list[str] | None = None) -> int:
     job = NightJob(serial, args.job_id if args.command == "run" else f"title-{int(time.time())}")
     for signum in HELD_SIGNALS:
         signal.signal(signum, job.on_signal)
-    try:
-        job.lease = DeviceLock(serial).__enter__()
-    except DeviceBusy as error:
-        print(f"SETUP HOLD reason=device-busy serial={serial} detail={error}", flush=True)
-        return 75
-    try:
+    with contextlib.ExitStack() as held:
+        held.callback(setattr, job, "lease", None)  # last out: the lease is released, then forgotten
+        try:
+            job.lease = held.enter_context(DeviceLock(serial))
+        except DeviceBusy as error:
+            print(f"SETUP HOLD reason=device-busy serial={serial} detail={error}", flush=True)
+            return 75
         if args.command == "title":
             read = job.ensure_title(args.game, "after") if args.recover else \
                 job.read_title(args.game, {}, own_session=True)
@@ -437,9 +439,6 @@ def main(argv: list[str] | None = None) -> int:
                                                           sort_keys=True), flush=True)
             return 0 if read["status"] == "OBSERVED" else 1
         code = job.run(args)
-    finally:
-        job.lease.__exit__(None, None, None)
-        job.lease = None
     # The result is decided: held from here to exit, so an interrupt during the
     # interpreter's own exit cannot replace this code with a SIGINT death.
     signal.pthread_sigmask(signal.SIG_BLOCK, HELD_SIGNALS)

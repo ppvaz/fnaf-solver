@@ -54,6 +54,7 @@ each night's run and appends one summary line per window.
 from __future__ import annotations
 
 import argparse
+import contextlib
 import hashlib
 import importlib.util
 import json
@@ -718,6 +719,8 @@ class Window:
         self.jobs_log = self.dir / "queue.log"
         self.started = mono()
         self.lease: DeviceLock | None = None
+        # Taken in body(), released in finish_lease(): two methods, so held by a stack, not a with block.
+        self.lease_stack = contextlib.ExitStack()
         self.lease_released = False
         self.child: subprocess.Popen | None = None
         self.child_signals: list[str] = []
@@ -921,7 +924,7 @@ class Window:
         config = self.config
         self.event("window.open", serial=self.serial, configSha256=self.record["configSha256"])
         try:
-            self.lease = DeviceLock(self.serial).__enter__()
+            self.lease = self.lease_stack.enter_context(DeviceLock(self.serial))
         except DeviceBusy as error:
             return self.end("LEASE_BUSY", str(error))
         self.event("lease.acquired", ownerPid=self.lease.owner_pid)
@@ -1262,7 +1265,7 @@ class Window:
     def finish_lease(self) -> None:
         acquired = self.lease is not None
         if acquired:
-            self.lease.__exit__(None, None, None)
+            self.lease_stack.close()
             self.lease = None
             self.lease_released = True
             self.event("lease.released")
@@ -1336,14 +1339,14 @@ def preflight(config: dict, as_json: bool) -> int:
         return 2
     report: dict = {"schema": "overnight-window-preflight-v1", "serial": serial,
                     "configSha256": canonical_sha256(config), "at": iso(now_local())}
-    try:
-        lease = DeviceLock(serial).__enter__()
-    except DeviceBusy as error:
-        report["phone"] = {"outcome": "LEASE_BUSY", "reason": str(error)}
-        print(json.dumps(report, indent=2, sort_keys=True) if as_json
-              else f"PREFLIGHT LEASE_BUSY {error}")
-        return 75
-    try:
+    with contextlib.ExitStack() as held:
+        try:
+            held.enter_context(DeviceLock(serial))
+        except DeviceBusy as error:
+            report["phone"] = {"outcome": "LEASE_BUSY", "reason": str(error)}
+            print(json.dumps(report, indent=2, sort_keys=True) if as_json
+                  else f"PREFLIGHT LEASE_BUSY {error}")
+            return 75
         window = window_for(now_local(), config)
         report["window"] = None if window is None else [iso(window[0]), iso(window[1])]
         try:
@@ -1374,8 +1377,6 @@ def preflight(config: dict, as_json: bool) -> int:
                 verdict = assess_phone(serial, config, report["launcher"], 0.0)
         report["phone"] = ({"outcome": "FIT"} if verdict is None
                            else {"outcome": verdict[0], "reason": verdict[1]})
-    finally:
-        lease.__exit__(None, None, None)
     if as_json:
         print(json.dumps(report, indent=2, sort_keys=True))
     else:
@@ -1396,15 +1397,13 @@ def restore_command(config: dict) -> int:
     if not path.exists():
         print("RESTORE NOTHING-PENDING")
         return 0
-    try:
-        lease = DeviceLock(serial).__enter__()
-    except DeviceBusy as error:
-        print(f"RESTORE HOLD reason=device-busy detail={error}")
-        return 75
-    try:
+    with contextlib.ExitStack() as held:
+        try:
+            held.enter_context(DeviceLock(serial))
+        except DeviceBusy as error:
+            print(f"RESTORE HOLD reason=device-busy detail={error}")
+            return 75
         result = recover(serial, lambda kind, **fields: print(f"RESTORE {kind} {fields}", flush=True))
-    finally:
-        lease.__exit__(None, None, None)
     target = window_dir() / str(result.get("windowId") or "unknown-window")
     write_json(target / f"recovery-{now_local().strftime('%Y%m%dT%H%M%S%z')}.json", result)
     print(f"RESTORE {'VERIFIED' if result['verified'] else 'PENDING'} {json.dumps(result, sort_keys=True)}")

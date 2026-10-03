@@ -177,7 +177,7 @@
     "recorded": "2026-10-01",
     "why": "mypy --strict errors (explicit Any refused) per area when tools/test-python-types.ts landed. Pedro, 2026-10-01: real types everywhere, Python alongside TypeScript, so an entry only shrinks, and an area that reaches none loses its entry and must stay at none.",
     "entries": {
-      "py:apps/lab": 111,
+      "py:apps/lab": 106,
       "py:apps/lab/test": 58,
       "py:apps/trainer/test": 80,
       "py:packages/play/bin": 378,
