@@ -297,18 +297,11 @@ export function timedStartHeld({ plannedPhoneWallMs, seedPhoneWallMs }: {planned
   return { held: true, delayMs };
 }
 
-export async function createCampaignPorts(options: CampaignPortOptions) {
-  const { spec, bundle, profile, calibration, calibrationPath = null, qualification, serial, adb = 'adb',
-    // `armMode` is undefined for a plan that declares no #arm-verify.  It must
-    // NOT default to 'blocking' here: cli.js already maps `--arm-none` to
-    // undefined, and a default parameter turns that back into 'blocking',
-    // which campaign-bundle.js then refuses as "armMode requires an
-    // arm-verified plan".  Only the double-camera-glitch strategies (minus-toys,
-    // minus3) carry that header, so the default locked every glitchless
-    // strategy -- Minus 7 among them -- out of the device lane entirely.
-    allowSaveReset = false, armMode = undefined, captureRestarted = false,
-    nightAnchorAimMs = null, nightAnchorMaxK = null, nightAnchorPeriodMs = 1000, nightAnchorStrict = false, nightAnchorAuthorizeOnLatch = false,
-    teachOverlay = false, venueBindings = [], startResidueMs = null } = options;
+/** Refuse options a live composition cannot run: their types, the night anchor's aim and bound, the arm mode, the profile. */
+function checkPortOptions({ teachOverlay, venueBindings, nightAnchorAimMs, allowSaveReset, captureRestarted, startResidueMs,
+  nightAnchorPeriodMs, nightAnchorMaxK, armMode, profile }: { teachOverlay: boolean, venueBindings: unknown,
+  nightAnchorAimMs: number | null, allowSaveReset: boolean, captureRestarted: boolean, startResidueMs: number | null,
+  nightAnchorPeriodMs: number, nightAnchorMaxK: number | null, armMode: string | undefined, profile: ResolvedDeviceProfile }) {
   if (typeof teachOverlay !== 'boolean') throw new TypeError('teachOverlay must be boolean');
   // The runner's own preflight compares the venue against the same bindings
   // the CLI's did, so the retained result records the same verdict.
@@ -316,7 +309,6 @@ export async function createCampaignPorts(options: CampaignPortOptions) {
   // The teach panel narrates from the anchor's release; an unanchored night
   // has no origin on the helper's clock to narrate from.
   if (teachOverlay && nightAnchorAimMs === null) throw new TypeError('teachOverlay requires a night anchor');
-  if (typeof serial !== 'string' || serial.length === 0) throw new TypeError('modern campaign ports require an ADB serial');
   if (typeof allowSaveReset !== 'boolean') throw new TypeError('allowSaveReset must be boolean');
   if (typeof captureRestarted !== 'boolean') throw new TypeError('captureRestarted must be boolean');
   if (startResidueMs !== null && !isStartResidue(startResidueMs))
@@ -338,6 +330,23 @@ export async function createCampaignPorts(options: CampaignPortOptions) {
     throw new TypeError('armMode must be blocking or observe-once');
   if (profile?.actuator !== 'hid-multi' || profile?.visualSensor !== 'mediaprojection')
     throw new TypeError('modern campaign ports require a HID + MediaProjection profile');
+}
+
+export async function createCampaignPorts(options: CampaignPortOptions) {
+  const { spec, bundle, profile, calibration, calibrationPath = null, qualification, serial, adb = 'adb',
+    // `armMode` is undefined for a plan that declares no #arm-verify.  It must
+    // NOT default to 'blocking' here: cli.js already maps `--arm-none` to
+    // undefined, and a default parameter turns that back into 'blocking',
+    // which campaign-bundle.js then refuses as "armMode requires an
+    // arm-verified plan".  Only the double-camera-glitch strategies (minus-toys,
+    // minus3) carry that header, so the default locked every glitchless
+    // strategy -- Minus 7 among them -- out of the device lane entirely.
+    allowSaveReset = false, armMode = undefined, captureRestarted = false,
+    nightAnchorAimMs = null, nightAnchorMaxK = null, nightAnchorPeriodMs = 1000, nightAnchorStrict = false, nightAnchorAuthorizeOnLatch = false,
+    teachOverlay = false, venueBindings = [], startResidueMs = null } = options;
+  checkPortOptions({ teachOverlay, venueBindings, nightAnchorAimMs, allowSaveReset, captureRestarted, startResidueMs,
+    nightAnchorPeriodMs, nightAnchorMaxK, armMode, profile });
+  if (typeof serial !== 'string' || serial.length === 0) throw new TypeError('modern campaign ports require an ADB serial');
   const bridge = new AdbDeviceBridge({ serial, adb });
   if (!captureRestarted) {
     const restarted = await bridge.restartCompanionCapture({ target: 'fnaf2', screen: 'menu' });

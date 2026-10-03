@@ -427,8 +427,8 @@
         "why": "the FNaF 4 night loop (doors, bed, closet, hearing) over live frames; splitting the policy step from the device step needs a live FNaF 4 night, and audit PG10’s teardown change is not yet confirmed on a phone"
       },
       "fn:packages/play/src/campaign/modern-campaign-ports.ts#createCampaignPorts": {
-        "count": 708,
-        "why": "the live campaign’s composition of its ports (title, lifecycle, start, Custom Night, teach, controls); the control observers left in audit PC13, and each remaining port is its own extraction, held behind the executor split above"
+        "count": 682,
+        "why": "the live campaign's composition of its ports (title, lifecycle, start, Custom Night, teach, controls); the control observers left in audit PC13 and the option checks in checkPortOptions (682); each remaining port is its own extraction"
       },
       "fn:packages/propose/bin/census/fnaf1-device-lane.ts#grid420": {
         "count": 256,
