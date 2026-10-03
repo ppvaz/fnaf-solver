@@ -7,7 +7,7 @@ import { cpus } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { Worker } from 'node:worker_threads';
 import { isList, isRecord } from '@sixam/kernel';
-import { RNG_INCREMENT, RNG_MASK, RNG_MODULUS, RNG_MULTIPLIER } from '../../../source/src/games/fnaf2/rng.ts';
+import { RNG_INCREMENT, RNG_MASK, RNG_MODULUS, RNG_MULTIPLIER } from '@sixam/source/games/fnaf2/rng.ts';
 
 export const sha256 = (bytes: BinaryLike) => createHash('sha256').update(bytes).digest('hex');
 

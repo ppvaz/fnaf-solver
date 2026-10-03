@@ -11,7 +11,7 @@
 //
 //   node apps/desktop/test/test-native-regions.ts
 
-import { parseRegionRead, regionSetLine } from '../../../packages/play/src/venues/phone/companion.ts';
+import { parseRegionRead, regionSetLine } from '@sixam/play/venues/phone/companion';
 import { loadRegionSet, pngFromRegion, recordFrames } from '../../../packages/play/bin/phone/native-regions.ts';
 import { makeClassifier } from '../../../packages/play/games/fnaf1/fnaf1-detectors.ts';
 import type { Detectors, RegionRead } from '../../../packages/play/games/fnaf1/fnaf1-detectors.ts';

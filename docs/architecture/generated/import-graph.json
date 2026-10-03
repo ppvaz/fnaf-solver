@@ -5,8 +5,8 @@
       "file": "apps/desktop/bin/deathchart.ts",
       "imports": [
         "../../../packages/propose/bin/plans/human-gate.ts",
-        "../../../packages/review/src/stat.ts",
         "../../../tools/chrome.ts",
+        "@sixam/review/stat",
         "@sixam/source/fnaf2",
         "node:child_process",
         "node:fs",
@@ -22,11 +22,11 @@
         "../../../packages/play/games/fnaf1/fnaf1-detectors.ts",
         "../../../packages/play/games/fnaf1/fnaf1-menu-probe.ts",
         "../../../packages/play/games/fnaf1/fnaf1-winner.ts",
-        "../../../packages/play/src/campaign/adb-bridge.ts",
-        "../../../packages/play/src/campaign/physical-ports.ts",
-        "../../../packages/play/src/venues/phone/hid.ts",
         "../../../packages/propose/bin/census/fnaf1-device-lane.ts",
         "@sixam/kernel",
+        "@sixam/play/campaign/adb-bridge",
+        "@sixam/play/campaign/physical-ports",
+        "@sixam/play/venues/phone/hid",
         "node:crypto",
         "node:fs",
         "node:fs/promises",
@@ -297,8 +297,8 @@
       "imports": [
         "../../../packages/play/bin/phone/native-regions.ts",
         "../../../packages/play/games/fnaf1/fnaf1-detectors.ts",
-        "../../../packages/play/src/venues/phone/companion.ts",
         "../bin/fnaf1-custom-run.ts",
+        "@sixam/play/venues/phone/companion",
         "@sixam/source/fnaf1",
         "node:fs"
       ]
@@ -2865,7 +2865,6 @@
     {
       "file": "packages/propose/bin/recompile/phone-encounter-replay.ts",
       "imports": [
-        "../../../play/src/sensors/fnaf2/button-strokes.ts",
         "../../../review/bin/recompile/compare-draw-trace.ts",
         "../../../review/venue-grid/encounter-replay.ts",
         "../../../source/recompile/model-draw-trace.ts",
@@ -2874,6 +2873,7 @@
         "./compare-schedule-replay.ts",
         "./schedule-to-input.ts",
         "./sweep-common.ts",
+        "@sixam/play/sensors/fnaf2/button-strokes",
         "@sixam/review/renamed-path",
         "@sixam/source",
         "@sixam/source/fnaf2",
@@ -3092,7 +3092,6 @@
     {
       "file": "packages/propose/bin/recompile/pilot/test-pilot.ts",
       "imports": [
-        "../../../../source/src/games/fnaf3/sim-fnaf3.ts",
         "../sweep-common.ts",
         "./batch.ts",
         "./fnaf3.ts",
@@ -3103,6 +3102,7 @@
         "./replay.ts",
         "./search.ts",
         "@sixam/review/renamed-path",
+        "@sixam/source/games/fnaf3/sim-fnaf3.ts",
         "node:assert/strict",
         "node:fs",
         "node:os",
@@ -3143,8 +3143,8 @@
     {
       "file": "packages/propose/bin/recompile/sweep-common.ts",
       "imports": [
-        "../../../source/src/games/fnaf2/rng.ts",
         "@sixam/kernel",
+        "@sixam/source/games/fnaf2/rng.ts",
         "node:crypto",
         "node:fs",
         "node:os",
@@ -5733,6 +5733,7 @@
         "../../review/src/pack-lift.mjs",
         "../src/index.ts",
         "./clockwork/index.ts",
+        "./gate-kit.ts",
         "./labels.js",
         "./module-refs.ts",
         "./phone/clocks.js",
@@ -5823,7 +5824,7 @@
     {
       "file": "tools/lanes.ts",
       "imports": [
-        "../packages/review/src/lanes.ts",
+        "@sixam/review/lanes",
         "node:child_process",
         "node:path",
         "node:url"
@@ -5846,7 +5847,7 @@
       "file": "tools/push-gate.ts",
       "imports": [
         "../apps/desktop/src/lane-kit.ts",
-        "../packages/review/src/lanes.ts",
+        "@sixam/review/lanes",
         "node:child_process",
         "node:fs",
         "node:os",
@@ -5886,8 +5887,8 @@
     {
       "file": "tools/test-commit-identity.ts",
       "imports": [
-        "../packages/review/src/lanes.ts",
         "./commit-identity.ts",
+        "@sixam/review/lanes",
         "node:assert/strict",
         "node:child_process",
         "node:fs",
@@ -5964,7 +5965,7 @@
     {
       "file": "tools/test-lanes.ts",
       "imports": [
-        "../packages/review/src/lanes.ts",
+        "@sixam/review/lanes",
         "node:assert/strict",
         "node:child_process",
         "node:fs",
@@ -5989,11 +5990,11 @@
         "../packages/play/bin/phone/capabilities.ts",
         "../packages/propose/bin/plans/basin-edge.ts",
         "../packages/review/bin/grade/run-report.ts",
-        "../packages/review/src/ci-reach.ts",
-        "../packages/review/src/lanes.ts",
-        "../packages/review/src/mistake-gates.ts",
-        "../packages/review/src/mistakes.ts",
-        "../packages/review/src/refusals.ts",
+        "@sixam/review/ci-reach",
+        "@sixam/review/lanes",
+        "@sixam/review/mistake-gates",
+        "@sixam/review/mistakes",
+        "@sixam/review/refusals",
         "\\.\\/basin-edge\\.ts",
         "node:child_process",
         "node:crypto",

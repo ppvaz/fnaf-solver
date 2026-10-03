@@ -12,6 +12,7 @@
   },
   "exports": {
     "./chronicle-schema": "./src/chronicle-schema.ts",
+    "./ci-reach": "./src/ci-reach.ts",
     "./consequence": "./src/consequence.ts",
     "./renamed-path": "./src/renamed-path.ts",
     "./envelopes": "./src/envelopes.ts",
@@ -19,13 +20,16 @@
     "./evidence-cohort": "./src/evidence-cohort.ts",
     "./evidence-pack": "./src/evidence-pack.ts",
     "./evidence-promotion": "./src/evidence-promotion.ts",
+    "./lanes": "./src/lanes.ts",
     "./measure": "./src/measure/index.ts",
+    "./mistake-gates": "./src/mistake-gates.ts",
     "./mistakes": "./src/mistakes.ts",
     "./pack-lift": "./src/pack-lift.ts",
     "./promotions-query": "./src/promotions-query.ts",
     "./refusals": "./src/refusals.ts",
     "./registers": "./src/registers.ts",
     "./roadmap": "./src/roadmap.ts",
-    "./solver": "./src/solver.ts"
+    "./solver": "./src/solver.ts",
+    "./stat": "./src/stat.ts"
   }
 }

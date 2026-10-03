@@ -8,7 +8,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { readLanes } from '../packages/review/src/lanes.ts';
+import { readLanes } from '@sixam/review/lanes';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const RUNNER = join(ROOT, 'tools', 'lanes.ts');

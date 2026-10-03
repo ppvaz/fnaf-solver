@@ -82,12 +82,12 @@ import { report } from '../packages/review/bin/grade/run-report.ts';
 import type { RunEvent } from '../packages/review/bin/grade/run-report.ts';
 import { formatEdge, scanEdge } from '../packages/propose/bin/plans/basin-edge.ts';
 import { report as capabilityReport, traceDecision } from '../packages/play/bin/phone/capabilities.ts';
-import { checkCapabilitiesFirst } from '../packages/review/src/refusals.ts';
-import { readLanes } from '../packages/review/src/lanes.ts';
-import { ciReach, ciSteps, readCiExemptions, walk, walkContext } from '../packages/review/src/ci-reach.ts';
-import type { Sink } from '../packages/review/src/ci-reach.ts';
-import { readMistakes } from '../packages/review/src/mistakes.ts';
-import { MISTAKE_GATES_FILE, REGISTER_GATES } from '../packages/review/src/mistake-gates.ts';
+import { checkCapabilitiesFirst } from '@sixam/review/refusals';
+import { readLanes } from '@sixam/review/lanes';
+import { ciReach, ciSteps, readCiExemptions, walk, walkContext } from '@sixam/review/ci-reach';
+import type { Sink } from '@sixam/review/ci-reach';
+import { readMistakes } from '@sixam/review/mistakes';
+import { MISTAKE_GATES_FILE, REGISTER_GATES } from '@sixam/review/mistake-gates';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SELF = MISTAKE_GATES_FILE;

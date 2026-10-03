@@ -58,7 +58,7 @@ import { STRATEGY_REGISTRY, validateWinner } from '../plans/bundle.ts';
 import { KNOBS0, build } from '../plans/minus-toys-plan.ts';
 import { windowCode } from '../../../review/venue-grid/encounter-replay.ts';
 import { MODEL_CONTEXT_LIGHT } from '@sixam/source';
-import { buttonStrokeState, BUTTON_STROKE_THRESHOLDS } from '../../../play/src/sensors/fnaf2/button-strokes.ts';
+import { buttonStrokeState, BUTTON_STROKE_THRESHOLDS } from '@sixam/play/sensors/fnaf2/button-strokes';
 import { currentPath } from '@sixam/review/renamed-path';
 import type { Sim } from '@sixam/source/fnaf2';
 

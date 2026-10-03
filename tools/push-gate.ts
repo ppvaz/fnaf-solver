@@ -29,7 +29,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync 
 import { homedir, tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { type Lane as TableLane, readLanes } from '../packages/review/src/lanes.ts';
+import { type Lane as TableLane, readLanes } from '@sixam/review/lanes';
 import { MEMORY_MAX, SCOPED, laneCommand, linkDependencies, recordRun, withoutGit } from '../apps/desktop/src/lane-kit.ts';
 
 const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '..'));

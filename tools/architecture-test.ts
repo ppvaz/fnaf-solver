@@ -20,6 +20,7 @@ import { builtinModules } from 'node:module';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
+import { loadBaseline, ratchet } from './gate-kit.ts';
 import { moduleReferences, parse } from './module-refs.ts';
 
 const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '..'));
@@ -580,5 +581,57 @@ for (const path of [...await files(join(ROOT, 'apps')), ...await files(join(ROOT
 // The campaign's live refusals (no --confirm-live; a --ports module outside the named compositions) and
 // the retired `live`, `dry-run` and `calibrate` commands are held by apps/desktop/test/device-cli.test.ts,
 // which runs the CLI: a regex over its source passed on a commented-out line and failed on a reworded one.
+
+// --- Source's public surface is Source -------------------------------------------
+// The source rule scopes src/, but Source's package.json exports what any consumer may import, and a
+// module exported from outside src/ escaped it: ./truth (decompile/truth.ts) reads the caller's dump with
+// fs, zlib and a child process, and Review's solver imports it. Every exported module answers to the
+// source rule; one that cannot yet is named here with the decision that would move it.
+const SOURCE_EXPORT_HOST_TOLERATED = new Map([
+  ['packages/source/decompile/truth.ts', 'DECISION (Pedro): the truth surface\'s host reader (it finds the caller\'s ' +
+    'local dump, inflates it and runs the configured dumper). Its pure half is ./truth/read. Moving it into Review, its ' +
+    'one production consumer, moves its 228-line test and the synthetic dump fixtures Source\'s tests share with it'],
+]);
+const sourceManifest = JSON.parse(await readFile(join(ROOT, 'packages/source/package.json'), 'utf8'));
+const sourceExports = Object.values(sourceManifest.exports as Record<string, string>)
+  .filter(target => !target.includes('*')).map(target => `packages/source/${target.replace(/^\.\//, '')}`)
+  .filter(path => !path.startsWith('packages/source/src/'));
+const sourceRule = RULES.find(rule => rule.id === 'source') as Rule;   // declared above
+for (const path of sourceExports) {
+  const crossing = moduleReferences(await tree(join(ROOT, path))).map(reference => ({ ...reference, ...landing(path, reference.specifier) }))
+    .filter(reference => sourceRule.refuse(reference, path)).map(reference => reference.specifier);
+  const why = SOURCE_EXPORT_HOST_TOLERATED.get(path);
+  if (why) assert.ok(crossing.length > 0, `${path} is tolerated as a host module Source exports, and now obeys the source rule: drop its entry`);
+  else assert.deepEqual(crossing, [], `${path} is exported by Source (package.json) and reaches ${crossing.join(', ')}: ${sourceRule.why}`);
+}
+for (const path of SOURCE_EXPORT_HOST_TOLERATED.keys())
+  assert.ok(sourceExports.includes(path), `SOURCE_EXPORT_HOST_TOLERATED names ${path}, which Source no longer exports`);
+
+// --- Another workspace through its package name, not a relative climb -----------
+// A relative import into another workspace (`../../../play/bin/phone/actuator.ts`) bypasses its package
+// exports, so the public surface a package declares is not the one used, and the dead-code and affected
+// gates misread the hubs it reaches. Counted per importing area and held to tools/quality-baseline.json
+// (`deepImports`, through tools/gate-kit.ts): an area's count only shrinks.
+// Planted: a climb into a sibling package is another workspace; one inside its own package and one to a
+// package name are not.
+const crossesWorkspace = (from: string, specifier: string) => specifier.startsWith('.') && landing(from, specifier).unit !== unitOf(from)
+  && /^(?:packages|apps)\//.test(landing(from, specifier).unit);
+assert.ok(crossesWorkspace('packages/propose/bin/plans/x.ts', '../../../play/bin/phone/actuator.ts'), 'a climb into play is another workspace');
+assert.ok(!crossesWorkspace('packages/propose/bin/plans/x.ts', '../census/y.ts'), 'a sibling inside propose is not');
+assert.ok(!crossesWorkspace('packages/propose/bin/plans/x.ts', '@sixam/play/campaign/hid-schedule'), 'a package name is not');
+const deepImports = new Map<string, { count: number, detail: string }>();
+for (const path of [...production, ...applications, ...await files(join(ROOT, 'tools'))]) {
+  const from = repoPath(path);
+  const own = unitOf(from);
+  for (const reference of moduleReferences(await tree(path))) {
+    if (!reference.specifier || !crossesWorkspace(from, reference.specifier)) continue;
+    const { target } = landing(from, reference.specifier);
+    const entry = deepImports.get(`deep:${own}`) ?? { count: 0, detail: '' };
+    deepImports.set(`deep:${own}`, { count: entry.count + 1, detail: entry.detail || `first: ${from} -> ${target}` });
+  }
+}
+const deepFailures = ratchet(deepImports, loadBaseline('deepImports'));
+assert.deepEqual(deepFailures, [], `relative imports into another workspace (use its package name and exports):\n${deepFailures.join('\n')}`);
 console.log(`architecture: ${hostFree.length} host-free core, source, kernel and propose modules and ${production.length} package modules obey boundary checks ` +
-  `(${parsed.size} modules parsed; rules: ${RULES.map(rule => rule.id).join(', ')})`);
+  `(${parsed.size} modules parsed; rules: ${RULES.map(rule => rule.id).join(', ')}; Source's exports held to the source rule; ` +
+  `${[...deepImports.values()].reduce((sum, item) => sum + item.count, 0)} relative imports into another workspace, none growing)`);

@@ -30,7 +30,7 @@ import { writeFileSync, existsSync } from 'node:fs';
 import { chromeBinary, chromeAvailable } from '../../../tools/chrome.ts';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { modelGate, GATE_RUNS, HUMAN_SLACK_MS } from '../../../packages/propose/bin/plans/human-gate.ts';
-import { formatRate } from '../../../packages/review/src/stat.ts';
+import { formatRate } from '@sixam/review/stat';
 import * as C from '@sixam/source/fnaf2';
 
 const arg = <T>(name: string, def: T) => {

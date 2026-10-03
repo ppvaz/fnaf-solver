@@ -201,5 +201,27 @@
         "why": "narrowings mypy cannot see when the count began: Pillow pixel access returns a union for every image mode while native-frame.py reads one RGB and one L image (4 calls); game-builds.py narrows rows its earlier steps filled in (3); sound-map.py passes a list or an ndarray its caller chose (2)"
       }
     }
+  },
+  "deepImports": {
+    "recorded": "2026-10-03",
+    "why": "Relative imports into another workspace, counted per importing area when tools/architecture-test.ts began counting them (2026-10-03, after the cheap ones moved to package names); an entry only shrinks.",
+    "entries": {
+      "deep:apps/desktop": {
+        "count": 25,
+        "why": "every target is a command-line module its package does not export: propose bin/plans (bundle.ts, imported by 24 modules), play bin/phone (local-profile.ts) and the play/games runners. Which bin modules are library is the ADR 0002 move into src/ with an export, not a specifier rewrite"
+      },
+      "deep:packages/propose": {
+        "count": 69,
+        "why": "48 reach modules no package exports (source/recompile's draw trace and harness, play bin/ and games/, review bin/ and venue-grid); 21 reach exported src modules from files a parallel Propose fixer holds or from bundle-hashed sources (recipe, minus-toys-plan, parked hid-device-pilot), where a rewrite changes engine.sourceSha256 and invalidates prebuilt bundles"
+      },
+      "deep:packages/review": {
+        "count": 3,
+        "why": "source/recompile/model-draw-trace.ts, which Source does not export: the recompile lane is a bin of Source, and exporting it is the same ADR 0002 decision"
+      },
+      "deep:tools": {
+        "count": 7,
+        "why": "apps/desktop/src/lane-kit.ts (the desktop has no exports map) and bin modules of review, play and propose that their packages do not export"
+      }
+    }
   }
 }

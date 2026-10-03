@@ -14,7 +14,7 @@
 import { spawnSync } from 'node:child_process';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { type Lane, readLanes } from '../packages/review/src/lanes.ts';
+import { type Lane, readLanes } from '@sixam/review/lanes';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 

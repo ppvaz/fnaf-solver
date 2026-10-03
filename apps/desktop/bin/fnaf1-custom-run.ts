@@ -36,9 +36,9 @@ import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { performance } from 'node:perf_hooks';
-import { AdbDeviceBridge } from '../../../packages/play/src/campaign/adb-bridge.ts';
-import { AdbCompanionPort, AdbHidProcess } from '../../../packages/play/src/campaign/physical-ports.ts';
-import { HidWireTransport } from '../../../packages/play/src/venues/phone/hid.ts';
+import { AdbDeviceBridge } from '@sixam/play/campaign/adb-bridge';
+import { AdbCompanionPort, AdbHidProcess } from '@sixam/play/campaign/physical-ports';
+import { HidWireTransport } from '@sixam/play/venues/phone/hid';
 import { BINDINGS_DIR } from '@sixam/kernel';
 import { ProbeRecord, ensureTitle, titleRead, titleConsensus, settleCustomNight, setDials, restartToTitle,
   DIALS, LEAVE_WAIT_MS } from '../../../packages/play/games/fnaf1/fnaf1-menu-probe.ts';

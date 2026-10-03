@@ -21,7 +21,7 @@ import { GAMES, gameModulePath, loadGame, view } from './pilot.ts';
 import { recordInputs } from './replay.ts';
 import type { PilotObject, PilotState } from './pilot.ts';
 import { MARKERS, ACTORS, WATCH as WATCH4, places, doomStart as doomStart4 } from './fnaf4.ts';
-import { GRAPH, LURE_FROM } from '../../../../source/src/games/fnaf3/sim-fnaf3.ts';
+import { GRAPH, LURE_FROM } from '@sixam/source/games/fnaf3/sim-fnaf3.ts';
 import { currentPath } from '@sixam/review/renamed-path';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
