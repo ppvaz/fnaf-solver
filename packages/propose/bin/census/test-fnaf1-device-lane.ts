@@ -24,7 +24,7 @@ import { Fnaf1Sim, DOOR_OPEN, DOOR_SHUT, DOOR_CLOSING, DOOR_OPENING, INPUT }
   from '@sixam/source/fnaf1';
 import { runDeviceNight, loadTiming, grid420, FOUR_TWENTY, TIMING_PATH, POPULATION_KIND, POPULATION_LANES }
   from './fnaf1-device-lane.ts';
-import type { populationRecord } from './fnaf1-device-lane.ts';
+import type { Frame, populationRecord } from './fnaf1-device-lane.ts';
 import { populationArgs } from './fnaf1-device-lane.ts';
 import { designBlock } from './winner-census.ts';
 
@@ -186,6 +186,10 @@ if (failures.length) {
   for (const f of failures) console.error(`  - ${f}`);
   process.exit(1);
 }
+// A frame as the phone's classifier reports it (a flickering doorway, a door it cannot place, no CAM 4B read) is a
+// frame the policies read: fnaf1-custom-run hands the classifier's frame over as it is, with no cast.
+const classified: Frame = { frame: 12, monitor: 'down', cam: 0, left: 'flicker', right: 'hidden', leftDoor: null, rightDoor: null };
+ok('a classifier frame carries what the policies read', classified.chica4B === undefined && classified.left === 'flicker');
 // The population command line: its own flags read, any other refused rather than ignored.
 ok('population --count is read', populationArgs(['--count', '3000'])('count', '65536') === '3000');
 ok('population --route defaults to tree', populationArgs([])('route', 'tree') === 'tree');

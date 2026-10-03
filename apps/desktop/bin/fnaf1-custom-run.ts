@@ -386,7 +386,7 @@ async function runPolicy({ policy, options, hid, record, controls, recorder, cla
       if (stale > LEFT_OFFICE_FRAMES) { await record.event('night-left-office', { atMs: ctx.now() }); return 'LEFT_OFFICE'; }
       teach?.frame(f, pan);
       // The policy reads the classifier's frame where the model hands it a rendered one.
-      send = f as unknown as Frame;
+      send = { ...f, frame: Number(f.frame) };
       continue;
     }
     if ('pan' in value) {

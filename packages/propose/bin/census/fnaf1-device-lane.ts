@@ -123,11 +123,21 @@ function drawer(rng: () => number, lane: string) {
  * classes; the model assumes they classify a visible region correctly and
  * nothing more.
  */
-/** What one rendered frame shows to the helper's native regions. */
-export type Frame = ReturnType<typeof render>;
+/**
+ * What a device policy reads of a frame: the model's render (below) and the phone's classifier
+ * (fnaf1-detectors.ts DeviceFrame) both provide it. A doorway's class is the renderer's hidden/dark/clear/occupied,
+ * and on the phone also `flicker`, which no rule acts on; a door the classifier cannot place is null. Chica on
+ * CAM 4B is rendered by the model and not yet read on the phone, so it is absent there.
+ */
+export interface Frame {
+  readonly frame: number, readonly monitor: 'flipping' | 'down' | 'up', readonly cam: number;
+  readonly left: string, readonly right: string, readonly leftDoor: number | null, readonly rightDoor: number | null;
+  readonly chica4B?: boolean | null;
+}
 
 function render(sim: Fnaf1Sim, pan: Side | 'moving') {
   const monitorUp = sim.viewing > 0 && !sim.flip;
+  const monitor: Frame['monitor'] = monitorUp ? 'up' : sim.flip ? 'flipping' : 'down';
   const officeClear = sim.viewing === 0 && !sim.flip;   // no flip drawing over the room
   // A lit doorway shows its occupant whether the door is open or shut:
   // through a shut left door Bonnie changes the shadow, and Chica stands in
@@ -143,7 +153,7 @@ function render(sim: Fnaf1Sim, pan: Side | 'moving') {
   };
   return {
     frame: sim.frame,
-    monitor: monitorUp ? 'up' : sim.flip ? 'flipping' : 'down',
+    monitor,
     cam: monitorUp ? sim.viewing : 0,
     // CAM 4B shows Chica over Freddy when both are there (community note; the
     // draw order is not yet read from the dump -- UNKNOWN(cam4b-draw-order)).
