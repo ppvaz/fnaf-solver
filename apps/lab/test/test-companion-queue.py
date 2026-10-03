@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""No-device contract tests for the safe Companion queue."""
+"""No-device contract tests for the safe Companion queue.
+
+Every expectation is a check() that records its failure, as in the lab's other
+tests, never a bare assert: `python3 -O` strips asserts, and the test would
+then pass having checked nothing.
+"""
 
 from __future__ import annotations
 
@@ -9,57 +14,111 @@ import os
 import subprocess
 import sys
 import tempfile
+from collections.abc import Callable
 from pathlib import Path
+from types import ModuleType
 
 
 HERE = Path(__file__).resolve().parent
-SPEC = importlib.util.spec_from_file_location("companion_queue", HERE / "../companion-queue.py")
-assert SPEC and SPEC.loader
-MODULE = importlib.util.module_from_spec(SPEC)
-SPEC.loader.exec_module(MODULE)
+QUEUE_SCRIPT = HERE / "../companion-queue.py"
 
 
-with tempfile.TemporaryDirectory(prefix="companion-queue-test-") as directory:
-    queue = Path(directory) / "jobs.json"
+def load_queue() -> ModuleType:
+    spec = importlib.util.spec_from_file_location("companion_queue", QUEUE_SCRIPT)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"cannot load {QUEUE_SCRIPT}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+MODULE = load_queue()
+
+failures: list[str] = []
+passed = 0
+
+
+def check(name: str, condition: bool, detail: object = "") -> None:
+    global passed
+    if condition:
+        passed += 1
+    else:
+        failures.append(f"{name}: {str(detail)[:2000]}")
+
+
+def patched(names: dict[str, object]) -> Callable[[], None]:
+    """Set MODULE's attributes; the returned function puts them back."""
+    previous = {name: getattr(MODULE, name) for name in names}
+    for name, value in names.items():
+        setattr(MODULE, name, value)
+
+    def restore() -> None:
+        for name, value in previous.items():
+            setattr(MODULE, name, value)
+    return restore
+
+
+def queue_file_env(queue: Path) -> Callable[[], None]:
+    """Point CUE_HELPER_QUEUE_FILE at `queue`; the returned function restores it."""
+    previous = os.environ.get("CUE_HELPER_QUEUE_FILE")
+    os.environ["CUE_HELPER_QUEUE_FILE"] = str(queue)
+
+    def restore() -> None:
+        if previous is None:
+            os.environ.pop("CUE_HELPER_QUEUE_FILE", None)
+        else:
+            os.environ["CUE_HELPER_QUEUE_FILE"] = previous
+    return restore
+
+
+def read_queue(queue: Path) -> list[dict[str, object]]:
+    jobs = json.loads(queue.read_text(encoding="utf-8"))
+    return jobs if isinstance(jobs, list) else []
+
+
+def persistence_and_runs(directory: Path) -> None:
+    queue = directory / "jobs.json"
     environment = {**os.environ, "CUE_HELPER_QUEUE_FILE": str(queue)}
     result = subprocess.run(
-        ["python3", str(HERE / "../companion-queue.py"), "enqueue", "menu-check"],
+        ["python3", str(QUEUE_SCRIPT), "enqueue", "menu-check"],
         cwd=HERE.parents[2], env=environment, check=True, text=True,
         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    assert "QUEUED" in result.stdout
-    jobs = json.loads(queue.read_text(encoding="utf-8"))
-    assert len(jobs) == 1 and jobs[0]["state"] == "PENDING"
+    check("enqueue prints QUEUED", "QUEUED" in result.stdout, result.stdout)
+    jobs = read_queue(queue)
+    check("one PENDING job is persisted", len(jobs) == 1 and jobs[0]["state"] == "PENDING", jobs)
 
     keyed = subprocess.run(
-        ["python3", str(HERE / "../companion-queue.py"), "enqueue", "menu-check",
+        ["python3", str(QUEUE_SCRIPT), "enqueue", "menu-check",
          "--idempotency-key", "same-agent-request", "--json"],
         cwd=HERE.parents[2], env=environment, check=True, text=True,
         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     keyed_again = subprocess.run(
-        ["python3", str(HERE / "../companion-queue.py"), "enqueue", "menu-check",
+        ["python3", str(QUEUE_SCRIPT), "enqueue", "menu-check",
          "--idempotency-key", "same-agent-request", "--json"],
         cwd=HERE.parents[2], env=environment, check=True, text=True,
         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    assert json.loads(keyed.stdout)["created"] is True
-    assert json.loads(keyed_again.stdout)["created"] is False
-    assert len(json.loads(queue.read_text(encoding="utf-8"))) == 2
+    check("an idempotency key creates its job once",
+          json.loads(keyed.stdout)["created"] is True and json.loads(keyed_again.stdout)["created"] is False
+          and len(read_queue(queue)) == 2, (keyed.stdout, keyed_again.stdout))
 
-    assert MODULE.job_command(jobs[0])[-4:] == ["--screen", "menu", "--wait", "30"]
-    assert all(part not in ("input", "tap", "hid") for part in MODULE.job_command(jobs[0]))
+    command = MODULE.job_command(jobs[0])
+    check("a menu check waits for the menu", command[-4:] == ["--screen", "menu", "--wait", "30"], command)
+    check("no job command inputs, taps or HID", all(part not in ("input", "tap", "hid") for part in command), command)
 
     hold = subprocess.run(
-        ["python3", str(HERE / "../companion-queue.py"), "run"],
+        ["python3", str(QUEUE_SCRIPT), "run"],
         cwd=HERE.parents[2], env={**environment, "ANDROID_SERIAL": "missing-device"},
         check=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    assert hold.returncode == 75
-    assert "QUEUE HOLD reason=device-unavailable" in hold.stdout
+    check("an absent device holds the queue (75)",
+          hold.returncode == 75 and "QUEUE HOLD reason=device-unavailable" in hold.stdout,
+          (hold.returncode, hold.stdout))
 
     with MODULE.QueueRunnerLock(queue):
         try:
             with MODULE.QueueRunnerLock(queue):
-                raise AssertionError("a second queue runner unexpectedly acquired the lease")
+                check("a second queue runner cannot take the lease", False, "it acquired the lease")
         except MODULE.QueueRunnerBusy:
-            pass
+            check("a second queue runner cannot take the lease", True)
 
     child_code = """
 import importlib.util
@@ -76,21 +135,16 @@ with module.QueueRunnerLock(Path(sys.argv[2])):
     signal.pause()
 """
     child = subprocess.Popen(
-        [sys.executable, "-c", child_code, str(HERE / "../companion-queue.py"),
-         str(queue)],
+        [sys.executable, "-c", child_code, str(QUEUE_SCRIPT), str(queue)],
         env=environment, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     try:
-        assert child.stdout is not None
-        assert child.stdout.readline().strip() == "child-runner-lease-acquired"
-        previous_queue = os.environ.get("CUE_HELPER_QUEUE_FILE")
-        os.environ["CUE_HELPER_QUEUE_FILE"] = str(queue)
+        line = child.stdout.readline().strip() if child.stdout is not None else ""
+        check("another process holds the runner lease", line == "child-runner-lease-acquired", line)
+        restore_env = queue_file_env(queue)
         try:
-            assert MODULE.run_queue(0.0, 0.1) == 75
+            check("a run while another runner holds the lease holds (75)", MODULE.run_queue(0.0, 0.1) == 75)
         finally:
-            if previous_queue is None:
-                os.environ.pop("CUE_HELPER_QUEUE_FILE", None)
-            else:
-                os.environ["CUE_HELPER_QUEUE_FILE"] = previous_queue
+            restore_env()
     finally:
         child.terminate()
         child.wait(timeout=5)
@@ -98,107 +152,114 @@ with module.QueueRunnerLock(Path(sys.argv[2])):
             child.kill()
             child.wait(timeout=5)
     with MODULE.QueueRunnerLock(queue):
-        pass
+        check("the lease is free once its holder exits", True)
 
-    original_run_adb = MODULE.run_adb
+    restore = patched({"run_adb": lambda serial, *args, **kwargs: (
+        (0, "mWakefulness=Awake") if args == ("shell", "dumpsys", "power") else (0, "isKeyguardShowing=true"))})
     try:
-        MODULE.run_adb = lambda serial, *args, **kwargs: (
-            (0, "mWakefulness=Awake") if args == ("shell", "dumpsys", "power") else
-            (0, "isKeyguardShowing=true")
-        )
-        ready, reason = MODULE.device_ready("fixture-locked")
-        assert ready is False and reason == "device-locked"
-
-        MODULE.run_adb = lambda serial, *args, **kwargs: (
-            (0, "mWakefulness=Dozing") if args == ("shell", "dumpsys", "power") else
-            (0, "")
-        )
-        ready, reason = MODULE.device_ready("fixture-asleep")
-        assert ready is False and reason == "device-not-awake"
+        check("a locked device is not ready", MODULE.device_ready("fixture-locked") == (False, "device-locked"))
+        setattr(MODULE, "run_adb", lambda serial, *args, **kwargs: (
+            (0, "mWakefulness=Dozing") if args == ("shell", "dumpsys", "power") else (0, "")))
+        check("a dozing device is not ready", MODULE.device_ready("fixture-asleep") == (False, "device-not-awake"))
     finally:
-        MODULE.run_adb = original_run_adb
+        restore()
 
-    hold_script = Path(directory) / "hold-setup.sh"
-    hold_script.write_text(
-        "#!/bin/sh\necho 'SETUP HOLD reason=target-not-night'\nexit 75\n",
-        encoding="utf-8")
+    hold_script = directory / "hold-setup.sh"
+    hold_script.write_text("#!/bin/sh\necho 'SETUP HOLD reason=target-not-night'\nexit 75\n", encoding="utf-8")
     hold_script.chmod(0o755)
     hold_job = MODULE.make_job("night-check", "night", False, False)
-    previous_queue = os.environ.get("CUE_HELPER_QUEUE_FILE")
-    previous_setup = MODULE.HELPER_SETUP
-    os.environ["CUE_HELPER_QUEUE_FILE"] = str(queue)
-    MODULE.HELPER_SETUP = hold_script
+    restore_env = queue_file_env(queue)
+    restore = patched({"HELPER_SETUP": hold_script})
     try:
         queue.write_text(json.dumps([hold_job]) + "\n", encoding="utf-8")
-        assert MODULE.execute(hold_job, "fixture-device") == "target-not-night"
-        held_jobs = json.loads(queue.read_text(encoding="utf-8"))
-        assert held_jobs[0]["state"] == "PENDING"
-        assert "target-not-night" in held_jobs[0]["lastHold"]
+        check("a setup hold returns its reason", MODULE.execute(hold_job, "fixture-device") == "target-not-night")
+        held_jobs = read_queue(queue)
+        check("a held job stays PENDING with its hold",
+              held_jobs[0]["state"] == "PENDING" and "target-not-night" in str(held_jobs[0]["lastHold"]), held_jobs)
     finally:
-        MODULE.HELPER_SETUP = previous_setup
-        if previous_queue is None:
-            os.environ.pop("CUE_HELPER_QUEUE_FILE", None)
-        else:
-            os.environ["CUE_HELPER_QUEUE_FILE"] = previous_queue
+        restore()
+        restore_env()
 
     # The overnight window drains one job per call (--max-jobs 1), notes the
     # jobs it leaves PENDING, and returns a job it had to kill to PENDING.
-    done_script = Path(directory) / "done-setup.sh"
+    done_script = directory / "done-setup.sh"
     done_script.write_text("#!/bin/sh\necho 'SETUP PASS fixture'\nexit 0\n", encoding="utf-8")
     done_script.chmod(0o755)
     first = MODULE.make_job("menu-check", "menu", False, False)
     second = MODULE.make_job("menu-check", "menu", False, False)
-    previous_queue = os.environ.get("CUE_HELPER_QUEUE_FILE")
-    previous = (MODULE.HELPER_SETUP, MODULE.select_device, MODULE.device_ready)
-    os.environ["CUE_HELPER_QUEUE_FILE"] = str(queue)
-    MODULE.HELPER_SETUP = done_script
-    MODULE.select_device = lambda: ("fixture-device", None)
-    MODULE.device_ready = lambda serial: (True, None)
+    restore_env = queue_file_env(queue)
+    restore = patched({"HELPER_SETUP": done_script, "select_device": lambda: ("fixture-device", None),
+                       "device_ready": lambda serial: (True, None)})
     try:
         queue.write_text(json.dumps([first, second]) + "\n", encoding="utf-8")
-        assert MODULE.run_queue(0.0, 0.1, 1) == 0
-        states = [job["state"] for job in json.loads(queue.read_text(encoding="utf-8"))]
-        assert states == ["DONE", "PENDING"], states
+        check("--max-jobs 1 runs one job", MODULE.run_queue(0.0, 0.1, 1) == 0)
+        states = [job["state"] for job in read_queue(queue)]
+        check("one job DONE, the next left PENDING", states == ["DONE", "PENDING"], states)
         noted = MODULE.note_pending({"windowId": "window-fixture", "outcome": "LOCKED"})
-        jobs = json.loads(queue.read_text(encoding="utf-8"))
-        assert noted == [second["id"]] and "windowNote" not in jobs[0]
-        assert jobs[1]["windowNote"] == {"windowId": "window-fixture", "outcome": "LOCKED"}
+        jobs = read_queue(queue)
+        check("the window notes only the job it leaves PENDING",
+              noted == [second["id"]] and "windowNote" not in jobs[0]
+              and jobs[1]["windowNote"] == {"windowId": "window-fixture", "outcome": "LOCKED"}, (noted, jobs))
         jobs[1]["state"] = "RUNNING"
         queue.write_text(json.dumps(jobs) + "\n", encoding="utf-8")
         with MODULE.QueueRunnerLock(queue):
-            assert MODULE.release_running("window deadline") == [], "released a live runner's job"
-        assert MODULE.release_running("window deadline") == [second["id"]]
-        jobs = json.loads(queue.read_text(encoding="utf-8"))
-        assert jobs[1]["state"] == "PENDING" and jobs[1]["lastHold"] == "window deadline"
+            check("a live runner's job is never released", MODULE.release_running("window deadline") == [])
+        check("a stopped runner's job is released", MODULE.release_running("window deadline") == [second["id"]])
+        jobs = read_queue(queue)
+        check("a released job is PENDING with the reason",
+              jobs[1]["state"] == "PENDING" and jobs[1]["lastHold"] == "window deadline", jobs[1])
     finally:
-        MODULE.HELPER_SETUP, MODULE.select_device, MODULE.device_ready = previous
-        if previous_queue is None:
-            os.environ.pop("CUE_HELPER_QUEUE_FILE", None)
-        else:
-            os.environ["CUE_HELPER_QUEUE_FILE"] = previous_queue
+        restore()
+        restore_env()
 
-# cancel retires PENDING jobs and keeps their records; a RUNNING job or an unknown id refuses the whole call.
-with tempfile.TemporaryDirectory(prefix="companion-queue-cancel-") as directory:
-    queue = Path(directory) / "jobs.json"
+
+def cancel(directory: Path) -> None:
+    """cancel retires PENDING jobs and keeps their records; a RUNNING job or an unknown id refuses the whole call."""
+    queue = directory / "jobs.json"
     environment = {**os.environ, "CUE_HELPER_QUEUE_FILE": str(queue)}
-    def cli(*args, check=True):
-        return subprocess.run(["python3", str(HERE / "../companion-queue.py"), *args], cwd=HERE.parents[2],
-                              env=environment, check=check, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    cli("enqueue", "menu-check"); cli("enqueue", "night-check", "--screen", "night"); cli("enqueue", "menu-check")
-    jobs = json.loads(queue.read_text(encoding="utf-8"))
+
+    def cli(*args: str, check_exit: bool = True) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(["python3", str(QUEUE_SCRIPT), *args], cwd=HERE.parents[2], env=environment,
+                              check=check_exit, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    cli("enqueue", "menu-check")
+    cli("enqueue", "night-check", "--screen", "night")
+    cli("enqueue", "menu-check")
+    jobs = read_queue(queue)
     jobs[2]["state"] = "RUNNING"
     queue.write_text(json.dumps(jobs) + "\n", encoding="utf-8")
-    refused = cli("cancel", jobs[0]["id"], jobs[2]["id"], "--reason", "stale", check=False)
-    assert refused.returncode == 2 and "only a PENDING job" in refused.stderr, refused.stderr
-    assert [j["state"] for j in json.loads(queue.read_text(encoding="utf-8"))] == ["PENDING", "PENDING", "RUNNING"]
-    assert cli("cancel", "cue-0-missing", "--reason", "stale", check=False).returncode == 2
-    assert cli("cancel", jobs[0]["id"], check=False).returncode == 2, "a cancel without --reason ran"
-    done = cli("cancel", jobs[0]["id"], jobs[1]["id"], "--reason", "stale since an earlier session")
-    assert done.stdout.count("CANCELLED id=") == 2
-    after = json.loads(queue.read_text(encoding="utf-8"))
-    assert [j["state"] for j in after] == ["CANCELLED", "CANCELLED", "RUNNING"] and len(after) == 3
-    assert after[0]["cancelReason"] == "stale since an earlier session" and after[0]["cancelledAt"]
-    assert MODULE.claimable(after[0], True) is False, "a cancelled job can still be claimed"
+    refused = cli("cancel", str(jobs[0]["id"]), str(jobs[2]["id"]), "--reason", "stale", check_exit=False)
+    check("cancel refuses a RUNNING job", refused.returncode == 2 and "only a PENDING job" in refused.stderr,
+          refused.stderr)
+    check("a refused cancel changes nothing",
+          [j["state"] for j in read_queue(queue)] == ["PENDING", "PENDING", "RUNNING"])
+    check("cancel refuses an unknown id",
+          cli("cancel", "cue-0-missing", "--reason", "stale", check_exit=False).returncode == 2)
+    check("cancel refuses without --reason", cli("cancel", str(jobs[0]["id"]), check_exit=False).returncode == 2)
+    done = cli("cancel", str(jobs[0]["id"]), str(jobs[1]["id"]), "--reason", "stale since an earlier session")
+    check("cancel retires each PENDING job named", done.stdout.count("CANCELLED id=") == 2, done.stdout)
+    after = read_queue(queue)
+    check("cancelled jobs keep their records",
+          [j["state"] for j in after] == ["CANCELLED", "CANCELLED", "RUNNING"] and len(after) == 3, after)
+    check("a cancelled job carries its reason and time",
+          after[0]["cancelReason"] == "stale since an earlier session" and bool(after[0]["cancelledAt"]), after[0])
+    check("a cancelled job cannot be claimed", MODULE.claimable(after[0], True) is False)
 
-print("Companion queue persistence, closed vocabulary, absent-device hold, one-job runs, "
-      "window notes, killed-job release and cancel passed")
+
+def main() -> int:
+    with tempfile.TemporaryDirectory(prefix="companion-queue-test-") as directory:
+        persistence_and_runs(Path(directory))
+    with tempfile.TemporaryDirectory(prefix="companion-queue-cancel-") as directory:
+        cancel(Path(directory))
+    if failures:
+        print("companion queue FAILED:", file=sys.stderr)
+        for failure in failures:
+            print(f"  - {failure}", file=sys.stderr)
+        return 1
+    print(f"Companion queue persistence, closed vocabulary, absent-device hold, one-job runs, "
+          f"window notes, killed-job release and cancel passed ({passed} checks)")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
