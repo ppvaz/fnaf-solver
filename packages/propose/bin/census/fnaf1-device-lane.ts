@@ -421,33 +421,9 @@ export function* flick4b(ctx: LaneContext): PolicyRun {
   }
 }
 
-/**
- * The roll-grid line: everything above, placed on the three movement grids
- * instead of on a fixed rhythm.
- *
- * `Every 4970/4980/5010 ms` load on the night's first frame and fire at
- * multiples of their period after it [g318, g319, g321; `passEvery`], and the
- * runtime advances them by each frame's real duration, so a measured night
- * origin fixes every roll instant of the night. Three consequences:
- *
- *   - Foxy only acts at his roll, and a raised camera re-sets his hold to at
- *     least 50 frames (833 ms) every 100 ms [g460]. One flick whose view ends
- *     inside the 733 ms before each roll holds him with certainty -- no
- *     flick is needed anywhere else.
- *   - Bonnie and Chica only arrive, and only die or turn back, at their own
- *     rolls. A door therefore needs to be at 2 at one instant per visit, and
- *     a closing door costs nothing [g305-g308], so it is shut just before
- *     that roll and opened just after it.
- *   - A doorway only needs a light after a roll that could have brought
- *     someone to it: Bonnie is at least three rolls from the door after he is
- *     turned back, and Chica reaches the door only from CAM 4B, where the
- *     flick sees her.
- *
- * Every instant carries `margin` for the origin error, the 1-82 ms landing
- * spread and the one-frame quantisation of `Every`.
- */
-export function* grid420(ctx: LaneContext): PolicyRun {
-  const o = {
+/** grid420's options: its defaults, overridden by what the runner hands it. */
+function gridOptions(ctx: LaneContext) {
+  return {
     marginMs: 150,         // origin error + landing spread + one frame, each side of a roll
     flickEndBeforeMs: 300, // aim the flick's down-press landing this far ahead of Foxy's roll
     flickLeadMs: 1100,     // start the flick this far ahead of Foxy's roll
@@ -470,14 +446,23 @@ export function* grid420(ctx: LaneContext): PolicyRun {
     lightOff: true,
     ...ctx.options,
   };
+}
+type GridOptions = ReturnType<typeof gridOptions>;
+
+/** The three movement grids: each roll instant as the policy believes it, and the last roll before a moment. */
+function rollGrid(ctx: LaneContext) {
   const PERIOD = { bonnie: 4970, chica: 4980, foxy: 5010 };
   // The first fire is one period after the load on frame 1 [passEvery], and
   // lands on the first frame at or past it.
   const roll = (who: keyof typeof PERIOD, k: number) => ctx.believedRollMs(PERIOD[who], k) + 17;
   const rollIndexBefore = (who: keyof typeof PERIOD, ms: number) => Math.floor((ms - roll(who, 0)) / PERIOD[who]);
-  const DOOR_ANIM = 533;
+  return { roll, rollIndexBefore };
+}
+type RollGrid = ReturnType<typeof rollGrid>;
 
-  // --- primitives ----------------------------------------------------------
+/** grid420's primitives over the rendered frame: reads, bounded waits, spaced taps, the monitor and the pan. */
+function gridPrimitives(ctx: LaneContext, o: GridOptions) {
+  const log = (msg: string) => { if (o.debug) o.debug(`${(ctx.now() / 1000).toFixed(3)} ${msg}`); };
   const read = function* (): PolicyRun<Sent> { return yield { read: true }; };
   const waitFor = function* (pred: (frame: Frame) => boolean, limitMs = 3000): PolicyRun<Frame | null> {
     const until = ctx.now() + limitMs;
@@ -513,9 +498,16 @@ export function* grid420(ctx: LaneContext): PolicyRun {
   let pan: Side = 'left';
   const goPan = function* (side: Side): PolicyRun { if (pan !== side) { yield { pan: side }; pan = side; } };
   const key = (side: Side) => (side === 'left' ? 'leftDoor' : 'rightDoor');
+  return { log, waitFor, cooldownTap, monitorTo, goPan, key };
+}
+type GridPrimitives = ReturnType<typeof gridPrimitives>;
 
-  // --- Foxy: one flick per roll, which also reads CAM 4B for Chica ---------
-  const chica = { seenAt4B: new Set<number>(), looked: new Set<number>() };
+/** What the flicks have seen of Chica on CAM 4B: the roll intervals looked at, and those she stood there through. */
+interface ChicaSightings { readonly seenAt4B: Set<number>, readonly looked: Set<number> }
+
+/** Foxy: one flick per roll, which also reads CAM 4B for Chica. */
+function foxyFlicks(ctx: LaneContext, o: GridOptions, { roll, rollIndexBefore }: RollGrid,
+  { log, waitFor, monitorTo }: GridPrimitives, chica: ChicaSightings) {
   let foxK = Math.max(1, rollIndexBefore('foxy', ctx.now()) + 1);
   const flickDue = () => ctx.now() >= roll('foxy', foxK) - o.flickLeadMs;
   const flick = function* (): PolicyRun {
@@ -542,34 +534,23 @@ export function* grid420(ctx: LaneContext): PolicyRun {
     }
     yield* monitorTo('down');
   };
+  return { flickDue, flick };
+}
 
-  // Every task runs through this: before each of its actions, a due flick
-  // goes first -- preemption at the only granularity a finger has. A task
-  // resumed after a flick re-reads the room: its light was put out by the
-  // put-down [g357], and its loops retry on what the frame shows.
-  const log = (msg: string) => { if (o.debug) o.debug(`${(ctx.now() / 1000).toFixed(3)} ${msg}`); };
-  const run = function* (task: () => PolicyRun<unknown>, label = 'task'): PolicyRun<unknown> {
-    log(`run ${label}`);
-    const it = task();
-    let v: Sent;
-    for (;;) {
-      const { value, done } = it.next(v);
-      if (done) return value;
-      // Before a read or a wait only: a touch goes with the read that
-      // decided it, never after a flick that has changed the room.
-      if (!('tap' in value || 'tapCam' in value || 'pan' in value) && flickDue()) yield* flick();
-      v = yield value;
-    }
-  };
+// `free` is the first roll at which the character could be at the door.
+// `turnBack` is the roll the shut door is holding for.
+/** A door's bookkeeping: who comes to it, the rolls it is free from and checked through, and what it is holding for. */
+interface DoorState {
+  who: 'bonnie' | 'chica', free: number, turnBack: number | null, closeAt: number | null,
+  shutSeenMs: number | null, checkedThrough: number,
+}
+/** A door's next task: how urgent it is, its name in the log, and its steps. */
+type Work = { prio: number, label: string, run: () => PolicyRun<unknown> };
 
-  // --- the doors --------------------------------------------------------------
-  // `free` is the first roll at which the character could be at the door.
-  // `turnBack` is the roll the shut door is holding for.
-  /** A door's bookkeeping: who comes to it, the rolls it is free from and checked through, and what it is holding for. */
-  interface DoorState {
-    who: 'bonnie' | 'chica', free: number, turnBack: number | null, closeAt: number | null,
-    shutSeenMs: number | null, checkedThrough: number,
-  }
+/** The doors: each one's state, looking through it, driving it to a state, and what it wants done now. */
+function gridDoors(ctx: LaneContext, o: GridOptions, { roll, rollIndexBefore }: RollGrid,
+  { waitFor, cooldownTap, monitorTo, goPan, key }: GridPrimitives, chica: ChicaSightings) {
+  const DOOR_ANIM = 533;
   const door: Record<Side, DoorState> = {
     left: { who: 'bonnie', free: 4, turnBack: null, closeAt: null, shutSeenMs: null, checkedThrough: 3 },
     right: { who: 'chica', free: 5, turnBack: null, closeAt: null, shutSeenMs: null, checkedThrough: 4 },
@@ -622,8 +603,6 @@ export function* grid420(ctx: LaneContext): PolicyRun {
   const shut = function* (side: Side) { return yield* setDoorState(side, DOOR_SHUT); };
   const open = function* (side: Side) { return yield* setDoorState(side, DOOR_OPEN); };
 
-  /** A door's next task: how urgent it is, its name in the log, and its steps. */
-  type Work = { prio: number, label: string, run: () => PolicyRun<unknown> };
   // What each door wants done now, in priority order.
   const doorWork = (side: Side): Work | null => {
     const d = door[side];
@@ -675,6 +654,60 @@ export function* grid420(ctx: LaneContext): PolicyRun {
       d.checkedThrough = through;
     } };
   };
+  return { door, shut, doorWork };
+}
+
+/**
+ * The roll-grid line: everything above, placed on the three movement grids
+ * instead of on a fixed rhythm.
+ *
+ * `Every 4970/4980/5010 ms` load on the night's first frame and fire at
+ * multiples of their period after it [g318, g319, g321; `passEvery`], and the
+ * runtime advances them by each frame's real duration, so a measured night
+ * origin fixes every roll instant of the night. Three consequences:
+ *
+ *   - Foxy only acts at his roll, and a raised camera re-sets his hold to at
+ *     least 50 frames (833 ms) every 100 ms [g460]. One flick whose view ends
+ *     inside the 733 ms before each roll holds him with certainty -- no
+ *     flick is needed anywhere else.
+ *   - Bonnie and Chica only arrive, and only die or turn back, at their own
+ *     rolls. A door therefore needs to be at 2 at one instant per visit, and
+ *     a closing door costs nothing [g305-g308], so it is shut just before
+ *     that roll and opened just after it.
+ *   - A doorway only needs a light after a roll that could have brought
+ *     someone to it: Bonnie is at least three rolls from the door after he is
+ *     turned back, and Chica reaches the door only from CAM 4B, where the
+ *     flick sees her.
+ *
+ * Every instant carries `margin` for the origin error, the 1-82 ms landing
+ * spread and the one-frame quantisation of `Every`.
+ */
+export function* grid420(ctx: LaneContext): PolicyRun {
+  const o = gridOptions(ctx);
+  const grid = rollGrid(ctx);
+  const primitives = gridPrimitives(ctx, o);
+  const { log, waitFor, monitorTo, goPan } = primitives;
+  const chica: ChicaSightings = { seenAt4B: new Set<number>(), looked: new Set<number>() };
+  const { flickDue, flick } = foxyFlicks(ctx, o, grid, primitives, chica);
+
+  // Every task runs through this: before each of its actions, a due flick
+  // goes first -- preemption at the only granularity a finger has. A task
+  // resumed after a flick re-reads the room: its light was put out by the
+  // put-down [g357], and its loops retry on what the frame shows.
+  const run = function* (task: () => PolicyRun<unknown>, label = 'task'): PolicyRun<unknown> {
+    log(`run ${label}`);
+    const it = task();
+    let v: Sent;
+    for (;;) {
+      const { value, done } = it.next(v);
+      if (done) return value;
+      // Before a read or a wait only: a touch goes with the read that
+      // decided it, never after a flick that has changed the room.
+      if (!('tap' in value || 'tapCam' in value || 'pan' in value) && flickDue()) yield* flick();
+      v = yield value;
+    }
+  };
+  const { door, shut, doorWork } = gridDoors(ctx, o, grid, primitives, chica);
 
   // --- the night ---------------------------------------------------------------
   yield* run(function* () {
