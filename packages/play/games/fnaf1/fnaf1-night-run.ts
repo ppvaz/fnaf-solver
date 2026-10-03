@@ -34,6 +34,7 @@ import { performance } from 'node:perf_hooks';
 import { AdbDeviceBridge } from '../../src/campaign/adb-bridge.ts';
 import { AdbHidProcess } from '../../src/campaign/physical-ports.ts';
 import { HidWireTransport } from '../../src/venues/phone/hid.ts';
+import { isList, isRecord } from '@sixam/kernel';
 import { resolveSerial } from '../../bin/phone/local-profile.ts';
 import { onStopSignal, releaseContacts } from '../../bin/phone/night-kit.ts';
 
@@ -161,63 +162,78 @@ export function parseArgs(argv: string[]) {
   return Object.freeze(options);
 }
 
-/** A profile file, of the shape validateRoute then checks. */
-async function readJson<T>(path: string): Promise<T> { return JSON.parse(await readFile(path, 'utf8')); }
+/** A profile file, unchecked until validateRoute reads it. */
+async function readModel(path: string): Promise<unknown> { return JSON.parse(await readFile(path, 'utf8')); }
 async function fileHash(path: string) { return sha256(await readFile(path)); }
 async function executable(path: string) { await access(path, fsConstants.X_OK); }
 
-export function validateRoute(route: Route, controls: Controls, titleModel: TitleModel, teachModel: TeachModel) {
-  if (route?.schema !== 'fnaf1-device-route-v1') fail('route schema is not fnaf1-device-route-v1');
-  if (route?.target?.package !== PACKAGE || route?.target?.build !== BUILD || route?.target?.launcher !== '.Main')
+/** The value at `keys` under `value`, or undefined where a step is not a record. */
+function at(value: unknown, ...keys: string[]): unknown {
+  let current = value;
+  for (const key of keys) {
+    if (!isRecord(current)) return undefined;
+    current = current[key];
+  }
+  return current;
+}
+const finite = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value);
+
+/** Check the four FNaF 1 profiles a night reads, and return them typed. */
+export function validateRoute(route: unknown, controls: unknown, titleModel: unknown, teachModel: unknown) {
+  if (at(route, 'schema') !== 'fnaf1-device-route-v1') fail('route schema is not fnaf1-device-route-v1');
+  if (at(route, 'target', 'package') !== PACKAGE || at(route, 'target', 'build') !== BUILD || at(route, 'target', 'launcher') !== '.Main')
     fail('route targets the wrong game or build');
-  if (route?.title?.observer !== relativeToRoot(TITLE_OBSERVER) ||
-      route?.title?.model !== relativeToRoot(TITLE_MODEL_PATH) ||
-      route?.title?.requiredItem !== 'continue' || route?.title?.consensusFrames !== 3)
+  if (at(route, 'title', 'observer') !== relativeToRoot(TITLE_OBSERVER) ||
+      at(route, 'title', 'model') !== relativeToRoot(TITLE_MODEL_PATH) ||
+      at(route, 'title', 'requiredItem') !== 'continue' || at(route, 'title', 'consensusFrames') !== 3)
     fail('route title gate is not the FNaF 1 Continue-only observer');
-  if (titleModel?.schema !== 'title-model-v1' ||
-      !String(titleModel?.build ?? '').startsWith(`${PACKAGE} v2.0.7 versionCode 40`) ||
-      !Array.isArray(titleModel?.items?.continue) || titleModel.items.continue.length !== 2 ||
-      !titleModel.items.continue.every(Number.isInteger))
+  const continueAt = at(titleModel, 'items', 'continue');
+  if (at(titleModel, 'schema') !== 'title-model-v1' ||
+      !String(at(titleModel, 'build') ?? '').startsWith(`${PACKAGE} v2.0.7 versionCode 40`) ||
+      !isList(continueAt) || continueAt.length !== 2 || !continueAt.every(Number.isInteger))
     fail('title model is not the measured FNaF 1 Continue binding');
-  if (route?.audio?.required !== true || !/Passive/.test(route?.audio?.purpose ?? ''))
+  if (at(route, 'audio', 'required') !== true || !/Passive/.test(String(at(route, 'audio', 'purpose') ?? '')))
     fail('route does not require passive retained audio');
-  if (route?.teachingOverlay?.required !== true ||
-      route.teachingOverlay.tool !== relativeToRoot(TEACH_OVERLAY) ||
-      route.teachingOverlay.model !== relativeToRoot(TEACH_MODEL_PATH) ||
-      route.teachingOverlay.schema !== 'fnaf1-teach-overlay-v2')
+  if (at(route, 'teachingOverlay', 'required') !== true ||
+      at(route, 'teachingOverlay', 'tool') !== relativeToRoot(TEACH_OVERLAY) ||
+      at(route, 'teachingOverlay', 'model') !== relativeToRoot(TEACH_MODEL_PATH) ||
+      at(route, 'teachingOverlay', 'schema') !== 'fnaf1-teach-overlay-v2')
     fail('route does not require the isolated FNaF 1 teaching overlay');
-  if (teachModel?.schema !== 'fnaf1-teach-overlay-v2' ||
-      teachModel?.target?.package !== PACKAGE || teachModel?.target?.build !== BUILD ||
-      teachModel?.presenter?.package !== 'com.ppvaz.fnafcompanion' ||
-      teachModel?.presenter?.lesson !== 'f1strip' ||
-      !Array.isArray(teachModel?.stages) || !teachModel.stages.includes('full-loop'))
+  const stages = at(teachModel, 'stages');
+  if (at(teachModel, 'schema') !== 'fnaf1-teach-overlay-v2' ||
+      at(teachModel, 'target', 'package') !== PACKAGE || at(teachModel, 'target', 'build') !== BUILD ||
+      at(teachModel, 'presenter', 'package') !== 'com.ppvaz.fnafcompanion' ||
+      at(teachModel, 'presenter', 'lesson') !== 'f1strip' ||
+      !isList(stages) || !stages.includes('full-loop'))
     fail('teaching overlay model is not the FNaF 1 passive presenter binding');
-  if (route?.controls?.contactMs !== 160 || route?.controls?.startsAtPan !== 0)
+  if (at(route, 'controls', 'contactMs') !== 160 || at(route, 'controls', 'startsAtPan') !== 0)
     fail('route control contact/start pan disagrees with the measured map');
-  if (controls?.target?.package !== PACKAGE || controls?.target?.version !== BUILD)
+  if (at(controls, 'target', 'package') !== PACKAGE || at(controls, 'target', 'version') !== BUILD)
     fail('control model targets the wrong game or build');
-  if (controls?.view?.startsAt !== 0 || controls?.view?.maxPanPx !== 600 || controls?.view?.scale !== 1.875)
+  const scale = at(controls, 'view', 'scale');
+  if (at(controls, 'view', 'startsAt') !== 0 || at(controls, 'view', 'maxPanPx') !== 600 || scale !== 1.875)
     fail('control model has an unexpected pan geometry');
   for (const [side, expected] of Object.entries({ left: 0, right: 600 })) {
-    const pan = controls?.panMap?.[side];
-    if (!pan || pan.resultingPan !== expected || pan.durationMs !== 310 ||
+    const pan = at(controls, 'panMap', side);
+    if (!isRecord(pan) || !finite(pan.x) || !finite(pan.y) || pan.resultingPan !== expected || pan.durationMs !== 310 ||
         pan.claimLevel !== 'SOURCE_DERIVED' || pan.durationClaimLevel !== 'DEVICE_MEASURED')
       fail(`control model's ${side} pan is not the qualified/source-derived binding`);
   }
-  if (!(controls.panMap.left.x < 153 * controls.view.scale) ||
-      !(controls.panMap.right.x > 1143 * controls.view.scale))
+  const leftX = at(controls, 'panMap', 'left', 'x');
+  const rightX = at(controls, 'panMap', 'right', 'x');
+  if (!(finite(leftX) && leftX < 153 * scale) || !(finite(rightX) && rightX > 1143 * scale))
     fail('pan points fall outside their source-derived edge bands');
   for (const control of ['leftDoor', 'leftDoorLight', 'rightDoor', 'rightDoorLight', 'monitor']) {
-    const point = controls.controlMap?.[control];
-    if (!point || !Number.isFinite(point.x) || !Number.isFinite(point.y))
+    if (!finite(at(controls, 'controlMap', control, 'x')) || !finite(at(controls, 'controlMap', control, 'y')))
       fail(`control model has no finite ${control} point`);
   }
   for (const key of ['lightAfterPressMs', 'flipSettleMs', 'cameraUpDwellMs', 'officeReadyDelayMs', 'doorRecheckMs', 'actionBoundMs'] as const) {
-    if (!Number.isInteger(route?.timing?.[key]) || route.timing[key] < 1)
-      fail(`route timing ${key} is missing`);
+    const value = at(route, 'timing', key);
+    if (!Number.isInteger(value) || (value as number) < 1) fail(`route timing ${key} is missing`);
   }
   night1Staging(route);
-  return Object.freeze({ route, controls, titleModel, teachModel });
+  return Object.freeze({ route: route as unknown as Route, controls: controls as unknown as Controls,
+    titleModel: titleModel as unknown as TitleModel, teachModel: teachModel as unknown as TeachModel });
 }
 
 /**
@@ -225,17 +241,17 @@ export function validateRoute(route: Route, controls: Controls, titleModel: Titl
  * numeric gates here rather than explanatory prose in JSON, so a later edit
  * cannot quietly reintroduce the midnight full loop.
  */
-export function night1Staging(route: Route) {
-  // Each key is checked below before any is read.
-  const staging = route?.night1Staging as Night1Staging;
+export function night1Staging(route: unknown) {
   const keys = ['bonnieArmedAtMs', 'leftCalibrationAtMs', 'leftCalibrationBudgetMs',
     'leftCalibrationObservedMs', 'firstLeftScanAtMs', 'leftScanIntervalMs',
     'rightAndCameraArmedAtMs', 'rightAndMonitorCalibrationAtMs',
     'rightAndMonitorCalibrationBudgetMs', 'rightAndMonitorObservedMs', 'fullLoopAtMs'] as const;
   for (const key of keys) {
-    if (!Number.isInteger(staging?.[key]) || staging[key] < 1)
-      fail(`Night 1 staging ${key} is missing`);
+    const value = at(route, 'night1Staging', key);
+    if (!Number.isInteger(value) || (value as number) < 1) fail(`Night 1 staging ${key} is missing`);
   }
+  // Every key is a positive integer.
+  const staging = at(route, 'night1Staging') as Night1Staging;
   if (staging.bonnieArmedAtMs !== 179000 || staging.rightAndCameraArmedAtMs !== 268000)
     fail('Night 1 staging does not use the sourced 2 AM / 3 AM boundaries');
   if (staging.leftCalibrationObservedMs > staging.leftCalibrationBudgetMs ||
@@ -676,10 +692,9 @@ function titleGone(read: TitleRead) { return !read.confident && /not-the-title-s
 
 async function main(argv: string[]) {
   const options = parseArgs(argv);
-  const [route, controls, titleModel, teachModel] = await Promise.all([
-    readJson<Route>(ROUTE_PATH), readJson<Controls>(CONTROL_PATH), readJson<TitleModel>(TITLE_MODEL_PATH), readJson<TeachModel>(TEACH_MODEL_PATH),
-  ]);
-  validateRoute(route, controls, titleModel, teachModel);
+  const { route, controls, titleModel } = validateRoute(...await Promise.all([
+    readModel(ROUTE_PATH), readModel(CONTROL_PATH), readModel(TITLE_MODEL_PATH), readModel(TEACH_MODEL_PATH),
+  ]));
   await Promise.all([executable(TITLE_OBSERVER), executable(AUDIO_LINK), executable(AUDIO_CAPTURE),
     executable(TEARDOWN), executable(TEACH_OVERLAY), stat(DOOR_SENSOR)]);
   const bindings = {

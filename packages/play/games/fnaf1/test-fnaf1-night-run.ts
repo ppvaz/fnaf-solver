@@ -56,6 +56,11 @@ refusesRoute('the teaching tool is the FNaF 1 overlay', (r) => { r.teachingOverl
 // Since 2026-10-01 the presenter is the Companion's FNaF 1 strip, not a second APK.
 refusesRoute('the presenter is not the retired FNaF 1 teaching APK', (_r, t) => { t.presenter.package = 'com.ppvaz.fnaf1teach'; });
 refusesRoute('the presenter is the Companion\'s f1strip lesson', (_r, t) => { t.presenter.lesson = 'f2strip'; });
+assert.throws(() => { const c = structuredClone(controls); c.panMap.left.y = 'top'; validateRoute(route, c, titleModel, teachModel); },
+  'a pan binding is a finite point');
+assert.throws(() => validateRoute(route, controls, { ...titleModel, items: { continue: 'here' } }, teachModel),
+  'the title model\'s Continue is a measured point');
+assert.throws(() => validateRoute(null, controls, titleModel, teachModel), 'a missing route is refused, not read through');
 assert.deepEqual(AUDIO_LINK_ARGS, ['--ensure', '--game-package', 'com.scottgames.fivenightsatfreddys'],
   'the Bluetooth settings fallback restores the FNaF 1 package');
 

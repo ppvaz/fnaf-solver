@@ -31,6 +31,7 @@ import {
   startVideo,
 } from '../../bin/phone/night-kit.ts';
 import { audioPreflight } from '../../bin/companion/audio-players.ts';
+import { isList, isRecord } from '@sixam/kernel';
 import { resolveSerial } from '../../bin/phone/local-profile.ts';
 import {
   type CueEvent, type Hearing, HEARING_PATH, loadHearing, sideGrid, laughGrid, landings, laughs, quietTapAt, releaseAt, shadowOf,
@@ -160,10 +161,35 @@ function startCues(captureDir: string, night: number | null) {
   };
 }
 
-function controlsOf(model: { readonly controlMap: Readonly<Record<string, Control>> }) {
-  const c = model.controlMap;
-  // The measured map names every control, the runs with their gaps and the pans with their holds.
-  return Object.fromEntries(Object.entries(c).map(([k, v]) => [k, { x: v.x, y: v.y, holdMs: v.holdMs, gapMs: v.gapMs }])) as Controls;
+const finiteNumber = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value);
+const numberList = (value: unknown) => isList(value) && value.every(finiteNumber);
+
+/** The measured control map, checked: every control a point, the runs with their gaps and the pans with their holds. */
+export function controlsOf(model: unknown): Controls {
+  const map = isRecord(model) ? model.controlMap : undefined;
+  if (!isRecord(map)) fail('the control model has no controlMap');
+  const controls: Record<string, Control> = {};
+  for (const [name, point] of Object.entries(map)) {
+    if (!isRecord(point) || !finiteNumber(point.x) || !finiteNumber(point.y)) fail(`control ${name} is not a point`);
+    for (const key of ['holdMs', 'gapMs']) {
+      if (point[key] !== undefined && !finiteNumber(point[key])) fail(`control ${name}'s ${key} is not a number`);
+    }
+    controls[name] = { x: point.x, y: point.y, holdMs: point.holdMs as number | undefined, gapMs: point.gapMs as number | undefined };
+  }
+  for (const run of ['leftDoor', 'rightDoor', 'closet']) if (!finiteNumber(controls[run]?.gapMs)) fail(`control ${run} has no double-tap gap`);
+  for (const pan of ['panLeft', 'panRight']) if (!finiteNumber(controls[pan]?.holdMs)) fail(`control ${pan} has no hold time`);
+  return controls as Controls;
+}
+
+/** A fnaf4-detectors-v1 file, checked: named regions, a template per view and a sample count per region. */
+export function readDetectors(value: unknown): Detectors {
+  if (!isRecord(value) || value.schema !== 'fnaf4-detectors-v1') fail('--detectors is not fnaf4-detectors-v1');
+  const { regions, templates, sampleCounts } = value;
+  if (!isList(regions) || !regions.every((r) => typeof r === 'string')) fail('--detectors regions are not names');
+  if (!isRecord(templates) || !Object.values(templates).every(numberList)) fail('--detectors templates are not lists of numbers');
+  if (!numberList(sampleCounts) || sampleCounts.length !== regions.length || sampleCounts.length < 2)
+    fail('--detectors needs a sample count for each region, edges first');
+  return value as unknown as Detectors;
 }
 
 /**
@@ -1108,8 +1134,7 @@ async function main(argv: string[]) {
     } else {
       // The loop requires --detectors and --night (parseArgs).
       const detectors = options.detectors as string;
-      const det: Detectors = JSON.parse(await readFile(detectors, 'utf8'));
-      if (det.schema !== 'fnaf4-detectors-v1') fail('--detectors is not fnaf4-detectors-v1');
+      const det = readDetectors(JSON.parse(await readFile(detectors, 'utf8')));
       record.document.detectors = { path: options.detectors, sha256: sha256(await readFile(detectors)), source: det.source };
       const eyes = new Eyes(frames, det);
       const first = await eyes.wait(['roomL'], 20000);

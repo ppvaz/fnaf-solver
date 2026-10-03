@@ -245,6 +245,23 @@ for (const [k, b] of silence) {
   ok(`SIGTERM requests the stop SIGINT does (${heard.join(',') || 'none'})`, heard.join(',') === 'SIGTERM');
 }
 
+// --- the control map and a detectors file are checked before a night reads them ------------
+{
+  const { controlsOf, readDetectors } = await import('./fnaf4-run.ts');
+  const refused = (fn: () => unknown) => { try { fn(); return false; } catch { return true; } };
+  const model = JSON.parse(readFileSync(new URL('../../profiles/fnaf4/moto-g56/controls-fnaf4-moto-g56-v204.json', import.meta.url), 'utf8'));
+  const c = controlsOf(model);
+  ok('the committed control map loads with its runs gapped and its pans timed',
+    c.leftDoor.gapMs > 0 && c.closet.gapMs > 0 && c.panLeft.holdMs > 0 && c.panRight.holdMs > 0);
+  ok('a door without its double-tap gap is refused', refused(() => controlsOf({ controlMap: { ...model.controlMap, leftDoor: { x: 1, y: 2 } } })));
+  ok('a control that is not a point is refused', refused(() => controlsOf({ controlMap: { ...model.controlMap, bed: { x: 1 } } })));
+  const det = { schema: 'fnaf4-detectors-v1', regions: ['edgeL', 'edgeR', 'centre'], templates: { roomL: [1, 2, 3] }, sampleCounts: [4, 4, 2] };
+  ok('a detectors file reads', readDetectors(det).regions.length === 3);
+  ok('another schema is refused', refused(() => readDetectors({ ...det, schema: 'fnaf3-detectors-v1' })));
+  ok('a sample count per region is required', refused(() => readDetectors({ ...det, sampleCounts: [4, 4] })));
+  ok('a template that is not numbers is refused', refused(() => readDetectors({ ...det, templates: { roomL: [null] } })));
+}
+
 console.log(`test-fnaf4-fredbear: ${checks - failures.length}/${checks} checks passed`);
 for (const f of failures) console.log(`FAIL ${f}`);
 process.exit(failures.length ? 1 : 0);

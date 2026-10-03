@@ -8,7 +8,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { gunzipSync } from 'node:zlib';
-import { parseArgs, searchOrder, NEXT, VENT_OF, SystemsClock, chooseReboot, teachFeed, raiseMonitor } from './fnaf3-run.ts';
+import { parseArgs, searchOrder, NEXT, VENT_OF, SystemsClock, chooseReboot, teachFeed, raiseMonitor, controlsOf, readDetectors } from './fnaf3-run.ts';
 import { FEED, PICTURE_MASK, Reader, boxSamples, medianLuma, occupancy, decodePng, sampleBlocks, boxLuma, stateScore, IMAGE_GEOMETRY, CAMERA_FRAMES } from './fnaf3-detectors.ts';
 import { loadRegionSet, pngFromRegion } from '../../bin/phone/native-regions.ts';
 import type { AdbCompanionPort } from '../../src/campaign/physical-ports.ts';
@@ -352,6 +352,24 @@ async function recorderRun({ endAt = 10000, stillUntil = 0, restartAt = Infinity
     const committed = loadRegionSet(new URL('../../profiles/fnaf3/moto-g56/regions-fnaf3-moto-g56-v204.json', import.meta.url).pathname, 'night');
     ok('the committed FNaF 3 night set loads', Object.keys(committed.set).includes('title'));
   } finally { rmSync(dir, { recursive: true, force: true }); }
+}
+
+// --- the control map and a detectors file are checked before a night reads them ------------
+{
+  const model = JSON.parse(readFileSync(new URL('../../profiles/fnaf3/moto-g56/controls-fnaf3-moto-g56-v204.json', import.meta.url), 'utf8'));
+  ok('the committed control map loads with both pans timed', controlsOf(model).panLeft.holdMs > 0 && controlsOf(model).panRight.holdMs > 0);
+  throws('a pan without a hold time is refused', () => controlsOf({ controlMap: { ...model.controlMap, panLeft: { x: 1, y: 2 } } }));
+  throws('a control that is not a point is refused', () => controlsOf({ controlMap: { ...model.controlMap, monitor: { x: 'right' } } }));
+  throws('a model without a map is refused', () => controlsOf({}));
+  const v1 = { schema: 'fnaf3-detectors-v1', templates: { 1: [0.1, 0.2] }, occupied: 0.4 };
+  ok('a v1 file with a cut reads', readDetectors(v1).schema === 'fnaf3-detectors-v1');
+  ok('a v1 file without a cut still reads, for calibrate', readDetectors({ ...v1, occupied: null }).schema === 'fnaf3-detectors-v1');
+  throws('a template that is not numbers is refused', () => readDetectors({ ...v1, templates: { 1: ['a'] } }));
+  throws('a cut that is not a number is refused', () => readDetectors({ ...v1, cuts: { 1: 'high' } }));
+  const v2 = { schema: 'fnaf3-detectors-v2', cams: { 1: { cut: 0.3, cutB: null, pairs: [{ A: [], C: [] }] } } };
+  ok('a v2 file reads', readDetectors(v2).schema === 'fnaf3-detectors-v2');
+  throws('a v2 camera without its cut is refused', () => readDetectors({ ...v2, cams: { 1: { cutB: null, pairs: [] } } }));
+  throws('another schema is refused', () => readDetectors({ ...v1, schema: 'fnaf4-detectors-v1' }));
 }
 
 if (failures.length) {

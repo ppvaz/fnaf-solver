@@ -28,6 +28,7 @@ import {
   Actor, type Point, type RegionRead, RegionRecorder, RunRecord, onStopSignal, relaunchToTitle, releaseContacts, startVideo,
 } from '../../bin/phone/night-kit.ts';
 import { Reader, type StoredPair, boxLuma, loadPairs, medianLuma, occupancy, stateScore } from './fnaf3-detectors.ts';
+import { isList, isRecord } from '@sixam/kernel';
 import { resolveSerial } from '../../bin/phone/local-profile.ts';
 
 /** The measured FNaF 3 control map, with the pans' hold times. */
@@ -144,9 +145,42 @@ class Eyes {
   }
 }
 
-function controlsOf(model: { readonly controlMap: Readonly<Record<string, object>> }) {
-  // The measured map names every control, the pans with their hold times.
-  return Object.fromEntries(Object.entries(model.controlMap).map(([k, v]) => [k, { ...v }])) as Controls;
+const finiteNumber = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value);
+const numberList = (value: unknown) => isList(value) && value.every(finiteNumber);
+
+/** The measured control map, checked: every control a point, and both pans with their hold times. */
+export function controlsOf(model: unknown): Controls {
+  const map = isRecord(model) ? model.controlMap : undefined;
+  if (!isRecord(map)) fail('the control model has no controlMap');
+  for (const [name, point] of Object.entries(map)) {
+    if (!isRecord(point) || !finiteNumber(point.x) || !finiteNumber(point.y)) fail(`control ${name} is not a point`);
+  }
+  for (const pan of ['panLeft', 'panRight']) {
+    const point = map[pan];
+    if (!isRecord(point) || !finiteNumber(point.holdMs)) fail(`control ${pan} has no hold time`);
+  }
+  return Object.fromEntries(Object.entries(map).map(([k, v]) => [k, { ...(v as object) }])) as unknown as Controls;
+}
+
+/** A detectors file, checked: v1's templates and optional cuts, or v2's cameras with their cuts and pictures. */
+export function readDetectors(value: unknown): Detectors {
+  if (!isRecord(value)) fail('--detectors is not a JSON object');
+  if (value.schema === 'fnaf3-detectors-v1') {
+    if (!isRecord(value.templates) || !Object.values(value.templates).every(numberList)) fail('--detectors templates are not lists of numbers');
+    if (value.occupied !== null && !finiteNumber(value.occupied)) fail('--detectors occupied is neither a cut nor null');
+    if (value.cuts !== undefined && !(isRecord(value.cuts) && Object.values(value.cuts).every(finiteNumber)))
+      fail('--detectors cuts are not numbers');
+  } else if (value.schema === 'fnaf3-detectors-v2') {
+    if (!isRecord(value.cams)) fail('--detectors has no cameras');
+    for (const [cam, v] of Object.entries(value.cams)) {
+      if (!isRecord(v) || !finiteNumber(v.cut) || !(v.cutB === null || finiteNumber(v.cutB)) || !isList(v.pairs) || !v.pairs.every(isRecord))
+        fail(`--detectors camera ${cam} is not a cut with its pictures`);
+    }
+  } else fail('--detectors is not fnaf3-detectors-v1 or v2');
+  for (const key of ['window', 'settleMs']) {
+    if (value[key] !== undefined && !finiteNumber(value[key])) fail(`--detectors ${key} is not a number`);
+  }
+  return value as unknown as Detectors;
 }
 /** What the night's steps share. */
 interface Hands { readonly act: Actor, readonly c: Controls, readonly eyes: Eyes, readonly reader: Reader }
@@ -872,17 +906,17 @@ async function main(argv: string[]) {
     record.document.night = nightDoc;
     await record.save('NIGHT_RUNNING');
     if (options.mode === 'calibrate') {
-      const det: DetectorsV1 | null = options.detectors ? JSON.parse(await readFile(options.detectors, 'utf8')) : null;
+      const read = options.detectors ? readDetectors(JSON.parse(await readFile(options.detectors, 'utf8'))) : null;
+      if (read && read.schema !== 'fnaf3-detectors-v1') fail('calibrate starts from a fnaf3-detectors-v1 file');
+      const det = read as DetectorsV1 | null;
       // A file was read only when --detectors named one.
       if (det) record.document.detectors = { path: options.detectors, sha256: sha256(await readFile(options.detectors as string)), source: det.source };
       await calibrate({ act, c, record, eyes, reader, snapTo, stopAfterMs: options.stopAfterMs, epochHostMs, det, survey: options.survey });
     } else {
       // The loop requires --detectors and --night (parseArgs).
       const detectors = options.detectors as string;
-      const det: Detectors = JSON.parse(await readFile(detectors, 'utf8'));
-      if (!['fnaf3-detectors-v1', 'fnaf3-detectors-v2'].includes(det.schema)) fail('--detectors is not fnaf3-detectors-v1 or v2');
-      if (det.schema === 'fnaf3-detectors-v2' ? !Object.values(det.cams).every((v) => Number.isFinite(v.cut))
-        : !Number.isFinite(det.occupied) && !det.cuts) fail('--detectors has no occupancy cut chosen');
+      const det = readDetectors(JSON.parse(await readFile(detectors, 'utf8')));
+      if (det.schema === 'fnaf3-detectors-v1' && det.occupied === null && !det.cuts) fail('--detectors has no occupancy cut chosen');
       record.document.detectors = { path: options.detectors, sha256: sha256(await readFile(detectors)), source: det.source };
       let teach = QUIET;
       if (options.teach) {
