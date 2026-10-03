@@ -105,6 +105,7 @@
       "packages/play/bin/audio/test-bt-audio-collector.ts",
       "packages/source/decompile/test-instances.ts",
       "packages/source/decompile/test-aimap.ts",
+      "packages/source/decompile/test-nightmap.ts",
       "packages/play/test/hid-report.test.ts",
       "packages/propose/test/policygrammartest.ts",
       "packages/propose/bin/policy/test-policy-ir.ts",
@@ -121,10 +122,6 @@
       [
         "python3",
         "packages/review/bin/recompile/test-phone-input-ledger.py"
-      ],
-      [
-        "python3",
-        "packages/source/decompile/test-nightmap.py"
       ],
       [
         "python3",

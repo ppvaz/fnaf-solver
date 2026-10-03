@@ -4523,7 +4523,7 @@
       }
     },
     {
-      "id": "packages/source/decompile/test-nightmap.py",
+      "id": "packages/source/decompile/test-nightmap.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,

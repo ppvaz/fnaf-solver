@@ -65,7 +65,7 @@ const SIBLING_EXCLUDED = new Map([
   ['chronicle-story.ts', 'the chronicle story builder the generator imports; it reads curated entries, not a run'],
   ['chronicle-harvest.ts', 'proposes chronicle candidates from commit history (npm run chronicle:harvest); it reads git, not a run'],
   ['aimap.ts', 'AI-table extractor from the event-sheet dump, gated by test-aimap.ts'],
-  ['nightmap.py', 'per-game night reader over any of the four event-sheet dumps -- clock, difficulty table, rolls, movement edges and draw census, gated by test-nightmap.py; it reads source, not a run'],
+  ['nightmap.ts', 'per-game night reader over any of the four event-sheet dumps -- clock, difficulty table, rolls, movement edges and draw census, gated by test-nightmap.ts; it reads source, not a run'],
   ['readdump.ts', 'event-sheet dump reader library, gated by test-instances.ts'],
   ['coverage.ts', 'group-coverage report over the dump; answers what is unread, not what a run did'],
   ['extract-samples.sh', 'asset extraction helper for the audio path'],

@@ -10,7 +10,7 @@ these rules does, and are not device measurements.*
 
 | Layer | Where | Covers |
 |---|---|---|
-| Reader | `packages/source/decompile/nightmap.py` | all four sheets: clock, difficulty table, rolls, movement graphs, draw census |
+| Reader | `packages/source/decompile/nightmap.ts` | all four sheets: clock, difficulty table, rolls, movement graphs, draw census |
 | Night models | `packages/source/src/games/fnaf*/fnaf*.js`, `packages/source/src/clockwork/night-model.js` | all four: clock, per-night table, roll schedule |
 | Simulator | `packages/source/src/games/fnaf1/sim-fnaf1.js`, `sim-fnaf3.js`, `sim-fnaf4.js` | FNaF 1, 3 and 4; FNaF 4 remains **MODEL_ONLY** |
 | Policies | `packages/propose/src/games/policy-fnaf1.js`, `policy-fnaf3.js`, `policy-fnaf4.js` | FNaF 1, 3 and 4 published lines and controls |
@@ -636,8 +636,8 @@ in hand.
 ## Reproducing
 
 ```sh
-packages/source/decompile/nightmap.py --game fnaf3 --table --clock --rolls
-packages/source/decompile/nightmap.py --game fnaf1 --graph charBonnie
+packages/source/decompile/nightmap.ts --game fnaf3 --table --clock --rolls
+packages/source/decompile/nightmap.ts --game fnaf1 --graph charBonnie
 node packages/propose/bin/census/census.ts --game fnaf1 --seeds 3000 --policy roll-grid
 node packages/propose/bin/census/census.ts --game fnaf1 --policy roll-grid --custom 20 --seeds 3000
 node packages/propose/bin/census/census.ts --game fnaf4 --night 5 --policy community-loop --seeds 3000
@@ -645,7 +645,7 @@ node packages/propose/bin/census/census.ts --game fnaf4 --night 5 --policy commu
 node packages/propose/bin/census/test-fnaf4-census.ts
 ```
 
-Gated by `packages/source/decompile/test-nightmap.py`, `packages/source/test/test-night-models.ts` and
+Gated by `packages/source/decompile/test-nightmap.ts`, `packages/source/test/test-night-models.ts` and
 `packages/propose/bin/census/test-fnaf1-census.ts`, `packages/propose/bin/census/test-fnaf3-census.ts` and
 `packages/propose/bin/census/test-fnaf4-census.ts`, all in `npm run test:unit`. The model censuses
 need no game content; `--start` selects a disjoint seed block for the three

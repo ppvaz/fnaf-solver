@@ -499,14 +499,14 @@
       "lifecycle": "supported"
     },
     {
-      "id": "packages/source/decompile/nightmap.py",
-      "invocation": "packages/source/decompile/nightmap.py --game <g>",
+      "id": "packages/source/decompile/nightmap.ts",
+      "invocation": "packages/source/decompile/nightmap.ts --game <g>",
       "kind": "report",
       "lifecycle": "supported"
     },
     {
-      "id": "packages/source/decompile/test-nightmap.py",
-      "invocation": "packages/source/decompile/test-nightmap.py",
+      "id": "packages/source/decompile/test-nightmap.ts",
+      "invocation": "packages/source/decompile/test-nightmap.ts",
       "kind": "check",
       "lifecycle": "supported"
     },

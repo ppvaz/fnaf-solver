@@ -5082,6 +5082,16 @@
       ]
     },
     {
+      "file": "packages/source/decompile/nightmap.ts",
+      "imports": [
+        "@sixam/kernel/py",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "packages/source/decompile/readdump.ts",
       "imports": [
         "@sixam/kernel/py",
@@ -5112,6 +5122,14 @@
         "node:path",
         "node:test",
         "node:url"
+      ]
+    },
+    {
+      "file": "packages/source/decompile/test-nightmap.ts",
+      "imports": [
+        "./nightmap.ts",
+        "node:assert/strict",
+        "node:test"
       ]
     },
     {
