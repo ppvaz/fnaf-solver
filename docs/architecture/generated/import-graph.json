@@ -5261,6 +5261,7 @@
     {
       "file": "packages/source/src/games/fnaf2/blackout-clock.ts",
       "imports": [
+        "./plant-constants.ts",
         "./plant-model.ts"
       ]
     },
@@ -5305,6 +5306,13 @@
     {
       "file": "packages/source/src/games/fnaf2/movement-clock.ts",
       "imports": [
+        "./plant-model.ts"
+      ]
+    },
+    {
+      "file": "packages/source/src/games/fnaf2/plant-constants.ts",
+      "imports": [
+        "./config.ts",
         "./plant-model.ts"
       ]
     },

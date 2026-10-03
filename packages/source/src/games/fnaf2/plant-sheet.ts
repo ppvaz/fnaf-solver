@@ -3,11 +3,33 @@
 // footsteps, the blackout flicker, g58/g59/g192). Each function is a Sim method; plant-model.js installs
 // it on Sim.prototype.
 import * as C from './config.ts';
-import { FOOTSTEP_NODES, FOOTSTEP_CAM_NODES, OFFICE_FOOTSTEP_IDS } from './plant-constants.ts';
+import { FOOTSTEP_NODES, FOOTSTEP_CAM_NODES, OFFICE_FOOTSTEP_IDS, unitOf } from './plant-constants.ts';
 import * as blackoutClock from './blackout-clock.ts';
 import { unitStunReady } from './movement-clock.ts';
 import { attackAnimationLate } from './attack-animation.ts';
 import type { Sim, Unit } from './plant-model.ts';
+
+// Per-frame lookups without per-frame allocation (the sheet pass spent a sourced night's time building
+// closures, arrays and keys each loop): a unit is found by its position (unitOf), and the id lists and timer
+// keys are built once here.
+const BB_VIEW_ROUTE: readonly number[] = [10, 7, 3, 1, 5];
+const TOY_GROUP: Readonly<Record<string, string>> = { toybonnie: 'g366', toychica: 'g368', toyfreddy: 'g419' };
+const VIEW_TOYS = ['toybonnie', 'toychica', 'toyfreddy'];
+const FADE_IDS = ['withfreddy', 'withbonnie', 'withchica', 'foxy', 'toyfreddy', 'toybonnie', 'toychica', 'mangle', 'bb'];
+const STREAK_IDS = ['withfreddy', 'withbonnie', 'withchica', 'toyfreddy'];
+const G556 = STREAK_IDS.map((id): [string, string] => [id, `556${id}`]);
+const G747 = STREAK_IDS.map((id): [string, string] => [id, `747${id}`]);
+const MANGLE_CUES: readonly [string, boolean][] = [['739', true], ['740', true], ['741', true], ['742', false], ['743', false]];
+const VENT_CAM_SITES: readonly [string, number][] = [['toychica', 5], ['withbonnie', 5], ['toybonnie', 6], ['withchica', 6], ['mangle', 6], ['puppet', 6]];
+const FOOTSTEP_IDS = ['withfreddy', 'withbonnie', 'withchica', 'foxy', 'toyfreddy', 'toybonnie', 'toychica', 'bb', 'mangle'];
+
+/** A camera's view of `id`: Balloon Boy's stage camera, Foxy on CAM 08, or a unit's route node. */
+function viewNode(sim: Sim, id: string) {
+  if (id === 'bb') return sim.bb.inOpening || sim.bb.inside ? null : (BB_VIEW_ROUTE[sim.bb.stage] ?? null);
+  if (id === 'foxy') return sim.opts.foxyEnabled && sim.foxy.loc === 'parts' ? 8 : null;
+  const u = unitOf(sim, id);
+  return !u || u.done || u.atOpening || u.inside ? null : u.path[u.idx];
+}
 
 /**
  * Camera-view draws in sheet order (sourcedViewDraws); `this.cam` is the
@@ -15,21 +37,13 @@ import type { Sim, Unit } from './plant-model.ts';
  */
 export function drawViewed(this: Sim, f: number, part = 'all') {
   const up = this.viewing > 0, all = part === 'all';
-  const toyGroup: Record<string, string> = { toybonnie: 'g366', toychica: 'g368', toyfreddy: 'g419' };
-  const nodeOf = (id: string) => {
-    if (id === 'bb') return this.bb.inOpening || this.bb.inside ? null : ([10, 7, 3, 1, 5][this.bb.stage] ?? null);
-    if (id === 'foxy') return this.opts.foxyEnabled && this.foxy.loc === 'parts' ? 8 : null;
-    const u = this.units.find(x => x.id === id);
-    return !u || u.done || u.atOpening || u.inside ? null : u.path[u.idx];
-  };
-  if (up) for (const id of ['toybonnie', 'toychica', 'toyfreddy']) {                       // g366, g368, g419
-    const u = this.units.find(x => x.id === id);
+  if (up) for (const id of VIEW_TOYS) {                                                   // g366, g368, g419
+    const u = unitOf(this, id);
     const armed = u?.pending && (!this.opts.sourcedPromotedViewDraws || u.promoted);   // value 0 == 2
-    if ((all || part === toyGroup[id]) && armed && nodeOf(id) === this.cam) this.rng.int(0, 99, 0);
+    if ((all || part === TOY_GROUP[id]) && armed && viewNode(this, id) === this.cam) this.rng.int(0, 99, 0);
   }
-  if (up && (all || part === 'fades')) for (const id of ['withfreddy', 'withbonnie', 'withchica', 'foxy', 'toyfreddy',
-                            'toybonnie', 'toychica', 'mangle', 'bb']) {                      // g468-g476
-    if (f <= (this.fadeUntil[id] ?? -1) && nodeOf(id) === this.cam) this.rng.int(0, 99, 0);
+  if (up && (all || part === 'fades')) for (const id of FADE_IDS) {                       // g468-g476
+    if (f <= (this.fadeUntil[id] ?? -1) && viewNode(this, id) === this.cam) this.rng.int(0, 99, 0);
   }
   if (!all && part !== 'g498') return;
   if (!(this.opts.sourcedEveryOrigin && this.frame === 1)) this.puppetStaticTimer -= this.frameUnits;   // g498
@@ -73,69 +87,65 @@ export function secondPass(this: Sim, f: number) {
   this.secondPassEarly(f); this.secondPassLate(f);
 }
 
-/** The per-second pass helpers; mask2 is read when each part starts. */
-export function passTools(this: Sim, _f: number) {
-  const every = (key: string, ms: number) => this.passEvery(this.passTimers[key] ??= { v: 0, init: false }, ms);
-  /** Random(n) == 1 */
-  const one = (n: number) => this.rng.int(0, n - 1, 1) === 1;
-  const unit = (id: string) => this.units.find(x => x.id === id);
-  const at122 = (u: Unit | undefined): u is Unit => !!u && u.atOpening && !u.inside;
-  const mask2 = this.maskFullyOn;
-  const p = this.puppet;
-  const danger2 = () => this.units.some(x => x.committedAt >= 0) || p.attackAt >= 0;
-  return { every, one, unit, at122, mask2, p, danger2 };
+// The per-second pass helpers; each part reads mask2 (the mask fully on) when it starts.
+const every = (sim: Sim, key: string, ms: number) => sim.passEvery(sim.passTimers[key] ??= { v: 0, init: false }, ms);
+/** Random(n) == 1 */
+const one = (sim: Sim, n: number) => sim.rng.int(0, n - 1, 1) === 1;
+const at122 = (u: Unit | undefined): u is Unit => !!u && u.atOpening && !u.inside;
+const danger2 = (sim: Sim) => sim.units.some(x => x.committedAt >= 0) || sim.puppet.attackAt >= 0;
+/** g494/g495: the Puppet's escape stage advances, and at the last one he is out. */
+function puppetStage(sim: Sim) {
+  const p = sim.puppet;
+  p.stage++;
+  sim.emit('puppet-stage', p.stage);
+  if (p.stage >= C.PUPPET_ESCAPE_STAGES) { p.out = true; sim.emit('puppet-out'); }
 }
 
 /** g213/g292/g294 precede rolls, promotions and route moves. */
-export function secondPassFront(this: Sim, f: number) {
-  const { every, one, unit, mask2 } = this.passTools(f);
-  { const u = unit('toyfreddy');                                                    // g213
+export function secondPassFront(this: Sim, _f: number) {
+  const mask2 = this.maskFullyOn;
+  { const u = unitOf(this, 'toyfreddy');                                                    // g213
     if (this.viewing === 0 && !this.lightHeld && u && !u.atOpening && !u.inside &&
-        u.path[u.idx] === 'blindB' && mask2 && every('213', 1000) && one(10)) {
+        u.path[u.idx] === 'blindB' && mask2 && every(this, '213', 1000) && one(this, 10)) {
       u.idx = 0; u.pending = false;
       this.emit('route-return', { who: u.id, to: 9, group: 213 });
     } }
-  if (this.bb.inOpening && mask2 && every('292', 1000) && one(10)) { this.rng.int(0, 3, 0); this.bbLeave(); }   // g292
+  if (this.bb.inOpening && mask2 && every(this, '292', 1000) && one(this, 10)) { this.rng.int(0, 3, 0); this.bbLeave(); }   // g292
   if (this.bb.inOpening && this.bb.maskTicks >= C.VENT_MASK_TICKS && mask2) { this.rng.int(0, 3, 0); this.bbLeave(); }   // g294
 }
 
 /** g366-g518; the front groups run before the movement pass under sourcedSheetOrder. */
 export function secondPassEarly(this: Sim, f: number) {
-  const { every, one, unit, at122, mask2, p } = this.passTools(f);
+  const mask2 = this.maskFullyOn, p = this.puppet;
   const sheet = this.opts.sourcedSheetOrder, views = sheet && this.opts.sourcedViewDraws;
   if (!sheet) this.secondPassFront(f);
   if (views && !this.opts.sourcedRouteViewDraws) { this.drawViewed(f, 'g366'); this.drawViewed(f, 'g368'); }
-  { const u = unit('mangle');
-    if (at122(u) && mask2 && every('400', 1000) && one(10)) { this.rng.int(0, 3, 0); this.unitLeave(u); }       // g400
+  { const u = unitOf(this, 'mangle');
+    if (at122(u) && mask2 && every(this, '400', 1000) && one(this, 10)) { this.rng.int(0, 3, 0); this.unitLeave(u); }       // g400
     if (at122(u) && u.maskExposureTicks >= 5 && mask2) { this.rng.int(0, 3, 0); this.unitLeave(u); } }          // g401
   if (this.opts.sourcedPuppetMoveOrder && this.puppet.pending && !this.puppet.atOpening && !this.puppet.inside) {
     this.puppet.pending = false;                                                     // g403-g411
     this.advancePuppet();
   }
   if (views && !this.opts.sourcedRouteViewDraws) this.drawViewed(f, 'g419');
-  { const u = unit('toybonnie');
+  { const u = unitOf(this, 'toybonnie');
     const overlays = this.units.some(x => (x.id === 'toybonnie' || x.id === 'toychica') && x.officeCue);
-    if (at122(u) && mask2 && !this.blackout.active && !overlays && every('436', 500) && one(2))
+    if (at122(u) && mask2 && !this.blackout.active && !overlays && every(this, '436', 500) && one(this, 2))
       this.startOfficeEncounter(u);                                                  // g436
-    if (at122(u) && mask2 && this.blackout.active && !u.officeCue && every('437', 1000) && one(3)) {
+    if (at122(u) && mask2 && this.blackout.active && !u.officeCue && every(this, '437', 1000) && one(this, 3)) {
       u.pending = false;
       this.unitLeave(u, { idx: u.path.indexOf(3) });                                 // g437
     } }
-  { const u = unit('toychica');
-    if (at122(u) && mask2 && every('439', 1000) && one(10)) { this.rng.int(0, 3, 0); this.unitLeave(u); }       // g439
+  { const u = unitOf(this, 'toychica');
+    if (at122(u) && mask2 && every(this, '439', 1000) && one(this, 10)) { this.rng.int(0, 3, 0); this.unitLeave(u); }       // g439
     if (at122(u) && u.maskExposureTicks >= 5 && mask2) { this.rng.int(0, 3, 0); this.unitLeave(u); } }          // g440
   if (views) this.drawViewed(f, 'fades');                                             // g468-g476
   {
-    const stage = () => {
-      p.stage++;
-      this.emit('puppet-stage', p.stage);
-      if (p.stage >= C.PUPPET_ESCAPE_STAGES) { p.out = true; this.emit('puppet-out'); }
-    };
-    if (this.box <= 0 && every('494', 1000) && p.stage < C.PUPPET_ESCAPE_STAGES &&
-        this.rng.int(0, 19, 0) <= this.ai.puppet && !this.camLightOn && this.viewing === C.BOX_CAM) stage();   // g494
-    if (this.box <= 0 && every('495', 1000) && p.stage < C.PUPPET_ESCAPE_STAGES &&
-        this.rng.int(0, 19, 0) <= this.ai.puppet && this.viewing !== C.BOX_CAM) stage();                      // g495
-    if (every('496', 1000) && this.rng.int(0, 19, 0) <= this.ai.puppet &&
+    if (this.box <= 0 && every(this, '494', 1000) && p.stage < C.PUPPET_ESCAPE_STAGES &&
+        this.rng.int(0, 19, 0) <= this.ai.puppet && !this.camLightOn && this.viewing === C.BOX_CAM) puppetStage(this);   // g494
+    if (this.box <= 0 && every(this, '495', 1000) && p.stage < C.PUPPET_ESCAPE_STAGES &&
+        this.rng.int(0, 19, 0) <= this.ai.puppet && this.viewing !== C.BOX_CAM) puppetStage(this);                      // g495
+    if (every(this, '496', 1000) && this.rng.int(0, 19, 0) <= this.ai.puppet &&
         p.out && !p.atOpening && !p.inside && unitStunReady(this, p, f)) p.pending = true;                   // g496
     if (this.hooked ? this.passEvery(this.hookTimers.g497, 1000) : f % C.FPS === 0)                          // g497
       p.pathChoice = this.rng.int(1, 2, 1) === 1 ? 'left' : 'right';
@@ -147,16 +157,16 @@ export function secondPassEarly(this: Sim, f: number) {
 
 /** g556-g781; under sourcedSheetOrder also the hour table (g673-g684) and g774 in sheet order. */
 export function secondPassLate(this: Sim, f: number) {
-  const { every, one, unit, mask2, p, danger2 } = this.passTools(f);
+  const mask2 = this.maskFullyOn, p = this.puppet;
   const sheet = this.opts.sourcedSheetOrder;
-  for (const id of ['withfreddy', 'withbonnie', 'withchica', 'toyfreddy']) {           // g556-g559
-    const u = unit(id);
-    if (u && u.inside && !danger2() && mask2 && every('556' + id, 1000) && one(2))
+  for (const [id, key] of G556) {                                                      // g556-g559
+    const u = unitOf(this, id);
+    if (u && u.inside && !danger2(this) && mask2 && every(this, key, 1000) && one(this, 2))
       this.commitAttack(u, 'inside-office mask attack roll');
   }
   attackAnimationLate(this);                                                        // g575-g595, before g611/g623
   if (this.bb.cueRedraw) { this.bb.cueRedraw = false; this.rng.int(0, 2, 0); }        // g611: a cue of 4 redrawn (sourcedBBMoves)
-  if (p.atOpening && every('623', 1000) && one(10)) {                                  // g623
+  if (p.atOpening && every(this, '623', 1000) && one(this, 10)) {                                  // g623
     p.atOpening = false; p.inside = true; p.loc = 'inside';
     p.attackAt = f + C.INSIDE_ATTACK_FRAMES;
     this.dropEverything = true;
@@ -178,22 +188,22 @@ export function secondPassLate(this: Sim, f: number) {
     if (this.am >= 70) { this.am = 0; this.hour++; this.applyAiHour(this.hour); }
   }
   if (this.opts.sourcedBoxCountdown) this.drainBoxCountdown();                         // g652-g661
-  { const u = unit('mangle');
-    if (u && u.inside && this.viewing > 0 && every('730', 1000) && one(20)) u.insideArmed = true;             // g730
-    for (const [g, cue] of ([['739', true], ['740', true], ['741', true], ['742', false], ['743', false]] as [string, boolean][]))
-      if (u && u.inside && every(g, 1000) && one(20) && cue) this.rng.int(0, 2, 0);                          // g739-g743
+  { const u = unitOf(this, 'mangle');
+    if (u && u.inside && this.viewing > 0 && every(this, '730', 1000) && one(this, 20)) u.insideArmed = true;             // g730
+    for (const [g, cue] of MANGLE_CUES)
+      if (u && u.inside && every(this, g, 1000) && one(this, 20) && cue) this.rng.int(0, 2, 0);                          // g739-g743
   }
   if (this.hooked ? this.passEvery(this.hookTimers.g744, 1000) : f % C.FPS === 0) this.rollDecidePath();   // g744
-  for (const id of ['withfreddy', 'withbonnie', 'withchica', 'toyfreddy']) {           // g747-g750
-    const u = unit(id);
-    if (u && u.inside && mask2 && every('747' + id, 1000) && one(10)) {
+  for (const [id, key] of G747) {                                                      // g747-g750
+    const u = unitOf(this, id);
+    if (u && u.inside && mask2 && every(this, key, 1000) && one(this, 10)) {
       if (id === 'withbonnie' || id === 'withchica') this.rng.int(0, 3, 0);
       this.unitLeave(u, { idx: 0, cooldown: C.INSIDE_LEAVE_COOLDOWN });
     }
   }
   if (sheet && this.opts.sourcedPuppetGlitchDraws) this.puppetGlitchLate();           // g774
   { const latch = this.opts.sourcedFoxyChain ? this.hallLatch : this.hallLightOn;    // g781
-    if (this.ai.golden > 0 && !latch && every('781', 1000)) {
+    if (this.ai.golden > 0 && !latch && every(this, '781', 1000)) {
       const there = this.rng.int(0, C.GF_HALL_ROLL - 1, 1) === 1;
       if (this.opts.gfEnabled && !this.gf.hallInside && there !== this.gf.inHall) {
         this.gf.inHall = there;
@@ -207,14 +217,13 @@ export function secondPassLate(this: Sim, f: number) {
 
 /** g685-g690: Random(4) the first loop a unit stands on CAM 05/06, re-armed when it leaves (sourcedVentCamDraws). */
 export function ventCamDraws(this: Sim) {
-  const sites: [string, number][] = [['toychica', 5], ['withbonnie', 5], ['toybonnie', 6], ['withchica', 6], ['mangle', 6], ['puppet', 6]];
-  for (const [id, cam] of sites) {
+  for (const [id, cam] of VENT_CAM_SITES) {
     let here;
     if (id === 'puppet') {
       const p = this.puppet;
       here = p.out && !p.atOpening && !p.inside && p.route ? p.route[p.idx] === cam : false;
     } else {
-      const u = this.units.find(x => x.id === id);
+      const u = unitOf(this, id);
       here = !!u && !u.done && !u.atOpening && !u.inside && u.path[u.idx] === cam;
     }
     if (here && !this.ventCamDrawn[id]) { this.ventCamDrawn[id] = true; this.rng.int(0, 3, 0); }
@@ -244,8 +253,8 @@ export function footstepDraws(this: Sim) {
       u.footstepOn = on;
     }
   }
-  for (const id of ['withfreddy', 'withbonnie', 'withchica', 'foxy', 'toyfreddy', 'toybonnie', 'toychica', 'bb', 'mangle']) {
-    const holder = id === 'foxy' ? this.foxy : id === 'bb' ? this.bb : this.units.find(x => x.id === id);
+  for (const id of FOOTSTEP_IDS) {
+    const holder = id === 'foxy' ? this.foxy : id === 'bb' ? this.bb : unitOf(this, id);
     if (!holder || !holder.footstep) continue;
     holder.footstep = false;
     const value = this.rng.int(0, id === 'mangle' ? 2 : 4, 0) + 1;   // cam01 value 5 = Random(5)+1; Mangle: value 12 = Random(3)+1

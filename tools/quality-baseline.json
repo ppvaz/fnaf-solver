@@ -393,7 +393,7 @@
         "why": "model-draw-trace’s reads of the recompiled game’s trace lines; validators over unknown at that boundary replace them (CLAUDE.md, Types)"
       },
       "cast:packages/source/src": {
-        "count": 16,
+        "count": 15,
         "why": "Source’s option and constant tables, given their literal types by assertion where a frozen object is built"
       },
       "cast:packages/source/test": {

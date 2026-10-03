@@ -2,13 +2,16 @@
 // until the fade clears it; a new danger edge can restart that fade first.
 // Qualified on the full-06 host replays, not the retail animation clock.
 import type { Sim } from './plant-model.ts';
+import { unitOf } from './plant-constants.ts';
+
+const STREAK_START_IDS = ['withbonnie', 'withchica', 'withfreddy', 'toyfreddy'];
 
 /** g445-g447/g490 must raise danger before g514 and g534. */
 export function startStreakEncounters(sim: Sim) {
   if (!sim.opts.sourcedBlackoutClockEnd || !sim.opts.sourcedSheetOrder ||
       !sim.opts.stalledEnabled || sim.viewing !== 0) return;
-  for (const id of ['withbonnie', 'withchica', 'withfreddy', 'toyfreddy']) {
-    const u = sim.units.find(unit => unit.id === id);
+  for (const id of STREAK_START_IDS) {
+    const u = unitOf(sim, id);
     if (u && !u.done && u.atOpening && !u.inside && !u.officeCue) sim.startOfficeEncounter(u);
   }
 }

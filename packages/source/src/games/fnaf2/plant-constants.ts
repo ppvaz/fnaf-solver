@@ -1,5 +1,7 @@
 // The Sim's own constants, shared by plant-model.js and its mechanism modules. The sourced game constants
 // are config.js's.
+import { STALLED } from './config.ts';
+import type { Sim, Unit } from './plant-model.ts';
 
 /** route nodes whose entry plays a footstep sound, by default the hall stages only. 8a7288b narrowed the set
  * to these because full-06's audio had no footstep sound (25-29) on a Withered hop onto cams 01-4
@@ -21,3 +23,10 @@ export const MON_UP = 'up';
 export const MON_LOWERING = 'lowering';
 // sourcedValue5: g1236's divisor, the Double token decoded as 32.32 fixed as the Android runtime reads it.
 export const VALUE5_DIVISOR = 71582788266 / 2 ** 32;
+// Sim.units follows config.ts's STALLED and is never reordered (the constructor builds it, restore copies it),
+// so a route unit is found by its position rather than a per-call search.
+const UNIT_AT: Readonly<Record<string, number>> = Object.fromEntries(STALLED.map((u, i) => [u.id, i]));
+/** The route unit `id`, as `sim.units.find(x => x.id === id)` finds it; undefined for any other id. */
+export const unitOf = (sim: Sim, id: string): Unit | undefined => sim.units[UNIT_AT[id]];
+/** The route units' ids in their order, then Balloon Boy: the move order when the views are not sheet-placed. */
+export const UNIT_MOVE_ORDER: readonly string[] = [...STALLED.map((u) => u.id), 'bb'];

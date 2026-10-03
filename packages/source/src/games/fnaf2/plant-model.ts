@@ -130,7 +130,6 @@ export class Sim {
   declare monitorDownLate: typeof sheet.monitorDownLate;
   declare secondPass: typeof sheet.secondPass;
   declare secondPassFront: typeof sheet.secondPassFront;
-  declare passTools: typeof sheet.passTools;
   declare secondPassEarly: typeof sheet.secondPassEarly;
   declare secondPassLate: typeof sheet.secondPassLate;
   declare ventCamDraws: typeof sheet.ventCamDraws;
@@ -918,7 +917,6 @@ Object.defineProperty(Sim.prototype, 'monitorDownEarly', { value: sheet.monitorD
 Object.defineProperty(Sim.prototype, 'monitorDownLate', { value: sheet.monitorDownLate, writable: true, configurable: true });
 Object.defineProperty(Sim.prototype, 'secondPass', { value: sheet.secondPass, writable: true, configurable: true });
 Object.defineProperty(Sim.prototype, 'secondPassFront', { value: sheet.secondPassFront, writable: true, configurable: true });
-Object.defineProperty(Sim.prototype, 'passTools', { value: sheet.passTools, writable: true, configurable: true });
 Object.defineProperty(Sim.prototype, 'secondPassEarly', { value: sheet.secondPassEarly, writable: true, configurable: true });
 Object.defineProperty(Sim.prototype, 'secondPassLate', { value: sheet.secondPassLate, writable: true, configurable: true });
 Object.defineProperty(Sim.prototype, 'ventCamDraws', { value: sheet.ventCamDraws, writable: true, configurable: true });

@@ -2,7 +2,7 @@
 // hops, the mask ticks, the cams-up streak, and the occupants of markers 122 and 123. Each function is a Sim
 // method; plant-model.js installs it on Sim.prototype.
 import * as C from './config.ts';
-import { ROUTE_MOVE_ORDER, MON_UP } from './plant-constants.ts';
+import { ROUTE_MOVE_ORDER, MON_UP, UNIT_MOVE_ORDER, unitOf } from './plant-constants.ts';
 import { unitStunReady, setUnitStun, drainUnitStuns } from './movement-clock.ts';
 import type { Sim, Unit } from './plant-model.ts';
 
@@ -238,19 +238,22 @@ export function rollAllFiveSecond(this: Sim) {
 }
 
 /** g344-g360 test every waiting roll's promotion, then g374-g435 move the promoted units (sourcedRoutePass). */
+/** A route unit whose roll passed and that still waits to promote or move (stalled units only). */
+function waitingToMove(sim: Sim, u: Unit) {
+  return sim.opts.stalledEnabled && u.pending && !u.done && !u.atOpening && !u.inside && u.committedAt < 0;
+}
+
 export function routePass(this: Sim, f: number) {
-  const stalled = this.opts.stalledEnabled;
-  if (stalled && this.opts.sourcedOfficeRolls) for (const u of this.units) this.officePromote(u);   // g344-g360 at 122
-  const waiting = (u: Unit) => stalled && u.pending && !u.done && !u.atOpening && !u.inside && u.committedAt < 0;
+  if (this.opts.stalledEnabled && this.opts.sourcedOfficeRolls) for (const u of this.units) this.officePromote(u);   // g344-g360 at 122
   for (const u of this.units) {
-    if (!waiting(u)) continue;
+    if (!waitingToMove(this, u)) continue;
     this.footstepPromote(u, false);
     if (this.sourcedRouteStep(u, f, 'promote') === 'discard') { u.pending = false; u.promoted = false; }
   }
   drainUnitStuns(this, f);                                                        // g361-g372
   const views = this.opts.sourcedRouteViewDraws && this.opts.sourcedViewDraws;
   if (views) { this.drawViewed(f, 'g366'); this.drawViewed(f, 'g368'); }             // among g361-g371, before the moves
-  const order = views ? ROUTE_MOVE_ORDER : [...this.units.map(u => u.id), 'bb'];
+  const order = views ? ROUTE_MOVE_ORDER : UNIT_MOVE_ORDER;
   for (const id of order) {
     if (id === 'g419') { if (views) this.drawViewed(f, 'g419'); continue; }
     if (id === 'bb') {
@@ -263,8 +266,8 @@ export function routePass(this: Sim, f: number) {
       }
       continue;
     }
-    const u = this.units.find(x => x.id === id);
-    if (!u || !waiting(u)) continue;
+    const u = unitOf(this, id);
+    if (!u || !waitingToMove(this, u)) continue;
     const step = this.sourcedRouteStep(u, f, 'move');
     if (step === 'returned') { u.pending = false; u.promoted = false; }
     else if (step !== 'hold' && this.canAdvance(u, f)) { u.pending = false; this.advanceUnit(u); }
