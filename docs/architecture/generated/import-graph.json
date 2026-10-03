@@ -2636,12 +2636,53 @@
         "../../../play/bin/phone/actuator.ts",
         "../census/winner-census.ts",
         "../lookup.ts",
+        "../recompile/model-options.ts",
         "../recompile/sweep-common.ts",
         "./minus-toys-plan.ts",
         "./night7-presets.ts",
         "./night7-robustness-field.ts",
+        "@sixam/review/renamed-path",
         "@sixam/source/fnaf2",
-        "node:fs"
+        "node:fs",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/plans/test-night7-presets.ts",
+      "imports": [
+        "../../../../packages/propose/bin/census/winner-phase-census.ts",
+        "../../../../packages/propose/bin/plans/night7-robustness.ts",
+        "../../../play/bin/phone/actuator.ts",
+        "../census/winner-census.ts",
+        "../lookup.ts",
+        "../recompile/model-options.ts",
+        "../recompile/sweep-common.ts",
+        "./minus-toys-plan.ts",
+        "./night7-presets.ts",
+        "./night7-robustness-field.ts",
+        "@sixam/review/renamed-path",
+        "@sixam/source/fnaf2",
+        "node:fs",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/plans/test-night7-presets.ts",
+      "imports": [
+        "../../../../packages/propose/bin/census/winner-phase-census.ts",
+        "../../../../packages/propose/bin/plans/night7-robustness.ts",
+        "../../../play/bin/phone/actuator.ts",
+        "../census/winner-census.ts",
+        "../lookup.ts",
+        "../recompile/model-options.ts",
+        "../recompile/sweep-common.ts",
+        "./minus-toys-plan.ts",
+        "./night7-presets.ts",
+        "./night7-robustness-field.ts",
+        "@sixam/review/renamed-path",
+        "@sixam/source/fnaf2",
+        "node:fs",
+        "node:url"
       ]
     },
     {
@@ -2794,6 +2835,12 @@
         "node:fs",
         "node:url",
         "node:util"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/recompile/model-options.ts",
+      "imports": [
+        "@sixam/source/fnaf2"
       ]
     },
     {
@@ -3097,6 +3144,7 @@
         "../census/winner-phase-census.ts",
         "../plans/bundle.ts",
         "../plans/night7-presets.ts",
+        "./model-options.ts",
         "./sweep-common.ts",
         "@sixam/kernel",
         "@sixam/source/fnaf2",
@@ -5782,6 +5830,13 @@
         "node:child_process",
         "node:path",
         "node:url"
+      ]
+    },
+    {
+      "file": "tools/legacy-model.ts",
+      "imports": [
+        "../packages/propose/bin/recompile/model-options.ts",
+        "@sixam/source/fnaf2"
       ]
     },
     {

@@ -44,6 +44,8 @@
 //     lateness lanes at their last all-win value and first recorded loss.
 import { sha256 } from '../recompile/sweep-common.ts';
 import { readFileSync, readdirSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { currentPath } from '@sixam/review/renamed-path';
 import * as C from '@sixam/source/fnaf2';
 import { KNOBS0 } from './minus-toys-plan.ts';
 import { loadPresets, cohort, runNight, PRESET_KNOBS, MEASURED_SPREAD_MS, HALL_PLATEAU_MS, BANDS,
@@ -60,8 +62,18 @@ import type { buildRobustnessRecord } from '../../../../packages/propose/bin/pla
 import type { buildFieldRecord } from './night7-robustness-field.ts';
 import type { Loss } from '../census/winner-census.ts';
 import { found } from '../lookup.ts';
+import { withModelOptions } from '../recompile/model-options.ts';
+import { LEGACY_SIM_OPTIONS } from '@sixam/source/fnaf2';
 
+// These records and bands were measured on fnaf2-legacy, the default before 2026-10-02.
+withModelOptions({ ...LEGACY_SIM_OPTIONS }, () => {
 const check: (ok: unknown, message: string) => asserts ok = (ok, message) => { if (!ok) throw new Error(message); };
+const ROOT = fileURLToPath(new URL('../../../../', import.meta.url));
+/** The winner files a record's schedules name, following retired bindings through their rename. */
+const namedPaths = (schedules: readonly object[]) => schedules.flatMap((s) => {
+  const binding = (s as { readonly binding?: unknown }).binding;
+  return typeof binding === 'string' ? [currentPath(ROOT, binding) ?? binding] : [];
+});
 
 // --- 1. the presets are the phone's presets ---------------------------------
 {
@@ -235,7 +247,7 @@ let robustLine = '';
   check(record.kind === ROBUSTNESS_KIND, `${name} is not a ${ROBUSTNESS_KIND}`);
   const seeds = heldOutSeeds(record.method.seeds.n);
   check(record.method.seeds.sha256 === sha256(JSON.stringify(seeds)), `${name}: the held-out seed block no longer rebuilds`);
-  const now = robustSchedules();
+  const now = robustSchedules(namedPaths(record.schedules));
   check(now.length === record.schedules.length, `${name} covers ${record.schedules.length} schedules, the tree has ${now.length}`);
   let replays = 0;
   const lostAs = (schedule: ReturnType<typeof robustSchedules>[number], opts: Parameters<typeof robustWins>[2],
@@ -311,7 +323,7 @@ let fieldLine = '';
   const step = 1000 / C.FPS;
   let replays = 0;
   for (const rec of record.schedules) {
-    const s = fieldSchedules().find(x => x.id === rec.id);
+    const s = fieldSchedules(namedPaths(record.schedules)).find(x => x.id === rec.id);
     check(s, `${name} names ${rec.id}, which the tree no longer has`);
     // The preset's row names its knobs, a binding's its winner.
     const digests: { knobsSha256?: string, winnerSha256?: string } = rec;
@@ -357,3 +369,4 @@ let fieldLine = '';
 
 console.log('night7-presets: presets match the menu model, the device lane bites, ' +
   `the hall pulse clears both floors by more than 33 ms, and ${populationLine}${planeLine}${robustLine}${fieldLine}`);
+});

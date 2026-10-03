@@ -93,11 +93,13 @@ export function retimedPreset(epochMs = RETIME_EPOCH_MS) {
 }
 
 const tag = (path: string) => winnerTag(path).replace(/^campaign-night7-/, '');
-export function fieldSchedules(): FieldSchedule[] {
+// `paths` defaults to the committed winners; a gate replaying an older record passes the files it names, which
+// may have been retired since.
+export function fieldSchedules(paths?: readonly string[]): FieldSchedule[] {
   return [
     { id: 'preset', knobs: PRESET_KNOBS, epochMs: 0 },
     { id: 'preset-retimed', knobs: retimedPreset(), epochMs: RETIME_EPOCH_MS },
-    ...nightBindings(7).map((b) => ({ id: tag(b.path), path: b.path, knobs: b.knobs, epochMs: b.epochMs,
+    ...nightBindings(7, paths).map((b) => ({ id: tag(b.path), path: b.path, knobs: b.knobs, epochMs: b.epochMs,
       winnerSha256: b.winnerSha256 })),
   ];
 }

@@ -73,10 +73,12 @@ interface Schedule {
 type RobustRow = BlockRow & { readonly subject: string, readonly losses: Loss[] };
 
 /** The preset schedule and every committed phase-aware Night 7 binding. */
-export function schedules(): Schedule[] {
+// `paths` defaults to the committed winners; a gate replaying an older record passes the files it names, which
+// may have been retired since.
+export function schedules(paths?: readonly string[]): Schedule[] {
   return [
     { id: 'preset', knobs: PRESET_KNOBS, epochMs: 0, knobsSha256: sha256(JSON.stringify(PRESET_KNOBS)) },
-    ...nightBindings(7).map((b) => ({ id: tag(b.path), path: b.path, knobs: b.knobs, epochMs: b.epochMs,
+    ...nightBindings(7, paths).map((b) => ({ id: tag(b.path), path: b.path, knobs: b.knobs, epochMs: b.epochMs,
       winnerSha256: b.winnerSha256 })),
   ];
 }

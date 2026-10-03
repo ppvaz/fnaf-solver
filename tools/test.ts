@@ -493,14 +493,22 @@ const secs = (ms: number) => `${(ms / 1000).toFixed(1)}s`;
 /** A finished check: its exit code (124 on a timeout), its output, and how long it ran. */
 interface ToolRun { code: number | null, out: string, ms: number, timedOut: boolean }
 
-function runTool(argv: string[], { timeoutMs = 120_000, streamLabel = null as string | null } = {}) {
+// Checks whose assertions are facts of the legacy model (fnaf2-legacy): KNOBS0 Minus Toys surviving every
+// seed, Mangle's five-tick repel, the parked Minus 7 pilot's and policy's numbers. Since 2026-10-02 the default
+// is the sourced model, under which those facts do not hold (Minus Toys at KNOBS0 goes 0/200 to Golden
+// Freddy), so these run with the legacy model preloaded until they are re-derived on it or archived.
+const LEGACY_MODEL_CHECKS = new Set(['minus toys', 'minus toys worst', 'mangle reactive', 'hidpilot vocal bound',
+  'hidpilot bang', 'hidpilot bang false', 'recipe', 'policytest']);
+const LEGACY_MODEL_PRELOAD = join(ROOT, 'tools/legacy-model.ts');
+
+function runTool(argv: string[], { timeoutMs = 120_000, streamLabel = null as string | null, nodeArgs = [] as string[] } = {}) {
   return new Promise<ToolRun>((resolve) => {
     const started = Date.now();
     // Most checks are node; the cue front end is stdlib Python, like the rest
     // of the device tooling, so dispatch on the extension.
     const runner = argv[0].endsWith('.py') ? 'python3'
       : argv[0].endsWith('.sh') ? 'bash' : process.execPath;
-    const child = spawn(runner, [join(TOOLS, argv[0]), ...argv.slice(1)],
+    const child = spawn(runner, [...(runner === process.execPath ? nodeArgs : []), join(TOOLS, argv[0]), ...argv.slice(1)],
       { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] });
     let out = '';
     let timedOut = false;
@@ -542,6 +550,7 @@ async function runGroup(group: readonly Check[], judge: boolean, { progress = fa
     const r = await runTool(argv, {
       timeoutMs,
       streamLabel: progress ? name : null,
+      nodeArgs: LEGACY_MODEL_CHECKS.has(name) ? ['--import', LEGACY_MODEL_PRELOAD] : [],
     });
     if (progress) process.stderr.write(`    ... ${name} finished in ${secs(r.ms)}${r.timedOut ? ' (TIMEOUT)' : ''}\n`);
     return r;

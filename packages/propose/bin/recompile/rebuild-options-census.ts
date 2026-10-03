@@ -66,6 +66,9 @@ import { Sim } from '@sixam/source/fnaf2';
 import { STRATEGY_REGISTRY, compileBundle, validateWinner } from '../plans/bundle.ts';
 import { PRESET_KNOBS, loadPresets, runNight } from '../plans/night7-presets.ts';
 import { simOptionsFrom } from '../../../source/recompile/model-draw-trace.ts';
+import { withModelOptions } from './model-options.ts';
+
+export { useModelOptions, withModelOptions } from './model-options.ts';
 import { committedWinners, designBlock, forkBlocks, gitState, phoneCohorts } from '../census/winner-census.ts';
 import type { ForkedChild } from '../census/winner-census.ts';
 import { heldOutSeeds } from '../census/winner-phase-census.ts';
@@ -125,29 +128,7 @@ export function optionSets(path = optionsFile()) {
   ];
 }
 
-// --- constructor-time options -------------------------------------------
-let active = null as SimOptions | null;
-let installed = false;
-function install() {
-  if (installed) return;
-  if (Object.getOwnPropertyDescriptor(Sim.prototype, 'opts')) throw new Error('Sim.prototype.opts is already defined');
-  Object.defineProperty(Sim.prototype, 'opts', {
-    configurable: true,
-    set(this: object, value: object) {
-      Object.defineProperty(this, 'opts', { value: active ? Object.assign(value, active) : value,
-        writable: true, configurable: true, enumerable: true });
-    },
-  });
-  installed = true;
-}
-
-/** Run `fn` with every Sim constructed inside it carrying `simOptions`. */
-export function withModelOptions<T>(simOptions: SimOptions, fn: () => T): T {
-  install();
-  if (active) throw new Error('withModelOptions does not nest');
-  active = Object.keys(simOptions).length ? simOptions : null;
-  try { return fn(); } finally { active = null; }
-}
+// --- constructor-time options: model-options.ts injects them -----------------
 
 /** The Sim was built with exactly this set: the injected values, or the defaults for an empty set. */
 function assertCarries(sim: Play['sim'], simOptions: SimOptions, tag: string) {

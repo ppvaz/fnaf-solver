@@ -41,6 +41,10 @@ committed winner (the CI step of that name: `npm run device:emit` then
 pushing run `npm run push-gate`, which runs the CI lanes against the pushed
 commit in a throwaway worktree; the working tree is a different measurement
 from CI's clean clone. `git config core.hooksPath .githooks` makes it automatic.
+It skips CI's slow lane (`test:unit:slow`, whose `tools/test.ts --gates` holds
+the engine checks) unless given `--full`: a change to the Sim's model, its
+defaults or the bindings runs `npm run push-gate -- --full` (142e3456 skipped
+it and left that lane red).
 Finish by updating the structured progress/result record, citing its generated
 evidence ID, and stating exactly what remains open; do not create a parallel
 handwritten evidence log.

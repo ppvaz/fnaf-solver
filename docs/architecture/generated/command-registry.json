@@ -221,6 +221,12 @@
       "lifecycle": "supported"
     },
     {
+      "id": "tools/legacy-model.ts",
+      "invocation": "tools/legacy-model.ts",
+      "kind": "module",
+      "lifecycle": "supported"
+    },
+    {
       "id": "tools/push-gate.ts",
       "invocation": "tools/push-gate.ts",
       "kind": "check",
@@ -2678,6 +2684,12 @@
       "id": "packages/propose/bin/recompile/rebuild-options-census.ts",
       "invocation": "packages/propose/bin/recompile/rebuild-options-census.ts [--jobs J] [--count N] [--out FILE] [--date YYYY-MM-DD] [--suffix LETTER] [--checkpoint DIR] [--assemble DIR] [--options FILE]",
       "kind": "report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/recompile/model-options.ts",
+      "invocation": "packages/propose/bin/recompile/model-options.ts",
+      "kind": "module",
       "lifecycle": "supported"
     },
     {
