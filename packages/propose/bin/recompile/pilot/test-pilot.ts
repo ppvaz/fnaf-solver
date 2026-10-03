@@ -15,6 +15,7 @@ import { SEAL_FOR, LURE_TO, proxyOf, whereIs, playsLeft, whatDayRare, doomStart 
 import { branchPoints, parseSeeds, progress, withoutStrays, LEAD, BACKOFF, SOURCES as SEARCH_SOURCES } from './search.ts';
 import { SOURCES as BATCH_SOURCES } from './batch.ts';
 import { GAMES, gameModulePath, loadGame, view } from './pilot.ts';
+import { recordInputs } from './replay.ts';
 import type { PilotObject, PilotState } from './pilot.ts';
 import { MARKERS, ACTORS, WATCH as WATCH4, places, doomStart as doomStart4 } from './fnaf4.ts';
 import { GRAPH, LURE_FROM } from '../../../../source/src/games/fnaf3/sim-fnaf3.ts';
@@ -42,7 +43,10 @@ for (const path of records) {
         `${r.input.fixture}: ${line} touches outside the window`);
     }
   }
-  ok(`${r.evidenceId} ${r.game} ${r.status}: re-derived, all touches in the window`);
+  // `replay --record` starts from these: the input where it stands now and the committed save the record hashes.
+  const starts = recordInputs(r);
+  assert.ok(existsSync(starts.input) && existsSync(starts.saveBefore), `${r.evidenceId}: a --record replay has nothing to start from`);
+  ok(`${r.evidenceId} ${r.game} ${r.status}: re-derived, all touches in the window, replayable from committed fixtures`);
 }
 
 // 2. Negative controls: each must change the verdict or fail the check.

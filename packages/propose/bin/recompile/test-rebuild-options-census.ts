@@ -187,7 +187,9 @@ function checkRecord(name: string) {
     }
   }
 
-  const scored = new Set(record.bindings.map((b: { readonly binding: string | null }) => b.binding).filter(Boolean));
+  // A record names each binding where it stood when the census ran; the winners are read where they stand now.
+  const scored = new Set(record.bindings.map((b: { readonly binding: string | null }) =>
+    b.binding && (currentPath(ROOT, b.binding) ?? b.binding)).filter(Boolean));
   const unscored = committedWinners().filter((path) => !scored.has(path) &&
     [...current.values()].some((s) => s.binding === path));
   console.log(`rebuild-options census ${name} (${scoredOptions}): ${record.bindings.length} subjects x ${sets.length} ` +

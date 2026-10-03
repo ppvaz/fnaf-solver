@@ -31,15 +31,15 @@ type UncheckedRow = { readonly lane?: unknown, readonly n?: unknown, readonly lo
 
 function checkRows(rows: unknown, start: number, end: number): asserts rows is LaneRow[] {
   if (!isList(rows) || JSON.stringify((rows as readonly UncheckedRow[]).map((r) => r.lane)) !== JSON.stringify(POPULATION_LANES))
-    throw new Error(`block ${start}../../../..${end}: wrong lanes`);
+    throw new Error(`block ${start}..${end}: wrong lanes`);
   for (const row of rows as readonly UncheckedRow[]) {
-    if (row.n !== end - start || !isList(row.losses)) throw new Error(`block ${start}../../../..${end}: wrong count`);
+    if (row.n !== end - start || !isList(row.losses)) throw new Error(`block ${start}..${end}: wrong count`);
     const seeds = new Set<unknown>();
     for (const loss of row.losses) {
       // Each comparison follows the integer check that guards it.
       if (!isList(loss) || loss.length !== 3 || !Number.isInteger(loss[0]) || (loss[0] as number) < start || (loss[0] as number) >= end
           || seeds.has(loss[0]) || typeof loss[1] !== 'string' || !Number.isInteger(loss[2]) || (loss[2] as number) < 0)
-        throw new Error(`block ${start}../../../..${end}: invalid or duplicate loss`);
+        throw new Error(`block ${start}..${end}: invalid or duplicate loss`);
       seeds.add(loss[0]);
     }
   }
@@ -143,7 +143,7 @@ async function main(argv: string[]) {
     const result = await checkpointedBlocks({ dir: resolve(args.checkpoints), identity, start, count, jobs, blockSize,
       runBlock: (a, b) => forkBlocks<LaneRow>({ script: join(ROOT, LANE_FILE), args: [source, JSON.stringify(options), ...POPULATION_LANES],
         start: a, count: b - a, jobs: 1 }),
-      onComplete: ({ completed, total, start: a, end: b }) => console.error(`checkpoint ${completed}/${total}: seeds ${a}../../../..${b - 1} retained`) });
+      onComplete: ({ completed, total, start: a, end: b }) => console.error(`checkpoint ${completed}/${total}: seeds ${a}..${b - 1} retained`) });
     const after = gitState(paths);
     if (after.commit !== git.commit || after.dirtyEnginePaths.length)
       throw new Error('sources changed during the census; no final evidence emitted');

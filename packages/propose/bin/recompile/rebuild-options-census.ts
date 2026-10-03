@@ -239,7 +239,7 @@ function censusBlock(a: number, b: number, count: number, checkpointDir: string 
   let rows: CensusRow[] = [];
   if (checkpoint && existsSync(checkpoint)) {
     rows = JSON.parse(readFileSync(checkpoint, 'utf8'));
-    console.error(`  seeds[${a}../../../..${b}) resuming after ${rows.length / sets.length} subjects from ${checkpoint}`);
+    console.error(`  seeds[${a}..${b}) resuming after ${rows.length / sets.length} subjects from ${checkpoint}`);
   }
   for (const [k, subject] of unique.entries()) {
     if (rows.some((row) => row.key === subject.replayKey)) continue;
@@ -257,7 +257,7 @@ function censusBlock(a: number, b: number, count: number, checkpointDir: string 
       rows.push({ key: subject.replayKey, set: set.id, n: seeds.length, losses });
     }
     if (checkpoint) writeFileSync(checkpoint, JSON.stringify(rows));
-    console.error(`  seeds[${a}../../../..${b}) ${k + 1}/${unique.length} ${subject.id} (${Math.round((Date.now() - started) / 1000)} s)`);
+    console.error(`  seeds[${a}..${b}) ${k + 1}/${unique.length} ${subject.id} (${Math.round((Date.now() - started) / 1000)} s)`);
   }
   return rows;
 }
@@ -492,7 +492,7 @@ export function assembleCheckpoints(dir: string, count: number, jobs: number) {
   for (let a = 0; a < total; a += size) {
     const b = Math.min(a + size, total);
     const found = files.filter((f) => f.startsWith(`block-${count}-${a}-${b}-`) && f.endsWith('.json'));
-    if (found.length !== 1) throw new Error(`--assemble: expected one checkpoint for seeds[${a}../../../..${b}) in ${dir}, found ${found.length}`);
+    if (found.length !== 1) throw new Error(`--assemble: expected one checkpoint for seeds[${a}..${b}) in ${dir}, found ${found.length}`);
     const rows: CensusRow[] = JSON.parse(readFileSync(join(dir, found[0]), 'utf8'));
     for (const row of rows) if (row.n !== b - a) throw new Error(`--assemble: ${found[0]} holds a row of ${row.n} seeds, not ${b - a}`);
     parts.push({ file: found[0], stamp: found[0].slice(`block-${count}-${a}-${b}-`.length, -'.json'.length), rows });

@@ -316,7 +316,7 @@ export function check(result: BracketResult) {
     if (current(result.source[key].path) !== current(sourcePath) || result.source[key].sha256 !== sourceHash(sourcePath)) throw new Error(`${key} bytes differ`);
   }
   // The record keeps only the tool's hash, so every path the tool has stood at is searched.
-  if (['tools/recompile/phone-input-bracket-sweep.mjs', 'packages/propose/bin/recompile/phone-input-bracket-sweep.ts',
+  if (['tools/recompile/phone-input-bracket-sweep.mjs', 'packages/propose/bin/recompile/phone-input-bracket-sweep.mjs',
     'packages/propose/bin/recompile/phone-input-bracket-sweep.ts']
     .every((path) => committedVersion(path, result.source.toolSha256) === null))
     throw new Error('tool bytes are no committed version of this tool');

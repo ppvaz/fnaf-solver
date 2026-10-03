@@ -168,7 +168,7 @@ function runChild(script: string, args: readonly string[], start: number, end: n
     child.on('message', (message) => { result = message; });
     child.on('error', reject);
     child.on('exit', (code) => (code === 0 && result ? resolveChild(result)
-      : reject(new Error(`${script}: block ${start}../../../..${end} exited ${code}`))));
+      : reject(new Error(`${script}: block ${start}..${end} exited ${code}`))));
   });
 }
 

@@ -14,7 +14,7 @@
  * `pilot.input`, and the replay's trace is compared with the pilot run's. With
  * --record, a committed recompile-pilot-night-v1 record supplies the game,
  * seed, update count and input fixture, the save is the fixture in
- * tools/recompile/fixtures/ whose sha256 the record names, and the trace is
+ * packages/source/recompile/fixtures/ whose sha256 the record names, and the trace is
  * compared with the record's replay digest: that re-checks a committed win on
  * another binary. With --input and --save, the rows and the save are given
  * directly and there is no trace to compare (search.ts checks its wins so). Either way the replay writes its own trace and save and
@@ -30,6 +30,7 @@ import { createInterface } from 'node:readline';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { NATIVE_ENV, loadGame } from './pilot.ts';
+import { currentPath } from '@sixam/review/renamed-path';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '../../../../..');
@@ -37,6 +38,20 @@ const IMAGE = 'fnaf2-chowdren:buster';
 const MOUNT = '/home/pedro/fnaf-apks';
 
 /** What a replay plays into a fresh run: the rows and the save before them, on which binary and assets, at which seed. */
+/** The committed save fixtures a --record replay starts from. */
+export const FIXTURES = join(ROOT, 'packages/source/recompile/fixtures');
+
+/**
+ * What a --record replay starts from: the record's input fixture where it stands now (a record keeps the path it
+ * was written with) and the fixture save whose sha256 it names; refused when either is missing.
+ */
+export function recordInputs(rec: { readonly input: { readonly fixture: string }, readonly saveBefore: { readonly sha256: string } }) {
+  const input = join(ROOT, currentPath(ROOT, rec.input.fixture) ?? rec.input.fixture);
+  const save = readdirSync(FIXTURES).filter((f) => f.endsWith('.ini')).find((f) => sha256(join(FIXTURES, f)) === rec.saveBefore.sha256);
+  if (!save) throw new Error(`replay: no fixture in ${FIXTURES} has the record's save sha256 ${rec.saveBefore.sha256}`);
+  return { input, saveBefore: join(FIXTURES, save) };
+}
+
 export interface ReplayRun {
   run: string, binary: string, assets: string, seed: number, maxTicks: number, docker: boolean, input: string, saveBefore: string;
 }
@@ -69,12 +84,9 @@ function parseArgs(argv: string[]) {
   if (o.input && !o.saveBefore) throw new Error('replay: --input needs --save');
   if (o.record) {
     const rec = JSON.parse(readFileSync(o.record, 'utf8'));
-    const fixtures = join(ROOT, 'tools/recompile/fixtures');
-    const save = readdirSync(fixtures).filter((f) => f.endsWith('.ini'))
-      .find((f) => sha256(join(fixtures, f)) === rec.saveBefore.sha256);
-    if (!save) throw new Error(`replay: no fixture in ${fixtures} has the record's save sha256 ${rec.saveBefore.sha256}`);
-    Object.assign(o, { game: rec.game, seed: rec.seed, maxTicks: rec.replay.rows, input: join(ROOT, rec.input.fixture),
-      saveBefore: join(fixtures, save), expect: rec.replay });
+    const { input, saveBefore } = recordInputs(rec);
+    Object.assign(o, { game: rec.game, seed: rec.seed, maxTicks: rec.replay.rows, input,
+      saveBefore, expect: rec.replay });
   } else if (o.from) {
     Object.assign(o, { input: join(o.from, 'pilot.input'), saveBefore: join(o.from, 'save-before.ini') });
   }

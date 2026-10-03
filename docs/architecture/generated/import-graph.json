@@ -2910,6 +2910,7 @@
       "file": "packages/propose/bin/recompile/pilot/replay.ts",
       "imports": [
         "./pilot.ts",
+        "@sixam/review/renamed-path",
         "node:child_process",
         "node:crypto",
         "node:fs",
@@ -2940,6 +2941,7 @@
         "./fnaf4.ts",
         "./pilot.ts",
         "./record.ts",
+        "./replay.ts",
         "./search.ts",
         "@sixam/review/renamed-path",
         "node:assert/strict",
