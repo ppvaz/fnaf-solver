@@ -35,13 +35,13 @@ import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { HID_DESCRIPTOR, HID_FEATURE_REPORTS, report } from '@sixam/play';
+import { DEFAULT_READY_DELAY_MS } from '@sixam/play/campaign/hid-schedule';
 import { resolveSerial } from '../phone/local-profile.ts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
 const PACKAGE = 'org.fnaf2practice.play';
 const ACTIVITY = `${PACKAGE}/org.libsdl.app.SDLActivity`;
 const HID_ID = 105;
-const READY_DELAY_MS = 7000;
 const TICK_MS = 1000 / 60;
 const GAME = [1024, 768], NATIVE = [2400, 1080];
 export const toNative = ([x, y]: readonly [number, number]) => ({ x: x * NATIVE[0] / GAME[0], y: y * NATIVE[1] / GAME[1] });
@@ -122,7 +122,7 @@ export function parts(text: string, titleTap: readonly number[] = [264, 696]) {
   const tap = toNative(titleTap as [number, number]);   // an x,y pair
   const A = [line('register', { name: 'FNAF Rebuild Night', vid: 6353, pid: 61959, bus: 'usb',
       descriptor: HID_DESCRIPTOR, feature_reports: HID_FEATURE_REPORTS }),
-    line('delay', { duration: READY_DELAY_MS }),
+    line('delay', { duration: DEFAULT_READY_DELAY_MS }),
     line('report', { report: report([{ flags: 0x03, point: tap }]) }), line('delay', { duration: 50 }),
     line('report', { report: report([{ flags: 0x00, point: tap }]) })];
   const bumped: Bumped[] = [];
@@ -200,7 +200,7 @@ async function live(args: string[]) {
   // death screen, the title or a menu. /system/bin/hid runs as app_process
   // (com.android.commands.hid.Hid), so it is stopped by its PID, never by name.
   const script = onPhoneScript();
-  const budgetMs = READY_DELAY_MS + 60000 + Math.round(lastOfficeTick * TICK_MS) + 60000;
+  const budgetMs = DEFAULT_READY_DELAY_MS + 60000 + Math.round(lastOfficeTick * TICK_MS) + 60000;
   const run = spawnSync('adb', ['-s', serial, 'shell', script], { encoding: 'utf8', timeout: budgetMs });
   log(`device shell: status ${run.status} signal ${run.signal ?? 'none'} ${run.stdout.trim()}`);
   if (run.status !== 0 || !run.stdout.includes('HID_DONE')) {

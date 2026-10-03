@@ -1079,6 +1079,7 @@
         "../grade/tap-stall-audit.ts",
         "@sixam/kernel",
         "@sixam/play",
+        "@sixam/play/campaign/hid-schedule",
         "node:child_process",
         "node:crypto",
         "node:fs",
@@ -1091,6 +1092,7 @@
       "imports": [
         "../phone/local-profile.ts",
         "@sixam/play",
+        "@sixam/play/campaign/hid-schedule",
         "node:child_process",
         "node:crypto",
         "node:fs",

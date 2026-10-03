@@ -35,6 +35,7 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { isList, isRecord } from '@sixam/kernel';
 import { HID_DESCRIPTOR, HID_FEATURE_REPORTS, report } from '@sixam/play';
+import { DEFAULT_READY_DELAY_MS } from '@sixam/play/campaign/hid-schedule';
 import { parseInputEvents, touchEdges } from '../grade/tap-stall-audit.ts';
 
 interface Point { readonly x: number, readonly y: number }
@@ -77,10 +78,9 @@ export const PACKAGE = 'org.fnaf2practice.play';
 export const ACTIVITY = `${PACKAGE}/org.libsdl.app.SDLActivity`;
 export const HID_NAME = 'FNAF Practice Audit';
 const HID_ID = 104;
-// The same readiness delay the campaign uses (hid-schedule.js
-// DEFAULT_READY_DELAY_MS): InputReader attaches ~5.1 s after registration on
-// this phone and reports sent before that are lost.
-export const READY_DELAY_MS = 7000;
+// The campaign's readiness delay: InputReader attaches ~5.1 s after
+// registration on this phone and reports sent before that are lost.
+export const READY_DELAY_MS = DEFAULT_READY_DELAY_MS;
 // The office press point: the retail profile's camera-feed / hall light point
 // (hid-sweep-probe.ts COORDS.cameraFeedLight), native 2400 x 1080. With the
 // monitor down it is the hall flashlight; a hold lights the hall and nothing
