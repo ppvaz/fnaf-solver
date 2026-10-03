@@ -1801,6 +1801,13 @@
       ]
     },
     {
+      "file": "packages/play/test/testdata/mock-control-server.ts",
+      "imports": [
+        "node:fs",
+        "node:net"
+      ]
+    },
+    {
       "file": "packages/play/test/timed-start.test.ts",
       "imports": [
         "../src/campaign/modern-campaign-ports.ts",

@@ -1529,8 +1529,8 @@
       "lifecycle": "supported"
     },
     {
-      "id": "packages/play/test/testdata/mock-control-server.py",
-      "invocation": "packages/play/test/testdata/mock-control-server.py",
+      "id": "packages/play/test/testdata/mock-control-server.ts",
+      "invocation": "packages/play/test/testdata/mock-control-server.ts",
       "kind": "mock",
       "lifecycle": "supported"
     },

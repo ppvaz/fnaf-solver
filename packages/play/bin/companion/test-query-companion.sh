@@ -10,7 +10,7 @@ ln -s "$HERE/../../test/testdata/mock-adb-companion.sh" "$TEMP_DIR/bin/adb"
 
 # The forward transport speaks a real socket, so the mock serves one rather
 # than shimming the client.
-python3 "$HERE/../../test/testdata/mock-control-server.py" "$TEMP_DIR/port" &
+node "$HERE/../../test/testdata/mock-control-server.ts" "$TEMP_DIR/port" &
 server_pid=$!
 trap 'kill "$server_pid" 2>/dev/null || true; rm -rf "$TEMP_DIR"' EXIT HUP INT TERM
 for _ in $(seq 1 100); do
