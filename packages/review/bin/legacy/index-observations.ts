@@ -12,7 +12,7 @@
 import { createHash } from 'node:crypto';
 import { closeSync, existsSync, lstatSync, openSync, readSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { pyDumps, pyPath } from '@sixam/kernel';
+import { pyArgs, pyDumps, pyPath } from '@sixam/kernel';
 
 type Record_ = { kind: string, authority: string, join: string | null, note: string };
 const record = (kind: string, authority: string, join: string | null = null, note = ''): Record_ => ({ kind, authority, join, note });
@@ -138,30 +138,15 @@ const width = (text: string) => [...text].length;
 const left = (text: string, size: number) => text + ' '.repeat(Math.max(0, size - width(text)));
 const right = (text: string, size: number) => ' '.repeat(Math.max(0, size - width(text))) + text;
 
-const USAGE = 'usage: index-observations.ts [-h] [--json] [--hash] [--strict] [root]';
-
 function main(argv: readonly string[]): number {
-  const flags = new Set<string>();
-  const positional: string[] = [];
-  const LONG = ['--help', '--json', '--hash', '--strict'];
-  for (let k = 0; k < argv.length; k += 1) {
-    if (argv[k] === '--') { positional.push(...argv.slice(k + 1)); break; }
-    let flag = argv[k];
-    if (flag === '-h') flag = '--help';
-    if (flag.startsWith('--') && !LONG.includes(flag)) {
-      const matches = LONG.filter(name => name.startsWith(flag));
-      if (matches.length !== 1) {
-        console.error(`${USAGE}\nindex-observations.ts: error: ${matches.length ? `ambiguous option: ${flag} could match ${matches.join(', ')}` : `unrecognized arguments: ${flag}`}`);
-        return 2;
-      }
-      flag = matches[0];
-    }
-    if (flag === '--help') { console.log(USAGE); return 0; }
-    if (LONG.includes(flag)) flags.add(flag);
-    else if (flag.startsWith('-') && flag !== '-') { console.error(`${USAGE}\nindex-observations.ts: error: unrecognized arguments: ${flag}`); return 2; }
-    else positional.push(argv[k]);
+  const args = pyArgs(argv, 'index-observations.ts', [{ name: '--json', takes: 'flag' }, { name: '--hash', takes: 'flag' },
+    { name: '--strict', takes: 'flag' }], [{ name: 'root', optional: true }]);
+  if ('exit' in args) {
+    (args.exit ? console.error : console.log)(args.text);
+    return args.exit;
   }
-  if (positional.length > 1) { console.error(`${USAGE}\nindex-observations.ts: error: unrecognized arguments: ${positional.slice(1).join(' ')}`); return 2; }
+  const flags = new Set(Object.keys(args.options));
+  const positional = args.positionals;
   const root = pyPath(positional[0] ?? 'captures');
 
   const rows = inventory(root, flags.has('--hash'));

@@ -704,6 +704,7 @@
         "./game-run.ts",
         "./labels.ts",
         "./outcome.ts",
+        "./pyargs.ts",
         "./pyfmt.ts",
         "./seed.ts",
         "./time/interval.ts",
@@ -722,6 +723,12 @@
         "./labels.ts",
         "./time/interval.ts",
         "./types.ts"
+      ]
+    },
+    {
+      "file": "packages/kernel/src/pyargs.ts",
+      "imports": [
+        "./pyfmt.ts"
       ]
     },
     {
@@ -791,6 +798,13 @@
       "file": "packages/kernel/test/kernel.test.ts",
       "imports": [
         "../src/index.ts",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/kernel/test/pyargs.test.ts",
+      "imports": [
+        "../src/pyargs.ts",
         "node:assert/strict"
       ]
     },

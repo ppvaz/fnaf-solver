@@ -753,6 +753,24 @@
       }
     },
     {
+      "id": "packages/kernel/test/pyargs.test.ts",
+      "lane": "test:unit",
+      "owner": "@sixam/kernel",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.ts per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
       "id": "packages/kernel/test/pyfmt.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/kernel",

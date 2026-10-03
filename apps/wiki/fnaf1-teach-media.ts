@@ -16,7 +16,7 @@
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { PyFloat, isRecord, pyDumps, pyFixed, pyFloat, pyPath, pyRound, pySplit, pySplitLines } from '@sixam/kernel';
+import { PyFloat, isRecord, pyArgs, pyDumps, pyFixed, pyFloat, pyPath, pyRound, pySplit, pySplitLines } from '@sixam/kernel';
 
 // The Companion's FNaF 1 panel, native pixels (Fnaf1Lesson.java).
 const PANEL = [560, 110, 1340, 330];
@@ -101,36 +101,15 @@ const round2 = (x: number) => new PyFloat(Number.isFinite(x) ? Number(pyFixed(x,
 
 interface Options { run: string, video: string, out: string, only: 'gif' | 'all' }
 
-const USAGE = 'usage: fnaf1-teach-media.ts [-h] --run RUN --video VIDEO --out OUT [--only {gif,all}]';
-
 function parse(argv: readonly string[]): Options | number {
-  const LONG = ['--help', '--run', '--video', '--out', '--only'];
-  const values: Record<string, string> = {};
-  const error = (message: string) => { console.error(`${USAGE}\nfnaf1-teach-media.ts: error: ${message}`); return 2; };
-  for (let k = 0; k < argv.length; k += 1) {
-    const equals = argv[k].startsWith('--') ? argv[k].indexOf('=') : -1;
-    let flag = equals > 0 ? argv[k].slice(0, equals) : argv[k];
-    let inline = equals > 0 ? argv[k].slice(equals + 1) : undefined;
-    if (flag === '-h') flag = '--help';
-    if (flag.startsWith('--') && !LONG.includes(flag)) {
-      const matches = LONG.filter(name => name.startsWith(flag));
-      if (matches.length > 1) return error(`ambiguous option: ${flag} could match ${matches.join(', ')}`);
-      if (matches.length === 1) flag = matches[0];
-    }
-    if (flag === '--help') { console.log(USAGE); return 0; }
-    if (!LONG.includes(flag)) return error(`unrecognized arguments: ${argv.slice(k).join(' ')}`);
-    if (inline === undefined) {
-      inline = argv[k + 1];
-      k += 1;
-      if (inline === undefined || (inline.startsWith('-') && !/^-\d|^-\.\d/.test(inline))) return error(`argument ${flag}: expected one argument`);
-    }
-    if (flag === '--only' && inline !== 'gif' && inline !== 'all')
-      return error(`argument --only: invalid choice: '${inline}' (choose from gif, all)`);
-    values[flag] = inline;
+  const args = pyArgs(argv, 'fnaf1-teach-media.ts', [{ name: '--run', required: true }, { name: '--video', required: true },
+    { name: '--out', required: true }, { name: '--only', choices: ['gif', 'all'] }]);
+  if ('exit' in args) {
+    (args.exit ? console.error : console.log)(args.text);
+    return args.exit;
   }
-  const missing = ['--run', '--video', '--out'].filter(flag => values[flag] === undefined);
-  if (missing.length) return error(`the following arguments are required: ${missing.join(', ')}`);
-  return { run: values['--run'], video: values['--video'], out: values['--out'], only: values['--only'] === 'gif' ? 'gif' : 'all' };
+  const text = (name: string) => String(args.options[name]);
+  return { run: text('--run'), video: text('--video'), out: text('--out'), only: args.options['--only'] === 'gif' ? 'gif' : 'all' };
 }
 
 function main(argv: readonly string[]): number {

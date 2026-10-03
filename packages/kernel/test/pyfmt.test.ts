@@ -2,7 +2,7 @@
 // negative value that rounds to zero is kept. pyRepr against repr(float), and pyDumps against json.dumps:
 // its separators, escapes, indent and floats. Each expected string was printed by CPython 3.12.
 import assert from 'node:assert/strict';
-import { PyFloat, pyDumps, pyFixed, pyFloat, pyPath, pyRepr, pyRound, pySplit, pySplitLines } from '../src/pyfmt.ts';
+import { PyFloat, pyDumps, pyFixed, pyFloat, pyInt, pyPath, pyRepr, pyRound, pySplit, pySplitLines } from '../src/pyfmt.ts';
 
 const CASES: [number, number, string][] = [
   [0.125, 2, '0.12'], [0.375, 2, '0.38'], [2.5, 0, '2'], [3.5, 0, '4'], [-0.125, 2, '-0.12'], [-2.5, 0, '-2'],
@@ -45,4 +45,7 @@ assert.deepEqual([pyFloat('1_0.5'), pyFloat(' \u0662.5\u3000'), pyFloat('-inf')]
 assert.deepEqual([pyFloat('\x1f2'), pyFloat('0x10'), pyFloat('1__0')], [null, null, null], 'ValueError in Python');
 assert.deepEqual([0.5, 1.5, 2.5, -2.5, 1789512694248.5].map(pyRound), [0, 2, 2, -2, 1789512694248]);
 assert.deepEqual([pyRound(NaN), pyRound(Infinity)], [null, null], 'ValueError and OverflowError in Python');
-console.log(`pyfmt: ${CASES.length} fixed, ${REPRS.length} repr, 4 json.dumps and ${PATHS.length} path values print as Python prints them, and split, splitlines, float and round read as Python reads`);
+// int() in base 10 and 16, as a bigint.
+assert.deepEqual([pyInt('0x_1F', 16), pyInt(' +0_7 '), pyInt('-ff', 16), pyInt('\u0661\u0662')], [31n, 7n, -255n, 12n]);
+assert.deepEqual([pyInt('0x', 16), pyInt('_1'), pyInt('1__2'), pyInt('1.0'), pyInt('0x1')], [null, null, null, null, null], 'ValueError in Python');
+console.log(`pyfmt: ${CASES.length} fixed, ${REPRS.length} repr, 4 json.dumps and ${PATHS.length} path values print as Python prints them, and split, splitlines, float, int and round read as Python reads`);

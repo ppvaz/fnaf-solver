@@ -132,18 +132,37 @@ function digitValue(char: string) {
   return count % 10;
 }
 
+// CPython reads a number's text after mapping each non-ASCII space to ' ' and decimal digit to its ASCII one.
+const asciiNumber = (text: string) => [...text].map(char => ((char.codePointAt(0) ?? 0) < 128 ? char : SPACE.test(char) ? ' '
+  : DECIMAL.test(char) ? String(digitValue(char)) : char)).join('');
+
 /**
  * `float(text)`: a decimal (underscores between digits), inf or nan, signed, with whitespace around; null
  * where Python raised ValueError. As CPython does, a character past ASCII is read first as a space or as an
  * ASCII digit, then the ASCII text is parsed: 0x1c-0x1f stay and are refused.
  */
 export function pyFloat(text: string): number | null {
-  const ascii = [...text].map(char => ((char.codePointAt(0) ?? 0) < 128 ? char : SPACE.test(char) ? ' '
-    : DECIMAL.test(char) ? String(digitValue(char)) : char)).join('');
-  const body = PY_FLOAT.exec(ascii)?.[1].toLowerCase().replace(/^\+/, '').replaceAll('_', '');
+  const body = PY_FLOAT.exec(asciiNumber(text))?.[1].toLowerCase().replace(/^\+/, '').replaceAll('_', '');
   if (body === undefined) return null;
   if (body.includes('inf')) return body.startsWith('-') ? -Infinity : Infinity;
   return body.includes('nan') ? NaN : Number(body);
+}
+
+const PY_INT = {
+  10: new RegExp(`^[ \\t\\n\\v\\f\\r]*([+-]?)(${DIGITS})[ \\t\\n\\v\\f\\r]*$`),
+  16: /^[ \t\n\v\f\r]*([+-]?)(?:0[xX]_?)?([0-9a-fA-F](?:_?[0-9a-fA-F])*)[ \t\n\v\f\r]*$/,
+} as const;
+
+/**
+ * `int(text)` or `int(text, 16)`: signed digits (underscores between them; base 16 may lead with 0x), with
+ * whitespace around, as a bigint; null where Python raised ValueError. A non-ASCII space or decimal digit
+ * reads as its ASCII one, as in pyFloat.
+ */
+export function pyInt(text: string, base: 10 | 16 = 10): bigint | null {
+  const match = PY_INT[base].exec(asciiNumber(text));
+  if (!match) return null;
+  const magnitude = BigInt(`${base === 16 ? '0x' : ''}${match[2].replaceAll('_', '')}`);
+  return match[1] === '-' ? -magnitude : magnitude;
 }
 
 /** `round(x)`: the nearest integer, an exact tie to the even one; null where Python raised (nan, inf). */

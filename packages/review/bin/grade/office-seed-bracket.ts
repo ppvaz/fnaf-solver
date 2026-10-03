@@ -38,7 +38,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { PyFloat, pyDumps, pyFixed, pyFloat, pyRound, pySplit, pySplitLines } from '@sixam/kernel';
+import { PyFloat, pyArgs, pyDumps, pyFixed, pyFloat, pyRound, pySplit, pySplitLines } from '@sixam/kernel';
 
 const OFFICE_LOAD = 'loading frame #:4';
 const START = 'Starting new frame';
@@ -100,48 +100,18 @@ function readIgnoringErrors(path: string): string {
   return parts.join('\ufffd');
 }
 
-const USAGE = 'usage: office-seed-bracket.ts [-h] [--onset-ms ONSET_MS] [--json JSON] [--clock-pinned] [--legacy-pair] logcat';
-
 interface Options { logcat: string, onsetMs: number | null, json: string | null, clockPinned: boolean, legacyPair: boolean }
 
 /** argparse's reading of the command line: an Options, or the exit code and message it gave instead. */
 function parse(argv: readonly string[]): Options | { code: number, message: string } {
-  const options: Options = { logcat: '', onsetMs: null, json: null, clockPinned: false, legacyPair: false };
-  const positional: string[] = [];
-  const error = (message: string) => ({ code: 2, message: `${USAGE}\noffice-seed-bracket.ts: error: ${message}` });
-  const LONG = ['--help', '--onset-ms', '--json', '--clock-pinned', '--legacy-pair'];
-  for (let k = 0; k < argv.length; k += 1) {
-    if (argv[k] === '--') { positional.push(...argv.slice(k + 1)); break; }
-    const equals = argv[k].startsWith('--') ? argv[k].indexOf('=') : -1;
-    let [flag, inline] = equals > 0 ? [argv[k].slice(0, equals), argv[k].slice(equals + 1)] : [argv[k], undefined];
-    // argparse takes any unique prefix of a long option
-    if (flag.startsWith('--') && !LONG.includes(flag)) {
-      const matches = LONG.filter(name => name.startsWith(flag));
-      if (matches.length > 1) return error(`ambiguous option: ${flag} could match ${matches.join(', ')}`);
-      if (matches.length === 1) flag = matches[0];
-    }
-    if (flag === '-h' || flag === '--help') return { code: 0, message: USAGE };
-    if (flag === '--clock-pinned' || flag === '--legacy-pair') {
-      if (inline !== undefined) return error(`argument ${flag}: ignored explicit argument '${inline}'`);
-      if (flag === '--clock-pinned') options.clockPinned = true; else options.legacyPair = true;
-    } else if (flag === '--onset-ms' || flag === '--json') {
-      const value = inline ?? argv[k + 1];
-      if (inline === undefined) k += 1;
-      if (value === undefined || (inline === undefined && value.startsWith('-') && !/^-\d|^-\.\d/.test(value)))
-        return error(`argument ${flag}: expected one argument`);
-      if (flag === '--json') options.json = value;
-      else {
-        const onset = pyFloat(value);
-        if (onset === null) return error(`argument --onset-ms: invalid float value: '${value}'`);
-        options.onsetMs = onset;
-      }
-    } else if (flag.startsWith('-') && flag !== '-') return error(`unrecognized arguments: ${argv[k]}`);
-    else positional.push(argv[k]);
-  }
-  if (!positional.length) return error('the following arguments are required: logcat');
-  if (positional.length > 1) return error(`unrecognized arguments: ${positional.slice(1).join(' ')}`);
-  options.logcat = positional[0];
-  return options;
+  const args = pyArgs(argv, 'office-seed-bracket.ts', [
+    { name: '--onset-ms', type: 'float' }, { name: '--json' }, { name: '--clock-pinned', takes: 'flag' }, { name: '--legacy-pair', takes: 'flag' },
+  ], [{ name: 'logcat' }]);
+  if ('exit' in args) return { code: args.exit, message: args.text };
+  const text = (name: string) => { const value = args.options[name]; return typeof value === 'string' ? value : null; };
+  const onset = text('--onset-ms');
+  return { logcat: args.positionals[0], onsetMs: onset === null ? null : pyFloat(onset), json: text('--json'),
+    clockPinned: args.options['--clock-pinned'] === true, legacyPair: args.options['--legacy-pair'] === true };
 }
 
 function main(argv: readonly string[]): number {

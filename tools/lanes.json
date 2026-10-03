@@ -70,6 +70,7 @@
       "packages/review/test/evidence-promotion.test.ts",
       "packages/kernel/test/kernel.test.ts",
       "packages/kernel/test/pyfmt.test.ts",
+      "packages/kernel/test/pyargs.test.ts",
       "packages/review/test/pack-lift.test.ts",
       "packages/review/test/promotions-query.test.ts",
       "packages/review/test/refusals.test.ts",
