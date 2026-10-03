@@ -1654,7 +1654,8 @@
     {
       "file": "packages/play/src/campaign/port-kit.ts",
       "imports": [
-        "@sixam/kernel"
+        "@sixam/kernel",
+        "node:child_process"
       ]
     },
     {

@@ -27,7 +27,7 @@ import { boundedRemotePath, renderDeviceLocalScript } from './device-shell.ts';
 import type { ArmControl } from './device-shell.ts';
 import { isList } from '@sixam/kernel';
 import { armObservationTimes } from './arm-observation.ts';
-import { HOST_CLOCK, messageOf } from './port-kit.ts';
+import { HOST_CLOCK, messageOf, terminate } from './port-kit.ts';
 import type { Clock } from './port-kit.ts';
 import { GATE_RETRY_GAP_MS, runCycleGates } from './cycle-gates.ts';
 
@@ -69,6 +69,9 @@ interface LedgerOptions {
 }
 
 const MAX_ARM_ATTEMPTS = 3;
+// How long a stop waits for the device-local shell after SIGTERM, and again after SIGKILL: the HID process's
+// close grace (physical-ports.ts), so both actuation paths give a stuck process the same bound.
+const SHELL_KILL_GRACE_MS = 1000;
 
 /**
  * A failure that ends an attempt without testing its policy: the plan did not
@@ -440,7 +443,7 @@ async function stopProcess(c: RunContext) {
   try {
     if (armControl) await touchRemote(ex.adb, ex.serial, armControl.fail);
   } finally {
-    spawned?.child.kill('SIGTERM');
+    if (spawned) await terminate(spawned.child, SHELL_KILL_GRACE_MS);
   }
 }
 
@@ -491,7 +494,7 @@ function haltActuation(c: RunContext, reason: string, at: number, detail: Record
         try {
           if (armControl) await touchRemote(ex.adb, ex.serial, armControl.fail);
         } finally {
-          spawned?.child.kill('SIGTERM');
+          if (spawned) await terminate(spawned.child, SHELL_KILL_GRACE_MS);
         }
       }
     } catch (caught) {

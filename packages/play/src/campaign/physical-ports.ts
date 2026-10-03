@@ -18,7 +18,7 @@ import type { ChildProcessByStdio } from 'node:child_process';
 import type { Readable, Writable } from 'node:stream';
 const HELPER_PACKAGE = 'com.ppvaz.fnafcompanion';
 const READY_DEVICE = 'FNAF Timed Touch';
-import { messageOf, sleep } from './port-kit.ts';
+import { messageOf, sleep, terminate } from './port-kit.ts';
 
 function endpointError(message: string): never { throw new Error(`Companion endpoint: ${message}`); }
 
@@ -544,14 +544,7 @@ export class AdbHidProcess {
     const child = this.child;
     this.child = null;
     if (!child || child.exitCode !== null || child.signalCode !== null) return;
-    const exited = new Promise<void>(resolve => child.once('exit', () => resolve()));
-    const within = (ms: number) => Promise.race([exited.then(() => true),
-      new Promise<boolean>(resolve => setTimeout(() => resolve(false), ms).unref())]);
     child.stdin?.end();
-    child.kill('SIGTERM');
-    if (await within(this.closeGraceMs)) return;
-    child.kill('SIGKILL');
-    if (await within(this.closeGraceMs)) return;
-    throw new Error(`ADB HID process ${child.pid} did not exit after SIGKILL`);
+    await terminate(child, this.closeGraceMs);
   }
 }

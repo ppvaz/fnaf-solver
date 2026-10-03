@@ -134,6 +134,12 @@ writeFileSync(loggingAdb, `#!/bin/sh\ncase "$*" in *" logcat "*|*" test -e "*|*"
   `echo started >> '${shellLog}'\ntrap 'echo killed >> "${shellLog}"; exit 143' TERM\ncat >/dev/null\n` +
   'while :; do sleep 0.02; done\n');
 chmodSync(loggingAdb, 0o755);
+// A device-local shell that ignores SIGTERM and writes its pid: the halt must still end it.
+const stubbornPid = join(fakeRoot, 'stubborn.pid');
+const stubbornAdb = join(fakeRoot, 'stubborn-adb');
+writeFileSync(stubbornAdb, `#!/bin/sh\ncase "$*" in *" logcat "*|*" test -e "*|*" touch "*) exit 0;; esac\n` +
+  `echo $$ > '${stubbornPid}'\ntrap '' TERM\nwhile :; do sleep 0.02; done\n`);
+chmodSync(stubbornAdb, 0o755);
 
 /**
  * One ordered log of writes, closes and events, so "nothing after the halt"
@@ -270,6 +276,36 @@ try {
     assert.deepEqual(readFileSync(shellLog, 'utf8').trim().split('\n'), ['started', 'killed'],
       'the device-local shell must be killed by the halt');
     assert.ok(afterHalt >= 4, 'the observer must outlive the shell it killed');
+  }
+
+  // 3b. A shell that ignores SIGTERM is killed anyway, and the halt is recorded only once it has exited:
+  // `shell-killed` names a process that is gone, not one that was asked to go.
+  {
+    const h = harness();
+    let reads = 0;
+    let halted = false;
+    let afterHalt = 0;
+    const executor = new AdbDeviceLocalArtifactExecutor({ serial: 'fixture-device', adb: stubbornAdb, readyDelayMs: 1,
+      pollMs: 250, timing: { pollMs: 1 },
+      observe: async () => {
+        reads += 1;
+        if (!halted) return reads < 4 ? 'night' : 'static';
+        afterHalt += 1;
+        await sleep(10);
+        return afterHalt < 4 ? null : 'gameover';
+      },
+      onEvent: event => {
+        h.onEvent(event);
+        if (event.type === 'lifecycle.actuation-halted') halted = true;
+      } });
+    const result = await executor.execute(request);
+    assert.equal(result.terminal, 'gameover');
+    const stopped = h.events().find(event => event.type === 'lifecycle.actuation-stopped');
+    assert.equal(stopped?.method, 'shell-killed');
+    assert.equal(stopped?.error, undefined, 'the shell was ended, so the stop names no error');
+    const pid = Number(readFileSync(stubbornPid, 'utf8').trim());
+    assert.ok(Number.isInteger(pid) && pid > 0, 'the stubborn shell wrote its pid');
+    assert.throws(() => process.kill(pid, 0), /ESRCH/, 'a shell that ignored SIGTERM is gone once the halt is recorded');
   }
 
   // 4. r02's shape: after the static, no read names a screen. The halted run
