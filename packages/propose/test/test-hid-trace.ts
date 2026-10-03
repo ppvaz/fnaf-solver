@@ -11,17 +11,23 @@
 // Usage: test-hid-trace.ts [trace.jsonl]   (no argument runs the self-test)
 import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
+import { DEVICE_CONSTRAINTS } from '@sixam/propose/fnaf2';
 
 // Both from device measurement; see docs/device/HID-MULTITOUCH.md.
 //
 // HID-MULTITOUCH.md's current device result: the Moto g56 registered 33 ms
 // contacts on camera, monitor, mask and hall controls. The former 100-120 ms
 // value was swipe-era margin and is retained only in the historical record.
-export const MIN_CONTACT_MS = 33;
-// Fusion polls touch once per frame, so two different buttons with no released
-// time between them can read as one finger moving from one to the other. The
-// mask press lost that way stuck the mask on and blinded every later read.
-export const MIN_RELEASED_MS = 20;
+//
+// Two different buttons with no released time between them can read as one
+// finger moving from one to the other; the mask press lost that way stuck the
+// mask on and blinded every later read. The released floor is one whole 30 Hz
+// Fusion poll, 33 ms (HID-MULTITOUCH.md, "The full-night trace buys one
+// released poll", 2026-08-27): the 20 ms this auditor used to hold was the
+// per-frame figure that entry retired. Both come from the cycle gate's
+// DEVICE_CONSTRAINTS, so the auditor and the gate cannot hold different floors.
+export const MIN_CONTACT_MS = DEVICE_CONSTRAINTS.minContactMs;
+export const MIN_RELEASED_MS = DEVICE_CONSTRAINTS.minReleasedMs;
 
 export function audit(text: string) {
   const events = text.split('\n').filter(Boolean).map(line => JSON.parse(line));
@@ -162,6 +168,13 @@ function selfTest() {
   if (!nogap.problems.some(p => /released between/.test(p)))
     throw new Error('self-test: a zero-gap button change was not caught');
 
+  // A gap under one released poll is as fatal as none: 25 ms passed the old
+  // 20 ms floor while the cycle gate refused anything under 33.
+  const shortGap = audit([R(1, rec(3, 100, 200)), D(100), R(1, rec(0, 100, 200)), D(25),
+                          R(1, rec(3, 900, 900)), D(100), R(1, rec(0, 900, 900))].join('\n'));
+  if (!shortGap.problems.some(p => /only 25 ms released between/.test(p)))
+    throw new Error(`self-test: a 25 ms released gap passed the ${MIN_RELEASED_MS} ms floor`);
+
   const zero = audit([R(1, rec(3, 100, 200)), D(0), R(1, rec(0, 100, 200))].join('\n'));
   if (!zero.problems.some(p => /hid rejects/.test(p)))
     throw new Error('self-test: a zero-length delay was not caught');
@@ -195,9 +208,10 @@ function selfTest() {
     JSON.stringify({ command: 'mark', ms: 0 }),
     R(1, rec(3, 100, 200)), D(100), R(1, rec(0, 100, 200)),
     JSON.stringify({ command: 'mark', ms: 40 }),
-    // 30 ms of emitted delay after the contested mark, so this fixture tests the
-    // contested boundary alone and not a genuine zero-gap change on top of it.
-    D(30), R(1, rec(3, 900, 900)), D(100), R(1, rec(0, 900, 900)),
+    // The released floor of emitted delay after the contested mark, so this
+    // fixture tests the contested boundary alone and not a genuine short-gap
+    // change on top of it.
+    D(MIN_RELEASED_MS), R(1, rec(3, 900, 900)), D(100), R(1, rec(0, 900, 900)),
   ].join('\n'));
   if (backwards.problems.length)
     throw new Error('self-test: a contested boundary was reported as a defect: ' +

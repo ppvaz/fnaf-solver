@@ -4139,6 +4139,7 @@
     {
       "file": "packages/propose/test/test-hid-trace.ts",
       "imports": [
+        "@sixam/propose/fnaf2",
         "node:fs",
         "node:url"
       ]
@@ -4147,7 +4148,7 @@
       "file": "packages/propose/test/test-recipe.ts",
       "imports": [
         "../bin/plans/recipe.ts",
-        "./test-hid-trace.ts"
+        "@sixam/propose/fnaf2"
       ]
     },
     {

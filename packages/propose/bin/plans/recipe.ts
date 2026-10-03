@@ -451,12 +451,15 @@ export const SWEEP_RELEASED_MS = DEVICE_SPACING_MS - SWEEP_SELECT_MS;
 // trial/test-plan-interpreter.sh, which reads both.
 export const LA_SELECT_MS = 17;
 export const LA_SETTLE_MS = 17;
+/** A sweep contact shorter than this is a LIGHT_AFTER slot: a Click select, then the light. */
+export const LIGHT_AFTER_BELOW_MS = 50;
+export const isLightAfter = (contactMs: number) => contactMs < LIGHT_AFTER_BELOW_MS;
 // `lightAfter` defaults to the historical `contact < 50` inference, but the
 // caller may force it: a sweep whose base contact is short is LIGHT_AFTER for
 // *every* slot, so a lengthened last slot (sweepLastContactMs, below) still
 // costs the select + settle even at 67 ms, where the bare threshold would
 // misprice it as the legacy same-report geometry.
-export const sweepCamMs = (contactMs: number, lightAfter = contactMs < 50) =>
+export const sweepCamMs = (contactMs: number, lightAfter = isLightAfter(contactMs)) =>
   lightAfter ? LA_SELECT_MS + LA_SETTLE_MS + contactMs : contactMs;
 
 // A sweep's cams token is `10,4,7`, or `10,4,7:67` when the drift-exposed last
@@ -480,7 +483,7 @@ export function sweepSpanMs([spacing, contact, cams]: readonly string[]) {
   const base = +contact;
   const { contacts } = sweepCams(cams, base);
   const last = contacts[contacts.length - 1];
-  return (contacts.length - 1) * +spacing + sweepCamMs(last, base < 50);
+  return (contacts.length - 1) * +spacing + sweepCamMs(last, isLightAfter(base));
 }
 
 // MONITOR_ANIM_UP is 12 sourced frames and `engine.js` drops a camera select
@@ -955,7 +958,7 @@ export function devicePlan(recipe: ReturnType<typeof build>, {
         // alone is 33, and a lengthened last slot costs still more. Its
         // geometry follows the base contact, not its own length. Anchor the END
         // to the model's using the real span.
-        const la = sweepContactMs < 50;
+        const la = isLightAfter(sweepContactMs);
         const deviceSpan = (cams.length - 1) * spacing + sweepCamMs(lastContact, la);
         const start = modelledEnd - deviceSpan;
         if (start < 0)
@@ -1105,7 +1108,7 @@ export function replay(plan: Readonly<Record<string, readonly string[]>>, { nigh
         // then press light one select+settle later, held the emitted contact.
         // The geometry follows the base contact; `10,4,7:67` lengthens only the
         // last slot's light hold (the drift-exposed slot).
-        const la = +contact < 50;
+        const la = isLightAfter(+contact);
         const lightGap = la ? f(LA_SELECT_MS + LA_SETTLE_MS) : 1;
         const { cams: camList, contacts } = sweepCams(cams, +contact);
         camList.forEach((n, i) => {
@@ -1199,7 +1202,7 @@ export function replay(plan: Readonly<Record<string, readonly string[]>>, { nigh
             // Drag the recovery sweep with the raise (fixed offset behind it),
             // but never past its cycle-end stun-bridge pin.
             const sweepAt = Math.min(d.sweepCap, ft + d.sweepRel);
-            const la = d.contact < 50;
+            const la = isLightAfter(d.contact);
             const lightGap = la ? f(LA_SELECT_MS + LA_SETTLE_MS) : 1;
             const { cams: camList, contacts } = sweepCams(d.cams, d.contact);
             camList.forEach((n, i) => {

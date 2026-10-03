@@ -9,12 +9,20 @@
 import { build, track, devicePlan, replay, MIN_CONTACT_MS, DEVICE_SPACING_MS,
          MODEL_SLOT_MS, FUSION_POLL_MS, MASK_RAISE_GAP_MS, SWEEP_SELECT_MS, LA_SELECT_MS, LA_SETTLE_MS,
          SWEEP_RELEASED_MS, sweepCamMs, sweepCams, sweepSpanMs } from '../bin/plans/recipe.ts';
-import { MIN_RELEASED_MS } from './test-hid-trace.ts';
+import { DEVICE_CONSTRAINTS } from '@sixam/propose/fnaf2';
+// The released floor the cycle gate holds every plan to; the HID auditor reads the same one.
+const MIN_RELEASED_MS = DEVICE_CONSTRAINTS.minReleasedMs;
 
 /** A device-plan line split into its offset, its instruction and the instruction's fields. */
 interface PlanInstruction { at: number, kind: string, rest: string[] }
 
 const check = (ok: unknown, message: string) => { if (!ok) throw new Error(message); };
+
+// The recipe emits contacts to its own floor; the cycle gate and the HID
+// auditor hold plans to DEVICE_CONSTRAINTS. Two floors for one device fact
+// drift apart silently, so they must be one number.
+check(MIN_CONTACT_MS === DEVICE_CONSTRAINTS.minContactMs,
+  `recipe.ts's MIN_CONTACT_MS ${MIN_CONTACT_MS} ms is not the cycle gate's ${DEVICE_CONSTRAINTS.minContactMs} ms`);
 
 // These are the options `tools/test.ts --engine` pins as `hidpilot n6 target`
 // (3000/3000 ordinary, 3000/3000 pinned-worst). The recipe must be built from

@@ -5,7 +5,8 @@
 
 import * as C from '@sixam/source/fnaf2';
 import { FNAF2_CONTROL_VOCABULARY as V } from '@sixam/source';
-import { FUSION_POLL_MS, MASK_ANIM_ON_MS, MIN_CONTACT_MS, MONITOR_READY_WIND_MS, RAISE_MARGIN_MS, SEAM_MARGIN_MS } from './recipe.ts';
+import { FUSION_POLL_MS, LA_SETTLE_MS, MASK_ANIM_ON_MS, MIN_CONTACT_MS, MONITOR_READY_WIND_MS, RAISE_MARGIN_MS, SEAM_MARGIN_MS,
+  isLightAfter } from './recipe.ts';
 
 // [SOURCED] The engine animates the monitor and the mask, and drops input that
 // lands inside those windows: a camera select or wind press during the raise
@@ -398,7 +399,7 @@ export function compileCycle(cycle: string, rows: readonly ParsedRow[], initial 
           ? Number(row.cams[camIndex].split(':')[1]) : row.contact;
         actions.push(action(cycle, { at: row.at + camIndex * row.spacing }, `${id}-cam${cam}`,
           { kind: 'sweep-slot', control: `cam:${cam}`, requiresMonitorUp: true,
-            selectMs: row.contact, settleMs: row.contact < 50 ? 17 : 0, lightMs }));
+            selectMs: row.contact, settleMs: isLightAfter(row.contact) ? LA_SETTLE_MS : 0, lightMs }));
       }
     } else if (row.kind === 'read') {
       if (state.monitorUp) throw new TypeError(`${cycle}: vent read requires monitor down`);
