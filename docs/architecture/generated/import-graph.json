@@ -5936,6 +5936,7 @@
       "file": "tools/push-gate.ts",
       "imports": [
         "../apps/desktop/src/lane-kit.ts",
+        "@sixam/kernel",
         "@sixam/review/lanes",
         "node:child_process",
         "node:fs",

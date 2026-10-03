@@ -30,6 +30,7 @@ import { homedir, tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { type Lane as TableLane, readLanes } from '@sixam/review/lanes';
+import { isList, isRecord } from '@sixam/kernel';
 import { MEMORY_MAX, SCOPED, laneCommand, linkDependencies, recordRun, withoutGit } from '../apps/desktop/src/lane-kit.ts';
 
 const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '..'));
@@ -119,9 +120,57 @@ function shellcheckScript(dir: string) {
 // test that imports an unpinned package passes here and fails online: on
 // 2026-09-15 packages/review/bin/grade/test-cycle-ledger.py (numpy through cycle-ledger.py)
 // failed CI on four pushes that this gate had passed. So the lanes run on an
-// isolated interpreter whose packages are exactly the pins, or the gate says it
+// isolated interpreter whose packages are exactly the pins and their active dependencies, or the gate says it
 // could not check Python dependencies instead of passing them.
 const CI_PYTHON = process.env.FNAF2_CI_PYTHON ?? join(homedir(), '.cache/fnaf2-ci-py312/bin/python3');
+
+/** Installed packages must be exactly the pinned roots and their active dependencies. */
+export function pythonPackageDrift(pins: Readonly<Record<string, string>>,
+  packages: readonly { name: string, version: string, requires: readonly string[] }[]) {
+  const name = (value: string) => value.toLowerCase().replace(/[-_.]+/g, '-');
+  const installed = new Map(packages.map(pkg => [name(pkg.name), pkg]));
+  if (installed.size !== packages.length) return 'duplicate package names';
+  for (const [root, version] of Object.entries(pins)) {
+    const pkg = installed.get(name(root));
+    if (!pkg) return `missing pinned package ${root}`;
+    if (pkg.version !== version) return `${root} version ${pkg.version}, expected ${version}`;
+  }
+  const pending = Object.keys(pins).map(name), visited = new Set<string>();
+  while (pending.length) {
+    const current = pending.pop();
+    if (current === undefined || visited.has(current)) continue;
+    const pkg = installed.get(current);
+    if (!pkg) return `missing dependency ${current}`;
+    visited.add(current);
+    pending.push(...pkg.requires.map(name));
+  }
+  const extras = [...installed.keys()].filter(pkg => !visited.has(pkg));
+  return extras.length ? `unexpected packages: ${extras.sort().join(', ')}` : null;
+}
+
+// Read active requirement edges with pip's own marker/version parser. Optional extras do not
+// belong to CI's plain install. A broken requirement fails before the closure is trusted.
+const PYTHON_PACKAGES = `
+import importlib.metadata as metadata, json
+from pip._vendor.packaging.requirements import Requirement
+from pip._vendor.packaging.utils import canonicalize_name
+packages = []
+for distribution in metadata.distributions():
+    name = distribution.metadata['Name']
+    if canonicalize_name(name) in {'pip', 'setuptools', 'wheel'}:
+        continue
+    requires = []
+    for raw in distribution.requires or []:
+        requirement = Requirement(raw)
+        if requirement.marker and not requirement.marker.evaluate({'extra': ''}):
+            continue
+        version = metadata.version(requirement.name)
+        if not requirement.specifier.contains(version, prereleases=True):
+            raise ValueError(f'{name} requires {raw}, installed {version}')
+        requires.append(requirement.name)
+    packages.append({'name': name, 'version': distribution.version, 'requires': requires})
+print(json.dumps(packages))
+`;
 
 /** The Python version and exact pip pins ci.yml gives the runner. */
 function ciPythonSpec(dir: string) {
@@ -140,11 +189,21 @@ function ciPythonEnv(dir: string) {
   if (!existsSync(CI_PYTHON)) return { why: `no CI-like Python at ${CI_PYTHON}; ${build}` };
   const got = spawnSync(CI_PYTHON, ['-c', 'import sys; print("%d.%d" % sys.version_info[:2])'], { encoding: 'utf8' }).stdout?.trim();
   if (got !== version) return { why: `${CI_PYTHON} is Python ${got}, ci.yml pins ${version}; ${build}` };
-  const freeze = spawnSync(CI_PYTHON, ['-m', 'pip', 'list', '--format=freeze', '--disable-pip-version-check'], { encoding: 'utf8' }).stdout ?? '';
-  const installed = Object.fromEntries(freeze.split('\n').filter(Boolean).map(l => l.split('==')).map(([n, v]) => [n.toLowerCase(), v])
-    .filter(([n]) => !['pip', 'setuptools', 'wheel'].includes(n)));
-  const same = JSON.stringify(Object.entries(installed).sort()) === JSON.stringify(Object.entries(pins).sort());
-  if (!same) return { why: `${CI_PYTHON} has ${JSON.stringify(installed)}, ci.yml pins ${JSON.stringify(pins)}; ${build}` };
+  const metadata = spawnSync(CI_PYTHON, ['-c', PYTHON_PACKAGES], { encoding: 'utf8' });
+  if (metadata.status !== 0) return { why: `cannot validate ${CI_PYTHON}'s requirements: ${metadata.stderr.trim()}; ${build}` };
+  let parsed: unknown;
+  try { parsed = JSON.parse(metadata.stdout); }
+  catch { return { why: `invalid package metadata from ${CI_PYTHON}; ${build}` }; }
+  if (!isList(parsed)) return { why: `package metadata is not a list; ${build}` };
+  const packages: { name: string, version: string, requires: readonly string[] }[] = [];
+  for (const row of parsed) {
+    if (!isRecord(row) || typeof row.name !== 'string' || typeof row.version !== 'string'
+      || !isList(row.requires) || !row.requires.every(value => typeof value === 'string'))
+      return { why: `invalid package metadata row; ${build}` };
+    packages.push({ name: row.name, version: row.version, requires: row.requires });
+  }
+  const drift = pythonPackageDrift(pins, packages);
+  if (drift) return { why: `${CI_PYTHON}: ${drift}; ${build}` };
   return { env: { ...withoutGit(process.env), PATH: `${dirname(CI_PYTHON)}:${process.env.PATH}` } };
 }
 
@@ -278,7 +337,7 @@ function validate(sha: string, subject: string) {
     const python = ciPythonEnv(worktree);
     if (python.env) {
       LANE_ENV = python.env;
-      console.log(`  python3 for every lane: ${CI_PYTHON} (the ci.yml version and pins, nothing else)`);
+      console.log(`  python3 for every lane: ${CI_PYTHON} (the ci.yml version, exact pins and active dependency closure)`);
     } else {
       LANE_ENV = withoutGit(process.env);
       console.log(`  SKIP CI Python dependencies (${python.why}); the lanes run on this machine's python3, which may hold packages CI does not`);

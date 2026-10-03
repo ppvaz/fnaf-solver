@@ -14,11 +14,22 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { mainCheckout } from '../packages/play/bin/phone/local-profile.ts';
-import { LANES, failureReport, reproduceCommand } from './push-gate.ts';
+import { LANES, failureReport, pythonPackageDrift, reproduceCommand } from './push-gate.ts';
 import { DEFAULT_MEMORY_MAX, RUN_RECORD_SCHEMA, laneCommand, recordRun, runRecordPath } from '../apps/desktop/src/lane-kit.ts';
 
 const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '..'));
 const BYPASS = /--no-verify|\bcommit\s+-n\b/;
+
+// pip installs mypy's dependencies too: direct pins alone are not the installed set.
+const pins = { mypy: '2.3.1' };
+const roots = [{ name: 'mypy', version: '2.3.1', requires: ['typing_extensions'] },
+  { name: 'typing-extensions', version: '4.16.0', requires: [] }];
+assert.equal(pythonPackageDrift(pins, roots), null, 'the exact pinned roots plus active transitive dependencies pass');
+assert.match(pythonPackageDrift(pins, [...roots, { name: 'pytest', version: '9', requires: [] }]) ?? '', /unexpected/);
+assert.match(pythonPackageDrift(pins, [{ ...roots[0], version: '2.3.0' }, roots[1]]) ?? '', /version/);
+assert.match(pythonPackageDrift(pins, [roots[0]]) ?? '', /missing/);
+assert.match(pythonPackageDrift(pins, [...roots, { name: 'cycle-a', version: '1', requires: ['cycle-b'] },
+  { name: 'cycle-b', version: '1', requires: ['cycle-a'] }]) ?? '', /unexpected/, 'an unrelated dependency cycle is refused');
 // A comment that tells the reader to take the bypass, as opposed to one that explains the rule.
 const ADVICE = /(?:bypass|push|send|commit)\b[^.\n]*\b(?:with|using|via|or)\s+`?(?:git\s+(?:push|commit)\s+)?(?:--no-verify|-n\b)/i;
 
