@@ -348,6 +348,24 @@
       }
     },
     {
+      "id": "apps/trainer/test/bundle.test.ts",
+      "lane": "test:unit",
+      "owner": "legacy migration",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.ts per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
       "id": "apps/trainer/test/calibration.test.ts",
       "lane": "test:unit",
       "owner": "legacy migration",

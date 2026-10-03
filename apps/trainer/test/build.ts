@@ -149,7 +149,10 @@ function transform(name: string, path: string, code: string): string {
   // the tiny bundle runtime.
   code = code.replace(EXPORT_STAR, (_, spec: string) => `Object.assign(__x, __req('${dep(spec)}'));`);
   let names = [...code.matchAll(EXPORT_DECL)].map(match => match[2]);
-  for (const match of code.matchAll(EXPORT_LIST)) names.push(...match[1].split(',').map(part => part.trim()).filter(Boolean));
+  // `export { a as b }` publishes `a` under `b`: an object literal says that as `b: a`.
+  for (const match of code.matchAll(EXPORT_LIST))
+    names.push(...match[1].split(',').map(part => part.trim()).filter(Boolean)
+      .map(part => part.includes(' as ') ? part.split(' as ').map(side => side.trim()).reverse().join(': ') : part));
   code = code.replace(EXPORT_LIST, '');
   code = code.replace(/^export\s+/gm, '');
   names = [...new Set(names)].sort();

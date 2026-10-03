@@ -456,6 +456,18 @@
       ]
     },
     {
+      "file": "apps/trainer/test/bundle.test.ts",
+      "imports": [
+        "node:assert/strict",
+        "node:child_process",
+        "node:fs",
+        "node:path",
+        "node:test",
+        "node:url",
+        "node:vm"
+      ]
+    },
+    {
       "file": "apps/trainer/test/calibration.test.ts",
       "imports": [
         "../../../tools/chrome.ts",
