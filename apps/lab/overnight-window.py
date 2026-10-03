@@ -197,7 +197,6 @@ PACK_COMMAND = ["node", str(ROOT / "apps/desktop/src/evidence.ts"), "pack"]
 PACKS_ROOT = ROOT                 # docs/evidence/runs/<run> lives here
 RUNS_ROOT = ROOT                  # artifacts/runs/<run> lives here
 
-SERIAL = re.compile(r"^[A-Za-z0-9._:-]{1,96}$")
 CLOCK = re.compile(r"^([01]\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?$")
 FOCUS = re.compile(r"mCurrentFocus=Window\{\S+ u\d+ ([^\s}]+)")
 
@@ -316,7 +315,7 @@ SERIAL_HOW_TO = ("--serial, FNAF_SERIAL, or the untracked local profile "
 def resolve_config(args: argparse.Namespace) -> dict:
     serial = (args.serial or os.environ.get("FNAF_SERIAL") or os.environ.get("ANDROID_SERIAL")
               or local_profile_serial())
-    if serial and not SERIAL.fullmatch(serial):
+    if serial and not night_jobs.SERIAL_TOKEN.fullmatch(serial):
         raise ConfigError(f"the serial is not a device token: {serial!r}")
     start_text = args.start or os.environ.get("FNAF_WINDOW_START") or DEFAULT_START
     end_text = args.end or os.environ.get("FNAF_WINDOW_END") or DEFAULT_END

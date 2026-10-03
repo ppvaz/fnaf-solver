@@ -74,7 +74,6 @@ SNAP_INTERVAL_S = 3.0
 RUNNER_STOP_GRACE_S = 120.0
 RUNNER_TERM_GRACE_S = 20.0
 RUNNER_KILL_GRACE_S = 10.0
-SERIAL = re.compile(r"^[A-Za-z0-9._:-]{1,96}$")
 SHA = re.compile(r"^[0-9a-f]{64}$")
 HELD_SIGNALS = frozenset({signal.SIGINT, signal.SIGTERM, signal.SIGHUP})
 
@@ -417,7 +416,7 @@ def parse(argv: list[str] | None) -> argparse.Namespace:
 def main(argv: list[str] | None = None) -> int:
     args = parse(argv)
     serial = os.environ.get("ANDROID_SERIAL") or os.environ.get("FNAF_SERIAL") or ""
-    if not SERIAL.fullmatch(serial):
+    if not night_jobs.SERIAL_TOKEN.fullmatch(serial):
         print("NIGHT-JOB ERROR ANDROID_SERIAL names no device", file=sys.stderr)
         return 2
     job = NightJob(serial, args.job_id if args.command == "run" else f"title-{int(time.time())}")
