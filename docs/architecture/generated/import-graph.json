@@ -2561,7 +2561,6 @@
     {
       "file": "packages/propose/bin/policy/policy-grammar.ts",
       "imports": [
-        "./policy-interpreter.ts",
         "./policy-ir.ts",
         "@sixam/kernel",
         "@sixam/propose/policy"
@@ -2626,6 +2625,7 @@
       "imports": [
         "./policy-ir.ts",
         "@sixam/propose/policy",
+        "node:assert/strict",
         "node:crypto"
       ]
     },

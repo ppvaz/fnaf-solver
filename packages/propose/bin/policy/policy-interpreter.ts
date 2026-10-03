@@ -22,21 +22,8 @@ const control = (action: string) => {
 /** One press or release the program schedules, at its time in the night. */
 export interface PolicyEvent { readonly atMs: number, readonly kind: 'press' | 'release', readonly action: string }
 
-/**
- * An action as its reviewed mode spells it: a tap, a hold or hall pulse and its
- * duration, or a camdrop's lead, monitor contact and tail.
- */
-export type ModeAction = PolicyAction & (
-  | { readonly mode?: 'tap' }
-  | { readonly mode: 'hold' | 'hall', readonly durationMs: number }
-  | { readonly mode: 'camdrop', readonly leadMs: number, readonly durationMs: number, readonly tailMs: number });
-
-/**
- * A phase's actions as their modes spell them. validateGrammarPolicy checks
- * each mode's numbers and validatePolicy does not, so a missing one reads NaN
- * here, as it did untyped.
- */
-export const modeActions = (phase: PolicyPhase) => (phase.actions ?? []) as readonly ModeAction[];
+/** A phase's actions, each with its mode's numbers checked by validatePolicy. */
+export const modeActions = (phase: PolicyPhase): readonly PolicyAction[] => phase.actions ?? [];
 
 /** The program's phase of `kind`, which a caller reads only where the program has one (a missing one throws reading it). */
 export function phaseOf(program: PolicyProgram, kind: 'repeat'): RepeatPhase;
@@ -45,7 +32,7 @@ export function phaseOf(program: PolicyProgram, kind: PolicyPhase['kind']) {
   return program.phases.find(phase => phase.kind === kind) as PolicyPhase;
 }
 
-function expandAction(action: ModeAction, baseMs: number, out: PolicyEvent[]) {
+function expandAction(action: PolicyAction, baseMs: number, out: PolicyEvent[]) {
   const atMs = baseMs + (action.atMs ?? action.offsetMs ?? 0);
   if (action.mode === 'camdrop') {
     out.push({ atMs, kind: 'press', action: 'light' });

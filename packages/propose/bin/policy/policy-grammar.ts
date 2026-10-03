@@ -7,10 +7,9 @@
 import {
   BRANCH_SCHEMA, POLICY_SCHEMA, canonicalPolicy, validateBranch, validatePolicy,
 } from '@sixam/propose/policy';
-import type { Branch, PolicyPhase, PolicyProgram, RepeatPhase } from '@sixam/propose/policy';
+import type { Branch, PolicyAction, PolicyPhase, PolicyProgram, RepeatPhase } from '@sixam/propose/policy';
 import { isRecord } from '@sixam/kernel';
 import { minimalPolicy } from './policy-ir.ts';
-import type { ModeAction } from './policy-interpreter.ts';
 
 export const GRAMMAR_SCHEMA = 'policy-grammar-v1';
 export const PHASE_ORDER = Object.freeze(['idle', 'setup', 'repeat', 'finish', 'observe']);
@@ -28,7 +27,7 @@ function fail(message: string): never { throw new TypeError(`policy grammar: ${m
 /** The monitor, mask and camera a body's actions leave behind. */
 interface SymbolicState { monitorUp: boolean, maskOn: boolean, camera: number | null }
 /** An action that passed checkAction, with its time and how long its contact runs. */
-interface Checked { readonly action: ModeAction, readonly at: number, readonly span: number, readonly end: number }
+interface Checked { readonly action: PolicyAction, readonly at: number, readonly span: number, readonly end: number }
 
 function actionAt(action: Readonly<Record<string, unknown>>, repeat: boolean) {
   const key = repeat ? 'offsetMs' : 'atMs';
@@ -79,7 +78,7 @@ function checkAction(action: unknown, { repeat, phase, index }: { repeat: boolea
   if (TRANSITIONS.has(action.action) && mode !== 'tap')
     fail(`${label} monitor/mask transitions must be taps`);
   // Its action and its mode's numbers are the ones just checked.
-  return { action: action as ModeAction, at, span, end: at + span };
+  return { action: action as PolicyAction, at, span, end: at + span };
 }
 
 function checkPhaseActions(phase: PolicyPhase, repeat: boolean) {

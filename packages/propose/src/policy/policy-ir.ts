@@ -12,13 +12,20 @@ export const PHASE_KINDS = Object.freeze(['idle', 'setup', 'repeat', 'finish', '
 
 type Game = keyof typeof PACKAGES;
 /** One timed contact a phase authors: a control of its game, at a time inside the phase. */
-export interface PolicyAction {
+interface ActionFields {
   readonly action: string;
   readonly atMs?: number;
   readonly offsetMs?: number;
   readonly contactMs?: number;
   readonly [field: string]: unknown;
 }
+/** The reviewed action modes: a tap, a hold or hall pulse and its duration, or a camdrop's lead, contact and tail. */
+export const ACTION_MODES = Object.freeze(['tap', 'hold', 'hall', 'camdrop'] as const);
+/** An action as its mode spells it; validatePolicy checks each mode's numbers. */
+export type PolicyAction = ActionFields & (
+  | { readonly mode?: 'tap' }
+  | { readonly mode: 'hold' | 'hall', readonly durationMs: number }
+  | { readonly mode: 'camdrop', readonly leadMs: number, readonly durationMs: number, readonly tailMs: number });
 /** A span of the night: what runs in it, what it may branch on, and what it records. */
 interface PhaseFields {
   readonly id: string;
@@ -96,14 +103,30 @@ function checkAction(action: unknown, label: string, catalog: ReturnType<typeof 
   if (action.contactMs !== undefined &&
       (!finite(action.contactMs) || action.contactMs <= 0))
     throw new TypeError(`${label} has invalid contactMs`);
+  const mode = action.mode ?? 'tap';
+  if (!isOneOf(ACTION_MODES, mode)) throw new TypeError(`${label} has unreviewed mode ${JSON.stringify(mode)}`);
+  if ((mode === 'hold' || mode === 'hall') && (!finite(action.durationMs) || action.durationMs <= 0))
+    throw new TypeError(`${label} ${mode} needs a positive durationMs`);
+  if (mode === 'camdrop')
+    for (const key of ['leadMs', 'durationMs', 'tailMs'])
+      if (!finite(action[key]) || Number(action[key]) < 0) throw new TypeError(`${label} camdrop needs a non-negative ${key}`);
+}
+
+/** A phase's list field: absent is none, anything but a list is refused rather than read as none. */
+function listField(phase: Readonly<Record<string, unknown>>, field: string, label: string): readonly unknown[] {
+  const value = phase[field];
+  if (value === undefined) return [];
+  if (!isList(value)) throw new TypeError(`${label} ${field} must be a list`);
+  return value;
 }
 
 export function validatePolicy(program: unknown): PolicyProgram {
   if (!isRecord(program) || program.schema !== POLICY_SCHEMA)
     throw new TypeError('policy schema mismatch');
   if (!isRecord(program.metadata) || typeof program.metadata.id !== 'string' ||
-      !isList(program.metadata.nights) || !program.metadata.nights.length)
-    throw new TypeError('policy metadata is incomplete');
+      !isList(program.metadata.nights) || !program.metadata.nights.length ||
+      !program.metadata.nights.every(night => Number.isInteger(night) && Number(night) >= 1))
+    throw new TypeError('policy metadata is incomplete: an id and the nights it plays, as whole numbers');
   const game = policyGame(program);
   const catalog = controlCatalogFor(PACKAGES[game]);
   if (!isList(program.phases) || !program.phases.length)
@@ -119,7 +142,7 @@ export function validatePolicy(program: unknown): PolicyProgram {
     if (phase.kind === 'repeat' &&
         (!finite(phase.periodMs) || phase.periodMs <= 0))
       throw new TypeError(`${label} repeat needs a positive periodMs`);
-    for (const [actionIndex, action] of (isList(phase.actions) ? phase.actions : []).entries())
+    for (const [actionIndex, action] of listField(phase, 'actions', label).entries())
       checkAction(action, `${label} action ${actionIndex}`, catalog, game);
     // An observation-conditioned branch is the only construct that may read a
     // fact and change what runs. Validating it here means no consumer of the
@@ -132,7 +155,7 @@ export function validatePolicy(program: unknown): PolicyProgram {
         throw new TypeError(`${label} branches are only defined inside a repeat body`);
       for (const branch of phase.branches) validateBranch(branch);
     }
-    for (const [observationIndex, observation] of (isList(phase.observations) ? phase.observations : []).entries()) {
+    for (const [observationIndex, observation] of listField(phase, 'observations', label).entries()) {
       if (!isRecord(observation) || typeof observation.fact !== 'string' ||
           !finite(observation.maxAgeMs) || observation.maxAgeMs < 0 ||
           !finite(observation.confidenceFloor) || observation.confidenceFloor < 0 ||
