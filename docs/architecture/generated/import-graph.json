@@ -4478,12 +4478,45 @@
       ]
     },
     {
+      "file": "packages/review/bin/legacy/session-manifest.ts",
+      "imports": [
+        "./validate-session.ts",
+        "@sixam/kernel/py",
+        "node:child_process",
+        "node:crypto",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "packages/review/bin/legacy/test-index-observations.ts",
       "imports": [
         "node:assert/strict",
         "node:child_process",
         "node:fs",
         "node:os",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/review/bin/legacy/test-validate-session.ts",
+      "imports": [
+        "node:assert/strict",
+        "node:child_process",
+        "node:fs",
+        "node:path",
+        "node:test",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/review/bin/legacy/validate-session.ts",
+      "imports": [
+        "@sixam/kernel/py",
+        "node:fs",
         "node:path",
         "node:url"
       ]

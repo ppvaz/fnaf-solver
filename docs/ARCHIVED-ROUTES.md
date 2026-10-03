@@ -103,7 +103,7 @@ the artifact checks.
 session manifest, driver log, cue trace, receiver PCM and external-authority
 facts -- and graded a retained night (`night6-n6-bbfix-20260920T010859Z`) to the
 same output in every live instrument before and after. `scan-night.sh` and
-`validate-session.py` stay, run by hand and by the session producers.
+`validate-session.ts` stay, run by hand and by the session producers.
 
 **What a restore would be for.** Minus 7's "heard" Balloon Boy -- the live
 audio cue (`CUE_HELPER=1`, `CUE_SHADOW`, `REACTIVE=observe`) -- was wired into

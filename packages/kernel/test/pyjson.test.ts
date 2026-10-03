@@ -1,7 +1,7 @@
 // pyLoads, pyLoadsBytes and pyReprOf against Python 3.12's json.loads and repr(): each expected string below is
 // what CPython printed for the same input (repr of the value, or str() of the error).
 import assert from 'node:assert/strict';
-import { PyUnicodeDecodeError, pyDecodeUtf8, pyLoads, pyLoadsBytes, pyReprOf } from '../src/pyjson.ts';
+import { PyUnicodeDecodeError, pyDecodeUtf8, pyEquals, pyLoads, pyLoadsBytes, pyReprOf, pyStr, pyTruthy } from '../src/pyjson.ts';
 import { test } from 'node:test';
 test("CPython JSON values and UTF-8 errors", async () => {
 
@@ -39,6 +39,15 @@ assert.throws(() => pyDecodeUtf8(hex('61eda080')), (error: Error) => error insta
   && error.message === "'utf-8' codec can't decode byte 0xed in position 1: invalid continuation byte");
 assert.equal(pyDecodeUtf8(hex('eda080'), 'surrogatepass'), String.fromCharCode(0xd800));
 assert.equal(pyDecodeUtf8(hex('efbbbf61')), `${String.fromCharCode(0xfeff)}a`);
+
+// ==, bool() and str() as Python gives them over what json.loads returns.
+const equal = (a: string, b: string) => pyEquals(pyLoads(a), pyLoads(b));
+assert.deepEqual([equal('true', '1'), equal('1', '1.0'), equal('9007199254740993', '9007199254740992.0'),
+  equal('{"a": 1, "b": [1, 2]}', '{"b": [1, 2.0], "a": true}'), equal('[1, 2]', '[2, 1]'), equal('"1"', '1'), equal('null', 'false'),
+  equal('NaN', 'NaN'), equal('0.0', '-0.0')], [true, true, false, true, false, false, false, false, true]);
+assert.deepEqual(['0.0', '""', '{}', '[]', '0', 'null', '" "', '[0]'].map(text => pyTruthy(pyLoads(text))),
+  [false, false, false, false, false, false, true, true]);
+assert.deepEqual(['true', 'null', '[1, "a"]', '"a"'].map(text => pyStr(pyLoads(text))), ['True', 'None', "[1, 'a']", 'a']);
 
 console.log(`pyjson: 3 values read and printed, ${refusals.length} refusals, 4 byte bodies and 3 decodes as CPython's json.loads, repr and bytes.decode give them`);
 

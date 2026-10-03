@@ -2851,20 +2851,20 @@
       "lifecycle": "supported"
     },
     {
-      "id": "packages/review/bin/legacy/session-manifest.py",
-      "invocation": "packages/review/bin/legacy/session-manifest.py",
+      "id": "packages/review/bin/legacy/session-manifest.ts",
+      "invocation": "packages/review/bin/legacy/session-manifest.ts",
       "kind": "producer",
       "lifecycle": "supported"
     },
     {
-      "id": "packages/review/bin/legacy/validate-session.py",
-      "invocation": "packages/review/bin/legacy/validate-session.py",
+      "id": "packages/review/bin/legacy/validate-session.ts",
+      "invocation": "packages/review/bin/legacy/validate-session.ts",
       "kind": "check",
       "lifecycle": "supported"
     },
     {
-      "id": "packages/review/bin/legacy/test-validate-session.py",
-      "invocation": "packages/review/bin/legacy/test-validate-session.py",
+      "id": "packages/review/bin/legacy/test-validate-session.ts",
+      "invocation": "packages/review/bin/legacy/test-validate-session.ts",
       "kind": "check",
       "lifecycle": "supported"
     },

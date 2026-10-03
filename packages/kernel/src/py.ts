@@ -4,6 +4,9 @@
  * which the trainer bundles for the browser: none of this runs there.
  */
 export { pyArgs, pyArgsError, type PyArgs, type PyOption, type PyPositional } from './pyargs.ts';
-export { PyJsonError, PyUnicodeDecodeError, pyDecodeUtf8, pyLoads, pyLoadsBytes, pyReprOf, pyStrRepr, type PyValue } from './pyjson.ts';
+export {
+  PyJsonError, PyUnicodeDecodeError, pyDecodeUtf8, pyEquals, pyIsDict, pyIsList, pyLoads, pyLoadsBytes, pyReprOf, pyStr, pyStrRepr, pyTruthy,
+  type PyValue,
+} from './pyjson.ts';
 export { PyFloat, pyDumps, pyFixed, pyFloat, pyInt, pyPath, pyRepr, pyRound, pySplit, pySplitLines, pyStrip, type PyJson } from './pyfmt.ts';
 export { PyCsvError, pyCsvDicts, pyCsvRows, pyMedian, pyPstdev } from './pystats.ts';

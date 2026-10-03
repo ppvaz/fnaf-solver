@@ -4112,7 +4112,7 @@
       }
     },
     {
-      "id": "packages/review/bin/legacy/test-validate-session.py",
+      "id": "packages/review/bin/legacy/test-validate-session.ts",
       "lane": "test:unit",
       "owner": "package boundary",
       "timeoutMs": 180000,

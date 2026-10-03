@@ -1,7 +1,7 @@
 # shellcheck shell=bash
 # Thread one session id and one monotonic origin through every producer.
 #
-# Sourced, never executed. `session-manifest.py` owns the file format; this
+# Sourced, never executed. `session-manifest.ts` owns the file format; this
 # owns the *threading*: the id is latched once by `fnaf_session_begin` and
 # exported, so a helper started inside a run joins that run's manifest instead
 # of inventing a second identity from a filename. That is the whole point --
@@ -18,7 +18,7 @@
 # no provenance, which is the state this plan exists to end.
 
 FNAF2_SESSION_HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-FNAF2_SESSION_TOOL="$FNAF2_SESSION_HERE/../../../../packages/review/bin/legacy/session-manifest.py"
+FNAF2_SESSION_TOOL="$FNAF2_SESSION_HERE/../../../../packages/review/bin/legacy/session-manifest.ts"
 FNAF2_MANIFEST="${FNAF2_MANIFEST:-1}"
 FNAF2_SESSION_FAULT=0
 # The build coords.sh, the screen models and the sourced event model are all
@@ -45,7 +45,7 @@ fnaf_session_begin() {                          # RUN COMMAND
     echo "manifest: joining session $FNAF2_SESSION_ID (started by $FNAF2_SESSION_RUN)" >&2
     return 0
   fi
-  out=$(python3 "$FNAF2_SESSION_TOOL" start "$run" "command=$command") || {
+  out=$(node "$FNAF2_SESSION_TOOL" start "$run" "command=$command") || {
     echo "manifest: could not start a session for $run; refusing to collect" >&2
     echo "          evidence that cannot name its build, clocks or models." >&2
     return 1
@@ -57,13 +57,13 @@ fnaf_session_begin() {                          # RUN COMMAND
 
 fnaf_session_record() {                         # OP key=value...
   fnaf_session_active || return 0
-  python3 "$FNAF2_SESSION_TOOL" record "$FNAF2_SESSION_RUN" "$@" ||
+  node "$FNAF2_SESSION_TOOL" record "$FNAF2_SESSION_RUN" "$@" ||
     fnaf_session_fault "failed to record $1 ($*)"
 }
 
 fnaf_session_event() {                          # key=value...
   fnaf_session_active || return 0
-  python3 "$FNAF2_SESSION_TOOL" event "$FNAF2_SESSION_RUN" "$@" ||
+  node "$FNAF2_SESSION_TOOL" event "$FNAF2_SESSION_RUN" "$@" ||
     fnaf_session_fault "failed to record event ($*)"
 }
 
@@ -86,7 +86,7 @@ fnaf_session_artifact() {                       # PATH key=value...
 
 # Everything the manifest needs about the phone and the build, read once.
 # ANDROID_SERIAL is deliberately not among them: a device serial never enters
-# a manifest, and session-manifest.py refuses one anyway.
+# a manifest, and session-manifest.ts refuses one anyway.
 fnaf_session_probe_target() {                   # NIGHT CONFIGURATION SENSOR_PATH
   local night=$1 configuration=$2 sensor=$3
   local pkg=com.scottgames.fnaf2 dump version code model size width height t0 t1
@@ -158,7 +158,7 @@ fnaf_session_finalize() {                       # LIFECYCLE REASON
     fnaf_session_record note \
       "text=INCOMPLETE: at least one fact failed to record during this run; see the fault events and the stderr log"
   fi
-  python3 "$FNAF2_SESSION_TOOL" finalize "$FNAF2_SESSION_RUN" \
+  node "$FNAF2_SESSION_TOOL" finalize "$FNAF2_SESSION_RUN" \
     "lifecycle=$lifecycle" "reason=$reason" || {
       echo "manifest: NOT VALID for $FNAF2_SESSION_RUN -- this run's evidence is" >&2
       echo "          unreplayable until the spool beside it is corrected." >&2

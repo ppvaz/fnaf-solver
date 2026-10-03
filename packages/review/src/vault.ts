@@ -26,7 +26,7 @@ import { canonicalJson } from '@sixam/kernel/contracts';
 import { isList, isRecord } from '@sixam/kernel';
 
 const HERE = fileURLToPath(new URL('.', import.meta.url));
-// FNAF2_REPO relocates the tree under test, as FNAF2_CAPTURES does for session-manifest.py.
+// FNAF2_REPO relocates the tree under test, as FNAF2_CAPTURES does for session-manifest.ts.
 const ROOT = resolve(process.env.FNAF2_REPO || join(HERE, '../../..'));
 const PACKS = join(ROOT, 'docs', 'evidence', 'packs');
 const EVIDENCE = join(ROOT, 'docs', 'evidence');

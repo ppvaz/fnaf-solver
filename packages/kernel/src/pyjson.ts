@@ -221,6 +221,56 @@ export function pyReprOf(value: PyValue | number): string {
   return `[${(value as readonly PyValue[]).map(pyReprOf).join(', ')}]`;
 }
 
+/** A list read by json.loads (Array.isArray would widen it to any[]). */
+export function pyIsList(value: PyValue): value is readonly PyValue[] {
+  return Array.isArray(value);
+}
+
+/** A dict read by json.loads. */
+export function pyIsDict(value: PyValue): value is ReadonlyMap<string, PyValue> {
+  return value instanceof Map;
+}
+
+/** str(value): a str as itself, anything else as its repr. */
+export function pyStr(value: PyValue): string {
+  return typeof value === 'string' ? value : pyReprOf(value);
+}
+
+/** bool(value): None, False, zero and an empty str, list or dict are false. */
+export function pyTruthy(value: PyValue): boolean {
+  if (value === null || typeof value === 'boolean') return value === true;
+  if (typeof value === 'bigint') return value !== 0n;
+  if (value instanceof PyFloat) return value.value !== 0;
+  if (typeof value === 'string' || pyIsList(value)) return value.length > 0;
+  return value.size > 0;
+}
+
+/** A bool, int or float as an exact number for comparison, else null (bool is an int in Python). */
+function numeric(value: PyValue): bigint | number | null {
+  if (typeof value === 'boolean') return value ? 1n : 0n;
+  if (typeof value === 'bigint') return value;
+  return value instanceof PyFloat ? value.value : null;
+}
+
+/** a == b as Python compares them: True == 1 == 1.0, an int and a float exactly, a dict by its items in any order. */
+export function pyEquals(a: PyValue, b: PyValue): boolean {
+  const [x, y] = [numeric(a), numeric(b)];
+  if (x !== null || y !== null) {
+    if (x === null || y === null) return false;
+    if (typeof x === typeof y) return x === y;
+    const [int, float] = typeof x === 'bigint' ? [x, Number(y)] : [BigInt(y), Number(x)];
+    return Number.isInteger(float) && BigInt(float) === int;
+  }
+  if (pyIsList(a)) return pyIsList(b) && a.length === b.length && a.every((item, k) => pyEquals(item, b[k]));
+  if (!pyIsDict(a) || !pyIsDict(b)) return a === b;
+  if (a.size !== b.size) return false;
+  for (const [key, item] of a) {
+    const other = b.get(key);
+    if (other === undefined || !pyEquals(item, other)) return false;
+  }
+  return true;
+}
+
 /** Python's UnicodeDecodeError, a ValueError there and so a RangeError here. */
 export class PyUnicodeDecodeError extends RangeError {}
 

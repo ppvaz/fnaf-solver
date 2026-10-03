@@ -336,7 +336,7 @@ const ENGINE: Check[] = [
   // that each way of being malformed fails with its own reason rather than one
   // generic rejection. A validator that refuses everything identically is
   // indistinguishable from one that refuses everything.
-  ['session contract', ['../packages/review/bin/legacy/test-validate-session.py']],
+  ['session contract', ['../packages/review/bin/legacy/test-validate-session.ts']],
   // Plan 09 package 2's producer half: one session id threaded through the
   // runners, hashes rather than filenames, and a manifest on every exit path.
   // Mock adb, synthetic artifacts, no phone.

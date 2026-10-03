@@ -107,6 +107,7 @@
       "packages/propose/test/policygrammartest.ts",
       "packages/propose/bin/policy/test-policy-ir.ts",
       "packages/review/bin/legacy/test-index-observations.ts",
+      "packages/review/bin/legacy/test-validate-session.ts",
       "apps/trainer/test/trace.test.ts",
       "packages/propose/bin/policy/test-policy-interpreter.ts",
       "apps/desktop/test/test-deathchart.ts",
@@ -170,10 +171,6 @@
       [
         "python3",
         "packages/review/bin/grade/test-sweepcheck.py"
-      ],
-      [
-        "python3",
-        "packages/review/bin/legacy/test-validate-session.py"
       ],
       [
         "python3",

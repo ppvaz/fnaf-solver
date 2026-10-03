@@ -21,7 +21,7 @@ Lifecycle meanings:
 | Surface | Lifecycle | Canonical replacement | Removal gate |
 |---|---|---|---|
 | `packages/play/bin/phone/session.sh` | compatibility | run packs for nights; kept for `collect-cue-audio.sh` and `capture-screen-sample.sh` | those collectors write run packs or retire |
-| `packages/review/bin/legacy/session-manifest.py` + `validate-session.py` | legacy/transitional | `@sixam/kernel/contracts` manifest validator and evidence CLI | historical shell manifests are indexed and replayable |
+| `packages/review/bin/legacy/session-manifest.ts` + `validate-session.ts` | legacy/transitional | `@sixam/kernel/contracts` manifest validator and evidence CLI | historical shell manifests are indexed and replayable |
 | `packages/review/bin/grade/grade-run.sh` | transitional | evidence CLI over content-addressed device bundles | historical video/HID/session artifacts have an equivalent structured grader |
 | `packages/play/bin/phone/select-adb.sh` | transitional | injected transport selected by the device composition root | direct-ADB probes become adapters or are explicitly archived |
 | `packages/play/bin/phone/coords.sh` | transitional | resolved profile `controlMap` | every device action consumes profile geometry |

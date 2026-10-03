@@ -134,10 +134,10 @@ carry all twelve minimum field groups from the inventory, including named clock
 domains with explicit alignment edges, authority class, artifact hash, label
 provenance and split role, model authorization with its holdout report,
 lifecycle outcome with independent evidence, helper identity and faults, and
-redaction. [`validate-session.py`](../packages/review/bin/legacy/validate-session.py) is
-standard-library only and interprets those schema files rather than restating
+redaction. [`validate-session.ts`](../packages/review/bin/legacy/validate-session.ts)
+interprets those schema files rather than restating
 them, so a field added to a schema cannot go unchecked.
-[`test-validate-session.py`](../packages/review/bin/legacy/test-validate-session.py) proves
+[`test-validate-session.ts`](../packages/review/bin/legacy/test-validate-session.ts) proves
 two synthetic sessions pass and that nine defects each fail with their *own*
 reason: `schema-version-unsupported`, `mixed-game-builds`,
 `artifact-hash-missing`, `model-stale`, `model-unauthorized`,
@@ -154,7 +154,7 @@ general secret scanner — it makes no claim about shapes it was not told about.
 
 **Result (producer slice, 2026-08-26).** Every producer now writes one.
 
-[`session-manifest.py`](../packages/review/bin/legacy/session-manifest.py) is the emitter and
+[`session-manifest.ts`](../packages/review/bin/legacy/session-manifest.ts) is the emitter and
 [`session.sh`](../packages/play/bin/phone/session.sh) is the threading: `fnaf_session_begin`
 latches one id and one `time.monotonic()` origin, exports them, and every later
 call — including a helper started *inside* a run — reads them back rather than

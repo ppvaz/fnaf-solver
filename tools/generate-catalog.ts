@@ -243,14 +243,14 @@ const legacyPaths = [
     notes: 'Sourced manifest bridge; the historical shell runner that also used it was archived 2026-09-25.',
   },
   {
-    id: 'device.session-manifest-producer', path: 'packages/review/bin/legacy/session-manifest.py', category: 'device',
+    id: 'device.session-manifest-producer', path: 'packages/review/bin/legacy/session-manifest.ts', category: 'device',
     lifecycle: 'legacy', owner: '@sixam/play',
     replacement: 'run packs for nights; `session-manifest-v1` (core/contracts) for research sessions',
     removalGate: 'Historical manifests are indexed/replayable and the shell runner is removed',
     notes: 'Plan 09 producer for the shell-specific `fnaf2.session-manifest` dialect.',
   },
   {
-    id: 'device.session-manifest-validator', path: 'packages/review/bin/legacy/validate-session.py', category: 'device',
+    id: 'device.session-manifest-validator', path: 'packages/review/bin/legacy/validate-session.ts', category: 'device',
     lifecycle: 'transitional', owner: '@sixam/evidence',
     replacement: 'core/contracts validateManifest + evidence CLI',
     removalGate: 'Historical shell manifests remain inspectable through the evidence boundary',

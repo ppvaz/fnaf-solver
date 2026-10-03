@@ -14,7 +14,7 @@
     },
     {
       "id": "device.session-manifest-producer",
-      "path": "packages/review/bin/legacy/session-manifest.py",
+      "path": "packages/review/bin/legacy/session-manifest.ts",
       "category": "device",
       "lifecycle": "legacy",
       "owner": "@sixam/play",
@@ -24,7 +24,7 @@
     },
     {
       "id": "device.session-manifest-validator",
-      "path": "packages/review/bin/legacy/validate-session.py",
+      "path": "packages/review/bin/legacy/validate-session.ts",
       "category": "device",
       "lifecycle": "transitional",
       "owner": "@sixam/evidence",
