@@ -341,8 +341,8 @@
         "why": "the FNaF 1/3/4 runners’ reads of Companion replies and detector models (fnaf4-run 44, fnaf3-run 38, fnaf1-night-run 21); their profile reads were checked in audit PG14, and validators over unknown at that boundary replace them (CLAUDE.md, Types)"
       },
       "cast:packages/play/src": {
-        "count": 57,
-        "why": "Play’s campaign and venue code at its edges, Companion replies and bundle manifests, 57 across 25 modules; validators over unknown at that boundary replace them (CLAUDE.md, Types)"
+        "count": 55,
+        "why": "Play’s campaign and venue code at its edges, Companion replies and bundle manifests, 55 across 25 modules; validators over unknown at that boundary replace them (CLAUDE.md, Types)"
       },
       "cast:packages/play/test": {
         "count": 88,
@@ -427,8 +427,8 @@
         "why": "the FNaF 4 night loop (doors, bed, closet, hearing) over live frames; splitting the policy step from the device step needs a live FNaF 4 night, and audit PG10’s teardown change is not yet confirmed on a phone"
       },
       "fn:packages/play/src/campaign/adb-device-local-executor.ts#AdbDeviceLocalArtifactExecutor.execute": {
-        "count": 948,
-        "why": "the device-local night loop (phases, gates, HID writes, the lifecycle watch) as one closure of mutable locals; audit PC13 lifted the clock, the gate evidence, the cycle gates and the control observers out (1,169 to 948 lines), and the rest moves timing-bearing code, so each further split waits for a live night to confirm the last"
+        "count": 884,
+        "why": "the device-local night loop (phases, gates, HID writes, the lifecycle watch); audit PC13 lifted the clock, the gate evidence, the cycle gates and the control observers out (1,169 to 948 lines), and its 36 mutable locals became one DeviceLocalRunState (884); the closures over that state move out one concern at a time, each order-preserving"
       },
       "fn:packages/play/src/campaign/modern-campaign-ports.ts#createCampaignPorts": {
         "count": 708,
