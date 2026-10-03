@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /** Move ignored evidence media between machines and detect when it goes missing.
  *
  * Blobs live outside the repository in a content-addressed vault at
@@ -34,14 +33,14 @@ const EVIDENCE = join(ROOT, 'docs', 'evidence');
 const PACK_SCHEMA = 'capture-pack-v1';
 const EXPORTABLE = new Set(['artifacts', 'captures']);
 const UNKNOWN = { kind: 'UNKNOWN', authority: 'UNKNOWN' };
-const KNOWN_FLAGS = new Set(['--label', '--paths', '--force', '--help']);
+export const KNOWN_FLAGS = new Set(['--label', '--paths', '--force', '--help']);
 const SHA256 = /^[0-9a-f]{64}$/;
 const PATH_PATTERN = /(?:captures|artifacts)\/[A-Za-z0-9._-]+(?:\/[A-Za-z0-9._-]+)*/g;
 
-const usage = 'usage: npm run vault -- <export|import|verify|refs|list> ' +
+export const usage = 'usage: npm run vault -- <export|import|verify|refs|list> ' +
   '[--label NAME] [--paths PATH...] [PACK_ID] [--force]';
 
-class Refused extends Error {}
+export class Refused extends Error {}
 function refuse(message: string): never { throw new Refused(message); }
 
 /** One retained file of a vault pack: its repository path, its bytes, its sha256, its corpus class. */
@@ -351,28 +350,7 @@ function listPacks() {
   }
 }
 
-const COMMANDS: Readonly<Record<string, () => void>> = {
+/** The vault's verbs; packages/review/bin/vault.ts dispatches them. */
+export const COMMANDS: Readonly<Record<string, () => void>> = {
   export: exportPack, import: importPack, verify: verifyPack, refs: checkRefs, list: listPacks,
 };
-
-const command = process.argv[2];
-if (!command || process.argv.includes('--help')) {
-  console.error(usage);
-  process.exit(process.argv.includes('--help') ? 0 : 2);
-}
-if (!Object.hasOwn(COMMANDS, command)) {
-  console.error(`vault: unknown command ${command}`);
-  process.exit(2);
-}
-const unknown = process.argv.slice(3).filter(value => value.startsWith('--') && !KNOWN_FLAGS.has(value));
-if (unknown.length > 0) {
-  console.error(`vault: unknown option ${unknown[0]}`);
-  process.exit(2);
-}
-
-try {
-  COMMANDS[command]();
-} catch (error) {
-  console.error(`vault: ${(error as Error).message}`);
-  process.exit(error instanceof Refused ? 1 : 2);
-}

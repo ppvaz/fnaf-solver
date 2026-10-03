@@ -139,7 +139,7 @@
     },
     {
       "id": "vault",
-      "command": "node packages/review/src/vault.ts",
+      "command": "node packages/review/bin/vault.ts",
       "lifecycle": "supported"
     },
     {
@@ -2675,8 +2675,8 @@
       "lifecycle": "supported"
     },
     {
-      "id": "packages/review/src/vault.ts",
-      "invocation": "packages/review/src/vault.ts <export|import|verify|refs|list>",
+      "id": "packages/review/bin/vault.ts",
+      "invocation": "packages/review/bin/vault.ts <export|import|verify|refs|list>",
       "kind": "evidence CLI",
       "lifecycle": "supported"
     },

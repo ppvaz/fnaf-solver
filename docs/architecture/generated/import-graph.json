@@ -4221,6 +4221,12 @@
       ]
     },
     {
+      "file": "packages/review/bin/vault.ts",
+      "imports": [
+        "../src/vault.ts"
+      ]
+    },
+    {
       "file": "packages/review/src/chronicle-schema.ts",
       "imports": [
         "@sixam/kernel",

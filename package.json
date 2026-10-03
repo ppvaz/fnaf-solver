@@ -32,7 +32,7 @@
     "review": "node packages/review/bin/cli.ts",
     "lab": "node apps/desktop/src/cli.ts",
     "night": "node apps/desktop/src/night.ts",
-    "vault": "node packages/review/src/vault.ts",
+    "vault": "node packages/review/bin/vault.ts",
     "chronicle": "node apps/wiki/chronicle.ts",
     "chronicle:harvest": "node apps/wiki/chronicle-harvest.ts",
     "test:chronicle": "node apps/wiki/test/chronicle.test.ts",
