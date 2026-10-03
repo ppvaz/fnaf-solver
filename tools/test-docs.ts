@@ -31,6 +31,7 @@ import { execFileSync } from 'node:child_process';
 import { dirname, join, relative, resolve, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { currentPath } from '@sixam/review/renamed-path';
+import { gitFreeEnv } from './gate-kit.ts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 let failed = 0;
@@ -196,7 +197,8 @@ for (const [index, entries] of entriesOf) {
 // files of its name, which is no port.
 {
   const repo = mkdtempSync(join(tmpdir(), 'renamed-path-'));
-  const git = (...args: string[]) => execFileSync('git', ['-C', repo, '-c', 'user.name=t', '-c', 'user.email=t@t', ...args], { stdio: 'ignore' });
+  const git = (...args: string[]) => execFileSync('git', ['-C', repo, '-c', 'user.name=t', '-c', 'user.email=t@t', ...args],
+    { stdio: 'ignore', env: gitFreeEnv() });
   try {
     git('init', '-q');
     mkdirSync(join(repo, 'a'));

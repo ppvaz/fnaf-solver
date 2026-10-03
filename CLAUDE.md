@@ -265,6 +265,11 @@ every commit (`tools/commit-identity.ts`, also at pre-push). The first four are 
 `tools/quality-baseline.json`: never add an entry to turn a gate green; add one
 only as `{count, why}` naming why the finding is accepted, and lower or remove
 entries as debt is paid.
+A gate or test that runs git in a scratch repository runs it under
+`gitFreeEnv()` (`tools/gate-kit.ts`): a hook or `git rebase -x` exports
+`GIT_DIR`, git follows it over the working directory and `-C`, and a fixture's
+`add` and `commit` then land in the caller's repository (2026-10-03: an index
+replaced, fixture history committed onto HEAD).
 
 The lanes are data (Pedro, 2026-10-02: the `&&` chains "look historical"):
 `tools/lanes.json` names each lane's node test files and its other steps, and

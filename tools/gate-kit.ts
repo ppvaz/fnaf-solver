@@ -22,6 +22,18 @@ export const FROZEN = [/^docs\/evidence\//, /^docs\/chronicle\//, /^tools\/recom
  * Tracked files plus untracked ones git does not ignore, so a new file is
  * judged before it is committed; frozen records and deleted paths are left out.
  */
+/**
+ * The environment with every GIT_* variable removed, for a gate that runs git in a
+ * scratch repository. A git hook or `git rebase -x` exports GIT_DIR, and git honours
+ * it over the working directory and `-C`: run with it, a fixture's `git init`,
+ * `config`, `add` and `commit` write into the caller's repository instead of the
+ * scratch one (on 2026-10-03 a gate under `rebase -x` replaced a worktree's index with
+ * its two fixture files, and another committed its fixture history onto HEAD).
+ */
+export function gitFreeEnv(env: NodeJS.ProcessEnv = process.env) {
+  return Object.fromEntries(Object.entries(env).filter(([name]) => !name.startsWith('GIT_')));
+}
+
 export function repoFiles(root: string = ROOT) {
   const out = execFileSync('git', ['ls-files', '-z', '--cached', '--others', '--exclude-standard'],
     { cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });

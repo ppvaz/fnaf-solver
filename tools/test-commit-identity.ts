@@ -9,6 +9,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { LEGACY, allowedAddress, parseIdent, pushRanges, refusal, scan } from './commit-identity.ts';
+import { gitFreeEnv } from './gate-kit.ts';
 import { readLanes } from '@sixam/review/lanes';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -45,7 +46,7 @@ checks += 2;
 // 3. The hooks, in a scratch repository: commit-msg on the identity a commit
 // would record, pre-push on every pushed commit, rebase-made ones included.
 const repo = mkdtempSync(join(tmpdir(), 'commit-identity-'));
-const env = Object.fromEntries(Object.entries(process.env).filter(([name]) => !name.startsWith('GIT_')));
+const env = gitFreeEnv();
 const git = (...args: string[]) => execFileSync('git', args, { cwd: repo, encoding: 'utf8', env }).trim();
 const sh = (file: string, args: string[], input?: string) => spawnSync('sh', [file, ...args], { cwd: repo, encoding: 'utf8', env, input });
 try {

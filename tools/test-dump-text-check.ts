@@ -11,6 +11,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SIGNATURES, findDumpText, commitMessageBody, refusal } from './dump-text-check.ts';
+import { gitFreeEnv } from './gate-kit.ts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const T = '\t';
@@ -118,11 +119,11 @@ checks += 1;
 // 6. The hook runs the check first, even with PEDRO-OK and nothing staged.
 const repo = mkdtempSync(join(tmpdir(), 'dump-text-hook-'));
 try {
-  execFileSync('git', ['init', '-q', repo]);
+  const env = gitFreeEnv();
+  execFileSync('git', ['init', '-q', repo], { env });
   // The hook also refuses an identity outside GitHub's noreply form (tools/commit-identity.ts).
-  execFileSync('git', ['-C', repo, 'config', 'user.name', 'Hook Test']);
-  execFileSync('git', ['-C', repo, 'config', 'user.email', 'hook-test@users.noreply.github.com']);
-  const env = Object.fromEntries(Object.entries(process.env).filter(([name]) => !name.startsWith('GIT_')));
+  execFileSync('git', ['-C', repo, 'config', 'user.name', 'Hook Test'], { env });
+  execFileSync('git', ['-C', repo, 'config', 'user.email', 'hook-test@users.noreply.github.com'], { env });
   const hook = join(ROOT, '.githooks', 'commit-msg');
   const run = (body: string) => {
     const file = join(repo, 'MSG');

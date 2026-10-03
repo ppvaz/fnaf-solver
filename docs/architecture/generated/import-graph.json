@@ -5911,6 +5911,35 @@
       "file": "tools/test-commit-identity.ts",
       "imports": [
         "./commit-identity.ts",
+        "./gate-kit.ts",
+        "@sixam/review/lanes",
+        "node:assert/strict",
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "tools/test-commit-identity.ts",
+      "imports": [
+        "./commit-identity.ts",
+        "./gate-kit.ts",
+        "@sixam/review/lanes",
+        "node:assert/strict",
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "tools/test-commit-identity.ts",
+      "imports": [
+        "./commit-identity.ts",
+        "./gate-kit.ts",
         "@sixam/review/lanes",
         "node:assert/strict",
         "node:child_process",
@@ -5946,6 +5975,7 @@
     {
       "file": "tools/test-docs.ts",
       "imports": [
+        "./gate-kit.ts",
         "@sixam/review/renamed-path",
         "node:child_process",
         "node:fs",
@@ -5958,6 +5988,7 @@
       "file": "tools/test-dump-text-check.ts",
       "imports": [
         "./dump-text-check.ts",
+        "./gate-kit.ts",
         "node:assert/strict",
         "node:child_process",
         "node:fs",
@@ -6074,6 +6105,28 @@
         "node:os",
         "node:path",
         "node:url"
+      ]
+    },
+    {
+      "file": "tools/test-python-types.ts",
+      "imports": [
+        "./gate-kit.ts",
+        "node:assert/strict",
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path"
+      ]
+    },
+    {
+      "file": "tools/test-python-types.ts",
+      "imports": [
+        "./gate-kit.ts",
+        "node:assert/strict",
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path"
       ]
     },
     {

@@ -14,13 +14,13 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { ROOT, loadBaseline, ratchet, report } from './gate-kit.ts';
+import { ROOT, gitFreeEnv, loadBaseline, ratchet, report } from './gate-kit.ts';
 
 const DRIVER = join(ROOT, 'tools', 'python_types.py');
 
 /** Run the driver over a repository. */
 function check(root: string): { areas: Record<string, number>, errors: string[], casts: Record<string, number> } {
-  const run = spawnSync('python3', [DRIVER], { cwd: root, encoding: 'utf8', env: { ...process.env, PYTHON_TYPES_ROOT: root },
+  const run = spawnSync('python3', [DRIVER], { cwd: root, encoding: 'utf8', env: { ...gitFreeEnv(), PYTHON_TYPES_ROOT: root },
     maxBuffer: 64 * 1024 * 1024 });
   if (run.status !== 0)
     throw new Error(`python_types.py failed${/No module named 'mypy'/.test(run.stderr) ? ' (install CI\'s pin: python3 -m pip install mypy==2.3.1)' : ''}:\n${run.stderr}`);
@@ -33,7 +33,7 @@ function check(root: string): { areas: Record<string, number>, errors: string[],
 {
   const repo = realpathSync(mkdtempSync(join(tmpdir(), 'python-types-')));
   try {
-    const git = (...args: string[]) => execFileSync('git', args, { cwd: repo, encoding: 'utf8' });
+    const git = (...args: string[]) => execFileSync('git', args, { cwd: repo, encoding: 'utf8', env: gitFreeEnv() });
     git('init', '-q');
     for (const dir of ['packages/demo/bin/typed', 'packages/demo/bin/loose']) mkdirSync(join(repo, dir), { recursive: true });
     writeFileSync(join(repo, 'packages/demo/bin/typed/tool.py'), 'import os\n\n\ndef double(value: int) -> int:\n    return value * 2\n\n\n'
@@ -66,7 +66,7 @@ function check(root: string): { areas: Record<string, number>, errors: string[],
 {
   const repo = realpathSync(mkdtempSync(join(tmpdir(), 'python-types-')));
   try {
-    const git = (...args: string[]) => execFileSync('git', args, { cwd: repo, encoding: 'utf8' });
+    const git = (...args: string[]) => execFileSync('git', args, { cwd: repo, encoding: 'utf8', env: gitFreeEnv() });
     git('init', '-q');
     mkdirSync(join(repo, 'packages/demo/bin/stopped'), { recursive: true });
     writeFileSync(join(repo, 'packages/demo/bin/stopped/a.py'), 'def double(value):\n    return value * 2\n');
