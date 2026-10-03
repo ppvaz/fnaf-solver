@@ -57,8 +57,11 @@ const check = (ok: unknown, msg: string) => { if (!ok) throw new Error(msg); };
                             opts: { jitterMs: 10 } });
   const tight = basinWidth({ night: 2, seeds: 60, max: 264, step: 66,
                              opts: { jitterMs: 45 } });
-  check(Number.isFinite(wide.width) && wide.width <= 528,
-    `the phase basin is not finite/small: ${wide.width} ms`);
+  // Finite means both edges closed inside the scan: a width that reached the
+  // +-264 ms cap would be the scan's limit, not the basin's.
+  check(Number.isFinite(wide.width) && !wide.cappedLate && !wide.cappedEarly,
+    `the phase basin did not close inside the +-264 ms scan: ${wide.width} ms ` +
+    `(capped late ${wide.cappedLate}, early ${wide.cappedEarly})`);
   check(tight.width <= wide.width,
     `more jitter widened the basin (${wide.width} -> ${tight.width} ms)`);
 }
