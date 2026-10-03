@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url';
 import { deriveInputs, identifyReading, measuredNight, periodValue, readoutStrength, regionImages, updateOf } from './phone-region-readout.ts';
 import { anchorIndex, back, seedCandidates } from './phone-seed-readout.ts';
 import { identifySeed } from './phone-seed-scan.ts';
-import { powerCheckPassed } from './sweep-common.ts';
+import { powerCheckPassed, recordId } from './sweep-common.ts';
 import { check as checkEncounters } from './phone-encounter-replay.ts';
 
 const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '../../../..');
@@ -101,8 +101,6 @@ assert.equal(anchorIndex([{ differ: 0 }, { differ: 99 }, { differ: 0 }], 10), nu
   assert.deepEqual(rows.filter((r) => r.c === 5).map((r) => r.x), [63], 'the lead: x = 63 ms with c = 5, and no other x in the bracket');
 }
 
-const canon = (v: unknown): string => Array.isArray(v) ? `[${v.map(canon).join(',')}]`
-  : v && typeof v === 'object' ? `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${canon((v as Record<string, unknown>)[k])}`).join(',')}}` : JSON.stringify(v);
 // --- the seed-scan rule (phone-seed-scan.ts): a clear top seed, never a close pair or a weak fit
 const seedRule = { minR: 0.85, minMargin: 0.2 };
 assert.equal(identifySeed(seedRule, [{ seed: 23712, r: 0.973 }, { seed: 13488, r: 0.585 }]).verdict, 'IDENTIFIED');
@@ -122,8 +120,7 @@ assert.equal(powerCheckPassed([1, -2], (n) => n > 0), false, 'one planted state 
   assert.deepEqual(rs, [...rs].sort((a: number, b: number) => b - a), 'the scan ranks by mean r');
   assert.ok(scan.top20.every((s: { r: number, perWindow: number[] }) => Math.abs(s.r - s.perWindow.reduce((a, b) => a + b, 0) / s.perWindow.length) < 1e-12), 'a seed scores its windows\' mean r');
   assert.equal(scan.top20[0].seed, back(57136, 284), 'the scanned seed is wind-1\'s read state stepped back by the model\'s draws');
-  const { id, ...body } = scan;
-  assert.equal(id, `s2-seed-scan-night7-0of20-${sha(canon(body)).slice(0, 16)}`, 'seed scan record id');
+  assert.equal(scan.id, recordId('s2-seed-scan-night7-0of20', scan), 'seed scan record id');
 }
 
 // --- the release-latency bound (docs/evidence/phone-release-latency-20261001.json): each night's outcomes split by
@@ -138,8 +135,7 @@ assert.equal(powerCheckPassed([1, -2], (n) => n > 0), false, 'one planted state 
   }
   const v2 = JSON.parse(readFileSync(join(ROOT, 'docs/evidence/s2-seed-scan-night7-1020-v2-predeclaration-20261001.json'), 'utf8'));
   for (const n of rel.nights) assert.ok(n.rows.find((r: { releaseMs: number }) => r.releaseMs === v2.releaseLatencyMs)?.outcome === '6am', `${n.night}: the v2 release latency plays the night as the phone did`);
-  const { id, ...body } = rel;
-  assert.equal(id, `phone-release-latency-${sha(canon(body)).slice(0, 16)}`, 'release latency record id');
+  assert.equal(rel.id, recordId('phone-release-latency', rel), 'release latency record id');
 }
 
 // --- the recompiled game with releases at 20 ms (docs/evidence/rebuild-release20-full06-20261001.json): the committed
@@ -153,8 +149,7 @@ assert.equal(powerCheckPassed([1, -2], (n) => n > 0), false, 'one planted state 
   assert.equal(r20.rebuilt.windows, r20.model.windows, 'rebuild and model alike on every window');
   assert.equal(r20.drawSplit ?? null, null, 'no draw split');
   assert.notEqual(ctl.rebuilt.outcome.result, '6am', 'the press-latency control loses the night');
-  const { id, ...body } = rec;
-  assert.equal(id, `rebuild-release20-${sha(canon(body)).slice(0, 16)}`, 'rebuild release record id');
+  assert.equal(rec.id, recordId('rebuild-release20', rec), 'rebuild release record id');
 }
 
 // --- the three traced nights (docs/evidence/rebuild-release20-three-nights-20261001.json): the committed result rechecked;
@@ -165,8 +160,7 @@ assert.equal(powerCheckPassed([1, -2], (n) => n > 0), false, 'one planted state 
   checkEncounters(JSON.parse(readFileSync(join(ROOT, rec.result.path), 'utf8')));
   const agrees = rec.nights.filter((n: { variants: Record<string, { derived: { rebuiltOutcome: { agrees: boolean | null } } }> }) => n.variants['landed-r20'].derived.rebuiltOutcome.agrees === true).map((n: { name: string }) => n.name);
   assert.deepEqual(agrees, ['full-06'], 'with releases at 20 ms only full-06\'s outcome agrees with the phone');
-  const { id, ...body } = rec;
-  assert.equal(id, `rebuild-release20-3nights-${sha(canon(body)).slice(0, 16)}`, 'three-night record id');
+  assert.equal(rec.id, recordId('rebuild-release20-3nights', rec), 'three-night record id');
 }
 
 // --- the records
@@ -195,13 +189,13 @@ for (const file of records) {
     assert.equal(rec.pairs.length, rec.windows.filter((w: { reading: { top: unknown } }) => w.reading.top).length - 1, `${file}: one pair per consecutive window`);
     const analysis = consistent >= rec.rule.supportConsistentPairs ? 'SUPPORTED' : consistent <= rec.rule.refuteConsistentPairs ? 'NOT_SUPPORTED' : 'INCONCLUSIVE';
     assert.equal(rec.analysisVerdict, analysis, `${file}: analysis verdict`);
-    const powered = rec.powerCheck.planted.every((p: { verdict: string }) => p.verdict === 'SUPPORTED');
+    const powered = powerCheckPassed(rec.powerCheck.planted, (p: { verdict: string }) => p.verdict === 'SUPPORTED');
     assert.equal(rec.powerCheck.powered, powered, `${file}: power check`);
     assert.equal(rec.verdict, powered ? analysis : 'UNINFORMATIVE', `${file}: verdict`);
     assert.equal(rec.identified, rec.windows.filter((w: { reading: { verdict: string } }) => w.reading.verdict === 'IDENTIFIED').length, `${file}: identified windows`);
   }
-  const { id, ...body } = rec;
-  assert.equal(id, `${id.slice(0, id.lastIndexOf('-'))}-${sha(canon(body)).slice(0, 16)}`, `${file}: record id`);
+  const { id } = rec;
+  assert.equal(id, recordId(id.slice(0, id.lastIndexOf('-')), rec), `${file}: record id`);
   if (rec.predeclaration?.path && existsSync(join(ROOT, rec.predeclaration.path)))
     assert.equal(rec.predeclaration.sha256, sha(readFileSync(join(ROOT, rec.predeclaration.path))), `${file}: the predeclaration is the committed one`);
 }

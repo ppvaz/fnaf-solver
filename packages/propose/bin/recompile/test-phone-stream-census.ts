@@ -7,8 +7,8 @@ import type { BinaryLike } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { isList } from '@sixam/kernel';
 import { decide } from './phone-stream-census.ts';
+import { recordId } from './sweep-common.ts';
 import { chiSquare, missExpectation, tally } from './phone-occupancy-rates.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
@@ -61,11 +61,9 @@ for (const r of best) {
 assert.deepEqual(Object.fromEntries(Object.entries(counts).map(([k, v]) => [k, v])), rec.exploratory.systematicDisagreements.counts);
 assert.ok(counts[22] >= 30 && counts[26] >= 30 && rec.phoneWindows[22] === 'F' && rec.phoneWindows[26] === 'F', 'the strong states miss both Withered Freddy windows');
 
-const { id, ...body } = rec;
+const { id } = rec;
 // keys sorted as strings, as Python's sort_keys does (a JS object would put integer-like keys first, in number order)
-const canon = (v: unknown): string => isList(v) ? `[${v.map(canon).join(',')}]`
-  : v && typeof v === 'object' ? `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${canon((v as Readonly<Record<string, unknown>>)[k])}`).join(',')}}` : JSON.stringify(v);
-assert.equal(id, `s2-stream-census-${sha256(canon(body)).slice(0, 16)}`, 'record id: sha256 of the body, keys sorted, compact');
+assert.equal(id, recordId('s2-stream-census', rec), 'record id: sha256 of the body, keys sorted, compact');
 
 // --- the census repeated with releases at 20 ms (docs/evidence/full06-stream-census-release20-20261001.json)
 {
@@ -81,8 +79,7 @@ assert.equal(id, `s2-stream-census-${sha256(canon(body)).slice(0, 16)}`, 'record
   assert.deepEqual(d20, r20.decision);
   assert.equal(r20.verdict, d20.verdict);
   assert.deepEqual(r20.stage1.prefixHistogram, rec.stage1.prefixHistogram, 'the release changes no stage-1 prefix');
-  const { id: id20, ...body20 } = r20;
-  assert.equal(id20, `s2-stream-census-release20-${sha256(canon(body20)).slice(0, 16)}`, 'release-20 record id');
+  assert.equal(r20.id, recordId('s2-stream-census-release20', r20), 'release-20 record id');
 }
 
 // --- the eyehole classes correction (docs/evidence/mask-eyehole-classes-correction-20261002.json): re-count its letters
@@ -98,8 +95,7 @@ assert.equal(id, `s2-stream-census-${sha256(canon(body)).slice(0, 16)}`, 'record
   assert.equal(strings, cls.counts.strings);
   assert.deepEqual(Object.fromEntries(Object.entries(letters).sort()), cls.counts.letters);
   assert.equal(letters.c ?? 0, 0, 'no window string holds Toy Chica');
-  const { id: clsId, ...clsBody } = cls;
-  assert.equal(clsId, `mask-eyehole-classes-${sha256(canon(clsBody)).slice(0, 16)}`);
+  assert.equal(cls.id, recordId('mask-eyehole-classes', cls));
 }
 
 // --- the occupancy-rate correction of this record's exploratory reading
@@ -117,6 +113,5 @@ assert.equal(chi.df, 3);
 assert.ok(Math.abs(p3(chi.chi) - occ.chiSquare.p) < 0.005, `p ${p3(chi.chi)} is the recorded ${occ.chiSquare.p}`);
 const best40 = [...rows].sort((a: { agree: number, state: number }, b: { agree: number, state: number }) => b.agree - a.agree || a.state - b.state).slice(0, 40).map((r) => rec.stage2.codes[String(r.state)]);
 assert.deepEqual(missExpectation(best40, rec.phoneWindows, occ.model, occ.played).filter((m) => m && [22, 26, 31, 32].includes(m.window)), occ.censusBest40.windows);
-const { id: occId, ...occBody } = occ;
-assert.equal(occId, `s2-occupancy-rates-${sha256(canon(occBody)).slice(0, 16)}`, 'occupancy record id');
+assert.equal(occ.id, recordId('s2-occupancy-rates', occ), 'occupancy record id');
 console.log(`phone-stream-census: decision rule fixtures, and ${id} (${decision.verdict}) re-derived from its rows, its release-20 repeat re-derived, the eyehole classes re-counted, and its occupancy-rate correction rechecked`);

@@ -146,7 +146,7 @@ async function main(argv: string[]) {
       measuredSeed: measured1, atLeastMeasured: stage1.filter((r) => r.prefix >= measured1.prefix).length },
     stage2: { minPrefix: rule.stage2MinPrefix, states: stage2.length,
       rows: [...stage2].sort((a, b) => b.prefix - a.prefix || b.agree - a.agree || a.state - b.state) },
-    decision, elapsedMs: Date.now() - t0,
+    decision, runFacts: { elapsedMs: Date.now() - t0 },
   };
   const text = `${JSON.stringify(result, null, 1)}\n`;
   if (args.out) writeFileSync(args.out, text);

@@ -8,9 +8,8 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { isList } from '@sixam/kernel';
 import { decide, earlyPredeclaration, family, memberContacts, stepState } from './phone-early-perturbation.ts';
-import { fanOut, predeclared, sweepArgs } from './sweep-common.ts';
+import { fanOut, predeclared, recordId, sweepArgs } from './sweep-common.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
 const read = (path: string) => readFileSync(join(ROOT, path));
@@ -55,6 +54,9 @@ assert.throws(() => decide({ minAgree: 30 }, []), /no member/, 'a verdict over n
   assert.throws(() => predeclared(file({ ...declared, seed: '7' }), reads, earlyPredeclaration), /seed must be an integer/);
   rmSync(dir, { recursive: true, force: true });
 }
+// --- a record's id hashes what it states: not its own id, and not how the run went (`runFacts`: wall time)
+assert.equal(recordId('p', { a: 1, b: [2, { d: 3, c: 4 }] }), recordId('p', { b: [2, { c: 4, d: 3 }], a: 1, id: 'p-x', runFacts: { elapsedMs: 5 } }));
+assert.notEqual(recordId('p', { a: 1 }), recordId('p', { a: 2 }));
 assert.throws(() => sweepArgs(['--predeclaration', 'x', '--workers', '0']), /--workers/, 'zero workers would score nothing');
 assert.throws(() => sweepArgs(['--predeclaration', 'x', '--workers', 'six']), /--workers/);
 await assert.rejects(fanOut(import.meta.url, 'none', {}, [1, 2], 0), /workers/, 'a pool of no workers scores nothing');
@@ -80,8 +82,6 @@ assert.equal(rec.verdict, verdict);
 assert.equal(rec.decision.verdict, verdict);
 assert.deepEqual([rec.control.agree, rec.control.firstHopUpdate, rec.control.audioFits], [14, 601, false], 'the unperturbed member is the census row for 47593');
 
-const canon = (v: unknown): string => isList(v) ? `[${v.map(canon).join(',')}]`
-  : v && typeof v === 'object' ? `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${canon((v as Readonly<Record<string, unknown>>)[k])}`).join(',')}}` : JSON.stringify(v);
-const { id, ...body } = rec;
-assert.equal(id, `s2-early-perturbation-${sha256(canon(body)).slice(0, 16)}`, 'record id');
+const { id } = rec;
+assert.equal(id, recordId('s2-early-perturbation', rec), 'record id');
 console.log(`phone-early-perturbation: family, members, LCG steps and rule fixtures, and ${id} (${verdict}) re-derived from its outcomes`);

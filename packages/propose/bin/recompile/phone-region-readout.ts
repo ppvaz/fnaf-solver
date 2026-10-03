@@ -358,7 +358,7 @@ async function main(argv: string[]) {
     const images = plantNight(base, pre.windows, method, Number(args.plant), { noiseSd: Number(args.noise ?? 2), gain: Number(args.gain ?? 30), seed: Number(args.seed ?? 1) });
     const t0 = Date.now();
     const out = await analyze(preBytes, pre, base, images, workers);
-    if (args.out) writeFileSync(args.out, `${JSON.stringify({ schema: SCHEMA, kind: 'plant-night', state: Number(args.plant), noiseSd: Number(args.noise ?? 2), gain: Number(args.gain ?? 30), ...out, elapsedMs: Date.now() - t0 }, null, 1)}\n`);
+    if (args.out) writeFileSync(args.out, `${JSON.stringify({ schema: SCHEMA, kind: 'plant-night', state: Number(args.plant), noiseSd: Number(args.noise ?? 2), gain: Number(args.gain ?? 30), ...out, runFacts: { elapsedMs: Date.now() - t0 } }, null, 1)}\n`);
     return;
   }
   if (args.plant !== undefined) {
@@ -403,7 +403,7 @@ async function main(argv: string[]) {
   const result = { schema: SCHEMA, claimLevel: 'MODEL_ONLY', predeclaration: { path: args.predeclaration, sha256: sha256(preBytes), id: declared.id },
     nightInputs: inputsBytes ? { path: args['night-inputs'], sha256: sha256(inputsBytes) } : null,
     readout: { path: pre.night.staticReadout.path, sha256: pre.night.staticReadout.sha256, images: images.length },
-    ...out, analysisVerdict: out.verdict, powerCheck: { strength, planted, powered }, verdict, elapsedMs: Date.now() - t0 };
+    ...out, analysisVerdict: out.verdict, powerCheck: { strength, planted, powered }, verdict, runFacts: { elapsedMs: Date.now() - t0 } };
   if (args.out) writeFileSync(args.out, `${JSON.stringify(result, null, 1)}\n`);
 }
 

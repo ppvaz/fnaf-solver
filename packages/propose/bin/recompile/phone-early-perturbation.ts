@@ -129,7 +129,7 @@ async function main(argv: string[]) {
   const decision = decide(pre.decisionRule, rows);
   const result = { schema: SCHEMA, claimLevel: 'MODEL_ONLY', night: pre.night, seed: pre.seed,
     predeclaration: record, inputs: inp.hashes, phoneWindows: inp.phone,
-    firstMaskTick: firstMask, members: members.length, control, rows, decision, elapsedMs: Date.now() - t0 };
+    firstMaskTick: firstMask, members: members.length, control, rows, decision, runFacts: { elapsedMs: Date.now() - t0 } };
   if (args.out) writeFileSync(args.out, `${JSON.stringify(result, null, 1)}\n`);
   const best = [...rows].sort((a, b) => b.agree - a.agree || b.prefix - a.prefix).slice(0, 8);
   console.log(`${pre.night} seed ${pre.seed}: control agree ${control.agree}/${control.compared}, first hop update ${control.firstHopUpdate}, audio fits ${control.audioFits}`);

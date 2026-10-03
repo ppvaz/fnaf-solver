@@ -4,16 +4,13 @@
 // flag from its draw counts and first moved updates, every window score inside 0..1 at a shift within the range,
 // and the record id. No model run. In `npm run test:unit`.
 import assert from 'node:assert/strict';
-import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { isList } from '@sixam/kernel';
 import { agreement, along, compareSites } from './phone-draw-sensitivity.ts';
+import { recordId } from './sweep-common.ts';
 
 const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '../../../..');
-const canon = (v: unknown): string => isList(v) ? `[${v.map(canon).join(',')}]`
-  : v && typeof v === 'object' ? `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${canon((v as Readonly<Record<string, unknown>>)[k])}`).join(',')}}` : JSON.stringify(v);
 
 // --- fixtures
 assert.equal(along(47593, 1), (47593 * 31415 + 1) & 0xffff);
@@ -55,7 +52,6 @@ for (const [path, prefix, results] of RECORDS) {
   if (!existsSync(join(ROOT, path))) continue;
   const rec = JSON.parse(readFileSync(join(ROOT, path), 'utf8'));
   for (const [label, data] of results(rec)) checked += checkResult(data, label);
-  const { id, ...body } = rec;
-  assert.equal(id, `${prefix}-${createHash('sha256').update(canon(body)).digest('hex').slice(0, 16)}`, `${path}: record id`);
+  assert.equal(rec.id, recordId(prefix, rec), `${path}: record id`);
 }
 console.log(`phone-draw-sensitivity: cycle, agreement and site fixtures${checked ? `, and ${checked} rows of the full-06 records re-derived` : ''}`);

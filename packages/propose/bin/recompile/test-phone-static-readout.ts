@@ -8,16 +8,13 @@ import type { BinaryLike } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { isList } from '@sixam/kernel';
 import { cycleIndex, detrend, identify, lumaByImage, pearson, regionMeanLuma, staticPredeclaration } from './phone-static-readout.ts';
-import { checkSweepPredeclaration } from './sweep-common.ts';
+import { checkSweepPredeclaration, recordId } from './sweep-common.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
 const read = (path: string) => readFileSync(join(ROOT, path));
 const json = (path: string) => JSON.parse(read(path).toString('utf8'));
 const sha256 = (bytes: BinaryLike) => createHash('sha256').update(bytes).digest('hex');
-const canon = (v: unknown): string => isList(v) ? `[${v.map(canon).join(',')}]`
-  : v && typeof v === 'object' ? `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${canon((v as Readonly<Record<string, unknown>>)[k])}`).join(',')}}` : JSON.stringify(v);
 const step = (s: number) => (s * 31415 + 1) & 0xffff;
 const along = (from: number, n: number) => { let s = from; for (let i = 0; i < n; i += 1) s = step(s); return s; };
 
@@ -99,7 +96,7 @@ for (const path of recs) {
     assert.equal(rec.hits, hits);
     assert.equal(rec.verdict, hits >= pre.decisionRule.minHits ? 'SUPPORTED' : 'NOT_SUPPORTED');
   }
-  const { id, ...body } = rec;
-  assert.equal(id, `${id.slice(0, id.lastIndexOf('-'))}-${sha256(canon(body)).slice(0, 16)}`, `${path}: record id`);
+  const { id } = rec;
+  assert.equal(id, recordId(id.slice(0, id.lastIndexOf('-')), rec), `${path}: record id`);
 }
 console.log(`phone-static-readout: correlation, cycle and rule fixtures, and ${recs.length} readout record(s) re-derived from their rows`);

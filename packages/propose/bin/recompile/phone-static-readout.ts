@@ -272,7 +272,7 @@ async function confirm(pre: StaticPre & { readonly kind: 'confirm' }, record: ob
   const verdict = hits >= minHits ? 'SUPPORTED' : 'NOT_SUPPORTED';
   console.log(`${hits} of ${windows.length} held-out windows hit: ${verdict}`);
   const result = { schema: SCHEMA, kind: 'confirm', claimLevel: 'DEVICE_MEASURED frames against MODEL_ONLY predictions', night: pre.night, seed: pre.seed,
-    predeclaration: record, inputs: inp.hashes, windows, hits, verdict, elapsedMs: Date.now() - t0 };
+    predeclaration: record, inputs: inp.hashes, windows, hits, verdict, runFacts: { elapsedMs: Date.now() - t0 } };
   if (args.out) writeFileSync(args.out, `${JSON.stringify(result, null, 1)}\n`);
 }
 
@@ -307,7 +307,7 @@ async function main(argv: string[]) {
     ? (() => { const c = cycleIndex((a.decision.top as Scored).state); return { sameCycle: c.has((b.decision.top as Scored).state), steps: c.get((b.decision.top as Scored).state) ?? null,
       modelDraws: (b.modelAtInject as NonNullable<typeof b.modelAtInject>).draws - (a.modelAtInject as NonNullable<typeof a.modelAtInject>).draws }; })() : null;
   const result = { schema: SCHEMA, claimLevel: 'DEVICE_MEASURED frames against MODEL_ONLY predictions', night: pre.night, seed: pre.seed,
-    predeclaration: record, inputs: inp.hashes, windows, between, elapsedMs: Date.now() - t0 };
+    predeclaration: record, inputs: inp.hashes, windows, between, runFacts: { elapsedMs: Date.now() - t0 } };
   if (args.out) writeFileSync(args.out, `${JSON.stringify(result, null, 1)}\n`);
   for (const w of windows) {
     console.log(`${w.name}: control r ${w.controlR?.toFixed(3)}; r quantiles ${JSON.stringify(Object.fromEntries(Object.entries(w.rQuantiles).map(([k, v]) => [k, Number((v as number).toFixed(3))])))}`);

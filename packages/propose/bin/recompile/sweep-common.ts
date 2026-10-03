@@ -6,9 +6,23 @@ import { readFileSync } from 'node:fs';
 import { cpus } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { Worker } from 'node:worker_threads';
-import { isRecord } from '@sixam/kernel';
+import { isList, isRecord } from '@sixam/kernel';
 
 export const sha256 = (bytes: BinaryLike) => createHash('sha256').update(bytes).digest('hex');
+
+/** JSON with every object's keys sorted, compact: the bytes a record's id hashes. */
+export const canonical = (value: unknown): string => isList(value) ? `[${value.map(canonical).join(',')}]`
+  : isRecord(value) ? `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${canonical(value[key])}`).join(',')}}`
+    : JSON.stringify(value);
+
+/**
+ * A record's id: its prefix and the sha256 of the record, canonical, without `id` and `runFacts`. `runFacts` holds how
+ * a run went (its wall time), which differs between identical runs, so it is never part of what the id names.
+ */
+export function recordId(prefix: string, record: Readonly<Record<string, unknown>>) {
+  const body = Object.fromEntries(Object.entries(record).filter(([key]) => key !== 'id' && key !== 'runFacts'));
+  return `${prefix}-${sha256(canonical(body)).slice(0, 16)}`;
+}
 
 /** A power check passed: it planted at least one state and recovered every one. Planting nothing shows no power. */
 export const powerCheckPassed = <T>(planted: readonly T[], recovered: (item: T) => boolean) =>

@@ -183,7 +183,7 @@ async function main(argv: string[]) {
     variants: variants.map((v) => ({ name: v.name, what: v.what, contactsSha256: sha256(JSON.stringify(v.contacts)), deltas: v.deltas.length })),
     drawSites: { frames, horizon, replays: { landed: { last: landedSites.last, outcome: landedSites.outcome }, sched: { last: schedSites.last, outcome: schedSites.outcome } }, rows: siteRows },
     readoutWindows: { injectedState: INJECTED, shiftRange: SHIFT, rows: windowRows },
-    elapsedMs: Date.now() - t0,
+    runFacts: { elapsedMs: Date.now() - t0 },
   };
   if (args.out) writeFileSync(args.out, `${JSON.stringify(result, null, 1)}\n`);
   for (const r of siteRows) console.log(`${r.moved ? 'MOVES' : 'same '} ${r.site.padEnd(46)} ${r.draws.join('/').padEnd(11)} ${r.firstMoved ? `first ${r.firstMoved.join(' vs ')}` : ''}`);

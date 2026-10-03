@@ -230,7 +230,7 @@ async function main(argv: string[]) {
     spec: { path: args.spec, sha256: sha256(specText) }, nightInputs: { path: args['night-inputs'], sha256: sha256(inputsText) },
     first: night.first, landingLatency: night.latency, frames: night.frames.length, endFrame: night.endFrame, seeds: seeds.length,
     top20: ranked.slice(0, 20), quantiles: { p50: ranked[ranked.length >> 1]?.r, p999: ranked[Math.floor(ranked.length * 0.001)]?.r },
-    ...(decision ? { exploratory: false, ...decision } : {}), elapsedMs: Date.now() - t0 };
+    ...(decision ? { exploratory: false, ...decision } : {}), runFacts: { elapsedMs: Date.now() - t0 } };
   if (args.out) writeFileSync(args.out, `${JSON.stringify(result, null, 1)}\n`);
   console.log(`${seeds.length} seeds, ${night.frames.length} frames to update ${night.endFrame}, landing ${night.latency.medianMs} ms; top ${ranked.slice(0, 5).map((s) => `${s.seed}:${s.r.toFixed(3)}`).join(' ')}`);
 }

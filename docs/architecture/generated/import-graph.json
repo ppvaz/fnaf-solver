@@ -3034,9 +3034,8 @@
       "file": "packages/propose/bin/recompile/test-phone-draw-sensitivity.ts",
       "imports": [
         "./phone-draw-sensitivity.ts",
-        "@sixam/kernel",
+        "./sweep-common.ts",
         "node:assert/strict",
-        "node:crypto",
         "node:fs",
         "node:path",
         "node:url"
@@ -3047,7 +3046,6 @@
       "imports": [
         "./phone-early-perturbation.ts",
         "./sweep-common.ts",
-        "@sixam/kernel",
         "node:assert/strict",
         "node:crypto",
         "node:fs",
@@ -3103,7 +3101,6 @@
       "imports": [
         "./phone-static-readout.ts",
         "./sweep-common.ts",
-        "@sixam/kernel",
         "node:assert/strict",
         "node:crypto",
         "node:fs",
@@ -3116,7 +3113,7 @@
       "imports": [
         "./phone-occupancy-rates.ts",
         "./phone-stream-census.ts",
-        "@sixam/kernel",
+        "./sweep-common.ts",
         "node:assert/strict",
         "node:crypto",
         "node:fs",
