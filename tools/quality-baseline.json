@@ -410,10 +410,6 @@
     "recorded": "2026-10-03",
     "why": "Functions, methods and arrows whose body spans more than 200 lines (tools/test-function-length.ts). An entry names the split that remains and why it is not done yet, and only shrinks; a new long function fails.",
     "entries": {
-      "fn:apps/desktop/src/lab.ts#createLab": {
-        "count": 385,
-        "why": "the lab’s composition root (status, next, doctor, morning, sessions); audit D3 moved the host readers and the doctor out (593 to 385 lines), and the session and morning verbs are the next split"
-      },
       "fn:packages/propose/bin/census/fnaf1-device-lane.ts#grid420": {
         "count": 256,
         "why": "the FNaF 1 device lane’s 4/20 grid census; test-fnaf1-device-lane re-runs the committed population record’s 33 replays through it, so a split must keep them identical"
