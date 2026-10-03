@@ -1,4 +1,4 @@
-// Smoke gate for minus-toys-margin.mjs. It is a model analysis tool (no run to
+// Smoke gate for minus-toys-margin.ts. It is a model analysis tool (no run to
 // grade), so this pins that it runs, that the shipped schedule clears at zero
 // shift, and the two facts the writeup rests on: the split-arming pair has
 // ~one-Fusion-poll margin, and the whole-schedule phase margin is far under the
@@ -25,12 +25,13 @@ check(rows.length === OPENING.length + LOOP.length, `expected ${OPENING.length +
 
 // The CAM 09 -> monitor arming pair is the tightest thing in the schedule:
 // one Fusion poll (33 ms) of slack. This is the geometry the device drag
-// collapsed to 0 ms on n2-minustoys-0117.
+// collapsed to 0 ms on n2-minustoys-0117. The pin is the writeup's band, one
+// to two polls, both ways: no slack contradicts it as much as more does.
 const arming = rows.filter(m => /opening\[(2|3)\]/.test(m[0]));
 check(arming.length === 2, 'could not find the arming-pair rows');
 for (const m of arming)
-  check(/^\d+$/.test(m[2]) && +m[2] <= 66,
-    `arming row "${m[0].trim()}" reports ${m[2]} ms early margin; expected <= one or two Fusion polls`);
+  check(/^\d+$/.test(m[2]) && +m[2] >= 33 && +m[2] <= 66,
+    `arming row "${m[0].trim()}" reports ${m[2]} ms early margin; the writeup says one or two Fusion polls (33-66 ms)`);
 
 // The whole-schedule phase response is banded (it clears again past its first
 // failure), so its first edge is reported with the band, never as the budget
