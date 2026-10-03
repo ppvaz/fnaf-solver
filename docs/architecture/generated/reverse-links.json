@@ -248,20 +248,27 @@
       "id": "contract.cue-helper-control-v1",
       "kind": "CONTRACT",
       "path": "packages/play/src/venues/phone/companion.ts",
-      "line": 44,
+      "line": 61,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.cue-helper-control-v1",
       "kind": "CONTRACT",
       "path": "packages/play/src/venues/phone/companion.ts",
-      "line": 62,
+      "line": 79,
       "relation": "REFERENCES"
     },
     {
       "id": "contract.cue-helper-control-v1",
       "kind": "CONTRACT",
       "path": "packages/play/test/companion-region-read.test.ts",
+      "line": 6,
+      "relation": "REFERENCES"
+    },
+    {
+      "id": "contract.cue-helper-control-v1",
+      "kind": "CONTRACT",
+      "path": "packages/play/test/companion-snap.test.ts",
       "line": 6,
       "relation": "REFERENCES"
     },

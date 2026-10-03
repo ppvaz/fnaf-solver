@@ -1037,8 +1037,7 @@ public final class CaptureService extends Service {
             } finally {
                 bitmap.recycle();
             }
-            return "OK path=files/frames/" + file.getName() + " imageNs=" + request.imageNs
-                    + " snapshotNs=" + System.nanoTime();
+            return SnapReply.ok(field[2], request.imageNs, System.nanoTime());
         }
     }
 

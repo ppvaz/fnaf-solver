@@ -12,7 +12,7 @@ import { spawn } from 'node:child_process';
 import { execFileSync } from 'node:child_process';
 import { connect } from 'node:net';
 import { writeFileSync } from 'node:fs';
-import { parseCueResponse, parseRegionRead, regionSetLine, REGION_LIMITS } from '@sixam/play/venues/phone/companion';
+import { parseCueResponse, parseRegionRead, parseSnapReply, regionSetLine, REGION_LIMITS } from '@sixam/play/venues/phone/companion';
 import { COMPANION_ENDPOINT_FILE, parseCompanionEndpoint, parseCompanionStatus } from '@sixam/play/venues/phone/companion-status';
 import type { ChildProcessByStdio } from 'node:child_process';
 import type { Readable, Writable } from 'node:stream';
@@ -458,14 +458,13 @@ export class AdbCompanionPort {
     const forwarded = this.#forward(endpoint, 'Companion snap');
     try {
       const reply = await lineExchange(forwarded, `SNAP ${endpoint.token} ${label}`, timeoutMs);
-      const fields = parseCueResponse(reply);
-      if (fields.path !== `files/frames/${label}.png`) throw new Error(`Companion snap wrote an unexpected path: ${reply}`);
+      const fields = parseSnapReply(reply, label);
       const bytes = runSyncBytes(this.adb, ['-s', this.serial, 'exec-out', 'run-as', HELPER_PACKAGE, 'cat', fields.path],
         { timeout: 10000, maxBuffer: 64 * 1024 * 1024 });
       if (!bytes || bytes.length < 1000) throw new Error('Companion snap pulled an empty frame');
       writeFileSync(target, bytes);
       try { runSync(this.adb, ['-s', this.serial, 'shell', 'run-as', HELPER_PACKAGE, 'rm', '-f', fields.path]); } catch { /* next snap overwrites */ }
-      return { path: target, imageNs: BigInt(fields.imageNs), snapshotNs: BigInt(fields.snapshotNs), bytes: bytes.length };
+      return { path: target, imageNs: fields.imageNs, snapshotNs: fields.snapshotNs, bytes: bytes.length };
     } finally {
       this.#unforward(forwarded);
     }

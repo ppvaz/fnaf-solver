@@ -1,0 +1,12 @@
+# The SNAP reply of cue-helper-control-v1, held from both sides.
+#
+# The Companion's SnapReply (SnapReplyTest.java) must format a SNAP of
+# `label:` whose frame carried `imageNs:`, answered at `snapshotNs:`, as exactly
+# `line:`. The host's parseSnapReply
+# (packages/play/test/companion-snap.test.ts) must read that line back to the
+# same path and clocks, and refuse it for any other label.
+
+label: title-01.a_b
+imageNs: 81234567890123
+snapshotNs: 81234569012345
+line: OK path=files/frames/title-01.a_b.png imageNs=81234567890123 snapshotNs=81234569012345

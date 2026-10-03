@@ -34,6 +34,23 @@ export function parseCueResponse(line: unknown) {
   return Object.freeze(fields);
 }
 
+/**
+ * The OK reply to `SNAP <token> <label>` (SnapReply.java writes it): the frame's app-relative path, which must
+ * be the label's own PNG under files/frames, and the two helper clocks that place it. Held from both sides by
+ * testdata/companion-snap-v1.txt.
+ */
+export function parseSnapReply(line: unknown, label: string) {
+  const fields = parseCueResponse(line);
+  const path = `files/frames/${label}.png`;
+  if (fields.path !== path) throw new Error(`Companion snap wrote ${fields.path ?? 'no path'}, not ${path}`);
+  const clock = (name: 'imageNs' | 'snapshotNs') => {
+    const value = fields[name];
+    if (value === undefined || !/^\d{1,20}$/.test(value)) throw new Error(`Companion snap reply has no ${name}`);
+    return BigInt(value);
+  };
+  return { path, imageNs: clock('imageNs'), snapshotNs: clock('snapshotNs') };
+}
+
 /** A REGION read is one line of at most 16 regions and 8192 samples (NativeRegions.java). */
 export const REGION_LIMITS = Object.freeze({ regions: 16, samples: 8192, step: 64, lineChars: 65536 });
 const REGION_NAME = /^[a-z][a-z0-9_]{0,31}$/;

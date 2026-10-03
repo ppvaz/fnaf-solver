@@ -1898,6 +1898,15 @@
       ]
     },
     {
+      "file": "packages/play/test/companion-snap.test.ts",
+      "imports": [
+        "../src/venues/phone/companion.ts",
+        "node:assert/strict",
+        "node:fs",
+        "node:test"
+      ]
+    },
+    {
       "file": "packages/play/test/companion-status.test.ts",
       "imports": [
         "../src/venues/phone/companion-status.ts",

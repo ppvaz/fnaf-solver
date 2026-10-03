@@ -252,6 +252,7 @@
       "apps/desktop/test/companion-mcp.test.ts",
       "packages/play/test/companion-status.test.ts",
       "packages/play/test/companion-region-read.test.ts",
+      "packages/play/test/companion-snap.test.ts",
       "packages/play/bin/companion/test-audio-probe.ts",
       "packages/kernel/test/experiment-v2.test.ts",
       "packages/propose/test/census.test.ts",
