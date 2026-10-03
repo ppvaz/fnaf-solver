@@ -12,8 +12,8 @@ import { readFile, mkdir, writeFile, appendFile } from 'node:fs/promises';
 import { appendFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { CompanionControlTransport, HidWireTransport, measureMaskOn, measureMonitorUp,
-  parseCameraRule, parseMaskRule, parseMonitorRule, reconcileExclusiveControls } from '@sixam/play';
+import { HidWireTransport, measureMaskOn, measureMonitorUp, parseCameraRule, parseCompanionFrame, parseCueResponse,
+  parseMaskRule, parseMonitorRule, reconcileExclusiveControls, visualAcquisitionOf } from '@sixam/play';
 import { configureCustomNight, selectCustomNightPreset, validateCustomNightCalibration, CUSTOM_NIGHT_CONTACT_MS } from './custom-night.ts';
 import type { CustomNightCalibration, Tap } from './custom-night.ts';
 import { AdbDeviceBridge } from './adb-bridge.ts';
@@ -415,12 +415,19 @@ export async function createCampaignPorts(options: CampaignPortOptions) {
   // changes nothing this lane reads.
   onEvent({ type: 'companion.announce', ...(await cuePort.announce({ target: 'fnaf2',
     lease: `fnaf2-campaign:${process.pid}` })) });
-  const cueTransport = new CompanionControlTransport({
-    request: line => cuePort.request(line), token: cueEndpoint.token,
-  });
+  // The night's control reads go over one held forward and never block the
+  // event loop the shared HID stream is written from: a synchronous adb shell
+  // per read (two per control-state read) held it for 140-240 ms each, up to
+  // the shell's 10 s bound.
+  let cueControl = cuePort.openControl();
+  const watch = async (action: string) =>
+    parseCueResponse(await cueControl.request(`WATCH ${cueEndpoint.token} ${action}`));
+  const readPanel = async () => parseCueResponse(await cueControl.request(`READ ${cueEndpoint.token}`));
+  const readFrame = async () => parseCompanionFrame(await cueControl.request(`FRAME ${cueEndpoint.token}`));
   const refreshCueEndpoint = () => {
     cueEndpoint = cuePort.discover();
-    cueTransport.token = cueEndpoint.token;
+    cueControl.close();
+    cueControl = cuePort.openControl();
     return cueEndpoint;
   };
   // The teach panel (--teach-overlay): the helper narrates the schedule this
@@ -484,20 +491,20 @@ export async function createCampaignPorts(options: CampaignPortOptions) {
   const maskEvidence = maskLimitations.length
     ? `diagnostic-provisional:${maskLimitations.join(',')}` : 'calibrated';
   let armWatchLoaded = false;
-  const ensureArmWatch = () => {
+  const ensureArmWatch = async () => {
     if (armWatchLoaded) return;
-    const status = cueTransport.watch('status');
+    const status = await watch('status');
     if (typeof status.spec !== 'string' || !/^[0-9a-f]{64}$/.test(status.spec))
       throw new Error('native camera watchlist status has no valid spec hash');
     const active = status.watch === 'ACTIVE';
-    const loaded = active ? status : cueTransport.watch(status.spec);
+    const loaded = active ? status : await watch(status.spec);
     if (loaded.watch !== 'ACTIVE' || loaded.spec !== status.spec)
       throw new Error('native camera watchlist did not activate');
     armWatchLoaded = true;
   };
-  const observeArm = (): ArmSample => {
+  const observeArm = async (): Promise<ArmSample> => {
     if (!armWatchLoaded) throw new Error('native camera watchlist is not active');
-    const read = cueTransport.read();
+    const read = await readPanel();
     const highlights = nativeCameraHighlights(read, cameraRule);
     const cameraValues = Object.fromEntries(cameraRule.adapter.buttons.map(button =>
       [button.control, read[button.entry] ?? 'UNKNOWN']));
@@ -511,11 +518,11 @@ export async function createCampaignPorts(options: CampaignPortOptions) {
       reason: highlights.state === 'UNKNOWN' ? highlights.reason : null,
     };
   };
-  const observeControlState = () => {
+  const observeControlState = async () => {
     // FRAME carries the snapshot and its 20x9 grid under one sequence. A
     // GET/GRID pair is deliberately not used here: those reads cannot prove
     // they describe the same image at the helper's capture cadence.
-    const frame = cueTransport.frame();
+    const frame = await readFrame();
     const monitor = measureMonitorUp(frame, monitorRule, { cells: frame.cells });
     const mask = measureMaskOn(frame, maskRule, { cells: frame.cells });
     // The fitted monitor rule answers only on the office HUD -- the screen a
@@ -528,8 +535,8 @@ export async function createCampaignPorts(options: CampaignPortOptions) {
     let panel: {state: string, reason?: string, value?: string[]} = { state: 'UNKNOWN', reason: 'camera-watch-unavailable' };
     let panelRead: Readonly<Record<string, string>> | null = null;
     try {
-      ensureArmWatch();
-      panelRead = cueTransport.read();
+      await ensureArmWatch();
+      panelRead = await readPanel();
       panel = nativeCameraHighlights(panelRead, cameraRule);
     } catch { /* the fitted rule still carries the monitor-down half */ }
     // The camera rule is calibrated on monitor-up frames only; its behaviour
@@ -557,8 +564,8 @@ export async function createCampaignPorts(options: CampaignPortOptions) {
     const maskOn = exclusive.maskOn;
     const maskSource = exclusive.maskInference ??
       (mask.state === 'OBSERVED' ? 'mask-rule' : null);
-    let visualCapture: ReturnType<CompanionControlTransport['visualAcquisition']> | null = null;
-    try { visualCapture = cueTransport.visualAcquisition(frame); }
+    let visualCapture: ReturnType<typeof visualAcquisitionOf> | null = null;
+    try { visualCapture = visualAcquisitionOf(frame); }
     catch { /* an unavailable timestamp leaves the state ACK usable but bounded */ }
     return {
       sequence: frame.seq,
@@ -645,12 +652,11 @@ export async function createCampaignPorts(options: CampaignPortOptions) {
     mode: 'live', artifact: bundle.artifact, armMode,
   });
   let pendingExecution: Promise<unknown> | null = null;
-  const prearm = (target: CampaignTarget) => {
-    // The native watchlist is a synchronous Companion operation. Load it
-    // before starting the held executor so its setup cannot block the
-    // phase-critical night release later in intro().
+  const prearm = async (target: CampaignTarget) => {
+    // Load the native watchlist before starting the held executor, so the
+    // executor's first arm read finds it active rather than racing its load.
     if (bundle.plans.find(plan => plan.night === target.night)?.armVerification)
-      ensureArmWatch();
+      await ensureArmWatch();
     if (pendingExecution) return;
     pendingExecution = localExecutor.execute(artifactRequestFor(target));
     // executeAttempt surfaces the failure; nothing else may await it.
@@ -792,7 +798,7 @@ export async function createCampaignPorts(options: CampaignPortOptions) {
         : await waitFor(bridge, serial,
           value => value === 'intro' || value === 'newspaper' || value === 'night',
           30000, 'night selection');
-      prearm(target);
+      await prearm(target);
       return { target: targetName, visible: true, selected: true, observed: true,
         menuPresses: firstSelectionState === 'title' ? 2 : 1, entryState };
     }
@@ -812,11 +818,11 @@ export async function createCampaignPorts(options: CampaignPortOptions) {
       const newGameState = await waitFor(bridge, serial,
         value => value === 'intro' || value === 'newspaper' || value === 'night',
         30000, 'new-game night start');
-      prearm(target);
+      await prearm(target);
       return { target: targetName, visible: true, selected: true, observed: true,
         saveResetAuthorized: true, confirmation: 'observed-and-accepted', entryState: newGameState };
     }
-    prearm(target);
+    await prearm(target);
     return { target: targetName, visible: true, selected: true, observed: true,
       saveResetAuthorized: true, confirmation: 'not-present', entryState: confirmationState };
   };
@@ -828,7 +834,7 @@ export async function createCampaignPorts(options: CampaignPortOptions) {
     // stays alive, so spawning during the intro no longer spends plan time on
     // a second registration and ready delay: the grid origin lands within one
     // poll of 12 AM instead of the measured 7.8 s post-office handoff lag.
-    prearm(target);
+    await prearm(target);
     // Any onset the helper latched before this instant belongs to an earlier
     // night; the anchor refuses it.
     const introStartedHostMs = performance.now();
@@ -1146,7 +1152,10 @@ export async function createCampaignPorts(options: CampaignPortOptions) {
   };
   const close = async () => {
     try { await closeMenuHid(); }
-    finally { teach?.channel.close(); }
+    finally {
+      teach?.channel.close();
+      cueControl.close();
+    }
   };
   return Object.freeze({ ports, runner: new DeviceCampaignRunner({ spec, ports }), deviceLocal: true,
     close, qualification, evidenceDirectory });

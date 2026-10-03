@@ -232,4 +232,56 @@ if (process.argv.includes('forward')) process.stdout.write('\\n');
   rmSync(noForward, { recursive: true, force: true });
 }
 
+// The night's control reads (FRAME, READ, WATCH) go over one held forward
+// and never block the event loop: the shared HID stream is written from this
+// same process, and a synchronous adb shell per read held it for 140-240 ms,
+// up to its 10 s timeout. The channel answers in the read vocabulary only.
+{
+  const { createServer } = await import('node:net');
+  const seen: string[] = [];
+  // The fake helper answers a FRAME only once the test lets it, from this same
+  // process: a read that blocked the event loop could never be answered.
+  let answerFrame = () => {};
+  const frameAnswered = new Promise<void>(resolve => { answerFrame = resolve; });
+  const server = createServer(socket => {
+    socket.setEncoding('utf8');
+    socket.once('data', line => {
+      const request = String(line).trim();
+      seen.push(request);
+      const reply = () => socket.end(`OK seq=7 screen=FNAF2_NIGHT\n`);
+      if (request.startsWith('FRAME')) void frameAnswered.then(reply); else reply();
+    });
+  });
+  await new Promise<void>(resolve => server.listen(0, '127.0.0.1', () => resolve()));
+  const address = server.address();
+  const hostPort = typeof address === 'object' && address !== null ? address.port : 0;
+  const controlRoot = mkdtempSync(join(tmpdir(), 'control-channel-'));
+  try {
+    const log = join(controlRoot, 'calls.log');
+    const adb = join(controlRoot, 'adb.cjs');
+    writeFileSync(adb, `#!/usr/bin/env node
+require('node:fs').appendFileSync(${JSON.stringify(log)}, process.argv.slice(2).join(' ') + '\\n');
+if (process.argv.includes('tcp:0')) process.stdout.write('${hostPort}\\n');
+`, { mode: 0o755 });
+    const port = new AdbCompanionPort({ serial: 'usb-1', adb });
+    port.endpoint = Object.freeze({ port: 49707, token: '0123456789abcdef0123456789abcdef' });
+    const control = port.openControl({ timeoutMs: 2000 });
+    const inFlight = control.request('FRAME 0123456789abcdef0123456789abcdef');
+    answerFrame();
+    assert.equal(await inFlight, 'OK seq=7 screen=FNAF2_NIGHT',
+      'the read returned to the event loop while in flight, so its answer could be sent');
+    await control.request('READ 0123456789abcdef0123456789abcdef');
+    assert.deepEqual(seen, ['FRAME 0123456789abcdef0123456789abcdef', 'READ 0123456789abcdef0123456789abcdef']);
+    await assert.rejects(() => control.request('SHELL anything'), /outside the authenticated read vocabulary/);
+    control.close();
+    await assert.rejects(() => control.request('READ 0123456789abcdef0123456789abcdef'), /closed/);
+    const calls = (await import('node:fs')).readFileSync(log, 'utf8').trim().split('\n');
+    assert.deepEqual(calls, ['-s usb-1 forward tcp:0 tcp:49707', `-s usb-1 forward --remove tcp:${hostPort}`],
+      'one forward for the channel, removed on close, and no adb shell per read');
+  } finally {
+    server.close();
+    rmSync(controlRoot, { recursive: true, force: true });
+  }
+}
+
 console.log('adb bridge: closed command set, selection, build, lock, focus, HID, helper and venue record gates pass');

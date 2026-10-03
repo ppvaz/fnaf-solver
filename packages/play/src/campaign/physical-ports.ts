@@ -22,6 +22,14 @@ import { messageOf, sleep } from './port-kit.ts';
 
 function endpointError(message: string): never { throw new Error(`Companion endpoint: ${message}`); }
 
+/**
+ * The FNaF 2 legacy reads (Fnaf2Legacy.java), authenticated by the session
+ * token. FRAME is the snapshot and its grid from one locked read; the
+ * separate GRID verb is retired.
+ */
+const isReadLine = (line: unknown): line is string =>
+  typeof line === 'string' && /^(?:GET|FRAME|WATCH|READ) [0-9a-f]{32}(?: status| [0-9a-f]{64})?$/.test(line);
+
 /** Where the live Companion session listens, and the token its control verbs carry. */
 interface CompanionEndpoint {
   readonly port: number;
@@ -102,8 +110,9 @@ function timedExchange(hostPort: number, line: string, timeoutMs: number) {
       // Every call without an error carries its reply.
       if (error) rejectPromise(error); else resolvePromise(value as TimedReply);
     };
-    // The composition's other helper reads are execFileSync adb shells that
-    // block this event loop for 140-240 ms at a time. When the loop frees up,
+    // Endpoint discovery, forwards and the lifecycle captures are execFileSync
+    // adb calls that block this event loop for 140-240 ms at a time (the
+    // night's control reads stopped doing so with openControl). When the loop frees up,
     // Node runs expired timers BEFORE pending socket I/O, so a reply that
     // arrived in time would lose to its own timeout (night5-anchor3: "clock
     // probe timed out" during the intro, while the native anchor loop polled).
@@ -289,12 +298,12 @@ export class AdbCompanionPort {
     return result;
   }
 
-  /** Synchronous by design: CompanionControlTransport is a bounded request/response codec. */
+  /**
+   * Synchronous: one adb shell per read (140-240 ms, bounded at 10 s), for a
+   * probe that has no event loop to keep. A night reads through openControl().
+   */
   request(line: unknown) {
-    // FNaF 2 legacy reads (Fnaf2Legacy.java). FRAME is the snapshot and its
-    // grid from one locked read; the separate GRID verb is retired.
-    if (typeof line !== 'string' || !/^(?:GET|FRAME|WATCH|READ) [0-9a-f]{32}(?: status| [0-9a-f]{64})?$/.test(line))
-      throw new TypeError('Companion request is outside the authenticated read vocabulary');
+    if (!isReadLine(line)) throw new TypeError('Companion request is outside the authenticated read vocabulary');
     const endpoint = this.endpoint ?? this.discover();
     const args = ['-s', this.serial, 'shell', 'sh', '-s', '--', String(endpoint.port), ...line.split(/\s+/)];
     return runSync(this.adb, args, { timeout: 10000, input: HELPER_QUERY_SCRIPT });
@@ -332,6 +341,30 @@ export class AdbCompanionPort {
         }
         return { offsetMs: best.offsetMs, uncertaintyMs: best.uncertaintyMs, rttMs: best.rttMs,
           samples, hostClock: 'performance-now-ms', fields: latest.fields };
+      },
+      close: () => {
+        if (closed) return;
+        closed = true;
+        this.#unforward(forwarded);
+      },
+    };
+  }
+
+  /**
+   * The night's control reads (GET, FRAME, WATCH, READ) over one forward held
+   * for the run: each read is one socket exchange, bounded by `timeoutMs`,
+   * that never blocks the event loop the shared HID stream is written from.
+   * Opening the forward is the only blocking step. Always close().
+   */
+  openControl({ timeoutMs = 2000 }: {timeoutMs?: number} = {}) {
+    const endpoint = this.endpoint ?? this.discover();
+    const forwarded = this.#forward(endpoint, 'Companion control');
+    let closed = false;
+    return {
+      request: async (line: string) => {
+        if (closed) throw new Error('Companion control channel is closed');
+        if (!isReadLine(line)) throw new TypeError('Companion request is outside the authenticated read vocabulary');
+        return lineExchange(forwarded, line, timeoutMs, 8192);
       },
       close: () => {
         if (closed) return;

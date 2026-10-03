@@ -118,16 +118,7 @@ export class CompanionControlTransport {
    * in 12 on the moto g56. `gridSeq` is set from the same `seq` deliberately:
    * one read, one frame.
    */
-  frame(): CompanionFrame {
-    const fields = parseCueResponse(this.request(`FRAME ${this.token}`));
-    if (fields.grid !== '20x9') throw new Error('Companion frame is missing its sensor');
-    const body = typeof fields.cells === 'string' ? fields.cells : '';
-    if (!/^[0-9a-f]*$/.test(body)) throw new Error('Companion frame cell is malformed');
-    if (body.length !== 180 * 6) throw new TypeError('Companion frame must carry the 180-cell sensor');
-    const cells: number[] = [];
-    for (let index = 0; index < body.length; index += 6) cells.push(parseInt(body.slice(index, index + 6), 16));
-    return Object.freeze({ ...fields, gridSeq: fields.seq, cells: Object.freeze(cells) });
-  }
+  frame(): CompanionFrame { return parseCompanionFrame(this.request(`FRAME ${this.token}`)); }
   watch(action: string) {
     if (action !== 'status' && !/^[0-9a-f]{64}$/.test(action)) throw new TypeError('Companion watch action is invalid');
     return parseCueResponse(this.request(`WATCH ${this.token} ${action}`));
@@ -138,36 +129,7 @@ export class CompanionControlTransport {
    * Old helpers expose only an integer ageUs: retain the 1 us bracket instead
    * of claiming nanosecond precision. No host/device clock offset is inferred.
    */
-  visualAcquisition(snapshot: Readonly<Record<string, unknown>> = {}) {
-    const integer = (value: unknown): value is string => typeof value === 'string' && /^\d+$/.test(value);
-    if (!integer(snapshot.snapshotNs) || !integer(snapshot.ageUs) || !integer(snapshot.seq))
-      throw new Error('visual-capture-time-unavailable');
-    const sequence = Number(snapshot.seq);
-    const snapshotNs = BigInt(snapshot.snapshotNs);
-    const ageNs = BigInt(snapshot.ageUs) * 1000n;
-    if (!Number.isSafeInteger(sequence) || sequence < 1 || ageNs > snapshotNs)
-      throw new Error('visual-capture-time-invalid');
-    let captureNs;
-    let uncertaintyMs;
-    const visualCaptureNs = snapshot.visualCaptureNs;
-    if (visualCaptureNs !== undefined) {
-      if (!integer(visualCaptureNs)) throw new Error('visual-capture-time-invalid');
-      captureNs = BigInt(visualCaptureNs);
-      const measuredAgeNs = snapshotNs - captureNs;
-      if (captureNs <= 0n || measuredAgeNs < ageNs || measuredAgeNs >= ageNs + 1000n)
-        throw new Error('visual-capture-age-disagrees');
-      uncertaintyMs = 0;
-    } else {
-      captureNs = snapshotNs - ageNs;
-      if (captureNs <= 0n) throw new Error('visual-capture-time-invalid');
-      uncertaintyMs = 0.001;
-    }
-    return {
-      clock: 'device-monotonic-ms', at: Number(captureNs) / 1e6,
-      sourceNs: captureNs.toString(), uncertaintyMs, sequence,
-      basis: uncertaintyMs ? 'snapshot-minus-age-upper-bound' : 'image-timestamp',
-    };
-  }
+  visualAcquisition(snapshot: Readonly<Record<string, unknown>> = {}) { return visualAcquisitionOf(snapshot); }
 
   /** A transport measurement is fresh only when helper explicitly says so. */
   monitorMeasurement(snapshot: Readonly<Record<string, unknown>> = {}): Reading<'monitorUp', boolean> {
@@ -177,4 +139,55 @@ export class CompanionControlTransport {
       return { signal: 'monitorUp', state: 'UNKNOWN', reason: 'monitor-state-unavailable' };
     return { signal: 'monitorUp', state: 'OBSERVED', value: value === 'true', confidence: 1 };
   }
+}
+
+/**
+ * A FRAME reply: the snapshot fields AND the 180-cell grid from a single
+ * locked read on the device, so both describe the same frame.
+ */
+export function parseCompanionFrame(reply: unknown): CompanionFrame {
+  const fields = parseCueResponse(reply);
+  if (fields.grid !== '20x9') throw new Error('Companion frame is missing its sensor');
+  const body = typeof fields.cells === 'string' ? fields.cells : '';
+  if (!/^[0-9a-f]*$/.test(body)) throw new Error('Companion frame cell is malformed');
+  if (body.length !== 180 * 6) throw new TypeError('Companion frame must carry the 180-cell sensor');
+  const cells: number[] = [];
+  for (let index = 0; index < body.length; index += 6) cells.push(parseInt(body.slice(index, index + 6), 16));
+  return Object.freeze({ ...fields, gridSeq: fields.seq, cells: Object.freeze(cells) });
+}
+
+/**
+ * When a snapshot's frame was captured, on the device's monotonic clock. Old
+ * helpers expose only an integer ageUs: retain the 1 us bracket instead of
+ * claiming nanosecond precision. No host/device clock offset is inferred.
+ */
+export function visualAcquisitionOf(snapshot: Readonly<Record<string, unknown>>) {
+  const integer = (value: unknown): value is string => typeof value === 'string' && /^\d+$/.test(value);
+  if (!integer(snapshot.snapshotNs) || !integer(snapshot.ageUs) || !integer(snapshot.seq))
+    throw new Error('visual-capture-time-unavailable');
+  const sequence = Number(snapshot.seq);
+  const snapshotNs = BigInt(snapshot.snapshotNs);
+  const ageNs = BigInt(snapshot.ageUs) * 1000n;
+  if (!Number.isSafeInteger(sequence) || sequence < 1 || ageNs > snapshotNs)
+    throw new Error('visual-capture-time-invalid');
+  let captureNs;
+  let uncertaintyMs;
+  const visualCaptureNs = snapshot.visualCaptureNs;
+  if (visualCaptureNs !== undefined) {
+    if (!integer(visualCaptureNs)) throw new Error('visual-capture-time-invalid');
+    captureNs = BigInt(visualCaptureNs);
+    const measuredAgeNs = snapshotNs - captureNs;
+    if (captureNs <= 0n || measuredAgeNs < ageNs || measuredAgeNs >= ageNs + 1000n)
+      throw new Error('visual-capture-age-disagrees');
+    uncertaintyMs = 0;
+  } else {
+    captureNs = snapshotNs - ageNs;
+    if (captureNs <= 0n) throw new Error('visual-capture-time-invalid');
+    uncertaintyMs = 0.001;
+  }
+  return {
+    clock: 'device-monotonic-ms', at: Number(captureNs) / 1e6,
+    sourceNs: captureNs.toString(), uncertaintyMs, sequence,
+    basis: uncertaintyMs ? 'snapshot-minus-age-upper-bound' : 'image-timestamp',
+  };
 }
