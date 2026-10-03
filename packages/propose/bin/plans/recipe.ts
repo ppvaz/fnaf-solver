@@ -79,28 +79,27 @@ function controlFor(act: string, camsUp: boolean) {
 
 export function capture(opts: CaptureOptions) {
   const log: LogEntry[] = [];
-  const patched: ['press' | 'release', typeof Sim.prototype.press][] = [];
-  for (const m of ['press', 'release'] as const) {
-    const orig = Sim.prototype[m];
-    patched.push([m, orig]);
-    Sim.prototype[m] = function (this: Sim, act: string) {
-      const camsUp = this.camsUp;
-      const result = orig.call(this, act);
-      // Record the state the engine actually reached, never a toggle count.
-      // Monitor and mask are toggles at the button and states everywhere else,
-      // and every time a schedule has inferred the state by counting presses
-      // it has eventually counted wrong -- that is what `pilottest --sync`
-      // exists to repair. A recipe carries the state the engine reports.
-      log.push({ f: this.frame, kind: m, act, camsUp,
-                 monitor: this.monitor, maskOn: this.maskOn });
-      return result;
-    };
-  }
-  try {
-    run({ ...opts, sim: { seed: opts.seed ?? 7, night: opts.night ?? 6 } });
-  } finally {
-    for (const [m, orig] of patched) Sim.prototype[m] = orig;
-  }
+  // Record the state the engine actually reached, never a toggle count.
+  // Monitor and mask are toggles at the button and states everywhere else,
+  // and every time a schedule has inferred the state by counting presses
+  // it has eventually counted wrong -- that is what `pilottest --sync`
+  // exists to repair. A recipe carries the state the engine reports.
+  // Only this night's Sim records: its own press and release are wrapped, the
+  // prototype is never patched, so no other Sim alive meanwhile is touched.
+  const recording = (config: ConstructorParameters<typeof Sim>[0]) => {
+    const sim = new Sim(config);
+    for (const kind of ['press', 'release'] as const) {
+      const apply = sim[kind];
+      sim[kind] = function (this: Sim, act: string) {
+        const camsUp = this.camsUp;
+        const result = apply.call(this, act);
+        log.push({ f: this.frame, kind, act, camsUp, monitor: this.monitor, maskOn: this.maskOn });
+        return result;
+      };
+    }
+    return sim;
+  };
+  run({ ...opts, sim: { seed: opts.seed ?? 7, night: opts.night ?? 6 }, makeSim: recording });
   return log;
 }
 
@@ -134,7 +133,7 @@ function events(log: readonly LogEntry[], from: number, to: number) {
 // A budget is what the cycle spends, not what it intends: light-on time is the
 // flashlight, wind time is the box, cams-down time is everything the schedule
 // cannot do while it is reading.
-export function budget(cycle: readonly RecipeEvent[], lengthMs: number) {
+export function budget(cycle: readonly RecipeEvent[], lengthMs: number, night = 6) {
   const lit = cycle.filter(e => e.act === 'camlight' || e.act === 'hall')
     .reduce((sum, e) => sum + e.dur, 0);
   const wind = cycle.filter(e => e.act === 'wind').reduce((sum, e) => sum + e.dur, 0);
@@ -147,9 +146,13 @@ export function budget(cycle: readonly RecipeEvent[], lengthMs: number) {
     else sweeps.push([e]);
   }
   const spacings = sweeps.flatMap(s => s.slice(1).map((e, i) => e.at - s[i].at));
-  // Nights 6-7 drain 120 box units/s and add 300/s while winding, so a cycle
-  // is net-neutral at 120/(300+120) of its length.
-  const windBreakEven = Math.round(lengthMs * 120 / 420);
+  // The box drains BOX_DRAIN_PER_TICK units per BOX_DRAIN_TICK_MS (120/s on
+  // Nights 6-7, 40/s on Nights 1-2) and winding adds +5/frame (+300/s, groups
+  // 638/643), so a cycle is net-neutral when it winds drain/(wind+drain) of
+  // its length -- at the night's own drain, not the hardest night's.
+  const drainPerS = (C.BOX_DRAIN_PER_TICK[night] ?? C.BOX_DRAIN_PER_TICK[7]) * 1000 / C.BOX_DRAIN_TICK_MS;
+  const windPerS = 5 * C.FPS;
+  const windBreakEven = Math.round(lengthMs * drainPerS / (windPerS + drainPerS));
   return {
     lengthMs,
     litMs: lit,
@@ -321,7 +324,7 @@ export function build(opts: CaptureOptions & { captureFn?: (opts: CaptureOptions
       `a ${o.attackWindowMs / 1000} s cycle, which would leave the pilot masked and idle on every Balloon Boy read`);
 
   // Each cycle with its budget, in the field order the budget was once added in.
-  const cycle = (lengthMs: number, events: RecipeEvent[]) => ({ lengthMs, events, budget: budget(events, lengthMs) });
+  const cycle = (lengthMs: number, events: RecipeEvent[]) => ({ lengthMs, events, budget: budget(events, lengthMs, night) });
   const cycles = {
     opening: cycle(7000, opening),
     clear: cycle(5000, clear),
@@ -416,7 +419,7 @@ export const MASK_GAP_MS = 40;
 // later control in the masked animation window.
 export const MASK_ANIM_OFF_MS = Math.round(C.MASK_ANIM_OFF * 1000 / C.FPS);
 // The engine drops input during the mask-ON animation exactly as it does during
-// the mask-off one. Exported here (artifact-commands.mjs imports its floors
+// the mask-off one. Exported here (artifact-commands.ts imports its floors
 // from this module) so the emitter can respect the same window the compiler
 // enforces, instead of authoring a plan the compiler will refuse.
 export const MASK_ANIM_ON_MS = Math.round(C.MASK_ANIM_ON * 1000 / C.FPS);
@@ -444,11 +447,11 @@ export const MASK_RAISE_SHIFT_MS = 60;
 export const SWEEP_SELECT_MS = MIN_CONTACT_MS;
 export const SWEEP_RELEASED_MS = DEVICE_SPACING_MS - SWEEP_SELECT_MS;
 
-// LIGHT_AFTER geometry (plans/17, trial/09-constants.sh): when the emitted
-// sweep contact is under 50 ms the map button is a Click and the light a
-// separate press, so each camera costs a 17 ms select + a 17 ms settle frame
-// + the emitted contact (the light hold). Kept in step with the runner by
-// trial/test-plan-interpreter.sh, which reads both.
+// LIGHT_AFTER geometry (plans/17): when the emitted sweep contact is under
+// 50 ms the map button is a Click and the light a separate press, so each
+// camera costs a 17 ms select + a 17 ms settle frame + the emitted contact (the
+// light hold). artifact-commands.ts compiles the settle from these same
+// constants, so the priced and the compiled geometry cannot diverge.
 export const LA_SELECT_MS = 17;
 export const LA_SETTLE_MS = 17;
 /** A sweep contact shorter than this is a LIGHT_AFTER slot: a Click select, then the light. */
@@ -511,7 +514,7 @@ export const RAISE_MARGIN_MS = 33;
 // device can make: a schedule that clears a floor by exactly one poll is one
 // dropped poll away from landing on the boundary, which is not a margin at all.
 // Every shipped plan sat at exactly 33 ms on its once-per-cycle mask press
-// until 2026-09-19; see test-seam-slack.mjs for what that cost.
+// until 2026-09-19; see test-seam-slack.ts for what that cost.
 export const SEAM_MARGIN_MS = 2 * FUSION_POLL_MS;
 
 // The same clearance, sized for the MODEL rather than the phone.
@@ -521,7 +524,7 @@ export const SEAM_MARGIN_MS = 2 * FUSION_POLL_MS;
 // raise and the select after it can lose 120 ms, four times the margin. On
 // night 1 that cost two seeds in 200: their cam11 select landed inside
 // MON_RAISING every cycle, the camera stayed where the sweep left it, and the
-// pilot wound CAM 07 all night. windtrace.mjs credits 12% of their wind frames.
+// pilot wound CAM 07 all night. bin/report/windtrace.ts credits 12% of their wind frames.
 //
 // This margin is applied by moving the SELECT later, which is only safe when
 // the select is a wind park rather than the sweep -- HID-MULTITOUCH.md records
@@ -537,7 +540,7 @@ export const RAISE_JITTER_MARGIN_MS = 120;
 // +500 ms worked. It is a refusal of the failing region, not a measurement --
 // the true readiness lies somewhere in (200, 434].
 //
-// It lives here, beside the other device floors, because artifact-commands.mjs
+// It lives here, beside the other device floors, because artifact-commands.ts
 // already imports its floors from this module; the reverse direction would be
 // a cycle. `clearTheRaise` needs it to place the wind park, and until
 // 2026-09-19 only the compiled-plan gate knew the number, so the emitter could
@@ -654,7 +657,7 @@ function clearTheRaise(name: string, lines: readonly string[]) {
 //
 // Fusion polls touch once per frame, so two different controls closer than one
 // poll can read as a single finger moving between them and the second never
-// fires. That is the same FUSION_POLL_MS rule test-recipe.mjs enforces; this
+// fires. That is the same FUSION_POLL_MS rule test-recipe.ts enforces; this
 // keeps it true after the emitter has retimed anything.
 
 function makeRoom(name: string, lines: readonly string[]) {
@@ -938,10 +941,6 @@ export function devicePlan(recipe: ReturnType<typeof build>, {
           ats.push(ev[j].at);
           j += ev[j + 1] && ev[j + 1].act === 'camlight' ? 2 : 1;
         }
-        // Spacing comes from this sweep's own selects. Looking the camera up
-        // by name found the first one in the cycle instead, which produced a
-        // negative spacing on a second sweep.
-        const modelled = ats.length > 1 ? ats[1] - ats[0] : spacing;
         // The emitted spacing is the ACTUATOR's, and either end could move:
         // the model quantises to MODEL_SLOT_MS and the phone may need wider
         // (the withdrawn 133 ms geometry) or -- since the LIGHT_AFTER
@@ -951,7 +950,6 @@ export function devicePlan(recipe: ReturnType<typeof build>, {
         // tail costing 272 of 400 nights. A narrower sweep just starts LATER,
         // which is strictly more free time before it -- the guard is only that
         // the start stays inside the cycle.
-        void modelled;
         const modelledEnd = ats[ats.length - 1] + MIN_CONTACT_MS;
         // The last camera costs its full per-camera time, not just the emitted
         // contact -- a LIGHT_AFTER select+settle+light is 67 ms where `contact`

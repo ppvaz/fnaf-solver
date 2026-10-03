@@ -847,9 +847,12 @@ class HidPilot {
 
 export function run(opts: PilotOptions & {
   sim?: ConstructorParameters<typeof Sim>[0], deviceActuator?: boolean | ConstructorParameters<typeof DeviceActuator>[1],
+  // Build the night's Sim (recipe.ts's capture passes one that records every press).
+  makeSim?: (config: ConstructorParameters<typeof Sim>[0]) => Sim,
 } = {}) {
   const knobs = makeSearchKnobs(opts.knobs);
-  const sim = new Sim(Object.assign({ seed: 1, night: 6 }, opts.sim));
+  const config = Object.assign({ seed: 1, night: 6 }, opts.sim);
+  const sim = opts.makeSim ? opts.makeSim(config) : new Sim(config);
   const actuator = opts.deviceActuator
     ? new DeviceActuator(sim, Object.assign(
         { seed: (opts.sim && opts.sim.seed) ?? 1, worst: opts.sim && opts.sim.worst,
