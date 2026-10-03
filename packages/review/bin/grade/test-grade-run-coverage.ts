@@ -193,7 +193,7 @@ const SIBLING_EXCLUDED = new Map([
   ['fnaf1-custom-run.sh', 'lease wrapper for the FNaF 1 Custom Night runner; a live route/calibration executor, not a post-run grader'],
   ['deathchart.ts', 'charts the model gate\'s death census for a PLAN under modeled human slack -- a simulator result with no run artifact to read; gated by test-deathchart.ts'],
   // apps/wiki
-  ['fnaf1-teach-media.py', 'cuts a FNaF 1 run video into a README GIF and phone videos; a presentation tool, not a grader'],
+  ['fnaf1-teach-media.ts', 'cuts a FNaF 1 run video into a README GIF and phone videos; a presentation tool, not a grader'],
   // tools/device
   ['overnight-window.py', 'a forwarder to apps/lab/overnight-window.py, kept while a host\'s installed systemd units name this path (legacy-paths.json lab.overnight-window-path); the window itself is gated in apps/lab'],
   // packages/review/bin/report

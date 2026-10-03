@@ -833,8 +833,8 @@
       "lifecycle": "supported"
     },
     {
-      "id": "apps/wiki/fnaf1-teach-media.py",
-      "invocation": "apps/wiki/fnaf1-teach-media.py --run DIR --video FILE.mp4 --out DIR [--only gif\\|all]",
+      "id": "apps/wiki/fnaf1-teach-media.ts",
+      "invocation": "apps/wiki/fnaf1-teach-media.ts --run DIR --video FILE.mp4 --out DIR [--only gif\\|all]",
       "kind": "report",
       "lifecycle": "supported"
     },

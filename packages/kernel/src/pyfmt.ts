@@ -42,7 +42,7 @@ export function pyFixed(x: number, digits: number): string {
 
 /**
  * `repr(x)` of a float: the shortest digits that read back as x, written plainly from 1e-4 up to 1e16
- * (always with a decimal point: '1.0') and as d.ddde±XX outside it ('1e-05', '1e+16').
+ * (always with a decimal point: '1.0') and as d.ddde+XX or d.ddde-XX outside it ('1e-05', '1e+16').
  */
 export function pyRepr(x: number): string {
   if (Number.isNaN(x)) return 'nan';
@@ -102,4 +102,54 @@ export function pyDumps(value: PyJson, indent?: number): string {
 export function pyPath(text: string): string {
   const lead = text.startsWith('//') && !text.startsWith('///') ? '//' : text.startsWith('/') ? '/' : '';
   return lead + text.split('/').filter(part => part !== '' && part !== '.').join('/') || '.';
+}
+
+// Python's whitespace (str.split, str.strip, float()): JavaScript's \s adds U+FEFF and lacks 0x1c-0x1f and NEL.
+const WS = '[\\t\\n\\v\\f\\r\\x1c-\\x1f \\x85\\xa0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000]';
+const FIELDS = new RegExp(`${WS}+`);
+const LINE_BREAK = /\r\n|[\n\r\v\f\x1c\x1d\x1e\x85\u2028\u2029]/;
+
+/** `text.split()`: the fields between runs of Python's whitespace. */
+export const pySplit = (text: string): string[] => text.split(FIELDS).filter(field => field !== '');
+
+/** `text.splitlines()`: split at every line boundary Python knows, with no empty line after a final one. */
+export function pySplitLines(text: string): string[] {
+  const lines = text.split(LINE_BREAK);
+  if (lines[lines.length - 1] === '') lines.pop();
+  return lines;
+}
+
+const DIGITS = '\\d(?:_?\\d)*';
+const PY_FLOAT = new RegExp(`^[ \\t\\n\\v\\f\\r]*([+-]?(?:(?:${DIGITS}(?:\\.(?:${DIGITS})?)?|\\.${DIGITS})(?:[eE][+-]?${DIGITS})?|inf(?:inity)?|nan))[ \\t\\n\\v\\f\\r]*$`, 'i');
+const SPACE = new RegExp(`^${WS}$`);
+const DECIMAL = /^\p{Nd}$/u;
+
+/** A decimal digit's value: Unicode encodes each set of ten in order, so it is the count back to its run's start. */
+function digitValue(char: string) {
+  let code = char.codePointAt(0) ?? 0;
+  let count = 0;
+  while (DECIMAL.test(String.fromCodePoint(code - 1))) { code -= 1; count += 1; }
+  return count % 10;
+}
+
+/**
+ * `float(text)`: a decimal (underscores between digits), inf or nan, signed, with whitespace around; null
+ * where Python raised ValueError. As CPython does, a character past ASCII is read first as a space or as an
+ * ASCII digit, then the ASCII text is parsed: 0x1c-0x1f stay and are refused.
+ */
+export function pyFloat(text: string): number | null {
+  const ascii = [...text].map(char => ((char.codePointAt(0) ?? 0) < 128 ? char : SPACE.test(char) ? ' '
+    : DECIMAL.test(char) ? String(digitValue(char)) : char)).join('');
+  const body = PY_FLOAT.exec(ascii)?.[1].toLowerCase().replace(/^\+/, '').replaceAll('_', '');
+  if (body === undefined) return null;
+  if (body.includes('inf')) return body.startsWith('-') ? -Infinity : Infinity;
+  return body.includes('nan') ? NaN : Number(body);
+}
+
+/** `round(x)`: the nearest integer, an exact tie to the even one; null where Python raised (nan, inf). */
+export function pyRound(x: number): number | null {
+  if (!Number.isFinite(x)) return null;
+  const floor = Math.floor(x);
+  const rest = x - floor;
+  return rest > 0.5 || (rest === 0.5 && floor % 2 !== 0) ? floor + 1 : floor;
 }

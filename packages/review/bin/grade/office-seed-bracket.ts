@@ -38,7 +38,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { PyFloat, pyDumps, pyFixed } from '@sixam/kernel';
+import { PyFloat, pyDumps, pyFixed, pyFloat, pyRound, pySplit, pySplitLines } from '@sixam/kernel';
 
 const OFFICE_LOAD = 'loading frame #:4';
 const START = 'Starting new frame';
@@ -48,28 +48,15 @@ const PRE = ['Starting new frame', 'updating viewport', 'Updating window dimensi
 // logged inside initRunLoop, after allocRunHeader took the seed (29 -> loadRunObject, 57 -> f_InitLoop)
 const POST = ['Created extension:', 'iPhoneOptions are'];
 
-// Python's whitespace (str.split, str.strip): JavaScript's \s adds U+FEFF and lacks 0x1c-0x1f and NEL.
-const WS = '[\\t\\n\\v\\f\\r\\x1c-\\x1f \\x85\\xa0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000]';
-const DIGITS = '\\d(?:_?\\d)*';
-// Python's float(): a decimal (underscores between digits), inf or nan, signed, with surrounding whitespace.
-const PY_FLOAT = new RegExp(`^${WS}*([+-]?(?:(?:${DIGITS}(?:\\.(?:${DIGITS})?)?|\\.${DIGITS})(?:[eE][+-]?${DIGITS})?|inf(?:inity)?|nan))${WS}*$`, 'i');
-function pyFloat(text: string): number {
-  const body = PY_FLOAT.exec(text)?.[1].toLowerCase().replace(/^\+/, '').replaceAll('_', '');
-  if (body === undefined) throw new Error(`could not convert string to float: '${text}'`);
-  if (body.includes('inf')) return body.startsWith('-') ? -Infinity : Infinity;
-  return body.includes('nan') ? NaN : Number(body);
+// float(line.split()[0]) * 1000, rounded: a line without a number there stops the run, as Python's raise did.
+function epochMs(line: string) {
+  const field = pySplit(line)[0] ?? '';
+  const seconds = pyFloat(field);
+  if (seconds === null) throw new Error(`could not convert string to float: '${field}'`);
+  const ms = pyRound(seconds * 1000);
+  if (ms === null) throw new Error(`cannot convert float ${seconds * 1000} to integer`);
+  return ms;
 }
-
-// Python's round(x): the nearest integer, an exact tie to the even one.
-function pyRound(x: number): number {
-  if (!Number.isFinite(x)) throw new Error(`cannot convert float ${x} to integer`);
-  const floor = Math.floor(x);
-  const rest = x - floor;
-  return rest > 0.5 || (rest === 0.5 && floor % 2 !== 0) ? floor + 1 : floor;
-}
-
-const FIELDS = new RegExp(`${WS}+`);
-const epochMs = (line: string) => pyRound(pyFloat(line.split(FIELDS).find(field => field !== '') ?? '') * 1000);
 
 function checkedInterval(lines: readonly string[], start: number, end: number): [number, number] | string {
   const stamps = lines.slice(start, end + 1).map(epochMs);
@@ -113,13 +100,6 @@ function readIgnoringErrors(path: string): string {
   return parts.join('\ufffd');
 }
 
-// str.splitlines(): every line boundary Python knows, and no empty line after a final one.
-const splitLines = (text: string) => {
-  const lines = text.split(/\r\n|[\n\r\v\f\x1c\x1d\x1e\x85\u2028\u2029]/);
-  if (lines[lines.length - 1] === '') lines.pop();
-  return lines;
-};
-
 const USAGE = 'usage: office-seed-bracket.ts [-h] [--onset-ms ONSET_MS] [--json JSON] [--clock-pinned] [--legacy-pair] logcat';
 
 interface Options { logcat: string, onsetMs: number | null, json: string | null, clockPinned: boolean, legacyPair: boolean }
@@ -150,8 +130,11 @@ function parse(argv: readonly string[]): Options | { code: number, message: stri
       if (value === undefined || (inline === undefined && value.startsWith('-') && !/^-\d|^-\.\d/.test(value)))
         return error(`argument ${flag}: expected one argument`);
       if (flag === '--json') options.json = value;
-      else if (!PY_FLOAT.test(value)) return error(`argument --onset-ms: invalid float value: '${value}'`);
-      else options.onsetMs = pyFloat(value);
+      else {
+        const onset = pyFloat(value);
+        if (onset === null) return error(`argument --onset-ms: invalid float value: '${value}'`);
+        options.onsetMs = onset;
+      }
     } else if (flag.startsWith('-') && flag !== '-') return error(`unrecognized arguments: ${argv[k]}`);
     else positional.push(argv[k]);
   }
@@ -169,7 +152,7 @@ function main(argv: readonly string[]): number {
   }
   let lines: string[];
   try {
-    lines = splitLines(readIgnoringErrors(options.logcat)).filter(line => line.includes('MMFRuntime'));
+    lines = pySplitLines(readIgnoringErrors(options.logcat)).filter(line => line.includes('MMFRuntime'));
   } catch (error) {
     console.error(`cannot read ${options.logcat}: ${(error as Error).message}`);
     return 1;

@@ -2,7 +2,7 @@
 // negative value that rounds to zero is kept. pyRepr against repr(float), and pyDumps against json.dumps:
 // its separators, escapes, indent and floats. Each expected string was printed by CPython 3.12.
 import assert from 'node:assert/strict';
-import { PyFloat, pyDumps, pyFixed, pyPath, pyRepr } from '../src/pyfmt.ts';
+import { PyFloat, pyDumps, pyFixed, pyFloat, pyPath, pyRepr, pyRound, pySplit, pySplitLines } from '../src/pyfmt.ts';
 
 const CASES: [number, number, string][] = [
   [0.125, 2, '0.12'], [0.375, 2, '0.38'], [2.5, 0, '2'], [3.5, 0, '4'], [-0.125, 2, '-0.12'], [-2.5, 0, '-2'],
@@ -36,4 +36,13 @@ assert.equal(pyDumps([NaN, Infinity, -Infinity, new PyFloat(2)]), '[NaN, Infinit
 const PATHS: [string, string][] = [['', '.'], ['./', '.'], ['/', '/'], ['//', '//'], ['///', '/'], ['////a', '/a'], ['a/', 'a'],
   ['a//b', 'a/b'], ['a/./b', 'a/b'], ['a/../b', 'a/../b'], ['//a//b/', '//a/b'], ['/./a/.', '/a']];
 for (const [text, want] of PATHS) assert.equal(pyPath(text), want, `str(Path(${JSON.stringify(text)}))`);
-console.log(`pyfmt: ${CASES.length} fixed, ${REPRS.length} repr, 4 json.dumps and ${PATHS.length} path values print as Python prints them`);
+// str.split(), str.splitlines(), float() and round(), against CPython 3.12: Python's whitespace takes
+// 0x1c-0x1f and NEL and not U+FEFF; float() reads a non-ASCII digit or space but refuses 0x1f; round()
+// takes a half to the even integer.
+assert.deepEqual(pySplit(' a\x1cb\x85c\ufeffd '), ['a', 'b', 'c\ufeffd']);
+assert.deepEqual(pySplitLines('a\r\nb\x0bc\u2028d\n'), ['a', 'b', 'c', 'd']);
+assert.deepEqual([pyFloat('1_0.5'), pyFloat(' \u0662.5\u3000'), pyFloat('-inf')], [10.5, 2.5, -Infinity]);
+assert.deepEqual([pyFloat('\x1f2'), pyFloat('0x10'), pyFloat('1__0')], [null, null, null], 'ValueError in Python');
+assert.deepEqual([0.5, 1.5, 2.5, -2.5, 1789512694248.5].map(pyRound), [0, 2, 2, -2, 1789512694248]);
+assert.deepEqual([pyRound(NaN), pyRound(Infinity)], [null, null], 'ValueError and OverflowError in Python');
+console.log(`pyfmt: ${CASES.length} fixed, ${REPRS.length} repr, 4 json.dumps and ${PATHS.length} path values print as Python prints them, and split, splitlines, float and round read as Python reads`);
