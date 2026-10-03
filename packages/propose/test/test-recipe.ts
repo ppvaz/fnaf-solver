@@ -233,28 +233,24 @@ for (const [name, lines] of Object.entries(plan)) {
 
 // The cycle seam.
 //
-// Every released-time check above measures *within* one cycle. This pair
-// straddles two: both steady cycles' sweeps finish exactly on their nominal
-// boundary, so the plan alone has no released time before the next anchor.
-// The runner deliberately waits one Fusion poll after the macro's derived end
-// before it writes that anchor (asserted in test-runner-plan.mjs and exercised
-// in test-plan-interpreter.sh). The wait is relative to `rm_shift`, so a late
-// macro moves the boundary with it instead of accumulating compression.
+// Every released-time check above measures *within* one cycle. This one
+// straddles two: the time between a cycle's last instruction and the next
+// cycle's first monitor press.
 //
-// Before that runner compensation existed, one lost press cost nights 6-22 to
-// 6-24: the cams stayed up, the monitor toggle desynced permanently, and the
-// box emptied. Cycle 1 stayed clean because the opening ends 200 ms clear of
-// its anchor. Keep checking the delivered seam here, but do not mistake the
-// nominal plan clock for the runner's later wall-clock delivery; the trace
-// auditor made exactly that mistake and its zero-gap finding was retracted.
+// The retired shell runner waited one Fusion poll after a macro's derived end
+// before writing the next anchor, and this check used to credit every steady
+// cycle with that wait. The HID executor adds none: its cycle gates are carved
+// out of idle the plan already has, and no authored contact moves
+// (hid-schedule.ts compileGateSegments). So a cycle that ends on its boundary
+// leaves the phone no released time, and that is what is checked. Before that
+// compensation existed, one lost press cost nights 6-22 to 6-24: the cams
+// stayed up, the monitor toggle desynced permanently, and the box emptied.
 //
 // The sweep is deliberately not moved earlier: HID-MULTITOUCH.md records that
 // one frame of tail costs 272 of 400 nights, because that stun has to bridge
-// the five-tick mask with nothing to spare. The runner instead delays the next
-// anchor, spending phase-window slack. This asserts both that the overrun stays
-// small enough for that to be a compensation rather than a reschedule and that
-// the delivered boundary (not the trace auditor's plan clock) has a legal gap.
-const needsSeamDelay = [];
+// the five-tick mask with nothing to spare. Cycles that end within one poll
+// of their boundary are listed below as the ones a later sweep would break.
+const tightSeams = [];
 const instrSpan = (kind: string, rest: string[]) =>
   kind === 'sweep' ? sweepSpanMs(rest)
   : kind === 'tap' || kind === 'hold' ? +rest[1]
@@ -272,18 +268,15 @@ for (const [name, lines] of Object.entries(plan)) {
     `${recipe.cycles[name as keyof typeof recipe.cycles].lengthMs} ms length. Past one Fusion poll the next ` +
     "anchor cannot be delayed into a released gap -- that is a reschedule, not " +
     'a compensation, and the route has to change instead.');
-  const nominalReleased = -overrun;
-  const deliveredReleased = name === 'opening'
-    ? nominalReleased : Math.max(nominalReleased, FUSION_POLL_MS);
-  check(deliveredReleased >= MIN_RELEASED_MS,
-    `${name}: the runner delivers only ${deliveredReleased} ms before the next ` +
+  // No runner delays the next anchor to open a gap at the seam (the shell
+  // runner that did, and test-runner-plan.mjs that held it, are retired), so
+  // the gap the cycle leaves itself is the gap the phone gets.
+  const released = -overrun;
+  check(released >= MIN_RELEASED_MS,
+    `${name}: the last instruction leaves only ${released} ms before the next ` +
     `cycle's monitor press, under the HID auditor's ${MIN_RELEASED_MS} ms floor`);
-  // Report which cycles depend on the runner's seam delay. This is the link
-  // between the two halves of the check: test-runner-plan.mjs asserts the
-  // runner leaves that gap, and this names the cycles that would be broken
-  // without it rather than asserting something vacuous here.
   if (overrun > -FUSION_POLL_MS)
-    needsSeamDelay.push(`${name} (${overrun >= 0 ? '+' : ''}${overrun} ms)`);
+    tightSeams.push(`${name} (${overrun >= 0 ? '+' : ''}${overrun} ms)`);
 }
 
 // The branch is only known after the read, so both steady cycles must begin
@@ -410,7 +403,7 @@ check(prefix(plan.clear) === prefix(plan.attack),
   check(r && r.sim, 'a localized plan must replay through the engine without error');
 }
 
-console.log(`  seam: ${needsSeamDelay.length ? needsSeamDelay.join(', ') + ' rely on the runner delaying the next anchor' : 'every cycle clears its own boundary'}`);
+console.log(`  seam: ${tightSeams.length ? tightSeams.join(', ') + ' end within one Fusion poll of the next anchor' : 'every cycle clears its own boundary by a Fusion poll'}`);
 console.log('recipe checks passed: ' + Object.entries(recipe.cycles)
   .map(([n, c]) => `${n} ${c.budget.windMarginMs >= 0 ? '+' : ''}${c.budget.windMarginMs} ms wind`)
   .join(', ') + `; ${recipe.powerFramesSpentIfAllClear}/${recipe.powerFramesAvailable} power`);
