@@ -379,6 +379,12 @@
       "lifecycle": "supported"
     },
     {
+      "id": "tools/test-function-length.ts",
+      "invocation": "tools/test-function-length.ts [--list]",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
       "id": "tools/test-todo-refs.ts",
       "invocation": "tools/test-todo-refs.ts",
       "kind": "check",

@@ -5918,34 +5918,6 @@
       ]
     },
     {
-      "file": "tools/test-commit-identity.ts",
-      "imports": [
-        "./commit-identity.ts",
-        "./gate-kit.ts",
-        "@sixam/review/lanes",
-        "node:assert/strict",
-        "node:child_process",
-        "node:fs",
-        "node:os",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
-      "file": "tools/test-commit-identity.ts",
-      "imports": [
-        "./commit-identity.ts",
-        "./gate-kit.ts",
-        "@sixam/review/lanes",
-        "node:assert/strict",
-        "node:child_process",
-        "node:fs",
-        "node:os",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
       "file": "tools/test-companion-name.ts",
       "imports": [
         "node:child_process",
@@ -6012,6 +5984,16 @@
         "node:assert/strict",
         "node:fs",
         "node:path"
+      ]
+    },
+    {
+      "file": "tools/test-function-length.ts",
+      "imports": [
+        "./gate-kit.ts",
+        "node:assert/strict",
+        "node:fs",
+        "node:path",
+        "typescript"
       ]
     },
     {
@@ -6103,28 +6085,6 @@
         "node:os",
         "node:path",
         "node:url"
-      ]
-    },
-    {
-      "file": "tools/test-python-types.ts",
-      "imports": [
-        "./gate-kit.ts",
-        "node:assert/strict",
-        "node:child_process",
-        "node:fs",
-        "node:os",
-        "node:path"
-      ]
-    },
-    {
-      "file": "tools/test-python-types.ts",
-      "imports": [
-        "./gate-kit.ts",
-        "node:assert/strict",
-        "node:child_process",
-        "node:fs",
-        "node:os",
-        "node:path"
       ]
     },
     {

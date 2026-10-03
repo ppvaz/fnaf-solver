@@ -249,11 +249,13 @@ gates that pin it, until the legacy branches are deleted.
 ## Quality gates and the method (Pedro, 2026-09-30)
 
 Executable, in `test:unit` or the commit hook: ambient entropy in replayable
-modules (`tools/architecture-test.ts`), the 2,000-line ceiling, dead code,
-copied code, TODOs without an owner, change locality (`Contexts:` line for
-three or more contexts), and a GitHub noreply author and committer address on
-every commit (`tools/commit-identity.ts`, also at pre-push). The first four are ratchets over
-`tools/quality-baseline.json`: never add an entry to turn a gate green; add one
+modules (`tools/architecture-test.ts`), the 2,000-line file ceiling and the
+200-line function limit, dead code, copied code (types erased, tests
+included), type debt and unchecked casts, TODOs without an owner, change
+locality (`Contexts:` line for three or more contexts), and a GitHub noreply
+author and committer address on every commit (`tools/commit-identity.ts`, also
+at pre-push). The size, dead-code, copy and type gates are ratchets over
+`tools/quality-baseline.json`, which refuses a bare count: never add an entry to turn a gate green; add one
 only as `{count, why}` naming why the finding is accepted, and lower or remove
 entries as debt is paid.
 A gate or test that runs git in a scratch repository runs it under

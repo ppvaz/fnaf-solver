@@ -413,5 +413,83 @@
         "why": "the gates’ reads of the repository’s own JSON tables (test-mistake-register 10, architecture-test 5); validators over unknown at that boundary replace them (CLAUDE.md, Types)"
       }
     }
+  },
+  "functionLength": {
+    "recorded": "2026-10-03",
+    "why": "Functions, methods and arrows whose body spans more than 200 lines (tools/test-function-length.ts). An entry names the split that remains and why it is not done yet, and only shrinks; a new long function fails.",
+    "entries": {
+      "fn:apps/desktop/src/lab.ts#createLab": {
+        "count": 385,
+        "why": "the lab’s composition root (status, next, doctor, morning, sessions); audit D3 moved the host readers and the doctor out (593 to 385 lines), and the session and morning verbs are the next split"
+      },
+      "fn:packages/play/games/fnaf3/fnaf3-run.ts#loopNight": {
+        "count": 314,
+        "why": "the FNaF 3 night loop (Springtrap search, ventilation, audio lure) over live frames; splitting the policy step from the device step needs a live FNaF 3 night"
+      },
+      "fn:packages/play/games/fnaf4/fnaf4-run.ts#loopNight": {
+        "count": 559,
+        "why": "the FNaF 4 night loop (doors, bed, closet, hearing) over live frames; splitting the policy step from the device step needs a live FNaF 4 night, and audit PG10’s teardown change is not yet confirmed on a phone"
+      },
+      "fn:packages/play/src/campaign/adb-device-local-executor.ts#AdbDeviceLocalArtifactExecutor.execute": {
+        "count": 948,
+        "why": "the device-local night loop (phases, gates, HID writes, the lifecycle watch) as one closure of mutable locals; audit PC13 lifted the clock, the gate evidence, the cycle gates and the control observers out (1,169 to 948 lines), and the rest moves timing-bearing code, so each further split waits for a live night to confirm the last"
+      },
+      "fn:packages/play/src/campaign/modern-campaign-ports.ts#createCampaignPorts": {
+        "count": 708,
+        "why": "the live campaign’s composition of its ports (title, lifecycle, start, Custom Night, teach, controls); the control observers left in audit PC13, and each remaining port is its own extraction, held behind the executor split above"
+      },
+      "fn:packages/propose/bin/census/fnaf1-device-lane.ts#grid420": {
+        "count": 256,
+        "why": "the FNaF 1 device lane’s 4/20 grid census; test-fnaf1-device-lane re-runs the committed population record’s 33 replays through it, so a split must keep them identical"
+      },
+      "fn:packages/propose/bin/plans/artifact-commands.ts#compileCycle": {
+        "count": 213,
+        "why": "compiles one cycle into HID commands; the bundle tests pin every compiled plan’s bytes, so a split must keep each output byte for byte"
+      },
+      "fn:packages/propose/bin/recompile/phone-input-bracket-sweep.ts#simulateFamily": {
+        "count": 209,
+        "why": "one input-bracket family’s expansion, replay and scoring in the phone input sweep; split into those three with the sweep’s next revision, which test-phone-input-bracket-sweep re-derives its committed results through"
+      },
+      "fn:packages/propose/bin/recompile/pilot/fnaf4.ts#warden": {
+        "count": 242,
+        "why": "the FNaF 4 pilot’s warden task, one generator over the whole night; split with the FNaF 4 runner’s policy/device split"
+      },
+      "fn:packages/propose/src/games/fnaf2/controller.ts#VentThreatReactive.decide": {
+        "count": 236,
+        "why": "the reactive controller’s decision; behaviour-critical, so a split first needs replay equivalence (audit E23)"
+      },
+      "fn:packages/propose/src/games/fnaf2/night-policy.ts#NightPolicy.want": {
+        "count": 296,
+        "why": "the FNaF 2 night policy’s decision (priorities, deadlines, mask timing); a behaviour-critical controller, so a split first needs replay equivalence over the committed winners (audit E23)"
+      },
+      "fn:packages/propose/test/cycle-controller.test.ts#withModelOptions callback": {
+        "count": 219,
+        "why": "the cycle controller’s checks: a run of independent checks under one model-options scope; they become node:test cases with the lanes’ move to node:test (audit G6)"
+      },
+      "fn:packages/propose/test/test-bundle.ts#withModelOptions callback": {
+        "count": 321,
+        "why": "test-bundle’s checks: a run of independent checks under one model-options scope; they become node:test cases with the lanes’ move to node:test (audit G6)"
+      },
+      "fn:packages/review/src/solver.ts#createSolver": {
+        "count": 338,
+        "why": "the solver interface’s verbs over one set of shared tables; audit R13 took describe and the shared tables out (490 to 338 lines), and the per-verb split is next"
+      },
+      "fn:packages/source/decompile/truth.ts#createTruth": {
+        "count": 346,
+        "why": "the truth surface over the caller’s own event-sheet dump (parse, index, query in one closure); split when the dump format gets the schema it lacks (castDebt names the same boundary)"
+      },
+      "fn:packages/source/src/games/fnaf2/plant-model.ts#Sim.constructor": {
+        "count": 235,
+        "why": "the FNaF 2 Sim constructor, building every unit and table from its options; plant-model.ts is fnaf2-1020-0f’s, and the split follows the sourced-model flip’s settled options"
+      },
+      "fn:packages/source/src/games/fnaf2/plant-options.ts#defaultSimOptions": {
+        "count": 489,
+        "why": "the FNaF 2 Sim’s option table as one function body, data rather than branching; fnaf2-1020-0f’s sourced-model flip owns plant-options.ts and settles which options remain before it is split"
+      },
+      "fn:packages/source/src/games/fnaf4/sim-fnaf4.ts#Fnaf4Sim.step": {
+        "count": 350,
+        "why": "FNaF 4’s per-frame step, kept in one function so it reads in the event sheet’s order; a split must keep that order, which the FNaF 4 census replays pin"
+      }
+    }
   }
 }

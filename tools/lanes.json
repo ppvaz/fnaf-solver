@@ -54,6 +54,7 @@
       "packages/propose/bin/recompile/test-calib-replay.ts",
       "apps/desktop/test/lab.test.ts",
       "tools/test-file-size.ts",
+      "tools/test-function-length.ts",
       "tools/test-todo-refs.ts",
       "tools/test-bash3.ts",
       "tools/test-dead-code.ts",
