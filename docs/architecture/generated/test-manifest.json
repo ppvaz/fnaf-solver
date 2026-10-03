@@ -820,22 +820,29 @@
       }
     },
     {
-      "id": "packages/play/bin/audio/test-bt-audio-collector.py",
+      "id": "packages/play/bin/audio/test-bt-audio-collector.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
       "timeoutSource": "tools/test.ts per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
+      "deterministic": false,
+      "determinismSignals": [
+        "performance.now",
+        "performance.now",
+        "performance.now",
+        "performance.now",
+        "performance.now",
+        "performance.now"
+      ],
       "fixedSleeps": [
-        "time.sleep(0.02",
-        "sleep(0.01",
-        "time.sleep(max(0.0, start + (i + 1",
-        "time.sleep(0.01",
-        "time.sleep(0.02"
+        "setTimeout(done, ms",
+        "sleep(20",
+        "setTimeout(next, Math.max(0, start + i * 10 - performance.now(",
+        "sleep(20",
+        "setTimeout(("
       ],
       "sharedResources": [],
-      "subprocesses": false,
+      "subprocesses": true,
       "measurement": {
         "status": "NOT_MEASURED",
         "runs": 0,

@@ -291,7 +291,7 @@ const ENGINE: Check[] = [
   ['fnaf1 night runner', ['../packages/play/games/fnaf1/test-fnaf1-night-run.ts']],
   // First/final PCM receipt bounds must survive an interactive stop; otherwise
   // a recorder's startup and teardown become fabricated Bluetooth loss.
-  ['BT audio collector', ['../packages/play/bin/audio/test-bt-audio-collector.py']],
+  ['BT audio collector', ['../packages/play/bin/audio/test-bt-audio-collector.ts']],
   // Plan 19 P3: derive a native-resolution watch adapter from labelled frames;
   // weak separation is an explicit refusal and foreign geometry is not resized.
   // Plan 22 device boundary: fit the monitorUp rule over the helper grid from

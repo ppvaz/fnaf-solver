@@ -937,6 +937,29 @@
       ]
     },
     {
+      "file": "packages/play/bin/audio/bt-audio-collector.ts",
+      "imports": [
+        "@sixam/kernel/py",
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/play/bin/audio/test-bt-audio-collector.ts",
+      "imports": [
+        "node:assert/strict",
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:test",
+        "node:url"
+      ]
+    },
+    {
       "file": "packages/play/bin/companion/audio-players.ts",
       "imports": [
         "../phone/local-profile.ts",

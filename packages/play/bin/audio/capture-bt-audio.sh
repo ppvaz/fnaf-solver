@@ -7,7 +7,7 @@
 #   packages/play/bin/audio/capture-bt-audio.sh --stop  OUT_BASENAME            # -> OUT_BASENAME.bt.wav + .bt.json
 #
 # --start/--stop exist for night-run.sh (--bt-audio): the capture brackets a
-# whole run. `bt-audio-collector.py` owns bluealsa-cli and records the first
+# whole run. `bt-audio-collector.ts` owns bluealsa-cli and records the first
 # and final PCM receipt bounds, excluding process-open and teardown overhead
 # from the duration/loss comparison. The run's HID release event is on the
 # same host clock, so audio still needs a known-event alignment before any
@@ -67,7 +67,7 @@ if [ "$MODE" != stop ]; then
 fi
 
 REPO="$(cd "$HERE/../../../.." && pwd)"
-COLLECTOR="$HERE/bt-audio-collector.py"
+COLLECTOR="$HERE/bt-audio-collector.ts"
 DEV="dev_$(echo "$MAC" | tr ':' '_')"
 PCM="/org/bluealsa/hci0/$DEV/a2dpsnk/source"
 check_route() {
@@ -191,7 +191,7 @@ if [ "$MODE" = start ]; then
   read -r FMT RATE CH < <(pcm_format)
   [ -n "$FMT" ] && [ -n "$RATE" ] || { echo "could not read the PCM format from bluealsa-cli info" >&2; exit 3; }
   START_WALL="$(date +%s%3N)"; START_MONO="$(mono_ms)"
-  nohup python3 "$COLLECTOR" --pcm "$PCM" --raw "$BASE.bt.raw" --state "$BASE.bt.stream.json" \
+  nohup node "$COLLECTOR" --pcm "$PCM" --raw "$BASE.bt.raw" --state "$BASE.bt.stream.json" \
     --stderr "$BASE.bt.err" --format "$FMT" --rate "$RATE" --channels "$CH" \
     > "$BASE.bt.collector.out" 2> "$BASE.bt.collector.err" < /dev/null &
   PID=$!

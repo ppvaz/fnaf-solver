@@ -2,7 +2,7 @@
 // spec (prog 't'; trace, extra nargs='?'; --start-ns int, --json store_true, --only choices, --ref append,
 // --out required), and each expected verdict and message is the one argparse gave.
 import assert from 'node:assert/strict';
-import { pyArgs } from '../src/pyargs.ts';
+import { pyArgs, pyArgsError } from '../src/pyargs.ts';
 
 const parse = (argv: string[]) => pyArgs(argv, 't', [{ name: '--start-ns', type: 'int' }, { name: '--json', takes: 'flag' },
   { name: '--only', choices: ['gif', 'all'] }, { name: '--ref', append: true }, { name: '--out', required: true }],
@@ -37,6 +37,10 @@ for (const [argv, message] of refusals) {
   assert.ok('exit' in result && result.exit === 2, `${argv.join(' ')} exits 2`);
   assert.equal(result.text.split('\n')[1], `t: error: ${message}`, argv.join(' '));
 }
+// parser.error after the parse prints the same usage line.
+const spec = [{ name: '--rate', type: 'int', required: true }] as const;
+assert.deepEqual(pyArgsError('t', spec, [{ name: 'trace' }], '--rate is out of bounds'),
+  { exit: 2, text: 'usage: t [-h] --rate RATE trace\nt: error: --rate is out of bounds' });
 const help = parse(['-h']);
 assert.ok('exit' in help && help.exit === 0 && help.text.startsWith('usage: t [-h]'), '-h prints the usage and exits 0');
 

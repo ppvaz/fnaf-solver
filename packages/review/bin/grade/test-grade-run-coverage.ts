@@ -114,7 +114,7 @@ const SIBLING_EXCLUDED = new Map([
   ['screen-calibrate.py', 'GAP: screen-class anchor fitter with no gate of its own -- the only one of the five calibrate fitters without one. Fits a rule adapters consume on device, so it wants a synthetic-frame gate of its own, modelled on the maskOn fitter\'s'],
   // packages/play/bin/audio
   ['capture-bt-audio.sh', 'records the phone A2DP mix via BlueALSA for offline cue proofing; a recorder that writes game audio outside the repo, grades no run'],
-  ['bt-audio-collector.py', 'receiver-side BlueALSA PCM collector that retains first/final receipt bounds and a terminal SIGINT state; gated by test-bt-audio-collector.py'],
+  ['bt-audio-collector.ts', 'receiver-side BlueALSA PCM collector that retains first/final receipt bounds and a terminal SIGINT state; gated by test-bt-audio-collector.ts'],
   ['fnaf4-cues.py', 'FNaF 4 live A2DP cue detector the FNaF 4 runner spawns during a night (matched filters, breathing level); an in-night sensor, not a post-run grader'],
   ['bt-audio-link.sh', 'brings the phone A2DP link up before a capture (night-run.sh --bt-audio); a link action on the phone and BlueALSA, grades no run'],
   // packages/play/games/fnaf1

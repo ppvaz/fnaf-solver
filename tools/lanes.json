@@ -102,6 +102,7 @@
       "packages/play/bin/phone/test-screen-map.ts",
       "packages/review/test/stat.test.ts",
       "packages/play/bin/phone/test-hid-sweep-probe.ts",
+      "packages/play/bin/audio/test-bt-audio-collector.ts",
       "packages/play/test/hid-report.test.ts",
       "packages/propose/test/policygrammartest.ts",
       "packages/propose/bin/policy/test-policy-ir.ts",
@@ -137,10 +138,6 @@
       [
         "python3",
         "packages/play/games/fnaf1/test-fnaf1-title-stars.py"
-      ],
-      [
-        "python3",
-        "packages/play/bin/audio/test-bt-audio-collector.py"
       ],
       [
         "python3",

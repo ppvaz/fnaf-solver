@@ -37,11 +37,16 @@ function usage(prog: string, options: readonly PyOption[], positionals: readonly
   return `usage: ${prog} ${parts.join(' ')}`;
 }
 
+/** parser.error(message), for a check the script makes after parsing: the usage line and the message, exit 2. */
+export function pyArgsError(prog: string, options: readonly PyOption[], positionals: readonly PyPositional[], message: string) {
+  return { exit: 2 as const, text: `${usage(prog, options, positionals)}\n${prog}: error: ${message}` };
+}
+
 /** The parsed command line, or the exit code and the text argparse printed (to stdout for help, else stderr). */
 export function pyArgs(argv: readonly string[], prog: string, options: readonly PyOption[], positionals: readonly PyPositional[] = []):
   PyArgs | { readonly exit: 0 | 2, readonly text: string } {
   const line = usage(prog, options, positionals);
-  const refuse = (message: string) => ({ exit: 2 as const, text: `${line}\n${prog}: error: ${message}` });
+  const refuse = (message: string) => pyArgsError(prog, options, positionals, message);
   const names = ['--help', ...options.map(option => option.name)];
   const given: Record<string, string | boolean | string[]> = {};
   const loose: string[] = [];

@@ -23,7 +23,7 @@ them. A route listed here is **parked, not refuted**, unless its row says so.
 | HUD-signature down/mask/up probe (parked 2026-09-01) | `research/sandbox/hud-signature-probe.py`, `research/sandbox/hud-signature-n1-minustoys-calib-01.json` | 2026-09-01 | [The research sandbox](#the-research-sandbox-2026-09-29-adr-0002), below (its notes left `research/sandbox/README.md` when the directory retired) |
 
 The ESP32 route superseded: rendered audio now reaches the host over A2DP
-directly (`packages/play/bin/audio/bt-audio-link.sh`, `packages/play/bin/audio/bt-audio-collector.py`).
+directly (`packages/play/bin/audio/bt-audio-link.sh`, `packages/play/bin/audio/bt-audio-collector.ts`).
 The Companion APK kept its ESP32 receiver path and the `pcm-udp-v1` wire
 contract until **2026-09-27** (Companion 0.2.0), when both left with the rest
 of the APK's audio stack: the UDP health/PCM listeners and Wi-Fi request, the

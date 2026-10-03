@@ -1585,14 +1585,14 @@
       "lifecycle": "supported"
     },
     {
-      "id": "packages/play/bin/audio/test-bt-audio-collector.py",
-      "invocation": "packages/play/bin/audio/test-bt-audio-collector.py",
+      "id": "packages/play/bin/audio/test-bt-audio-collector.ts",
+      "invocation": "packages/play/bin/audio/test-bt-audio-collector.ts",
       "kind": "check",
       "lifecycle": "supported"
     },
     {
-      "id": "packages/play/bin/audio/bt-audio-collector.py",
-      "invocation": "packages/play/bin/audio/bt-audio-collector.py --pcm PCM --raw OUT --state OUT.json ...",
+      "id": "packages/play/bin/audio/bt-audio-collector.ts",
+      "invocation": "packages/play/bin/audio/bt-audio-collector.ts --pcm PCM --raw OUT --state OUT.json ...",
       "kind": "recorder",
       "lifecycle": "supported"
     },
