@@ -2150,6 +2150,8 @@
         "../recompile/rebuild-options-census.ts",
         "./winner-census.ts",
         "@sixam/kernel/contracts",
+        "@sixam/propose/census",
+        "@sixam/propose/seeds",
         "@sixam/review/renamed-path",
         "@sixam/source/fnaf2",
         "node:assert/strict",
@@ -2182,6 +2184,7 @@
         "../plans/minus-toys-plan.ts",
         "./winner-census.ts",
         "@sixam/kernel",
+        "@sixam/propose/seeds",
         "@sixam/source/fnaf2",
         "node:crypto",
         "node:fs",
@@ -2240,6 +2243,7 @@
       "imports": [
         "@sixam/play/sim",
         "@sixam/propose/fnaf2",
+        "@sixam/propose/seeds",
         "@sixam/source/fnaf2"
       ]
     },
@@ -2545,6 +2549,7 @@
         "./policy-ir.ts",
         "@sixam/kernel",
         "@sixam/propose/policy",
+        "@sixam/propose/seeds",
         "node:crypto",
         "node:fs",
         "node:url"
@@ -2599,6 +2604,7 @@
         "./policy-grammar.ts",
         "./policy-interpreter.ts",
         "@sixam/propose/policy",
+        "@sixam/propose/seeds",
         "node:crypto",
         "node:fs"
       ]
@@ -3585,6 +3591,7 @@
       "imports": [
         "@sixam/kernel",
         "@sixam/kernel/contracts",
+        "@sixam/review/refusals",
         "node:crypto"
       ]
     },

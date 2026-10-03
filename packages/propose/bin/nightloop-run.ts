@@ -11,6 +11,7 @@
 import * as C from '@sixam/source/fnaf2';
 import { Sim, Rng } from '@sixam/source/fnaf2';
 import { OBSERVE_INTERVAL, Observer } from '@sixam/play/sim';
+import { smokeSeed } from '@sixam/propose/seeds';
 import { CycleController, makeUnknownFacts, getCycle, NightPolicy,
          NIGHT_POLICY_CYCLES } from '@sixam/propose/fnaf2';
 import type { Cycle, DeferredAction, Hypothesis } from '@sixam/propose/fnaf2';
@@ -24,7 +25,7 @@ const libraryCycles = (): Cycle[] => LIBRARY_IDS.map((id) => {
 });
 const REVIEWED = new Set(LIBRARY_IDS);
 
-export const seedOf = (index: number) => (index * 2654435761) >>> 0;
+export const seedOf = smokeSeed;
 
 // ---------------------------------------------------------------- the gates
 //

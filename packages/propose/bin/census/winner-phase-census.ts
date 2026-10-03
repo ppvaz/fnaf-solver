@@ -16,7 +16,7 @@
 // at a phase if ANY binding does, and its excess over the best single binding
 // is the most knowing the seed could add within that family.
 //
-//   node packages/propose/bin/census/winner-phase-census.ts --night 7 --count 1000 --window 1000 --jobs 7 --out FILE
+//   node packages/propose/bin/census/winner-phase-census.ts --night 7 --count 3000 --window 1000 --jobs 7 --out FILE
 //
 // MODEL_ONLY, exact lane: the phase is the only thing moved.
 import { parseArgs } from 'node:util';
@@ -26,6 +26,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { FPS } from '@sixam/source/fnaf2';
+import { GOLDEN_MODEL_SEEDS } from '@sixam/propose/seeds';
 import { STRATEGY_REGISTRY, compileBundle, validateWinner } from '../plans/bundle.ts';
 import { replay as replayToys } from '../plans/minus-toys-plan.ts';
 import type { KNOBS0 } from '../plans/minus-toys-plan.ts';
@@ -221,7 +222,7 @@ async function main(argv: string[]) {
   }
   const flag = phaseCensusArgs(argv);
   const night = Number(flag('night', '7'));
-  const count = Number(flag('count', '1000'));
+  const count = Number(flag('count', String(GOLDEN_MODEL_SEEDS)));
   const windowMs = Number(flag('window', '1000'));
   const jobs = Number(flag('jobs', '1'));
   const frames = Math.round(windowMs / STEP_MS);

@@ -16,6 +16,8 @@
 // bindings and seed block as censused, and every band edge, the declared
 // phase and each partial cell's first listed loss replaying as recorded --
 // the cells an engine change would move first.
+import { GOLDEN_MODEL_SEEDS } from '@sixam/propose/seeds';
+import { SEED_FLOOR } from '@sixam/propose/census';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync } from 'node:fs';
@@ -139,6 +141,8 @@ const censused = new Set(record.bindings.map((row) => current(row.binding)));
 const uncensused = committedWinners().filter((path) => !censused.has(path));
 // The phase census's command line refuses a flag it does not read: `--seeds 3000` used to run its default count.
 assert.equal(phaseCensusArgs(['--count', '3000'])('count', '1000'), '3000');
+// The golden cohort a census defaults to is the floor a rate is quoted over: one number, Review's.
+assert.equal(GOLDEN_MODEL_SEEDS, SEED_FLOOR);
 assert.throws(() => phaseCensusArgs(['--seeds', '3000']), /Unknown option '--seeds'/);
 console.log(`winner census ${recordName}: ${record.bindings.length} night-bindings still match the tree ` +
   `(${replays} replays), ${phaseName} still maps the phases (${phaseReplays} replays); ` +

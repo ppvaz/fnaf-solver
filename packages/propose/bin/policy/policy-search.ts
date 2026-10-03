@@ -10,12 +10,12 @@ import { canonicalPolicy, observationLanguage } from '@sixam/propose/policy';
 import type { PolicyAction, PolicyProgram } from '@sixam/propose/policy';
 import { closedFamilyMatches } from './closed-families.ts';
 import { classifyPolicy, validateGrammarPolicy } from './policy-grammar.ts';
+import { smokeSeed } from '@sixam/propose/seeds';
 import { compilePolicy, phaseOf, replayPolicy } from './policy-interpreter.ts';
 import { compileDevicePlan, comparePolicyToDevice } from './policy-equivalence.ts';
 
 export const SEARCH_SCHEMA = 'policy-search-v1';
 const clone = <T>(value: T): T => structuredClone(value);
-const seedAt = (index: number) => (index * 2654435761) >>> 0;
 
 /** A clone of the base the search edits before the grammar checks it: the fields it sets are writable. */
 type Draft = PolicyProgram & {
@@ -77,7 +77,7 @@ function replayMetrics(policy: PolicyProgram, { night, seeds, worst = false }: {
     // current policy-v1 adapter exposes exact normal replay only. A caller may
     // supply a separate exact worst-control runner in a later campaign.
     if (worst) throw new Error('policy search worst control requires an exact adapter');
-    const result = replayPolicy(policy, { night, seed: seedAt(i), untilMs });
+    const result = replayPolicy(policy, { night, seed: smokeSeed(i), untilMs });
     if (result.sim.won) survived++;
     else {
       const reason = result.sim.death?.reason ?? 'not-won';

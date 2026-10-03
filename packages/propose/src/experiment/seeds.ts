@@ -17,12 +17,20 @@
 import { createHash } from 'node:crypto';
 import { isList, validateSeedProvenance } from '@sixam/kernel';
 import { validateSeedDerivation, validateSeedSet } from '@sixam/kernel/contracts';
+import { SEED_FLOOR } from '@sixam/review/refusals';
 import type { SeedDerivation, SeedSet } from '@sixam/kernel/contracts';
 
 export type { SeedSet };
 
 export const MODEL_SEED_COHORT_SCHEMA = 'model-seed-cohort-v1';
-export const GOLDEN_MODEL_SEEDS = 3000;
+/** The golden cohort's size: Review's seed floor, the fewest seeds a win rate is quoted over (refusals.ts). */
+export const GOLDEN_MODEL_SEEDS = SEED_FLOOR;
+
+/**
+ * A smoke cohort's seed: index times Knuth's multiplicative constant, quick and replayable. It is never a
+ * population a rate is quoted over -- that is randomSeedCohort's golden cohort.
+ */
+export const smokeSeed = (index: number) => (index * 2654435761) >>> 0;
 export const GOLDEN_MODEL_SEED_SALT = 0x9e3779b9;
 
 const UINT32 = 0x100000000;

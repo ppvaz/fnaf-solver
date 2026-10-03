@@ -9,6 +9,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { canonicalPolicy, validatePolicy } from '@sixam/propose/policy';
 import type { PolicyProgram } from '@sixam/propose/policy';
+import { smokeSeed } from '@sixam/propose/seeds';
 import { isRecord } from '@sixam/kernel';
 import { minimalPolicy } from './policy-ir.ts';
 import { compileDevicePlan, comparePolicyToDevice } from './policy-equivalence.ts';
@@ -93,7 +94,7 @@ export function gatePolicyArtifact(program: PolicyProgram = minimalPolicy(), run
     for (let i = 0; i < count; i++) {
       const result = replayPolicy(program, {
         night: program.metadata.nights[0],
-        seed: (i * 2654435761) >>> 0,
+        seed: smokeSeed(i),
         worst,
         untilMs,
       });
