@@ -12,7 +12,7 @@ import java.util.Map;
  * no space, no {@code =} -- and a measurement that is missing or ambiguous is
  * {@code UNKNOWN}, never a guess. The same line is broadcast to the activity,
  * which renders it, and logged. The host parser is
- * {@code packages/adapters/src/transports/companion-status.js}; both sides
+ * {@code packages/play/src/venues/phone/companion-status.ts}; both sides
  * are held to {@code packages/play/test/testdata/companion-status-v1.txt}.</p>
  *
  * <p>The endpoint handshake replaces scraping logcat for the per-session
@@ -45,6 +45,22 @@ public final class CompanionStatus {
     public CompanionStatus() {
         for (String field : FIELDS) values.put(field, UNKNOWN);
         values.put("schema", SCHEMA);
+    }
+
+    /**
+     * The value of the first {@code key=} token anywhere in the service's
+     * multi-line status broadcast, or {@link #UNKNOWN}. The screen label rides
+     * inside the {@code visual=} line, so a line-start match never finds it.
+     */
+    public static String broadcastField(String broadcast, String key) {
+        if (broadcast == null) return UNKNOWN;
+        String prefix = key + "=";
+        for (String line : broadcast.split("\n")) {
+            for (String token : line.split(" ")) {
+                if (token.startsWith(prefix)) return token.substring(prefix.length());
+            }
+        }
+        return UNKNOWN;
     }
 
     /** Set one field; the value is reduced to a bounded token. */

@@ -117,11 +117,7 @@ public final class MainActivity extends Activity {
                 if (statusView != null) {
                     statusView.setText(sessionStatus(status));
                 }
-                for (String line : status.split("\\n")) {
-                    if (line.startsWith("screen=")) {
-                        lastScreen = line.substring("screen=".length()).split(" ", 2)[0];
-                    }
-                }
+                lastScreen = CompanionStatus.broadcastField(status, "screen");
                 if (diagnosticView != null) {
                     diagnosticView.setText(status);
                 }
@@ -160,6 +156,17 @@ public final class MainActivity extends Activity {
                     "Runner catalog unavailable: " + error.getMessage());
         }
         setContentView(buildUi());
+        // Registered for the Activity's whole life, not only while it is
+        // visible: the runner's night gate reads lastScreen while the game,
+        // not this Activity, is in front, and a receiver dropped at onStop
+        // froze it at its last value.
+        IntentFilter filter = new IntentFilter(CaptureService.ACTION_STATUS);
+        if (Build.VERSION.SDK_INT >= 33) {
+            registerReceiver(statusReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            registerReceiver(statusReceiver, filter);
+        }
+        receiverRegistered = true;
         applyTargetExtra(getIntent());
         refreshOverlayControls("overlay=" + (Settings.canDrawOverlays(this)
                 ? "READY" : "DISABLED(permission)"));
@@ -175,14 +182,6 @@ public final class MainActivity extends Activity {
     @Override
     protected void onStart() {
         super.onStart();
-        IntentFilter filter = new IntentFilter(CaptureService.ACTION_STATUS);
-        if (Build.VERSION.SDK_INT >= 33) {
-            registerReceiver(statusReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
-        } else {
-            registerReceiver(statusReceiver, filter);
-        }
-        receiverRegistered = true;
-
         // Configuration changes recreate this Activity. Ask the service for
         // its current combined state so portrait and landscape do not wait for
         // the next sensor heartbeat to redraw the signal feed.
@@ -204,6 +203,10 @@ public final class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        if (receiverRegistered) {
+            unregisterReceiver(statusReceiver);
+            receiverRegistered = false;
+        }
         if (nightRunner != null) nightRunner.stop();
         if (termuxBridge != null) {
             termuxBridge.sendRelease();
@@ -245,14 +248,6 @@ public final class MainActivity extends Activity {
                 .getString(CaptureService.PREF_TARGET, null));
     }
 
-    @Override
-    protected void onStop() {
-        if (receiverRegistered) {
-            unregisterReceiver(statusReceiver);
-            receiverRegistered = false;
-        }
-        super.onStop();
-    }
 
     private View buildUi() {
         int pad = dp(20);
@@ -530,19 +525,9 @@ public final class MainActivity extends Activity {
 
     private String sessionStatus(String raw) {
         if (raw == null || raw.isEmpty()) return "Capture off";
-        String[] lines = raw.split("\\n");
-        String lifecycle = lines[0];
+        String lifecycle = raw.split("\\n", 2)[0];
         if (lifecycle.startsWith("UNAVAILABLE")) return "Capture off\n" + lifecycle;
-        String screen = "UNKNOWN";
-        String battery = "UNKNOWN";
-        for (String line : lines) {
-            for (String token : line.split(" ")) {
-                if (token.startsWith("screen=")) screen = token.substring(7);
-                if (token.startsWith("percent=")) battery = token.substring(8) + "%";
-            }
-        }
-        return "Capture: " + lifecycle + "\nScreen: " + screen
-                + "\nFlashlight: " + battery;
+        return "Capture: " + lifecycle + "\nScreen: " + CompanionStatus.broadcastField(raw, "screen");
     }
 
     private boolean isTermuxInstalled() {

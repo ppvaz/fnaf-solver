@@ -103,6 +103,16 @@ public final class CompanionStatusTest {
         }
         check("the first field is the schema", lines.get("idle").startsWith("schema=companion-status-v1 "));
         check("an unknown field is refused", refuses(() -> new CompanionStatus().put("audio", "ESP32")));
+
+        // The activity reads the screen label out of the service's multi-line
+        // broadcast, where it rides inside the visual= line, never first.
+        String broadcast = "RUNNING\nvisual=OBSERVED seq=9 ageUs=120 content=2400x1080 visible=1"
+                + " screen=FNAF2_NIGHT\ncontrol=READY port=49707 socket=none token=none\noverlay=READY";
+        check("the screen label is read inside the visual line",
+                "FNAF2_NIGHT".equals(CompanionStatus.broadcastField(broadcast, "screen")));
+        check("a field the broadcast does not carry is UNKNOWN",
+                CompanionStatus.UNKNOWN.equals(CompanionStatus.broadcastField(broadcast, "percent")));
+        check("no broadcast is UNKNOWN", CompanionStatus.UNKNOWN.equals(CompanionStatus.broadcastField(null, "screen")));
         check("the schema cannot be overwritten", refuses(() -> new CompanionStatus().put("schema", "x")));
         check("another schema is refused by the parser",
                 refuses(() -> CompanionStatus.parse("OK schema=cue-helper-control-v1 capture=ON")));
