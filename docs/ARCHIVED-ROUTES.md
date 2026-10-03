@@ -64,7 +64,7 @@ tag carries them unchanged (`git checkout archive/2026-09-24 -- <path>`).
 | `night5-modal-observer.mjs` | Dual-modality sampling on Night 5 | [`evidence/night5-monitor-raise-loss-20260909.json`](evidence/night5-monitor-raise-loss-20260909.json); Night 5 is won |
 | `watch-vent-cue.sh` | Balloon Boy at the vent, by the helper's audio | The A2DP capture and `tickphase.py` ([`device/AUDIO-WITNESS-MAP.md`](device/AUDIO-WITNESS-MAP.md)) |
 | `touch-contamination-guard.sh` | Physical touches during a run | Never wired into `night-run.sh`; a guard nothing calls guards nothing |
-| `seed-clock.mjs` | Host/phone wall-clock samples for seed recovery | Superseded by `seedpin/` and `office-seed-bracket.py`; [`device/RNG-SEED-RECOVERY.md`](device/RNG-SEED-RECOVERY.md) |
+| `seed-clock.mjs` | Host/phone wall-clock samples for seed recovery | Superseded by `seedpin/` and `office-seed-bracket.ts`; [`device/RNG-SEED-RECOVERY.md`](device/RNG-SEED-RECOVERY.md) |
 
 `hid-sweep-probe.ts` stays: despite its name it is the `COORDS`/`toRaw`
 library the live intersection gate and `test-screen-map.ts` import.

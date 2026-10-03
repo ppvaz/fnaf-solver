@@ -2915,8 +2915,8 @@
       "lifecycle": "supported"
     },
     {
-      "id": "packages/review/bin/grade/office-seed-bracket.py",
-      "invocation": "packages/review/bin/grade/office-seed-bracket.py LOGCAT [--onset-ms MS] [--json OUT]",
+      "id": "node",
+      "invocation": "node packages/review/bin/grade/office-seed-bracket.ts LOGCAT [--onset-ms MS] [--json OUT]",
       "kind": "report",
       "lifecycle": "supported"
     },
@@ -2933,8 +2933,8 @@
       "lifecycle": "supported"
     },
     {
-      "id": "packages/review/bin/grade/test-office-seed-bracket.py",
-      "invocation": "packages/review/bin/grade/test-office-seed-bracket.py",
+      "id": "packages/review/bin/grade/test-office-seed-bracket.ts",
+      "invocation": "packages/review/bin/grade/test-office-seed-bracket.ts",
       "kind": "check",
       "lifecycle": "supported"
     },

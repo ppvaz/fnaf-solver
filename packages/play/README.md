@@ -139,7 +139,7 @@ set and its allowlist that names one.
 
 Seed-pin caveat (2026-09-27): wall-clock resets can occur between the seed
 bracket's log calls, including when its endpoints appear to increase. Read a
-pinned run with `office-seed-bracket.py --clock-pinned`; it reports `UNKNOWN`
+pinned run with `office-seed-bracket.ts --clock-pinned`; it reports `UNKNOWN`
 and no candidates. A visible backwards step is refused even without that flag.
 The five `night6-tw27` attempts retained this failure, not a verified twin.
 

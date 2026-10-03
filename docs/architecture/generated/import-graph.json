@@ -3868,6 +3868,15 @@
       ]
     },
     {
+      "file": "packages/review/bin/grade/office-seed-bracket.ts",
+      "imports": [
+        "@sixam/kernel",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "packages/review/bin/grade/post-night-static.ts",
       "imports": [
         "node:crypto",
@@ -3899,6 +3908,18 @@
         "../../src/lanes.ts",
         "node:child_process",
         "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/review/bin/grade/test-office-seed-bracket.ts",
+      "imports": [
+        "./office-seed-bracket.ts",
+        "node:assert/strict",
+        "node:child_process",
+        "node:fs",
+        "node:os",
         "node:path",
         "node:url"
       ]

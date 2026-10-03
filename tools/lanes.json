@@ -218,14 +218,14 @@
       "packages/play/bin/companion/test-audio-probe.ts",
       "packages/kernel/test/experiment-v2.test.ts",
       "packages/propose/test/census.test.ts",
-      "packages/source/test/plant-facade.test.ts"
+      "packages/source/test/plant-facade.test.ts",
+      "packages/review/bin/grade/test-office-seed-bracket.ts"
     ],
     "steps": [
       ["python3","packages/review/bin/grade/test-framesource.py"],
       ["python3","packages/review/bin/grade/test-decode-once.py"],
       ["python3","packages/review/bin/grade/test-grade-night.py"],
       ["python3","packages/review/bin/grade/test-cycle-ledger.py"],
-      ["python3","packages/review/bin/grade/test-office-seed-bracket.py"],
       ["python3","packages/kernel/test/contract-vectors.py"],
       ["python3","packages/play/bin/companion/test-companion-setup.py"],
       ["python3","packages/play/test/test-companion-device-lock.py"],
