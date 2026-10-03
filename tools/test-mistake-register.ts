@@ -87,9 +87,10 @@ import { readLanes } from '../packages/review/src/lanes.ts';
 import { ciReach, ciSteps, readCiExemptions, walk, walkContext } from '../packages/review/src/ci-reach.ts';
 import type { Sink } from '../packages/review/src/ci-reach.ts';
 import { readMistakes } from '../packages/review/src/mistakes.ts';
+import { MISTAKE_GATES_FILE, REGISTER_GATES } from '../packages/review/src/mistake-gates.ts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const SELF = 'tools/test-mistake-register.ts';
+const SELF = MISTAKE_GATES_FILE;
 const explain = process.argv.includes('--explain');
 
 // --- Test files that no CI step runs, one decision each --------------------
@@ -98,28 +99,8 @@ const explain = process.argv.includes('--explain');
 const EXEMPT = readCiExemptions(ROOT);
 
 // --- The gates each register item relies on --------------------------------
-// Item 13 applied to the register: a register entry whose gate no CI step runs
-// has no gate.
-const REGISTER_GATES = [
-  [1, 'packages/play/src/sensors/screencap/test-sensor.py'],   // title-observe.py refuses a path it would not read
-  [2, SELF],
-  [3, 'apps/lab/test/test-night-job.py'],   // a night job refuses on an observed title mismatch and on an unreadable Continue night
-  [4, 'packages/propose/test/test-terminal-deadline.ts'],   // every committed plan's end plus the port's wait covers the latest measured 6 AM
-  [5, SELF],
-  [7, 'packages/propose/test/test-seam-slack.ts'],
-  [9, 'packages/propose/test/test-seam-slack.ts'],
-  [10, 'packages/propose/test/test-seam-slack.ts'],   // a floor measured in one order is used only in that order
-  [8, SELF],
-  [11, SELF],
-  [12, SELF],
-  [13, SELF],
-  [13, 'packages/review/bin/grade/test-grade-run-coverage.ts'],
-  [14, 'tools/test-sibling-paths.ts'],
-  [15, 'apps/desktop/test/test-fnaf1-winner.ts'],
-  [6, 'apps/lab/test/test-night-job.py'],   // after an abort or a killed runner the game is driven back to an observed title
-];
-// packages/review/src/roadmap.ts reads the table above by its text, so its rows are typed here, not in its declaration.
-const GATE_ROWS = REGISTER_GATES as [number, string][];
+// Item 13 applied to the register: a register entry whose gate no CI step runs has no gate. The rows
+// are Review's (packages/review/src/mistake-gates.ts), which its S7 row reads too.
 
 // Register entries no gate holds yet (ROADMAP S7 closes when this is empty).
 // A ratchet: an entry leaves it when a REGISTER_GATES row lands, and a new
@@ -377,14 +358,14 @@ const missing = missingPaths({ scripts: SCRIPTS, ciText, exists: path => existsS
 // the day someone runs its group.
 for (const message of missing) fail(`${message} -- a wrong path fails silently behind \`> /dev/null && echo\` (item 5)`);
 
-for (const [item, gate] of GATE_ROWS) {
+for (const [item, gate] of REGISTER_GATES) {
   if (!existsSync(join(ROOT, gate))) fail(`register item ${item} relies on ${gate}, which does not exist`);
   else if (!reached.has(gate)) fail(`register item ${item} relies on ${gate}, which no CI step runs (item 13)`);
 }
 // Every entry the registers hold (read where they are written) names a gate or
 // is open with a reason; an open entry that has a gate is stale.
 {
-  const gated = new Set(GATE_ROWS.map(([item]) => item));
+  const gated = new Set(REGISTER_GATES.map(([item]) => item));
   const { source, entries } = readMistakes(ROOT);
   if (!entries.length) fail(`no mistake-register entry was read (${source ?? 'no source'})`);
   for (const { n } of entries) {
@@ -515,5 +496,5 @@ console.log(`mistake register: item 13 -- ${verdicts.size} test files, ${counts.
   'item 5 -- every script path and npm script named exists; item 8 -- the input trace runs only on a ' +
   `capability read as present; item 11 -- a margin scan reads a banded ` +
   'response as banded; item 12 -- the five-read threshold holds ' +
-  `on both sides; items ${[...new Set(GATE_ROWS.map(([item]) => item))].sort((a, b) => a - b).join(', ')} rely only on ` +
+  `on both sides; items ${[...new Set(REGISTER_GATES.map(([item]) => item))].sort((a, b) => a - b).join(', ')} rely only on ` +
   `gates a CI step runs; open (no gate yet): ${[...OPEN_ENTRIES.keys()].join(', ') || 'none'}`);

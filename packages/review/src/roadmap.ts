@@ -27,7 +27,8 @@ import { MISTAKE_ENTRIES } from './refusals.ts';
 import { ciReach } from './ci-reach.ts';
 import { readMistakes, stepFamily } from './mistakes.ts';
 import { GAMES, gameKey } from './registers.ts';
-import { VERBS } from './solver.ts';
+import { SOLVER_SERVER_NAME, VERBS } from './solver.ts';
+import { REGISTER_GATES } from './mistake-gates.ts';
 
 /** An evidence record that names a step. */
 type StepRecord = { file: string, id: unknown, date: string | null, step: string };
@@ -50,8 +51,6 @@ type StepRow = {
 };
 
 export const ROADMAP = 'plans/ROADMAP.md';
-export const MISTAKE_GATES_FILE = 'tools/test-mistake-register.ts';
-export const MCP_SERVER_FILE = 'apps/desktop/src/companion-mcp.ts';
 
 /** The steps, their headings as the ROADMAP writes them, and what each needs closed first. */
 export const STEPS = Object.freeze([
@@ -135,14 +134,10 @@ export function stepRecords(root: string) {
   return byStep;
 }
 
-/** The gate each mistake-register entry relies on: tools/test-mistake-register.ts's REGISTER_GATES, and the refusals. */
-export function mistakeGates(root: string) {
-  const text = readFileSync(join(root, MISTAKE_GATES_FILE), 'utf8');
-  const block = /const REGISTER_GATES = \[([\s\S]*?)\n\];/.exec(text)?.[1];
-  if (block === undefined) return null;
+/** The gate each mistake-register entry relies on: the register's rows (mistake-gates.ts), and the refusals. */
+export function mistakeGates() {
   const gates: Record<string, string[]> = {};
-  for (const [, n, self, file] of block.matchAll(/\[(\d+),\s*(?:(SELF)|'([^']+)')\]/g))
-    (gates[n] ??= []).push(self ? MISTAKE_GATES_FILE : file);
+  for (const [n, file] of REGISTER_GATES) (gates[n] ??= []).push(file);
   for (const n of Object.keys(MISTAKE_ENTRIES)) (gates[n] ??= []).push('packages/review/test/refusals.test.ts');
   return gates;
 }
@@ -221,10 +216,10 @@ export function stepStatus(root: string, { promotions, packs }: {promotions: Pro
     }
     const rootName = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).name;
     const off = workspaceNames(root).filter(item => !String(item.name).startsWith('@sixam/'));
-    const server = existsSync(join(root, MCP_SERVER_FILE)) && /name: 'fnaf-solver'/.test(readFileSync(join(root, MCP_SERVER_FILE), 'utf8'));
-    const named = rootName === 'fnaf-solver' && off.length === 0 && server;
+    // The MCP server is served under the solver's name (SOLVER_SERVER_NAME); companion-mcp.test.ts reads it off initialize.
+    const named = rootName === SOLVER_SERVER_NAME && off.length === 0;
     (named ? row.met : row.unmet).push(named ? 'the repository, every workspace and the MCP server carry fnaf-solver / @sixam/* names'
-      : `names: package ${rootName}${off.length ? `, workspaces ${off.map(item => item.name).join(', ')}` : ''}${server ? '' : ', MCP server not fnaf-solver'}`);
+      : `names: package ${rootName}${off.length ? `, workspaces ${off.map(item => item.name).join(', ')}` : ''}`);
     const truth = VERBS.some(verb => verb === 'rulebook' || verb.startsWith('truth'));
     (truth ? row.met : row.unmet).push(truth ? 'the solver interface answers a truth verb'
       : `Plan 28's truth.* verbs are not in the solver interface (its verbs: ${VERBS.join(', ')})`);
@@ -236,9 +231,9 @@ export function stepStatus(root: string, { promotions, packs }: {promotions: Pro
   {
     const row = base(STEPS[6]);
     const register = readMistakes(root);
-    const gates = mistakeGates(root);
+    const gates = mistakeGates();
     const inLane = ciRuns(root);
-    if (!gates || !register.entries.length) row.unmet.push(`the register or ${MISTAKE_GATES_FILE}'s REGISTER_GATES could not be read`);
+    if (!register.entries.length) row.unmet.push(`no mistake-register entry was read (${register.source ?? 'no source'})`);
     else {
       const bare = register.entries.filter(entry => !(gates[entry.n] ?? []).some(inLane)).map(entry => entry.n);
       (bare.length ? row.unmet : row.met).push(bare.length

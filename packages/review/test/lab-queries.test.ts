@@ -102,7 +102,7 @@ for (const step of STEPS) assert.ok(Number(closes[step.id]?.length) > 20, `${ste
 assert.match(closes.S1 as string, /graph\.json.*promotion edge/); // the loop above read S1's text
 assert.equal(ORDER.length, 6);
 assert.deepEqual(Object.keys(ORDER_OF).sort(), STEPS.map(step => step.id));
-const gates = mistakeGates(ROOT);
+const gates = mistakeGates();
 for (const n of [5, 7, 9, 12, 13, 8, 10]) assert.ok(gates?.[n]?.length, `entry ${n} names a gate`);
 const records = stepRecords(ROOT);
 assert.ok(records.S2.length >= 1 && records.S2.every(row => row.file.endsWith('.json')), 'records that name S2 are found');

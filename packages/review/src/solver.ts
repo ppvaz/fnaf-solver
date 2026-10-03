@@ -26,14 +26,14 @@ import { liftPack } from './pack-lift.ts';
 import { queryPromotions } from './promotions-query.ts';
 import { CHECKS, RULE_CITES, checkUnknownAsNumber } from './refusals.ts';
 import { describe } from './solver-describe.ts';
-import { ENVELOPE_EMITTERS, INSTRUMENTS, PACK_ID, PLAN28, QUERIES, RESOURCES, RESOURCE_TEMPLATES, SURFACE_DOC, VERBS, badArgument,
+import { ENVELOPE_EMITTERS, INSTRUMENTS, PACK_ID, PLAN28, QUERIES, RESOURCES, RESOURCE_TEMPLATES, SOLVER_SERVER_NAME, SURFACE_DOC, VERBS, badArgument,
   gameRefusal, shellQuote, sharedLabel } from './solver-shared.ts';
 import type { PackRow, SolverContext, ValidPackRow } from './solver-shared.ts';
 import { ARCHIVED_ROUTES, CHRONICLE_ATTRIBUTION, CHRONICLE_DIR, CHRONICLE_SCHEMA_MODULE, CONTRACT_REGISTER, GAMES,
   controlCatalogFile, catalogUnknowns, chronicleLabel, gameKey, isNegative, readArchivedRoutes, readChronicle, readContracts,
   readPackRow, readPacks, resolveGame } from './registers.ts';
 
-export { ENVELOPE_EMITTERS, INSTRUMENTS, PLAN28, QUERIES, RESOURCES, RESOURCE_TEMPLATES, SURFACE_DOC, VERBS };
+export { ENVELOPE_EMITTERS, INSTRUMENTS, PLAN28, QUERIES, RESOURCES, RESOURCE_TEMPLATES, SOLVER_SERVER_NAME, SURFACE_DOC, VERBS };
 
 /** Stat fingerprint of the committed winners, to know when a cached compile is stale. */
 function winnersKey(root: string) {

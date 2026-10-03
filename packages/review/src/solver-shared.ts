@@ -20,6 +20,8 @@ export const SURFACE_DOC = 'docs/device/COMPANION-MCP.md';
 export const PLAN28 = 'plans/28-solver-interface.md';
 
 /** The verbs, by the name every door calls them. */
+/** The name the solver interface is served under (the stdio MCP server, apps/desktop/src/companion-mcp.ts). */
+export const SOLVER_SERVER_NAME = 'fnaf-solver';
 export const VERBS = Object.freeze(['describe', 'query', 'review', 'promote', 'check', 'truth']);
 export const QUERIES = Object.freeze(['promotions', 'packs', 'chronicle', 'contracts']);
 export const INSTRUMENTS = Object.freeze(['custody', 'outcome', 'promotion-checks', 'death-time']);

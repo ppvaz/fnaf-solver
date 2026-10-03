@@ -4654,6 +4654,7 @@
       "file": "packages/review/src/roadmap.ts",
       "imports": [
         "./ci-reach.ts",
+        "./mistake-gates.ts",
         "./mistakes.ts",
         "./refusals.ts",
         "./registers.ts",
@@ -6003,6 +6004,7 @@
         "../packages/review/bin/grade/run-report.ts",
         "../packages/review/src/ci-reach.ts",
         "../packages/review/src/lanes.ts",
+        "../packages/review/src/mistake-gates.ts",
         "../packages/review/src/mistakes.ts",
         "../packages/review/src/refusals.ts",
         "\\.\\/basin-edge\\.ts",

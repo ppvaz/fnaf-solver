@@ -216,10 +216,11 @@ gates that pin it, until the legacy branches are deleted.
 - A module both lanes check (the lenient `tsconfig.js.json` reaches it through
   an importer) must also type-check without `strictNullChecks`, where
   `x === null` narrows nothing: return the literal (`return null`).
-- A declaration another module reads as text keeps its text: Review's
-  `roadmap.ts` matches `const REGISTER_GATES = [` in
-  `tools/test-mistake-register.ts`, so that table is typed through an alias,
-  and an annotation on its declaration broke `lab-queries.test.ts`.
+- Data two modules share is exported and imported, never read out of the
+  other's source text: Review's `roadmap.ts` once regexed
+  `const REGISTER_GATES = [` in `tools/test-mistake-register.ts`, and an
+  annotation on that declaration broke `lab-queries.test.ts`. The rows live in
+  `packages/review/src/mistake-gates.ts` now.
 
 ## Sensors and on-device code (Pedro, 2026-09-24/25 — start here, not with the old sensors)
 
