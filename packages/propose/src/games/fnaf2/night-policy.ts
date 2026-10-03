@@ -107,6 +107,11 @@ const observedValue = (facts: Readonly<Record<string, unknown>>, name: string) =
  */
 /** Names the primitive a decision wants and records why. */
 type Reason = (cycle: string, why: string) => string;
+/** What every section of `want` reads: the reduced state, the facts, the two controls, and the reason recorder. */
+interface WantContext {
+  readonly state: ReducedState, readonly facts: CycleController['facts'], readonly up: boolean,
+  readonly masked: boolean, readonly reason: Reason,
+}
 /** The policy's knobs; each default is argued beside it in the constructor. */
 interface NightPolicyOptions {
   readonly night?: number;
@@ -602,14 +607,47 @@ export class NightPolicy {
    */
   want(controller: CycleController) {
     const state = controller.reduced;
-    const facts = controller.facts;
     const up = state.monitor === 'up' || state.monitor === 'raising';
     const masked = state.maskOn;
     const reason = (cycle: string, why: string) => {
       this.lastDecision = { frame: state.frame, cycle, why };
       return cycle;
     };
+    const at: WantContext = { state, facts: controller.facts, up, masked, reason };
 
+    const cue = this.wantOnCue(at);
+    if (cue !== null) return cue;
+
+    // 3. Golden Freddy. He can only appear while the monitor is up (g336) and
+    //    the mask press clears him on the spot, while RAISING the monitor or
+    //    FLASHING the hall with him there is an instant kill. Nothing
+    //    observable says whether he is in the office, so the trip pays an
+    //    unconditional mask flick on the way out. Measured 2026-09-02: without
+    //    it Night 7 lost 10 of 20 to `golden-freddy`, every one of them the
+    //    hall flash that follows a wind trip.
+    if (this.goldenAi > 0 && !masked && !up &&
+        state.lastMonitorUpFrame > state.lastMaskOnFrame)
+      return reason(MASK, 'golden freddy: clear the office after a cams-up trip');
+
+    // 4. The deadline race. Whichever of the two tasks is nearer its deadline
+    //    wins, and only once it is actually due.
+    const box = this.boxSlack(state);
+    const foxy = this.foxySlack(state);
+    const sweep = this.sweepSlack(state);
+    // The stun is NOT in this race. Its deadline is not lethal -- an expired
+    // stun releases a character to roll again, it does not kill -- while both
+    // of the others are, so it belongs with the opportunistic work below.
+    // Measured 2026-09-02: racing it against the other two starved the hall
+    // flash to 1-3 flashes a night and lost 20/20 to `foxy` on every night
+    // from 2 up, because a trip is longer than the stun period and the sweep
+    // is therefore permanently the most overdue task.
+    const due = Math.min(box, foxy);
+    if (due <= this.actWithinFrames) return this.wantDeadline(at, foxy);
+    return this.wantTopUp(at, { box, sweep, due }) ?? this.wantIdle(at, { box, due });
+  }
+
+  /** Sections 1 and 2: a blackout, and an occupant at the office or a thud with its repel unpaid; or null. */
+  wantOnCue({ state, facts, up, masked, reason }: WantContext): string | null {
     // 1. The office cue. A whole-screen luma collapse is the one fact a coarse
     //    read never misses, and the mask reaching state 2 before the fuse is
     //    the only thing that defuses it.
@@ -692,84 +730,65 @@ export class NightPolicy {
       // anyway -- and let the deadline race have the boundary.
       if (masked) return reason(UNMASK, `${why}: no room to camp; the box is due`);
     }
+    return null;
+  }
 
-    // 3. Golden Freddy. He can only appear while the monitor is up (g336) and
-    //    the mask press clears him on the spot, while RAISING the monitor or
-    //    FLASHING the hall with him there is an instant kill. Nothing
-    //    observable says whether he is in the office, so the trip pays an
-    //    unconditional mask flick on the way out. Measured 2026-09-02: without
-    //    it Night 7 lost 10 of 20 to `golden-freddy`, every one of them the
-    //    hall flash that follows a wind trip.
-    if (this.goldenAi > 0 && !masked && !up &&
-        state.lastMonitorUpFrame > state.lastMaskOnFrame)
-      return reason(MASK, 'golden freddy: clear the office after a cams-up trip');
-
-    // 4. The deadline race. Whichever of the two tasks is nearer its deadline
-    //    wins, and only once it is actually due.
-    const box = this.boxSlack(state);
-    const foxy = this.foxySlack(state);
-    const sweep = this.sweepSlack(state);
-    // The stun is NOT in this race. Its deadline is not lethal -- an expired
-    // stun releases a character to roll again, it does not kill -- while both
-    // of the others are, so it belongs with the opportunistic work below.
-    // Measured 2026-09-02: racing it against the other two starved the hall
-    // flash to 1-3 flashes a night and lost 20/20 to `foxy` on every night
-    // from 2 up, because a trip is longer than the stun period and the sweep
-    // is therefore permanently the most overdue task.
-    const due = Math.min(box, foxy);
-    if (due <= this.actWithinFrames) {
-      // Rank the two overdue tasks on their LEAD-FREE deadlines.
+  /** Section 4, with the box or Foxy due: the more overdue one on its lead-free deadline. */
+  wantDeadline({ state, up, masked, reason }: WantContext, foxy: number): string {
+    // Rank the two overdue tasks on their LEAD-FREE deadlines.
+    //
+    // The lead terms depend on where the monitor and the mask are, and the
+    // two tasks want them in opposite positions -- winding needs the monitor
+    // up, the hall light needs it down. Ranking on the lead-included slack
+    // therefore flips the winner every time the loser's own prerequisite
+    // lands, and the controller livelocks: measured 2026-09-02 on Night 3,
+    // `verify-and-resume`/`lower-monitor` alternated for 2300 frames with
+    // the box at zero, and the run died with the Puppet out. The lead still
+    // decides WHEN a task becomes due; it must not decide WHICH one wins.
+    if (this.boxSlack(state, { lead: false }) <=
+        this.foxySlack(state, { lead: false })) {
+      // Size the wind to the Foxy slack even when the box is already late.
+      // A 4.5 s hold is longer than the whole flash period on the late
+      // nights, so taking the long wind here turns one late task into two.
       //
-      // The lead terms depend on where the monitor and the mask are, and the
-      // two tasks want them in opposite positions -- winding needs the monitor
-      // up, the hall light needs it down. Ranking on the lead-included slack
-      // therefore flips the winner every time the loser's own prerequisite
-      // lands, and the controller livelocks: measured 2026-09-02 on Night 3,
-      // `verify-and-resume`/`lower-monitor` alternated for 2300 frames with
-      // the box at zero, and the run died with the Puppet out. The lead still
-      // decides WHEN a task becomes due; it must not decide WHICH one wins.
-      if (this.boxSlack(state, { lead: false }) <=
-          this.foxySlack(state, { lead: false })) {
-        // Size the wind to the Foxy slack even when the box is already late.
-        // A 4.5 s hold is longer than the whole flash period on the late
-        // nights, so taking the long wind here turns one late task into two.
-        //
-        // The alternative was measured, because on Night 6 the box is what
-        // kills: serving the box fully here (always the long wind) moves that
-        // night's deaths from 50 Puppet / 7 Foxy to 9 Puppet / 49 Foxy over 60
-        // held-out seeds and buys 1 clear in 60, while costing Night 2 and
-        // Night 4 three and five runs in sixty. It is a redistribution, not a
-        // gain: Night 6's box drain (16.7 s) and Foxy band (5 D at his 2 AM
-        // level) cannot both be served by a controller whose shortest useful
-        // wind plus trip is longer than the 5 s flash period. That is a
-        // resource wall, and no ordering of these two tasks gets through it.
-        // Size the wind to the Foxy slack, and take NO wind at all when even
-        // the short one does not fit.
-        //
-        // A committed cycle is not interruptible on a deadline -- only on a
-        // positively observed hazard -- so a 156-frame wind started with 20
-        // frames of Foxy slack does not miss the roll by 20 frames, it misses
-        // it by 136 and cannot be recalled. That is what the old
-        // `foxy > longTrip ? WIND : WIND_SHORT` did on every late night:
-        // measured 2026-09-04 on Night 7 seed 5002, the engine's own roll log
-        // shows D = 4, 6, 6 at three consecutive checks against a band of 3,
-        // with a wind in flight across each of them. Serving the box FIRST
-        // when it is the more overdue task is right; serving it with a
-        // primitive that outlives the other deadline is not the same thing.
-        const wind = foxy > this.tripFrames(state, C.s(4.5)) ? WIND
-          : foxy > this.tripFrames(state, C.s(2.5)) ? WIND_SHORT
-          : null;
-        if (wind) return this.windTrip(state, wind, 'box', reason);
-        // Nothing fits. Fall through to the flash: it is 18 frames, it buys a
-        // whole roll period of Foxy slack, and a wind trip fits inside that.
-        // Refusing to wind here is not abandoning the box, it is paying for
-        // the room to wind at all.
-      }
-      if (masked) return reason(UNMASK, 'foxy: the hall light needs the mask off');
-      if (up) return reason(LOWER, 'foxy: the hall light needs the monitor down');
-      return reason(FLASH, 'foxy: reset D before the band');
+      // The alternative was measured, because on Night 6 the box is what
+      // kills: serving the box fully here (always the long wind) moves that
+      // night's deaths from 50 Puppet / 7 Foxy to 9 Puppet / 49 Foxy over 60
+      // held-out seeds and buys 1 clear in 60, while costing Night 2 and
+      // Night 4 three and five runs in sixty. It is a redistribution, not a
+      // gain: Night 6's box drain (16.7 s) and Foxy band (5 D at his 2 AM
+      // level) cannot both be served by a controller whose shortest useful
+      // wind plus trip is longer than the 5 s flash period. That is a
+      // resource wall, and no ordering of these two tasks gets through it.
+      // Size the wind to the Foxy slack, and take NO wind at all when even
+      // the short one does not fit.
+      //
+      // A committed cycle is not interruptible on a deadline -- only on a
+      // positively observed hazard -- so a 156-frame wind started with 20
+      // frames of Foxy slack does not miss the roll by 20 frames, it misses
+      // it by 136 and cannot be recalled. That is what the old
+      // `foxy > longTrip ? WIND : WIND_SHORT` did on every late night:
+      // measured 2026-09-04 on Night 7 seed 5002, the engine's own roll log
+      // shows D = 4, 6, 6 at three consecutive checks against a band of 3,
+      // with a wind in flight across each of them. Serving the box FIRST
+      // when it is the more overdue task is right; serving it with a
+      // primitive that outlives the other deadline is not the same thing.
+      const wind = foxy > this.tripFrames(state, C.s(4.5)) ? WIND
+        : foxy > this.tripFrames(state, C.s(2.5)) ? WIND_SHORT
+        : null;
+      if (wind) return this.windTrip(state, wind, 'box', reason);
+      // Nothing fits. Fall through to the flash: it is 18 frames, it buys a
+      // whole roll period of Foxy slack, and a wind trip fits inside that.
+      // Refusing to wind here is not abandoning the box, it is paying for
+      // the room to wind at all.
     }
+    if (masked) return reason(UNMASK, 'foxy: the hall light needs the mask off');
+    if (up) return reason(LOWER, 'foxy: the hall light needs the monitor down');
+    return reason(FLASH, 'foxy: reset D before the band');
+  }
 
+  /** Section 4b: a box top-up or a route sweep while one fits; or null. */
+  wantTopUp({ state, reason }: WantContext, { box, sweep, due }: { box: number, sweep: number, due: number }): string | null {
     // 4b. Opportunistic top-up. The hall flash is the metronome and the gap
     //     between two flashes is the only time the monitor may be up at all,
     //     so a box that is merely NOT FULL is worth topping up whenever a
@@ -798,7 +817,11 @@ export class NightPolicy {
     }
     if (sweep <= 0 && due > this.sweepFrames + BOUNDARY)
       return this.sweepTrip(state, reason);
+    return null;
+  }
 
+  /** Section 5: what to do with a boundary nothing is due at. */
+  wantIdle({ state, up, masked, reason }: WantContext, { box, due }: { box: number, due: number }): string {
     // 5. Idle. The office is closed only while the mask is on, so wearing it is
     //    the default -- and because `mask-now` ends as soon as the mask is
     //    verifiably on, how long to keep it there is decided here, one boundary
