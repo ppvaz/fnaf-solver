@@ -1474,10 +1474,14 @@
       "owner": "@sixam/play",
       "timeoutMs": 180000,
       "timeoutSource": "tools/test.ts per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
+      "deterministic": false,
+      "determinismSignals": [
+        "performance.now"
+      ],
       "fixedSleeps": [],
-      "sharedResources": [],
+      "sharedResources": [
+        "device-transport"
+      ],
       "subprocesses": true,
       "measurement": {
         "status": "NOT_MEASURED",

@@ -51,6 +51,8 @@ const TEACH_OVERLAY = join(HERE, 'fnaf1-teach-overlay.ts');
 const AUDIO_LINK = join(ROOT, 'packages/play/bin/audio/bt-audio-link.sh');
 const AUDIO_CAPTURE = join(ROOT, 'packages/play/bin/audio/capture-bt-audio.sh');
 const TEARDOWN = join(HERE, '../../bin/phone/game-teardown.sh');
+// The Bluetooth link's settings fallback hands the screen back to this game.
+export const AUDIO_LINK_ARGS = ['--ensure', '--game-package', PACKAGE] as const;
 const TITLE_INTERVAL_MS = 250;
 
 type Side = 'left' | 'right';
@@ -168,8 +170,8 @@ export function validateRoute(route: Route, controls: Controls, titleModel: Titl
   if (route?.schema !== 'fnaf1-device-route-v1') fail('route schema is not fnaf1-device-route-v1');
   if (route?.target?.package !== PACKAGE || route?.target?.build !== BUILD || route?.target?.launcher !== '.Main')
     fail('route targets the wrong game or build');
-  if (route?.title?.observer !== 'packages/play/games/fnaf1/fnaf1-title-observe.sh' ||
-      route?.title?.model !== 'packages/play/profiles/fnaf1/moto-g56/title-fnaf1-moto-g56-v207.json' ||
+  if (route?.title?.observer !== relativeToRoot(TITLE_OBSERVER) ||
+      route?.title?.model !== relativeToRoot(TITLE_MODEL_PATH) ||
       route?.title?.requiredItem !== 'continue' || route?.title?.consensusFrames !== 3)
     fail('route title gate is not the FNaF 1 Continue-only observer');
   if (titleModel?.schema !== 'title-model-v1' ||
@@ -180,8 +182,8 @@ export function validateRoute(route: Route, controls: Controls, titleModel: Titl
   if (route?.audio?.required !== true || !/Passive/.test(route?.audio?.purpose ?? ''))
     fail('route does not require passive retained audio');
   if (route?.teachingOverlay?.required !== true ||
-      route.teachingOverlay.tool !== 'packages/play/games/fnaf1/fnaf1-teach-overlay.ts' ||
-      route.teachingOverlay.model !== 'packages/play/profiles/fnaf1/moto-g56/teach-panel-fnaf1-moto-g56-v207.json' ||
+      route.teachingOverlay.tool !== relativeToRoot(TEACH_OVERLAY) ||
+      route.teachingOverlay.model !== relativeToRoot(TEACH_MODEL_PATH) ||
       route.teachingOverlay.schema !== 'fnaf1-teach-overlay-v2')
     fail('route does not require the isolated FNaF 1 teaching overlay');
   if (teachModel?.schema !== 'fnaf1-teach-overlay-v2' ||
@@ -372,7 +374,7 @@ async function waitForTitleToLeave(bridge: Bridge, record: RunRecord) {
   fail('Continue did not leave the observed FNaF 1 title within the bounded start wait');
 }
 
-class Fnaf1Controls {
+export class Fnaf1Controls {
   declare hid: HidWireTransport;
   declare record: RunRecord;
   declare route: Route;
@@ -590,7 +592,7 @@ async function stageNight1({ route, record, bridge, control, nightEpochMs, shoul
 
 async function startAudio(serial: string, id: string, record: RunRecord) {
   const env = { ANDROID_SERIAL: serial };
-  const link = await run('bash', [AUDIO_LINK, '--ensure', '--game-package', PACKAGE], { timeoutMs: 120000, env });
+  const link = await run('bash', [AUDIO_LINK, ...AUDIO_LINK_ARGS], { timeoutMs: 120000, env });
   await writeFile(join(record.outdir, 'bt-audio-link.txt'), `${link.stdout}${link.stderr}`);
   const linkState = audioLinkState(link);
   await record.event('audio-link', { code: link.code, state: linkState, output: `${link.stdout}${link.stderr}`.trim() });
