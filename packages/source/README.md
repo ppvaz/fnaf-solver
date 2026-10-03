@@ -24,7 +24,7 @@ FNaF 2's `config.ts` that way).
 **TypeScript.** Since 2026-09-30 the sources are TypeScript that Node runs
 by type stripping (Pedro: "runtime .ts"; `tools/ts-migrate.ts`), checked at the
 strictness they had as JavaScript (`typecheck:js`), to be tightened later. The
-browser gets them with their types erased (`apps/trainer/test/strip-types.ts`).
+browser gets them with their types erased by Node's own stripper (`apps/trainer/test/build.ts` and `serve.ts`).
 
 **The model sources.** `src/games/fnaf2/plant-model.ts`, `config.ts`
 and `rng.ts` moved byte for byte and stay together, because `plant-model.ts`

@@ -199,8 +199,8 @@ for (const path of sourceFiles.filter(path => /(?:test|check|spec)[^/]*\.(?:mjs|
   const sharedResources = [...new Set([
     ...(source.includes('chrome') || source.includes('CDP') ? ['browser'] : []),
     ...(source.includes('adb') || source.includes('/dev/') || source.includes('hid') ? ['device-transport'] : []),
-    // serve.py as a file name: 'title-observe.py' ends in the same letters and opens no port
-    ...(source.includes('8731') || /(^|[^\w-])serve\.py\b/.test(source) ? ['local-http-port'] : []),
+    // serve.ts as a file name, or the dev server that starts it: a script that opens the trainer's port
+    ...(source.includes('8731') || /(^|[^\w-])(?:serve|dev-server)\.ts\b/.test(source) ? ['local-http-port'] : []),
   ])];
   tests.push({
     id, lane,

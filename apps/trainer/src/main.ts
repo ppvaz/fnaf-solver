@@ -39,7 +39,7 @@ const CONTROL_CHIPS: Readonly<Record<string, { readonly label: string, readonly 
 };
 const ALL_CONTROLS = Object.keys(CONTROL_CHIPS);
 
-// What this page's server can write. The trainer's dev server (serve.py) names
+// What this page's server can write. The trainer's dev server (serve.ts) names
 // its endpoints in a meta tag it adds to the pages it serves; GitHub Pages and
 // any other static host serve the page as committed, with none, and there is
 // nothing to post a trace or a layout to.
@@ -178,7 +178,7 @@ class App {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ map: this.ui.map, widgets: this.ui.widgets }),
       });
-      // What serve.py's save-layout answers.
+      // What serve.ts's save-layout answers.
       const body: { error?: string, build?: string } = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
       ta.hidden = true;

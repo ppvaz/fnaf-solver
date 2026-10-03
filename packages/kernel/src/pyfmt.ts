@@ -68,7 +68,8 @@ export class PyFloat {
 }
 
 /** What pyDumps writes. An object's integer-like keys come first in JavaScript, so a ported record avoids them. */
-export type PyJson = null | boolean | number | bigint | string | PyFloat | readonly PyJson[] | { readonly [key: string]: PyJson };
+export type PyJson = null | boolean | number | bigint | string | PyFloat | readonly PyJson[] | ReadonlyMap<string, PyJson>
+  | { readonly [key: string]: PyJson };
 
 const pyString = (text: string) =>
   JSON.stringify(text).replace(/[\u007f-\uffff]/g, char => `\\u${char.charCodeAt(0).toString(16).padStart(4, '0')}`);
@@ -88,6 +89,8 @@ function byCodePoint(a: string, b: string) {
  * `json.dumps(value, indent=N)`: one item per line and ',' at each line's end; with sortKeys, sort_keys=True.
  */
 export function pyDumps(value: PyJson, indent?: number, { sortKeys = false } = {}): string {
+  // A Map keeps its keys in the order they came, as a dict does (json.loads reads an object into one).
+  const pairs = (item: ReadonlyMap<string, PyJson> | { readonly [key: string]: PyJson }) => (item instanceof Map ? [...item] : Object.entries(item));
   const write = (item: PyJson, level: number): string => {
     if (item === null) return 'null';
     if (typeof item === 'boolean') return item ? 'true' : 'false';
@@ -97,7 +100,7 @@ export function pyDumps(value: PyJson, indent?: number, { sortKeys = false } = {
     if (item instanceof PyFloat) return pyFloatJson(item.value);
     const list = isList(item);
     const parts = list ? item.map(entry => write(entry, level + 1))
-      : (sortKeys ? Object.entries(item).sort(([a], [b]) => byCodePoint(a, b)) : Object.entries(item))
+      : (sortKeys ? [...pairs(item)].sort(([a], [b]) => byCodePoint(a, b)) : pairs(item))
         .map(([key, entry]) => `${pyString(key)}: ${write(entry, level + 1)}`);
     const [open, close] = list ? ['[', ']'] : ['{', '}'];
     if (!parts.length) return open + close;

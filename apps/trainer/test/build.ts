@@ -37,7 +37,7 @@ process.removeAllListeners('warning');
 
 /**
  * A module's code as the browser runs it. A .ts module has its types erased by Node's own stripper (what
- * strip-types.ts prints) and is otherwise the same text, so every regex here reads plain JavaScript either way.
+ * the dev server serves too) and is otherwise the same text, so every regex here reads plain JavaScript either way.
  */
 function sourceOf(path: string): string {
   const text = readFileSync(path, 'utf8');

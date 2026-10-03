@@ -72,6 +72,8 @@
       "packages/kernel/test/kernel.test.ts",
       "packages/kernel/test/pyfmt.test.ts",
       "packages/kernel/test/pyargs.test.ts",
+      "packages/kernel/test/pyjson.test.ts",
+      "apps/trainer/test/serve.test.ts",
       "packages/review/test/pack-lift.test.ts",
       "packages/review/test/promotions-query.test.ts",
       "packages/review/test/refusals.test.ts",
@@ -101,7 +103,6 @@
       ["python3","packages/play/bin/audio/test-bt-audio-collector.py"],
       ["python3","packages/play/games/fnaf1/test-fnaf1-teach-overlay.py"],
       ["python3","packages/play/src/sensors/screencap/test-sensor.py"],
-      ["python3","apps/trainer/test/serve_test.py"],
       ["node","tools/affected-test.ts","--self-check"],
       ["python3","packages/review/bin/recompile/test-audio-records.py"]
     ]

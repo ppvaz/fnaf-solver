@@ -71,7 +71,7 @@ one field named `timestamp` would incorrectly imply interchangeability.
 
 | Property | Inventory |
 |---|---|
-| Producer | `src/main.js` posts a coached run to `apps/trainer/test/serve.py` `/save-trace`; failed posts queue up to eight bodies in browser `localStorage` |
+| Producer | `src/main.js` posts a coached run to `apps/trainer/test/serve.ts` `/save-trace`; failed posts queue up to eight bodies in browser `localStorage` |
 | Default root/format | `captures/traces/YYYYMMDD-HHMMSS-LESSON[-N].json`; override through `FNAF_TRACE_DIR` |
 | Primary content | Coach step rows, holds, raw press/release events, simulation time, `performance.now()`, settings, browser environment, outcome |
 | Provenance | Server stamps UTC `savedAt` and short commit plus `+` for dirty; client records lesson, speed, viewport, user agent, webdriver, touch |

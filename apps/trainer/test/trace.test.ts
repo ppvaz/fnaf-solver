@@ -1,5 +1,5 @@
 // The per-step trainer trace, checked without a browser: the Coach's census
-// rows against a scripted run with known lateness, and serve.py's /save-trace
+// rows against a scripted run with known lateness, and serve.ts's /save-trace
 // endpoint against a temporary trace directory. The rows this gates are the
 // raw material for a future HumanActuator's bands (plans/04), so what matters
 // is exactly what a lateness census needs: cycle attribution, null-delta miss
@@ -92,11 +92,11 @@ check('trace is not the rolling results array', (coach.trace as unknown) !== coa
   check('commit provenance surfaces', s.commits.some(([c, n]) => c === 'abc1234' && n === 1));
 }
 
-// ------------------------------------------------------- serve.py /save-trace
+// ------------------------------------------------------- serve.ts /save-trace
 const traceDir = mkdtempSync(join(tmpdir(), 'fnaf-traces-'));
 const server = await startDevServer({ env: { ...process.env, FNAF_TRACE_DIR: traceDir } });
 
-/** What serve.py answers a /save-trace POST with: its status, and its body if that is a JSON object. */
+/** What serve.ts answers a /save-trace POST with: its status, and its body if that is a JSON object. */
 const post = async (body: unknown) => {
   const res = await fetch(`${server.origin}/save-trace`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },

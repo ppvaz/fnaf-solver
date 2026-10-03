@@ -580,7 +580,7 @@
       }
     },
     {
-      "id": "apps/trainer/test/serve_test.py",
+      "id": "apps/trainer/test/serve.test.ts",
       "lane": "test:unit",
       "owner": "legacy migration",
       "timeoutMs": 180000,
@@ -747,6 +747,24 @@
     },
     {
       "id": "packages/kernel/test/pyfmt.test.ts",
+      "lane": "test:unit",
+      "owner": "@sixam/kernel",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.ts per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/kernel/test/pyjson.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/kernel",
       "timeoutMs": 180000,

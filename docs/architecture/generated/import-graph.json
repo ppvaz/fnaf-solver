@@ -595,19 +595,37 @@
       ]
     },
     {
+      "file": "apps/trainer/test/serve.test.ts",
+      "imports": [
+        "./serve.ts",
+        "node:assert/strict",
+        "node:fs",
+        "node:http",
+        "node:net",
+        "node:os",
+        "node:path"
+      ]
+    },
+    {
+      "file": "apps/trainer/test/serve.ts",
+      "imports": [
+        "@sixam/kernel/py",
+        "node:child_process",
+        "node:fs",
+        "node:http",
+        "node:module",
+        "node:net",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "apps/trainer/test/storage.test.ts",
       "imports": [
         "../src/curriculum.ts",
         "../src/settings.ts",
         "node:assert/strict",
         "node:test"
-      ]
-    },
-    {
-      "file": "apps/trainer/test/strip-types.ts",
-      "imports": [
-        "node:fs",
-        "node:module"
       ]
     },
     {
@@ -782,7 +800,8 @@
       "file": "packages/kernel/src/py.ts",
       "imports": [
         "./pyargs.ts",
-        "./pyfmt.ts"
+        "./pyfmt.ts",
+        "./pyjson.ts"
       ]
     },
     {
@@ -795,6 +814,12 @@
       "file": "packages/kernel/src/pyfmt.ts",
       "imports": [
         "./labels.ts"
+      ]
+    },
+    {
+      "file": "packages/kernel/src/pyjson.ts",
+      "imports": [
+        "./pyfmt.ts"
       ]
     },
     {
@@ -872,6 +897,13 @@
       "file": "packages/kernel/test/pyfmt.test.ts",
       "imports": [
         "../src/pyfmt.ts",
+        "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/kernel/test/pyjson.test.ts",
+      "imports": [
+        "../src/pyjson.ts",
         "node:assert/strict"
       ]
     },

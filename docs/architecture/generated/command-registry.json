@@ -104,7 +104,7 @@
     },
     {
       "id": "serve:trainer",
-      "command": "python3 apps/trainer/test/serve.py 8731",
+      "command": "node apps/trainer/test/serve.ts 8731",
       "lifecycle": "supported"
     },
     {
