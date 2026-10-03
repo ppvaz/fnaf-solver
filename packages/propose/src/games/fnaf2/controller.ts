@@ -344,11 +344,6 @@ export class VentThreatReactive extends ReactiveController {
     this.maskEndUncertaintyFrames = opts.maskEndUncertaintyFrames ?? 0;
     this.maskWindow = null;
     this.phaseClock = opts.phaseClock ?? null;
-    // A threat that outlives two hold+verify cycles is BB already INSIDE
-    // (bb.inside never clears and the left-opening reads it exactly like the
-    // opening). Nothing the mask does helps; mask-camping the box to death is
-    // strictly worse than stopping. Two strikes and this controller stands
-    // down for the night.
     // A threat that outlives a hold+verify cycle is USUALLY BB still at the
     // opening, not inside: with the monitor held down there is no walk-in
     // edge, and the 10%/s early-leave rolls make each extra cycle a fresh
@@ -493,7 +488,8 @@ export class VentThreatReactive extends ReactiveController {
     if (maskValue === false) this.maskOnAt = -1;
 
     // A threat that outlives its hold+verify cycle is a strike against
-    // "still at the opening"; past two, treat it as BB-inside and stand down.
+    // "still at the opening"; past maxFailedHolds (6 by default), treat it as
+    // BB-inside and stand down.
     if (factThreat && (this.state === 'verifying' || this.state === 'restoring')) {
       this.failedHolds++;
       this.note(f, `threat persisted past hold (${this.failedHolds}/${this.maxFailedHolds})`);

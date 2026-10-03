@@ -859,8 +859,8 @@ export class NightPolicy {
     // lets a movement period pass unflashed, so `foxySlack` is bounded by 300.
     // On every night with Foxy live the answer was therefore no, the stall
     // always won, and the mask idle was UNREACHABLE rather than unattractive.
-    // At the default `campMinTicks` = 5 this is `idleMasked < 316` again, so
-    // the quantity changes and the behaviour does not.
+    // At `campMinTicks` = 5 this is `idleMasked < 316` again, the old whole-repel
+    // test; the default, 1, stalls only when not one repel tick fits.
     const campTicks = Math.floor((idleMasked - C.MASK_ANIM_ON - BOUNDARY) / C.FPS);
     if (this.idleStall && campTicks < this.campMinTicks && due > C.FPS + BOUNDARY)
       return reason(STALL, `stall: ${campTicks} of ${this.campMinTicks} repel ticks fit`);
