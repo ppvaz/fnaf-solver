@@ -601,8 +601,9 @@ public final class CaptureService extends Service {
      * capture stops.
      */
     private void writeEndpoint(long generation) {
-        String app = appVersion()[0];
-        long code = Long.parseLong(appVersion()[1]);
+        AppVersion version = appVersion();
+        String app = version.name;
+        long code = version.code;
         String text = CompanionStatus.endpointProperties(app, code, generation,
                 Process.myPid(), CONTROL_PORT, controlSocketName, controlToken);
         File target = new File(getFilesDir(), CompanionStatus.ENDPOINT_FILE);
@@ -623,17 +624,27 @@ public final class CaptureService extends Service {
         if (file.exists() && !file.delete()) Log.w(TAG, "endpoint file delete failed");
     }
 
-    private String[] cachedVersion;
+    /** This APK's versionName and versionCode. */
+    private static final class AppVersion {
+        final String name;
+        final long code;
 
-    /** {versionName, versionCode} of this APK. */
-    private String[] appVersion() {
+        AppVersion(String name, long code) {
+            this.name = name;
+            this.code = code;
+        }
+    }
+
+    private AppVersion cachedVersion;
+
+    private AppVersion appVersion() {
         if (cachedVersion != null) return cachedVersion;
         try {
             PackageInfo info = getPackageManager().getPackageInfo(getPackageName(), 0);
-            cachedVersion = new String[] {info.versionName == null ? "UNKNOWN" : info.versionName,
-                    Long.toString(info.getLongVersionCode())};
+            cachedVersion = new AppVersion(info.versionName == null ? "UNKNOWN" : info.versionName,
+                    info.getLongVersionCode());
         } catch (PackageManager.NameNotFoundException | RuntimeException error) {
-            cachedVersion = new String[] {"UNKNOWN", "0"};
+            cachedVersion = new AppVersion("UNKNOWN", 0L);
         }
         return cachedVersion;
     }
@@ -641,8 +652,8 @@ public final class CaptureService extends Service {
     /** The versioned status line (STATUS verb, broadcast and log). */
     private String statusLine() {
         CompanionStatus status = new CompanionStatus();
-        String[] version = appVersion();
-        status.put("app", version[0]).put("code", version[1]);
+        AppVersion version = appVersion();
+        status.put("app", version.name).put("code", version.code);
         boolean capturing = projection != null && !stopping.get();
         status.put("session", capturing ? sessionGeneration : 0L)
                 .put("capture", capturing ? "ON" : "OFF")
@@ -668,9 +679,9 @@ public final class CaptureService extends Service {
                 .put("regions", nativeRegions.size())
                 .put("regionSamples", nativeRegions.samples())
                 .put("regionFrames", nativeRegions.captured());
-        String[] lesson = overlayController == null
-                ? new String[] {"NONE", "OFF", "NONE"} : overlayController.lessonStatus();
-        status.put("lesson", lesson[0]).put("lessonState", lesson[1]).put("panel", lesson[2])
+        OverlayController.LessonStatus lesson = overlayController == null
+                ? OverlayController.LessonStatus.NONE : overlayController.lessonStatus();
+        status.put("lesson", lesson.lesson).put("lessonState", lesson.state).put("panel", lesson.panel)
                 .put("clearance", "UNCHECKED")
                 .put("overlayPermission", Settings.canDrawOverlays(this) ? "GRANTED" : "DENIED");
         String lease = leaseLabel;

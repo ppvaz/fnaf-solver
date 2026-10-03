@@ -66,34 +66,48 @@ public final class OverlayController {
      * The lesson channel for the status line: the game whose lesson was last
      * addressed, that lesson's state, and the rectangle of the attached panel.
      */
-    public String[] lessonStatus() {
+    public LessonStatus lessonStatus() {
         String game = lastLessonGame;
         if ("f2".equals(game)) {
-            return new String[] {"f2", teachState.replace(':', '/'),
+            return new LessonStatus("f2", teachState.replace(':', '/'),
                     teachAttached ? rect(TeachPanel.LEFT, TeachPanel.TOP, TeachPanel.RIGHT,
-                            TeachPanel.BOTTOM) : "NONE"};
+                            TeachPanel.BOTTOM) : "NONE");
         }
         if ("f1".equals(game)) {
-            return new String[] {"f1", f1View != null ? "ATTACHED" : "OFF",
+            return new LessonStatus("f1", f1View != null ? "ATTACHED" : "OFF",
                     f1View != null ? rect(Fnaf1Lesson.LEFT, Fnaf1Lesson.TOP, Fnaf1Lesson.RIGHT,
-                            Fnaf1Lesson.BOTTOM) : "NONE"};
+                            Fnaf1Lesson.BOTTOM) : "NONE");
         }
         if ("f1strip".equals(game)) {
-            return new String[] {"f1strip", f1StripView != null ? "ATTACHED" : "OFF",
+            return new LessonStatus("f1strip", f1StripView != null ? "ATTACHED" : "OFF",
                     f1StripView != null ? rect(Fnaf1Strip.LEFT, Fnaf1Strip.TOP, Fnaf1Strip.RIGHT,
-                            Fnaf1Strip.BOTTOM) : "NONE"};
+                            Fnaf1Strip.BOTTOM) : "NONE");
         }
         if ("f3".equals(game)) {
-            return new String[] {"f3", f3View != null ? "ATTACHED" : "OFF",
+            return new LessonStatus("f3", f3View != null ? "ATTACHED" : "OFF",
                     f3View != null ? rect(Fnaf3Lesson.LEFT, Fnaf3Lesson.TOP, Fnaf3Lesson.RIGHT,
-                            Fnaf3Lesson.BOTTOM) : "NONE"};
+                            Fnaf3Lesson.BOTTOM) : "NONE");
         }
         if ("f4".equals(game)) {
-            return new String[] {"f4", f4View != null ? "ATTACHED" : "OFF",
+            return new LessonStatus("f4", f4View != null ? "ATTACHED" : "OFF",
                     f4View != null ? rect(Fnaf4Lesson.LEFT, Fnaf4Lesson.TOP, Fnaf4Lesson.RIGHT,
-                            Fnaf4Lesson.BOTTOM) : "NONE"};
+                            Fnaf4Lesson.BOTTOM) : "NONE");
         }
-        return new String[] {"NONE", "OFF", "NONE"};
+        return LessonStatus.NONE;
+    }
+
+    /** One lesson channel reading: which game, its state, and its panel's rectangle. */
+    public static final class LessonStatus {
+        public static final LessonStatus NONE = new LessonStatus("NONE", "OFF", "NONE");
+        public final String lesson;
+        public final String state;
+        public final String panel;
+
+        LessonStatus(String lesson, String state, String panel) {
+            this.lesson = lesson;
+            this.state = state;
+            this.panel = panel;
+        }
     }
 
     private volatile String lastLessonGame = "NONE";
