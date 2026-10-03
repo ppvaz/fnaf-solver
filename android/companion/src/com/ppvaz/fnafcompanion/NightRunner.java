@@ -128,7 +128,9 @@ public final class NightRunner {
         if (nightStillVisible != null && !nightStillVisible.getAsBoolean()) {
             throw new IOException("capture is not observing FNAF2_NIGHT");
         }
-        cancelled.set(false);
+        // A runner is built per run, so cancelled starts false; it is not reset
+        // here, or a Stop pressed during the bridge connect would be erased.
+        if (cancelled.get()) throw new IOException("runner stopped");
         Plan plan = readPlan();
         if (plan.armVerify && !route.adaptersReady) {
             throw new IOException("route requires a qualified visual arm adapter");

@@ -209,8 +209,7 @@ public final class MainActivity extends Activity {
         }
         if (nightRunner != null) nightRunner.stop();
         if (termuxBridge != null) {
-            termuxBridge.sendRelease();
-            termuxBridge.close();
+            releaseOffMainThread(termuxBridge);
             termuxBridge = null;
         }
         super.onDestroy();
@@ -693,11 +692,17 @@ public final class MainActivity extends Activity {
         if (!nightRunnerRunning) return;
         if (nightRunner != null) nightRunner.stop();
         TermuxBridge bridge = termuxBridge;
-        if (bridge != null) {
-            bridge.sendRelease();
-            bridge.close();
-        }
+        if (bridge != null) releaseOffMainThread(bridge);
         postRunnerStatus("Stopping local route...");
+    }
+
+    /**
+     * Releases every contact and closes the bridge on its own thread. Both are
+     * socket writes: on the main thread they throw NetworkOnMainThreadException,
+     * which the bridge's IOException handling does not catch.
+     */
+    private static void releaseOffMainThread(TermuxBridge bridge) {
+        new Thread(bridge::close, "route-release").start();
     }
 
     private void postRunnerStatus(String text) {
