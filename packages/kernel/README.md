@@ -41,7 +41,7 @@ in `src/index.ts`.
 | `src/contracts/` (`@sixam/kernel/contracts`) | the runtime validators of the versioned plain-data contracts every context shares: clock refs, profiles, qualification v1/v2, venue identity, check and binding, the campaign result and save proof, telemetry, session manifest, artifact refs, experiment spec and result v1 and v2 (`experiment.ts`: competing explanations, seed sets with their derivation and provenance, a named held-out block, rates with an `Interval` and their method), `canonicalJson` and `stableHash`; compile-time shapes in `src/contracts/types.ts` |
 | `contracts/register.json` | the contract register: every contract id, its owner, kind and validator ([`contracts/README.md`](contracts/README.md)) |
 | `src/time/` (`@sixam/kernel/time`) | `Interval`, the declared clock of every campaign timestamp (`event-clocks.ts`), the bounded fact link (`fact-link.ts`, `fact-message-v1`) and the clock port (`ports.ts`) |
-| `src/pyfmt.ts` | Python's printing, for the scripts ported from Python, whose output keeps its bytes: `pyFixed` (`format(x, '.Nf')`, exact ties to even), `pyRepr` (`repr` of a float), and `pyDumps` (`json.dumps`, with `indent`), where `PyFloat` marks a whole float that Python wrote as `1.0` |
+| `src/pyfmt.ts` | Python's printing, for the scripts ported from Python, whose output keeps its bytes: `pyFixed` (`format(x, '.Nf')`, exact ties to even), `pyRepr` (`repr` of a float), `pyPath` (`str(Path(text))`), and `pyDumps` (`json.dumps`, with `indent`), where `PyFloat` marks a whole float that Python wrote as `1.0` |
 
 The validators generated from the per-game control catalogs
 (`validateControlCommand`, `deviceProfileGame`, `resolveDeviceProfile`) stay

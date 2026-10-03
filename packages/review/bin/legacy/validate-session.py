@@ -3,7 +3,7 @@
 
     packages/review/bin/legacy/validate-session.py MANIFEST.json [--events PATH] [--json]
 
-Standard library only, like index-observations.py: this must run on the phone's
+Standard library only: this must run on the phone's
 host, in CI, and in a checkout with no virtualenv, so there is no jsonschema
 dependency. The schemas in packages/review/bin/legacy/schema/ are the machine-readable
 contract; this file interprets them rather than restating them, so a field

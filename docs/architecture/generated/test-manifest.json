@@ -3915,7 +3915,7 @@
       }
     },
     {
-      "id": "packages/review/bin/legacy/test-index-observations.py",
+      "id": "packages/review/bin/legacy/test-index-observations.ts",
       "lane": "test:unit",
       "owner": "package boundary",
       "timeoutMs": 180000,
@@ -3926,7 +3926,7 @@
       "sharedResources": [
         "device-transport"
       ],
-      "subprocesses": false,
+      "subprocesses": true,
       "measurement": {
         "status": "NOT_MEASURED",
         "runs": 0,

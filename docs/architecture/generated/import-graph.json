@@ -3954,6 +3954,26 @@
       ]
     },
     {
+      "file": "packages/review/bin/legacy/index-observations.ts",
+      "imports": [
+        "@sixam/kernel",
+        "node:crypto",
+        "node:fs",
+        "node:path"
+      ]
+    },
+    {
+      "file": "packages/review/bin/legacy/test-index-observations.ts",
+      "imports": [
+        "node:assert/strict",
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "packages/review/bin/recompile/af-tracks.ts",
       "imports": [
         "@sixam/kernel",

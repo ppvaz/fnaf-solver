@@ -202,7 +202,7 @@ const SIBLING_EXCLUDED = new Map([
   ['death-census.py', 'cross-run census -- answers "what keeps happening", not "what happened in this run"'],
   ['find-events.ts', 'mask-camp trial scrubber, not a night-run grader'],
   // packages/review/bin/legacy
-  ['index-observations.py', 'read-only corpus inventory; indexes artifacts rather than grading one run'],
+  ['index-observations.ts', 'read-only corpus inventory; indexes artifacts rather than grading one run'],
   ['session-manifest.py', 'the manifest producer -- grade-run.sh consumes its output through validate-session.py; gated by test-session-manifest.sh'],
   ['validate-session.py', 'Plan 09 session-manifest validator, run by session-manifest.py when a session producer (collect-cue-audio.sh, capture-screen-sample.sh) finalizes; night-run.sh writes no session manifest, so no night has one to grade; gated by test-validate-session.py'],
 ]);

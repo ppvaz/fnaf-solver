@@ -97,3 +97,9 @@ export function pyDumps(value: PyJson, indent?: number): string {
   };
   return write(value, 0);
 }
+
+/** `str(Path(text))` on POSIX: repeated and trailing slashes and '.' parts dropped, two leading slashes kept, '' as '.'. */
+export function pyPath(text: string): string {
+  const lead = text.startsWith('//') && !text.startsWith('///') ? '//' : text.startsWith('/') ? '/' : '';
+  return lead + text.split('/').filter(part => part !== '' && part !== '.').join('/') || '.';
+}

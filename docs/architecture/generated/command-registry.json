@@ -2873,14 +2873,14 @@
       "lifecycle": "supported"
     },
     {
-      "id": "packages/review/bin/legacy/index-observations.py",
-      "invocation": "packages/review/bin/legacy/index-observations.py [root] [--json] [--hash] [--strict]",
+      "id": "packages/review/bin/legacy/index-observations.ts",
+      "invocation": "packages/review/bin/legacy/index-observations.ts [root] [--json] [--hash] [--strict]",
       "kind": "report/check",
       "lifecycle": "supported"
     },
     {
-      "id": "packages/review/bin/legacy/test-index-observations.py",
-      "invocation": "packages/review/bin/legacy/test-index-observations.py",
+      "id": "packages/review/bin/legacy/test-index-observations.ts",
+      "invocation": "packages/review/bin/legacy/test-index-observations.ts",
       "kind": "check",
       "lifecycle": "supported"
     },
@@ -2915,8 +2915,8 @@
       "lifecycle": "supported"
     },
     {
-      "id": "node",
-      "invocation": "node packages/review/bin/grade/office-seed-bracket.ts LOGCAT [--onset-ms MS] [--json OUT]",
+      "id": "packages/review/bin/grade/office-seed-bracket.ts",
+      "invocation": "packages/review/bin/grade/office-seed-bracket.ts LOGCAT [--onset-ms MS] [--json OUT]",
       "kind": "report",
       "lifecycle": "supported"
     },

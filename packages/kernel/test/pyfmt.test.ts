@@ -2,7 +2,7 @@
 // negative value that rounds to zero is kept. pyRepr against repr(float), and pyDumps against json.dumps:
 // its separators, escapes, indent and floats. Each expected string was printed by CPython 3.12.
 import assert from 'node:assert/strict';
-import { PyFloat, pyDumps, pyFixed, pyRepr } from '../src/pyfmt.ts';
+import { PyFloat, pyDumps, pyFixed, pyPath, pyRepr } from '../src/pyfmt.ts';
 
 const CASES: [number, number, string][] = [
   [0.125, 2, '0.12'], [0.375, 2, '0.38'], [2.5, 0, '2'], [3.5, 0, '4'], [-0.125, 2, '-0.12'], [-2.5, 0, '-2'],
@@ -32,4 +32,8 @@ assert.equal(pyDumps('tab\t e\u00e9 del\u007f \u{1F600}'), '"tab\\t e\\u00e9 del
 assert.equal(pyDumps({ pid: '6690', outputs: [{ tracks: [], kind: 'fast' }], empty: {} }, 1),
   '{\n "pid": "6690",\n "outputs": [\n  {\n   "tracks": [],\n   "kind": "fast"\n  }\n ],\n "empty": {}\n}');
 assert.equal(pyDumps([NaN, Infinity, -Infinity, new PyFloat(2)]), '[NaN, Infinity, -Infinity, 2.0]');
-console.log(`pyfmt: ${CASES.length} fixed, ${REPRS.length} repr and 4 json.dumps values print as Python prints them`);
+// str(PurePosixPath(text)), printed by CPython 3.12.
+const PATHS: [string, string][] = [['', '.'], ['./', '.'], ['/', '/'], ['//', '//'], ['///', '/'], ['////a', '/a'], ['a/', 'a'],
+  ['a//b', 'a/b'], ['a/./b', 'a/b'], ['a/../b', 'a/../b'], ['//a//b/', '//a/b'], ['/./a/.', '/a']];
+for (const [text, want] of PATHS) assert.equal(pyPath(text), want, `str(Path(${JSON.stringify(text)}))`);
+console.log(`pyfmt: ${CASES.length} fixed, ${REPRS.length} repr, 4 json.dumps and ${PATHS.length} path values print as Python prints them`);

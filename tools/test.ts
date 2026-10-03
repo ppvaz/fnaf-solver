@@ -320,7 +320,7 @@ const ENGINE: Check[] = [
   // Unwired since it was written; the AI table is what every survival figure
   // in this repository is computed against.
   ['aimap', ['../packages/source/decompile/test-aimap.py']],
-  ['observation index', ['../packages/review/bin/legacy/test-index-observations.py']],
+  ['observation index', ['../packages/review/bin/legacy/test-index-observations.ts']],
   // Plan 09's v1 session contract: the manifest/event schemas, and the proof
   // that each way of being malformed fails with its own reason rather than one
   // generic rejection. A validator that refuses everything identically is

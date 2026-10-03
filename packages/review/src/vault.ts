@@ -110,8 +110,8 @@ function expand(relPath: string, into: Set<string>): Set<string> {
 function captureClasses(wanted: boolean) {
   const classes = new Map<string, { kind: unknown, authority: unknown }>();
   if (!wanted) return classes;
-  const tool = join(HERE, '../bin/legacy', 'index-observations.py');
-  const output = execFileSync('python3', [tool, 'captures', '--json'],
+  const tool = join(HERE, '../bin/legacy', 'index-observations.ts');
+  const output = execFileSync(process.execPath, [tool, 'captures', '--json'],
     { cwd: ROOT, encoding: 'utf8', maxBuffer: 128 * 1024 * 1024 });
   const rows: readonly { path: string, kind: unknown, authority: unknown }[] = JSON.parse(output).artifacts;
   for (const row of rows)
