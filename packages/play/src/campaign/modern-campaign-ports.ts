@@ -297,6 +297,280 @@ export function timedStartHeld({ plannedPhoneWallMs, seedPhoneWallMs }: {planned
   return { held: true, delayMs };
 }
 
+/** What createCampaignPorts composed, and the state its ports share: the context the port functions run over. */
+interface PortsContext {
+  readonly spec: CampaignSpec;
+  readonly serial: string;
+  readonly bridge: AdbDeviceBridge;
+  readonly cuePort: AdbCompanionPort;
+  readonly onEvent: (event: CampaignEventRow) => void;
+  readonly localExecutor: AdbDeviceLocalArtifactExecutor;
+  readonly titleModel: { items?: Readonly<Record<string, unknown>> };
+  readonly modelPath: string;
+  readonly calibration: CustomNightCalibration | undefined;
+  readonly calibrationPath: string | null;
+  readonly configReadback: ConfigReadback | undefined;
+  readonly allowSaveReset: boolean;
+  readonly startResidueMs: number | null;
+  readonly nightAnchorAimMs: number | null;
+  readonly nightAnchorMaxK: number | null;
+  readonly nightAnchorPeriodMs: number;
+  readonly nightAnchorStrict: boolean;
+  readonly nightAnchorAuthorizeOnLatch: boolean;
+  readonly tap: (args: { point: unknown, holdMs?: number }) => Promise<void>;
+  readonly prearm: (target: CampaignTarget) => Promise<void>;
+  readonly openMenuHid: () => ReturnType<typeof createHidSender>;
+  readonly closeMenuHid: () => Promise<void>;
+  readonly refreshCueEndpoint: () => ReturnType<AdbCompanionPort['discover']>;
+  readonly teachArm: (target: CampaignTarget) => Promise<void>;
+  readonly teachOrigin: (release: AnchorResult | undefined) => Promise<void>;
+  readonly teachClear: (reason: string) => Promise<void>;
+  readonly artifactRequestFor: (target: CampaignTarget) => ReturnType<typeof makeCampaignExecutionRequest>;
+  rolledIntoNight: number;
+  pendingExecution: Promise<unknown> | null;
+  preflightIdentity: VenueIdentity | null;
+}
+
+// Twin-nights clock seeding. startResidueMs places the press that starts a
+// night when the phone's wall clock reaches that residue modulo 65 536 ms.
+// The stock game seeds its 16-bit RNG from (short) System.currentTimeMillis() in
+// CRun.allocRunHeader, the first instruction of CRun.initRunLoop, which the office
+// frame's load reaches a fixed transition after this press: 3612-3614 ms on the
+// Custom Night path over three runs, with the load itself the only loose part
+// (docs/evidence/night6-h-seedlock-census-20260916.json). The press is stamped in
+// phone wall time either way, and a requested timed start never falls back to an
+// untimed tap.
+async function stampedStartTap(cp: PortsContext, { point: target, holdMs, kind, refusal }:
+  { point: unknown, holdMs?: number, kind: string, refusal: string }) {
+  const { cuePort, onEvent, startResidueMs, tap } = cp;
+  const residueMs = startResidueMs;
+  let clock: ReturnType<AdbCompanionPort['openClock']> | null = null;
+  let plan: ReturnType<typeof planTimedStart> | null = null;
+  let tapped = false;
+  try {
+    clock = cuePort.openClock();
+    const before = await clock.probe({ samples: 8 });
+    if (residueMs !== null) {
+      plan = planTimedStart({ sample: before, residueMs, nowHostMs: performance.now() });
+      onEvent({ type: `${kind}.start-planned`, residueMs, targetPhoneWallMs: plan.targetPhoneWallMs,
+        waitMs: plan.waitMs, uncertaintyMs: before.uncertaintyMs });
+      await waitUntilHostMs(plan.targetHostMs);
+    }
+    const tapHostMs = performance.now();
+    tapped = true;
+    await tap({ point: target, holdMs });
+    const after = await clock.probe({ samples: 4 });
+    const tapPhoneWallMs = phoneWallAt(after, tapHostMs);
+    onEvent({ type: `${kind}.start`, tapHostMs, tapPhoneWallMs, tapPhoneWallLow16: Math.floor(tapPhoneWallMs) % 65536,
+      plannedPhoneWallMs: plan?.targetPhoneWallMs ?? null, lateMs: plan ? tapHostMs - plan.targetHostMs : null,
+      uncertaintyMs: after.uncertaintyMs });
+  } catch (error) {
+    if (residueMs !== null) throw new Error(`${refusal}: ${messageOf(error)}`);
+    onEvent({ type: `${kind}.start`, status: 'unstamped', reason: messageOf(error) });
+    if (!tapped) await tap({ point: target, holdMs });
+  } finally {
+    clock?.close();
+  }
+}
+
+/** The menu port: select the target night on the observed title, and pre-arm its execution. */
+async function menuStep(cp: PortsContext, { target }: { target: CampaignTarget }) {
+  const { allowSaveReset, bridge, calibration, modelPath, onEvent, openMenuHid, prearm, serial, startResidueMs,
+    tap, teachArm, titleModel } = cp;
+  // A story night the game rolled straight into after the previous night's
+  // observed 6 AM: the roll performed the selection, no title exists to
+  // read, and no press may be sent. Anything else still goes through the
+  // observed-title path below.
+  if (cp.rolledIntoNight === target.night && target.mode === 'story' && target.menuTarget === 'continue') {
+    const state = await lifecycle(bridge, serial);
+    if (state !== 'night')
+      throw new Error(`rolled-through night ${target.night} left gameplay before its attempt (state=${state})`);
+    return { target: target.menuTarget, visible: false, selected: true, observed: true,
+      rolledThrough: true, state };
+  }
+  // Seconds before the night, far from the phase-critical release.
+  await teachArm(target);
+  const items = await title(bridge, serial, modelPath);
+  const targetName = target.menuTarget;
+  if (!items.includes(targetName)) return { target: targetName, visible: false, selected: false, observed: true };
+  if (targetName === 'newGame' && !allowSaveReset)
+    throw new Error('New Game requires the explicit allow-save-reset capability');
+  // HID registration waits for Android InputReader. Re-read the title after
+  // that bounded wait so the press is tied to a fresh target observation.
+  const sender = openMenuHid();
+  await sender.transport.start();
+  // Register and qualify the one HID process while the title is still
+  // visible; the intro and gameplay schedule reuse this ready process.
+  const freshItems = await title(bridge, serial, modelPath);
+  if (!freshItems.includes(targetName))
+    return { target: targetName, visible: false, selected: false, observed: true, items: freshItems };
+  const targetPoint = targetName === 'customNight'
+    ? point(calibration?.menu?.point, 'calibration.menu.point')
+    : modelPoint(titleModel.items?.[targetName], `title model ${targetName}`);
+  // point() above already refused a Custom Night with no calibration.
+  const holdMs = targetName === 'customNight' ? calibration?.menu.holdMs ?? CUSTOM_NIGHT_CONTACT_MS : CUSTOM_NIGHT_CONTACT_MS;
+  // This build separates focusing a title row from activating it: the first press paints the
+  // `>>` cursor and a second press activates the focused row -- unless the row was already
+  // focused, and then the FIRST press activates. An untimed start does not care which press
+  // did it. A timed story start does, because only the activating press fixes the office seed.
+  //
+  // A read taken just after a press shows the title whether the press focused the row or
+  // started the night, and returning on that read is the race that cost two timed attempts. On
+  // 2026-09-17 (twin-01) the timed second press landed 15 s into a night the first press had
+  // started. On 2026-09-18 (tw-01) the untimed first press started Night 6 on a freshly
+  // relaunched game, the read came back `title`, and the night ran 47 s with no executor while
+  // this phase waited for the residue -- so "a relaunched game has the cursor off the row" is
+  // not a premise this path may rest on.
+  //
+  // A timed start therefore places EVERY press it may send on the residue, and after the first
+  // one it reads the state only once the press has had time to act (settledAfterPress), with
+  // the answer in before the office appears. Holding this phase open across the office load is
+  // what makes the strict anchor refuse a night as onset-predates-intro, so when that read
+  // already shows the night beginning it is used as the entry state and no further read is
+  // spent. Whichever press activated, the seed follows a timed instant; timedStartHeld reads
+  // back from the seed which one.
+  const residueMs = startResidueMs;
+  const timedStory = residueMs !== null && targetName !== 'customNight';
+  let firstSelectionState: string | null;
+  if (timedStory) {
+    const timedTap = () => stampedStartTap(cp, { point: targetPoint, holdMs, kind: 'menu',
+      refusal: `timed ${targetName} start refused` });
+    await timedTap();
+    firstSelectionState = await settledAfterPress(() => lifecycle(bridge, serial));
+    onEvent({ type: 'menu.press-settled', press: 1, state: firstSelectionState });
+    if (firstSelectionState === 'title') await timedTap();
+  } else {
+    await tap({ point: targetPoint, holdMs });
+    firstSelectionState = await waitFor(bridge, serial,
+      value => value === 'title' || value === 'titleDialog' || value === 'intro' || value === 'night',
+      10000, 'title row focus or night start');
+    if (firstSelectionState === 'title') await tap({ point: targetPoint, holdMs });
+  }
+  if (targetName === 'customNight')
+    return { target: targetName, visible: true, selected: true, observed: true,
+      menuPresses: firstSelectionState === 'title' ? 2 : 1 };
+
+  // Continue/6th Night activates the intro after the focused-row press.
+  // Keep the already-qualified menu HID open through the intro: the gameplay
+  // executor hands its first schedule lines to this same process after the
+  // office frame is observed.
+  if (targetName !== 'newGame') {
+    // A first read that already saw the night begin is the entry state: another read costs
+    // 1-2 s, and intro() has to stamp before the office appears.
+    const entryState = firstSelectionState !== null && ['intro', 'newspaper', 'night'].includes(firstSelectionState)
+      ? firstSelectionState
+      : await waitFor(bridge, serial,
+        value => value === 'intro' || value === 'newspaper' || value === 'night',
+        30000, 'night selection');
+    await prearm(target);
+    return { target: targetName, visible: true, selected: true, observed: true,
+      menuPresses: firstSelectionState === 'title' ? 2 : 1, entryState };
+  }
+
+  // New Game raises a measured confirmation dialog. The capability above
+  // authorizes the save reset; this second observation proves the dialog is
+  // actually present before the calibrated Yes coordinate is pressed. A
+  // direct transition is also accepted for builds/states that do not show
+  // the prompt, but no unobserved confirmation press is allowed.
+  const confirmationState = await waitFor(bridge, serial,
+    value => value === 'titleDialog' || value === 'intro' || value === 'night',
+    30000, 'new-game confirmation or night start');
+  if (confirmationState === 'titleDialog') {
+    const yesPoint = modelPoint(titleModel.items?.sixthNight,
+      'title model new-game confirmation yes');
+    await tap({ point: yesPoint });
+    const newGameState = await waitFor(bridge, serial,
+      value => value === 'intro' || value === 'newspaper' || value === 'night',
+      30000, 'new-game night start');
+    await prearm(target);
+    return { target: targetName, visible: true, selected: true, observed: true,
+      saveResetAuthorized: true, confirmation: 'observed-and-accepted', entryState: newGameState };
+  }
+  await prearm(target);
+  return { target: targetName, visible: true, selected: true, observed: true,
+    saveResetAuthorized: true, confirmation: 'not-present', entryState: confirmationState };
+}
+
+/** The intro port: hold the pre-armed schedule until the office is seen, then release or anchor it. */
+async function introStep(cp: PortsContext, { target }: { target: CampaignTarget }) {
+  const { bridge, cuePort, localExecutor, nightAnchorAimMs, nightAnchorAuthorizeOnLatch, nightAnchorMaxK,
+    nightAnchorPeriodMs, nightAnchorStrict, onEvent, prearm, serial, spec, teachOrigin } = cp;
+  // Pre-arm the device-local schedule while the intro card plays. The
+  // executor's night_go gate holds every plan action -- arm taps included --
+  // until the lifecycle observer positively sees the office. The title HID
+  // stays alive, so spawning during the intro no longer spends plan time on
+  // a second registration and ready delay: the grid origin lands within one
+  // poll of 12 AM instead of the measured 7.8 s post-office handoff lag.
+  await prearm(target);
+  // Any onset the helper latched before this instant belongs to an earlier
+  // night; the anchor refuses it.
+  const introStartedHostMs = performance.now();
+  // Do not accept the night transition on the newspaper/intro card: the
+  // authoritative office `night` state establishes the actuator origin.
+  // With an anchor, the executor's observer usually sees the office first,
+  // so take whichever edge comes first; the slower poll then ends on its
+  // next sample, and its failure cannot crash a night the executor authorized.
+  let executorAuthorized = false;
+  const lifecycleNight = waitFor(bridge, serial, value => value === 'night' || executorAuthorized,
+    30000, 'night start');
+  let state: string | null;
+  if (nightAnchorAimMs === null) {
+    state = await lifecycleNight;
+    // This is the phase-critical handoff. The measurement deliberately leaves
+    // setup taps out of the path so the already-ready HID can act immediately
+    // after the first authoritative office frame.
+    localExecutor.releaseNight();
+  } else {
+    // The office classification only AUTHORIZES; the release is planned from
+    // the helper's latched onset while the intro card is still up, and fires
+    // at onset + aim + k s once authorized (night-anchor.js). Any refusal
+    // releases at authorization.
+    let authorizedAtHostMs: number | null = null;
+    const authorized = Promise.race([
+      lifecycleNight,
+      localExecutor.whenNightAuthorized().then(() => { executorAuthorized = true; return 'night'; }),
+    ]).then(value => { authorizedAtHostMs ??= performance.now(); return value; });
+    let clock: ReturnType<AdbCompanionPort['openClock']> | null = null;
+    try { clock = cuePort.openClock(); }
+    catch (error) { onEvent({ type: 'origin.anchor', status: 'unavailable', reason: 'probe-failed', error: messageOf(error) }); }
+    const anchoring: Promise<AnchorResult | undefined> = clock === null
+      ? authorized.then(() => { localExecutor.releaseNight(); return undefined; })
+      : anchorNightRelease({ clock,
+        authorization: { isAuthorized: () => authorizedAtHostMs !== null, whenAuthorized: () => authorized,
+          authorizedAt: () => authorizedAtHostMs },
+        release: () => localExecutor.releaseNight(), onEvent,
+        // Validated a non-negative integer whenever an aim is set.
+        aimMs: nightAnchorAimMs, maxK: nightAnchorMaxK as number, periodMs: nightAnchorPeriodMs, strict: nightAnchorStrict === true, authorizeOnLatch: nightAnchorAuthorizeOnLatch === true,
+        notBeforeHostMs: introStartedHostMs });
+    anchoring.catch(() => {});
+    try {
+      state = await authorized;
+      const release = await anchoring;
+      // Not awaited: the origin is one socket write on an open forward, and
+      // nothing about the night waits for the panel.
+      void teachOrigin(release);
+    } finally {
+      clock?.close();
+      if (executorAuthorized) lifecycleNight.catch(() => {});
+    }
+  }
+  // The 6th Night and Custom Night menu targets identify the configured
+  // night. A story night inside a chained campaign is identified by its
+  // selection chain: newGame on an observed fresh save, continue after the
+  // previous night's observed 6 AM, or continue from an operator-observed
+  // save cursor equal to the target night. A standalone continue with an
+  // unobserved cursor keeps its identity unknown and is not promoted.
+  const storyTargets = spec.nights.filter(entry => entry.mode === 'story');
+  const chainedStory = target.mode === 'story' &&
+    (target.menuTarget === 'newGame' ||
+      (target.menuTarget === 'continue' &&
+        (storyTargets.findIndex(entry => entry.night === target.night) > 0 ||
+          target.saveCursorObserved === target.night)));
+  const identified = target.menuTarget === 'sixthNight' || target.menuTarget === 'customNight' ||
+    chainedStory;
+  return { night: target.night, identity: identified ? target.mode : 'unknown', observed: identified, state };
+}
+
 /** Refuse options a live composition cannot run: their types, the night anchor's aim and bound, the arm mode, the profile. */
 function checkPortOptions({ teachOverlay, venueBindings, nightAnchorAimMs, allowSaveReset, captureRestarted, startResidueMs,
   nightAnchorPeriodMs, nightAnchorMaxK, armMode, profile }: { teachOverlay: boolean, venueBindings: unknown,
@@ -481,10 +755,6 @@ export async function createCampaignPorts(options: CampaignPortOptions) {
   // The committed title model for this handset; title-observe.py validates the same file.
   const titleModel = await readJson(TITLE_MODEL) as { items?: Readonly<Record<string, unknown>> };
   const modelPath = TITLE_MODEL.pathname;
-  // Set when save() observes the game roll a 6 AM straight into the next
-  // night's gameplay (story Nights 1..4 on this build). The next night's
-  // menu step is then satisfied by the roll: there is no title to read.
-  let rolledIntoNight = 0;
 
   const openMenuHid = () => {
     if (!menuHid) {
@@ -505,16 +775,15 @@ export async function createCampaignPorts(options: CampaignPortOptions) {
     bundle, plan: bundle.plans.find(item => item.night === target.night), profile,
     mode: 'live', artifact: bundle.artifact, armMode,
   });
-  let pendingExecution: Promise<unknown> | null = null;
   const prearm = async (target: CampaignTarget) => {
     // Load the native watchlist before starting the held executor, so the
     // executor's first arm read finds it active rather than racing its load.
     if (bundle.plans.find(plan => plan.night === target.night)?.armVerification)
       await ensureArmWatch();
-    if (pendingExecution) return;
-    pendingExecution = localExecutor.execute(artifactRequestFor(target));
+    if (cp.pendingExecution) return;
+    cp.pendingExecution = localExecutor.execute(artifactRequestFor(target));
     // executeAttempt surfaces the failure; nothing else may await it.
-    pendingExecution.catch(() => {});
+    cp.pendingExecution.catch(() => {});
   };
 
   const tap = async ({ point: target, holdMs = CUSTOM_NIGHT_CONTACT_MS }: { point: unknown, holdMs?: number }) => {
@@ -526,250 +795,19 @@ export async function createCampaignPorts(options: CampaignPortOptions) {
     });
   };
 
-  // Twin-nights clock seeding. startResidueMs places the press that starts a
-  // night when the phone's wall clock reaches that residue modulo 65 536 ms.
-  // The stock game seeds its 16-bit RNG from (short) System.currentTimeMillis() in
-  // CRun.allocRunHeader, the first instruction of CRun.initRunLoop, which the office
-  // frame's load reaches a fixed transition after this press: 3612-3614 ms on the
-  // Custom Night path over three runs, with the load itself the only loose part
-  // (docs/evidence/night6-h-seedlock-census-20260916.json). The press is stamped in
-  // phone wall time either way, and a requested timed start never falls back to an
-  // untimed tap.
-  const stampedStartTap = async ({ point: target, holdMs, kind, refusal }: { point: unknown, holdMs?: number, kind: string, refusal: string }) => {
-    const residueMs = startResidueMs;
-    let clock: ReturnType<AdbCompanionPort['openClock']> | null = null;
-    let plan: ReturnType<typeof planTimedStart> | null = null;
-    let tapped = false;
-    try {
-      clock = cuePort.openClock();
-      const before = await clock.probe({ samples: 8 });
-      if (residueMs !== null) {
-        plan = planTimedStart({ sample: before, residueMs, nowHostMs: performance.now() });
-        onEvent({ type: `${kind}.start-planned`, residueMs, targetPhoneWallMs: plan.targetPhoneWallMs,
-          waitMs: plan.waitMs, uncertaintyMs: before.uncertaintyMs });
-        await waitUntilHostMs(plan.targetHostMs);
-      }
-      const tapHostMs = performance.now();
-      tapped = true;
-      await tap({ point: target, holdMs });
-      const after = await clock.probe({ samples: 4 });
-      const tapPhoneWallMs = phoneWallAt(after, tapHostMs);
-      onEvent({ type: `${kind}.start`, tapHostMs, tapPhoneWallMs, tapPhoneWallLow16: Math.floor(tapPhoneWallMs) % 65536,
-        plannedPhoneWallMs: plan?.targetPhoneWallMs ?? null, lateMs: plan ? tapHostMs - plan.targetHostMs : null,
-        uncertaintyMs: after.uncertaintyMs });
-    } catch (error) {
-      if (residueMs !== null) throw new Error(`${refusal}: ${messageOf(error)}`);
-      onEvent({ type: `${kind}.start`, status: 'unstamped', reason: messageOf(error) });
-      if (!tapped) await tap({ point: target, holdMs });
-    } finally {
-      clock?.close();
-    }
-  };
 
-  const menu = async ({ target }: { target: CampaignTarget }) => {
-    // A story night the game rolled straight into after the previous night's
-    // observed 6 AM: the roll performed the selection, no title exists to
-    // read, and no press may be sent. Anything else still goes through the
-    // observed-title path below.
-    if (rolledIntoNight === target.night && target.mode === 'story' && target.menuTarget === 'continue') {
-      const state = await lifecycle(bridge, serial);
-      if (state !== 'night')
-        throw new Error(`rolled-through night ${target.night} left gameplay before its attempt (state=${state})`);
-      return { target: target.menuTarget, visible: false, selected: true, observed: true,
-        rolledThrough: true, state };
-    }
-    // Seconds before the night, far from the phase-critical release.
-    await teachArm(target);
-    const items = await title(bridge, serial, modelPath);
-    const targetName = target.menuTarget;
-    if (!items.includes(targetName)) return { target: targetName, visible: false, selected: false, observed: true };
-    if (targetName === 'newGame' && !allowSaveReset)
-      throw new Error('New Game requires the explicit allow-save-reset capability');
-    // HID registration waits for Android InputReader. Re-read the title after
-    // that bounded wait so the press is tied to a fresh target observation.
-    const sender = openMenuHid();
-    await sender.transport.start();
-    // Register and qualify the one HID process while the title is still
-    // visible; the intro and gameplay schedule reuse this ready process.
-    const freshItems = await title(bridge, serial, modelPath);
-    if (!freshItems.includes(targetName))
-      return { target: targetName, visible: false, selected: false, observed: true, items: freshItems };
-    const targetPoint = targetName === 'customNight'
-      ? point(calibration?.menu?.point, 'calibration.menu.point')
-      : modelPoint(titleModel.items?.[targetName], `title model ${targetName}`);
-    // point() above already refused a Custom Night with no calibration.
-    const holdMs = targetName === 'customNight' ? calibration?.menu.holdMs ?? CUSTOM_NIGHT_CONTACT_MS : CUSTOM_NIGHT_CONTACT_MS;
-    // This build separates focusing a title row from activating it: the first press paints the
-    // `>>` cursor and a second press activates the focused row -- unless the row was already
-    // focused, and then the FIRST press activates. An untimed start does not care which press
-    // did it. A timed story start does, because only the activating press fixes the office seed.
-    //
-    // A read taken just after a press shows the title whether the press focused the row or
-    // started the night, and returning on that read is the race that cost two timed attempts. On
-    // 2026-09-17 (twin-01) the timed second press landed 15 s into a night the first press had
-    // started. On 2026-09-18 (tw-01) the untimed first press started Night 6 on a freshly
-    // relaunched game, the read came back `title`, and the night ran 47 s with no executor while
-    // this phase waited for the residue -- so "a relaunched game has the cursor off the row" is
-    // not a premise this path may rest on.
-    //
-    // A timed start therefore places EVERY press it may send on the residue, and after the first
-    // one it reads the state only once the press has had time to act (settledAfterPress), with
-    // the answer in before the office appears. Holding this phase open across the office load is
-    // what makes the strict anchor refuse a night as onset-predates-intro, so when that read
-    // already shows the night beginning it is used as the entry state and no further read is
-    // spent. Whichever press activated, the seed follows a timed instant; timedStartHeld reads
-    // back from the seed which one.
-    const residueMs = startResidueMs;
-    const timedStory = residueMs !== null && targetName !== 'customNight';
-    let firstSelectionState: string | null;
-    if (timedStory) {
-      const timedTap = () => stampedStartTap({ point: targetPoint, holdMs, kind: 'menu',
-        refusal: `timed ${targetName} start refused` });
-      await timedTap();
-      firstSelectionState = await settledAfterPress(() => lifecycle(bridge, serial));
-      onEvent({ type: 'menu.press-settled', press: 1, state: firstSelectionState });
-      if (firstSelectionState === 'title') await timedTap();
-    } else {
-      await tap({ point: targetPoint, holdMs });
-      firstSelectionState = await waitFor(bridge, serial,
-        value => value === 'title' || value === 'titleDialog' || value === 'intro' || value === 'night',
-        10000, 'title row focus or night start');
-      if (firstSelectionState === 'title') await tap({ point: targetPoint, holdMs });
-    }
-    if (targetName === 'customNight')
-      return { target: targetName, visible: true, selected: true, observed: true,
-        menuPresses: firstSelectionState === 'title' ? 2 : 1 };
 
-    // Continue/6th Night activates the intro after the focused-row press.
-    // Keep the already-qualified menu HID open through the intro: the gameplay
-    // executor hands its first schedule lines to this same process after the
-    // office frame is observed.
-    if (targetName !== 'newGame') {
-      // A first read that already saw the night begin is the entry state: another read costs
-      // 1-2 s, and intro() has to stamp before the office appears.
-      const entryState = firstSelectionState !== null && ['intro', 'newspaper', 'night'].includes(firstSelectionState)
-        ? firstSelectionState
-        : await waitFor(bridge, serial,
-          value => value === 'intro' || value === 'newspaper' || value === 'night',
-          30000, 'night selection');
-      await prearm(target);
-      return { target: targetName, visible: true, selected: true, observed: true,
-        menuPresses: firstSelectionState === 'title' ? 2 : 1, entryState };
-    }
 
-    // New Game raises a measured confirmation dialog. The capability above
-    // authorizes the save reset; this second observation proves the dialog is
-    // actually present before the calibrated Yes coordinate is pressed. A
-    // direct transition is also accepted for builds/states that do not show
-    // the prompt, but no unobserved confirmation press is allowed.
-    const confirmationState = await waitFor(bridge, serial,
-      value => value === 'titleDialog' || value === 'intro' || value === 'night',
-      30000, 'new-game confirmation or night start');
-    if (confirmationState === 'titleDialog') {
-      const yesPoint = modelPoint(titleModel.items?.sixthNight,
-        'title model new-game confirmation yes');
-      await tap({ point: yesPoint });
-      const newGameState = await waitFor(bridge, serial,
-        value => value === 'intro' || value === 'newspaper' || value === 'night',
-        30000, 'new-game night start');
-      await prearm(target);
-      return { target: targetName, visible: true, selected: true, observed: true,
-        saveResetAuthorized: true, confirmation: 'observed-and-accepted', entryState: newGameState };
-    }
-    await prearm(target);
-    return { target: targetName, visible: true, selected: true, observed: true,
-      saveResetAuthorized: true, confirmation: 'not-present', entryState: confirmationState };
-  };
-
-  const intro = async ({ target }: { target: CampaignTarget }) => {
-    // Pre-arm the device-local schedule while the intro card plays. The
-    // executor's night_go gate holds every plan action -- arm taps included --
-    // until the lifecycle observer positively sees the office. The title HID
-    // stays alive, so spawning during the intro no longer spends plan time on
-    // a second registration and ready delay: the grid origin lands within one
-    // poll of 12 AM instead of the measured 7.8 s post-office handoff lag.
-    await prearm(target);
-    // Any onset the helper latched before this instant belongs to an earlier
-    // night; the anchor refuses it.
-    const introStartedHostMs = performance.now();
-    // Do not accept the night transition on the newspaper/intro card: the
-    // authoritative office `night` state establishes the actuator origin.
-    // With an anchor, the executor's observer usually sees the office first,
-    // so take whichever edge comes first; the slower poll then ends on its
-    // next sample, and its failure cannot crash a night the executor authorized.
-    let executorAuthorized = false;
-    const lifecycleNight = waitFor(bridge, serial, value => value === 'night' || executorAuthorized,
-      30000, 'night start');
-    let state: string | null;
-    if (nightAnchorAimMs === null) {
-      state = await lifecycleNight;
-      // This is the phase-critical handoff. The measurement deliberately leaves
-      // setup taps out of the path so the already-ready HID can act immediately
-      // after the first authoritative office frame.
-      localExecutor.releaseNight();
-    } else {
-      // The office classification only AUTHORIZES; the release is planned from
-      // the helper's latched onset while the intro card is still up, and fires
-      // at onset + aim + k s once authorized (night-anchor.js). Any refusal
-      // releases at authorization.
-      let authorizedAtHostMs: number | null = null;
-      const authorized = Promise.race([
-        lifecycleNight,
-        localExecutor.whenNightAuthorized().then(() => { executorAuthorized = true; return 'night'; }),
-      ]).then(value => { authorizedAtHostMs ??= performance.now(); return value; });
-      let clock: ReturnType<AdbCompanionPort['openClock']> | null = null;
-      try { clock = cuePort.openClock(); }
-      catch (error) { onEvent({ type: 'origin.anchor', status: 'unavailable', reason: 'probe-failed', error: messageOf(error) }); }
-      const anchoring: Promise<AnchorResult | undefined> = clock === null
-        ? authorized.then(() => { localExecutor.releaseNight(); return undefined; })
-        : anchorNightRelease({ clock,
-          authorization: { isAuthorized: () => authorizedAtHostMs !== null, whenAuthorized: () => authorized,
-            authorizedAt: () => authorizedAtHostMs },
-          release: () => localExecutor.releaseNight(), onEvent,
-          // Validated a non-negative integer whenever an aim is set.
-          aimMs: nightAnchorAimMs, maxK: nightAnchorMaxK as number, periodMs: nightAnchorPeriodMs, strict: nightAnchorStrict === true, authorizeOnLatch: nightAnchorAuthorizeOnLatch === true,
-          notBeforeHostMs: introStartedHostMs });
-      anchoring.catch(() => {});
-      try {
-        state = await authorized;
-        const release = await anchoring;
-        // Not awaited: the origin is one socket write on an open forward, and
-        // nothing about the night waits for the panel.
-        void teachOrigin(release);
-      } finally {
-        clock?.close();
-        if (executorAuthorized) lifecycleNight.catch(() => {});
-      }
-    }
-    // The 6th Night and Custom Night menu targets identify the configured
-    // night. A story night inside a chained campaign is identified by its
-    // selection chain: newGame on an observed fresh save, continue after the
-    // previous night's observed 6 AM, or continue from an operator-observed
-    // save cursor equal to the target night. A standalone continue with an
-    // unobserved cursor keeps its identity unknown and is not promoted.
-    const storyTargets = spec.nights.filter(entry => entry.mode === 'story');
-    const chainedStory = target.mode === 'story' &&
-      (target.menuTarget === 'newGame' ||
-        (target.menuTarget === 'continue' &&
-          (storyTargets.findIndex(entry => entry.night === target.night) > 0 ||
-            target.saveCursorObserved === target.night)));
-    const identified = target.menuTarget === 'sixthNight' || target.menuTarget === 'customNight' ||
-      chainedStory;
-    return { night: target.night, identity: identified ? target.mode : 'unknown', observed: identified, state };
-  };
-
-  // What preflight read, for the terminal's venue check.
-  let preflightIdentity: VenueIdentity | null = null;
   const terminal = async ({ target, execution }: { target: CampaignTarget, execution: unknown }) => {
     const observed = await observedTerminal({ target, execution });
-    if (observed.outcome === 'unknown' || observed.outcome === 'invalid' || preflightIdentity === null ||
+    if (observed.outcome === 'unknown' || observed.outcome === 'invalid' || cp.preflightIdentity === null ||
         typeof bridge.venueIdentity !== 'function') return observed;
     // Input stops before the read: a terminal ends the attempt's ownership of
     // the screen, and the read takes a few adb round trips.
     await localExecutor.abort('campaign-terminal-venue-check');
     let drift: { field: string, from: string, to: string }[] = [];
     try {
-      drift = venueDriftDuringRun(preflightIdentity, await bridge.venueIdentity());
+      drift = venueDriftDuringRun(cp.preflightIdentity, await bridge.venueIdentity());
       onEvent({ type: 'campaign.terminal.venue', drift });
     } catch (error) {
       // An unreadable venue is not drift; the terminal stands as observed.
@@ -809,7 +847,7 @@ export async function createCampaignPorts(options: CampaignPortOptions) {
     const rollsIntoNext = target.night >= 1 && target.night <= 4;
     if (rollsIntoNext) {
       const state = await waitFor(bridge, serial, value => value === 'night', 90000, 'post-win next-night roll');
-      rolledIntoNight = target.night + 1;
+      cp.rolledIntoNight = target.night + 1;
       return { observed: true, advanced: true, nextNightStarted: true, state };
     }
     await waitFor(bridge, serial, value => value === 'title', 90000, 'post-win title menu');
@@ -895,7 +933,7 @@ export async function createCampaignPorts(options: CampaignPortOptions) {
     // reaches that residue modulo 65 536 ms (packages/play/src/campaign/timed-start.ts). The tap's
     // phone wall time is logged either way; a requested timed start never falls back to
     // an untimed tap.
-    await stampedStartTap({ point: measured.start.point, holdMs: measured.start.holdMs,
+    await stampedStartTap(cp, { point: measured.start.point, holdMs: measured.start.holdMs,
       kind: 'custom-night', refusal: 'timed Custom Night start refused' });
     return configured;
   };
@@ -904,7 +942,7 @@ export async function createCampaignPorts(options: CampaignPortOptions) {
   const devicePreflight = async (args: { spec: CampaignSpec }) => {
     const result = await bridge.preflight({ targetBuild: spec.target.build,
       restartCapture: false, venueBindings, ...args, requireVenueBinding: true, profileId: profile.id });
-    preflightIdentity = result?.venue?.observed ?? null;
+    cp.preflightIdentity = result?.venue?.observed ?? null;
     return result;
   };
   const restartAfterAbort = async (reason: unknown) => {
@@ -933,8 +971,21 @@ export async function createCampaignPorts(options: CampaignPortOptions) {
       throw error;
     }
   };
+  const cp: PortsContext = { spec, serial, bridge, cuePort, onEvent, localExecutor, titleModel, modelPath,
+    calibration, calibrationPath, configReadback, allowSaveReset, startResidueMs, nightAnchorAimMs, nightAnchorMaxK,
+    nightAnchorPeriodMs, nightAnchorStrict, nightAnchorAuthorizeOnLatch, tap, prearm, openMenuHid, closeMenuHid,
+    refreshCueEndpoint, teachArm, teachOrigin, teachClear, artifactRequestFor,
+    // Set when save() observes the game roll a 6 AM straight into the next
+    // night's gameplay (story Nights 1..4 on this build). The next night's
+    // menu step is then satisfied by the roll: there is no title to read.
+    rolledIntoNight: 0,
+    pendingExecution: null,
+    // What preflight read, for the terminal's venue check.
+    preflightIdentity: null,
+  };
   const composed = composeCampaignPorts({ spec, bundle, profile,
-    artifact: bundle.artifact, armMode, devicePreflight, menu, customNight, intro,
+    artifact: bundle.artifact, armMode, devicePreflight, menu: args => menuStep(cp, args), customNight,
+    intro: args => introStep(cp, args),
     terminal, terminalVerification, save, retryReady, localExecutor, restartAfterAbort });
   const ports = {
     ...composed.ports,
@@ -970,9 +1021,9 @@ export async function createCampaignPorts(options: CampaignPortOptions) {
         onEvent({ type: 'campaign.attempt.invalid', why: tagged.invalid, detail: tagged.message });
         return { status: 'INVALID', why: tagged.invalid, detail: tagged.message };
       });
-      if (pendingExecution) {
-        const pending = pendingExecution;
-        pendingExecution = null;
+      if (cp.pendingExecution) {
+        const pending = cp.pendingExecution;
+        cp.pendingExecution = null;
         return settle(pending);
       }
       // A retry can reach the attempt port after intro has already returned;
@@ -981,8 +1032,8 @@ export async function createCampaignPorts(options: CampaignPortOptions) {
       return settle(localExecutor.execute(artifactRequestFor(target)));
     },
     releaseAll: async () => {
-      const hadPendingExecution = pendingExecution !== null;
-      pendingExecution = null;
+      const hadPendingExecution = cp.pendingExecution !== null;
+      cp.pendingExecution = null;
       try {
         await composed.ports.releaseAll();
       } finally {
@@ -996,7 +1047,7 @@ export async function createCampaignPorts(options: CampaignPortOptions) {
       }
     },
     cleanup: async (reason: unknown) => {
-      pendingExecution = null;
+      cp.pendingExecution = null;
       try { await composed.ports.cleanup(reason); }
       finally {
         await closeMenuHid();
