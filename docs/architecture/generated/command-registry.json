@@ -2717,6 +2717,12 @@
       "lifecycle": "supported"
     },
     {
+      "id": "packages/review/src/stat.ts",
+      "invocation": "packages/review/src/stat.ts",
+      "kind": "module",
+      "lifecycle": "supported"
+    },
+    {
       "id": "packages/review/test/stat.test.ts",
       "invocation": "packages/review/test/stat.test.ts",
       "kind": "check",

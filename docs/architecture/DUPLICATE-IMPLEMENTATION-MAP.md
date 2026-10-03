@@ -430,7 +430,7 @@ green.
 
 | Twin | Lines | Verdict |
 |---|---|---|
-| `packages/review/src/stat.ts` / `packages/review/src/stat.py` | 129 / 113 | **`GATE`, keep.** Same five functions; `packages/review/test/stat.test.ts:49` spawns `python3` and compares. The model pair. |
+| `packages/review/src/stat.ts` / ~~`packages/review/src/stat.py`~~ | 129 / — | **Removed 2026-10-02.** No Python script imported `stat.py`; its only caller was the parity check in `stat.test.ts`. Unforced Python (CLAUDE.md, "Types"). |
 | `packages/propose/bin/policy/closed-families.ts` / `tools/invent/closed-families.ts` | 70 / 134 | Two registers of closed policy families — device-plan surface vs privileged genome surface. Same register, two classifiers. |
 | `tools/invent/search.mjs` / `packages/propose/parked/minus7/search.ts` | 248 / 189 | Two constrained searches; see §12. |
 | `packages/propose/parked/minus7/cycle.ts` / `packages/propose/bin/minus-toys/cycle.ts` | 244 / 263 | Same shape, different route. `tools/minustoys/` holds **exactly one file**. **Decided 2026-09-08: keep.** One directory per route is the convention; a move would touch importers, the `TOOLS.md` row and the generated catalogs for no behaviour change, and Minus Toys is the live Night 5/6 route. |
@@ -471,8 +471,9 @@ A cleanup should reuse one of these five rather than invent a sixth:
    got a correction, and the stale copy still carried the docstring claiming it
    was frame-for-frame identical. The fix expresses boxes as **fractions** so a
    2400x1080 screencap caller and a 1280x576 video caller evaluate one rule.
-2. **Cross-language spawn comparison.** `packages/review/test/stat.test.ts` imports the JS
-   module and spawns `python3` against `stat.py` in the same test.
+2. **Cross-language spawn comparison.** `packages/review/test/stat.test.ts` imported the JS
+   module and spawned `python3` against `stat.py` in the same test, until `stat.py`, which no
+   script used, was removed on 2026-10-02.
 3. **Shared JSONL vectors read from both languages.**
    `packages/kernel/test/contract-vectors.py` over `packages/source/test/fixtures/*.jsonl`.
 4. **Equivalence gate between a model and its authority.**

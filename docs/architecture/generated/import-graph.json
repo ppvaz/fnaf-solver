@@ -4610,10 +4610,7 @@
       "file": "packages/review/test/stat.test.ts",
       "imports": [
         "../src/stat.ts",
-        "node:assert/strict",
-        "node:child_process",
-        "node:path",
-        "node:url"
+        "node:assert/strict"
       ]
     },
     {
