@@ -346,6 +346,15 @@ STAY = "global/stay_on_while_plugged_in"
 
 
 def main() -> int:
+    # The cleanup latch must observe the inherited mask on every POSIX host;
+    # /proc is absent on macOS, which otherwise waits until the child has exited.
+    prior_mask = signal.pthread_sigmask(signal.SIG_BLOCK, {signal.SIGINT})
+    try:
+        assert fake_phone.sigint_blocked() is True, "fake adb must observe blocked SIGINT"
+        signal.pthread_sigmask(signal.SIG_UNBLOCK, {signal.SIGINT})
+        assert fake_phone.sigint_blocked() is False, "fake adb must observe unblocked SIGINT"
+    finally:
+        signal.pthread_sigmask(signal.SIG_SETMASK, prior_mask)
     pure_checks()
     with tempfile.TemporaryDirectory(prefix="overnight-window-test-") as scratch:
         base = Path(scratch)

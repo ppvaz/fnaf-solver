@@ -79,15 +79,11 @@ class Phone:
         self.lock.close()
 
 
-def sigint_blocked() -> bool | None:
+def sigint_blocked() -> bool:
     """Was this process started with SIGINT blocked (inherited from its parent)?"""
-    try:
-        for line in Path("/proc/self/status").read_text().splitlines():
-            if line.startswith("SigBlk:"):
-                return bool(int(line.split()[1], 16) & (1 << (signal.SIGINT - 1)))
-    except OSError:
-        pass
-    return None
+    # An empty set reads the current mask without changing it, on Linux and
+    # macOS alike. /proc/self/status exists only on Linux.
+    return signal.SIGINT in signal.pthread_sigmask(signal.SIG_BLOCK, set())
 
 
 def log(actor: str, args: list[str], known: bool = True, serial: str | None = None, **extra) -> None:
