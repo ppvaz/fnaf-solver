@@ -26,7 +26,9 @@ import { performance } from 'node:perf_hooks';
 import { AdbCompanionPort, AdbHidProcess } from '../../src/campaign/physical-ports.ts';
 import { HidWireTransport } from '../../src/venues/phone/hid.ts';
 import { loadRegionSet, registerSet } from '../../bin/phone/native-regions.ts';
-import { Actor, type Point, type RegionRead, RegionRecorder, RunRecord, interruptibleSleep, startVideo } from '../../bin/phone/night-kit.ts';
+import {
+  Actor, type Point, type RegionRead, RegionRecorder, RunRecord, interruptibleSleep, onStopSignal, startVideo,
+} from '../../bin/phone/night-kit.ts';
 import { audioPreflight } from '../../bin/companion/audio-players.ts';
 import { resolveSerial } from '../../bin/phone/local-profile.ts';
 import {
@@ -454,9 +456,10 @@ const QUIET: Teach = { origin() {}, step() {}, door() {}, closet() {}, bed() {},
  * a hall-far occupant home (g68/g84) -- a flash into hall-near is the one
  * certain death (g345/g346), so doubt always closes.
  */
-export async function loopNight({ act, c, record, eyes, ears, epochHostMs, stopAfterMs, night, teach = QUIET, hearing = loadHearing() }:
+export async function loopNight({ act, c, record, eyes, ears, epochHostMs, stopAfterMs, night, teach = QUIET, hearing = loadHearing(),
+  shouldStop = () => false }:
   { act: Actor, c: Controls, record: RunRecord, eyes: Eyes, ears: Ears, epochHostMs: number, stopAfterMs: number, night: number,
-    teach?: Teach, hearing?: Hearing }) {
+    teach?: Teach, hearing?: Hearing, shouldStop?: () => boolean }) {
   const pt = (k: string) => ({ x: c[k].x, y: c[k].y });
   const nightMs = () => performance.now() - epochHostMs;
   const log = (m: string, f: object = {}) => record.event('policy', { atNightMs: Math.round(nightMs()), m, ...f });
@@ -969,7 +972,7 @@ export async function loopNight({ act, c, record, eyes, ears, epochHostMs, stopA
   };
 
   let fredStarted = false;
-  while (nightMs() < stopAfterMs) {
+  while (nightMs() < stopAfterMs && !shouldStop()) {
     if (fredActive()) {
       if (!fredStarted) {
         fredStarted = true;
@@ -1038,6 +1041,8 @@ async function main(argv: string[]) {
     claimLevel: 'DEVICE_MEASURED helper native frames and regions, A2DP audio; no detector or route is promoted by this record',
     sensor: 'cue-helper-mediaprojection-2400x1080 + a2dp-bluealsa' });
   await record.save('PREFLIGHT');
+  let stopRequested = false;
+  onStopSignal((signal) => { stopRequested = true; record.event('signal', { signal }).catch(() => {}); });
 
   const port = new AdbCompanionPort({ serial });
   // Name the target and show the lease on the phone (companion-status-v1). A
@@ -1130,7 +1135,7 @@ async function main(argv: string[]) {
       const ears = new Ears(live);
       ears.anchor(wallOf(epochHostMs) + LEVEL_ORIGIN_MS);
       record.document.loop = await loopNight({ act, c, record, eyes, ears, epochHostMs,
-        stopAfterMs: options.stopAfterMs, night: options.night as number, teach, hearing });
+        stopAfterMs: options.stopAfterMs, night: options.night as number, teach, hearing, shouldStop: () => stopRequested });
       await teach.clear();
       nightDoc.endedAtNightMs = performance.now() - epochHostMs;
       for (let i = 0; i < 3; i += 1) { await snapTo(`after-night-${i}`); await sleep(2500); }

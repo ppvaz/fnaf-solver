@@ -35,6 +35,7 @@ import { AdbDeviceBridge } from '../../src/campaign/adb-bridge.ts';
 import { AdbHidProcess } from '../../src/campaign/physical-ports.ts';
 import { HidWireTransport } from '../../src/venues/phone/hid.ts';
 import { resolveSerial } from '../../bin/phone/local-profile.ts';
+import { onStopSignal } from '../../bin/phone/night-kit.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '../../../..');
@@ -711,8 +712,7 @@ async function main(argv: string[]) {
   let teachVisible = false;
   let stopRequested = false;
   const requestStop = (signal: string) => { stopRequested = true; record.event('signal', { signal }).catch(() => {}); };
-  process.once('SIGINT', () => requestStop('SIGINT'));
-  process.once('SIGTERM', () => requestStop('SIGTERM'));
+  onStopSignal(requestStop);
   try {
     const preflight = await bridge.preflight({ targetPackage: PACKAGE, targetBuild: `${PACKAGE}:${BUILD}`,
       requireHelper: false, requireHid: true });

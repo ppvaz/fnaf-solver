@@ -1550,7 +1550,8 @@
       "determinismSignals": [
         "Date.now",
         "Date.now",
-        "Date.now"
+        "Date.now",
+        "performance.now"
       ],
       "fixedSleeps": [],
       "sharedResources": [

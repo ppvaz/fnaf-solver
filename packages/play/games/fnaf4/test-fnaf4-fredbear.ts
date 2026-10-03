@@ -8,7 +8,7 @@ import { createHash } from 'node:crypto';
 import {
   HEARING_PATH, loadHearing, Grid, sideGrid, laughGrid, landings, laughs, walkSlot, quietTapAt, releaseAt, shadowOf,
 } from './fnaf4-fredbear.ts';
-import { Actor, type RunRecord, interruptibleSleep } from '../../bin/phone/night-kit.ts';
+import { Actor, type RunRecord, interruptibleSleep, onStopSignal } from '../../bin/phone/night-kit.ts';
 import { HidWireTransport } from '../../src/venues/phone/hid.ts';
 import type { HearingRecord } from './fnaf4-hearing-evidence.ts';
 
@@ -223,6 +223,26 @@ for (const [k, b] of silence) {
   let refused = false;
   try { await new Actor(hid, record0, 160).holdWhile('x', { x: 1, y: 1 }, 100, () => null); } catch { refused = true; }
   ok('holdWhile refuses a transport it cannot interrupt', refused);
+}
+
+// --- a stop request ends the night at its next step ------------------------------------
+{
+  const { loopNight } = await import('./fnaf4-run.ts');
+  const logged: string[] = [];
+  const quiet = fakeOf<RunRecord>({ document: { inputsSent: 0 },
+    event: async (type: string, fields: { m?: string } = {}) => { logged.push(fields.m ?? type); return {}; } });
+  let ended: unknown;
+  try {
+    ended = await loopNight({ act: fakeOf({}), c: fakeOf({}), record: quiet, eyes: fakeOf({}), ears: fakeOf({}),
+      epochHostMs: performance.now(), stopAfterMs: 60000, night: 1, shouldStop: () => true });
+  } catch (e) { ended = e; }
+  ok(`a requested stop ends the loop before its next step (${ended instanceof Error ? ended.message : 'returned'})`,
+    !(ended instanceof Error) && logged.includes('loop ended'));
+  const heard: string[] = [];
+  const release = onStopSignal((signal) => { heard.push(signal); });
+  process.emit('SIGTERM');
+  release();
+  ok(`SIGTERM requests the stop SIGINT does (${heard.join(',') || 'none'})`, heard.join(',') === 'SIGTERM');
 }
 
 console.log(`test-fnaf4-fredbear: ${checks - failures.length}/${checks} checks passed`);

@@ -70,6 +70,20 @@ export class RunRecord {
 }
 
 /**
+ * Ctrl-C and SIGTERM both end a runner's night at its next step, so the
+ * record, the region file and the game's teardown still run: a killed run
+ * leaves all three. Returns what removes the listeners.
+ */
+export function onStopSignal(stop: (signal: NodeJS.Signals) => void) {
+  const listeners = (['SIGINT', 'SIGTERM'] as const).map((signal) => {
+    const listener = () => stop(signal);
+    process.once(signal, listener);
+    return [signal, listener] as const;
+  });
+  return () => { for (const [signal, listener] of listeners) process.removeListener(signal, listener); };
+}
+
+/**
  * A sleep port for HidWireTransport whose pending sleeps can be cut short: a
  * hold is then ONE contact from its DOWN to an UP written when the caller
  * decides, not a chain of reports with a release between each.

@@ -24,7 +24,7 @@ import { performance } from 'node:perf_hooks';
 import { AdbCompanionPort, AdbHidProcess } from '../../src/campaign/physical-ports.ts';
 import { HidWireTransport } from '../../src/venues/phone/hid.ts';
 import { loadRegionSet, registerSet } from '../../bin/phone/native-regions.ts';
-import { Actor, type Point, type RegionRead, RegionRecorder, RunRecord, startVideo } from '../../bin/phone/night-kit.ts';
+import { Actor, type Point, type RegionRead, RegionRecorder, RunRecord, onStopSignal, startVideo } from '../../bin/phone/night-kit.ts';
 import { Reader, type StoredPair, boxLuma, loadPairs, medianLuma, occupancy, stateScore } from './fnaf3-detectors.ts';
 import { resolveSerial } from '../../bin/phone/local-profile.ts';
 
@@ -80,8 +80,7 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const stamp = () => new Date().toISOString().replace(/[-:.]/g, '');
 const sha256 = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex');
 function fail(message: string): never { throw new Error(`fnaf3-run: ${message}`); }
-// A SIGINT ends the night's loop at its next step, so the record, the region
-// file and the game's teardown still run (a killed run leaves all three).
+// Set by onStopSignal: the night's loop ends at its next step.
 const STOP = { requested: false };
 
 export function parseArgs(argv: string[]) {
@@ -936,6 +935,6 @@ async function main(argv: string[]) {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  process.on('SIGINT', () => { STOP.requested = true; });
+  onStopSignal(() => { STOP.requested = true; });
   main(process.argv.slice(2)).catch((error: Error) => { console.error(error.message); process.exitCode = 2; });
 }
