@@ -41,13 +41,21 @@ const sweep = (t0: number) => [
 // geometry, so no step here carries one: how late each step can be before the
 // night is lost is UNKNOWN for this timing, and grading uses the lesson's own
 // tolerance.
+//
+// On the sourced model (the Sim's default since 2026-10-02) two of those floors are a frame longer than the
+// animation constants: g619 reads a mask-off touch at its sheet position and the next update performs it
+// (sourcedDropFlagOrder), and the monitor-up animation counts one more loop (sourcedAnimationCount). Both
+// were measured in the Sim as the first gap whose follow-up press it takes: mask off -> hall light 16 frames,
+// raise -> camera 13 (12 and 15 on the legacy model, as the constants say).
 const frames = (n: number) => n / C.FPS;
 const SLACK = 2;
+const MASK_OFF_FLOOR = C.MASK_ANIM_OFF + 1;
+const MONITOR_UP_FLOOR = C.MONITOR_ANIM_UP + 1;
 const MASK_ON = 0.20;
 const MASK_OFF = MASK_ON + frames(C.MASK_ANIM_ON + SLACK);   // the mask is fully on
-const HALL = MASK_OFF + frames(C.MASK_ANIM_OFF + SLACK);     // the mask is fully off
+const HALL = MASK_OFF + frames(MASK_OFF_FLOOR + SLACK);      // the mask is fully off
 const RAISE = HALL + frames(11);                              // CYCLE_SCRIPT's 0.18 s
-const SWEEP = RAISE + frames(C.MONITOR_ANIM_UP + SLACK);     // the monitor is fully up
+const SWEEP = RAISE + frames(MONITOR_UP_FLOOR + SLACK);      // the monitor is fully up
 const HOME = SWEEP + 0.60;                                    // three cameras, 0.2 s apart
 const WIND = HOME + 0.10;
 const ms3 = (x: number) => Math.round(x * 1000) / 1000;
@@ -80,7 +88,8 @@ const PHASE_A_SCRIPT = [
   S('monitor-down', 0.00, 'Cams down', 'monitor', { want: 'down' }),
   S('flash-hall', 0.15, 'Flash the hall', 'light'),
   S('monitor-up', 0.40, 'Cams up', 'monitor', { want: 'up' }),
-  S('cam-10', 0.60, 'CAM 10, then LIGHT', 'camflash', { cam: 10 }),
+  // The first camera waits for the monitor to be fully up, by the same rule as the main cycle's SWEEP.
+  S('cam-10', ms3(0.40 + frames(MONITOR_UP_FLOOR + SLACK)), 'CAM 10, then LIGHT', 'camflash', { cam: 10 }),
   S('cam-4', 0.80, 'CAM 04, then LIGHT', 'camflash', { cam: 4 }),
   S('cam-7', 1.00, 'CAM 07, then LIGHT', 'camflash', { cam: 7 }),
   S('cam-11', 1.20, 'CAM 11', 'cam', { cam: 11 }),
@@ -261,10 +270,7 @@ export const byId = (id: string | null | undefined) => LESSONS.find(l => l.id ==
  * @param options extra Sim options
  */
 export function lessonSim(lesson: typeof LESSONS[number], options: ConstructorParameters<typeof C.Sim>[0] = {}) {
-  // The taught cycle's gaps were derived on the legacy model, and the sourced model (the default since
-  // 2026-10-02) counts the animations a frame longer, so it refuses a press on its cue (lessons.test.ts).
-  // Lessons stay on fnaf2-legacy until the cycle is re-derived under fnaf2-sourced (roadmap S5).
-  const sim = new C.Sim({ ...C.LEGACY_SIM_OPTIONS, android: true, record: true, ...lesson.sim,
+  const sim = new C.Sim({ android: true, record: true, ...lesson.sim,
     ...(lesson.fullNight ? {} : { durationFrames: LESSON_FRAMES }), ...options });
   if (lesson.start) {
     Object.assign(sim, lesson.start);

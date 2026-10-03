@@ -6,17 +6,16 @@
 import assert from 'node:assert/strict';
 import * as C from '@sixam/source/fnaf2';
 import { Sim } from '@sixam/source/fnaf2';
-import { Coach, playPress, pressLanded, pressState } from '../src/coach.ts';
+import { Coach, playPress } from '../src/coach.ts';
 import type { Step } from '../src/curriculum.ts';
 
-// The coach grades against the lessons' model, fnaf2-legacy (curriculum.ts).
-const QUIET = { ...C.LEGACY_SIM_OPTIONS, bbEnabled: false, foxyEnabled: false, gfEnabled: false, boxEnabled: false,
+const QUIET = { bbEnabled: false, foxyEnabled: false, gfEnabled: false, boxEnabled: false,
   stalledEnabled: false, powerEnabled: false, lethal: false, record: false, seed: 1 };
 
-// pressLanded, press by press, on states the Sim refuses and accepts.
+// The press path, press by press, on states the Sim refuses and accepts.
 {
   const sim = new Sim(QUIET);
-  const press = (act: string) => { const before = pressState(sim); sim.press(act); return pressLanded(before, pressState(sim), act); };
+  const press = (act: string) => playPress(sim, null, act);
   assert.equal(sim.monitor, 'down');
   assert.equal(press('cam:10'), false, 'a camera with the monitor down is refused');
   assert.equal(press('mask'), true, 'the mask goes on from rest');
@@ -25,7 +24,8 @@ const QUIET = { ...C.LEGACY_SIM_OPTIONS, bbEnabled: false, foxyEnabled: false, g
   for (let i = 0; i < C.MASK_ANIM_ON; i++) sim.tick();
   assert.equal(press('mask'), true, 'the mask comes off once it is fully on');
   assert.equal(press('monitor'), false, 'nothing but the mask answers while it is coming off');
-  for (let i = 0; i < C.MASK_ANIM_OFF; i++) sim.tick();
+  // On the sourced model the mask-off touch is performed on the next update, then animates off.
+  for (let i = 0; (sim.maskOn || sim.maskAnim > 0) && i < 60; i++) sim.tick();
   assert.equal(press('light'), true, 'the light answers once the mask is fully off');
   sim.release('light');
   assert.equal(press('monitor'), true, 'the monitor raises');

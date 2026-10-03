@@ -21,10 +21,15 @@ policies, live input to the phone or claim promotion.
 - **The taught pass is one the Sim accepts.** Every gap the Sim gates on an
   animation is the sourced animation length plus two frames; the rest keeps
   Source's `CYCLE_SCRIPT` spacing, whose own mask-off the Sim has refused since
-  3d5c5f7. `test/lessons.test.ts` plays every lesson through the Sim.
+  3d5c5f7. On the sourced model, the Sim's default since 2026-10-02, the
+  mask-off and monitor-up floors are a frame longer than the constants (the
+  touch is performed an update later; the animation counts one more loop).
+  `test/lessons.test.ts` plays every lesson through the Sim.
 - **The coach grades what the game took.** `playPress` lets the Sim take a
   press before the coach grades it, and a press the Sim refuses is graded
-  `refused`, not on its timing.
+  `refused`, not on its timing. A press that only records a drop-button touch
+  is graded by the Sim's next update, played on a copy, which performs it or
+  drops it.
 - **Every number about a route wears its label.** `src/route-facts.js` holds
   each statement with its claim level (`MODEL_ONLY`, `DEVICE_MEASURED`) and
   the committed record behind it; `test/route-facts.test.ts` fails when a

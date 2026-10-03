@@ -24,7 +24,7 @@ interface CoachOptions {
 // press the game had refused.
 
 /** The Sim state a press can change. */
-export function pressState(sim: C.Sim) {
+function pressState(sim: C.Sim) {
   return {
     maskOn: sim.maskOn, maskAnim: sim.maskAnim, monitor: sim.monitor,
     dropEverything: !!sim.dropEverything, dropTouch: sim.dropTouch ?? null,
@@ -34,14 +34,17 @@ export function pressState(sim: C.Sim) {
 }
 
 /**
- * Did the press of `act` land, judged from the Sim state before and after it?
+ * Did the press of `act` land, judged from the Sim state before and after it? A mask or monitor press that
+ * only records a drop-button touch is not decided yet: g618/g619 read it on the next update and perform it
+ * or drop it (the sourced model), so `touchPerformed` carries that update's answer (playPress asks the Sim).
  */
-export function pressLanded(before: ReturnType<typeof pressState>, after: ReturnType<typeof pressState>, act: string) {
+function pressLanded(before: ReturnType<typeof pressState>, after: ReturnType<typeof pressState>, act: string,
+  touchPerformed = false) {
+  const touched = before.dropTouch !== after.dropTouch && touchPerformed;
   switch (act) {
-    case 'mask': return before.maskOn !== after.maskOn || before.maskAnim !== after.maskAnim ||
-      before.dropTouch !== after.dropTouch;
+    case 'mask': return before.maskOn !== after.maskOn || before.maskAnim !== after.maskAnim || touched;
     case 'monitor': return before.monitor !== after.monitor ||
-      before.dropEverything !== after.dropEverything || before.dropTouch !== after.dropTouch;
+      before.dropEverything !== after.dropEverything || touched;
     case 'light': return after.lightHeld;
     case 'wind': return after.winding;
     case 'ventL': return after.ventL;
@@ -60,9 +63,17 @@ export function pressLanded(before: ReturnType<typeof pressState>, after: Return
 export function playPress(sim: C.Sim, coach: Coach | null | undefined, act: string) {
   const before = pressState(sim);
   sim.press(act);
-  const landed = pressLanded(before, pressState(sim), act);
+  const after = pressState(sim);
+  const landed = pressLanded(before, after, act, before.dropTouch !== after.dropTouch && touchPerformed(sim));
   coach?.onInput(act, landed);
   return landed;
+}
+
+/** Does the next update perform the drop-button touch just recorded? Play it on a copy and see the forcedown raised. */
+function touchPerformed(sim: C.Sim) {
+  const copy = C.Sim.fromSnapshot(sim.opts, sim.snapshot());
+  copy.tick();
+  return copy.dropEverything;
 }
 
 // Watches the routine rather than the game: which input was due, when it
