@@ -10,6 +10,7 @@ import * as C from '@sixam/source/fnaf2';
 import { DeviceActuator, SEAM_SAFE_MS, MONITOR_ANIM_DOWN_MS } from '../../play/bin/phone/actuator.ts';
 import { run as pilotRun } from '../parked/minus7/stock-device-pilot.ts';
 import { cohort } from '../parked/minus7/closed-loop-reclaim.ts';
+import { found } from '../bin/lookup.ts';
 
 type ActuatedSim = ConstructorParameters<typeof DeviceActuator>[0];
 /** What a stub records: the frame a contact landed on, press or release, and the action. */
@@ -91,8 +92,8 @@ const problems = [];
       [90, 'release', 'light'],
     ], 200);
     // Nothing drops a light contact, so both land.
-    const down = sim.delivered.find(d => d[2] === 'light' && d[1] === 'press') as Delivery;
-    const up = sim.delivered.find(d => d[2] === 'light' && d[1] === 'release') as Delivery;
+    const down = found(sim.delivered.find(d => d[2] === 'light' && d[1] === 'press'), 'the light press');
+    const up = found(sim.delivered.find(d => d[2] === 'light' && d[1] === 'release'), 'the light release');
     if (up[0] - down[0] !== 90) {
       problems.push(`seed ${seed}: a 90-frame hold landed as ${up[0] - down[0]} frames`);
       break;
@@ -113,7 +114,7 @@ const problems = [];
       { seed, lateMinMs: 110, lateMaxMs: 300 }), events, 400);
     runSchedule(ablated, new DeviceActuator(ablated,
       { seed, lateMinMs: 110, lateMaxMs: 300, lateWhen: late }), events, 400);
-    const at = (sim: StubSim, name: string) => (sim.delivered.find(d => d[2] === name) as Delivery)[0]; // a, b and c all land
+    const at = (sim: StubSim, name: string) => found(sim.delivered.find(d => d[2] === name), `delivery ${name}`)[0]; // a, b and c all land
     if (at(ablated, 'a') !== 0 || at(ablated, 'c') !== 80) {
       problems.push(`seed ${seed}: lateWhen left a/c at ${at(ablated, 'a')}/${at(ablated, 'c')}, not 0/80`);
       break;
@@ -130,7 +131,7 @@ const problems = [];
                                         lateWhen: (a: string) => a !== 'light' });
   runSchedule(sim, act, [[0, 'press', 'light'], [90, 'release', 'light']], 300);
   const [down, up] = ['press', 'release'].map(k =>
-    (sim.delivered.find(d => d[2] === 'light' && d[1] === k) as Delivery)[0]); // both contacts of the hold land
+    found(sim.delivered.find(d => d[2] === 'light' && d[1] === k), `the light ${k}`)[0]); // both contacts of the hold land
   if (down !== 0 || up !== 90)
     problems.push(`an ablated hold landed ${down}..${up}, not 0..90`);
   let threw = false;

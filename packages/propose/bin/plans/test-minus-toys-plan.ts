@@ -23,12 +23,11 @@ import { DOUBLE_GLITCH_CAMERA_PAIRS } from '../../../play/bin/probe/arm-verifica
 import { parsePlan } from './bundle.ts';
 import { compileArtifactPlans } from './artifact-commands.ts';
 import * as C from '@sixam/source/fnaf2';
+import { found } from '../lookup.ts';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const check: (ok: unknown, message: string) => asserts ok = (ok, message) => { if (!ok) throw new Error(message); };
 const seed = (i: number) => (i * 2654435761) >>> 0;
-/** A row the test reads where the plan has it; a missing one fails the check that reads it. */
-const found = <T>(value: T | null | undefined) => value as T;
 
 // --- 0. the parametrized build reproduces the shipped schedule ---------------
 //

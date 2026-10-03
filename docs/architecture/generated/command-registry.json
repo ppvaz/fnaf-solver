@@ -1811,6 +1811,12 @@
       "lifecycle": "supported"
     },
     {
+      "id": "packages/propose/bin/lookup.ts",
+      "invocation": "packages/propose/bin/lookup.ts",
+      "kind": "module",
+      "lifecycle": "supported"
+    },
+    {
       "id": "packages/propose/bin/nightloop.ts",
       "invocation": "packages/propose/bin/nightloop.ts",
       "kind": "check",

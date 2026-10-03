@@ -59,10 +59,9 @@ import type { planeRecord, populationRecord } from './night7-presets.ts';
 import type { buildRobustnessRecord } from '../../../../packages/propose/bin/plans/night7-robustness.ts';
 import type { buildFieldRecord } from './night7-robustness-field.ts';
 import type { Loss } from '../census/winner-census.ts';
+import { found } from '../lookup.ts';
 
 const check: (ok: unknown, message: string) => asserts ok = (ok, message) => { if (!ok) throw new Error(message); };
-/** A value the test reads where the tree or the record has it; a missing one fails the check that reads it. */
-const found = <T>(value: T | null | undefined) => value as T;
 const sha256 = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex');
 
 // --- 1. the presets are the phone's presets ---------------------------------

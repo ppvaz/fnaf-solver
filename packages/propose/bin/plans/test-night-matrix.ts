@@ -34,6 +34,7 @@ import { modelGate, GATE_MIN_SURVIVAL, HUMAN_SLACK_MS, GATE_RUNS } from './human
 import { contractVerdict, formatRate } from '../../../review/src/stat.ts';
 import { pool, closePool } from '../census/pool.ts';
 import type { survivors } from './gate-worker.ts';
+import { found } from '../lookup.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const NIGHTS = [1, 2, 3, 4, 5, 6];
@@ -47,8 +48,6 @@ const check = (name: string, cond: unknown, detail = '') => {
 // Must match what --device-plan prints, header for header: this text is
 // compared against a pinned file, and a header the CLI emits but this does not
 // makes the pin compare two different plans.
-/** A value the test reads where the matrix has it; a missing one fails the check that reads it. */
-const found = <T>(value: T | null | undefined) => value as T;
 const planText = (recipe: ReturnType<typeof build>, plan: ReturnType<typeof devicePlan>) =>
   `#night ${recipe.night}\n#idle-until ${idleUntilMs(recipe.night)}\n` +
   Object.entries(plan).map(([name, lines]) =>

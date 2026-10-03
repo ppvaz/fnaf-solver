@@ -47,6 +47,7 @@ import type { AnchorAim } from '../census/winner-phase-census.ts';
 import { DEFAULT_LATCH_HOLD_MS, DEFAULT_MIN_LEAD_MS } from '../../../play/src/campaign/night-anchor.ts';
 import { heldOutSeeds, nightBindings } from '../census/winner-phase-census.ts';
 import { winnerTag } from '@sixam/kernel';
+import { found } from '../lookup.ts';
 
 const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '../../../..');
 // The anchor aims packages/propose/bindings/fact-register.ts declares, as `npm run catalog` writes them out
@@ -81,7 +82,7 @@ export function schedules(): Schedule[] {
 }
 
 // The menu model names golden-freddy, the 10/20 preset.
-const tenTwenty = () => loadPresets().find((p) => p.id === 'golden-freddy') as Preset;
+const tenTwenty = () => found(loadPresets().find((p) => p.id === 'golden-freddy'), 'the golden-freddy (10/20) preset');
 
 /** The earliest epoch the anchored release can deliver on Night 7, from the anchor's own defaults and the register. */
 export function earliestDeliveredMs() {
@@ -134,7 +135,8 @@ export function buildRobustnessRecord({ rows, count, winnerHashes, git, date, co
 }) {
   const out = schedules().map((s) => {
     // Every (schedule, axis, value) ran in every block.
-    const row = (axis: string, value: number) => rows.find((r) => r.subject === `${s.id}|${axis}|${value}`) as RobustRow;
+    const row = (axis: string, value: number) =>
+      found(rows.find((r) => r.subject === `${s.id}|${axis}|${value}`), `robustness row ${s.id}|${axis}|${value}`);
     const wins = (r: RobustRow) => r.n - r.losses.length;
     const phaseWins: number[] = [];
     for (let f = -PHASE_FRAMES; f <= PHASE_FRAMES; f += 1) phaseWins.push(wins(row('phase', f)));

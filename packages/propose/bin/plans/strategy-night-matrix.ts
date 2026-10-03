@@ -32,6 +32,7 @@ import { fileURLToPath } from 'node:url';
 import { compileArtifactPlans } from './artifact-commands.ts';
 import { parsePlan, validateWinner, STRATEGY_REGISTRY } from './bundle.ts';
 import * as C from '@sixam/source/fnaf2';
+import { found } from '../lookup.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const NIGHTS = [1, 2, 3, 4, 5, 6, 7];
@@ -139,7 +140,8 @@ const cells: Cell[] = [];
 for (const strategy of strategies)
   for (const night of NIGHTS) cells.push(probeCell(strategy, night, { runs }));
 // Every strategy-night pair was probed above.
-const cellAt = (strategy: string, night: number) => cells.find(c => c.strategy === strategy && c.night === night) as Cell;
+const cellAt = (strategy: string, night: number) =>
+  found(cells.find(c => c.strategy === strategy && c.night === night), `the ${strategy} night ${night} cell`);
 
 if (process.argv.includes('--json')) {
   console.log(JSON.stringify({ schema: 'strategy-night-matrix-v1', runs, cells }, null, 2));

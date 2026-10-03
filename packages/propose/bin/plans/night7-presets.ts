@@ -40,6 +40,7 @@ import { designBlock, forkBlocks, gitState } from '../census/winner-census.ts';
 import type { BlockRow, ForkedChild, Loss } from '../census/winner-census.ts';
 import { heldOutSeeds } from '../../../../packages/propose/bin/census/winner-phase-census.ts';
 import { STRATEGY_REGISTRY, validateWinner } from './bundle.ts';
+import { found } from '../lookup.ts';
 
 const MENU_MODEL = new URL('../../../play/profiles/fnaf2/moto-g56/custom-night-moto-g56-v207.json', import.meta.url);
 
@@ -352,7 +353,7 @@ export function planeRecord({ rows, a, b, bases, count, git, date, command }: {
   for (const base of bases) for (const schedule of schedules) {
     const cells = rows.filter(r => r.base === base && r.schedule === schedule.id);
     // Every cell of the plane was scored.
-    const at = (x: number, y: number) => cells.find(r => r.x === x && r.y === y) as PlaneRow;
+    const at = (x: number, y: number) => found(cells.find(r => r.x === x && r.y === y), `plane cell (${x}, ${y})`);
     const map = Array.from({ length: 21 }, (_, x) => Array.from({ length: 21 }, (_, y) => {
       const r = at(x, y);
       return r.losses.length === 0 ? '#' : r.losses.length === r.n ? '.' : '+';

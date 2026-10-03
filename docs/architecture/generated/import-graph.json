@@ -2482,6 +2482,7 @@
         "../../../../packages/propose/bin/census/winner-phase-census.ts",
         "../../../play/bin/phone/actuator.ts",
         "../census/winner-census.ts",
+        "../lookup.ts",
         "./bundle.ts",
         "./minus-toys-plan.ts",
         "@sixam/propose/seeds",
@@ -2497,6 +2498,7 @@
         "../../../../packages/propose/bin/census/winner-phase-census.ts",
         "../../../play/bin/phone/actuator.ts",
         "../census/winner-census.ts",
+        "../lookup.ts",
         "./artifact-commands.ts",
         "./minus-toys-plan.ts",
         "./night7-presets.ts",
@@ -2515,6 +2517,7 @@
         "../../../play/src/campaign/night-anchor.ts",
         "../census/winner-census.ts",
         "../census/winner-phase-census.ts",
+        "../lookup.ts",
         "./bundle.ts",
         "./night7-presets.ts",
         "@sixam/kernel",
@@ -2537,6 +2540,7 @@
     {
       "file": "packages/propose/bin/plans/strategy-night-matrix.ts",
       "imports": [
+        "../lookup.ts",
         "./artifact-commands.ts",
         "./bundle.ts",
         "@sixam/source/fnaf2",
@@ -2571,6 +2575,7 @@
       "file": "packages/propose/bin/plans/test-minus-toys-plan.ts",
       "imports": [
         "../../../play/bin/probe/arm-verification.ts",
+        "../lookup.ts",
         "./artifact-commands.ts",
         "./bundle.ts",
         "./minus-toys-plan.ts",
@@ -2596,6 +2601,7 @@
       "imports": [
         "../../../review/src/stat.ts",
         "../census/pool.ts",
+        "../lookup.ts",
         "./gate-worker.ts",
         "./human-gate.ts",
         "./recipe.ts",
@@ -2612,6 +2618,7 @@
         "../../../../packages/propose/bin/plans/night7-robustness.ts",
         "../../../play/bin/phone/actuator.ts",
         "../census/winner-census.ts",
+        "../lookup.ts",
         "./minus-toys-plan.ts",
         "./night7-presets.ts",
         "./night7-robustness-field.ts",
@@ -3276,6 +3283,7 @@
     {
       "file": "packages/propose/bin/report/test-phase-reconstruct.ts",
       "imports": [
+        "../lookup.ts",
         "./phase-reconstruct.ts"
       ]
     },
@@ -3534,6 +3542,7 @@
       "file": "packages/propose/parked/minus7/policytest.ts",
       "imports": [
         "../../../review/src/stat.ts",
+        "../../bin/lookup.ts",
         "./cyclesearch.ts",
         "./policy.ts",
         "./policybaselines.ts",
@@ -3968,6 +3977,7 @@
     {
       "file": "packages/propose/test/observationlanguagetest.ts",
       "imports": [
+        "../bin/lookup.ts",
         "../bin/policy/closed-families.ts",
         "../bin/policy/policy-equivalence.ts",
         "../bin/policy/policy-grammar.ts",
@@ -4050,6 +4060,7 @@
       "file": "packages/propose/test/test-actuator.ts",
       "imports": [
         "../../play/bin/phone/actuator.ts",
+        "../bin/lookup.ts",
         "../parked/minus7/closed-loop-reclaim.ts",
         "../parked/minus7/stock-device-pilot.ts",
         "@sixam/source/fnaf2",

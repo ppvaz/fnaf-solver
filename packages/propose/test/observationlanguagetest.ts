@@ -20,6 +20,7 @@ import { compileDevicePlan } from '../bin/policy/policy-equivalence.ts';
 import { compilePolicy } from '../bin/policy/policy-interpreter.ts';
 import { closedFamilyMatches } from '../bin/policy/closed-families.ts';
 import type { Branch, PolicyPhase } from '@sixam/propose/policy';
+import { found } from '../bin/lookup.ts';
 
 // A fresh program's repeat phase, which branchedPolicy and its mutators edit in place.
 type EditableBranch = Branch & { atMs: number, then: Branch['then'], observe: Branch['observe'], predicate: Branch['predicate'] };
@@ -112,7 +113,8 @@ rejects(() => validateBranch({
 
 function branchedPolicy(mutate: (repeat: EditableRepeat) => void = () => {}) {
   const program = minimalPolicy();
-  const repeat = program.phases.find(phase => phase.kind === 'repeat') as EditableRepeat; // the Minimal program has one
+  // The test edits the phase in place, hence the editable view of a found phase.
+  const repeat = found(program.phases.find(phase => phase.kind === 'repeat'), "the Minimal program's repeat phase") as EditableRepeat;
   // Shorten the wind hold so the body has room for a decision point.
   repeat.actions[1].durationMs = 4000;
   repeat.actions[1].contactMs = 4000;

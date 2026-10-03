@@ -46,6 +46,7 @@ import { forkBlocks, gitState } from '../census/winner-census.ts';
 import type { BlockRow, ForkedChild, Loss } from '../census/winner-census.ts';
 import { heldOutSeeds, nightBindings } from '../../../../packages/propose/bin/census/winner-phase-census.ts';
 import { winnerTag } from '@sixam/kernel';
+import { found } from '../lookup.ts';
 
 export const FIELD_KIND = 'night7-robustness-field-v1';
 export const FIELD_FRAMES = 20;
@@ -167,7 +168,7 @@ export function playField({ seed, events, shifts = {}, band = null, preset }: {
 }
 
 // The menu model names golden-freddy, the 10/20 preset.
-const tenTwenty = () => loadPresets().find((p) => p.id === 'golden-freddy') as Preset;
+const tenTwenty = () => found(loadPresets().find((p) => p.id === 'golden-freddy'), 'the golden-freddy (10/20) preset');
 const eventTags = (events: readonly FieldEvent[]) => ['ALL', ...new Set(events.flatMap((e) => e.axes))];
 
 /** Every (schedule, axis) the field scans, in a fixed order. */
@@ -259,7 +260,8 @@ export function buildFieldRecord({ rows, fieldCount, laneCount, only, git, date,
 }) {
   const schedules = fieldSchedules().filter((x) => !only || only.includes(x.id)).map((s) => {
     // Every (schedule, lane or axis, offset) ran.
-    const row = (...parts: (string | number)[]) => rows.find((r) => r.subject === `${s.id}|${parts.join('|')}`) as FieldRow;
+    const row = (...parts: (string | number)[]) =>
+      found(rows.find((r) => r.subject === `${s.id}|${parts.join('|')}`), `field row ${s.id}|${parts.join('|')}`);
     const events = fieldEvents(s.knobs, s.epochMs);
     const field: Record<string, FieldCell> = {};
     for (const t of eventTags(events)) {
@@ -269,8 +271,8 @@ export function buildFieldRecord({ rows, fieldCount, laneCount, only, git, date,
       if (t.endsWith('/end')) {
         const unit = t.slice(0, -'/end'.length);
         // An /end axis is a hold's release, whose press carries the unit alone.
-        const press = events.find((e) => e.axes.length === 1 && e.axes[0] === unit) as FieldEvent;
-        const release = events.find((e) => e.axes.includes(t)) as FieldEvent;
+        const press = found(events.find((e) => e.axes.length === 1 && e.axes[0] === unit), `the press of ${unit}`);
+        const release = found(events.find((e) => e.axes.includes(t)), `the release on ${t}`);
         minD = -(frame(release.ms) - frame(press.ms));
       }
       const cells: string[] = [];
@@ -281,7 +283,8 @@ export function buildFieldRecord({ rows, fieldCount, laneCount, only, git, date,
       const map = cells.join('');
       // An axis is placed where the event it moves last sits (a hold's /end at its release).
       // Every axis moves some event.
-      const first = ([...events].reverse().find((e) => e.cycle <= 0 && e.axes[e.axes.length - 1] === t) ?? events.find((e) => e.axes.includes(t))) as FieldEvent;
+      const first = found([...events].reverse().find((e) => e.cycle <= 0 && e.axes[e.axes.length - 1] === t) ??
+        events.find((e) => e.axes.includes(t)), `an event axis ${t} moves`);
       const atMs = t === 'ALL' ? s.epochMs : +(first.ms - (first.cycle > 0 ? first.cycle * s.knobs.loopPeriodMs : 0)).toFixed(2);
       field[t] = { atMs, map, window: windowOf(map) };
     }

@@ -6,10 +6,9 @@
 // three from timestamps alone, and has to keep saying UNKNOWN about the one
 // interval no recorded quantity measures.
 import { reconstruct, lossBands, phoneWallFrom, SCHEMA } from './phase-reconstruct.ts';
+import { found } from '../lookup.ts';
 
 const check: (condition: unknown, message: string) => asserts condition = (condition, message) => { if (!condition) throw new Error(message); };
-/** A field the test reads where the report has it; a missing one fails the check that reads it. */
-const found = <T>(value: T | null | undefined) => value as T;
 const expectFailure = (fn: () => unknown, message: string) => {
   let failed = false;
   try { fn(); } catch { failed = true; }

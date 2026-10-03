@@ -22,6 +22,7 @@ import { run as bbRun, DEFAULT_CYCLE, LEGACY_ANIMATION_INVALID_CYCLE } from './r
 import type { PlanRow } from './reactive-pilot.ts';
 import { genCycle, KNOBS0, MIN } from './cyclesearch.ts';
 import { formatRate } from '../../../review/src/stat.ts';
+import { found } from '../../bin/lookup.ts';
 
 const RUNS = +(process.env.POLICY_RUNS || 100);
 const SLACKS = [0, 20, 40, 60, 100];
@@ -116,7 +117,7 @@ function assertSuite(recordPath: string | null = null) {
   // Source-driven input floor, not a seed fit: mask-off must wait for the
   // put-on animation. The old nine-frame hold remains an explicit negative.
   const maskRows = DEFAULT_CYCLE.filter(([, , action]) => action === 'mask');
-  const hallRow = DEFAULT_CYCLE.find(([, kind, action]) => kind === 'down' && action === 'light') as PlanRow; // the cycle flashes the hall
+  const hallRow = found(DEFAULT_CYCLE.find(([, kind, action]) => kind === 'down' && action === 'light'), "the cycle's hall flash");
   check('mask-off precedes the sourced put-on completion', maskRows[1][0] - maskRows[0][0] === C.MASK_ANIM_ON);
   check('hall flash lost its sourced take-off floor and one-frame margin', hallRow[0] - maskRows[1][0] === C.MASK_ANIM_OFF + 1);
   check('cycle search can propose animation-invalid mask holds', MIN.maskHold === C.MASK_ANIM_ON && KNOBS0.maskHold === C.MASK_ANIM_ON);
@@ -126,7 +127,7 @@ function assertSuite(recordPath: string | null = null) {
       foxyEnabled: false, stalledEnabled: false, boxEnabled: false, powerEnabled: false });
     s.monitor = 'up'; s.viewing = 11;
     const maskStates = []; let hallLit = false, at = 0;
-    const end = (cycle.find(([ , kind, action]) => kind === 'up' && action === 'light') as PlanRow)[0]; // both tables release a light
+    const end = found(cycle.find(([ , kind, action]) => kind === 'up' && action === 'light'), 'a light release')[0];
     while (s.frame <= end) {
       while (at < cycle.length && cycle[at][0] <= s.frame) {
         const [, kind, action] = cycle[at++];
