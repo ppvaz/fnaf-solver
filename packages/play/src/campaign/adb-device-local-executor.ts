@@ -943,6 +943,258 @@ async function verifyArm(c: RunContext, startedAt: number) {
   }
 }
 
+// Runs beside the authority, not instead of it. It only records WHEN the
+// native read first named the night screen; nothing here releases a
+// stream, ends a run, or decides that a night is running.
+async function watchNativeAnchor(c: RunContext) {
+  const { ex, run, processIdentity } = c;
+  while (!run.stopObserver && ex.child === processIdentity && ex.running &&
+         run.nativeNightAt === null && !run.nightObserved) {
+    const startedAt = ex.clock.now();
+    let sample: unknown = null;
+    try { ({ sample } = await readControlState(c)); } catch { sample = null; }
+    run.nativeAnchorSamples += 1;
+    const screen = (sample as { screen?: unknown } | null | undefined)?.screen;
+    if (screen === NATIVE_NIGHT_SCREEN) { run.nativeNightAt = startedAt; break; }
+    // A read that positively named some OTHER screen is the native
+    // stream's own lower bound on the transition. An UNKNOWN read
+    // names nothing and must not move it.
+    if (typeof screen === 'string' && screen !== 'UNKNOWN')
+      run.nativeLastNotNightAt = startedAt;
+    const spent = ex.clock.now() - startedAt;
+    if (spent < NATIVE_ANCHOR_POLL_MS)
+      await ex.clock.sleep(NATIVE_ANCHOR_POLL_MS - spent);
+  }
+}
+
+// A halted run's observation ends once its window, measured from the
+// static read that halted it, has run out: a read that was in flight at
+// the expiry is still taken first, so a Game Over it returns is the
+// terminal. The exit is the static exit the campaign already knows.
+async function endAtHaltWindow(c: RunContext, observedAt: number) {
+  const { ex, run } = c;
+  if (!run.actuationHalt) return false;
+  const heldMs = observedAt - run.actuationHalt.at;
+  if (heldMs < ex.staticTerminalWaitMs) return false;
+  ex.onEvent({ type: 'lifecycle.static-hold.expired', at: observedAt,
+    heldMs, waitMs: ex.staticTerminalWaitMs });
+  run.observedExitState = 'static';
+  run.stopObserver = true;
+  await stopRun(c);
+  return true;
+}
+
+/**
+ * The first authoritative night frame: refine the origin from the native
+ * anchor, then authorize (port-owned release) or release the schedule.
+ * True when the run is stopping and the observer should end.
+ */
+async function onFirstNight(c: RunContext, observeStartedAt: number) {
+  const { ex, run, schedule, sharedMode, armControl } = c;
+  // The first authoritative office frame is the timeline's
+  // 12 AM anchor: release the schedule and stamp the arm
+  // verifier's window origin. The executor owns this edge for
+  // the shared title HID; waiting for the separate intro
+  // observer would spend the handoff budget on PNG retention
+  // and let a healthy run abort before its first contact.
+  // Clamp: the refined origin must lie inside the window the
+  // authority itself bracketed -- after the last frame it called
+  // NOT a night, and not after the capture that proved one. A
+  // native read outside that window is discarded rather than
+  // trusted, so a premature FNAF2_NIGHT on an intro or dark
+  // frame cannot pull the origin earlier than the evidence.
+  // The authority's own previous sample is the preferred lower
+  // bound. When the authority found the night on its first look
+  // it has none, and the native stream supplies one instead: the
+  // last read that positively named a DIFFERENT screen. Both are
+  // real observations; if neither exists the refinement is
+  // refused rather than guessed.
+  const lowerBound = run.lastNonNightObserveAt ?? run.nativeLastNotNightAt;
+  const nativeAt = run.nativeNightAt;
+  const refined = (nativeAt !== null && lowerBound !== null &&
+    nativeAt >= lowerBound && nativeAt <= observeStartedAt)
+    ? nativeAt : null;
+  ex.onEvent({ type: 'origin.refined',
+    authorityAtMs: observeStartedAt,
+    authorityBracketFromMs: run.lastNonNightObserveAt,
+    nativeBracketFromMs: run.nativeLastNotNightAt,
+    bracketSource: run.lastNonNightObserveAt !== null ? 'authority'
+      : (run.nativeLastNotNightAt !== null ? 'native' : 'none'),
+    nativeAtMs: run.nativeNightAt,
+    nativeSamples: run.nativeAnchorSamples,
+    accepted: refined !== null,
+    shrunkByMs: refined === null ? 0 : observeStartedAt - refined });
+  const portOwnsRelease = sharedMode && ex.nightReleaseOwner === 'port';
+  if (portOwnsRelease) {
+    // Authorization only: releaseNight() records its own
+    // night-go when the port fires, so the schedule's origin is
+    // the placed instant, not this classifier sample.
+    // `at` stays the sample's start for the timeline; the gate
+    // opens only when the classification returned.
+    const authorizedAt = ex.clock.now();
+    ex.nightAuthorizedAt = authorizedAt;
+    ex.onEvent({ type: 'hid.night-authorized', at: observeStartedAt,
+      sampleStartedAt: observeStartedAt, authorizedAt, owner: 'port' });
+    for (const resolve of ex.nightAuthorizedListeners) resolve(authorizedAt);
+    ex.nightAuthorizedListeners.clear();
+  } else {
+    recordNightGo(c, refined ?? observeStartedAt, 'lifecycle');
+  }
+  if (portOwnsRelease) {
+    /* the composition's releaseNight() starts the schedule */
+  } else if (sharedMode) {
+    try {
+      if (!run.sharedReleaseInFlight) await startSharedSchedule(c, ex.clock.now());
+      if (run.stopObserver) return true;
+      await run.sharedReleaseTask;
+      if (run.handoffFailure || run.stopObserver) return true;
+    } catch (error) {
+      run.handoffFailure ??= error;
+      await stopRun(c);
+      return true;
+    }
+  } else if (armControl?.nightGo && schedule.gated) {
+    try {
+      await touchRemote(ex.adb, ex.serial, armControl.nightGo);
+      const nightGoAt = ex.clock.now();
+      run.nightReleasedAt = nightGoAt;
+      run.startControlEffectLedger('prefix', nightGoAt,
+        schedule.gated.monitorTransitions.prefix, schedule.gated.maskTransitions.prefix,
+        { originUncertaintyMs: 50, attempt: 1,
+          phaseEndMs: schedule.gated.armReadyAtMs });
+      ex.onEvent({ type: 'hid.night-go-released', at: nightGoAt,
+        originUncertaintyMs: 50 });
+    } catch (error) {
+      // The observer's drop guard still governs the run; the record
+      // says why the schedule never started.
+      ex.onEvent({ type: 'hid.night-go-failed', at: ex.clock.now(), error: eventMessage(error) });
+    }
+  }
+  return false;
+}
+
+/**
+ * The lifecycle authority: read the screen every poll until a terminal, a
+ * title, three exit votes, the halt window's expiry or a stop ends the run.
+ * Night frames anchor and release it; the first static after a night halts
+ * actuation while this keeps reading.
+ */
+async function observeLifecycle(c: RunContext, startupDeadline: number) {
+  const { ex, run, armVerification, processIdentity } = c;
+  while (!run.stopObserver && ex.child === processIdentity && ex.running) {
+    await ex.clock.sleep(ex.pollMs);
+    if (run.stopObserver || ex.child !== processIdentity || !ex.running) break;
+    const observeStartedAt = ex.clock.now();
+    let state: LifecycleState | null = null;
+    let unreadable = false;
+    try { state = ex.observe ? await ex.observe() : null; }
+    catch { unreadable = true; }
+    const observedAt = ex.clock.now();
+    const gapMs = run.previousReadAt === null ? null : observedAt - run.previousReadAt;
+    run.previousReadAt = observedAt;
+    // The window assumes reads at most one observer interval apart. From
+    // the read that halts actuation on, a longer gap is evented: r02's
+    // reads around its static were 11776 and 8393 ms apart.
+    if (gapMs !== null && gapMs > ex.observerGapBoundMs &&
+        (run.actuationHalt || (run.nightObserved && state === 'static')))
+      ex.onEvent({ type: 'lifecycle.observe-gap', at: observedAt, gapMs,
+        boundMs: ex.observerGapBoundMs, state: unreadable ? null : state });
+    if (unreadable) {
+      // An unreadable frame does NOT reset the evidence.
+      //
+      // It used to. The 2026-09-12 origin run read `state=title`
+      // alternating with `unknown=no-signature-matched` for over a
+      // minute while the schedule kept pressing into the title screen:
+      // every UNKNOWN zeroed the counter, so three CONSECUTIVE non-night
+      // samples never accumulated and the run could not end itself. An
+      // unreadable frame is an absence of evidence, so it withholds a
+      // vote rather than destroying the votes already cast. It does not
+      // hold a halted run open past its window either.
+      try { if (await endAtHaltWindow(c, observedAt)) break; }
+      catch (error) { ex.onEvent({ type: 'lifecycle.stop-failed', at: ex.clock.now(), error: eventMessage(error) }); }
+      continue;
+    }
+    try {
+      // A lifecycle observer that positively names any other screen has
+      // proved that the scheduled night is gone once a night frame has
+      // been seen. Classifiers are frame-based and can produce one bad
+      // positive during a camera/monitor animation, so require a short
+      // consecutive run of positive non-night samples. A single bad
+      // frame, or an UNKNOWN capture, never kills the stream.
+      if (state === 'night') {
+        if (!run.nightObserved && await onFirstNight(c, observeStartedAt)) break;
+        run.nightObserved = true;
+        run.nonNightSamples = 0;
+        // After a halt a night read resumes nothing and does not restart
+        // the window: p1b read `state=night` once from inside its death
+        // minigame, 123.7 s after its first static.
+      } else if (!state) {
+        // An UNKNOWN classification withholds a vote; see the catch below.
+      } else if (!run.nightObserved) {
+        // The authority's own lower bound on the origin: it looked at a
+        // frame captured about now and did not call it a night.
+        run.lastNonNightObserveAt = observeStartedAt;
+      }
+      if (state === 'gameover' || state === 'sixam') {
+        if (!run.armVerified) {
+          run.armFailure = new Error(`camera arm verification ended with ${state} ` +
+            `(expected=${JSON.stringify(armVerification?.cameras)} ` +
+            `viewing=${armVerification?.viewing} last=${JSON.stringify(run.lastArmObservation)})`);
+        }
+        run.observedTerminal = state;
+        run.stopObserver = true;
+        await stopRun(c);
+        break;
+      }
+      // Once a night has been seen, the TITLE is not a transient
+      // animation the way an intro or a dark frame is: the night is over
+      // and the schedule is now pressing into a menu. `coords.sh` puts
+      // New Game on that screen, so continuing to actuate there risks
+      // the save, not just the run. It stops on the first positive read,
+      // like gameover and sixam above.
+      if (run.nightObserved && state !== null && TERMINAL_SCREENS.has(state)) {
+        run.observedExitState = state;
+        run.stopObserver = true;
+        await stopRun(c);
+        break;
+      }
+      // POST_NIGHT_STATIC_HALT. After a night, the first static read
+      // stops every press and opens the STATIC_TERMINAL_WAIT_MS window;
+      // the observer keeps reading. Static reads withhold their exit vote
+      // (they neither count nor erase the votes already cast, like an
+      // UNKNOWN read) until the window's expiry ends the run below. Any
+      // other positive screen votes as before.
+      if (run.nightObserved && state === 'static' && !run.actuationHalt) {
+        ex.onEvent({ type: 'lifecycle.static-hold', at: observedAt,
+          waitMs: ex.staticTerminalWaitMs });
+        haltActuation(c, POST_NIGHT_STATIC_HALT, observedAt, { state,
+          waitMs: ex.staticTerminalWaitMs, ...(gapMs === null ? {} : { gapMs }) });
+      }
+      const staticWithheld = run.actuationHalt !== null && state === 'static';
+      const startupTransition = !run.nightObserved &&
+        (state === 'intro' || state === 'newspaper') && ex.clock.now() < startupDeadline;
+      if (startupTransition) {
+        run.nonNightSamples = 0;
+      } else if (staticWithheld) {
+        // Withheld: the death's terminal screen is still expected.
+      } else if (state && state !== 'night') {
+        run.nonNightSamples += 1;
+        if (run.nonNightSamples >= EXIT_CONFIRM_SAMPLES) {
+          run.observedExitState = state;
+          run.stopObserver = true;
+          await stopRun(c);
+          break;
+        }
+      }
+      if (await endAtHaltWindow(c, observedAt)) break;
+    } catch (error) {
+      // A stop that fails while ending the run leaves the decision
+      // already recorded above; teardown still releases the stream.
+      ex.onEvent({ type: 'lifecycle.stop-failed', at: ex.clock.now(), error: eventMessage(error) });
+    }
+  }
+}
+
 export class AdbDeviceLocalArtifactExecutor {
   declare serial: string;
   declare adb: string;
@@ -1205,239 +1457,9 @@ export class AdbDeviceLocalArtifactExecutor {
         run.armFailure = error;
         await stopRun(c);
       }) : Promise.resolve();
-      // Runs beside the authority, not instead of it. It only records WHEN the
-      // native read first named the night screen; nothing here releases a
-      // stream, ends a run, or decides that a night is running.
       const nativeAnchor = (this.observe && typeof this.observeControlState === 'function')
-        ? (async () => {
-          while (!run.stopObserver && this.child === processIdentity && this.running &&
-                 run.nativeNightAt === null && !run.nightObserved) {
-            const startedAt = this.clock.now();
-            let sample: unknown = null;
-            try { ({ sample } = await readControlState(c)); } catch { sample = null; }
-            run.nativeAnchorSamples += 1;
-            const screen = (sample as { screen?: unknown } | null | undefined)?.screen;
-            if (screen === NATIVE_NIGHT_SCREEN) { run.nativeNightAt = startedAt; break; }
-            // A read that positively named some OTHER screen is the native
-            // stream's own lower bound on the transition. An UNKNOWN read
-            // names nothing and must not move it.
-            if (typeof screen === 'string' && screen !== 'UNKNOWN')
-              run.nativeLastNotNightAt = startedAt;
-            const spent = this.clock.now() - startedAt;
-            if (spent < NATIVE_ANCHOR_POLL_MS)
-              await this.clock.sleep(NATIVE_ANCHOR_POLL_MS - spent);
-          }
-        })().catch(() => {})
-        : Promise.resolve();
-      // A halted run's observation ends once its window, measured from the
-      // static read that halted it, has run out: a read that was in flight at
-      // the expiry is still taken first, so a Game Over it returns is the
-      // terminal. The exit is the static exit the campaign already knows.
-      const endAtHaltWindow = async (observedAt: number) => {
-        if (!run.actuationHalt) return false;
-        const heldMs = observedAt - run.actuationHalt.at;
-        if (heldMs < this.staticTerminalWaitMs) return false;
-        this.onEvent({ type: 'lifecycle.static-hold.expired', at: observedAt,
-          heldMs, waitMs: this.staticTerminalWaitMs });
-        run.observedExitState = 'static';
-        run.stopObserver = true;
-        await stopRun(c);
-        return true;
-      };
-      run.observer = this.observe ? (async () => {
-        while (!run.stopObserver && this.child === processIdentity && this.running) {
-          await this.clock.sleep(this.pollMs);
-          if (run.stopObserver || this.child !== processIdentity || !this.running) break;
-          const observeStartedAt = this.clock.now();
-          let state: LifecycleState | null = null;
-          let unreadable = false;
-          try { state = this.observe ? await this.observe() : null; }
-          catch { unreadable = true; }
-          const observedAt = this.clock.now();
-          const gapMs = run.previousReadAt === null ? null : observedAt - run.previousReadAt;
-          run.previousReadAt = observedAt;
-          // The window assumes reads at most one observer interval apart. From
-          // the read that halts actuation on, a longer gap is evented: r02's
-          // reads around its static were 11776 and 8393 ms apart.
-          if (gapMs !== null && gapMs > this.observerGapBoundMs &&
-              (run.actuationHalt || (run.nightObserved && state === 'static')))
-            this.onEvent({ type: 'lifecycle.observe-gap', at: observedAt, gapMs,
-              boundMs: this.observerGapBoundMs, state: unreadable ? null : state });
-          if (unreadable) {
-            // An unreadable frame does NOT reset the evidence.
-            //
-            // It used to. The 2026-09-12 origin run read `state=title`
-            // alternating with `unknown=no-signature-matched` for over a
-            // minute while the schedule kept pressing into the title screen:
-            // every UNKNOWN zeroed the counter, so three CONSECUTIVE non-night
-            // samples never accumulated and the run could not end itself. An
-            // unreadable frame is an absence of evidence, so it withholds a
-            // vote rather than destroying the votes already cast. It does not
-            // hold a halted run open past its window either.
-            try { if (await endAtHaltWindow(observedAt)) break; }
-            catch (error) { this.onEvent({ type: 'lifecycle.stop-failed', at: this.clock.now(), error: eventMessage(error) }); }
-            continue;
-          }
-          try {
-            // A lifecycle observer that positively names any other screen has
-            // proved that the scheduled night is gone once a night frame has
-            // been seen. Classifiers are frame-based and can produce one bad
-            // positive during a camera/monitor animation, so require a short
-            // consecutive run of positive non-night samples. A single bad
-            // frame, or an UNKNOWN capture, never kills the stream.
-            if (state === 'night') {
-              if (!run.nightObserved) {
-                // The first authoritative office frame is the timeline's
-                // 12 AM anchor: release the schedule and stamp the arm
-                // verifier's window origin. The executor owns this edge for
-                // the shared title HID; waiting for the separate intro
-                // observer would spend the handoff budget on PNG retention
-                // and let a healthy run abort before its first contact.
-                // Clamp: the refined origin must lie inside the window the
-                // authority itself bracketed -- after the last frame it called
-                // NOT a night, and not after the capture that proved one. A
-                // native read outside that window is discarded rather than
-                // trusted, so a premature FNAF2_NIGHT on an intro or dark
-                // frame cannot pull the origin earlier than the evidence.
-                // The authority's own previous sample is the preferred lower
-                // bound. When the authority found the night on its first look
-                // it has none, and the native stream supplies one instead: the
-                // last read that positively named a DIFFERENT screen. Both are
-                // real observations; if neither exists the refinement is
-                // refused rather than guessed.
-                const lowerBound = run.lastNonNightObserveAt ?? run.nativeLastNotNightAt;
-                const nativeAt = run.nativeNightAt;
-                const refined = (nativeAt !== null && lowerBound !== null &&
-                  nativeAt >= lowerBound && nativeAt <= observeStartedAt)
-                  ? nativeAt : null;
-                this.onEvent({ type: 'origin.refined',
-                  authorityAtMs: observeStartedAt,
-                  authorityBracketFromMs: run.lastNonNightObserveAt,
-                  nativeBracketFromMs: run.nativeLastNotNightAt,
-                  bracketSource: run.lastNonNightObserveAt !== null ? 'authority'
-                    : (run.nativeLastNotNightAt !== null ? 'native' : 'none'),
-                  nativeAtMs: run.nativeNightAt,
-                  nativeSamples: run.nativeAnchorSamples,
-                  accepted: refined !== null,
-                  shrunkByMs: refined === null ? 0 : observeStartedAt - refined });
-                const portOwnsRelease = sharedMode && this.nightReleaseOwner === 'port';
-                if (portOwnsRelease) {
-                  // Authorization only: releaseNight() records its own
-                  // night-go when the port fires, so the schedule's origin is
-                  // the placed instant, not this classifier sample.
-                  // `at` stays the sample's start for the timeline; the gate
-                  // opens only when the classification returned.
-                  const authorizedAt = this.clock.now();
-                  this.nightAuthorizedAt = authorizedAt;
-                  this.onEvent({ type: 'hid.night-authorized', at: observeStartedAt,
-                    sampleStartedAt: observeStartedAt, authorizedAt, owner: 'port' });
-                  for (const resolve of this.nightAuthorizedListeners) resolve(authorizedAt);
-                  this.nightAuthorizedListeners.clear();
-                } else {
-                  recordNightGo(c, refined ?? observeStartedAt, 'lifecycle');
-                }
-                if (portOwnsRelease) {
-                  /* the composition's releaseNight() starts the schedule */
-                } else if (sharedMode) {
-                  try {
-                    if (!run.sharedReleaseInFlight) await startSharedSchedule(c, this.clock.now());
-                    if (run.stopObserver) break;
-                    await run.sharedReleaseTask;
-                    if (run.handoffFailure || run.stopObserver) break;
-                  } catch (error) {
-                    run.handoffFailure ??= error;
-                    await stopRun(c);
-                    break;
-                  }
-                } else if (armControl?.nightGo && schedule.gated) {
-                  try {
-                    await touchRemote(this.adb, this.serial, armControl.nightGo);
-                    const nightGoAt = this.clock.now();
-                    run.nightReleasedAt = nightGoAt;
-                    run.startControlEffectLedger('prefix', nightGoAt,
-                      schedule.gated.monitorTransitions.prefix, schedule.gated.maskTransitions.prefix,
-                      { originUncertaintyMs: 50, attempt: 1,
-                        phaseEndMs: schedule.gated.armReadyAtMs });
-                    this.onEvent({ type: 'hid.night-go-released', at: nightGoAt,
-                      originUncertaintyMs: 50 });
-                  } catch (error) {
-                    // The drop guard below still governs the run; the record
-                    // says why the schedule never started.
-                    this.onEvent({ type: 'hid.night-go-failed', at: this.clock.now(), error: eventMessage(error) });
-                  }
-                }
-              }
-              run.nightObserved = true;
-              run.nonNightSamples = 0;
-              // After a halt a night read resumes nothing and does not restart
-              // the window: p1b read `state=night` once from inside its death
-              // minigame, 123.7 s after its first static.
-            } else if (!state) {
-              // An UNKNOWN classification withholds a vote; see the catch below.
-            } else if (!run.nightObserved) {
-              // The authority's own lower bound on the origin: it looked at a
-              // frame captured about now and did not call it a night.
-              run.lastNonNightObserveAt = observeStartedAt;
-            }
-            if (state === 'gameover' || state === 'sixam') {
-              if (!run.armVerified) {
-                run.armFailure = new Error(`camera arm verification ended with ${state} ` +
-                  `(expected=${JSON.stringify(armVerification?.cameras)} ` +
-                  `viewing=${armVerification?.viewing} last=${JSON.stringify(run.lastArmObservation)})`);
-              }
-              run.observedTerminal = state;
-              run.stopObserver = true;
-              await stopRun(c);
-              break;
-            }
-            // Once a night has been seen, the TITLE is not a transient
-            // animation the way an intro or a dark frame is: the night is over
-            // and the schedule is now pressing into a menu. `coords.sh` puts
-            // New Game on that screen, so continuing to actuate there risks
-            // the save, not just the run. It stops on the first positive read,
-            // like gameover and sixam above.
-            if (run.nightObserved && state !== null && TERMINAL_SCREENS.has(state)) {
-              run.observedExitState = state;
-              run.stopObserver = true;
-              await stopRun(c);
-              break;
-            }
-            // POST_NIGHT_STATIC_HALT. After a night, the first static read
-            // stops every press and opens the STATIC_TERMINAL_WAIT_MS window;
-            // the observer keeps reading. Static reads withhold their exit vote
-            // (they neither count nor erase the votes already cast, like an
-            // UNKNOWN read) until the window's expiry ends the run below. Any
-            // other positive screen votes as before.
-            if (run.nightObserved && state === 'static' && !run.actuationHalt) {
-              this.onEvent({ type: 'lifecycle.static-hold', at: observedAt,
-                waitMs: this.staticTerminalWaitMs });
-              haltActuation(c, POST_NIGHT_STATIC_HALT, observedAt, { state,
-                waitMs: this.staticTerminalWaitMs, ...(gapMs === null ? {} : { gapMs }) });
-            }
-            const staticWithheld = run.actuationHalt !== null && state === 'static';
-            const startupTransition = !run.nightObserved &&
-              (state === 'intro' || state === 'newspaper') && this.clock.now() < startupDeadline;
-            if (startupTransition) {
-              run.nonNightSamples = 0;
-            } else if (staticWithheld) {
-              // Withheld: the death's terminal screen is still expected.
-            } else if (state && state !== 'night') {
-              run.nonNightSamples += 1;
-              if (run.nonNightSamples >= EXIT_CONFIRM_SAMPLES) {
-                run.observedExitState = state;
-                run.stopObserver = true;
-                await stopRun(c);
-                break;
-              }
-            }
-            if (await endAtHaltWindow(observedAt)) break;
-          } catch (error) {
-            // A stop that fails while ending the run leaves the decision
-            // already recorded above; teardown still releases the stream.
-            this.onEvent({ type: 'lifecycle.stop-failed', at: this.clock.now(), error: eventMessage(error) });
-          }
-        }
-      })() : Promise.resolve();
+        ? watchNativeAnchor(c).catch(() => {}) : Promise.resolve();
+      run.observer = this.observe ? observeLifecycle(c, startupDeadline) : Promise.resolve();
       try {
         await processPromise;
       } catch (error) {

@@ -426,10 +426,6 @@
         "count": 559,
         "why": "the FNaF 4 night loop (doors, bed, closet, hearing) over live frames; splitting the policy step from the device step needs a live FNaF 4 night, and audit PG10’s teardown change is not yet confirmed on a phone"
       },
-      "fn:packages/play/src/campaign/adb-device-local-executor.ts#AdbDeviceLocalArtifactExecutor.execute": {
-        "count": 399,
-        "why": "the device-local night loop (phases, gates, HID writes, the lifecycle watch); audit PC13 lifted the clock, the gate evidence, the cycle gates and the control observers out (1,169 to 948 lines), its 36 mutable locals became one DeviceLocalRunState (884), and the actuation primitives (793), the control reads and ledgers (678), the night release (600) and arm verification (399) became module functions over a RunContext; the lifecycle observer is what remains inside, and moves the same way"
-      },
       "fn:packages/play/src/campaign/modern-campaign-ports.ts#createCampaignPorts": {
         "count": 708,
         "why": "the live campaign’s composition of its ports (title, lifecycle, start, Custom Night, teach, controls); the control observers left in audit PC13, and each remaining port is its own extraction, held behind the executor split above"
