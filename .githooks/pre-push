@@ -7,8 +7,10 @@
 # command that reproduces it.
 #
 # Before the gate, every pushed commit's author and committer address must be
-# GitHub's noreply form (tools/commit-identity.ts): rebase and cherry-pick
-# never run commit-msg. Both read the same ref lines.
+# GitHub's noreply form (tools/commit-identity.ts), and a commit whose code
+# spans three or more contexts must say why (tools/change-locality.ts):
+# rebase and cherry-pick never run commit-msg. All read the same ref lines.
 refs=$(cat)
 printf '%s\n' "$refs" | node "$(dirname "$0")/../tools/commit-identity.ts" --push || exit 1
+printf '%s\n' "$refs" | node "$(dirname "$0")/../tools/change-locality.ts" --push || exit 1
 printf '%s\n' "$refs" | node "$(dirname "$0")/../tools/push-gate.ts" --stdin
