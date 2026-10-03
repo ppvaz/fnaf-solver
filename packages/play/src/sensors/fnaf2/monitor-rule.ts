@@ -83,8 +83,8 @@ function parseAnchor(anchor: unknown, index: number): Anchor {
   if (!finite(rule.threshold)) fail(`anchor ${index} threshold must be finite`);
   const band = rule.refuse_band;
   if (!finite(band) || band < 0) fail(`anchor ${index} refuse_band must be finite non-negative`);
-  // As JavaScript compares: an absent margin (NaN) passes, a null one reads 0.
-  if (Number(anchor.separation_margin) < band) fail(`anchor ${index} refuse_band exceeds its separation margin`);
+  if (!finite(anchor.separation_margin) || anchor.separation_margin < band)
+    fail(`anchor ${index} refuse_band needs a finite separation margin at least as wide`);
   return anchor as unknown as Anchor;
 }
 

@@ -85,8 +85,8 @@ export function parseCameraRule(artifact: unknown): CameraRule {
     if (!finite(rule.threshold)) fail('button threshold must be finite');
     const band = rule.refuse_band;
     if (!finite(band) || band < 0) fail('button refuse_band must be finite non-negative');
-    // As JavaScript compares: an absent margin (NaN) passes, a null one reads 0.
-    if (Number(button.separation_margin) < band) fail('refuse_band exceeds the separation margin');
+    if (!finite(button.separation_margin) || button.separation_margin < band)
+      fail('refuse_band needs a finite separation margin at least as wide');
   }
   const reasons = fact.unknown_reasons;
   if (!isList(reasons) || reasons.some(reason => typeof reason !== 'string' || !UNKNOWN_REASONS.has(reason)))

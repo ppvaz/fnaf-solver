@@ -64,6 +64,8 @@ for (const [what, mutate] of [
     buttons: [buttons[0], { ...buttons[1], feature: 'luma' }] } })],
   ['band over margin', a => ({ ...a, adapter: { ...a.adapter,
     buttons: [buttons[0], { ...buttons[1], rule: { ...buttons[1].rule, refuse_band: 9 } }] } })],
+  ['missing separation margin', a => ({ ...a, adapter: { ...a.adapter,
+    buttons: [buttons[0], (({ separation_margin: _, ...button }) => button)(buttons[1])] } })],
   ['invented unknown reason', a => ({ ...a, fact: { ...a.fact, unknown_reasons: ['looks-fine'] } })],
 ] satisfies [string, (a: typeof artifact) => unknown][]) {
   assert.throws(() => parseCameraRule(mutate(artifact)), /camera-rule-v1/, what);

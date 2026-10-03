@@ -127,6 +127,10 @@ assert.throws(() => parseCalibrationStateRule({ ...stateRule,
 const unproven = { ...maskRule,
   adapter: { ...maskRule.adapter, limitations: ['night-1-corpus', 'blackout-unproven'] } };
 assert.doesNotThrow(() => parseMaskRule(unproven));
+// A margin the fitter did not write is not one the band can sit inside.
+assert.throws(() => parseMaskRule({ ...maskRule, adapter: { ...maskRule.adapter,
+  anchors: maskRule.adapter.anchors.map((anchor, index) => index ? anchor
+    : (({ separation_margin: _, ...rest }) => rest)(anchor)) } }), /separation margin/);
 assert.throws(() => parseCalibrationStateRule({ ...stateRule,
   mask: { rule: unproven, digest: maskRuleDigest(unproven) } }), /unproven darkness guard/);
 const proven = { ...maskRule,

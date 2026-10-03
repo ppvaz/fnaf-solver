@@ -70,8 +70,8 @@ function parseMaskAnchors(adapter: unknown) {
     if (!finite(rule.threshold)) fail(`mask anchor ${index} threshold must be finite`);
     const band = rule.refuse_band;
     if (!finite(band) || band < 0) fail(`mask anchor ${index} refuse_band must be finite non-negative`);
-    // As JavaScript compares: an absent margin (NaN) passes, a null one reads 0.
-    if (Number(anchor.separation_margin) < band) fail(`mask anchor ${index} refuse_band exceeds its separation margin`);
+    if (!finite(anchor.separation_margin) || anchor.separation_margin < band)
+      fail(`mask anchor ${index} refuse_band needs a finite separation margin at least as wide`);
     if (seen.has(anchor.cell)) fail(`mask anchor cell ${anchor.cell} is repeated`);
     seen.add(anchor.cell);
   });
