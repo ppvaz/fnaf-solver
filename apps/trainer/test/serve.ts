@@ -522,7 +522,7 @@ function body(req: IncomingMessage, chunks: readonly Buffer[]) {
   return length < 0n ? all : all.subarray(0, Number(length));
 }
 
-function saveLayout(root: string, req: IncomingMessage, res: ServerResponse, chunks: readonly Buffer[]) {
+function saveLayout(root: string, build: readonly string[], req: IncomingMessage, res: ServerResponse, chunks: readonly Buffer[]) {
   try {
     const raw = body(req, chunks);
     const data = pyLoadsBytes(raw.length ? raw : Buffer.from('{}'));
@@ -535,8 +535,16 @@ function saveLayout(root: string, req: IncomingMessage, res: ServerResponse, chu
       return json(res, 200, { ok: true, dry: true, build: '(dry run, not written)' });
     }
     writeConfig(root, m, w);
-    const build = spawnSync(process.execPath, [join(HERE, 'build.ts')], { encoding: 'utf8' });
-    const out = (build.stdout ?? '').trim();
+    const run = spawnSync(build[0], build.slice(1), { encoding: 'utf8' });
+    const out = (run.stdout ?? '').trim();
+    // The config is written either way; a rebuild that failed leaves dist/ stale, and the answer says so
+    // rather than ok (serve.py answered ok whatever the build did).
+    if (run.status !== 0) {
+      const how = run.error ? run.error.message : run.signal ? `signal ${run.signal}` : `exit ${run.status}`;
+      const why = `the layout was saved to packages/source/src/games/fnaf2/config.ts, but the rebuild failed (${how}): ${(run.stderr ?? '').trim()}`;
+      console.log(`save-layout: ${why}`);
+      return json(res, 500, { error: why });
+    }
     console.log(`saved layout -> packages/source/src/games/fnaf2/config.ts  (${out})`);
     json(res, 200, { ok: true, build: out });
   } catch (error) {
@@ -578,11 +586,14 @@ function logRequest(req: IncomingMessage, code: number) {
   process.stderr.write(`${req.socket.remoteAddress} - - [${when}] "${line}" ${code} -\n`);
 }
 
-/** The server, on root (the repository unless a test names another). */
-export function makeServer(port: number, host = HOST, root = REPO): Server {
+/**
+ * The server, on root (the repository unless a test names another), rebuilding dist/ after a layout save with
+ * build (the bundler unless a test names another command).
+ */
+export function makeServer(port: number, host = HOST, root = REPO, build: readonly string[] = [process.execPath, join(HERE, 'build.ts')]): Server {
   return createServer((req, res) => {
     try {
-      handle(root, req, res);
+      handle(root, build, req, res);
     } catch (error) {
       // socketserver's handle_error: the traceback on stderr, and the connection closed with no answer.
       console.error(`Exception occurred during processing of request from ${req.socket.remoteAddress}\n${(error as Error).stack}`);
@@ -591,7 +602,7 @@ export function makeServer(port: number, host = HOST, root = REPO): Server {
   }).listen(port, host);
 }
 
-function handle(root: string, req: IncomingMessage, res: ServerResponse) {
+function handle(root: string, build: readonly string[], req: IncomingMessage, res: ServerResponse) {
     res.on('finish', () => logRequest(req, res.statusCode));
     const method = req.method ?? '';
     if (method === 'GET') {
@@ -617,7 +628,7 @@ function handle(root: string, req: IncomingMessage, res: ServerResponse) {
       }
       if (req.url === '/save-trace') return saveTrace(root, req, res, chunks);
       if (req.url !== '/save-layout') return json(res, 404, { error: 'not found' });
-      return saveLayout(root, req, res, chunks);
+      return saveLayout(root, build, req, res, chunks);
     });
 }
 

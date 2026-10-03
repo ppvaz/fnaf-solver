@@ -14,11 +14,12 @@
 //
 //   node apps/trainer/test/serve.test.ts
 import assert from 'node:assert/strict';
-import { mkdtempSync, readdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { request } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const traceDir = mkdtempSync(join(tmpdir(), 'serve-test-'));
 process.env.FNAF_TRACE_DIR = traceDir;
@@ -36,8 +37,8 @@ const call = (port: number, method: string, path: string, headers: Record<string
     req.on('error', reject);
     req.end(body);
   });
-const listening = (port: number, root?: string) => new Promise<ReturnType<typeof makeServer>>(resolve => {
-  const server = root === undefined ? makeServer(port) : makeServer(port, HOST, root);
+const listening = (port: number, root?: string, build?: readonly string[]) => new Promise<ReturnType<typeof makeServer>>(resolve => {
+  const server = root === undefined ? makeServer(port) : makeServer(port, HOST, root, build);
   server.on('listening', () => resolve(server));
 });
 const portOf = (server: ReturnType<typeof makeServer>) => (server.address() as AddressInfo).port;
@@ -100,6 +101,36 @@ try {
   rmSync(probeRoot, { recursive: true, force: true });
 }
 
+// /save-layout in a scratch root holding a copy of the core config, with a rebuild that fails, then one that
+// succeeds: a failed rebuild is not an ok, and two saves at once each rewrite the whole config, never a mix.
+const CONFIG = 'packages/source/src/games/fnaf2/config.ts';
+const layoutRoot = realpathSync(mkdtempSync(join(tmpdir(), 'serve-layout-')));
+mkdirSync(dirname(join(layoutRoot, CONFIG)), { recursive: true });
+copyFileSync(fileURLToPath(new URL(`../../../${CONFIG}`, import.meta.url)), join(layoutRoot, CONFIG));
+const layout = (x: number) => JSON.stringify({
+  map: Object.fromEntries(Array.from({ length: 12 }, (_, k) => [String(k + 1), { x, y: 0.2, w: 0.05, h: 0.05 }])),
+  widgets: Object.fromEntries(['light', 'camlight', 'mask', 'monitor', 'ventL', 'ventR', 'wind'].map(name => [name, { x, y: 0.5, w: 0.1, h: 0.1 }])),
+});
+const failing = await listening(0, layoutRoot, [process.execPath, '-e', 'process.stderr.write("no bundle\\n"); process.exit(3)']);
+const passing = await listening(0, layoutRoot, [process.execPath, '-e', 'console.log("dist/index.html  1 KB  (1 modules)")']);
+try {
+  const at = (server: ReturnType<typeof makeServer>) => ({ Host: `127.0.0.1:${portOf(server)}`, 'Content-Type': 'application/json' });
+  const failed = await call(portOf(failing), 'POST', '/save-layout', at(failing), layout(0.25));
+  assert.equal(failed.status, 500, `a failed rebuild is not answered 200: ${failed.status} ${failed.body}`);
+  const answer = JSON.parse(failed.body);
+  assert.ok(answer.ok !== true && /rebuild failed \(exit 3\)/.test(answer.error) && answer.error.includes('no bundle'),
+    `the answer names the failed rebuild: ${failed.body}`);
+  const [one, two] = await Promise.all([0.125, 0.375].map(x => call(portOf(passing), 'POST', '/save-layout', at(passing), layout(x))));
+  assert.deepEqual([one.status, two.status], [200, 200], 'two saves at once are both answered');
+  const rows = readFileSync(join(layoutRoot, CONFIG), 'utf8').match(/x: 0\.\d{3}/g) ?? [];
+  assert.equal(rows.length, 19, 'twelve cams and seven widgets are written');
+  assert.equal(new Set(rows).size, 1, `one save's layout, whole: ${[...new Set(rows)].join(' ')}`);
+} finally {
+  failing.close();
+  passing.close();
+  rmSync(layoutRoot, { recursive: true, force: true });
+}
+
 console.log('serve: binds 127.0.0.1, writes from this machine\'s own page or a loopback client, refuses a foreign origin, '
   + 'a rebound Host and an off-host client, sends no Access-Control-Allow-Origin, and serves a .ts module as JavaScript '
-  + 'with its types erased');
+  + 'with its types erased; a failed rebuild after a layout save is not answered ok, and two saves at once never mix');
