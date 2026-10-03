@@ -313,6 +313,11 @@ const ENGINE: Check[] = [
   // score zero on Night 7, and Night 1 -- whose AI table cannot arm Balloon Boy
   // -- is the positive control every family must clear.
   ['policytest', ['../packages/propose/parked/minus7/policytest.ts', '--assert']],
+  // What a lateness reduction would be worth. Two controls before a table: the
+  // zero row must reproduce the exact figure and the 110-300 ms row must
+  // reproduce plans/12, so a drifted cell fails instead of being re-read. The
+  // knee is the 2->3 frame boundary -- free to 41 ms, gone at 42.
+  ['lateness sweep', ['../packages/propose/parked/minus7/latenesssweep.ts', '--runs=200', '--assert'], 600_000],
   ['camtrace', ['../packages/review/bin/grade/test-camtrace.py']],
   // Plan 09's read-only corpus index: classify existing artifacts without
   // rewriting them, preserve basename joins, and surface unknown/empty files.
@@ -420,16 +425,18 @@ const BACKLOG = new Map([
   ['hidpilot n6 target', 'Minus 7: HID pilot, Night 6 below its floor (Golden Freddy)'],
   ['hidpilot n6 target worst', 'Minus 7: as hidpilot n6 target'],
   ['device input gaps', 'Minus 7: the Night 6 recipe sweeps 226 ms after the raise, under 233'],
-  ['device actuator', 'Minus 7: Night 6 loop-debt exemption is now stale'],
+  ['device actuator', 'Minus 7: Night 6 loop-debt exemption is now stale (the whole file: it has no per-assertion filter)'],
   ['human gate', 'Minus 7: the shipped Night 6 plan is 123/1200 under human slack'],
+  ['lateness sweep', 'Minus 7: its zero-lateness and plans/12 pins predate the sourced model (2026-10-03: night 6 9/200, night 1 66/200 against 23)'],
   // Red on code the live route uses. Open defects, not controls.
-  ['reactivetest', 'observer: a dropped VIDEO read is not UNKNOWN(read-dropped) on every video fact'],
-  ['reduced model', 'vent press with the monitor up diverges from the Sim (true vs false)'],
+  ['reactivetest', 'observer: a dropped VIDEO read is not UNKNOWN(read-dropped) on every video fact (the whole file: it has no per-assertion filter, so its green checks wait with it)'],
+  ['reduced model', 'vent press with the monitor up diverges from the Sim (true vs false) (the whole file: it has no per-assertion filter)'],
   // Scientific controls that stay red until Plans 20-21 price the rescue cost.
   ['vent reactive', 'control: the reactive layer still pays a monitor-down/box cost'],
   // Not red: CI runs test-docs.ts in its own step, and here it would also
   // read untracked files a concurrent session has not indexed yet.
-  ['docs', 'run by the CI documentation step'],
+  ['docs', 'not red: CI\'s "Documentation and catalog links" step runs it after regenerating the catalogs it reads; '
+    + 'run here it would read a stale catalog and any untracked file a concurrent session has not indexed'],
 ]);
 const BROWSER: Check[] = [
   ['browsertest', ['../apps/trainer/test/browser.test.ts'], { timeoutMs: 360_000, devServer: true }],
@@ -478,11 +485,6 @@ const REPORTS: Check[] = [
   // window causes the desyncs it looks for, and a free perfect one gains
   // nothing either.
   ['closed-loop reclaim', ['../packages/propose/parked/minus7/closed-loop-reclaim.ts', '--runs=200']],
-  // What a lateness reduction would be worth. Two controls before a table: the
-  // zero row must reproduce the exact figure and the 110-300 ms row must
-  // reproduce plans/12, so a drifted cell fails instead of being re-read. The
-  // knee is the 2->3 frame boundary -- free to 41 ms, gone at 42.
-  ['lateness sweep', ['../packages/propose/parked/minus7/latenesssweep.ts', '--runs=200', '--assert']],
   // The measured human bands, from whatever trainer runs have been recorded.
   // Empty until practice sessions accumulate under /save-trace.
   ['tracereport', ['../apps/trainer/test/tracereport.ts']],
