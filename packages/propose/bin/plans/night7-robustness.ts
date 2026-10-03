@@ -32,7 +32,7 @@
 // how the phone's displacement is shaped (night7-preset-sweep-20260917's
 // measuredDeviceNumber); read the lateness column as a comparison between
 // routes, not as a prediction of a cohort.
-import { createHash } from 'node:crypto';
+import { sha256 } from '../recompile/sweep-common.ts';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -62,7 +62,6 @@ export const PHASE_FRAMES = 30;
 export const SPAN_FRAMES = 600;
 export const SPAN_SEEDS = 16;
 const STEP_MS = 1000 / FPS;
-const sha256 = (text: string) => createHash('sha256').update(text).digest('hex');
 const tag = (path: string) => winnerTag(path).replace(/^campaign-night7-/, '');
 
 /** A schedule the comparison scores: the preset's or a committed binding's, with its knobs and declared epoch. */

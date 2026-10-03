@@ -27,7 +27,7 @@
 //   node packages/propose/bin/plans/night7-presets.ts --bands           # price every cited band
 //   node packages/propose/bin/plans/night7-presets.ts --population --jobs 7 --out FILE   # all 65,536 seeds, exact lane
 //   node packages/propose/bin/plans/night7-presets.ts --plane bb,foxy --bases 0,20 --count 100 --jobs 7 --out FILE
-import { createHash } from 'node:crypto';
+import { sha256 } from '../recompile/sweep-common.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as C from '@sixam/source/fnaf2';
@@ -198,7 +198,6 @@ export function cohort({ preset, runs, worst = false, knobs = PRESET_KNOBS, band
 // model's answer about the ROUTE, which is what a P_max is a statement of --
 // with the win condition `cohort()` uses: 6 AM and the split armed.
 export const POPULATION_KIND = 'night7-preset-population-v1';
-const sha256 = (text: string | Buffer) => createHash('sha256').update(text).digest('hex');
 /** A preset's rows from one population block. */
 type PresetRow = BlockRow & { readonly id: string, readonly losses: Loss[] };
 

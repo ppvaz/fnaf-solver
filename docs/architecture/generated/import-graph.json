@@ -2488,11 +2488,11 @@
         "../census/winner-census.ts",
         "../flags.ts",
         "../lookup.ts",
+        "../recompile/sweep-common.ts",
         "./bundle.ts",
         "./minus-toys-plan.ts",
         "@sixam/propose/seeds",
         "@sixam/source/fnaf2",
-        "node:crypto",
         "node:fs",
         "node:url"
       ]
@@ -2505,6 +2505,7 @@
         "../census/winner-census.ts",
         "../flags.ts",
         "../lookup.ts",
+        "../recompile/sweep-common.ts",
         "./artifact-commands.ts",
         "./minus-toys-plan.ts",
         "./night7-presets.ts",
@@ -2512,7 +2513,6 @@
         "@sixam/source",
         "@sixam/source/fnaf2",
         "node:child_process",
-        "node:crypto",
         "node:fs",
         "node:url"
       ]
@@ -2525,11 +2525,11 @@
         "../census/winner-phase-census.ts",
         "../flags.ts",
         "../lookup.ts",
+        "../recompile/sweep-common.ts",
         "./bundle.ts",
         "./night7-presets.ts",
         "@sixam/kernel",
         "@sixam/source/fnaf2",
-        "node:crypto",
         "node:fs",
         "node:os",
         "node:path",
@@ -2636,11 +2636,11 @@
         "../../../play/bin/phone/actuator.ts",
         "../census/winner-census.ts",
         "../lookup.ts",
+        "../recompile/sweep-common.ts",
         "./minus-toys-plan.ts",
         "./night7-presets.ts",
         "./night7-robustness-field.ts",
         "@sixam/source/fnaf2",
-        "node:crypto",
         "node:fs"
       ]
     },
@@ -4014,9 +4014,9 @@
         "../bin/policy/policy-artifact.ts",
         "../bin/policy/policy-interpreter.ts",
         "../bin/policy/policy-ir.ts",
+        "../bin/recompile/sweep-common.ts",
         "@sixam/propose/policy",
-        "node:assert/strict",
-        "node:crypto"
+        "node:assert/strict"
       ]
     },
     {

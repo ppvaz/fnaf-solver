@@ -31,7 +31,7 @@
 // together can fail inside both of their windows. The jitter lane is where
 // they move together.
 import { fork } from 'node:child_process';
-import { createHash } from 'node:crypto';
+import { sha256 } from '../recompile/sweep-common.ts';
 import { writeFileSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { FPS, Sim } from '@sixam/source/fnaf2';
@@ -56,7 +56,6 @@ export const JITTER_MS = Object.freeze([0, 10, 20, 30, 40, 50, 60]);
 export const LATENESS_MS = Object.freeze([0, 30, 50, 60, 70, 80, 90, 100]);
 const STEP_MS = 1000 / FPS;
 const frame = (ms: number) => Math.round(ms * FPS / 1000);
-const sha256 = (text: string) => createHash('sha256').update(text).digest('hex');
 /** Every Minus Toys knob, set. */
 type Knobs = typeof KNOBS0;
 /** A schedule the field scans: its knobs and declared epoch, and its winner where it is a binding. */

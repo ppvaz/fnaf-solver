@@ -42,7 +42,7 @@
 //     it; each schedule's worst event and camdrop->mask seam must replay at
 //     their window edges, the phase map at its transitions, and the jitter and
 //     lateness lanes at their last all-win value and first recorded loss.
-import { createHash } from 'node:crypto';
+import { sha256 } from '../recompile/sweep-common.ts';
 import { readFileSync, readdirSync } from 'node:fs';
 import * as C from '@sixam/source/fnaf2';
 import { KNOBS0 } from './minus-toys-plan.ts';
@@ -62,7 +62,6 @@ import type { Loss } from '../census/winner-census.ts';
 import { found } from '../lookup.ts';
 
 const check: (ok: unknown, message: string) => asserts ok = (ok, message) => { if (!ok) throw new Error(message); };
-const sha256 = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex');
 
 // --- 1. the presets are the phone's presets ---------------------------------
 {

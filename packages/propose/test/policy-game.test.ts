@@ -2,14 +2,13 @@
 // game's catalog (@sixam/source), and a policy that names no game is FNaF 2's.
 // CONTRACT:policy-program-v1.
 import assert from 'node:assert/strict';
-import { createHash } from 'node:crypto';
+import { sha256 } from '../bin/recompile/sweep-common.ts';
 import { canonicalPolicy, policyGame, roundTripPolicy, validatePolicy } from '@sixam/propose/policy';
 import { minimalPolicy } from '../bin/policy/policy-ir.ts';
 import { compilePolicy } from '../bin/policy/policy-interpreter.ts';
 import { compilePolicyArtifact } from '../bin/policy/policy-artifact.ts';
 import type { PolicyProgram } from '@sixam/propose/policy';
 
-const sha256 = (text: string) => createHash('sha256').update(text).digest('hex');
 // The program with the first action of its first acting phase renamed.
 const withAction = (program: PolicyProgram, action: string) => {
   const copy = structuredClone(program);
