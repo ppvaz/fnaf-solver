@@ -17,12 +17,12 @@
 // The roll rule: in an update that holds a 3000 ms roll, g229's four draws come first and his direction is the
 // fourth (Random(2), 1 = right); the roll (g286, Random(20) + 1 <= AI) is the next draw, or the eighth when the
 // 5000 ms group's three draws share the update. MODEL_ONLY over a DEVICE_MEASURED night. Host-only.
-import { spawn } from 'node:child_process';
 import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { LEVEL_ORIGIN_MS } from '../../../play/games/fnaf4/fnaf4-run.ts';
-import { sha256 } from './sweep-common.ts';
+import { resumedSeeds, sha256 } from './sweep-common.ts';
+import { spawnPilot } from './pilot/pilot-child.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '../../../..');
@@ -127,32 +127,24 @@ function args(argv: string[]) {
   return o;
 }
 
-function runSeed(pre: Predeclaration, o: Readonly<Record<string, string>>, rowsPath: string, seed: number) {
+async function runSeed(pre: Predeclaration, o: Readonly<Record<string, string>>, rowsPath: string, seed: number) {
   const dir = join(o.out, `s${seed}`);
-  const pilot = [join(HERE, 'pilot/pilot.ts'), '--game', 'fnaf4', '--run', dir, '--binary', o.binary, '--assets', o.assets,
+  const { code, out, err } = await spawnPilot(['--game', 'fnaf4', '--run', dir, '--binary', o.binary, '--assets', o.assets,
     '--save', resolve(ROOT, pre.save.path), '--policy', 'still', '--knobs', JSON.stringify({ input: rowsPath }),
-    '--seed', String(seed), '--max-ticks', String(pre.maxTicks)];
-  return new Promise<object>((res) => {
-    const child = spawn(process.execPath, pilot, { stdio: ['ignore', 'pipe', 'pipe'] });
-    let out = '', err = '';
-    child.stdout.on('data', (d) => { out += d; });
-    child.stderr.on('data', (d) => { err += d; });
-    child.on('close', (code) => {
-      let row: Row;
-      try {
-        const night = readNight(readFileSync(join(dir, 'still.jsonl'), 'utf8'), pre.rollTicks);
-        // The prefix the stage-1 rule read must be this seed's own: its draws before each prefix roll.
-        const cum = readFileSync(join(dir, 'trace'), 'utf8').split('\n').filter((l) => l && !l.startsWith('#'))
-          .map((l) => l.split(' ')).filter((r) => r[0] === '3').map((r) => Number(r[2]));
-        const prefixOk = pre.prefix.every((p) => cum[p.update - 1] === p.before);
-        row = { seed, ticks: night.ticks, dead: night.dead, gameoverAt: night.gameoverAt, prefixOk };
-      } catch (e) {
-        row = { seed, error: `${code}: ${String(e).slice(0, 200)} | ${err.trim().split('\n').slice(-2).join(' | ')}` };
-      }
-      rmSync(dir, { recursive: true, force: true });
-      res({ ...row, stdout: out.trim().split('\n').pop()?.slice(0, 200) });
-    });
-  });
+    '--seed', String(seed), '--max-ticks', String(pre.maxTicks)]);
+  let row: Row;
+  try {
+    const night = readNight(readFileSync(join(dir, 'still.jsonl'), 'utf8'), pre.rollTicks);
+    // The prefix the stage-1 rule read must be this seed's own: its draws before each prefix roll.
+    const cum = readFileSync(join(dir, 'trace'), 'utf8').split('\n').filter((l) => l && !l.startsWith('#'))
+      .map((l) => l.split(' ')).filter((r) => r[0] === '3').map((r) => Number(r[2]));
+    const prefixOk = pre.prefix.every((p) => cum[p.update - 1] === p.before);
+    row = { seed, ticks: night.ticks, dead: night.dead, gameoverAt: night.gameoverAt, prefixOk };
+  } catch (e) {
+    row = { seed, error: `${code}: ${String(e).slice(0, 200)} | ${err.trim().split('\n').slice(-2).join(' | ')}` };
+  }
+  rmSync(dir, { recursive: true, force: true });
+  return { ...row, stdout: out.trim().split('\n').pop()?.slice(0, 200) };
 }
 
 async function scan(o: Readonly<Record<string, string>>) {
@@ -169,7 +161,9 @@ async function scan(o: Readonly<Record<string, string>>) {
   if (sha256(readFileSync(rowsPath)) !== pre.rows.sha256) throw new Error('scan: the rows are not the predeclared ones');
   const kept = prefilter(pre.prefix);
   const resultsPath = join(o.out, 'results.jsonl');
-  const done = new Set<number>(existsSync(resultsPath) ? readFileSync(resultsPath, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l).seed) : []);
+  // Each row names the predeclaration it was scanned under, so a resume reuses only its own scan's rows.
+  const predeclarationSha256 = sha256(preBytes);
+  const done = resumedSeeds(resultsPath, 'predeclarationSha256', predeclarationSha256);
   const todo = [...kept, ...pre.validity.seeds].filter((s) => !done.has(s));
   console.log(`stage 1: ${kept.length} of 65,536 seeds kept; stage 2: ${todo.length} to replay`);
   let next = 0;
@@ -178,7 +172,7 @@ async function scan(o: Readonly<Record<string, string>>) {
       if (drift().length) throw new Error(`scan: ${drift().join(', ')} changed during the scan`);
       const seed = todo[next++];
       const row = await runSeed(pre, o, rowsPath, seed);
-      appendFileSync(resultsPath, `${JSON.stringify({ ...row, kept: kept.includes(seed) })}\n`);
+      appendFileSync(resultsPath, `${JSON.stringify({ ...row, kept: kept.includes(seed), predeclarationSha256 })}\n`);
     }
   };
   await Promise.all(Array.from({ length: Number(o.jobs ?? 3) }, worker));

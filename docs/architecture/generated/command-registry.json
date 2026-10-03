@@ -2621,9 +2621,15 @@
       "lifecycle": "supported"
     },
     {
+      "id": "packages/propose/bin/recompile/pilot/pilot-child.ts",
+      "invocation": "packages/propose/bin/recompile/pilot/pilot-child.ts",
+      "kind": "module",
+      "lifecycle": "supported"
+    },
+    {
       "id": "packages/propose/bin/recompile/pilot/batch.ts",
       "invocation": "packages/propose/bin/recompile/pilot/batch.ts --game G --policy NAME --binary FILE --assets FILE --save FILE --seeds A-B[,C...] --out DIR --win-key K=V [--jobs N] [--knobs JSON]",
-      "kind": "One policy over a block of seeds, natively, stopped at the win frame or killed on a loss. A seed is WON only if the save holds every `--win-key`; a seed whose controller never logged a record never reached the night and is NO_NIGHT, not a loss. One row per seed in `DIR/results.jsonl` (verdict, outcome, updates, the input's sha256, the policy sources' sha256, the last controller records of a loss); an interrupted block resumes, and the batch stops if `pilot.ts` or the game module changes before the block is done. Run it under a memory-capped scope (`systemd-run --user --scope -p MemoryMax=...`). Host-only; DIR outside the repository.",
+      "kind": "One policy over a block of seeds, natively, stopped at the win frame or killed on a loss. A seed is WON only if the save holds every `--win-key`; a seed whose controller never logged a record never reached the night and is NO_NIGHT, not a loss; a child that crashed or left no summary is ERROR, not a loss. One row per seed in `DIR/results.jsonl` (verdict, outcome, updates, the input's sha256, the policy sources' sha256, the last controller records of a loss); an interrupted block resumes, refusing rows another policy-source state wrote, and the batch stops if `pilot.ts` or the game module changes before the block is done. Run it under a memory-capped scope (`systemd-run --user --scope -p MemoryMax=...`). Host-only; DIR outside the repository.",
       "lifecycle": "supported"
     },
     {

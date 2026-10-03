@@ -2,7 +2,7 @@
 // measured-seed check, and a worker pool whose workers run only for the tool that started them.
 import { createHash } from 'node:crypto';
 import type { BinaryLike } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { cpus } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { Worker } from 'node:worker_threads';
@@ -22,6 +22,24 @@ export const canonical = (value: unknown): string => isList(value) ? `[${value.m
 export function recordId(prefix: string, record: Readonly<Record<string, unknown>>) {
   const body = Object.fromEntries(Object.entries(record).filter(([key]) => key !== 'id' && key !== 'runFacts'));
   return `${prefix}-${sha256(canonical(body)).slice(0, 16)}`;
+}
+
+/**
+ * The seeds a results file already holds, for a run resuming into it. Each row must carry `field` equal to `value`
+ * (the sources or predeclaration it was computed under): a row from another run is refused, never reused.
+ */
+export function resumedSeeds(path: string, field: string, value: string) {
+  const done = new Set<number>();
+  if (!existsSync(path)) return done;
+  for (const [index, line] of readFileSync(path, 'utf8').split('\n').entries()) {
+    if (!line) continue;
+    const row: unknown = JSON.parse(line);
+    if (!isRecord(row) || !Number.isInteger(row.seed)) throw new Error(`${path}:${index + 1}: not a row with a seed`);
+    if (row[field] !== value)
+      throw new Error(`${path}:${index + 1}: seed ${row.seed} was computed under ${field} ${String(row[field])}, not ${value}; resume into a new --out`);
+    done.add(Number(row.seed));
+  }
+  return done;
 }
 
 /** A power check passed: it planted at least one state and recovered every one. Planting nothing shows no power. */

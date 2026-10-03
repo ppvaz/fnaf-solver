@@ -24,13 +24,14 @@
  * every row, and stops if either file changes before the block is done.
  * DIR stays outside the repository. Host-only; no device.
  */
-import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gameModulePath, loadGame } from './pilot.ts';
-import type { PilotSummary } from './pilot.ts';
+import { missingWinKeys, runPilotChild } from './pilot-child.ts';
+import type { PilotChildRun } from './pilot-child.ts';
+import { resumedSeeds } from '../sweep-common.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '../../../../..');
@@ -43,7 +44,7 @@ interface BatchOptions {
 
 /** One seed's row in results.jsonl. */
 interface SeedRow {
-  seed: number, verdict: 'WON' | 'NO_NIGHT' | 'LOST', policySha256: string | undefined, outcome: unknown, updates: number | null;
+  seed: number, verdict: 'WON' | 'NO_NIGHT' | 'LOST' | 'ERROR', policySha256: string | undefined, outcome: unknown, updates: number | null;
   inputSha256: string | null, missing?: string[], error?: string, tail?: string[];
 }
 
@@ -78,19 +79,6 @@ function parseArgs(argv: string[]): BatchOptions {
   return checked;
 }
 
-function iniKeys(text: string) {
-  const out: Record<string, string> = {};
-  let section = null as string | null;
-  for (const raw of text.split(/\r?\n/)) {
-    const line = raw.trim();
-    const sec = /^\[(.+)\]$/.exec(line);
-    if (sec) { section = sec[1]; continue; }
-    const kv = /^([^=]+)=(.*)$/.exec(line);
-    if (kv && section) out[`${section}.${kv[1]}`] = kv[2];
-  }
-  return out;
-}
-
 export const SOURCES = (game: string) => [join(HERE, 'pilot.ts'), gameModulePath(game)];
 const sourcesSha256 = (game: string) => {
   const h = createHash('sha256');
@@ -98,43 +86,34 @@ const sourcesSha256 = (game: string) => {
   return h.digest('hex');
 };
 
-function runSeed(o: BatchOptions, saveName: string, seed: number) {
+/**
+ * A seed's verdict: ERROR when the child crashed or left no summary to trust, WON when the save holds every win key,
+ * NO_NIGHT when the night never reached the office (no outcome and an empty log), and LOST otherwise.
+ */
+export function seedVerdict(run: Pick<PilotChildRun, 'failure' | 'summary'>, missing: readonly string[], logText: string): SeedRow['verdict'] {
+  if (run.failure || !run.summary) return 'ERROR';
+  if (!missing.length) return 'WON';
+  return run.summary.outcome === null && logText === '' ? 'NO_NIGHT' : 'LOST';
+}
+
+async function runSeed(o: BatchOptions, saveName: string, seed: number): Promise<SeedRow> {
   const dir = join(o.out, `s${seed}`);
-  const args = [join(HERE, 'pilot.ts'), '--game', o.game, '--run', dir, '--binary', o.binary, '--assets', o.assets,
-    '--save', o.save, '--policy', o.policy, '--seed', String(seed), '--max-ticks', '30000',
-    '--stop-frame', '5', '--no-trace', '--kill-on-loss', '--knobs', JSON.stringify({ ...o.knobs, quiet: true })];
-  return new Promise<SeedRow>((res) => {
-    const child = spawn(process.execPath, args, { stdio: ['ignore', 'pipe', 'pipe'] });
-    let out = '', err = '';
-    child.stdout.on('data', (d) => { out += d; });
-    child.stderr.on('data', (d) => { err += d; });
-    // 'close', not 'exit': a child's last stdout chunk can arrive after its
-    // exit event, and a summary that lists every task start is long enough to
-    // be cut off (seed 50005, 2026-09-30, read as a night that never started).
-    child.on('close', (code) => {
-      let summary = null as PilotSummary | null;
-      // split always returns a last line.
-      try { summary = JSON.parse(out.trim().split('\n').pop() as string); } catch { /* reported below */ }
-      const save = existsSync(join(dir, saveName)) ? iniKeys(readFileSync(join(dir, saveName), 'utf8')) : {};
-      const missing = o.winKeys.filter((k) => save[k.split('=')[0]] !== k.split('=')[1]);
-      const input = existsSync(join(dir, 'pilot.input')) ? readFileSync(join(dir, 'pilot.input')) : null;
-      const logName = o.game === 'fnaf3' ? 'guard.jsonl' : 'warden.jsonl';
-      const logText = existsSync(join(dir, logName)) ? readFileSync(join(dir, logName), 'utf8').trim() : '';
-      const verdict = code === 0 && summary && !missing.length ? 'WON'
-        : code === 0 && summary && summary.outcome === null && logText === '' ? 'NO_NIGHT' : 'LOST';
-      const row: SeedRow = { seed, verdict, policySha256: o.policySha256,
-        outcome: summary?.outcome ?? null, updates: summary?.updates ?? null,
-        inputSha256: input ? createHash('sha256').update(input).digest('hex') : null };
-      if (row.verdict !== 'WON') {
-        row.missing = missing;
-        if (code !== 0) row.error = err.trim().split('\n').slice(-3).join(' | ');
-        if (logText) row.tail = logText.split('\n').slice(-6);
-      } else {
-        rmSync(dir, { recursive: true, force: true });
-      }
-      res(row);
-    });
-  });
+  const run = await runPilotChild(o, seed, dir, saveName);
+  const missing = missingWinKeys(run.save, o.winKeys);
+  const input = existsSync(join(dir, 'pilot.input')) ? readFileSync(join(dir, 'pilot.input')) : null;
+  const logName = o.game === 'fnaf3' ? 'guard.jsonl' : 'warden.jsonl';
+  const logText = existsSync(join(dir, logName)) ? readFileSync(join(dir, logName), 'utf8').trim() : '';
+  const row: SeedRow = { seed, verdict: seedVerdict(run, missing, logText), policySha256: o.policySha256,
+    outcome: run.summary?.outcome ?? null, updates: run.summary?.updates ?? null,
+    inputSha256: input ? createHash('sha256').update(input).digest('hex') : null };
+  if (row.verdict !== 'WON') {
+    row.missing = missing;
+    if (run.failure) row.error = run.failure;
+    if (logText) row.tail = logText.split('\n').slice(-6);
+  } else {
+    rmSync(dir, { recursive: true, force: true });
+  }
+  return row;
 }
 
 async function main() {
@@ -143,11 +122,10 @@ async function main() {
   o.policySha256 = sourcesSha256(o.game);
   mkdirSync(o.out, { recursive: true });
   const resultsPath = join(o.out, 'results.jsonl');
-  const done = new Set<number>();
-  if (existsSync(resultsPath)) for (const l of readFileSync(resultsPath, 'utf8').split('\n')) if (l) done.add(JSON.parse(l).seed);
+  const done = resumedSeeds(resultsPath, 'policySha256', o.policySha256);
   const queue: number[] = [];
   for (const s of o.seeds) if (!done.has(s)) queue.push(s);
-  let won = 0, lost = 0, noNight = 0;
+  let won = 0, lost = 0, noNight = 0, errors = 0;
   const started = Date.now();
   async function worker() {
     while (queue.length) {
@@ -159,14 +137,15 @@ async function main() {
         throw new Error(`batch: ${SOURCES(o.game).join(' or ')} changed during the block; seed ${seed} and later are not recorded`);
       }
       appendFileSync(resultsPath, JSON.stringify(row) + '\n');
-      if (row.verdict === 'WON') won += 1; else if (row.verdict === 'NO_NIGHT') noNight += 1; else lost += 1;
-      const n = won + lost + noNight;
+      if (row.verdict === 'WON') won += 1; else if (row.verdict === 'NO_NIGHT') noNight += 1;
+      else if (row.verdict === 'ERROR') errors += 1; else lost += 1;
+      const n = won + lost + noNight + errors;
       if (n % 10 === 0 || row.verdict !== 'WON')
-        console.log(`${new Date().toISOString().slice(11, 19)} seed ${seed} ${row.verdict} (${row.outcome}); ${won} won, ${lost} lost, ${noNight} no night, ${queue.length} left, ${((Date.now() - started) / 1000 / n).toFixed(1)} s/seed`);
+        console.log(`${new Date().toISOString().slice(11, 19)} seed ${seed} ${row.verdict} (${row.outcome}); ${won} won, ${lost} lost, ${noNight} no night, ${errors} errors, ${queue.length} left, ${((Date.now() - started) / 1000 / n).toFixed(1)} s/seed`);
     }
   }
   await Promise.all(Array.from({ length: o.jobs }, worker));
-  console.log(JSON.stringify({ won, lost, noNight, seeds: o.seeds.length, first: o.seeds[0], last: o.seeds[o.seeds.length - 1], skipped: done.size }));
+  console.log(JSON.stringify({ won, lost, noNight, errors, seeds: o.seeds.length, first: o.seeds[0], last: o.seeds[o.seeds.length - 1], skipped: done.size }));
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

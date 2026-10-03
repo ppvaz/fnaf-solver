@@ -6,14 +6,17 @@
 // the negative controls that must fail. It also pins the controller's tables
 // to the core model's graph, so the two cannot drift apart silently.
 import assert from 'node:assert/strict';
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SCHEMA, check, evidenceId, iniKeys, verdict } from './record.ts';
 import type { PilotNightRecord } from './record.ts';
 import { SEAL_FOR, LURE_TO, proxyOf, whereIs, playsLeft, whatDayRare, doomStart } from './fnaf3.ts';
-import { branchPoints, parseSeeds, progress, withoutStrays, LEAD, BACKOFF, SOURCES as SEARCH_SOURCES } from './search.ts';
-import { SOURCES as BATCH_SOURCES } from './batch.ts';
+import { branchPoints, parseSeeds, progress, withoutStrays, unbranchedVerdict, LEAD, BACKOFF, SOURCES as SEARCH_SOURCES } from './search.ts';
+import { SOURCES as BATCH_SOURCES, seedVerdict } from './batch.ts';
+import { missingWinKeys, pilotSummary } from './pilot-child.ts';
+import { resumedSeeds } from '../sweep-common.ts';
 import { GAMES, gameModulePath, loadGame, view } from './pilot.ts';
 import { recordInputs } from './replay.ts';
 import type { PilotObject, PilotState } from './pilot.ts';
@@ -150,5 +153,33 @@ for (const g of GAMES) {
 }
 assert.throws(() => gameModulePath('fnaf2'), /must be one of fnaf3, fnaf4/);
 ok('every game module the pilot tools load exists with its policies, and every source they hash exists');
+
+// 7. A pilot child is read one way by batch and search: its summary line is checked, a crash or an unreadable
+// summary is an ERROR in both (batch read one as LOST and search as NO_NIGHT), and a resumed block refuses rows
+// another source state wrote instead of reusing them.
+const summary = { exit: 0, updates: 120, runtime: '2s', lastPlayTick: 118, outcome: null };
+assert.deepEqual(pilotSummary(summary), summary);
+assert.throws(() => pilotSummary({ ...summary, updates: '120' }), /not a pilot summary/);
+assert.deepEqual(missingWinKeys({ 'fn4.beat8': '1' }, ['fn4.beat8=1']), []);
+assert.deepEqual(missingWinKeys({ 'fn4.beat8': '0' }, ['fn4.beat8=1']), ['fn4.beat8=1']);
+const clean = { failure: null, summary };
+assert.equal(seedVerdict({ failure: 'exit 1: boom', summary: null }, ['fn4.beat8=1'], ''), 'ERROR', 'a crash is not a loss');
+assert.equal(seedVerdict(clean, [], ''), 'WON');
+assert.equal(seedVerdict(clean, ['fn4.beat8=1'], ''), 'NO_NIGHT');
+assert.equal(seedVerdict({ ...clean, summary: { ...summary, outcome: 'death' } }, ['fn4.beat8=1'], ''), 'LOST');
+assert.equal(seedVerdict(clean, ['fn4.beat8=1'], '{"t":3}'), 'LOST', 'a night with a log reached the office');
+assert.equal(unbranchedVerdict({ error: 'exit 1: boom', outcome: null }), 'ERROR', 'a crash is not a night that never started');
+assert.equal(unbranchedVerdict({ outcome: null }), 'NO_NIGHT');
+assert.equal(unbranchedVerdict({ outcome: 'stalled' }), 'ERROR');
+{
+  const dir = mkdtempSync(join(tmpdir(), 'pilot-resume-'));
+  const results = join(dir, 'results.jsonl');
+  assert.equal(resumedSeeds(results, 'policySha256', 'a').size, 0, 'nothing to resume');
+  writeFileSync(results, `${JSON.stringify({ seed: 1, policySha256: 'a' })}\n${JSON.stringify({ seed: 2, policySha256: 'a' })}\n`);
+  assert.deepEqual([...resumedSeeds(results, 'policySha256', 'a')], [1, 2]);
+  assert.throws(() => resumedSeeds(results, 'policySha256', 'b'), /computed under policySha256 a, not b/);
+  rmSync(dir, { recursive: true, force: true });
+}
+ok('batch and search read a pilot child one way: checked summary, ERROR for a crash, no rows reused across sources');
 
 console.log(`# pilot records: ${passed} passed`);

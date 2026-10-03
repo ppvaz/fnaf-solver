@@ -2658,8 +2658,8 @@
       "file": "packages/propose/bin/recompile/fnaf4-run-seed.ts",
       "imports": [
         "../../../play/games/fnaf4/fnaf4-run.ts",
+        "./pilot/pilot-child.ts",
         "./sweep-common.ts",
-        "node:child_process",
         "node:fs",
         "node:path",
         "node:url"
@@ -2860,8 +2860,9 @@
     {
       "file": "packages/propose/bin/recompile/pilot/batch.ts",
       "imports": [
+        "../sweep-common.ts",
+        "./pilot-child.ts",
         "./pilot.ts",
-        "node:child_process",
         "node:crypto",
         "node:fs",
         "node:path",
@@ -2882,6 +2883,18 @@
         "./pilot.ts",
         "node:fs",
         "node:path"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/recompile/pilot/pilot-child.ts",
+      "imports": [
+        "./pilot.ts",
+        "./record.ts",
+        "@sixam/kernel",
+        "node:child_process",
+        "node:fs",
+        "node:path",
+        "node:url"
       ]
     },
     {
@@ -2922,10 +2935,12 @@
     {
       "file": "packages/propose/bin/recompile/pilot/search.ts",
       "imports": [
+        "../sweep-common.ts",
+        "./pilot-child.ts",
         "./pilot.ts",
+        "./record.ts",
         "./replay.ts",
         "@sixam/kernel",
-        "node:child_process",
         "node:crypto",
         "node:fs",
         "node:path",
@@ -2936,9 +2951,11 @@
       "file": "packages/propose/bin/recompile/pilot/test-pilot.ts",
       "imports": [
         "../../../../source/src/games/fnaf3/sim-fnaf3.ts",
+        "../sweep-common.ts",
         "./batch.ts",
         "./fnaf3.ts",
         "./fnaf4.ts",
+        "./pilot-child.ts",
         "./pilot.ts",
         "./record.ts",
         "./replay.ts",
@@ -2946,6 +2963,7 @@
         "@sixam/review/renamed-path",
         "node:assert/strict",
         "node:fs",
+        "node:os",
         "node:path",
         "node:url"
       ]
