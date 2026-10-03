@@ -67,8 +67,10 @@ export function heldOutSeeds(count: number) {
 }
 
 /** The night's phase-aware committed bindings, each with its declared epoch and replay knobs. */
-export function nightBindings(night: number) {
-  return committedWinners().map((path): NightBinding | null => {
+// `paths` defaults to the committed winners; a gate replaying an older record passes the files it names, which
+// may have been retired since (their renames keep them reachable).
+export function nightBindings(night: number, paths: readonly string[] = committedWinners()) {
+  return paths.map((path): NightBinding | null => {
     const text = readFileSync(join(ROOT, path), 'utf8');
     const winner = validateWinner(JSON.parse(text));
     if (!winner.nights.includes(night) || !STRATEGY_REGISTRY[winner.strategy].phaseAware) return null;

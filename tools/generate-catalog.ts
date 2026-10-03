@@ -375,24 +375,34 @@ const legacyPaths = [
 ];
 
 // Every committed winner's compiled winnerHash. compileBundle normalises a
-// winner (it stamps the gate with the replay hash), so a pack can name a hash
+// winner (it stamps the gate with a replay hash), so a pack can name a hash
 // that is not the file's own stableHash; only Propose can compile, and Review
 // never imports Propose (ADR 0002). So the catalog records the answer, CI's
 // catalog diff keeps it current, and Review's trackedWinners() reads it, refusing
 // when a winner file's bytes differ from the sha256 recorded here. Retired winners
 // (bindings/<game>/retired/) are listed too, marked retired: a pack that ran one
-// keeps its custody.
-const { compileBundle } = await import(pathToFileURL(join(ROOT, 'packages/propose/bin/plans/bundle.ts')).href);
+// keeps its custody. A winner the gate register holds takes its compiled hash
+// from there: that identity is fixed by the first model that measured it, so a
+// winner the current model refuses (a PASS gate whose replay loses) keeps the
+// hash its packs recorded. Any other winner is compiled.
+const { compileBundle, readGateRegister } = await import(pathToFileURL(join(ROOT, 'packages/propose/bin/plans/bundle.ts')).href);
+const { stableHash } = await import(pathToFileURL(join(ROOT, 'packages/kernel/src/contracts/index.ts')).href);
+const registeredIdentity = new Map<string, string>();
+for (const section of readGateRegister().models)
+  for (const gate of section.gates) if (!registeredIdentity.has(gate.winnerHash)) registeredIdentity.set(gate.winnerHash, gate.compiledWinnerHash);
 const { custodyWinnerFiles } = await import(pathToFileURL(join(ROOT, 'packages/review/src/evidence-pack.ts')).href);
 const winnerHashes = [];
 for (const file of custodyWinnerFiles(ROOT)) {
   const bytes = await readFile(join(ROOT, file));
-  const scratch = mkdtempSync(join(tmpdir(), 'winner-hashes-'));
-  let compiledWinnerHash = null;
+  const winner = JSON.parse(bytes.toString('utf8'));
+  let compiledWinnerHash = registeredIdentity.get(stableHash(winner)) ?? null;
   let notCompiled;
-  try { compiledWinnerHash = compileBundle(JSON.parse(bytes.toString('utf8')), join(scratch, 'bundle')).manifest.winnerHash; }
-  catch (error) { notCompiled = (error as Error).message; }
-  finally { rmSync(scratch, { recursive: true, force: true }); }
+  if (!compiledWinnerHash) {
+    const scratch = mkdtempSync(join(tmpdir(), 'winner-hashes-'));
+    try { compiledWinnerHash = compileBundle(winner, join(scratch, 'bundle')).manifest.winnerHash; }
+    catch (error) { notCompiled = (error as Error).message; }
+    finally { rmSync(scratch, { recursive: true, force: true }); }
+  }
   winnerHashes.push({ file, sha256: createHash('sha256').update(bytes).digest('hex'),
     compiledWinnerHash, ...(notCompiled ? { notCompiled } : {}), ...(file.includes('/retired/') ? { retired: true } : {}) });
 }

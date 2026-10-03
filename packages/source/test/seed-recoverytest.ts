@@ -1,6 +1,7 @@
 // Phone-free checks for the stock-APK seed recovery helpers.
 import assert from 'node:assert/strict';
 import { Rng, SEED_SPACE, filterSeedCandidatesByEvents, filterSeedCandidatesByRolls, nextRngState, seedCandidatesFromTimeWindow, seedCandidatesFromHostMarker, seedFromDeviceTimeMs } from '@sixam/source/fnaf2';
+import { LEGACY_SIM_OPTIONS } from '../src/games/fnaf2/plant-options.ts';
 
 assert.equal(seedFromDeviceTimeMs(0), 0);
 assert.equal(seedFromDeviceTimeMs(65535), 65535);
@@ -45,14 +46,14 @@ assert.throws(() => filterSeedCandidatesByRolls({ candidates: [knownSeed], obser
 
 const eventResult = filterSeedCandidatesByEvents({
   candidates: [0, 1, 2],
-  simOptions: { night: 7, durationFrames: 700, lethal: false },
+  simOptions: { ...LEGACY_SIM_OPTIONS, night: 7, durationFrames: 700, lethal: false },
   observations: [{ event: 'foxy-arrive', frame: 600 }],
 });
 assert.deepEqual(eventResult.candidateSeeds, [0, 1, 2]);
 
 const dataResult = filterSeedCandidatesByEvents({
   candidates: [0],
-  simOptions: { night: 7, durationFrames: 300, lethal: false },
+  simOptions: { ...LEGACY_SIM_OPTIONS, night: 7, durationFrames: 300, lethal: false },
   observations: [{ event: 'mangle-static', frame: 300,
     data: { context: 'cam11', present: true } }],
 });
@@ -60,7 +61,7 @@ assert.deepEqual(dataResult.candidateSeeds, [0]);
 
 const mismatch = filterSeedCandidatesByEvents({
   candidates: [0],
-  simOptions: { night: 7, durationFrames: 601, lethal: false },
+  simOptions: { ...LEGACY_SIM_OPTIONS, night: 7, durationFrames: 601, lethal: false },
   observations: [{ event: 'foxy-arrive', frame: 601 }],
 });
 assert.deepEqual(mismatch.candidateSeeds, []);

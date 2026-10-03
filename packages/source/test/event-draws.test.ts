@@ -5,6 +5,7 @@ import type { Unit } from '../src/games/fnaf2/plant-model.ts';
 import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
 import * as C from '../src/games/fnaf2/config.ts';
 import { RNG_MULTIPLIER, RNG_INCREMENT, RNG_MASK, RNG_MODULUS } from '../src/games/fnaf2/rng.ts';
+import { LEGACY_SIM_OPTIONS } from '../src/games/fnaf2/plant-options.ts';
 
 const lcg = (s: number) => (s * RNG_MULTIPLIER + RNG_INCREMENT) & RNG_MASK;
 const after = (s: number, n: number) => { for (let i = 0; i < n; i++) s = lcg(s); return s; };
@@ -12,7 +13,7 @@ const after = (s: number, n: number) => { for (let i = 0; i < n; i++) s = lcg(s)
 const rnd = (s: number, n: number) => { const t = lcg(s); return [Math.floor((t / RNG_MODULUS) * n), t]; };
 const QUIET = { night: 7, seed: 5, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false,
                 boxEnabled: false, foxyEnabled: false };
-const pair = (extra = {}) => [new Sim({ ...QUIET, ...extra }), new Sim({ ...QUIET, ...extra, sourcedEventDraws: true })];
+const pair = (extra = {}) => [new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, ...extra }), new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, ...extra, sourcedEventDraws: true })];
 
 // Resolution that lets the unit inside: one Random(500) more than the default.
 {
@@ -31,7 +32,7 @@ const pair = (extra = {}) => [new Sim({ ...QUIET, ...extra }), new Sim({ ...QUIE
 
 // Balloon Boy hops: stage 1 silent, stages 2-3 one cue, stage 4 two cues, e548 redraws a 4.
 {
-  const s = new Sim({ ...QUIET, sourcedEventDraws: true });
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, sourcedEventDraws: true });
   let st = s.rng.state;
   s.bbHop(); assert.equal(s.rng.state, st, 'CAM 10 -> 07 draws nothing');
   for (const stage of [2, 3, 4]) {
@@ -46,7 +47,7 @@ const pair = (extra = {}) => [new Sim({ ...QUIET, ...extra }), new Sim({ ...QUIE
   st = s.rng.state; s.bbEnterOpening(); assert.equal(s.rng.state, lcg(st), 'e354');
   // A cue of 4 is redrawn: find a state whose Random(4) is 3 and check the extra draw.
   let seed4 = 0; while (rnd(seed4, 4)[0] !== 3) seed4++;
-  const r = new Sim({ ...QUIET, sourcedEventDraws: true }); r.bb.stage = 1; r.rng.state = seed4;
+  const r = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, sourcedEventDraws: true }); r.bb.stage = 1; r.rng.state = seed4;
   r.bbHop(); assert.equal(r.rng.state, after(seed4, 2), 'e548 after a cue of 4');
 }
 
@@ -91,8 +92,8 @@ const pair = (extra = {}) => [new Sim({ ...QUIET, ...extra }), new Sim({ ...QUIE
 
 // Off: the default is unchanged.
 {
-  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
-  if (new Sim({ night: 7, seed: 1 }).opts.sourcedEventDraws === false)
+  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
+  if (new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, seed: 1 }).opts.sourcedEventDraws === false)
     assert.equal(run({}), run({ sourcedEventDraws: false }), 'explicit off equals the default');
 }
 console.log('event draws: failed-resolution Random(500), BB hop cues with the e548 redraw, e354, the mask sendback roll + cue, e324, the streak entry Random(500); off unchanged');

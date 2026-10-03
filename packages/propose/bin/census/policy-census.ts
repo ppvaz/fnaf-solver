@@ -97,7 +97,8 @@ export function registration(specPath: string, { unregistered = false }: { unreg
 // ---- the night7-anchor-band-v1 family -------------------------------------------------------
 
 /** Each binding the spec names, checked against the tree: the same bytes, the same winner hash, the same band. */
-export function anchorBandBindings(spec: CensusSpec) {
+// `model` is the model the Sim runs: a gate replaying an older record runs that one and names it.
+export function anchorBandBindings(spec: CensusSpec, { model }: { model?: string } = {}) {
   const scratch = mkdtempSync(join(tmpdir(), 'policy-census-'));
   try {
     return spec.family.grid.bindings.map((entry) => {
@@ -107,7 +108,7 @@ export function anchorBandBindings(spec: CensusSpec) {
       const winner = validateWinner(JSON.parse(text));
       if (winner.strategy !== 'minus-toys' || !winner.nights.includes(spec.family.grid.night))
         throw new Error(`policy-census: ${entry.path} is not a Minus Toys night ${spec.family.grid.night} binding`);
-      const winnerHash = compileBundle(JSON.parse(text), join(scratch, entry.name)).manifest.winnerHash;
+      const winnerHash = compileBundle(JSON.parse(text), join(scratch, entry.name), model ? { model } : {}).manifest.winnerHash;
       if (winnerHash !== entry.winnerHash) throw new Error(`policy-census: ${entry.path} hashes to ${winnerHash}, not ${entry.winnerHash}`);
       const aims: Readonly<Record<string, AnchorAim | undefined>> = ANCHOR_AIMS;
       const aim = aims[winnerHash];

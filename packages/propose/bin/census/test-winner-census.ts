@@ -30,7 +30,13 @@ import { currentPath } from '@sixam/review/renamed-path';
 import { PHASE_KIND, heldOutSeeds, nightBindings, phaseWins } from '../../../../packages/propose/bin/census/winner-phase-census.ts';
 import type { buildPhaseRecord } from '../../../../packages/propose/bin/census/winner-phase-census.ts';
 
+import { withModelOptions } from '../recompile/rebuild-options-census.ts';
+import { simOptionsFrom } from '../../../source/recompile/model-draw-trace.ts';
+
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
+
+// Both records were taken on the legacy model (fnaf2-legacy, before 2026-10-02), so their replays run there.
+withModelOptions(simOptionsFrom({}), () => {
 // A binding as a committed record names it, where the file lives now (records keep their paths).
 const current = (path: string) => currentPath(ROOT, path) ?? path;
 const EVIDENCE = join(ROOT, 'docs/evidence');
@@ -108,7 +114,7 @@ let phaseReplays = 0;
   const seeds = heldOutSeeds(phase.method.seeds.n);
   assert.equal(sha256(JSON.stringify(seeds)), phase.method.seeds.sha256, `${phaseName}: the held-out seed block no longer rebuilds`);
   const frames = (phase.method.phases.frames - 1) / 2;
-  const bindings = nightBindings(night);
+  const bindings = nightBindings(night, phase.bindings.map((row) => current(row.binding)));
   for (const row of phase.bindings) {
     const binding = bindings.find((b) => b.path === current(row.binding));
     assert.ok(binding, `${phaseName} names ${row.binding}, which no longer plays night ${night}`);
@@ -134,3 +140,4 @@ const uncensused = committedWinners().filter((path) => !censused.has(path));
 console.log(`winner census ${recordName}: ${record.bindings.length} night-bindings still match the tree ` +
   `(${replays} replays), ${phaseName} still maps the phases (${phaseReplays} replays); ` +
   `UNCENSUSED_WINNERS ${uncensused.length}${uncensused.length ? `: ${uncensused.join(', ')}` : ''}`);
+});

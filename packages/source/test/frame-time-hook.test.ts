@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
 import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
 import * as C from '../src/games/fnaf2/config.ts';
+import { LEGACY_SIM_OPTIONS } from '../src/games/fnaf2/plant-options.ts';
 
 const SOURCED = { sourcedDropLightOrder: true, sourcedFoxyChain: true, sourcedUnconditionalDraws: true,
   sourcedEventDraws: true, sourcedBlackoutDraws: true, sourcedViewDraws: true, sourcedRollDraws: true,
@@ -11,16 +12,16 @@ const SOURCED = { sourcedDropLightOrder: true, sourcedFoxyChain: true, sourcedUn
 const QUIET = { night: 7, seed: 91, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false,
                 boxEnabled: false, foxyEnabled: false };
 
-assert.throws(() => new Sim({ night: 7, frameMs: () => 17 }), /requires sourcedSheetOrder/);
+assert.throws(() => new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, frameMs: () => 17 }), /requires sourcedSheetOrder/);
 {
   const { sourcedFoxyChain, ...noChain } = SOURCED;
-  assert.throws(() => new Sim({ night: 7, foxyEnabled: true, ...noChain, sourcedDropLightOrder: true, frameMs: () => 17 }),
+  assert.throws(() => new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, foxyEnabled: true, ...noChain, sourcedDropLightOrder: true, frameMs: () => 17 }),
     /requires sourcedFoxyChain/);
 }
 
 // The shared cadences at 20 ms loops (60 units): 1 s every 50 frames, 500 ms every 25, 200 ms every 10, 10 s every 500.
 {
-  const s = new Sim({ ...QUIET, ...SOURCED, frameMs: () => 20 });
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, ...SOURCED, frameMs: () => 20 });
   const seen: { sec: number[], half: number[], sample: number[], ten: number[] } = { sec: [], half: [], sample: [], ten: [] };
   while (s.frame < 1000) {
     s.tick();
@@ -41,7 +42,7 @@ assert.throws(() => new Sim({ night: 7, frameMs: () => 17 }), /requires sourcedS
 {
   const cams = [11, 3, 4, 1, 10, 7, 8, 5];
   const play = (seed: number, hook: Partial<SimOptions>, base = {}) => {
-    const s = new Sim({ night: 7, lethal: true, seed, ...base, ...SOURCED, ...hook });
+    const s = new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, lethal: true, seed, ...base, ...SOURCED, ...hook });
     while (s.alive && !s.won && s.frame < 30000) {
       const f = s.frame;
       if (f % 150 === 20) s.setMonitor(true);
@@ -66,7 +67,7 @@ assert.throws(() => new Sim({ night: 7, frameMs: () => 17 }), /requires sourcedS
 // full-06 update 2030 starts an encounter on value 5 = 4, followed by 0.06.
 // g514 counts the entry loop. Replacing both deltas with the later one loses 3.94 clock units.
 {
-  const s = new Sim({ ...QUIET, ...SOURCED, frameValue5: f => f === 10 ? 4 : f === 11 ? 0.06 : f === 12 ? 0.5 : 0.75 });
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, ...SOURCED, frameValue5: f => f === 10 ? 4 : f === 11 ? 0.06 : f === 12 ? 0.5 : 0.75 });
   s.frame = 10;
   s.startBlackout('entry-clock');
   assert.equal(s.blackoutClock, 4, 'entry loop already contributes its own delta');
@@ -80,7 +81,7 @@ assert.throws(() => new Sim({ night: 7, frameMs: () => 17 }), /requires sourcedS
 
 // 20 ms loops (60 units): a second is 50 frames, an hour 3500, the night 21000.
 {
-  const s = new Sim({ ...QUIET, ...SOURCED, frameMs: () => 20 });
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, ...SOURCED, frameMs: () => 20 });
   const hours: Array<[number, number]> = []; const h = s.applyAiHour.bind(s);
   s.applyAiHour = n => { hours.push([s.frame, n]); return h(n); };
   const fives: number[] = []; const five = s.onFiveSecond.bind(s);
@@ -94,7 +95,7 @@ assert.throws(() => new Sim({ night: 7, frameMs: () => 17 }), /requires sourcedS
 // g514 at global value 5 = 2: the clock passes 20 and reaches 200 twice as fast -- 89 flicker draws, not 179.
 {
   const count = (v5: number) => {
-    const s = new Sim({ ...QUIET, ...SOURCED, frameValue5: () => v5 });
+    const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, ...SOURCED, frameValue5: () => v5 });
     s.frame = 1000;
     let n = 0; const int = s.rng.int.bind(s.rng);
     s.rng.int = (a, b, w) => { if (a === 0 && b === 49) n++; return int(a, b, w); };

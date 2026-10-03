@@ -6,7 +6,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
-import { Sim } from '@sixam/source/fnaf2';
+import { LEGACY_SIM_OPTIONS, Sim } from '@sixam/source/fnaf2';
 import type { Unit } from '@sixam/source/fnaf2';
 import { MODEL_CONTEXT_LIGHT } from '@sixam/source';
 
@@ -58,7 +58,8 @@ function main(argv: string[]) {
     // the 2026-09-18 encounter-fidelity configuration (enc-cfg.json)
     sourcedLastViewPause: true, sourcedFootstepDraws: true, sourcedHallEntry: true, sourcedMonitorRaiseGate: true,
     sourcedMangleReturn: true };
-  const OPTS = { ...DEFAULT_OPTS, ...(cfg.opts ?? {}) };
+  // The replay's options name switches over the legacy model, as written before the sourced one became the default.
+  const OPTS = { ...LEGACY_SIM_OPTIONS, ...DEFAULT_OPTS, ...(cfg.opts ?? {}) };
 
   function loadTrace(path: string | undefined) {
     if (!path) return null;

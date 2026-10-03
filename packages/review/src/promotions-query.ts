@@ -19,7 +19,7 @@ import { readFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { canonicalJson, stableHash } from '@sixam/kernel/contracts';
 import { BINDINGS_DIR, isUnknown, validateAnnotation, validateClaimLevel } from '@sixam/kernel';
-import { ATTESTATION_FILE, PACKS_DIR, WINNER_HASHES, packPromotionChecks, trackedWinners, winnerFiles } from './evidence-pack.ts';
+import { ATTESTATION_FILE, PACKS_DIR, WINNER_HASHES, custodyWinnerFiles, packPromotionChecks, trackedWinners, winnerFiles } from './evidence-pack.ts';
 import { GRAPH_FILE, PROMOTION_EDGE, derivePromotion, fnaf1PromotionChecks, readGraph, recordPromotion } from './evidence-promotion.ts';
 import { liftPack, packIds } from './pack-lift.ts';
 
@@ -134,7 +134,8 @@ export function queryPromotions(root: string, { winners = trackedWinners(root) }
   // S1's open items, derived.
   const committed = committedWinners(root, winners);
   const unnamed = committed.filter(item => item.schema === 'winner-v1' && !item.hashes.some(hash => packsByWinnerHash.has(hash)));
-  const trackedFileHashes = new Set(committed.map(item => item.fileHash));
+  // A retired winner is still committed and rebuildable, so it tracks an aim (test-fact-register.ts reads custody too).
+  const trackedFileHashes = new Set(custodyWinnerFiles(root).map(path => stableHash(JSON.parse(readFileSync(join(root, path), 'utf8')))));
   const tables: { anchorAims: Readonly<Record<string, { night?: unknown }>>, untrackedWinnerDebt: Readonly<Record<string, unknown>> } =
     JSON.parse(readFileSync(join(root, ANCHOR_AIMS_FILE), 'utf8'));
   const { anchorAims: ANCHOR_AIMS, untrackedWinnerDebt: UNTRACKED_WINNER_DEBT } = tables;

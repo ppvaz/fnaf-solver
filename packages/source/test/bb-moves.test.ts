@@ -4,17 +4,18 @@
 import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
 import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
+import { LEGACY_SIM_OPTIONS } from '../src/games/fnaf2/plant-options.ts';
 
 const SOURCED = { sourcedDropLightOrder: true, sourcedFoxyChain: true, sourcedSecondPass: true, sourcedSheetOrder: true,
                   sourcedRollDraws: true, sourcedEventDraws: true, sourcedPromotedMoves: true, sourcedRollsBeforeMoves: true,
                   sourcedRoutePass: true };
 const QUIET = { night: 7, seed: 5, lethal: false, stalledEnabled: false, gfEnabled: false, boxEnabled: false, foxyEnabled: false };
 
-assert.throws(() => new Sim({ ...QUIET, sourcedBBMoves: true }), /requires sourcedRoutePass/);
+assert.throws(() => new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, sourcedBBMoves: true }), /requires sourcedRoutePass/);
 
 /** The draws of one roll loop with Balloon Boy on CAM 07 and a sure roll: labels in draw order. */
 const loop = (opts: Partial<SimOptions>, seed = 5) => {
-  const s = new Sim({ ...QUIET, ...SOURCED, seed, ...opts });
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, ...SOURCED, seed, ...opts });
   for (const k of Object.keys(s.ai)) s.ai[k] = 0;
   s.ai.bb = 20;
   s.bb.stage = 1;
@@ -39,7 +40,7 @@ const loop = (opts: Partial<SimOptions>, seed = 5) => {
 {
   let seed = 1, found = null;
   for (; seed < 400 && !found; seed += 1) {
-    const s = new Sim({ ...QUIET, ...SOURCED, seed, sourcedBBMoves: true });
+    const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, ...SOURCED, seed, sourcedBBMoves: true });
     s.bb.stage = 1;
     s.bbHop();
     if (s.bb.cueRedraw) found = s;
@@ -53,7 +54,7 @@ const loop = (opts: Partial<SimOptions>, seed = 5) => {
 
 // Off leaves the default unchanged.
 {
-  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
+  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
   assert.equal(run({}), run({ sourcedBBMoves: false }), 'off equals the default');
 }
 

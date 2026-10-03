@@ -7,7 +7,9 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { score, windowCode } from '../../review/venue-grid/encounter-replay.ts';
-import { Sim } from '@sixam/source/fnaf2';
+import { LEGACY_SIM_OPTIONS, Sim } from '@sixam/source/fnaf2';
+import { withModelOptions } from '../bin/recompile/rebuild-options-census.ts';
+import { simOptionsFrom } from '../../source/recompile/model-draw-trace.ts';
 import { applySimOpts } from '../bin/census/winner-census.ts';
 import { STRATEGY_REGISTRY, validateWinner } from '../bin/plans/bundle.ts';
 import { fileURLToPath } from 'node:url';
@@ -75,7 +77,8 @@ for (const row of record.census.bindings) {
 // semantics are read at tick time. Enabling one on the first tick must behave
 // exactly like requesting it at construction.
 assert.throws(() => applySimOpts(['sourcedFoxyChain']), /not a tick-time option/);
-const base = { night: 6, seed: 23, lethal: false, boxEnabled: false, foxyEnabled: false };
+// The record was taken on the legacy model (fnaf2-legacy, before 2026-10-02), so its checks run there.
+const base = { ...LEGACY_SIM_OPTIONS, night: 6, seed: 23, lethal: false, boxEnabled: false, foxyEnabled: false };
 const explicit = new Sim({ ...base, sourcedGatedEvery: true });
 const injected = new Sim(base);
 assert.equal(injected.opts.sourcedGatedEvery, false);
@@ -93,7 +96,7 @@ assert.throws(() => applySimOpts(['sourcedGatedEvery']), /already applied/);
 // large-loss rows retain a digest rather than the complete loss list; this
 // bounded gate does not pretend to rerun the full 84,000-night comparison.
 let replays = 0;
-for (const row of record.census.bindings) {
+withModelOptions(simOptionsFrom({}), () => { for (const row of record.census.bindings) {
   const winner = validateWinner(JSON.parse(readFileSync(new URL(`../../../${current(row.binding)}`, import.meta.url), 'utf8')));
   const { replay } = STRATEGY_REGISTRY[winner.strategy].emit(winner, row.night);
   if (row.wins === row.n) {
@@ -109,6 +112,6 @@ for (const row of record.census.bindings) {
       replays++;
     }
   }
-}
+} });
 assert.ok(replays > 0);
 console.log(`encounter fidelity: ${scored} rows score missing model windows UNKNOWN; ${replays} option-on census probes match; 3000 design / 0 held-out seeds; first-tick injection matches construction`);

@@ -4,16 +4,17 @@
 import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
 import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
+import { LEGACY_SIM_OPTIONS } from '../src/games/fnaf2/plant-options.ts';
 
 const SOURCED = { sourcedDropLightOrder: true, sourcedFoxyChain: true, sourcedSecondPass: true, sourcedSheetOrder: true,
                   frameMs: () => 50 / 3, sourcedValue5: true };
 const QUIET = { night: 7, seed: 5, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false, boxEnabled: false };
 
-assert.throws(() => new Sim({ ...QUIET, sourcedExposureValue5: true }), /requires sourcedValue5/);
+assert.throws(() => new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, sourcedExposureValue5: true }), /requires sourcedValue5/);
 
 /** Foxy in the hall with the latch held: the loop count at which g846 would pass once the latch and B clear. */
 const loopsToRetreat = (opts: Partial<SimOptions>) => {
-  const s = new Sim({ ...QUIET, ...SOURCED, ...opts });
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, ...SOURCED, ...opts });
   const fx = s.foxy;
   fx.loc = 'hall';
   let n = 0;
@@ -25,7 +26,7 @@ assert.equal(loopsToRetreat({ sourcedExposureValue5: true }), 700, 'on: 700 loop
 
 // Off leaves the default unchanged.
 {
-  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
+  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
   assert.equal(run({}), run({ sourcedExposureValue5: false }), 'off equals the default');
 }
 

@@ -7,8 +7,9 @@ import { Sim } from '../src/games/fnaf2/plant-model.ts';
 import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
 import * as C from '../src/games/fnaf2/config.ts';
 import { contactEdges, drawTrace } from '../recompile/model-draw-trace.ts';
+import { LEGACY_SIM_OPTIONS } from '../src/games/fnaf2/plant-options.ts';
 
-const QUIET = { night: 7, seed: 3, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false, boxEnabled: false, foxyEnabled: false,
+const QUIET = { ...LEGACY_SIM_OPTIONS, night: 7, seed: 3, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false, boxEnabled: false, foxyEnabled: false,
                 sourcedDropLightOrder: true };
 const settle = (s: Sim, n: number) => { for (let i = 0; i < n; i++) s.tick(); };
 // The ledger states compare-schedule-replay.ts reads (`flip panel button` v0 and `mask` v0).
@@ -22,10 +23,10 @@ const firstReached = (s: Sim, action: string, read: (s: Sim) => number, states: 
   for (let i = 0; i < ticks; i++) { s.tick(); const v = read(s); if (states.includes(v) && at[v] === undefined) at[v] = s.frame - 1 - F; }
   return at;
 };
-const upAtRest = (extra: Partial<SimOptions>) => { const s = new Sim({ ...QUIET, ...extra }); settle(s, 5); s.press('monitor'); settle(s, 30); assert.equal(s.monitor, 'up'); return s; };
-const maskedAtRest = (extra: Partial<SimOptions>) => { const s = new Sim({ ...QUIET, ...extra }); settle(s, 5); s.press('mask'); settle(s, 30); assert.ok(s.maskFullyOn); return s; };
+const upAtRest = (extra: Partial<SimOptions>) => { const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, ...extra }); settle(s, 5); s.press('monitor'); settle(s, 30); assert.equal(s.monitor, 'up'); return s; };
+const maskedAtRest = (extra: Partial<SimOptions>) => { const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, ...extra }); settle(s, 5); s.press('mask'); settle(s, 30); assert.ok(s.maskFullyOn); return s; };
 
-assert.throws(() => new Sim({ night: 7, sourcedDropFlagOrder: true }), /requires sourcedDropLightOrder/);
+assert.throws(() => new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, sourcedDropFlagOrder: true }), /requires sourcedDropLightOrder/);
 
 // g618 -> g262: the drop touched on F lowers on F+1 (sourcedDropLightOrder alone lowered on F), and g6's
 // 22-count lowering then ends one update later too.
@@ -54,7 +55,7 @@ assert.throws(() => new Sim({ night: 7, sourcedDropFlagOrder: true }), /requires
 
 // The mask goes on at the press as before (g270 runs before g274 in the sheet).
 {
-  const s = new Sim({ ...QUIET, sourcedDropFlagOrder: true }); settle(s, 5);
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, sourcedDropFlagOrder: true }); settle(s, 5);
   s.press('mask'); assert.equal(maskState(s), 1);
 }
 
@@ -73,10 +74,10 @@ assert.throws(() => new Sim({ night: 7, sourcedDropFlagOrder: true }), /requires
 // a drop touched on the update the raise completes is performed. sourcedDropLightOrder alone read it at the
 // press, from the previous update's state, and refused it.
 {
-  const raising = (extra: Partial<SimOptions>) => { const s = new Sim({ ...QUIET, ...extra }); settle(s, 5); s.press('monitor'); while (s.monAnim > 1) s.tick(); assert.equal(s.monitor, 'raising'); return s; };
+  const raising = (extra: Partial<SimOptions>) => { const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, ...extra }); settle(s, 5); s.press('monitor'); while (s.monAnim > 1) s.tick(); assert.equal(s.monitor, 'raising'); return s; };
   const on = raising({ sourcedDropFlagOrder: true }); on.press('monitor'); settle(on, 2); assert.equal(on.monitor, 'lowering');
   const off = raising({}); off.press('monitor'); settle(off, 2); assert.equal(off.monitor, 'up');
-  const masking = (extra: Partial<SimOptions>) => { const s = new Sim({ ...QUIET, ...extra }); settle(s, 5); s.press('mask'); while (s.maskAnim > 1) s.tick(); return s; };
+  const masking = (extra: Partial<SimOptions>) => { const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, ...extra }); settle(s, 5); s.press('mask'); while (s.maskAnim > 1) s.tick(); return s; };
   const m = masking({ sourcedDropFlagOrder: true }); m.press('mask'); settle(m, 2); assert.equal(maskState(m), 3, 'g9 finished at the top, g619 reads mask == 2');
   const mid = masking({ sourcedDropFlagOrder: true }); mid.maskAnim = 3; mid.press('mask'); settle(mid, 4); assert.equal(maskState(mid), 2, 'mid put-on: g619 refuses');
 }
@@ -92,7 +93,7 @@ assert.throws(() => new Sim({ night: 7, sourcedDropFlagOrder: true }), /requires
   const script: Array<[number, string]> = [[30, 'monitor'], [80, 'monitor'], [140, 'mask'], [200, 'mask'], [260, 'monitor'], [262, 'monitor'], [330, 'monitor'],
                   [400, 'mask'], [405, 'mask'], [470, 'mask']];
   const run = (opts: Partial<SimOptions>) => {
-    const x = new Sim({ night: 7, seed: 11, lethal: false, durationFrames: 3600, ...opts });
+    const x = new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, seed: 11, lethal: false, durationFrames: 3600, ...opts });
     const rows = [...script]; const trace = [];
     for (let i = 0; i < 3600; i++) {
       while (rows.length && rows[0][0] === x.frame) x.press((rows.shift() as [number, string])[1]);   // rows.length was checked
@@ -100,10 +101,10 @@ assert.throws(() => new Sim({ night: 7, sourcedDropFlagOrder: true }), /requires
     }
     return JSON.stringify([x.events, x.rng.state, trace, Object.keys(x.snapshot()).sort()]);
   };
-  if (new Sim({ night: 7, seed: 1 }).opts.sourcedDropFlagOrder === false) {
+  if (new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, seed: 1 }).opts.sourcedDropFlagOrder === false) {
     assert.equal(run({}), run({ sourcedDropFlagOrder: false }), 'explicit off equals the default');
     assert.equal(run({ sourcedDropLightOrder: true }), run({ sourcedDropLightOrder: true, sourcedDropFlagOrder: false }), 'off under sourcedDropLightOrder');
-    assert.ok(!('dropTouch' in new Sim({ night: 7 })), 'off adds no state');
+    assert.ok(!('dropTouch' in new Sim({ ...LEGACY_SIM_OPTIONS, night: 7 })), 'off adds no state');
     assert.notEqual(run({ sourcedDropLightOrder: true }), run({ sourcedDropLightOrder: true, sourcedDropFlagOrder: true }), 'on moves the script');
   }
 }

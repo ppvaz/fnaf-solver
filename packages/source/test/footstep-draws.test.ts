@@ -4,16 +4,17 @@ import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
 import type { Unit } from '../src/games/fnaf2/plant-model.ts';
 import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
+import { LEGACY_SIM_OPTIONS } from '../src/games/fnaf2/plant-options.ts';
 
 const BASE = { night: 7, seed: 111, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false,
                boxEnabled: false, foxyEnabled: false, sourcedSecondPass: true, sourcedSheetOrder: true };
 const script = (s: Sim) => { const log: Array<[number, string]> = []; s.rng.int = (a, b) => { log.push([s.frame, `${a},${b}`]); return a; }; s.rng.chance = () => false; return log; };
 
-assert.throws(() => new Sim({ night: 7, sourcedFootstepDraws: true }), /requires sourcedSheetOrder/);
+assert.throws(() => new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, sourcedFootstepDraws: true }), /requires sourcedSheetOrder/);
 
 // Withered Bonnie hops 7 -> hall stage 1 (blindA): one Random(5) that frame; a further hop off it draws nothing.
 {
-  const s = new Sim({ ...BASE, sourcedFootstepDraws: true }); s.frame = 1000;
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...BASE, sourcedFootstepDraws: true }); s.frame = 1000;
   const u = s.units.find(x => x.id === 'withbonnie') as Unit; u.idx = u.path.indexOf(7);   // one of the seven route units
   const log = script(s);
   s.advanceUnit(u); s.tick();
@@ -28,7 +29,7 @@ assert.throws(() => new Sim({ night: 7, sourcedFootstepDraws: true }), /requires
 
 // Withered Freddy 8 -> 7 -> 3: neither is a hall stage, no draw; 3 -> hall stage 2 draws.
 {
-  const s = new Sim({ ...BASE, sourcedFootstepDraws: true }); s.frame = 1000;
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...BASE, sourcedFootstepDraws: true }); s.frame = 1000;
   const u = s.units.find(x => x.id === 'withfreddy') as Unit;   // one of the seven route units
   const log = script(s);
   s.advanceUnit(u); s.tick(); assert.equal(u.path[u.idx], 7);
@@ -41,7 +42,7 @@ assert.throws(() => new Sim({ night: 7, sourcedFootstepDraws: true }), /requires
 
 // Mangle onto hall stage 1 (blindA) draws Random(3), not Random(5).
 {
-  const s = new Sim({ ...BASE, sourcedFootstepDraws: true }); s.frame = 1000;
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...BASE, sourcedFootstepDraws: true }); s.frame = 1000;
   const u = s.units.find(x => x.id === 'mangle') as Unit; u.idx = u.path.indexOf(7);   // one of the seven route units
   const log = script(s);
   s.advanceUnit(u); s.tick(); assert.equal(u.path[u.idx], 'blindA');
@@ -50,8 +51,8 @@ assert.throws(() => new Sim({ night: 7, sourcedFootstepDraws: true }), /requires
 
 // Off: the default is unchanged.
 {
-  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
-  if (new Sim({ night: 7, seed: 1 }).opts.sourcedFootstepDraws === false)
+  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
+  if (new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, seed: 1 }).opts.sourcedFootstepDraws === false)
     assert.equal(run({}), run({ sourcedFootstepDraws: false }), 'explicit off equals the default');
 }
 console.log('footstep draws: one Random(5) per roll hop onto hall stage 1 or 2, Random(3) for Mangle, none elsewhere or while standing; off unchanged');

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
 import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
 import * as C from '../src/games/fnaf2/config.ts';
+import { LEGACY_SIM_OPTIONS } from '../src/games/fnaf2/plant-options.ts';
 
 const QUIET = { night: 7, seed: 81, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false,
                 boxEnabled: false, foxyEnabled: false };
@@ -16,11 +17,11 @@ const script = (s: Sim, values: Record<string, number>) => {
   return log;
 };
 
-assert.throws(() => new Sim({ ...QUIET, sourcedSheetOrder: true }), /requires sourcedSecondPass/);
+assert.throws(() => new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, sourcedSheetOrder: true }), /requires sourcedSecondPass/);
 
 // One frame with g497, g498, a g500 hit (so g500-g502 and g505 draw) and g744: sheet order vs the default placement.
 const frameKeys = (sheetOrder: boolean) => {
-  const s = new Sim({ ...QUIET, ...ALL, sourcedSheetOrder: sheetOrder });
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, ...ALL, sourcedSheetOrder: sheetOrder });
   s.frame = 1019; s.ai.golden = 0; s.box = 99;
   s.puppet.out = true; s.puppet.loc = 3;
   s.monitor = 'up'; s.monAnim = 0; s.viewing = 3; s.cam = 3;
@@ -37,7 +38,7 @@ assert.deepEqual(frameKeys(false), ['0,99', '0,49', '0,49', '0,49', '0,149', '1,
 
 // The Toy Bonnie waiting draw (g366) lands between g294 and g400; the fades (g468-g476) after g440.
 {
-  const s = new Sim({ ...QUIET, ...ALL, sourcedSheetOrder: true });
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, ...ALL, sourcedSheetOrder: true });
   s.frame = 1000; s.ai.golden = 0; s.box = 99;
   const calls: Array<string | undefined> = [];
   const dv = s.drawViewed.bind(s), pe = s.puppetGlitchEarly.bind(s), bf = s.blackoutFlicker.bind(s);
@@ -50,7 +51,7 @@ assert.deepEqual(frameKeys(false), ['0,99', '0,49', '0,49', '0,49', '0,149', '1,
 
 // The late part: the hour table before g744, and g774 after it.
 const hourOrder = (sheetOrder: boolean) => {
-  const s = new Sim({ ...QUIET, ...ALL, sourcedRouteForks: true, sourcedSheetOrder: sheetOrder });
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, ...ALL, sourcedRouteForks: true, sourcedSheetOrder: sheetOrder });
   s.frame = C.HOUR_FRAMES - 1;
   const calls: string[] = [];
   const h = s.applyAiHour.bind(s), r = s.rollDecidePath.bind(s), g = s.puppetGlitchLate.bind(s);
@@ -66,8 +67,8 @@ assert.deepEqual(hourOrder(false), ['g744', 'hour', 'g774']);
 
 // Off: the default is unchanged, and the pass without sheet order is unchanged by the split.
 {
-  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
-  if (new Sim({ night: 7, seed: 1 }).opts.sourcedSheetOrder === false)
+  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
+  if (new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, seed: 1 }).opts.sourcedSheetOrder === false)
     assert.equal(run({}), run({ sourcedSheetOrder: false }), 'explicit off equals the default');
 }
 console.log('sheet order: requires the pass; g497, g498, g500-g505, g744 in sheet order; view parts g366/g368/g419/fades/g498 then g500 and g517; hour table before g744; off unchanged');

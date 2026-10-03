@@ -7,17 +7,18 @@ import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
 import type { Unit } from '../src/games/fnaf2/plant-model.ts';
 import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
+import { LEGACY_SIM_OPTIONS } from '../src/games/fnaf2/plant-options.ts';
 
 const SOURCED = { sourcedDropLightOrder: true, sourcedFoxyChain: true, sourcedSecondPass: true, sourcedSheetOrder: true,
                   sourcedBlackoutDraws: true, frameMs: () => 50 / 3 };
 const QUIET = { night: 7, seed: 5, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false,
                 boxEnabled: false, foxyEnabled: false };
 
-assert.throws(() => new Sim({ ...QUIET, sourcedBlackoutClockEnd: true }), /requires sourcedBlackoutDraws and frameMs/);
+assert.throws(() => new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, sourcedBlackoutClockEnd: true }), /requires sourcedBlackoutDraws and frameMs/);
 
 /** Frames from the start frame to the frame the encounter resolved on. */
 const length = (opts: Partial<SimOptions>) => {
-  const s = new Sim({ ...QUIET, ...SOURCED, ...opts });
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, ...SOURCED, ...opts });
   for (let i = 0; i < 30; i += 1) s.tick();
   s.startBlackout('test');
   const start = s.frame;
@@ -33,7 +34,7 @@ for (const v5 of [{ frameValue5: () => 1 }, { sourcedValue5: true }]) {
 // full-06's winning branch: g845 requests fade completion, but a new danger
 // edge at g534 resets the fade before g536 can clear the old clock.
 {
-  const s = new Sim({ ...QUIET, ...SOURCED, sourcedBlackoutClockEnd: true, frameValue5: () => 1 });
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, ...SOURCED, sourcedBlackoutClockEnd: true, frameValue5: () => 1 });
   for (const id of Object.keys(s.ai)) s.ai[id] = 0;
   s.frame = 100; s.maskOn = true; s.maskAnim = 0; s.startBlackout('prior');
   for (let i = 0; i < 299; i++) s.tick();
@@ -59,7 +60,7 @@ for (const v5 of [{ frameValue5: () => 1 }, { sourcedValue5: true }]) {
 
 // Without a new danger edge, g845's fade request clears on the next g536 pass.
 {
-  const s = new Sim({ ...QUIET, ...SOURCED, sourcedBlackoutClockEnd: true, frameValue5: () => 1 });
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, ...SOURCED, sourcedBlackoutClockEnd: true, frameValue5: () => 1 });
   s.frame = 100; s.maskOn = true; s.maskAnim = 0; s.startBlackout('prior');
   for (let i = 0; i < 299; i++) s.tick();
   s.maskOn = false; s.monitor = 'up'; s.viewing = 11; s.tick();
@@ -69,7 +70,7 @@ for (const v5 of [{ frameValue5: () => 1 }, { sourcedValue5: true }]) {
 
 // Off leaves the default unchanged.
 {
-  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
+  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
   assert.equal(run({}), run({ sourcedBlackoutClockEnd: false }), 'off equals the default');
 }
 

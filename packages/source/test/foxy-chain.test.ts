@@ -3,23 +3,24 @@ import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
 import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
 import { RNG_MULTIPLIER, RNG_INCREMENT, RNG_MASK } from '../src/games/fnaf2/rng.ts';
+import { LEGACY_SIM_OPTIONS } from '../src/games/fnaf2/plant-options.ts';
 
 const lcg = (s: number) => (s * RNG_MULTIPLIER + RNG_INCREMENT) & RNG_MASK;
 const ON = { sourcedDropLightOrder: true, sourcedFoxyChain: true };
 const fresh = (extra = {}) => {
-  const s = new Sim({ night: 7, seed: 9, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false, boxEnabled: false, ...ON, ...extra });
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, seed: 9, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false, boxEnabled: false, ...ON, ...extra });
   s.frame = 100; s.monitor = 'down'; s.monAnim = 0; s.viewing = 0; s.maskOn = false; s.maskAnim = 0;
   s.hallLatch = false; s.hallLit = false;
   return s;
 };
 
 // The option needs the latch.
-assert.throws(() => new Sim({ night: 7, seed: 1, sourcedFoxyChain: true }), /requires sourcedDropLightOrder/);
+assert.throws(() => new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, seed: 1, sourcedFoxyChain: true }), /requires sourcedDropLightOrder/);
 
 // No readyAt draw at construction: the off simulator is exactly one draw ahead.
 {
-  const on = new Sim({ night: 7, seed: 4242, ...ON });
-  const off = new Sim({ night: 7, seed: 4242, sourcedDropLightOrder: true });
+  const on = new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, seed: 4242, ...ON });
+  const off = new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, seed: 4242, sourcedDropLightOrder: true });
   assert.equal(off.rng.state, lcg(on.rng.state));
   assert.equal(on.foxy.A, 0); assert.equal(on.foxy.B, 0);
 }
@@ -104,8 +105,8 @@ assert.throws(() => new Sim({ night: 7, seed: 1, sourcedFoxyChain: true }), /req
 
 // Off: the default is unchanged.
 {
-  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify(x.events); };
-  if (new Sim({ night: 7, seed: 1 }).opts.sourcedFoxyChain === false)
+  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify(x.events); };
+  if (new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, seed: 1 }).opts.sourcedFoxyChain === false)
     assert.equal(run({}), run({ sourcedFoxyChain: false }), 'explicit off equals the default');
 }
 
@@ -116,7 +117,7 @@ assert.throws(() => new Sim({ night: 7, seed: 1, sourcedFoxyChain: true }), /req
   const base = { night: 7, seed: 11, sourcedDropLightOrder: true, sourcedFoxyChain: true,
     sourcedSheetOrder: true, sourcedSecondPass: true };
   const drain = (frameValue5: () => number) => {
-    const s = new Sim({ ...base, frameMs: () => 1000 / 60, frameValue5 });
+    const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...base, frameMs: () => 1000 / 60, frameValue5 });
     s.foxy.B = 50;
     const before = s.foxy.B;
     s.tick();
@@ -125,7 +126,7 @@ assert.throws(() => new Sim({ night: 7, seed: 1, sourcedFoxyChain: true }), /req
   assert.equal(drain(() => 1), 1, 'a 60 fps frame drains the pin by one');
   assert.equal(drain(() => 2), 2, 'a frame worth two drains it by two');
   assert.equal(drain(() => 4), 4, 'the term is capped at four by the runtime, and the pin follows it');
-  const unhooked = new Sim({ ...base });
+  const unhooked = new Sim({ ...LEGACY_SIM_OPTIONS, ...base });
   unhooked.foxy.B = 50;
   const was = unhooked.foxy.B;
   unhooked.tick();

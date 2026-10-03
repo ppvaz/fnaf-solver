@@ -309,7 +309,7 @@ export const ANCHOR_AIMS: Readonly<Record<string, AnchorAim>> = Object.freeze({
     // released UNANCHORED because that hand-feeding was silently discarded.
     replayHash: 'fnv1a-c651e2ff',
     alsoBinds: Object.freeze({
-      'fnv1a-3d5b2167': 'packages/propose/bindings/fnaf2/campaign-night6-h-winner.json',
+      'fnv1a-3d5b2167': 'packages/propose/bindings/fnaf2/retired/campaign-night6-h-winner.json',
     }),
   }),
   // h2: h with the mask coming off 300 ms later, and nothing else. Same aim,

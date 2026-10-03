@@ -5,13 +5,14 @@ import { readFileSync } from 'node:fs';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
 import type { Death, Unit } from '../src/games/fnaf2/plant-model.ts';
 import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
+import { LEGACY_SIM_OPTIONS } from '../src/games/fnaf2/plant-options.ts';
 
 const QUIET = { night: 7, seed: 5, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false,
                 boxEnabled: false, foxyEnabled: false };
 
 /** The tick an animation finishes on, counted from the tick it starts on (a press applies before its tick). */
 const span = (opts: Partial<SimOptions>, start: (s: Sim) => void, done: (s: Sim) => boolean) => {
-  const s = new Sim({ ...QUIET, ...opts });
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, ...opts });
   s.tick();
   start(s);
   let n = 0;
@@ -46,7 +47,7 @@ for (const row of measured.measurements.raiseCompletions) {
 
 // A later show resets each clock, and snapshot/restore retains a partially accumulated one.
 {
-  const s = new Sim({ ...QUIET, ...hooked, frameValue5: () => 0.75 });
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, ...hooked, frameValue5: () => 0.75 });
   const cycle = (set: () => void, done: () => boolean) => {
     set(); let ticks = 0;
     while (!done() && ticks < 100) { s.tick(); ticks++; }
@@ -67,13 +68,13 @@ for (const row of measured.measurements.raiseCompletions) {
 
 // Off leaves the default unchanged.
 {
-  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
+  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
   assert.equal(run({}), run({ sourcedAnimationCount: false }), 'off equals the default');
 }
 
 // g10/g11 separate the visual animation endpoint from the mask state during an attack.
 for (const sourcedAnimationCount of [false, true]) {
-  const s = new Sim({ ...QUIET, ...hooked, sourcedAnimationCount });
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, ...hooked, sourcedAnimationCount });
   s.maskOn = true;
   s.setMask(false);
   (s.units.find(u => u.id === 'withbonnie') as Unit).committedAt = 1000;   // one of the seven route units
@@ -92,7 +93,7 @@ for (const sourcedAnimationCount of [false, true]) {
 // The terminal early dispatch spends no ordinary-loop RNG or attack-counter increment.
 const attackOpts = { ...QUIET, ...hooked, lethal: true, sourcedAttackAnimation: true };
 for (const [value5, updates, mechanism] of [[0.5, 32, 'animation'], [1, 32, 'animation'], [2, 20, 'counter']] as const) {
-  const s = new Sim({ ...attackOpts, frameValue5: () => value5 });
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...attackOpts, frameValue5: () => value5 });
   for (let i = 0; i < 3; i++) s.tick();
   s.commitAttack(s.units.find(u => u.id === 'withbonnie') as Unit, 'fixture');   // one of the seven route units
   const start = s.frame;
@@ -103,7 +104,7 @@ for (const [value5, updates, mechanism] of [[0.5, 32, 'animation'], [1, 32, 'ani
   if (mechanism === 'animation') assert.equal(s.attackAnimation?.count, prior);
 }
 {
-  const s = new Sim({ ...attackOpts, frameValue5: () => 0.75 });
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...attackOpts, frameValue5: () => 0.75 });
   for (let i = 0; i < 3; i++) s.tick();
   s.commitAttack(s.units.find(u => u.id === 'withbonnie') as Unit, 'fixture');   // one of the seven route units
   for (let i = 0; i < 8; i++) s.tick();
@@ -111,13 +112,13 @@ for (const [value5, updates, mechanism] of [[0.5, 32, 'animation'], [1, 32, 'ani
   while (s.alive) { s.tick(); copy.tick(); }
   assert.deepEqual(copy.snapshot(), s.snapshot(), 'both attack clocks survive a branch');
 }
-assert.throws(() => new Sim({ sourcedAttackAnimation: true }), /requires sourcedSheetOrder/);
+assert.throws(() => new Sim({ ...LEGACY_SIM_OPTIONS, sourcedAttackAnimation: true }), /requires sourcedSheetOrder/);
 for (const [who, updates, mechanism] of [
   ['withfreddy', 80, 'counter'], ['withchica', 80, 'counter'], ['toyfreddy', 80, 'counter'],
   ['toybonnie', 26, 'animation'], ['toychica', 32, 'animation'], ['mangle', 32, 'animation'],
   ['puppet', 30, 'animation'], ['golden', 32, 'animation'],
 ] as const) {
-  const s = new Sim({ ...attackOpts, frameValue5: () => 0.5 });
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...attackOpts, frameValue5: () => 0.5 });
   for (let i = 0; i < 3; i++) s.tick();
   if (who === 'puppet') s.puppet.attackAt = 43;
   else if (who === 'golden') s.gf.attackAt = 43;

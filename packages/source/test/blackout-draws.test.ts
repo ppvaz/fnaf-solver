@@ -2,12 +2,13 @@
 import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
 import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
+import { LEGACY_SIM_OPTIONS } from '../src/games/fnaf2/plant-options.ts';
 
 const QUIET = { night: 7, seed: 21, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false,
                 boxEnabled: false, foxyEnabled: false };
 
 const drawFrames = (extra: Partial<SimOptions>) => {
-  const s = new Sim({ ...QUIET, ...extra });
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, ...extra });
   s.frame = 1000;
   s.startBlackout('test');
   const frames = [];
@@ -33,7 +34,7 @@ assert.deepEqual(drawFrames({}), []);
 
 // A second encounter restarts the clock from its own start frame.
 {
-  const s = new Sim({ ...QUIET, sourcedBlackoutDraws: true });
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, sourcedBlackoutDraws: true });
   s.frame = 2000; s.startBlackout('first');
   for (let i = 0; i < 310; i++) s.tick();
   s.startBlackout('second');
@@ -44,8 +45,8 @@ assert.deepEqual(drawFrames({}), []);
 
 // Off: the default is unchanged.
 {
-  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
-  if (new Sim({ night: 7, seed: 1 }).opts.sourcedBlackoutDraws === false)
+  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
+  if (new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, seed: 1 }).opts.sourcedBlackoutDraws === false)
     assert.equal(run({}), run({ sourcedBlackoutDraws: false }), 'explicit off equals the default');
 }
 console.log('blackout draws: g517/g518 on encounter frames 20..198 (179 per encounter), clock restarts per encounter; off unchanged');

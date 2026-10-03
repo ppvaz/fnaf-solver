@@ -10,18 +10,19 @@ import { Sim } from '../src/games/fnaf2/plant-model.ts';
 import type { Unit } from '../src/games/fnaf2/plant-model.ts';
 import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
 import * as C from '../src/games/fnaf2/config.ts';
+import { LEGACY_SIM_OPTIONS } from '../src/games/fnaf2/plant-options.ts';
 
 const BASE = { night: 7, seed: 111, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false,
                boxEnabled: false, foxyEnabled: false, sourcedSecondPass: true, sourcedSheetOrder: true };
 const script = (s: Sim) => { const log: Array<[number, string]> = []; s.rng.int = (a, b) => { log.push([s.frame, `${a},${b}`]); return a; }; s.rng.chance = () => false; return log; };
 
-assert.throws(() => new Sim({ night: 1, sourcedBoxCountdown: true }), /requires sourcedSheetOrder/);
-assert.throws(() => new Sim({ night: 1, sourcedPuppetMoveOrder: true }), /requires sourcedSheetOrder/);
+assert.throws(() => new Sim({ ...LEGACY_SIM_OPTIONS, night: 1, sourcedBoxCountdown: true }), /requires sourcedSheetOrder/);
+assert.throws(() => new Sim({ ...LEGACY_SIM_OPTIONS, night: 1, sourcedPuppetMoveOrder: true }), /requires sourcedSheetOrder/);
 
 // footstepCamMarkers: Withered Freddy 8 -> 7 -> 3 -> hall stage 2 draws on CAM 03 and on the hall stage.
 {
   const hops = (knob: boolean) => {
-    const s = new Sim({ ...BASE, sourcedFootstepDraws: true, footstepCamMarkers: knob }); s.frame = 1000;
+    const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...BASE, sourcedFootstepDraws: true, footstepCamMarkers: knob }); s.frame = 1000;
     const u = s.units.find(x => x.id === 'withfreddy') as Unit;   // one of the seven route units
     const log = script(s);
     const at = [];
@@ -41,7 +42,7 @@ const SOURCED = { sourcedDropLightOrder: true, sourcedFoxyChain: true, sourcedSe
 const QUIET1 = { night: 1, seed: 7, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false,
                  foxyEnabled: false, boxEnabled: true, ...SOURCED, ...HOOK60 };
 {
-  const s = new Sim({ ...QUIET1, sourcedBoxCountdown: true });
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET1, sourcedBoxCountdown: true });
   let reach = -1; let last = 1;
   while (s.box > 0 && s.frame < 20000) {
     last = s.box;
@@ -57,7 +58,7 @@ const QUIET1 = { night: 1, seed: 7, lethal: false, stalledEnabled: false, bbEnab
 // The wind hold: a wind loop sets music button value 1 to 10 and g661 drains it after the drain has run,
 // so the drain countdown is next reached ten loops after the last wind loop.
 {
-  const s = new Sim({ ...QUIET1, sourcedBoxCountdown: true });
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET1, sourcedBoxCountdown: true });
   while (s.hour < 2) s.tick();
   for (let i = 0; i < 30; i += 1) s.tick();
   const t = s.gatedEvery.box;
@@ -71,7 +72,7 @@ const QUIET1 = { night: 1, seed: 7, lethal: false, stalledEnabled: false, bbEnab
 // sourcedPuppetMoveOrder: g496 arms a hop; the hop lands at g403-g411 of the next loop, not the same one.
 {
   const firstHop = (opts: Partial<SimOptions>) => {
-    const s = new Sim({ ...QUIET1, ...opts });   // tickPuppet runs at the end of tickBox
+    const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET1, ...opts });   // tickPuppet runs at the end of tickBox
     const p = s.puppet;
     p.out = true; p.stage = C.PUPPET_ESCAPE_STAGES; p.stunUntil = 0; s.ai.puppet = 20;   // every one-second roll arms a hop
     let armed = -1;
@@ -94,12 +95,12 @@ const QUIET1 = { night: 1, seed: 7, lethal: false, stalledEnabled: false, bbEnab
 
 // sourcedHourTable: hour 0's rows run on frame 1 at g673-g684 -- after g822, before g811 -- and nights
 // 3-5 roll Golden Freddy there (g677 Random(1000), g679/g681 Random(100)); the constructor draws nothing.
-assert.throws(() => new Sim({ night: 4, sourcedHourTable: true }), /requires sourcedSheetOrder/);
+assert.throws(() => new Sim({ ...LEGACY_SIM_OPTIONS, night: 4, sourcedHourTable: true }), /requires sourcedSheetOrder/);
 {
   const firstFrame = (night: number, opts: Partial<SimOptions>) => {
     const log: string[] = [];
     const Probe = class extends Sim {};
-    const s = new Probe({ night, seed: 5, ...SOURCED, sourcedUnconditionalDraws: true, sourcedRandomImageDraw: true, ...opts });
+    const s = new Probe({ ...LEGACY_SIM_OPTIONS, night, seed: 5, ...SOURCED, sourcedUnconditionalDraws: true, sourcedRandomImageDraw: true, ...opts });
     const built = s.rng.state;
     const next = s.rng.next.bind(s.rng); const int = s.rng.int.bind(s.rng);
     let inner = false;   // int() draws through next(); log the call once
@@ -109,8 +110,8 @@ assert.throws(() => new Sim({ night: 4, sourcedHourTable: true }), /requires sou
     return { built, log };
   };
   const on = firstFrame(4, { sourcedHourTable: true });
-  assert.equal(on.built, new Sim({ night: 4, seed: 5, ...SOURCED, sourcedHourTable: true }).rng.state);
-  assert.equal(on.built, new Sim({ night: 1, seed: 5, ...SOURCED }).rng.state, 'the constructor draws nothing for the hour table');
+  assert.equal(on.built, new Sim({ ...LEGACY_SIM_OPTIONS, night: 4, seed: 5, ...SOURCED, sourcedHourTable: true }).rng.state);
+  assert.equal(on.built, new Sim({ ...LEGACY_SIM_OPTIONS, night: 1, seed: 5, ...SOURCED }).rng.state, 'the constructor draws nothing for the hour table');
   assert.deepEqual(on.log.slice(0, 3), ['next', 'int 0,99', 'int 0,999'], 'g822, then g679\'s Golden Freddy roll, then g811');
   const off = firstFrame(4, {});
   assert.ok(!off.log.includes('int 0,99'), 'off: the model\'s night 4 table rolls no Golden Freddy');
@@ -129,16 +130,16 @@ const DIALS = (v: number) => Object.fromEntries(C.AI_DIALS.map(id => [id, v]));
 // `night number` into it, so g486 parks `your view` on CAM 09 on Custom Night too; g4's first raise,
 // with `night` = 7 by then, still opens CAM 07; and g498 draws only while the marker is on the Puppet.
 {
-  assert.equal(new Sim({ night: 7 }).cam, 10, 'off: the Custom Night marker starts on CAM 10');
-  assert.equal(new Sim({ night: 7, sourcedParkedMarker: true }).cam, 9, 'on: CAM 09, as g486 leaves it');
-  assert.equal(new Sim({ night: 5, sourcedParkedMarker: true }).cam, 9, 'story nights: CAM 09 either way');
-  const raised = new Sim({ ...BASE, sourcedParkedMarker: true });
+  assert.equal(new Sim({ ...LEGACY_SIM_OPTIONS, night: 7 }).cam, 10, 'off: the Custom Night marker starts on CAM 10');
+  assert.equal(new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, sourcedParkedMarker: true }).cam, 9, 'on: CAM 09, as g486 leaves it');
+  assert.equal(new Sim({ ...LEGACY_SIM_OPTIONS, night: 5, sourcedParkedMarker: true }).cam, 9, 'story nights: CAM 09 either way');
+  const raised = new Sim({ ...LEGACY_SIM_OPTIONS, ...BASE, sourcedParkedMarker: true });
   raised.press('monitor'); raised.release('monitor');
   for (let i = 0; i < 40 && raised.monitor !== 'up'; i += 1) raised.tick();
   assert.equal(raised.monitor, 'up');
   assert.deepEqual([raised.cam, raised.viewing], [7, 7], 'g4: the first raise opens CAM 07');
   const g498 = (knob: boolean) => {
-    const s = new Sim({ ...BASE, sourcedViewDraws: true, sourcedParkedMarker: knob });
+    const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...BASE, sourcedViewDraws: true, sourcedParkedMarker: knob });
     Object.assign(s.puppet, { out: true, loc: 10 });
     let n = 0; const int = s.rng.int.bind(s.rng);
     s.rng.int = (a, b, w) => { if (a === 0 && b === 99) n += 1; return int(a, b, w); };
@@ -152,12 +153,12 @@ const DIALS = (v: number) => Object.fromEntries(C.AI_DIALS.map(id => [id, v]));
 // sourcedCustomDialOrder: g787 copies the dials on the first loop after g781, which tests `Golden
 // Freddy AI > 0` ahead of its Every; the global counter reads 0 until then (a fresh launch), so the
 // hall roll's 1000 ms countdown loads a loop later.
-assert.throws(() => new Sim({ night: 7, sourcedCustomDialOrder: true }), /requires sourcedSheetOrder/);
+assert.throws(() => new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, sourcedCustomDialOrder: true }), /requires sourcedSheetOrder/);
 {
-  const QUIET7 = { night: 7, seed: 9, lethal: false, stalledEnabled: false, bbEnabled: false, foxyEnabled: false,
+  const QUIET7 = { ...LEGACY_SIM_OPTIONS, night: 7, seed: 9, lethal: false, stalledEnabled: false, bbEnabled: false, foxyEnabled: false,
                    boxEnabled: false, customNight: DIALS(20), ...SOURCED, ...HOOK60, sourcedEveryOrigin: true };
   const off = new Sim(QUIET7);
-  const on = new Sim({ ...QUIET7, sourcedCustomDialOrder: true });
+  const on = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET7, sourcedCustomDialOrder: true });
   assert.equal(off.ai.golden, 10, 'off: the constructor applies the dials (capped by g830)');
   assert.deepEqual([on.ai.golden, on.ai.puppet], [0, 0], 'on: nothing before the first loop');
   on.tick();
@@ -169,10 +170,10 @@ assert.throws(() => new Sim({ night: 7, sourcedCustomDialOrder: true }), /requir
     return first;
   };
   const offAt = firstHallRoll(new Sim(QUIET7));
-  const onAt = firstHallRoll(new Sim({ ...QUIET7, sourcedCustomDialOrder: true }));
+  const onAt = firstHallRoll(new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET7, sourcedCustomDialOrder: true }));
   assert.ok(offAt > 0, 'g781 rolls within the first seconds');
   assert.equal(onAt - offAt, 1, 'on: the first g781 roll is one loop later');
-  const story = new Sim({ night: 6, seed: 9, ...SOURCED, sourcedHourTable: true, sourcedCustomDialOrder: true });
+  const story = new Sim({ ...LEGACY_SIM_OPTIONS, night: 6, seed: 9, ...SOURCED, sourcedHourTable: true, sourcedCustomDialOrder: true });
   story.tick();
   assert.equal(story.ai.withfreddy, 5, 'story nights keep the hour table');
 }
@@ -182,7 +183,7 @@ assert.throws(() => new Sim({ night: 7, sourcedCustomDialOrder: true }), /requir
 // (g374), then Bonnie's hop cancels Chica's armed hop.
 {
   const at = (knob: boolean) => {
-    const s = new Sim({ night: 7, seed: 1, lethal: false, sourcedRouteForks: true, sourcedCam8Cancel: knob });
+    const s = new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, seed: 1, lethal: false, sourcedRouteForks: true, sourcedCam8Cancel: knob });
     s.rng.chance = () => true; s.rng.int = a => a;
     s.frame = 300;
     s.rollAllFiveSecond();
@@ -193,7 +194,7 @@ assert.throws(() => new Sim({ night: 7, sourcedCustomDialOrder: true }), /requir
   assert.deepEqual(at(true), [[7, false], [7, false], [8, false]], 'on: Chica stays, her roll spent');
   // Story nights: Chica's roll waits (g347) while Bonnie stands on CAM 08, and his departure discards it.
   const held = (knob: boolean) => {
-    const s = new Sim({ night: 3, seed: 1, lethal: false, sourcedRouteForks: true, sourcedCam8Cancel: knob });
+    const s = new Sim({ ...LEGACY_SIM_OPTIONS, night: 3, seed: 1, lethal: false, sourcedRouteForks: true, sourcedCam8Cancel: knob });
     const u = (id: string) => (s.units.find(x => x.id === id) as Unit);   // one of the seven route units
     u('withchica').pending = true;
     s.advanceUnit(u('withbonnie'));
@@ -205,7 +206,7 @@ assert.throws(() => new Sim({ night: 7, sourcedCustomDialOrder: true }), /requir
 
 // Off, all three leave the default unchanged.
 {
-  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
+  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
   assert.equal(run({}), run({ footstepCamMarkers: false }), 'footstep knob off equals the default');
 }
 

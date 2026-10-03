@@ -7,17 +7,18 @@ import { Sim } from '../src/games/fnaf2/plant-model.ts';
 import type { Unit } from '../src/games/fnaf2/plant-model.ts';
 import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
 import { drainUnitStuns, setUnitStun, unitStunReady } from '../src/games/fnaf2/movement-clock.ts';
+import { LEGACY_SIM_OPTIONS } from '../src/games/fnaf2/plant-options.ts';
 
-const QUIET = { night: 7, seed: 5, lethal: false, bbEnabled: false, gfEnabled: false, boxEnabled: false, foxyEnabled: false };
+const QUIET = { ...LEGACY_SIM_OPTIONS, night: 7, seed: 5, lethal: false, bbEnabled: false, gfEnabled: false, boxEnabled: false, foxyEnabled: false };
 
 const WEIGHTED = { sourcedBDrainOrder: true, sourcedMovementClock: true, sourcedRoutePass: true,
   sourcedPromotedMoves: true, sourcedRollsBeforeMoves: true, sourcedRollDraws: true,
   sourcedRouteForks: true, sourcedSecondPass: true, sourcedSheetOrder: true, frameValue5: () => 1.5 };
-assert.throws(() => new Sim({ ...QUIET, sourcedMovementClock: true }), /requires sourcedBDrainOrder and sourcedRoutePass/);
+assert.throws(() => new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, sourcedMovementClock: true }), /requires sourcedBDrainOrder and sourcedRoutePass/);
 
 // A fractional B is still a closed promotion gate. Draining it to zero permits the next pass.
 {
-  const s = new Sim({ ...QUIET, ...WEIGHTED });
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, ...WEIGHTED });
   s.decidePath = 1;
   const u = s.units.find(x => x.id === 'withfreddy') as Unit;   // one of the seven route units
   u.idx = u.path.indexOf(3); u.pending = true;
@@ -34,7 +35,7 @@ assert.throws(() => new Sim({ ...QUIET, sourcedMovementClock: true }), /requires
 
 // Every B writer uses the same counter: camera flash, route return, repel, and Toy Bonnie's arrival.
 {
-  const s = new Sim({ ...QUIET, ...WEIGHTED });
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, ...WEIGHTED });
   const u = s.units.find(x => x.id === 'withfreddy') as Unit;   // one of the seven route units
   u.idx = u.path.indexOf(3);
   s.stunCam(3, 7.25);
@@ -59,7 +60,7 @@ assert.throws(() => new Sim({ ...QUIET, sourcedMovementClock: true }), /requires
 
 // Runtime repels retain the fractional quotient: Random(500) / night, e.g. 310 / 7 at full-06 update 2328.
 {
-  const s = new Sim({ ...QUIET, ...WEIGHTED });
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, ...WEIGHTED });
   s.rng.int = () => 310;
   assert.equal(s.repelCooldown(), 310 / 7);
   const old = new Sim(QUIET); old.rng.int = () => 310;
@@ -69,7 +70,7 @@ assert.throws(() => new Sim({ ...QUIET, sourcedMovementClock: true }), /requires
 // The promotion read: a flash on loop L = 1000 writes stunUntil 1400.
 {
   const promotable = (opts: Partial<SimOptions>, f: number) => {
-    const s = new Sim({ ...QUIET, ...opts });
+    const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, ...opts });
     const u = s.units.find(x => x.id === 'toybonnie') as Unit;   // one of the seven route units
     u.stunUntil = 1400;
     return s.footstepPromotable(u, f);
@@ -82,7 +83,7 @@ assert.throws(() => new Sim({ ...QUIET, sourcedMovementClock: true }), /requires
 // The Night 1 discard (g356): Toy Chica's accepted roll is discarded on the loop her B is first read 0.
 {
   const discard = (opts: Partial<SimOptions>, f: number) => {
-    const s = new Sim({ ...QUIET, night: 1, sourcedRouteForks: true, ...opts });
+    const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, night: 1, sourcedRouteForks: true, ...opts });
     const u = s.units.find(x => x.id === 'toychica') as Unit;   // one of the seven route units
     u.stunUntil = 1400;
     return s.sourcedRouteStep(u, f);
@@ -97,7 +98,7 @@ assert.throws(() => new Sim({ ...QUIET, sourcedMovementClock: true }), /requires
   const SOURCED = { sourcedDropLightOrder: true, sourcedFoxyChain: true, sourcedSecondPass: true, sourcedSheetOrder: true,
                     sourcedHallLatchOrder: true, frameMs: () => 50 / 3, frameValue5: () => 1 };
   const lastPin = (opts: Partial<SimOptions>) => {
-    const s = new Sim({ ...QUIET, ...SOURCED, stalledEnabled: true, ...opts });
+    const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, ...SOURCED, stalledEnabled: true, ...opts });
     for (const k of Object.keys(s.ai)) s.ai[k] = 0;
     const u = s.units.find(x => x.id === 'withfreddy') as Unit;   // one of the seven route units
     u.idx = u.path.indexOf('blindB');
@@ -117,7 +118,7 @@ assert.throws(() => new Sim({ ...QUIET, sourcedMovementClock: true }), /requires
 
 // Off leaves the default unchanged.
 {
-  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
+  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
   assert.equal(run({}), run({ sourcedBDrainOrder: false }), 'off equals the default');
 }
 

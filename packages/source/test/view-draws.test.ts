@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
 import type { Unit } from '../src/games/fnaf2/plant-model.ts';
 import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
+import { LEGACY_SIM_OPTIONS } from '../src/games/fnaf2/plant-options.ts';
 
 const QUIET = { night: 7, seed: 31, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false,
                 boxEnabled: false, foxyEnabled: false };
@@ -11,19 +12,19 @@ const viewing = (s: Sim, cam: number) => { s.monitor = 'up'; s.monAnim = 0; s.vi
 
 // g498: the Puppet's 200 ms static draw, every 12 frames, only when your-view is on CAM 11 (box).
 {
-  const s = new Sim({ ...QUIET, sourcedViewDraws: true }); s.frame = 1000; s.cam = 11;
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, sourcedViewDraws: true }); s.frame = 1000; s.cam = 11;
   assert.equal(countDraws(s, 120), 10, 'monitor down, your-view parked on CAM 11');
-  const t = new Sim({ ...QUIET, sourcedViewDraws: true }); t.frame = 1000; t.cam = 7;
+  const t = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, sourcedViewDraws: true }); t.frame = 1000; t.cam = 7;
   assert.equal(countDraws(t, 120), 0, 'your-view elsewhere');
 }
 
 // g469: Withered Bonnie's fade counter under your-view with a camera up: 9 frames.
 {
-  const s = new Sim({ ...QUIET, sourcedViewDraws: true }); s.frame = 1000;
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, sourcedViewDraws: true }); s.frame = 1000;
   const u = s.units.find(x => x.id === 'withbonnie') as Unit; u.idx = u.path.indexOf(5);   // one of the seven route units
   viewing(s, 5); s.fadeUntil.withbonnie = s.frame + 9;
   assert.equal(countDraws(s, 20), 9);
-  const t = new Sim({ ...QUIET, sourcedViewDraws: true }); t.frame = 1000;
+  const t = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, sourcedViewDraws: true }); t.frame = 1000;
   const v = t.units.find(x => x.id === 'withbonnie') as Unit; v.idx = v.path.indexOf(5);   // one of the seven route units
   viewing(t, 6); t.fadeUntil.withbonnie = t.frame + 9;
   assert.equal(countDraws(t, 20), 0, 'a different camera');
@@ -31,7 +32,7 @@ const viewing = (s: Sim, cam: number) => { s.monitor = 'up'; s.monAnim = 0; s.vi
 
 // g368: Toy Chica waiting in state 2 under your-view draws every frame.
 {
-  const s = new Sim({ ...QUIET, sourcedViewDraws: true }); s.frame = 1000;
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, sourcedViewDraws: true }); s.frame = 1000;
   const u = s.units.find(x => x.id === 'toychica') as Unit; u.idx = u.path.indexOf(7); u.pending = true;   // one of the seven route units
   viewing(s, 7);
   assert.equal(countDraws(s, 11), 11);
@@ -41,8 +42,8 @@ const viewing = (s: Sim, cam: number) => { s.monitor = 'up'; s.monAnim = 0; s.vi
 
 // Off: the default is unchanged.
 {
-  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
-  if (new Sim({ night: 7, seed: 1 }).opts.sourcedViewDraws === false)
+  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
+  if (new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, seed: 1 }).opts.sourcedViewDraws === false)
     assert.equal(run({}), run({ sourcedViewDraws: false }), 'explicit off equals the default');
 }
 console.log('view draws: g498 every 12 frames on the Puppet, fade counter 9 frames under your-view, waiting toy every frame; off unchanged');

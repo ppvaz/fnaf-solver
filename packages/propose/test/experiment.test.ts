@@ -1,15 +1,20 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { isList } from '@sixam/kernel';
 import { generateCandidates, replayModelResult, runModelExperiment } from '../src/experiment/experiment.ts';
+import { withModelOptions } from '../bin/recompile/rebuild-options-census.ts';
+import { simOptionsFrom } from '../../source/recompile/model-draw-trace.ts';
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
+// The experiments' expectations were computed on the legacy model (fnaf2-legacy, the default before
+// 2026-10-02), so their Sims run that model until the legacy branches go.
+withModelOptions(simOptionsFrom({}), () => {
 const cases = ['model-smoke', 'controller-synthesis', 'cycle-optimization',
   'robustness-sweep', 'model-probe', 'device-characterization', 'minus-toys', 'minus-two'];
 for (const id of cases) {
-  const spec = JSON.parse(await readFile(join(ROOT, 'experiments', `${id}.json`), 'utf8'));
+  const spec = JSON.parse(readFileSync(join(ROOT, 'experiments', `${id}.json`), 'utf8'));
   const candidates = generateCandidates(spec);
   const result = runModelExperiment(spec);
   const dimensions = Object.values(spec.candidateSpace?.dimensions ?? {})
@@ -36,12 +41,13 @@ for (const id of cases) {
   // Read as a record: the payload's type has no terminal field to look for.
   assert.equal((replay.payload as Readonly<Record<string, unknown>>).terminal, undefined, `${id}: no first-evaluation terminal`);
 }
-const synthesis = JSON.parse(await readFile(join(ROOT, 'experiments', 'controller-synthesis.json'), 'utf8'));
+const synthesis = JSON.parse(readFileSync(join(ROOT, 'experiments', 'controller-synthesis.json'), 'utf8'));
 assert.equal(generateCandidates(synthesis).length, 18, 'controller synthesis expands its cartesian candidate space');
 assert.equal(runModelExperiment(synthesis).campaign.method, 'exhaustive-enumeration');
-const toys = JSON.parse(await readFile(join(ROOT, 'experiments', 'minus-toys.json'), 'utf8'));
+const toys = JSON.parse(readFileSync(join(ROOT, 'experiments', 'minus-toys.json'), 'utf8'));
 const toysResult = runModelExperiment(toys);
 assert.deepEqual(toysResult.campaign.ranking.map(item => item.candidate), ['split', 'no-split-control']);
-const two = JSON.parse(await readFile(join(ROOT, 'experiments', 'minus-two.json'), 'utf8'));
+const two = JSON.parse(readFileSync(join(ROOT, 'experiments', 'minus-two.json'), 'utf8'));
 assert.ok(runModelExperiment(two).evaluations.every(item => item.family === 'minus-two'));
 console.log(`research reference cases: ${cases.length} shared experiment paths pass, including Minus Toys/Two family evaluators`);
+});

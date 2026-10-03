@@ -20,6 +20,7 @@ import * as C from '@sixam/source/fnaf2';
 import { Sim } from '@sixam/source/fnaf2';
 import { Rng } from '@sixam/source/fnaf2';
 import type { SimOptions } from '@sixam/source/games/fnaf2/plant-options.ts';
+import { LEGACY_SIM_OPTIONS } from '../src/games/fnaf2/plant-options.ts';
 
 let pass = 0;
 const fails: string[] = [];
@@ -30,7 +31,7 @@ const ok = (group: string, what: string, cond: unknown) => {
 
 // A sim with only the mechanism under test alive, so unrelated characters
 // cannot end the night mid-assertion.
-const bare = (opts = {}) => new Sim(Object.assign({
+const bare = (opts = {}) => new Sim(Object.assign({ ...LEGACY_SIM_OPTIONS,
   seed: 12345, bbEnabled: false, foxyEnabled: false, gfEnabled: false,
   boxEnabled: false, powerEnabled: false, stalledEnabled: false,
 }, opts));
@@ -618,13 +619,13 @@ eq('g494-497', "the Puppet's bare <= roll is 16/20 at AI 15",
 
   // Only the armed characters can end the night: nothing but the Puppet is
   // dialed, so an unplayed run can only die to the Puppet.
-  const idle = new Sim({ seed: 7, night: 7, customNight: {} });
+  const idle = new Sim({ ...LEGACY_SIM_OPTIONS, seed: 7, night: 7, customNight: {} });
   while (idle.alive && !idle.won) idle.tick();
   ok('customNight', 'with only the Puppet armed, only the Puppet kills',
     !idle.won && idle.death?.reason === 'puppet');
 
   let threw = false;
-  try { new Sim({ night: 3, customNight: { bb: 20 } }); } catch { threw = true; }
+  try { new Sim({ ...LEGACY_SIM_OPTIONS, night: 3, customNight: { bb: 20 } }); } catch { threw = true; }
   ok('customNight', 'the vector refuses a night other than 7', threw);
 }
 

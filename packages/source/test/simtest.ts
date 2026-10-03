@@ -2,12 +2,13 @@
 // whether the simulation's economics actually work out over a full night.
 import * as C from '@sixam/source/fnaf2';
 import { Sim } from '@sixam/source/fnaf2';
+import { LEGACY_SIM_OPTIONS } from '../src/games/fnaf2/plant-options.ts';
 
 // Regression for the sourced hop gates: a fresh successful movement roll must
 // wait behind a closed gate just like an already-stunned pending move. This was
 // easy to miss because the retry path and the initial-roll path are separate.
 {
-  const gate = new Sim({ seed: 1, worst: true, bbEnabled: false, foxyEnabled: false,
+  const gate = new Sim({ ...LEGACY_SIM_OPTIONS, seed: 1, worst: true, bbEnabled: false, foxyEnabled: false,
     gfEnabled: false, boxEnabled: false, powerEnabled: false, record: false });
   const wbGate = gate.units.find(u => u.id === 'withbonnie') as C.Unit;   // one of the seven route units
   wbGate.idx = wbGate.path.length - 2; // CAM 05 -> left opening requires cams up
@@ -23,7 +24,7 @@ import { Sim } from '@sixam/source/fnaf2';
   // A short office-light tap latches through the next global second tick, but
   // only blocks the route edges that test `viewing hall light` = 0 in the
   // source.
-  const lightGate = new Sim({ seed: 3, worst: true, bbEnabled: false, foxyEnabled: false,
+  const lightGate = new Sim({ ...LEGACY_SIM_OPTIONS, seed: 3, worst: true, bbEnabled: false, foxyEnabled: false,
     gfEnabled: false, boxEnabled: false, powerEnabled: false, record: false });
   const litWb = lightGate.units.find(u => u.id === 'withbonnie') as C.Unit;   // one of the seven route units
   litWb.idx = 1; // source CAM 07 -> hall stage 1 (g381) is light-gated
@@ -36,7 +37,7 @@ import { Sim } from '@sixam/source/fnaf2';
   if (litWb.pending || (litWb.idx as number) !== 2)   // the ticks above move him
     throw new Error('W. Bonnie did not cross after the office-light latch cleared');
 
-  const ungated = new Sim({ seed: 4, worst: true, bbEnabled: false, foxyEnabled: false,
+  const ungated = new Sim({ ...LEGACY_SIM_OPTIONS, seed: 4, worst: true, bbEnabled: false, foxyEnabled: false,
     gfEnabled: false, boxEnabled: false, powerEnabled: false, record: false });
   const lateWb = ungated.units.find(u => u.id === 'withbonnie') as C.Unit;   // one of the seven route units
   lateWb.idx = 3; lateWb.pending = true; // CAM 01 -> CAM 05 (g383) has no light gate
@@ -45,7 +46,7 @@ import { Sim } from '@sixam/source/fnaf2';
   if (lateWb.pending || lateWb.idx !== 4)
     throw new Error('office light incorrectly blocked an ungated W. Bonnie edge');
 
-  const ventLight = new Sim({ seed: 5, worst: true, bbEnabled: false, foxyEnabled: false,
+  const ventLight = new Sim({ ...LEGACY_SIM_OPTIONS, seed: 5, worst: true, bbEnabled: false, foxyEnabled: false,
     gfEnabled: false, boxEnabled: false, record: false });
   const ventWb = ventLight.units.find(u => u.id === 'withbonnie') as C.Unit;   // one of the seven route units
   ventWb.idx = 1; ventWb.pending = true;
@@ -56,7 +57,7 @@ import { Sim } from '@sixam/source/fnaf2';
   if (ventLight.power !== C.POWER_FRAMES)
     throw new Error('vent light incorrectly drained the sourced battery counter');
 
-  const threshold = new Sim({ seed: 6, bbEnabled: false, foxyEnabled: false,
+  const threshold = new Sim({ ...LEGACY_SIM_OPTIONS, seed: 6, bbEnabled: false, foxyEnabled: false,
     gfEnabled: false, boxEnabled: false, powerEnabled: false, record: false });
   const tc = threshold.units.find(u => u.id === 'toychica') as C.Unit;   // one of the seven route units
   tc.idx = tc.path.length - 1; tc.atOpening = true;
@@ -71,7 +72,7 @@ import { Sim } from '@sixam/source/fnaf2';
   if (tc.atOpening || tc.idx !== 1 || tc.path[tc.idx] !== 7)
     throw new Error('five sourced Toy Chica mask ticks did not return her to CAM 07');
 
-  const maskedArrival = new Sim({ seed: 7, bbEnabled: false, foxyEnabled: false,
+  const maskedArrival = new Sim({ ...LEGACY_SIM_OPTIONS, seed: 7, bbEnabled: false, foxyEnabled: false,
     gfEnabled: false, boxEnabled: false, powerEnabled: false, record: false });
   const arrivingTc = maskedArrival.units.find(u => u.id === 'toychica') as C.Unit;   // one of the seven route units
   arrivingTc.idx = arrivingTc.path.length - 2;
@@ -80,7 +81,7 @@ import { Sim } from '@sixam/source/fnaf2';
   if (!arrivingTc.atOpening)
     throw new Error('mask already on incorrectly erased a newly arrived threshold attacker');
 
-  const tbCue = new Sim({ seed: 1, bbEnabled: false, foxyEnabled: false,
+  const tbCue = new Sim({ ...LEGACY_SIM_OPTIONS, seed: 1, bbEnabled: false, foxyEnabled: false,
     gfEnabled: false, boxEnabled: false, powerEnabled: false, record: false });
   const cueTb = tbCue.units.find(u => u.id === 'toybonnie') as C.Unit;   // one of the seven route units
   cueTb.idx = cueTb.path.length - 1; cueTb.atOpening = true;
@@ -94,7 +95,7 @@ import { Sim } from '@sixam/source/fnaf2';
   if (!cueTb.atOpening || !tbCue.blackout.active || tbCue.blackout.unitId !== 'toybonnie')
     throw new Error('Toy Bonnie mask cue did not start the sourced office sequence');
 
-  const streakEncounter = new Sim({ seed: 8, bbEnabled: false, foxyEnabled: false,
+  const streakEncounter = new Sim({ ...LEGACY_SIM_OPTIONS, seed: 8, bbEnabled: false, foxyEnabled: false,
     gfEnabled: false, boxEnabled: false, powerEnabled: false, record: false });
   const encounterWb = streakEncounter.units.find(u => u.id === 'withbonnie') as C.Unit;   // one of the seven route units
   encounterWb.idx = encounterWb.path.length - 1; encounterWb.atOpening = true;
@@ -106,7 +107,7 @@ import { Sim } from '@sixam/source/fnaf2';
   if (!streakEncounter.alive || encounterWb.atOpening || streakEncounter.blackout.active)
     throw new Error('timely fully-on mask did not survive and resolve the office sequence');
 
-  const missedEncounter = new Sim({ seed: 9, worst: true, bbEnabled: false, foxyEnabled: false,
+  const missedEncounter = new Sim({ ...LEGACY_SIM_OPTIONS, seed: 9, worst: true, bbEnabled: false, foxyEnabled: false,
     gfEnabled: false, boxEnabled: false, powerEnabled: false, record: false });
   const missedWb = missedEncounter.units.find(u => u.id === 'withbonnie') as C.Unit;   // one of the seven route units
   for (const u of missedEncounter.units) if (u !== missedWb) u.done = true;
@@ -122,7 +123,7 @@ import { Sim } from '@sixam/source/fnaf2';
   if (missedEncounter.alive || missedEncounter.death?.reason !== 'inside-office')
     throw new Error('marker-123 mask roll did not start the sourced 40-frame attack');
 
-  const fuseEdge = new Sim({ seed: 10, bbEnabled: false, foxyEnabled: false,
+  const fuseEdge = new Sim({ ...LEGACY_SIM_OPTIONS, seed: 10, bbEnabled: false, foxyEnabled: false,
     gfEnabled: false, boxEnabled: false, powerEnabled: false, record: false });
   const edgeWb = fuseEdge.units.find(u => u.id === 'withbonnie') as C.Unit;   // one of the seven route units
   edgeWb.idx = edgeWb.path.length - 1; edgeWb.atOpening = true;
@@ -133,7 +134,7 @@ import { Sim } from '@sixam/source/fnaf2';
   if (!fuseEdge.alive || !edgeWb.inside)
     throw new Error('mask completion on the fuse-expiry frame incorrectly defused the encounter');
 
-  const endgame = new Sim({ seed: 2, bbEnabled: false, foxyEnabled: false,
+  const endgame = new Sim({ ...LEGACY_SIM_OPTIONS, seed: 2, bbEnabled: false, foxyEnabled: false,
     gfEnabled: false, boxEnabled: false, powerEnabled: false, record: false });
   const armedTb = endgame.units.find(u => u.id === 'toybonnie') as C.Unit;   // one of the seven route units
   armedTb.idx = armedTb.path.length - 1; armedTb.atOpening = true; armedTb.stunUntil = 0;
@@ -146,7 +147,7 @@ import { Sim } from '@sixam/source/fnaf2';
   if (endgame.alive || endgame.death?.reason !== 'inside-office')
     throw new Error('Toy Bonnie at marker 123 did not attack on monitor lowering');
 
-  const mangleRaise = new Sim({ seed: 11, bbEnabled: false, foxyEnabled: false,
+  const mangleRaise = new Sim({ ...LEGACY_SIM_OPTIONS, seed: 11, bbEnabled: false, foxyEnabled: false,
     gfEnabled: false, boxEnabled: false, powerEnabled: false, record: false });
   const mg = mangleRaise.units.find(u => u.id === 'mangle') as C.Unit;   // one of the seven route units
   for (const u of mangleRaise.units) if (u !== mg) u.done = true;
@@ -156,7 +157,7 @@ import { Sim } from '@sixam/source/fnaf2';
   if (!mg.inside || mg.atOpening)
     throw new Error('Mangle did not cross 122 -> 123 when the monitor raise completed');
 
-  const mangleMask = new Sim({ seed: 12, worst: true, bbEnabled: false, foxyEnabled: false,
+  const mangleMask = new Sim({ ...LEGACY_SIM_OPTIONS, seed: 12, worst: true, bbEnabled: false, foxyEnabled: false,
     gfEnabled: false, boxEnabled: false, powerEnabled: false, record: false });
   const maskedMg = mangleMask.units.find(u => u.id === 'mangle') as C.Unit;   // one of the seven route units
   for (const u of mangleMask.units) if (u !== maskedMg) u.done = true;
@@ -186,7 +187,7 @@ import { Sim } from '@sixam/source/fnaf2';
   // Groups 556-559 execute before 747-750. If both marker-123 rolls pass on
   // one scheduler tick, the attacker leaves but the global danger countdown
   // must survive that return.
-  const orderedInside = new Sim({ seed: 13, bbEnabled: false, foxyEnabled: false,
+  const orderedInside = new Sim({ ...LEGACY_SIM_OPTIONS, seed: 13, bbEnabled: false, foxyEnabled: false,
     gfEnabled: false, boxEnabled: false, powerEnabled: false, record: false });
   const orderedTb = orderedInside.units.find(u => u.id === 'withbonnie') as C.Unit;   // one of the seven route units
   for (const u of orderedInside.units) if (u !== orderedTb) u.done = true;
@@ -204,7 +205,7 @@ import { Sim } from '@sixam/source/fnaf2';
   if (orderedInside.alive || orderedInside.death?.reason !== 'inside-office')
     throw new Error('persisted marker-123 danger did not complete after 40 frames');
 
-  const insideTriggers = new Sim({ seed: 14, worst: true, bbEnabled: false,
+  const insideTriggers = new Sim({ ...LEGACY_SIM_OPTIONS, seed: 14, worst: true, bbEnabled: false,
     foxyEnabled: false, gfEnabled: false, boxEnabled: false, powerEnabled: false,
     record: false });
   const insideTb = insideTriggers.units.find(u => u.id === 'toybonnie') as C.Unit;   // one of the seven route units
@@ -232,7 +233,7 @@ import { Sim } from '@sixam/source/fnaf2';
 
   // Endpoint resolution (groups 538-555): a defended encounter repels the
   // occupant to their sourced mid-route room with B = Random(500)/night.
-  const repel = new Sim({ seed: 16, bbEnabled: false, foxyEnabled: false,
+  const repel = new Sim({ ...LEGACY_SIM_OPTIONS, seed: 16, bbEnabled: false, foxyEnabled: false,
     gfEnabled: false, boxEnabled: false, powerEnabled: false, record: false });
   const repelWb = repel.units.find(u => u.id === 'withbonnie') as C.Unit;   // one of the seven route units
   for (const u of repel.units) if (u !== repelWb) u.done = true;
@@ -248,7 +249,7 @@ import { Sim } from '@sixam/source/fnaf2';
 
   // Toy Bonnie's opening timer is his own B counter: written on arrival at
   // marker 122, and B = 0 plus cameras up crosses him to 123 (group 546).
-  const tbTimer = new Sim({ seed: 17, bbEnabled: false, foxyEnabled: false,
+  const tbTimer = new Sim({ ...LEGACY_SIM_OPTIONS, seed: 17, bbEnabled: false, foxyEnabled: false,
     gfEnabled: false, boxEnabled: false, powerEnabled: false, record: false });
   const timerTb = tbTimer.units.find(u => u.id === 'toybonnie') as C.Unit;   // one of the seven route units
   for (const u of tbTimer.units) if (u !== timerTb) u.done = true;
@@ -268,7 +269,7 @@ import { Sim } from '@sixam/source/fnaf2';
 
   // Toy Bonnie's vent hop (group 428) needs the right vent light OFF as well
   // as cameras down — holding it stalls his entry (the Shooter25 stall).
-  const rightLight = new Sim({ seed: 22, bbEnabled: false, foxyEnabled: false,
+  const rightLight = new Sim({ ...LEGACY_SIM_OPTIONS, seed: 22, bbEnabled: false, foxyEnabled: false,
     gfEnabled: false, boxEnabled: false, powerEnabled: false, record: false });
   const stallTb = rightLight.units.find(u => u.id === 'toybonnie') as C.Unit;   // one of the seven route units
   for (const u of rightLight.units) if (u !== stallTb) u.done = true;
@@ -284,7 +285,7 @@ import { Sim } from '@sixam/source/fnaf2';
 
   // Foxy: per-frame exposure vs 100*night, with the B = 50 hall pin holding
   // his eviction until 50 frames after the light release (g745/846/855).
-  const foxyPin = new Sim({ seed: 18, bbEnabled: false, gfEnabled: false,
+  const foxyPin = new Sim({ ...LEGACY_SIM_OPTIONS, seed: 18, bbEnabled: false, gfEnabled: false,
     boxEnabled: false, powerEnabled: false, stalledEnabled: false, record: false });
   const fx = foxyPin.foxy;
   fx.loc = 'hall';
@@ -302,7 +303,7 @@ import { Sim } from '@sixam/source/fnaf2';
     throw new Error('over-exposed Foxy did not retreat once lights were off and B = 0');
 
   // The pin also blocks his 5-second roll: B must be 0 before he can lock on.
-  const pinnedRoll = new Sim({ seed: 21, bbEnabled: false, gfEnabled: false,
+  const pinnedRoll = new Sim({ ...LEGACY_SIM_OPTIONS, seed: 21, bbEnabled: false, gfEnabled: false,
     boxEnabled: false, powerEnabled: false, stalledEnabled: false, record: false });
   const pfx = pinnedRoll.foxy;
   pfx.loc = 'hall'; pfx.D = 10;
@@ -318,12 +319,12 @@ import { Sim } from '@sixam/source/fnaf2';
     throw new Error('Foxy with B = 0 did not lock on when his roll passed');
 
   // D is zeroed all of night 1 and until 2 AM on night 2 (g872-874).
-  const dormant = new Sim({ seed: 19, night: 1, bbEnabled: false, gfEnabled: false,
+  const dormant = new Sim({ ...LEGACY_SIM_OPTIONS, seed: 19, night: 1, bbEnabled: false, gfEnabled: false,
     boxEnabled: false, powerEnabled: false, stalledEnabled: false, record: false });
   for (let i = 0; i < C.FPS * 3; i++) dormant.tick();
   if (dormant.foxy.D !== 0)
     throw new Error('Foxy D accumulated during the sourced night-1 dormancy');
-  const night2 = new Sim({ seed: 20, night: 2, bbEnabled: false, gfEnabled: false,
+  const night2 = new Sim({ ...LEGACY_SIM_OPTIONS, seed: 20, night: 2, bbEnabled: false, gfEnabled: false,
     boxEnabled: false, powerEnabled: false, stalledEnabled: false, record: false });
   for (let i = 0; i < C.FPS * 3; i++) night2.tick();
   if (night2.foxy.D !== 0)
@@ -333,7 +334,7 @@ import { Sim } from '@sixam/source/fnaf2';
   if ((night2.foxy.D as number) !== 3)   // the ticks above accrue it
     throw new Error('Foxy D did not resume its +1/s accrual at 2 AM on night 2');
 
-  const mutex = new Sim({ seed: 15, bbEnabled: false, foxyEnabled: false,
+  const mutex = new Sim({ ...LEGACY_SIM_OPTIONS, seed: 15, bbEnabled: false, foxyEnabled: false,
     gfEnabled: false, boxEnabled: false, powerEnabled: false, record: false });
   const mutexWb = mutex.units.find(u => u.id === 'withbonnie') as C.Unit;   // one of the seven route units
   const mutexTf = mutex.units.find(u => u.id === 'toyfreddy') as C.Unit;   // one of the seven route units
@@ -406,7 +407,7 @@ export function run(opts = {}) {
 // No device winner schedule is changed by these fixture timings.
 {
   for (const held of [false, true]) {
-    const control = new Sim({ seed: 12345, bbEnabled: false, foxyEnabled: false,
+    const control = new Sim({ ...LEGACY_SIM_OPTIONS, seed: 12345, bbEnabled: false, foxyEnabled: false,
       boxEnabled: false, powerEnabled: false, record: false });
     control.monitor = 'up'; control.viewing = 11; control.gf.present = true;
     control.lightHeld = held;

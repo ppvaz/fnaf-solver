@@ -7,6 +7,8 @@ import { GATES_SCHEMA, compileBundle, measureWinner, parsePlan, validateBundle }
 import type { GateRegister, ModelGate } from '../bin/plans/bundle.ts';
 import { stableHash } from '@sixam/kernel/contracts';
 import { FNAF2_MODEL } from '@sixam/source/fnaf2';
+import { withModelOptions } from '../bin/recompile/rebuild-options-census.ts';
+import { simOptionsFrom } from '../../source/recompile/model-draw-trace.ts';
 import { compileArtifactPlans } from '../bin/plans/artifact-commands.ts';
 import { makeExecutorRequest } from '../../play/src/campaign/artifact-executor.ts';
 import type { persistArtifactPlans } from '../bin/plans/artifact-commands.ts';
@@ -26,8 +28,11 @@ const expectFailure = (fn: () => unknown, message: string) => {
   check(failed, message);
 };
 
+// The fixtures were tuned to the legacy model (KNOBS0 loses Nights 2 and 7 under fnaf2-sourced, and a PASS
+// gate must win its replay), and the compiler's contract does not depend on the model, so the Sims built
+// here run fnaf2-legacy until the legacy branches go.
 const root = mkdtempSync(join(tmpdir(), 'fnaf2-device-bundle-'));
-try {
+withModelOptions(simOptionsFrom({}), () => { try {
   const winner = {
     schema: 'winner-v1', strategy: 'minus-toys', knobs: 'KNOBS0', nights: [2, 7],
     engineHash: 'minus-toys-engine-fixture-v1', seeds: [1, 2],
@@ -126,11 +131,14 @@ try {
 
   const cliWinner = join(root, 'winner-input.json');
   const cliBundle = join(root, 'cli-bundle');
-  writeFileSync(cliWinner, JSON.stringify(winner) + '\n');
+  // device:emit runs in its own process, on the model the Sim runs, so it emits a winner that wins there:
+  // the committed k3 Night 7 binding. Its compileBundle validated the bundle before printing READY.
+  writeFileSync(cliWinner, readFileSync(new URL('../bindings/fnaf2/campaign-night7-k3-winner.json', import.meta.url), 'utf8'));
   const cliOutput = execFileSync('node', [join(process.cwd(), 'packages/propose/bin/plans/emit.ts'),
     '--winner', cliWinner, '--out', cliBundle], { encoding: 'utf8' });
-  check(cliOutput.includes('device bundle READY') && validateBundle(cliBundle).status === 'READY',
-    'device:emit CLI did not create a valid bundle');
+  check(cliOutput.includes('device bundle READY') &&
+    JSON.parse(readFileSync(join(cliBundle, 'manifest.json'), 'utf8')).model === FNAF2_MODEL,
+  'device:emit CLI did not create a valid bundle under the current model');
 
   const planPath = join(bundlePath, 'night-2.plan');
   const originalPlan = readFileSync(planPath, 'utf8');
@@ -344,4 +352,4 @@ try {
   console.log('device bundle: winner-v1 -> manifest/plans/profile, hash+syntax+control+replay validation, and the executor boundary pass');
 } finally {
   rmSync(root, { recursive: true, force: true });
-}
+} });

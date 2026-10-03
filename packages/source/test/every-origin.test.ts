@@ -5,6 +5,7 @@
 // always pass). Off keeps the committed frame-0 origin.
 import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
+import { LEGACY_SIM_OPTIONS } from '../src/games/fnaf2/plant-options.ts';
 
 const SOURCED = { sourcedDropLightOrder: true, sourcedFoxyChain: true, sourcedUnconditionalDraws: true,
   sourcedEventDraws: true, sourcedBlackoutDraws: true, sourcedViewDraws: true, sourcedRollDraws: true,
@@ -15,10 +16,10 @@ const QUIET = { night: 7, seed: 91, lethal: false, stalledEnabled: false, bbEnab
                 boxEnabled: false, foxyEnabled: false };
 
 // Only the hook runs every cadence as a countdown; unhooked f % N timers keep their own origin.
-assert.throws(() => new Sim({ ...QUIET, ...SOURCED, sourcedEveryOrigin: true }), /requires frameMs or frameValue5/);
+assert.throws(() => new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, ...SOURCED, sourcedEveryOrigin: true }), /requires frameMs or frameValue5/);
 
 const cadence = (origin: boolean) => {
-  const s = new Sim({ ...QUIET, ...SOURCED, ...HOOK60, sourcedEveryOrigin: origin });
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, ...SOURCED, ...HOOK60, sourcedEveryOrigin: origin });
   const seen: { unconditional: Array<[number, number]>, sec: number[], half: number[], sample: number[] } =
     { unconditional: [], sec: [], half: [], sample: [] };
   let before = s.unconditionalDraws;
@@ -50,7 +51,7 @@ const cadence = (origin: boolean) => {
 
 // A group first reached after frame 1 loads there in both origins; only the frame-1 reach differs.
 {
-  const s = new Sim({ ...QUIET, ...SOURCED, ...HOOK60, sourcedEveryOrigin: true });
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, ...SOURCED, ...HOOK60, sourcedEveryOrigin: true });
   s.tick();
   const t = { v: 0, init: false };
   s.tick();

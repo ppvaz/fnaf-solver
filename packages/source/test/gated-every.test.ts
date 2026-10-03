@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import * as C from '../src/games/fnaf2/index.ts';
 import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
 
-const QUIET = { night: 5, seed: 7, worst: true, lethal: false, stalledEnabled: false, gfEnabled: false, bbEnabled: false,
+const QUIET = { ...C.LEGACY_SIM_OPTIONS, night: 5, seed: 7, worst: true, lethal: false, stalledEnabled: false, gfEnabled: false, bbEnabled: false,
                 boxEnabled: false, foxyEnabled: false, powerEnabled: false };
 const bbAtVent = (s: C.Sim) => { s.bb.stage = C.BB_STAGES; s.bb.inOpening = true; s.bb.openingAtCamsUp = s.camsUpCount; };
 // Put the mask on, hold it FULLY on for `frames` frames (the put-on's last tick is the first fully-on
@@ -165,10 +165,11 @@ for (const prime of [0, 1, 17, 59, 100, 133]) {
   assert.equal(s.gf.attackAt, s.frame + C.INSIDE_ATTACK_FRAMES, 'g570 fires after a full reached second');
 }
 
-// Default off, and explicit off equals the default, event for event.
+// On in the default model since 2026-10-02 (fnaf2-sourced); off in the legacy one, where explicit off
+// equals that model, event for event.
 {
-  assert.equal(new C.Sim({ night: 6, seed: 1 }).opts.sourcedGatedEvery, false, 'default off');
-  const run = (opts: Partial<SimOptions>) => { const x = new C.Sim({ night: 6, seed: 23, lethal: false, ...opts }); for (let i = 0; i < 6000; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
-  assert.equal(run({}), run({ sourcedGatedEvery: false }), 'explicit off equals the default');
+  assert.equal(new C.Sim({ night: 6, seed: 1 }).opts.sourcedGatedEvery, true, 'on in the default model');
+  const run = (opts: Partial<SimOptions>) => { const x = new C.Sim({ ...C.LEGACY_SIM_OPTIONS, night: 6, seed: 23, lethal: false, ...opts }); for (let i = 0; i < 6000; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
+  assert.equal(run({}), run({ sourcedGatedEvery: false }), 'explicit off equals the legacy model');
 }
 console.log('gated every: BB/Mangle mask windows, variable frame clock, cams streak, Foxy danger, Toy Chica/Bonnie and Golden Freddy countdowns; off keeps the global grid');

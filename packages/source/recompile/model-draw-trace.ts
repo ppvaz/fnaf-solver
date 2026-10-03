@@ -12,7 +12,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { Rng, Sim } from '@sixam/source/fnaf2';
+import { LEGACY_SIM_OPTIONS, Rng, Sim } from '@sixam/source/fnaf2';
 
 /** A Sim input row: before the tick from `frame`, call the Sim's `op` with the action. */
 export type SimRow = readonly [frame: number, op: 'press' | 'release' | 'contactDown' | 'contactUp', action: string];
@@ -56,13 +56,17 @@ const RESEARCH_KNOBS = ['footstepFoxy', 'footstepCamMarkers'];
 const validOption = ([key, value]: [string, unknown]) => ((/^sourced[A-Z]/.test(key) || RESEARCH_KNOBS.includes(key)) && typeof value === 'boolean') ||
   (HOOK_CONSTANTS.includes(key) && Number.isFinite(value) && (value as number) > 0);
 
-/** A model-options JSON object as Sim options: each hook constant becomes its per-frame function. */
+/**
+ * A model-options JSON object as Sim options: each hook constant becomes its per-frame function. Every
+ * committed set names its switches over the legacy model, so it is laid over LEGACY_SIM_OPTIONS and stays a
+ * whole model since the defaults became the sourced one (2026-10-02): `{}` is fnaf2-legacy.
+ */
 export function simOptionsFrom(modelOptions: unknown): Readonly<Record<string, unknown>> {
   if (!modelOptions || Array.isArray(modelOptions) || typeof modelOptions !== 'object' || !Object.entries(modelOptions).every(validOption)) {
     throw new Error('model options must be sourced* or research-knob booleans, or positive frameMs/frameValue5 constants');
   }
-  return Object.fromEntries(Object.entries(modelOptions)
-    .map(([key, value]: [string, unknown]) => [key, HOOK_CONSTANTS.includes(key) ? () => value : value]));
+  return { ...LEGACY_SIM_OPTIONS, ...Object.fromEntries(Object.entries(modelOptions)
+    .map(([key, value]: [string, unknown]) => [key, HOOK_CONSTANTS.includes(key) ? () => value : value])) };
 }
 
 /**

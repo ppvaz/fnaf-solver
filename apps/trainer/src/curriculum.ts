@@ -260,7 +260,10 @@ export const byId = (id: string | null | undefined) => LESSONS.find(l => l.id ==
  * @param options extra Sim options
  */
 export function lessonSim(lesson: typeof LESSONS[number], options: ConstructorParameters<typeof C.Sim>[0] = {}) {
-  const sim = new C.Sim({ android: true, record: true, ...lesson.sim,
+  // The taught cycle's gaps were derived on the legacy model, and the sourced model (the default since
+  // 2026-10-02) counts the animations a frame longer, so it refuses a press on its cue (lessons.test.ts).
+  // Lessons stay on fnaf2-legacy until the cycle is re-derived under fnaf2-sourced (roadmap S5).
+  const sim = new C.Sim({ ...C.LEGACY_SIM_OPTIONS, android: true, record: true, ...lesson.sim,
     ...(lesson.fullNight ? {} : { durationFrames: LESSON_FRAMES }), ...options });
   if (lesson.start) {
     Object.assign(sim, lesson.start);

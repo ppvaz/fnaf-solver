@@ -5,7 +5,7 @@
 import assert from 'node:assert/strict';
 import * as C from '../src/games/fnaf2/index.ts';
 
-const sim = new C.Sim({ night: 1, seed: 1 });
+const sim = new C.Sim({ ...C.LEGACY_SIM_OPTIONS, night: 1, seed: 1 });
 sim.press('mask');
 assert.equal(sim.maskOn, true, 'a mask press at rest puts the mask on');
 sim.tick();

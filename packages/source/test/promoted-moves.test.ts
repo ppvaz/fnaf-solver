@@ -9,13 +9,14 @@ import { Sim } from '../src/games/fnaf2/plant-model.ts';
 import type { Unit } from '../src/games/fnaf2/plant-model.ts';
 import type { RouteNode } from '../src/games/fnaf2/config.ts';
 import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
+import { LEGACY_SIM_OPTIONS } from '../src/games/fnaf2/plant-options.ts';
 
 const QUIET = { night: 7, seed: 5, lethal: false, bbEnabled: false, gfEnabled: false, boxEnabled: false, foxyEnabled: false };
 const LATCHED = Number.MAX_SAFE_INTEGER;
 
 /** A Sim whose only roller is `id` (AI 20, a sure pass), standing on `node` with the hall-light latch `latch`. */
 const setup = (opts: Partial<SimOptions>, id: string, node: RouteNode) => {
-  const s = new Sim({ ...QUIET, ...opts });
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, ...opts });
   for (const k of Object.keys(s.ai)) s.ai[k] = 0;
   s.ai[id] = 20;
   const u = s.units.find(x => x.id === id) as Unit;   // one of the seven route units
@@ -70,7 +71,7 @@ const setup = (opts: Partial<SimOptions>, id: string, node: RouteNode) => {
 
 // Off leaves the default unchanged.
 {
-  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
+  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
   assert.equal(run({}), run({ sourcedPromotedMoves: false }), 'off equals the default');
 }
 

@@ -9,7 +9,11 @@ import { Observer } from '@sixam/play/sim';
 import { Rng } from '@sixam/source/fnaf2';
 import { CycleController, getCycle, makeUnknownFacts } from '@sixam/propose/fnaf2';
 import type { Cycle, DeferredAction, Hypothesis } from '@sixam/propose/fnaf2';
-
+import { withModelOptions } from '../bin/recompile/rebuild-options-census.ts';
+import { simOptionsFrom } from '../../source/recompile/model-draw-trace.ts';
+// Its fixtures and expectations were computed on the legacy model (fnaf2-legacy, the default before
+// 2026-10-02), so the Sims built here run that model until the legacy branches go.
+withModelOptions(simOptionsFrom({}), () => {
 type ObserverOptions = ConstructorParameters<typeof Observer>[0];
 
 const check = (condition: unknown, message: string) => { if (!condition) throw new Error(message); };
@@ -227,3 +231,4 @@ check(!/\bSim\b|engine\.js/.test(
 console.log(`cycle controller: disabled ${disabled.won}/${RUNS}, ` +
   `estimator ${estimator.won}/${RUNS}, stress ${stress.won}/${RUNS}, ` +
   `oracle ${oracle.won}/${RUNS}; no privileged engine read in controller`);
+});

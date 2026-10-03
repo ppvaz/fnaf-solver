@@ -5,17 +5,18 @@
 import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
 import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
+import { LEGACY_SIM_OPTIONS } from '../src/games/fnaf2/plant-options.ts';
 
 const SOURCED = { sourcedDropLightOrder: true, sourcedFoxyChain: true, sourcedSecondPass: true, sourcedSheetOrder: true };
 const HOOK60 = { frameMs: () => 50 / 3, frameValue5: () => 1 };
 const QUIET = { night: 7, seed: 5, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false,
                 boxEnabled: false, foxyEnabled: false };
 
-assert.throws(() => new Sim({ night: 1, sourcedHallLatchOrder: true }), /requires frameMs/);
+assert.throws(() => new Sim({ ...LEGACY_SIM_OPTIONS, night: 1, sourcedHallLatchOrder: true }), /requires frameMs/);
 
 /** The latch as tickUnits sees it on the first second boundary after the light is released, and after that tick. */
 const boundary = (opts: Partial<SimOptions>) => {
-  const s = new Sim({ ...QUIET, ...SOURCED, ...HOOK60, ...opts });
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, ...SOURCED, ...HOOK60, ...opts });
   const seen: Array<{ frame: number, sec: boolean, stall: boolean }> = [];
   const units = s.tickUnits.bind(s);
   s.tickUnits = (f) => { seen.push({ frame: s.frame, sec: s.secTick, stall: s.lightStallOn }); return units(f); };
@@ -43,7 +44,7 @@ const boundary = (opts: Partial<SimOptions>) => {
 
 // Off leaves the default unchanged.
 {
-  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
+  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
   assert.equal(run({}), run({ sourcedHallLatchOrder: false }), 'off equals the default');
 }
 

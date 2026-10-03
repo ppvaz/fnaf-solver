@@ -2,9 +2,10 @@
 import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
 import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
+import { LEGACY_SIM_OPTIONS } from '../src/games/fnaf2/plant-options.ts';
 
 const fresh = (extra = {}) => {
-  const s = new Sim({ night: 7, seed: 3, lethal: false, sourcedDropLightOrder: true, stalledEnabled: false, bbEnabled: false, gfEnabled: false, boxEnabled: false, ...extra });
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, seed: 3, lethal: false, sourcedDropLightOrder: true, stalledEnabled: false, bbEnabled: false, gfEnabled: false, boxEnabled: false, ...extra });
   s.frame = 100; s.monitor = 'up'; s.monAnim = 0; s.viewing = 11; s.maskOn = false; s.maskAnim = 0; s.hallLatch = false;
   return s;
 };
@@ -48,10 +49,10 @@ const fresh = (extra = {}) => {
 }
 // Off: the drop is immediate as before.
 {
-  const s = new Sim({ night: 7, seed: 3, lethal: false, sourcedDropLightOrder: false }); s.monitor = 'up'; s.maskOn = false; s.maskAnim = 0;
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, seed: 3, lethal: false, sourcedDropLightOrder: false }); s.monitor = 'up'; s.maskOn = false; s.maskAnim = 0;
   s.press('monitor'); assert.equal(s.monitor, 'lowering');
-  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ night: 7, seed: 11, lethal: false, durationFrames: 3600, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify(x.events); };
-  if (new Sim({ night: 7, seed: 1 }).opts.sourcedDropLightOrder === false)
+  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, seed: 11, lethal: false, durationFrames: 3600, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify(x.events); };
+  if (new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, seed: 1 }).opts.sourcedDropLightOrder === false)
     assert.equal(run({}), run({ sourcedDropLightOrder: false }), 'explicit off equals the default');
 }
 console.log('drop light order: g614 drop latency, latch from frame-start state, encounter blocks the latch, g488 clear, g745 from the latch, g573 from the latch; off unchanged');

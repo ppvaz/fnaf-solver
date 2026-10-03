@@ -5,11 +5,12 @@
 // tools/recompile/results/model-foxy-move-value2-20260929.json
 import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
+import { LEGACY_SIM_OPTIONS } from '../src/games/fnaf2/plant-options.ts';
 
 const ON = { sourcedDropLightOrder: true, sourcedFoxyChain: true, sourcedSecondPass: true, sourcedSheetOrder: true,
              sourcedFootstepDraws: true };
 const fresh = (extra = {}) => {
-  const s = new Sim({ night: 7, seed: 9, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false,
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, seed: 9, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false,
                       boxEnabled: false, ...ON, ...extra });
   s.frame = 1000; s.monitor = 'down'; s.monAnim = 0; s.viewing = 0; s.maskOn = false; s.maskAnim = 0;
   s.hallLatch = false; s.hallLit = false;
@@ -17,9 +18,9 @@ const fresh = (extra = {}) => {
 };
 const foxySteps = (s: Sim) => s.events.filter(e => e.type === 'footstep' && e.data?.who === 'foxy').map(e => e.f);
 
-assert.throws(() => new Sim({ night: 7, sourcedDropLightOrder: true, sourcedFoxyChain: true, sourcedFoxyMoveValue2: true }),
+assert.throws(() => new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, sourcedDropLightOrder: true, sourcedFoxyChain: true, sourcedFoxyMoveValue2: true }),
   /requires sourcedFootstepDraws and sourcedFoxyChain/);
-assert.throws(() => new Sim({ night: 7, sourcedSecondPass: true, sourcedSheetOrder: true, sourcedFootstepDraws: true,
+assert.throws(() => new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, sourcedSecondPass: true, sourcedSheetOrder: true, sourcedFootstepDraws: true,
   sourcedFoxyMoveValue2: true }), /requires sourcedFootstepDraws and sourcedFoxyChain/);
 
 // An accepted move that the latch held for 40 loops: off, the move is silent; on, it draws on the move.

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
 import type { Unit } from '../src/games/fnaf2/plant-model.ts';
 import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
+import { LEGACY_SIM_OPTIONS } from '../src/games/fnaf2/plant-options.ts';
 
 const QUIET = { night: 7, seed: 61, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false,
                 boxEnabled: false, foxyEnabled: false };
@@ -18,7 +19,7 @@ const at = (log: Array<[number, string]>, f: number) => log.filter(([fr]) => fr 
 
 // Countdowns load on the first frame reached and fire 60 frames later; Random(2) == 1 commits the attack.
 {
-  const s = new Sim({ ...QUIET, sourcedSecondPass: true });
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, sourcedSecondPass: true });
   s.frame = 1000; s.ai.golden = 0; s.box = 99;
   const u = s.units.find(x => x.id === 'withfreddy') as Unit; u.inside = true;   // one of the seven route units
   s.maskOn = true; s.maskAnim = 0;
@@ -32,7 +33,7 @@ const at = (log: Array<[number, string]>, f: number) => log.filter(([fr]) => fr 
 
 // A group reachable from the first frame loaded on the dump's first loop (model frame 0): g496 fires with g497 at 60.
 {
-  const s = new Sim({ ...QUIET, sourcedSecondPass: true });
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, sourcedSecondPass: true });
   s.ai.golden = 0; s.box = 99;
   const log = script(s, {});
   for (let i = 0; i < 121; i++) s.tick();
@@ -43,7 +44,7 @@ const at = (log: Array<[number, string]>, f: number) => log.filter(([fr]) => fr 
 
 // A countdown only runs on frames its earlier conditions hold: g730 pauses while no camera is up.
 {
-  const s = new Sim({ ...QUIET, sourcedSecondPass: true });
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, sourcedSecondPass: true });
   s.frame = 2000; s.ai.golden = 0; s.box = 99;
   const m = s.units.find(x => x.id === 'mangle') as Unit; m.inside = true;   // one of the seven route units
   const log = script(s, {});
@@ -57,7 +58,7 @@ const at = (log: Array<[number, string]>, f: number) => log.filter(([fr]) => fr 
 
 // Toy Bonnie leaves on Random(3) == 1 during another unit's encounter (g437).
 {
-  const s = new Sim({ ...QUIET, sourcedSecondPass: true });
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, sourcedSecondPass: true });
   s.frame = 3000; s.ai.golden = 0; s.box = 99;
   const tb = s.units.find(x => x.id === 'toybonnie') as Unit; tb.idx = tb.path.indexOf('ventR'); tb.atOpening = true;   // one of the seven route units
   s.maskOn = true; s.maskAnim = 0;
@@ -71,7 +72,7 @@ const at = (log: Array<[number, string]>, f: number) => log.filter(([fr]) => fr 
 // g292 reads before g333 on a loop shared with the five-second rolls. Equal
 // draw counts do not guarantee that the same character received each value.
 {
-  const s = new Sim({ ...QUIET, bbEnabled: true, sourcedSecondPass: true,
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, bbEnabled: true, sourcedSecondPass: true,
     sourcedDropLightOrder: true, sourcedFoxyChain: true, sourcedSheetOrder: true,
     sourcedRollDraws: true, sourcedRollsBeforeMoves: true });
   s.frame = 299; s.maskOn = true; s.maskAnim = 0; s.bb.inOpening = true;
@@ -85,8 +86,8 @@ const at = (log: Array<[number, string]>, f: number) => log.filter(([fr]) => fr 
 
 // Off: the default is unchanged.
 {
-  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
-  if (new Sim({ night: 7, seed: 1 }).opts.sourcedSecondPass === false)
+  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
+  if (new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, seed: 1 }).opts.sourcedSecondPass === false)
     assert.equal(run({}), run({ sourcedSecondPass: false }), 'explicit off equals the default');
 }
 console.log('second pass: per-group countdowns load on first reach and pause, Random(N) == 1 outcomes, sheet order g496/g556/g747, g437 Toy Bonnie leave; off unchanged');

@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
 import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
+import { LEGACY_SIM_OPTIONS } from '../src/games/fnaf2/plant-options.ts';
 
 const QUIET = { night: 7, seed: 51, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false,
                 boxEnabled: false, foxyEnabled: false };
@@ -10,7 +11,7 @@ const up = (s: Sim) => { s.monitor = 'up'; s.monAnim = 0; };
 
 // One draw on the drop frame, none while the sprite shows.
 {
-  const s = new Sim({ ...QUIET, sourcedMonitorDownDraw: true }); s.frame = 1000; up(s);
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, sourcedMonitorDownDraw: true }); s.frame = 1000; up(s);
   s.setMonitor(false);
   const b = s.rng.state; s.tick();
   assert.notEqual(s.rng.state, b, 'the drop frame draws');
@@ -21,22 +22,22 @@ const up = (s: Sim) => { s.monitor = 'up'; s.monAnim = 0; };
 
 // A second drop after the sprite hid draws again.
 {
-  const s = new Sim({ ...QUIET, sourcedMonitorDownDraw: true }); s.frame = 1000; up(s);
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, sourcedMonitorDownDraw: true }); s.frame = 1000; up(s);
   s.setMonitor(false); assert.equal(drawsIn(s, 30), 1);
   up(s); s.setMonitor(false); assert.equal(drawsIn(s, 30), 1, 'value 2 was reset while hidden');
 }
 
 // A re-drop while the sprite is still showing does not draw.
 {
-  const s = new Sim({ ...QUIET, sourcedMonitorDownDraw: true }); s.frame = 1000; up(s);
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, sourcedMonitorDownDraw: true }); s.frame = 1000; up(s);
   s.setMonitor(false); assert.equal(drawsIn(s, 5), 1);
   up(s); s.setMonitor(false); assert.equal(drawsIn(s, 5), 0);
 }
 
 // Off: the default is unchanged.
 {
-  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
-  if (new Sim({ night: 7, seed: 1 }).opts.sourcedMonitorDownDraw === false)
+  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
+  if (new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, seed: 1 }).opts.sourcedMonitorDownDraw === false)
     assert.equal(run({}), run({ sourcedMonitorDownDraw: false }), 'explicit off equals the default');
 }
 console.log('monitor-down draw: one Random(1000000) per drop, hidden at value 0 = 22, no draw on a re-drop while showing; off unchanged');

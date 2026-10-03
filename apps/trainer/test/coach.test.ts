@@ -9,7 +9,8 @@ import { Sim } from '@sixam/source/fnaf2';
 import { Coach, playPress, pressLanded, pressState } from '../src/coach.ts';
 import type { Step } from '../src/curriculum.ts';
 
-const QUIET = { bbEnabled: false, foxyEnabled: false, gfEnabled: false, boxEnabled: false,
+// The coach grades against the lessons' model, fnaf2-legacy (curriculum.ts).
+const QUIET = { ...C.LEGACY_SIM_OPTIONS, bbEnabled: false, foxyEnabled: false, gfEnabled: false, boxEnabled: false,
   stalledEnabled: false, powerEnabled: false, lethal: false, record: false, seed: 1 };
 
 // pressLanded, press by press, on states the Sim refuses and accepts.

@@ -5,20 +5,21 @@ import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
 import type { SimEvent, Unit } from '../src/games/fnaf2/plant-model.ts';
 import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
+import { LEGACY_SIM_OPTIONS } from '../src/games/fnaf2/plant-options.ts';
 
 const SOURCED = { sourcedSecondPass: true, sourcedSheetOrder: true, sourcedRollDraws: true, sourcedFootstepDraws: true,
                   sourcedFootstepValue2: true, footstepCamMarkers: true, sourcedOfficeFootsteps: true,
                   sourcedPromotedMoves: true, sourcedRollsBeforeMoves: true, sourcedRoutePass: true };
 const QUIET = { night: 7, seed: 5, lethal: false, gfEnabled: false, boxEnabled: false, foxyEnabled: false };
 
-assert.throws(() => new Sim({ ...QUIET, sourcedOfficeRolls: true }), /requires sourcedOfficeFootsteps and sourcedRoutePass/);
+assert.throws(() => new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, sourcedOfficeRolls: true }), /requires sourcedOfficeFootsteps and sourcedRoutePass/);
 
 const footsteps = (s: Sim, before: number) => s.events.slice(before).filter((e): e is Extract<SimEvent, { type: 'footstep' }> => e.type === 'footstep').map(e => e.data.who);
 
 // Mangle at 122, monitor down, the hall latch set when her roll passes; the latch clears the loop after.
 {
   const run = (opts: Partial<SimOptions>) => {
-    const s = new Sim({ ...QUIET, bbEnabled: false, ...SOURCED, ...opts });
+    const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, bbEnabled: false, ...SOURCED, ...opts });
     for (const k of Object.keys(s.ai)) s.ai[k] = 0;
     s.ai.mangle = 20;
     const u = s.units.find(x => x.id === 'mangle') as Unit;   // one of the seven route units
@@ -45,7 +46,7 @@ const footsteps = (s: Sim, before: number) => s.events.slice(before).filter((e):
 // Balloon Boy at 122: g359 promotes him, g702 draws, and a leave then hops him on to CAM 07 on the same loop.
 {
   const run = (opts: Partial<SimOptions>) => {
-    const s = new Sim({ ...QUIET, ...SOURCED, stalledEnabled: false, ...opts });
+    const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, ...SOURCED, stalledEnabled: false, ...opts });
     for (const k of Object.keys(s.ai)) s.ai[k] = 0;
     s.ai.bb = 20;
     s.bb.stage = 4; s.bb.inOpening = true;
@@ -64,7 +65,7 @@ const footsteps = (s: Sim, before: number) => s.events.slice(before).filter((e):
 
 // Off leaves the default unchanged.
 {
-  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
+  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
   assert.equal(run({}), run({ sourcedOfficeRolls: false }), 'off equals the default');
 }
 

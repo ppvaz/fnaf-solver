@@ -88,16 +88,18 @@ function checkRecord(name: string) {
   assert.equal(sha256(JSON.stringify(heldOut)), record.method.heldOutBlock.sha256, 'the held-out block no longer rebuilds');
   assert.equal(design.filter((seed) => heldOut.includes(seed)).length, 0, 'the two seed blocks overlap');
 
-  // The injection reaches the constructor: on a story night sourcedHourTable
-  // leaves hour 0's AI table to the first loop, so a fresh Sim has every AI at 0.
+  // The injection reaches the constructor and stays in its scope: on a story night
+  // sourcedHourTable leaves hour 0's AI table to the first loop, so a fresh Sim has
+  // every AI at 0. Since 2026-10-02 that is the default, and the injected set is
+  // the legacy model ({} laid over LEGACY_SIM_OPTIONS), which arms someone at once.
   {
-    const rebuild = simOptionsFrom(found(sets.find((s) => s.id === 'rebuild')).modelOptions);
-    const inside = withModelOptions(rebuild, () => new Sim({ night: 6, seed: 1 }));
+    const legacy = simOptionsFrom({});
+    const inside = withModelOptions(legacy, () => new Sim({ night: 6, seed: 1 }));
     const outside = new Sim({ night: 6, seed: 1 });
-    assert.equal(inside.opts.sourcedHourTable, true);
-    assert.equal(outside.opts.sourcedHourTable, false, 'the option scope leaked past its replay');
-    assert.ok(Object.values(outside.ai).some((level) => level > 0), 'night 6 hour 0 should arm someone by default');
-    assert.ok(Object.values(inside.ai).every((level) => level === 0), 'sourcedHourTable did not reach the constructor');
+    assert.equal(inside.opts.sourcedHourTable, false);
+    assert.equal(outside.opts.sourcedHourTable, true, 'the option scope leaked past its replay');
+    assert.ok(Object.values(inside.ai).some((level) => level > 0), 'the legacy set did not reach the constructor');
+    assert.ok(Object.values(outside.ai).every((level) => level === 0), 'night 6 hour 0 should arm no one by default');
   }
 
   // A binding retired since the record was written (bindings/<game>/retired/)

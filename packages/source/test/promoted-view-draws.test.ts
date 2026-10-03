@@ -5,17 +5,18 @@ import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
 import type { Unit } from '../src/games/fnaf2/plant-model.ts';
 import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
+import { LEGACY_SIM_OPTIONS } from '../src/games/fnaf2/plant-options.ts';
 
 const SOURCED = { sourcedDropLightOrder: true, sourcedFoxyChain: true, sourcedSecondPass: true, sourcedSheetOrder: true,
                   sourcedViewDraws: true };
 const QUIET = { night: 7, seed: 5, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false,
                 boxEnabled: false, foxyEnabled: false };
 
-assert.throws(() => new Sim({ night: 1, sourcedPromotedViewDraws: true }), /requires sourcedViewDraws/);
+assert.throws(() => new Sim({ ...LEGACY_SIM_OPTIONS, night: 1, sourcedPromotedViewDraws: true }), /requires sourcedViewDraws/);
 
 /** Random(100) draws spent by one call of drawViewed(part) with the monitor up on the Toy's room. */
 const viewDraws = (opts: Partial<SimOptions>, id: string, part: string, setup: (u: Unit, s: Sim) => void) => {
-  const s = new Sim({ ...QUIET, ...SOURCED, ...opts });
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, ...SOURCED, ...opts });
   const u = s.units.find(x => x.id === id) as Unit;   // one of the seven route units
   s.viewing = 1; s.cam = u.path[u.idx] as number;   // a Toy waits on a camera
   setup(u, s);
@@ -36,7 +37,7 @@ for (const [id, part] of [['toybonnie', 'g366'], ['toychica', 'g368'], ['toyfred
 
 // The fade counter: a roll into the stun marks nothing; the promotion, once B is 0, writes C = 10.
 {
-  const s = new Sim({ ...QUIET, ...SOURCED, sourcedPromotedViewDraws: true });
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, ...SOURCED, sourcedPromotedViewDraws: true });
   const u = s.units.find(x => x.id === 'toyfreddy') as Unit;   // one of the seven route units
   u.stunUntil = s.frame + 100;
   s.footstepPromote(u, true);
@@ -50,7 +51,7 @@ for (const [id, part] of [['toybonnie', 'g366'], ['toychica', 'g368'], ['toyfred
 
 // Off leaves the default unchanged.
 {
-  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
+  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
   assert.equal(run({}), run({ sourcedPromotedViewDraws: false }), 'off equals the default');
 }
 

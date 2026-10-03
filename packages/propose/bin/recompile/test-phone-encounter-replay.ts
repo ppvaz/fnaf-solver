@@ -100,7 +100,7 @@ type Named = { readonly name: string };
 
 // --- the schedule at a measured release reproduces a press file; a changed action is refused
 {
-  const winner = JSON.parse(read('packages/propose/bindings/fnaf2/campaign-night6-h-winner.json'));
+  const winner = JSON.parse(read('packages/propose/bindings/fnaf2/retired/campaign-night6-h-winner.json'));
   const sched = phoneSchedule(winner, 6, 4963.6);
   assert.equal(sched.queueMs.length, 517);
   assert.deepEqual(sched.queueMs[0], [4963.6, 'press', 'monitor']);

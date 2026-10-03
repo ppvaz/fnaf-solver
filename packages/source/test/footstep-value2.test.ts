@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
 import type { Unit } from '../src/games/fnaf2/plant-model.ts';
 import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
+import { LEGACY_SIM_OPTIONS } from '../src/games/fnaf2/plant-options.ts';
 
 const BASE = { night: 7, seed: 111, lethal: false, stalledEnabled: false, bbEnabled: false, gfEnabled: false,
                boxEnabled: false, foxyEnabled: false, sourcedSecondPass: true, sourcedSheetOrder: true,
@@ -14,7 +15,7 @@ const script = (s: Sim) => { const log: Array<[number, string]> = []; s.rng.int 
 const draws = (log: Array<[number, string]>) => log.filter(([, k]) => k === '0,4').map(([f]) => f);
 const ticks = (s: Sim, n: number) => { for (let i = 0; i < n; i += 1) s.tick(); };
 
-assert.throws(() => new Sim({ night: 7, sourcedSecondPass: true, sourcedSheetOrder: true, sourcedFootstepValue2: true }),
+assert.throws(() => new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, sourcedSecondPass: true, sourcedSheetOrder: true, sourcedFootstepValue2: true }),
   /requires sourcedFootstepDraws/);
 
 // A hop in its promotion loop draws, as the per-hop rule did: Withered Bonnie CAM 07 -> hall stage 1.
@@ -43,7 +44,7 @@ for (const [late, want] of [[8, [1009]], [9, []]] as const) {
 
 // Global 5 drains it: at 4 per loop (a long frame under the frame-time hook) the window is three loops.
 {
-  const s = new Sim({ ...BASE, frameMs: () => 4 * 50 / 3, frameValue5: () => 4 }); s.frame = 1000;
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...BASE, frameMs: () => 4 * 50 / 3, frameValue5: () => 4 }); s.frame = 1000;
   const u = s.units.find(x => x.id === 'withbonnie') as Unit; u.idx = u.path.indexOf(7);   // one of the seven route units
   const log = script(s);
   s.footstepPromote(u, true); ticks(s, 2); s.advanceUnit(u); s.tick();
@@ -53,7 +54,7 @@ for (const [late, want] of [[8, [1009]], [9, []]] as const) {
 // A unit promoted while it stands on a marker draws where it stands, once; a passed roll promotes the
 // waiting move again and draws again. Withered Freddy on hall stage 2, monitor down (g379 waits).
 {
-  const s = new Sim({ ...BASE, stalledEnabled: true, sourcedRouteForks: true }); s.frame = 1000;
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...BASE, stalledEnabled: true, sourcedRouteForks: true }); s.frame = 1000;
   const u = s.units.find(x => x.id === 'withfreddy') as Unit; u.idx = u.path.indexOf('blindB'); u.pending = true;   // one of the seven route units
   const log = script(s);
   s.footstepPromote(u, true); ticks(s, 20);
@@ -66,7 +67,7 @@ for (const [late, want] of [[8, [1009]], [9, []]] as const) {
 // g378's return onto CAM 03 (footstepCamMarkers): in its promotion loop it draws on CAM 03; promoted
 // twelve loops before the mask came on, value 2 is spent and the return is silent.
 for (const [maskFirst, marks, want] of [[true, true, [1001]], [true, false, []], [false, true, [1001]]] as const) {
-  const s = new Sim({ ...BASE, stalledEnabled: true, sourcedRouteForks: true, footstepCamMarkers: marks }); s.frame = 1000;
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...BASE, stalledEnabled: true, sourcedRouteForks: true, footstepCamMarkers: marks }); s.frame = 1000;
   const u = s.units.find(x => x.id === 'withfreddy') as Unit; u.idx = u.path.indexOf('blindB'); u.pending = true;   // one of the seven route units
   const log = script(s);
   if (maskFirst) { s.maskOn = true; s.maskAnim = 0; }
@@ -81,9 +82,9 @@ for (const [maskFirst, marks, want] of [[true, true, [1001]], [true, false, []],
 
 // Off: the per-hop rule, unchanged.
 {
-  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ night: 7, seed: 11, lethal: false, sourcedSecondPass: true, sourcedSheetOrder: true,
+  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, seed: 11, lethal: false, sourcedSecondPass: true, sourcedSheetOrder: true,
     sourcedFootstepDraws: true, footstepCamMarkers: true, ...opts }); for (let i = 0; i < 7200; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
-  assert.equal(new Sim({ night: 7, seed: 1 }).opts.sourcedFootstepValue2, false, 'default off');
+  assert.equal(new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, seed: 1 }).opts.sourcedFootstepValue2, false, 'default off');
   assert.equal(run({}), run({ sourcedFootstepValue2: false }), 'explicit off equals the default');
   assert.notEqual(run({ sourcedFootstepValue2: true }), '', 'on runs a night');
 }

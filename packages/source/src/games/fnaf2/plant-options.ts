@@ -5,13 +5,72 @@ import * as C from './config.ts';
  * its replay under one model (packages/propose/bindings/fnaf2/gates.json), so a change that moves any
  * winner's replay takes a new id here and measures every winner under it in the same diff.
  */
-export const FNAF2_MODEL = 'fnaf2-legacy';
+export const FNAF2_MODEL = 'fnaf2-sourced';
 
 /**
  * The Sim's options at their defaults, a new object on every call (the default seed is drawn per Sim).
- * The comment above each option says what it models and where it was read.
+ * The comment above each option says what it models and where it was read. Since 2026-10-02 every
+ * sourced* switch is on (the fnaf2-sourced model, packages/source/recompile/sourced-rebuild-model-options.json);
+ * a comment that calls one off by default describes the legacy model, which LEGACY_SIM_OPTIONS restores.
  */
 export type SimOptions = ReturnType<typeof defaultSimOptions>;
+
+/**
+ * The legacy model (fnaf2-legacy): every switch the sourced model turned on, back off, as the defaults were
+ * until 2026-10-02. A transition shim for the tests and record gates that pin the legacy model, removed with
+ * the legacy branches; nothing that plays or censuses a night passes it.
+ */
+export const LEGACY_SIM_OPTIONS = Object.freeze({
+  sourcedRouteForks: false,
+  sourcedHallEntry: false,
+  sourcedDropLightOrder: false,
+  sourcedFoxyChain: false,
+  sourcedUnconditionalDraws: false,
+  sourcedEventDraws: false,
+  sourcedBlackoutDraws: false,
+  sourcedViewDraws: false,
+  sourcedRollDraws: false,
+  sourcedMonitorDownDraw: false,
+  sourcedSecondPass: false,
+  sourcedPuppetGlitchDraws: false,
+  sourcedFootstepDraws: false,
+  sourcedMangleReturn: false,
+  sourcedVentCamDraws: false,
+  sourcedRandomImageDraw: false,
+  sourcedMonitorRaiseGate: false,
+  sourcedSheetOrder: false,
+  sourcedLastViewPause: false,
+  sourcedEveryOrigin: false,
+  footstepCamMarkers: false,
+  sourcedBoxCountdown: false,
+  sourcedPuppetMoveOrder: false,
+  sourcedHourTable: false,
+  sourcedParkedMarker: false,
+  sourcedCustomDialOrder: false,
+  sourcedCam8Cancel: false,
+  sourcedPromotedViewDraws: false,
+  sourcedDropFlagOrder: false,
+  sourcedHallLatchOrder: false,
+  sourcedFootstepValue2: false,
+  sourcedRollsBeforeMoves: false,
+  sourcedPromotedMoves: false,
+  sourcedValue5: false,
+  sourcedOfficeFootsteps: false,
+  sourcedBlackoutClockEnd: false,
+  sourcedBDrainOrder: false,
+  sourcedMovementClock: false,
+  sourcedRoutePass: false,
+  sourcedOfficeRolls: false,
+  sourcedAnimationCount: false,
+  sourcedAttackAnimation: false,
+  sourcedGatedEvery: false,
+  sourcedBBMoves: false,
+  sourcedExposureValue5: false,
+  sourcedRouteViewDraws: false,
+  sourcedFoxyMoveValue2: false,
+  frameMs: null,
+  frameValue5: null,
+});
 
 export function defaultSimOptions() {
   return {
@@ -60,11 +119,11 @@ export function defaultSimOptions() {
     //             leave CAM 08; W. Chica waits for W. Bonnie
     //   g352/g356 off Night 7: Toy Freddy / Toy Chica's accepted roll is
     //             discarded while Toy Chica / Toy Bonnie is on CAM 09
-    sourcedRouteForks: false,
+    sourcedRouteForks: true,
     // g875-880 write `hall movement` = 300 once per entry into the hall
     // column (C -7), not every frame someone stands there. Read from the
     // dump on 2026-09-15 (docs/evidence/hall-movement-trigger-20260915.json).
-    sourcedHallEntry: false,
+    sourcedHallEntry: true,
     // Frame order at a monitor drop and the hall-light latch, read from the
     // dump on 2026-09-15 (docs/evidence/withered-freddy-route-night7-20260915.json):
     //   g614/g618 a drop press only sets `drop everything` (monitor fully up,
@@ -79,7 +138,7 @@ export function defaultSimOptions() {
     //             g573 kills from the latch on any frame, not only on a press
     // So an encounter that starts at a camdrop never lets the hall light
     // latch, and D is not reset. Off by default until the censuses compare.
-    sourcedDropLightOrder: false,
+    sourcedDropLightOrder: true,
     // Where the drop button writes `drop everything` (requires sourcedDropLightOrder). The sheet
     // performs the flag at g262 (monitor v0 2 -> 3, viewing 0) and g274 (mask 2 -> 3), clears it at
     // g612, and only then sets it from a touch: g618 (monitor v0 == 2, v1 == 0, mask == 0) and g619
@@ -94,11 +153,11 @@ export function defaultSimOptions() {
     // blackout resolution and tickBox, before g623), and the next tick's forcedown performs it;
     // g619 refuses a mask-off while in danger. A tap carries no release in the Sim queue, so the
     // touch is read on its press update only, where the sheet re-reads a finger still down.
-    sourcedDropFlagOrder: false,
+    sourcedDropFlagOrder: true,
     // g1/g6/g9/g10 read animation counters at the top; g1015-g1022 reset on show and add value 5 late.
     // At 60 Hz they take 12/22/12/14 updates. A measured clock needs accumulated value 5, not a fixed count:
     // docs/evidence/full06-animation-clock-20260930.json explains the BB entry/draw split at update 1823.
-    sourcedAnimationCount: false,
+    sourcedAnimationCount: true,
     // Foxy as the dump's literal A/B chain (requires sourcedDropLightOrder):
     //   g337  every 5 s, no location/pin/state condition: the Random(5) draw
     //         is spent every time; success writes A=1 and D=0
@@ -113,7 +172,7 @@ export function defaultSimOptions() {
     //   g855  B=50 while latched in the hall;  g864 -1 per 500 ms on CAM 08
     // Foxy's B starts at 0 (no night-start writer, empty object values), so
     // the constructor's readyAt draw is not spent under this option.
-    sourcedFoxyChain: false,
+    sourcedFoxyChain: true,
     // The Office frame's unconditional random draws (docs/evidence/
     // rng-draw-audit-office-20260915.json). Every Random( advances the one
     // global LCG, cosmetic or not, so without these the stream leaves the
@@ -130,7 +189,7 @@ export function defaultSimOptions() {
     // every 6 frames and g59 alternates 29/30. Only the draws are emulated; the
     // values are cosmetic. g497 and g744 are already drawn (tickPuppet,
     // rollDecidePath), but in the opposite order to the sheet -- not fixed here.
-    sourcedUnconditionalDraws: false,
+    sourcedUnconditionalDraws: true,
     // One draw at events the model already simulates (docs/evidence/
     // rng-draw-audit-office-20260915.json, classification.onModelledEvents):
     //   e478/e484-e487/e489  the resolution that lets a unit inside also draws
@@ -144,7 +203,7 @@ export function defaultSimOptions() {
     //              and the early-leave roll is drawn on that tick too (no short-circuit)
     //   e324       Withered Chica CAM 02->06: Random(4)
     // Values only matter where the sheet branches on them (e548).
-    sourcedEventDraws: false,
+    sourcedEventDraws: true,
     // The blackout flicker's per-frame draws (dump g514/g517/g518): while an
     // encounter runs, g514 adds global value 5 -- the frame's elapsed time in
     // 60 fps frames, capped at 4 -- to the blackout clock (OI 131 value 0) from
@@ -153,11 +212,11 @@ export function defaultSimOptions() {
     // exact 60 fps that is 179 draws per encounter, on frames 20..198 after the
     // start; a dropped frame on the phone advances the clock by 2 and removes
     // a draw.
-    sourcedBlackoutDraws: false,
+    sourcedBlackoutDraws: true,
     // g537 resolves on the rising edge of clock >= 300. g534-g536 retain that clock through the fade;
     // a new encounter can restart the fade before its reset. See blackout-clock.js and full06-winning-branch.
     // Requires sourcedBlackoutDraws and frameMs; off resolves 300 frames after encounter start.
-    sourcedBlackoutClockEnd: false,
+    sourcedBlackoutClockEnd: true,
     // Camera-view draws (dump g344-g360, g458-g477, g366/g368/g419, g498):
     //   an accepted move writes the unit's fade counter C = 10 (g344-g360,
     //   Foxy g349); g458-g467 then take one per frame before g468-g476 draw
@@ -172,7 +231,7 @@ export function defaultSimOptions() {
     // gate, and a toy that moves on its roll frame never waits in state 2.
     // Not emulated: the Puppet's static glitch chain (g500-g505, needs the
     // Puppet out and static value 5) and Paper Pals (g477, not in the model).
-    sourcedViewDraws: false,
+    sourcedViewDraws: true,
     // The eleven 5 s movement rolls as the sheet runs them (dump g333-g343):
     // each is a 5000 ms timer then its Random compare, before any state
     // condition, so every roll draws every 5 s whatever the character is doing,
@@ -180,7 +239,7 @@ export function defaultSimOptions() {
     // Freddy (g336), Foxy (g337, Random(5)), Toy Freddy, Toy Bonnie, Toy Chica,
     // Mangle, Balloon Boy, Paper Pals (g343). State only gates the outcome.
     // Paper Pals' AI is (Random(100)+1)/100 <= 1, so its roll is spent as a draw.
-    sourcedRollDraws: false,
+    sourcedRollDraws: true,
     // The monitor-down image's draw (generated source e7, e211, e720-e722,
     // e871-e872; dump g807): the drop shows the sprite; e720 draws
     // Random(1000000) on a frame it is visible with value 2 = 0 and e721 sets
@@ -188,7 +247,7 @@ export function defaultSimOptions() {
     // zeroes value 0 the first visible frame, e872 adds global value 5 (~1) per
     // visible frame, and e7 hides it the first frame value 0 reaches 22. So one
     // draw per drop, none for a re-drop while the sprite is still showing.
-    sourcedMonitorDownDraw: false,
+    sourcedMonitorDownDraw: true,
     // The per-second draw groups as one pass in sheet order (dump g213, g292,
     // g294, g400, g401, g436, g437, g439, g440, g494-g497, g556-g559, g623, g730,
     // g739-g744, g747-g750, g781). Each conditional group has its own CND_EVERY2
@@ -202,7 +261,7 @@ export function defaultSimOptions() {
     // (Mangle's inside cues). Still not in sheet position relative to these: the
     // camera-view draws (g366-g498), the blackout flicker and the resolution run
     // earlier in the model's frame.
-    sourcedSecondPass: false,
+    sourcedSecondPass: true,
     // The Puppet's static glitch chain (dump g500-g506, g774): while your-view is
     // on the Puppet out of his box, away from CAM 11, with a camera up and the
     // light off and the glitch flag (static value 5) at 1, g500-g502 each draw
@@ -212,7 +271,7 @@ export function defaultSimOptions() {
     // every 110 ms (timer only); g774, later in the sheet, sets the flag while
     // the light is on that Puppet. Placed after the camera-view draws (g498) and
     // before the monitor-down draw (g807).
-    sourcedPuppetGlitchDraws: false,
+    sourcedPuppetGlitchDraws: true,
     // The footstep cues (dump g695-g703, generated e620-e628): while a
     // hall-routed character's value 2 is above zero (the 5 s move groups
     // g344-g359 write 10, g458-g466 drain 1 per loop) and it overlaps
@@ -228,7 +287,7 @@ export function defaultSimOptions() {
     // g730. Foxy's sprite moves at g389 when the hall latch clears, so his
     // draw needs the move within ten loops of g349's acceptance. Requires
     // sourcedSheetOrder.
-    sourcedFootstepDraws: false,
+    sourcedFootstepDraws: true,
     // Research knob under sourcedFootstepDraws: Foxy's hall-stage entry draw (g698 via g389), the least
     // sourced part of the trigger. Off leaves the other eight characters' draws in place.
     footstepFoxy: true,
@@ -239,7 +298,7 @@ export function defaultSimOptions() {
     // move within ten loops of the acceptance. Night 7 10/20 k3 at seed 27656: Foxy accepted on loop 300,
     // value 2 drained to 0 by 309, moved on 361 with value 2 = 10 again, and the rebuilt runtime drew
     // Random(5) there (tools/recompile/results/model-foxy-move-value2-20260929.json).
-    sourcedFoxyMoveValue2: false,
+    sourcedFoxyMoveValue2: true,
     // Research knob under sourcedFootstepDraws: also draw on hops onto CAM 01, 02, 03 and 04. The
     // CCN puts them under `hear footsteps` (149): its 264 x 151 image is opaque at every pixel, every
     // character is an opaque 24 x 24 fine-collision sprite whose hotspot lands inside it on those
@@ -250,7 +309,7 @@ export function defaultSimOptions() {
     // even on the hall-stage entries 8a7288b kept, and recovers 0 of 60 footsteps injected on the
     // roll phase at the capture's own channel gain (docs/evidence/footstep-cam-markers-adjudication-20260927.json).
     // Off by default until a comparison adopts it.
-    footstepCamMarkers: false,
+    footstepCamMarkers: true,
     // Research knob under sourcedFootstepDraws: the cue as g695-g703 test it for the route units (the
     // Withereds, the Toys and Mangle), in place of one draw per hop. Each carries value 2: 10 when its
     // move is promoted (g344-g358: the roll has passed, value 1 is 0, the your-view marker is off its
@@ -262,7 +321,7 @@ export function defaultSimOptions() {
     // a light-held edge) is silent; a unit promoted while it stands on a marker draws where it stands;
     // and g378's return onto CAM 03 draws when it lands in the window. Foxy and Balloon Boy keep their
     // rules. (docs/evidence/footstep-cam-markers-adjudication-20260927.json)
-    sourcedFootstepValue2: false,
+    sourcedFootstepValue2: true,
     // Footsteps at the office opening (requires sourcedFootstepValue2 and sourcedRollDraws). `in office` (122,
     // at (668, 612)) overlaps `hear footsteps` (x 538-802, y 458-609) for the bottom/centre-hotspot sprites:
     // Withered Bonnie, Toy Bonnie and Mangle among the route units (docs/android/ANDROID-SOURCE-STATUS.md; the
@@ -271,7 +330,7 @@ export function defaultSimOptions() {
     // 10), and g696/g700/g703 draw its footstep where it stands; an arrival at 122 inside value 2's window
     // draws too. Off: a unit at the opening is not rolled into a promotion and 122 is not a footstep marker
     // (Night 7 k3 tick 2100: W. Bonnie, at 122 in her encounter, promoted and drew before Mangle's g703).
-    sourcedOfficeFootsteps: false,
+    sourcedOfficeFootsteps: true,
     // The rolls at the office opening as the sheet keeps them (requires sourcedOfficeFootsteps and sourcedRoutePass).
     // A passed roll at 122 leaves value 0 = 1 until g344-g360 promote it, re-tested every loop: Mangle's g358 holds
     // on the hall latch, so a roll on a latched loop is promoted, and draws g703, on the loop after g488 clears it
@@ -279,7 +338,7 @@ export function defaultSimOptions() {
     // unconditionally and g702 draws his footstep there, as it does when he arrives within value 2's window. His
     // value 0 then stays 2, since no move group leaves 122 and g292/g294 do not clear it, so the loop g292/g294
     // send him to CAM 10, g413 (later in the sheet) moves him on to CAM 07 (Night 7 k3 tick 4703).
-    sourcedOfficeRolls: false,
+    sourcedOfficeRolls: true,
     // g366/g368/g419 draw Random(100) each update a Toy's value 0 == 2 (its move promoted), `your view`
     // overlaps it and `viewing` > 0. A passed roll only sets value 0 = 1; g344-g358 promote it once
     // value 1 (B) is 0 and its route gates open, and g344-g360 write the fade counter C = 10 there, not
@@ -287,23 +346,23 @@ export function defaultSimOptions() {
     // value 0 == 1 by the stun or a Show Stage gate, and the fade is marked at the roll. The schedule
     // replays split on exactly this on all three nights (tools/recompile/README.md, "Winner schedules
     // replayed"): Toy Bonnie held on Night 1, Toy Freddy on Night 5, all three on Night 7.
-    sourcedPromotedViewDraws: false,
+    sourcedPromotedViewDraws: true,
     // `viewing hall light` is cleared by g488 (Every 1000 ms) and set again by g489 while the light is lit,
     // both AFTER the route moves g380-g383 that test it (g381: W. Bonnie CAM 07 -> hall stage 1 needs it 0).
     // So a move whose second-boundary clears the latch waits one loop: it sees the latch still set. Off: the
     // hooked clock clears the model's latch (lightLogicalUntil) at the top of the tick, before the 5 s rolls
     // and moves, which moves such a unit one loop early (Night 7 k3's first replay mismatch, tick 600).
-    sourcedHallLatchOrder: false,
+    sourcedHallLatchOrder: true,
     // Promotions read B before its drain, g546 afterwards; hall pins g848-g854 follow the g488/g489 reset.
-    sourcedBDrainOrder: false,
+    sourcedBDrainOrder: true,
     // Actual B countdowns for route units and the Puppet: drain by value 5 between promotions and moves.
     // Update deadlines lose measured-clock time (full-06 Freddy step: model 3045, rebuild 3047).
-    sourcedMovementClock: false,
+    sourcedMovementClock: true,
     // g333-g343 roll every character before any promotion (g344-g358) or move (g380 on) runs, so a move's
     // own draw (e324: W. Chica CAM 02 -> 06, Random(4)) lands after the Paper Pals roll. Off: each passed roll
     // is promoted and moved at once, and that draw shifts every later roll of the same loop onto another
     // value (Night 7 k3 at tick 1200: Mangle's roll failed in the model and passed in the rebuild).
-    sourcedRollsBeforeMoves: false,
+    sourcedRollsBeforeMoves: true,
     // A route move needs its unit promoted (value 0 == 2), and the promotion test gates only the promotion.
     // g344-g358 promote a passed roll (value 0 == 1, value 1 == 0) under their own conditions: the your-view
     // marker off a Withered's room (g344-g348), and for Mangle g357 (viewing > 0, marker off her) or g358
@@ -314,7 +373,7 @@ export function defaultSimOptions() {
     // outside Mangle's latch-gated hops, so a Mangle roll passed on a latched loop moved at once where the
     // sheet promotes her on the loop after g488 clears the latch (Night 7 k3 replay, tick 1800: Mangle
     // CAM 02 -> CAM 01 and her g703 footstep draw one update early).
-    sourcedPromotedMoves: false,
+    sourcedPromotedMoves: true,
     // The promotions and the moves as two passes, where the sheet runs them (requires sourcedPromotedMoves and
     // sourcedRollsBeforeMoves). Every loop, g344-g360 test the promotion of every waiting roll, and only then do
     // g374-g435 move the promoted units, right after the rolls (g333-g343) and before g436 on. The model settled a
@@ -323,7 +382,7 @@ export function defaultSimOptions() {
     // runtime) Toy Chica's g356 discard reads Toy Bonnie still on CAM 09, where the model had already moved him.
     // On: after the rolls, every waiting unit's promotion is tested (and the g352/g356 discards applied), then the
     // promoted ones move in unit order, with g378's return among the moves.
-    sourcedRoutePass: false,
+    sourcedRoutePass: true,
     // Balloon Boy's hops where the sheet makes them (requires sourcedRoutePass). g342 rolls him with the others and
     // g359 promotes him at once, but his moves are g413-g418, after the other units' moves (g374-g412) and after the
     // Paper Pals roll (g343); g414-g416 draw his cue (cam 01 value 6 = Random(4) + 1, and g416 also value 21), and g611,
@@ -331,7 +390,7 @@ export function defaultSimOptions() {
     // redrew at once, so his cue took the LCG value before the Paper Pals roll, and a 4 changed the loop's count at
     // the wrong place (Night 7 k3 tick 6600 in the rebuilt runtime). On: the roll marks the hop, the route pass makes
     // it after the other moves, and the redraw waits for g611's place.
-    sourcedBBMoves: false,
+    sourcedBBMoves: true,
     // The Toy view draws and the moves in sheet order (requires sourcedRoutePass and sourcedPromotedViewDraws). g366
     // and g368 (Toy Bonnie's and Toy Chica's Random(100) while value 0 == 2 under your view with a camera up) sit
     // between the promotions and the moves, among the value 1 drains g361-g371; g419 (Toy Freddy's) sits after
@@ -340,12 +399,12 @@ export function defaultSimOptions() {
     // leaves CAM 09 with your view on it). The model drew them in the per-second pass, after every move. On: they
     // run inside the route pass, whose moves then follow the sheet: the Withereds (g374-g388), Mangle (g391-g399),
     // Balloon Boy (g413-g418), g419, then Toy Freddy, Toy Bonnie and Toy Chica (g420-g435).
-    sourcedRouteViewDraws: false,
+    sourcedRouteViewDraws: true,
     // Mangle's mask leaves (dump g400: the 10%/s roll under the mask; g401: five mask ticks) place her at
     // CAM 7 (marker 62), three hops from the vent, not at the route start the unit table's repelIdx 0 gives.
     // Every other unit's repelIdx matches its dump endpoint (g538-g555, g213, g437, g439/g440, g292/g294).
     // On full-06 the phone's Mangle returned 5-10 s faster than the model on every approach.
-    sourcedMangleReturn: false,
+    sourcedMangleReturn: true,
     // The music box drain as the sheet writes it (g652-g661). g653-g660: the packed test (music
     // button value 1 == 0 and value 0 > 0), the night (and for night 1 not 12 AM or 1 AM), then a
     // gated Every 50 ms that subtracts 2-6 units of 2000. The countdown loads on its first reach,
@@ -354,14 +413,14 @@ export function defaultSimOptions() {
     // wind loop sets value 1 to 10 (g638/g643) and g661 drains it by Global(5) per loop after the
     // drain has run, so the drain resumes ten loops after a wind. Runs in the late pass, after the
     // hour update (g627-g630). Requires sourcedSheetOrder.
-    sourcedBoxCountdown: false,
+    sourcedBoxCountdown: true,
     // The Puppet's hop order: g496 arms a hop (sockpuppet value 0 = 2) and g403-g411, earlier in the
     // sheet, carry it out, so a hop lands on the loop after its roll. Under the sheet-ordered pass the
     // model armed in the early pass and moved in tickPuppet the same frame, one loop early; the
     // rebuilt runtime moves on the next loop (office tick 15841 after the tick-15840 roll), and g623's
     // gated Every 1000 loads on arrival, so the early hop moved its Random(10) by a loop. On: the
     // armed hop runs at the g403-g411 position of the next early pass. Requires sourcedSheetOrder.
-    sourcedPuppetMoveOrder: false,
+    sourcedPuppetMoveOrder: true,
     // The hour table where the sheet runs it (g673-g684, story nights). Each row is `night == N`
     // [+ `time of the night == H`] + NotAlways, so hour 0's rows fire on the first loop, in the
     // always pass: after g822's StartOfFrame draw and before g811's. The model applied hour 0 in
@@ -371,7 +430,7 @@ export function defaultSimOptions() {
     // runtime spends that draw on office tick 0 of nights 4 and 5. Under the frame-time hook a later
     // hour's rows follow its clock (g627-g630) ahead of g685-g703, as in the sheet. Night 7 keeps
     // the constructor. Requires sourcedSheetOrder.
-    sourcedHourTable: false,
+    sourcedHourTable: true,
     // Where the frame start parks `your view` on Custom Night. g486 (`night <> 7` -> CAM 09) and g487
     // (`night == 7` -> CAM 10) run in the StartOfFrame list before g632 copies `night number` into
     // `night`, and `night` is a frame-local counter (no global flag in the CCN) whose initial value
@@ -379,7 +438,7 @@ export function defaultSimOptions() {
     // parks it inside CAM 09's box on Custom Night, and spends no g498 draw when the Puppet reaches
     // CAM 10. The model parked night 7 on CAM 10 (`parkedCamera`). g4's first raise (night 7 by
     // then) still opens CAM 07.
-    sourcedParkedMarker: false,
+    sourcedParkedMarker: true,
     // Where Custom Night's dials reach the AI counters. g787 (`night == 7` + NotAlways) copies the ten
     // `cust_*` dials on the first loop, after g781, and g821 sets the Puppet's 15 after it. The AI
     // counters are global objects (initial 0, kept between office visits; only the office writes
@@ -389,7 +448,7 @@ export function defaultSimOptions() {
     // loop; the model applied the row in its constructor and loaded it on the first. The rebuilt
     // runtime's first Golden Freddy hall roll at 20/20 is a loop after the model's. On: night 7's row
     // applies at the end of the late pass on frame 1. Requires sourcedSheetOrder.
-    sourcedCustomDialOrder: false,
+    sourcedCustomDialOrder: true,
     // The Withereds' CAM 08 departures cancel the others' moves. g380 (W. Bonnie CAM 08 -> CAM 07) also
     // writes `old freddy` and `old chica` value 0 = 0, and g385 (W. Chica CAM 08 -> CAM 04) writes `old
     // freddy` value 0 = 0, wherever those two stand. Value 0 is 1 for an accepted roll and 2 for an armed
@@ -401,7 +460,7 @@ export function defaultSimOptions() {
     // CAM 08. On: a departure clears the others' pending hops and discards their rolls later in the same
     // model frame. Not covered: a Bonnie departure from the pending path (tickUnits) after Chica's
     // five-second hop in the same frame, which needs the marker to leave CAM 08 on a roll frame.
-    sourcedCam8Cancel: false,
+    sourcedCam8Cancel: true,
     // The vent-camera sound selectors (dump g685-g690, generated e610-e615):
     // one Random(4) into cam01 value 21 the first loop a unit stands on CAM 05
     // (Toy Chica g685, Withered Bonnie g686) or CAM 06 (Toy Bonnie g687,
@@ -409,13 +468,13 @@ export function defaultSimOptions() {
     // action when event loops" flag, which re-arms once the unit has left.
     // They sit between the hour table (g673-g684) and the footstep cues
     // (g695-g703). Requires sourcedSheetOrder.
-    sourcedVentCamDraws: false,
+    sourcedVentCamDraws: true,
     // The office's random image (dump g811, generated e724): Random(1000)
     // into the `random image` counter on the first loop `viewing` is 0
     // after it was above 0 -- once at night start and once per monitor
     // drop, not once per night. Sits after the monitor-down draw (g807) and
     // before g822.
-    sourcedRandomImageDraw: false,
+    sourcedRandomImageDraw: true,
     // The monitor raise (dump g254 click / g257 touch on the white button)
     // needs the panel down and still (flip panel v0 = 0 and v1 = 0), the
     // mask fully off (mask v0 = 0), `in danger` = 0 and `being attacked by`
@@ -424,11 +483,11 @@ export function defaultSimOptions() {
     // refused outright. Without this the k3 loop's raise at cycle phase 7.6
     // goes up inside a Toy Bonnie overlay encounter and g546 walks him to
     // marker 123 (observed-press probe, full-06, 2026-09-15).
-    sourcedMonitorRaiseGate: false,
+    sourcedMonitorRaiseGate: true,
     // Sheet order requires sourcedSecondPass: g213/g292/g294 precede the five-second
     // rolls and route moves. g366-g518 precede blackout resolution and the music box;
     // g556-g781 follow, including the hour table before g730 and g774 after g750.
-    sourcedSheetOrder: false,
+    sourcedSheetOrder: true,
     // The frame-time hook requires sourcedSheetOrder. frameMs supplies rhTimerDelta;
     // frameValue5 supplies global 5 unless sourcedValue5 derives its prior-loop value.
     // CND_EVERY2 timers spend round(ms * 3) units; frame-only mode retains the 60 Hz grid.
@@ -439,8 +498,8 @@ export function defaultSimOptions() {
     // g263 places its 200 ms countdown after `viewing > 0`, so the countdown only runs on
     // frames a camera is displayed and its phase follows the accumulated camera-up time,
     // not frame 0. Off keeps the model's global f % 12 sample (dump g263).
-    sourcedLastViewPause: false,
-    sourcedAttackAnimation: false, // g587/g588 plus rebuilt sprite exits; existing committed-attack paths only
+    sourcedLastViewPause: true,
+    sourcedAttackAnimation: true, // g587/g588 plus rebuilt sprite exits; existing committed-attack paths only
     // The gated one-second countdowns (dump g907, g904, g786/g785, g824,
     // g825, g722, g570). Each is an `Every` placed AFTER other conditions,
     // and CND_EVERY2 only loads and counts down on frames it is reached
@@ -465,7 +524,7 @@ export function defaultSimOptions() {
     //   g722  Toy Bonnie at marker 123, viewing > 0, then Every 10000
     //   g570  hallway Golden Freddy at 123, being attacked by 0, Every 1000
     // Default off: switching it on moves replays and the census.
-    sourcedGatedEvery: false,
+    sourcedGatedEvery: true,
     // The countdowns' origin, from classes.dex (2026-09-27): CRun.initRunLoop
     // runs no events; the first f_GameLoop runs the StartOfFrame list once
     // (CEventProgram.compute_TimerEvents, then zeroes its pointer) and then
@@ -479,7 +538,7 @@ export function defaultSimOptions() {
     // first reached on frame 1 loads there, like any later first reach.
     // Requires the frame-time hook, whose countdowns replace the f % N
     // cadences (identical to them at 50/3 ms, frame-time-hook.test.ts).
-    sourcedEveryOrigin: false,
+    sourcedEveryOrigin: true,
     // Global value 5 as the sheet writes it (requires frameMs). g1236, the office's last group (Always),
     // sets value 5 = Min(4, (TimerValue - global 0) / D) and then global 0 = TimerValue, so every loop reads
     // the PREVIOUS loop's timer delta over D. The Android runtime decodes D's Double token as 32.32 fixed:
@@ -490,15 +549,15 @@ export function defaultSimOptions() {
     // first draw lands on the 20th loop of `in danger`, not the 21st (Night 7 k3 tick 2044, Night 5
     // contact-final tick 7460 in the rebuilt runtime). Replaces frameValue5, which it refuses beside it.
     // Off: value 5 is frameValue5(frame), or 1.
-    sourcedValue5: false,
+    sourcedValue5: true,
     // The exposure accumulators add global value 5 (requires sourcedValue5). g745 adds `1 * Global(5)` to Withered
     // Foxy's value 9 each loop the hall latch is lit on him, and g846 retreats him once it is > 100 * night; g779 adds
     // it to hallway Golden Freddy's value 0, and g780 moves him in once it is > 100. With value 5 a hair above 1, the
     // Nth loop already passes > N: on Night 7 (night 7, 700) Foxy's retreat, and its B = 500 + Random(500) draw,
     // came on the 700th lit loop in the rebuilt runtime (k3 tick 20449), where the model's integer count needed the
     // 701st. Off: both count 1 per loop.
-    sourcedExposureValue5: false,
-    frameMs: (null as null | ((frame: number) => number)),
+    sourcedExposureValue5: true,
+    frameMs: ((() => 1000 / 60) as null | ((frame: number) => number)),   // 60 fps, the frame-time hook's constant clock
     frameValue5: (null as null | ((frame: number) => number)),
   };
 }

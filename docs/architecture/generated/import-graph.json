@@ -2001,6 +2001,8 @@
     {
       "file": "packages/propose/bin/census/test-policy-census.ts",
       "imports": [
+        "../../../source/recompile/model-draw-trace.ts",
+        "../recompile/rebuild-options-census.ts",
         "./policy-census.ts",
         "./winner-census.ts",
         "@sixam/kernel/contracts",
@@ -2017,7 +2019,9 @@
       "file": "packages/propose/bin/census/test-winner-census.ts",
       "imports": [
         "../../../../packages/propose/bin/census/winner-phase-census.ts",
+        "../../../source/recompile/model-draw-trace.ts",
         "../plans/bundle.ts",
+        "../recompile/rebuild-options-census.ts",
         "./winner-census.ts",
         "@sixam/kernel/contracts",
         "@sixam/review/renamed-path",
@@ -3082,7 +3086,9 @@
     {
       "file": "packages/propose/bindings/test-fact-register.ts",
       "imports": [
+        "../../source/recompile/model-draw-trace.ts",
         "../bin/plans/bundle.ts",
+        "../bin/recompile/rebuild-options-census.ts",
         "./fact-register.ts",
         "@sixam/kernel",
         "@sixam/kernel/contracts",
@@ -3621,6 +3627,8 @@
     {
       "file": "packages/propose/test/cycle-controller.test.ts",
       "imports": [
+        "../../source/recompile/model-draw-trace.ts",
+        "../bin/recompile/rebuild-options-census.ts",
         "@sixam/play/sim",
         "@sixam/propose/fnaf2",
         "@sixam/source/fnaf2",
@@ -3645,10 +3653,12 @@
     {
       "file": "packages/propose/test/experiment.test.ts",
       "imports": [
+        "../../source/recompile/model-draw-trace.ts",
+        "../bin/recompile/rebuild-options-census.ts",
         "../src/experiment/experiment.ts",
         "@sixam/kernel",
         "node:assert/strict",
-        "node:fs/promises",
+        "node:fs",
         "node:path",
         "node:url"
       ]
@@ -3658,6 +3668,7 @@
       "imports": [
         "../src/experiment/families/minus-toys.ts",
         "../src/experiment/families/minus-two.ts",
+        "@sixam/propose/seeds",
         "node:assert/strict",
         "node:child_process",
         "node:path",
@@ -3675,7 +3686,9 @@
     {
       "file": "packages/propose/test/mechanic-constraints.test.ts",
       "imports": [
+        "../../source/recompile/model-draw-trace.ts",
         "../bin/plans/bundle.ts",
+        "../bin/recompile/rebuild-options-census.ts",
         "@sixam/propose/parked/minus7",
         "@sixam/propose/strategies/minus-3",
         "@sixam/propose/strategies/minus-toys",
@@ -3813,8 +3826,10 @@
       "file": "packages/propose/test/test-bundle.ts",
       "imports": [
         "../../play/src/campaign/artifact-executor.ts",
+        "../../source/recompile/model-draw-trace.ts",
         "../bin/plans/artifact-commands.ts",
         "../bin/plans/bundle.ts",
+        "../bin/recompile/rebuild-options-census.ts",
         "@sixam/kernel/contracts",
         "@sixam/source/fnaf2",
         "node:child_process",
@@ -3827,8 +3842,10 @@
       "file": "packages/propose/test/test-encounter-fidelity.ts",
       "imports": [
         "../../review/venue-grid/encounter-replay.ts",
+        "../../source/recompile/model-draw-trace.ts",
         "../bin/census/winner-census.ts",
         "../bin/plans/bundle.ts",
+        "../bin/recompile/rebuild-options-census.ts",
         "@sixam/review/renamed-path",
         "@sixam/source/fnaf2",
         "node:assert/strict",
@@ -4929,6 +4946,7 @@
       "file": "packages/source/test/every-origin.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/plant-options.ts",
         "node:assert/strict"
       ]
     },
@@ -4976,6 +4994,7 @@
       "file": "packages/source/test/foxy-move-value2.test.ts",
       "imports": [
         "../src/games/fnaf2/plant-model.ts",
+        "../src/games/fnaf2/plant-options.ts",
         "node:assert/strict"
       ]
     },
@@ -5177,6 +5196,7 @@
     {
       "file": "packages/source/test/seed-recoverytest.ts",
       "imports": [
+        "../src/games/fnaf2/plant-options.ts",
         "@sixam/source/fnaf2",
         "node:assert/strict"
       ]
@@ -5193,12 +5213,14 @@
     {
       "file": "packages/source/test/simtest.ts",
       "imports": [
+        "../src/games/fnaf2/plant-options.ts",
         "@sixam/source/fnaf2"
       ]
     },
     {
       "file": "packages/source/test/sourcetest.ts",
       "imports": [
+        "../src/games/fnaf2/plant-options.ts",
         "@sixam/source/fnaf2",
         "@sixam/source/games/fnaf2/plant-options.ts",
         "node:url"

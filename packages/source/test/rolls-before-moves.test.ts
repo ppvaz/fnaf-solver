@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import { Sim } from '../src/games/fnaf2/plant-model.ts';
 import type { Unit } from '../src/games/fnaf2/plant-model.ts';
 import type { SimOptions } from '../src/games/fnaf2/plant-options.ts';
+import { LEGACY_SIM_OPTIONS } from '../src/games/fnaf2/plant-options.ts';
 
 const SOURCED = { sourcedDropLightOrder: true, sourcedFoxyChain: true, sourcedSecondPass: true, sourcedSheetOrder: true,
                   sourcedRollDraws: true, sourcedEventDraws: true };
@@ -13,7 +14,7 @@ const QUIET = { night: 7, seed: 5, lethal: false, bbEnabled: false, gfEnabled: f
 
 /** The draw sequence of one five-second roll pass with W. Chica one sure roll away from CAM 02 -> 06. */
 const rollPass = (opts: Partial<SimOptions>) => {
-  const s = new Sim({ ...QUIET, ...SOURCED, ...opts });
+  const s = new Sim({ ...LEGACY_SIM_OPTIONS, ...QUIET, ...SOURCED, ...opts });
   for (const id of Object.keys(s.ai)) s.ai[id] = 0;
   s.ai.withchica = 20;
   const u = s.units.find(x => x.id === 'withchica') as Unit;   // one of the seven route units
@@ -42,7 +43,7 @@ const rollPass = (opts: Partial<SimOptions>) => {
 
 // Off leaves the default unchanged.
 {
-  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
+  const run = (opts: Partial<SimOptions>) => { const x = new Sim({ ...LEGACY_SIM_OPTIONS, night: 7, seed: 11, lethal: false, ...opts }); for (let i = 0; i < 3600; i++) x.tick(); return JSON.stringify([x.events, x.rng.state]); };
   assert.equal(run({}), run({ sourcedRollsBeforeMoves: false }), 'off equals the default');
 }
 

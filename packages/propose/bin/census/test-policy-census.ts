@@ -28,7 +28,13 @@ import {
 import type { CensusSpec, buildRecord } from './policy-census.ts';
 import type { Loss } from './winner-census.ts';
 
+import { withModelOptions } from '../recompile/rebuild-options-census.ts';
+import { simOptionsFrom } from '../../../source/recompile/model-draw-trace.ts';
+
 const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '../../../..');
+
+// The record was taken on the legacy model (fnaf2-legacy, before 2026-10-02), so its replays run there.
+withModelOptions(simOptionsFrom({}), () => {
 const EVIDENCE = join(ROOT, 'docs/evidence');
 /** A value the test reads where the record has it; a missing one fails the check that reads it. */
 const found = <T>(value: T | null | undefined) => value as T;
@@ -108,7 +114,7 @@ assert.ok(JSON.stringify(observe(planted)) !== JSON.stringify(observations) ||
   JSON.stringify(pMaxRate(planted)) !== JSON.stringify(pMax), 'a planted held-out count is not caught');
 
 // The family, re-derived from the tree.
-const bindings = anchorBandBindings(spec);
+const bindings = anchorBandBindings(spec, { model: 'fnaf2-legacy' });
 assert.deepEqual(bindings.map((b) => b.name), record.bindings.map((b) => b.name));
 let replays = 0;
 for (const binding of bindings) {
@@ -160,3 +166,4 @@ for (const binding of bindings) {
 console.log(`policy census: ${name} (${record.evidenceId}) holds its pre-registration ${record.preregistration.specSha256.slice(0, 12)}, ` +
   `re-derives its selection (${selectedName}), observation, ${decided.explanations.length} explanation tags and P_max ` +
   `${pMax.successes}/${pMax.n} [${pMax.interval.lo.toFixed(5)}, ${pMax.interval.hi.toFixed(5)}], and ${replays} slice replays match`);
+});

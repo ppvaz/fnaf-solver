@@ -20,14 +20,16 @@
       "retired": true
     },
     {
-      "file": "packages/propose/bindings/fnaf2/campaign-night5-contact-final-20260912-winner.json",
+      "file": "packages/propose/bindings/fnaf2/retired/campaign-night5-contact-final-20260912-winner.json",
       "sha256": "9441622efda32b0834d1221628415d3ef933e0126830bfcb198d71ac29937d7c",
-      "compiledWinnerHash": "fnv1a-f430f190"
+      "compiledWinnerHash": "fnv1a-f430f190",
+      "retired": true
     },
     {
-      "file": "packages/propose/bindings/fnaf2/campaign-night5-contact-final-winner.json",
+      "file": "packages/propose/bindings/fnaf2/retired/campaign-night5-contact-final-winner.json",
       "sha256": "255a0d78dcbc62343c8706f1d716ae839c7d995344c54996ab1fd4d953ecdd5e",
-      "compiledWinnerHash": "fnv1a-f430f190"
+      "compiledWinnerHash": "fnv1a-f430f190",
+      "retired": true
     },
     {
       "file": "packages/propose/bindings/fnaf2/campaign-night5-hallfix-winner.json",
@@ -45,24 +47,28 @@
       "compiledWinnerHash": "fnv1a-1a0e32b7"
     },
     {
-      "file": "packages/propose/bindings/fnaf2/campaign-night5-toys-n5-winner.json",
+      "file": "packages/propose/bindings/fnaf2/retired/campaign-night5-toys-n5-winner.json",
       "sha256": "b1654fcd16551381f92c90b5a250dc8d9ed625223c412f65a933ac17306c3862",
-      "compiledWinnerHash": "fnv1a-9ca64157"
+      "compiledWinnerHash": "fnv1a-9ca64157",
+      "retired": true
     },
     {
-      "file": "packages/propose/bindings/fnaf2/campaign-night6-b-winner.json",
+      "file": "packages/propose/bindings/fnaf2/retired/campaign-night6-b-winner.json",
       "sha256": "d0ae423aeb2688b65ad3f57266ddd7d81c8d6fdfe0c8d41c730d19b26c1c263a",
-      "compiledWinnerHash": "fnv1a-3c7ba773"
+      "compiledWinnerHash": "fnv1a-3c7ba773",
+      "retired": true
     },
     {
-      "file": "packages/propose/bindings/fnaf2/campaign-night6-c-winner.json",
+      "file": "packages/propose/bindings/fnaf2/retired/campaign-night6-c-winner.json",
       "sha256": "6be6ea922ead7e402b972bcd77a947614d0ecb95a8872a54e0b40e378c011ea0",
-      "compiledWinnerHash": "fnv1a-cf41e97e"
+      "compiledWinnerHash": "fnv1a-cf41e97e",
+      "retired": true
     },
     {
-      "file": "packages/propose/bindings/fnaf2/campaign-night6-d-winner.json",
+      "file": "packages/propose/bindings/fnaf2/retired/campaign-night6-d-winner.json",
       "sha256": "3c80739f4c9bbdc871530822ad5ac156625de5f33ea5e74ad67b13223edff8ab",
-      "compiledWinnerHash": "fnv1a-e3a68491"
+      "compiledWinnerHash": "fnv1a-e3a68491",
+      "retired": true
     },
     {
       "file": "packages/propose/bindings/fnaf2/campaign-night6-e-winner.json",
@@ -75,19 +81,22 @@
       "compiledWinnerHash": "fnv1a-b6c36d77"
     },
     {
-      "file": "packages/propose/bindings/fnaf2/campaign-night6-g-winner.json",
+      "file": "packages/propose/bindings/fnaf2/retired/campaign-night6-g-winner.json",
       "sha256": "61ff3d0845ca3c26b12855b1113d9b4118b60e43b59e5b41d7ecff209a0e9a4c",
-      "compiledWinnerHash": "fnv1a-1b43db92"
+      "compiledWinnerHash": "fnv1a-1b43db92",
+      "retired": true
     },
     {
-      "file": "packages/propose/bindings/fnaf2/campaign-night6-h-registered-winner.json",
+      "file": "packages/propose/bindings/fnaf2/retired/campaign-night6-h-registered-winner.json",
       "sha256": "fb8f0dffa24385cfbd8ac1d8179a804015fe199dfc78ce602a7ab097eaef4ef8",
-      "compiledWinnerHash": "fnv1a-3d5b2167"
+      "compiledWinnerHash": "fnv1a-3d5b2167",
+      "retired": true
     },
     {
-      "file": "packages/propose/bindings/fnaf2/campaign-night6-h-winner.json",
+      "file": "packages/propose/bindings/fnaf2/retired/campaign-night6-h-winner.json",
       "sha256": "b466b7a81b71e08845e475258463ec13cfd583a5c6f2b090395ca64d3def645c",
-      "compiledWinnerHash": "fnv1a-3d5b2167"
+      "compiledWinnerHash": "fnv1a-3d5b2167",
+      "retired": true
     },
     {
       "file": "packages/propose/bindings/fnaf2/campaign-night6-h2-winner.json",
@@ -95,9 +104,10 @@
       "compiledWinnerHash": "fnv1a-c27182da"
     },
     {
-      "file": "packages/propose/bindings/fnaf2/campaign-night6-winner.json",
+      "file": "packages/propose/bindings/fnaf2/retired/campaign-night6-winner.json",
       "sha256": "dbfe73ad4db16f1678fca2a2cc15dd9b2f1659cf1e2f853fe60a8525a9263d4b",
-      "compiledWinnerHash": "fnv1a-59908edd"
+      "compiledWinnerHash": "fnv1a-59908edd",
+      "retired": true
     },
     {
       "file": "packages/propose/bindings/fnaf2/campaign-night7-420-minus3-winner.json",
@@ -105,14 +115,16 @@
       "compiledWinnerHash": "fnv1a-c839fc9f"
     },
     {
-      "file": "packages/propose/bindings/fnaf2/campaign-night7-i-winner.json",
+      "file": "packages/propose/bindings/fnaf2/retired/campaign-night7-i-winner.json",
       "sha256": "eb9c0c306f86d2ce15af30ae408dc1d1c95b3d9a249f05ca4ec2a08e622bd47d",
-      "compiledWinnerHash": "fnv1a-651ed623"
+      "compiledWinnerHash": "fnv1a-651ed623",
+      "retired": true
     },
     {
-      "file": "packages/propose/bindings/fnaf2/campaign-night7-j-winner.json",
+      "file": "packages/propose/bindings/fnaf2/retired/campaign-night7-j-winner.json",
       "sha256": "7cadf889042d6a41e93ddef54b370de11d2654a38d163112b730590acae63423",
-      "compiledWinnerHash": "fnv1a-f337717a"
+      "compiledWinnerHash": "fnv1a-f337717a",
+      "retired": true
     },
     {
       "file": "packages/propose/bindings/fnaf2/campaign-night7-k2-winner.json",
@@ -125,14 +137,16 @@
       "compiledWinnerHash": "fnv1a-5c8dcb5f"
     },
     {
-      "file": "packages/propose/bindings/fnaf2/campaign-toys-night5-winner.json",
+      "file": "packages/propose/bindings/fnaf2/retired/campaign-toys-night5-winner.json",
       "sha256": "e98b0dc23e2b1571127addcc626db19e5f4775f8ec0ab326137d14ef64c11de8",
-      "compiledWinnerHash": "fnv1a-959f7cb5"
+      "compiledWinnerHash": "fnv1a-959f7cb5",
+      "retired": true
     },
     {
-      "file": "packages/propose/bindings/fnaf2/campaign-toys-nights1-2-winner.json",
+      "file": "packages/propose/bindings/fnaf2/retired/campaign-toys-nights1-2-winner.json",
       "sha256": "7e67e7085fd563cd441a3e99d33be1dc11b4d9690e117e2559ab6b205fe6cb83",
-      "compiledWinnerHash": "fnv1a-e75e1b68"
+      "compiledWinnerHash": "fnv1a-e75e1b68",
+      "retired": true
     },
     {
       "file": "packages/propose/bindings/fnaf2/campaign-toys-nights3-4-winner.json",

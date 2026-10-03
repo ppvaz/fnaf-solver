@@ -25,9 +25,11 @@ import { basename, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build, FACTS, ANCHOR_AIMS, ANCHOR_AIM_MIN_MARGIN_MS, UNTRACKED_WINNER_DEBT, anchorAimFor } from './fact-register.ts';
 import { compileBundle } from '../bin/plans/bundle.ts';
+import { withModelOptions } from '../bin/recompile/rebuild-options-census.ts';
+import { simOptionsFrom } from '../../source/recompile/model-draw-trace.ts';
 import { stableHash } from '@sixam/kernel/contracts';
 import { BINDINGS_DIR } from '@sixam/kernel';
-import { winnerFiles } from '@sixam/review/evidence-pack';
+import { custodyWinnerFiles } from '@sixam/review/evidence-pack';
 
 const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '../../..'));
 
@@ -82,7 +84,10 @@ for (const [hash, entry] of Object.entries(ANCHOR_AIMS)) {
 // list; on 2026-09-25 ten of the eleven left were found on this machine and
 // committed, and the one that no longer rebuilds is all that remains. Anything
 // else without a tracked winner is refused, and so is any growth of that list.
-const trackedWinners = new Map(winnerFiles(ROOT)
+// A retired winner (<game>/retired/) is still committed and rebuildable, so it
+// counts: the 2026-10-02 move to the sourced model retired eight bindings that
+// carry aims, and their aims stay on record beside them.
+const trackedWinners = new Map(custodyWinnerFiles(ROOT)
   .map(file => [stableHash(JSON.parse(readFileSync(join(ROOT, file), 'utf8'))), basename(file)]));
 const DEBT_CEILING = 1;
 if (Object.keys(UNTRACKED_WINNER_DEBT).length > DEBT_CEILING)
@@ -170,10 +175,11 @@ for (const [hash, entry] of Object.entries(ANCHOR_AIMS)) {
     }
     // The winner's own gate can only restate what it was emitted with, so
     // compile it here: a plan drift that re-hashed the winner AND edited its
-    // gate would pass every string comparison above.
+    // gate would pass every string comparison above. The aims were priced on
+    // the legacy model (before 2026-10-02), and so is the replay hash they name.
     const out = mkdtempSync(join(tmpdir(), 'fnaf2-alsobinds-'));
     try {
-      const built = compileBundle(stored, out);
+      const built = withModelOptions(simOptionsFrom({}), () => compileBundle(stored, out, { model: 'fnaf2-legacy' }));
       if (built.replay.hash !== entry.replayHash)
         fail(`alsoBinds ${migrated} -> ${hash}: ${file} now emits plan ${built.replay.hash}, not the ` +
           `${entry.replayHash} the aim was measured on. The aim belongs to the schedule: re-measure it ` +

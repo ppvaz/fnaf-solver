@@ -13,6 +13,8 @@ import { MANIFEST as MINUS_TOYS } from '@sixam/propose/strategies/minus-toys';
 import { MANIFEST as MINUS_3 } from '@sixam/propose/strategies/minus-3';
 import { MANIFEST as MINUS_7 } from '@sixam/propose/parked/minus7';
 import { STRATEGY_REGISTRY, compileBundle, runMechanics } from '../bin/plans/bundle.ts';
+import { withModelOptions } from '../bin/recompile/rebuild-options-census.ts';
+import { simOptionsFrom } from '../../source/recompile/model-draw-trace.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, '../../..');
@@ -50,7 +52,10 @@ for (const [strategy, entry] of Object.entries(STRATEGY_REGISTRY))
     assert.ok(Object.hasOwn(FNAF2_MECHANICS, id), `${strategy} requires ${id}, which Source does not name`);
 
 const scratch = mkdtempSync(join(tmpdir(), 'mechanic-constraints-'));
-try {
+// The in-process fixtures were tuned to the legacy model (KNOBS0 loses Night 2 under fnaf2-sourced, and a
+// PASS gate must win its replay); what they check, the mechanic constraints, does not depend on the model.
+const LEGACY = { model: 'fnaf2-legacy' };
+try { withModelOptions(simOptionsFrom({}), () => {
   // -- a split-requiring strategy under a constraint that forbids the split
   //    is refused with the plain message, before anything is written.
   for (const [strategy, nights] of [['minus-toys', [2]], ['minus3', [3]]] as const) {
@@ -73,8 +78,8 @@ try {
   //    winner and artifact are byte-identical.
   const minus7 = JSON.parse(readFileSync(MINUS7_WINNER, 'utf8'));
   const bytes = (dir: string) => Object.fromEntries(readdirSync(dir).sort().map(file => [file, readFileSync(join(dir, file), 'utf8')]));
-  compileBundle(minus7, join(scratch, 'minus7-default'));
-  compileBundle(minus7, join(scratch, 'minus7-no-split'), FORBID_SPLIT);
+  compileBundle(minus7, join(scratch, 'minus7-default'), LEGACY);
+  compileBundle(minus7, join(scratch, 'minus7-no-split'), { ...FORBID_SPLIT, ...LEGACY });
   const { 'manifest.json': constrained, ...constrainedFiles } = bytes(join(scratch, 'minus7-no-split'));
   const { 'manifest.json': plain, ...plainFiles } = bytes(join(scratch, 'minus7-default'));
   assert.deepEqual(constrainedFiles, plainFiles);
@@ -97,6 +102,7 @@ try {
   assert.deepEqual(runMechanics(older), { requires: [CAMERA_SPLIT], forbidden: [] });
   assert.throws(() => runMechanics(older, [CAMERA_SPLIT]), error => refusal('minus-toys').test(String(error)));
 
+  });
   // -- `npm run device:emit` takes the constraint and refuses the same way.
   const emitted = spawnSync(process.execPath, [EMIT, '--winner', K3, '--out', join(scratch, 'k3'),
     '--forbid-mechanic', CAMERA_SPLIT], { encoding: 'utf8' });

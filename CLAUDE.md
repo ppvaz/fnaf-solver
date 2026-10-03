@@ -148,6 +148,25 @@ by content hash.
 `UNTRACKED_WINNER_DEBT` is 1 of 1: Night 6 `a`, whose winner was found but no
 longer rebuilds.
 
+**One model (Pedro, 2026-10-02: drop the legacy/sourced split).** A winner is
+its plan; its replay under the Sim is a verdict under one model
+(`FNAF2_MODEL`, `plant-options.ts`), kept in
+`packages/propose/bindings/fnaf2/gates.json`, one section per model.
+`compileBundle` checks a committed winner against its current-model gate and
+refuses a PASS gate whose replay loses; a winner's compiled identity carries
+the replay hash of the first model that measured it, so a model change never
+re-hashes it. A change that moves any replay takes a new `FNAF2_MODEL` and runs
+`packages/propose/bindings/gates.ts --measure` in the same diff. The default
+model is `fnaf2-sourced`
+(`packages/source/recompile/sourced-rebuild-model-options.json`,
+`sourcedGatedEvery` included): 13 of 24 census subjects moved under it
+(`docs/evidence/rebuild-options-census-20261002.json`), and on the phone the
+bindings it says lose went 9 wins to 21 deaths against 38 to 5 for those it
+says win. The 14 winners that lose replay seeds under it are retired (custody
+keeps them; their promotions and aims stand): 11 stay active, and Night 2 has
+none. `LEGACY_SIM_OPTIONS` restores `fnaf2-legacy` for the tests and record
+gates that pin it, until the legacy branches are deleted.
+
 ## Types (Pedro, 2026-10-01: "Real types everywhere")
 
 - No explicit `any`, anywhere. Strict mode refuses an implicit `any` but not a

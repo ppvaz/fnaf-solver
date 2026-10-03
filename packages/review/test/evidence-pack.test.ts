@@ -126,14 +126,16 @@ try {
   assert.equal(packPromotionChecks(readPack(dir), winners).plan12Attestation, false, 'an attestation binds one exact pack');
   rmSync(join(dir, ATTESTATION_FILE));
   assert.equal(packPromotionChecks(loaded, new Map()).winnerCommitted, false, 'an uncommitted winner cannot be re-run elsewhere');
-  // A bundle records the winner as compiled, which compileBundle normalises: the committed
-  // Night 6 winner's file hashes to fnv1a-de095950 and compiles to fnv1a-59908edd. A pack from
-  // that bundle must still find its winner.
-  const night6 = readFileSync(new URL('../../../packages/propose/bindings/fnaf2/campaign-night6-winner.json', import.meta.url), 'utf8');
-  put('packages/propose/bindings/fnaf2/campaign-night6-winner.json', night6);
+  // A bundle records the winner as compiled, which compileBundle normalises: the Night 6
+  // winner's file hashes to fnv1a-de095950 and compiles to fnv1a-59908edd. A pack from that
+  // bundle must still find its winner, though it is retired since 2026-10-02 and no longer
+  // compiles (it loses under the sourced model): the register keeps the hash it was first
+  // measured with (packages/propose/bindings/fnaf2/gates.json).
+  const night6 = readFileSync(new URL('../../../packages/propose/bindings/fnaf2/retired/campaign-night6-winner.json', import.meta.url), 'utf8');
+  put('packages/propose/bindings/fnaf2/retired/campaign-night6-winner.json', night6);
   // Its compiled hash comes from the committed register, which must hold it.
   const committed: { winners: RegisterRow[] } = JSON.parse(readFileSync(new URL(`../../../${WINNER_HASHES}`, import.meta.url), 'utf8'));
-  registerRows.push(committed.winners.find(row => row.file === 'packages/propose/bindings/fnaf2/campaign-night6-winner.json'));
+  registerRows.push(committed.winners.find(row => row.file === 'packages/propose/bindings/fnaf2/retired/campaign-night6-winner.json'));
   writeRegister();
   const withNight6 = trackedWinners(root);
   assert.equal(withNight6.get(stableHash(JSON.parse(night6))), 'campaign-night6-winner.json');
