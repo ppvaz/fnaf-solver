@@ -4169,6 +4169,7 @@
         "../bin/plans/bundle.ts",
         "../bin/plans/recipe.ts",
         "@sixam/review/refusals",
+        "@sixam/source/fnaf2",
         "node:fs",
         "node:path",
         "node:url"

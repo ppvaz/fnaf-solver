@@ -36,6 +36,7 @@ import { compileArtifactPlans, SEAM_FLOORS } from '../bin/plans/artifact-command
 import { parsePlan, validateWinner, STRATEGY_REGISTRY } from '../bin/plans/bundle.ts';
 import { FUSION_POLL_MS } from '../bin/plans/recipe.ts';
 import { checkDirectionalReuse, DIRECTIONAL_CONSTANTS } from '@sixam/review/refusals';
+import * as C from '@sixam/source/fnaf2';
 
 type Seam = ReturnType<typeof compileArtifactPlans>[number]['seams'][number];
 
@@ -43,14 +44,15 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 // The committed FNaF 2 winners (winner-v1): packages/propose/bindings/fnaf2.
 const WINNERS = join(HERE, '../bindings/fnaf2');
 
-// The allowance is TWO Fusion polls, not one, and that is the whole point.
+// The allowance is ONE Fusion poll (33 ms). The case for two, argued on
+// 2026-09-19 and kept here because it is still true:
 //
-// 33 ms is already MIN_CONTACT_MS, FUSION_POLL_MS and RAISE_MARGIN_MS. When the
-// allowance was also 33, "this plan clears its floor by the allowance" meant
-// "this plan clears its floor by exactly one poll" -- so a single dropped poll,
-// the smallest error the device can make, puts the contact ON the boundary, and
-// the check passed it because it only refused values BELOW 33. A margin equal
-// to the quantum of the error it protects against is not a margin.
+// 33 ms is already MIN_CONTACT_MS, FUSION_POLL_MS and RAISE_MARGIN_MS. With the
+// allowance also 33, "this plan clears its floor by the allowance" means "this
+// plan clears its floor by exactly one poll" -- so a single dropped poll, the
+// smallest error the device can make, puts the contact ON the boundary, and the
+// check passes it because it only refuses values BELOW 33. A margin equal to
+// the quantum of the error it protects against is not a margin.
 //
 // What that cost, measured 2026-09-19: every shipped minus-toys plan put its
 // once-per-cycle mask press at monitor-down + 449 ms against a 416 ms floor --
@@ -64,7 +66,6 @@ const WINNERS = join(HERE, '../bindings/fnaf2');
 // This is mistake-register item 7 one level up: item 7 was a FLOOR calibrated to
 // the route it protected; this is the ALLOWANCE calibrated to the error it
 // protects against. Both look derived and neither can refuse anything.
-// ONE Fusion poll, not two.
 //
 // Two was tried on 2026-09-19 and reverted, and the reason is worth keeping:
 // raising it forced every shipped plan's knobs to move, `validateWinner`
@@ -126,6 +127,37 @@ const ANIMATION_FLOORS = Object.freeze({
 for (const floor of Object.keys(SEAM_FLOORS))
   if (!Object.hasOwn(DIRECTIONAL_CONSTANTS, floor) && !Object.hasOwn(ANIMATION_FLOORS, floor))
     fail(`SEAM_FLOORS.${floor} has no registered order (DIRECTIONAL_CONSTANTS) and is not an engine animation`);
+
+// --- what each floor stands on ---------------------------------------------
+// Section 1 holds the mask floor to its native trace. Every other floor is
+// accounted for here, so none is a number nobody checks: an animation floor
+// must be its Source animation length, and the two raise-readiness floors are
+// DEVICE BRACKETS -- no readiness measurement exists, so each is bounded by
+// what the phone was seen to do -- named and printed as such, never reported
+// as a measurement. A new floor in none of these classes fails.
+const ANIMATION_SOURCE: Readonly<Record<keyof typeof ANIMATION_FLOORS, number>> = Object.freeze({
+  maskAnimOffMs: C.MASK_ANIM_OFF, maskAnimOnMs: C.MASK_ANIM_ON,
+  monitorAnimUpMs: C.MONITOR_ANIM_UP, monitorAnimDownMs: C.MONITOR_ANIM_DOWN,
+});
+const DEVICE_BRACKETS = Object.freeze({
+  monitorReadyCameraMs: 'the raise animation plus RAISE_MARGIN_MS; a camera select at raise+300 ms is the arm ' +
+    'that landed every story-night win, and no shorter gap has been tried on the phone',
+  monitorReadyWindMs: 'the lowest raise-to-wind gap seen to work (+434 ms, the minus-toys opening); +100 and ' +
+    '+200 ms missed on the phone, so the true readiness lies in (200, 434]',
+});
+const MEASURED = Object.freeze({ monitorMaskReadyMs: 'maskButtonFullyVisibleAfterMonitorDownMs' });
+for (const [floor, frames] of Object.entries(ANIMATION_SOURCE)) {
+  const sourced = Math.round(frames * 1000 / C.FPS);
+  if (SEAM_FLOORS[floor as keyof typeof ANIMATION_SOURCE] !== sourced)
+    fail(`SEAM_FLOORS.${floor} is ${SEAM_FLOORS[floor as keyof typeof ANIMATION_SOURCE]} ms, not its Source ` +
+      `animation (${frames} frames at ${C.FPS} fps = ${sourced} ms)`);
+}
+for (const floor of Object.keys(SEAM_FLOORS))
+  if (floor !== 'maskButtonFullyVisibleAfterMonitorDownMs' && !Object.hasOwn(ANIMATION_SOURCE, floor) &&
+      !Object.hasOwn(DEVICE_BRACKETS, floor) && !Object.hasOwn(MEASURED, floor))
+    fail(`SEAM_FLOORS.${floor} stands on nothing this gate knows: name its measurement, or list it as a device bracket`);
+for (const [floor, why] of Object.entries(DEVICE_BRACKETS))
+  process.stdout.write(`${floor} ${SEAM_FLOORS[floor as keyof typeof DEVICE_BRACKETS]} ms: UNMEASURED device bracket -- ${why}\n`);
 const orderRefusal = (seam: Pick<Seam, 'relation' | 'atMs' | 'floor' | 'first' | 'then'>) => {
   if (!seam.floor || !seam.first || !seam.then)
     return `${seam.relation} at +${seam.atMs} names no floor or no order (${seam.floor}: ${seam.first} -> ${seam.then})`;
@@ -212,6 +244,7 @@ if (failed) {
     'findings: each one is a press the phone can lose to a frame of jitter.\n');
   process.exit(1);
 }
-process.stdout.write('seam slack: every floor stands above its measurement, every shipped ' +
-  `plan clears every timing floor by at least ${SEAM_JITTER_ALLOWANCE_MS} ms, and uses each ` +
-  'measured floor in the order it was measured\n');
+process.stdout.write('seam slack: the mask floor is its native-trace measurement, the four animation ' +
+  'floors are their Source animations, the camera and wind raise floors are named unmeasured device ' +
+  `brackets; every shipped and registry plan clears every floor by at least ${SEAM_JITTER_ALLOWANCE_MS} ms ` +
+  'and uses each measured floor in the order it was measured\n');
