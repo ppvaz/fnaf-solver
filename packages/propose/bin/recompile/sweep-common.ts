@@ -9,6 +9,10 @@ import { Worker } from 'node:worker_threads';
 
 export const sha256 = (bytes: BinaryLike) => createHash('sha256').update(bytes).digest('hex');
 
+/** A power check passed: it planted at least one state and recovered every one. Planting nothing shows no power. */
+export const powerCheckPassed = <T>(planted: readonly T[], recovered: (item: T) => boolean) =>
+  planted.length > 0 && planted.every(recovered);
+
 /** A sweep's command line: its predeclaration, how many workers, and where its record goes. */
 export interface SweepArgs { readonly predeclaration: string, readonly workers: number, readonly out?: string }
 /** What every sweep's predeclaration names: its id, the night and its measured seed, and its inputs' sha256. */

@@ -41,7 +41,7 @@ import { cumTick, FRAME_MS, loadConfig, mapSchedule, phoneSchedule } from './pho
 import { cycleIndex, detrend, lumaByImage, pearson, staticRow, wireStatic } from './phone-static-readout.ts';
 import type { StaticState, Win } from './phone-static-readout.ts';
 import { modelContacts } from './schedule-to-input.ts';
-import { fanOut, sha256 } from './sweep-common.ts';
+import { fanOut, powerCheckPassed, sha256 } from './sweep-common.ts';
 
 /** The night a region-readout predeclaration names, with its measured onset, release and readout rows merged in. */
 export interface RegionNight {
@@ -397,7 +397,7 @@ async function main(argv: string[]) {
     const got = await analyze(merged, pre, base, fake, workers, (line) => console.log(`  [planted ${state}] ${line}`));
     planted.push({ state, verdict: got.verdict, identified: got.identified, consistent: got.consistent });
   }
-  const powered = planted.every((p) => p.verdict === 'SUPPORTED');
+  const powered = powerCheckPassed(planted, (p) => p.verdict === 'SUPPORTED');
   const verdict = powered ? out.verdict : 'UNINFORMATIVE';
   console.log(`power check at noise sd ${strength.noiseSd?.toFixed(3)}, gain ${strength.gain?.toFixed(2)}: ${planted.map((p) => `${p.state} ${p.verdict}`).join(', ')} -> ${verdict}`);
   const result = { schema: SCHEMA, claimLevel: 'MODEL_ONLY', predeclaration: { path: args.predeclaration, sha256: sha256(preBytes), id: declared.id },

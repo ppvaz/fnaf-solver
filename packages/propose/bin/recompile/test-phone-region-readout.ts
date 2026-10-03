@@ -12,6 +12,7 @@ import { fileURLToPath } from 'node:url';
 import { deriveInputs, identifyReading, measuredNight, periodValue, readoutStrength, regionImages, updateOf } from './phone-region-readout.ts';
 import { anchorIndex, back, seedCandidates } from './phone-seed-readout.ts';
 import { identifySeed } from './phone-seed-scan.ts';
+import { powerCheckPassed } from './sweep-common.ts';
 import { check as checkEncounters } from './phone-encounter-replay.ts';
 
 const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '../../../..');
@@ -108,6 +109,11 @@ assert.equal(identifySeed(seedRule, [{ seed: 23712, r: 0.973 }, { seed: 13488, r
 assert.equal(identifySeed(seedRule, [{ seed: 1, r: 0.95 }, { seed: 2, r: 0.8 }]).verdict, 'UNIDENTIFIED', 'a lead under 0.2');
 assert.equal(identifySeed(seedRule, [{ seed: 1, r: 0.84 }]).verdict, 'UNIDENTIFIED', 'r under 0.85');
 assert.equal(identifySeed(seedRule, []).verdict, 'UNIDENTIFIED', 'no seed scored');
+
+// --- the power check: power is shown by recovering what was planted, so planting nothing shows none
+assert.equal(powerCheckPassed([], () => true), false, 'an empty power check is not power');
+assert.equal(powerCheckPassed([1, 2], (n) => n > 0), true);
+assert.equal(powerCheckPassed([1, -2], (n) => n > 0), false, 'one planted state not recovered fails the check');
 
 // --- the whole-seed scan agrees with the injection analysis (docs/evidence/s2-seed-scan-night7-0of20-20261001.json)
 {

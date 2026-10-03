@@ -3071,6 +3071,7 @@
         "./phone-region-readout.ts",
         "./phone-seed-readout.ts",
         "./phone-seed-scan.ts",
+        "./sweep-common.ts",
         "node:assert/strict",
         "node:crypto",
         "node:fs",

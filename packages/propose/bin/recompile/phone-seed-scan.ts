@@ -33,7 +33,7 @@ import { detrend, lumaByImage, pearson, staticRow, wireStatic } from './phone-st
 import type { StaticState, Win } from './phone-static-readout.ts';
 import { deriveInputs, periodValue, readoutStrength } from './phone-region-readout.ts';
 import { modelContacts } from './schedule-to-input.ts';
-import { fanOut, sha256 } from './sweep-common.ts';
+import { fanOut, powerCheckPassed, sha256 } from './sweep-common.ts';
 import type { Sim } from '@sixam/source/fnaf2';
 
 /** A seed-scan spec (predeclared or exploratory): the night and binding, its windows, region and rules. */
@@ -215,7 +215,7 @@ async function main(argv: string[]) {
       planted.push({ seed, verdict: got.verdict, top: got.top, second: got.second, recovered: got.verdict === 'IDENTIFIED' && (got.top as Ranked).seed === seed });
       console.log(`  planted ${seed}: ${got.verdict} top ${got.top?.seed}:${got.top?.r.toFixed(3)} next ${got.second?.r.toFixed(3)}`);
     }
-    const powered = planted.every((p) => p.recovered);
+    const powered = powerCheckPassed(planted, (p) => p.recovered);
     const verdict = !powered ? 'UNINFORMATIVE' : reading.verdict === 'IDENTIFIED' ? 'SUPPORTED' : 'NOT_SUPPORTED';
     // Descriptive, not tested: the top seed's r in every window the predeclaration reports (`reportWindows`, else the
     // scanned ones), replayed once through the night: where the model's stream stops reproducing the phone's static.

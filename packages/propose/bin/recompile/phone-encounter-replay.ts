@@ -883,6 +883,12 @@ export function verdictOf(night: NightRecord, derived: Record<string, unknown>) 
   return 'DIVERGENT';
 }
 
+/** The comparison's status over its nights: equivalence is shown night by night, so no night shows none. */
+export function overallStatus(verdicts: readonly (string | undefined)[]) {
+  if (verdicts.length && verdicts.every((v) => v === 'EQUIVALENT_ON_READ_WINDOWS')) return 'EQUIVALENT_ON_READ_WINDOWS';
+  return verdicts.some((v) => v === 'DIVERGENT') ? 'DIVERGENT' : 'UNKNOWN';
+}
+
 const idOf = (result: EncounterResult) => `recompile-phone-encounters-${sha256(JSON.stringify({ ...result, evidenceId: undefined })).slice(0, 16)}`;
 
 /** Recompute every derived field and the id; throws on the first difference. */
@@ -901,8 +907,7 @@ export function check(result: EncounterResult) {
     if (verdictOf(night, derived) !== night.verdict) throw new Error(`${night.name}: verdict ${night.verdict} is not ${verdictOf(night, derived)}`);
   }
   const verdicts = result.nights.map((n) => n.verdict);
-  const overall = verdicts.every((v) => v === 'EQUIVALENT_ON_READ_WINDOWS') ? 'EQUIVALENT_ON_READ_WINDOWS'
-    : verdicts.some((v) => v === 'DIVERGENT') ? 'DIVERGENT' : 'UNKNOWN';
+  const overall = overallStatus(verdicts);
   if (overall !== result.status) throw new Error(`status ${result.status} is not ${overall}`);
   if (result.method.responseExperiment && JSON.stringify(responseExperiment(result)) !== JSON.stringify(result.responseExperiment))
     throw new Error('response experiment conclusion differs from its rows or retained control');
@@ -936,8 +941,7 @@ function compareAll(cfg: EncounterConfig, cfgPath: string, runsDir: string, inpu
     schema: SCHEMA, claimLevel: 'MODEL_ONLY', fidelity: 'rebuilt-runtime',
     comparedWith: 'DEVICE_MEASURED phone reads and terminals, reused from the records each night names; no new phone run',
     question: 'On phone nights whose seed is established, replayed into the rebuilt runtime at that seed on the phone\'s own frame clock: does each mask window hold the same occupant as on the phone, and does the night end the same way?',
-    status: verdicts.every((v) => v === 'EQUIVALENT_ON_READ_WINDOWS') ? 'EQUIVALENT_ON_READ_WINDOWS'
-      : verdicts.some((v) => v === 'DIVERGENT') ? 'DIVERGENT' : 'UNKNOWN',
+    status: overallStatus(verdicts),
     method: {
       config: relative(ROOT, cfgPath), configSha256: sha256(readFileSync(cfgPath)),
       variants: cfg.variants, windowMs: WINDOW_MS, watch: WATCH, officeFrame: OFFICE_FRAME,

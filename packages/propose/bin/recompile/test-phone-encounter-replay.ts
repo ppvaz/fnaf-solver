@@ -14,7 +14,7 @@ import {
   FRAME_MS, OFFICE_FRAME, check, compareOutcome, compareSides, cumTick, cumulative, derive, landingLatency, maskPresses,
   officeClock, overlapSeries, rebuiltOccupant, scoreWindows, traceTick, verdictOf, windowCodes, checkPressFile, phoneSchedule,
   nativeResponses, responseCoverage, mapResponses, mapSchedule,
-  responseEvidence, deriveResponseExperiment, loadConfig, prepare,
+  responseEvidence, deriveResponseExperiment, loadConfig, prepare, overallStatus,
 } from './phone-encounter-replay.ts';
 import type { MappedResponse, ScheduleMs, SideState } from './phone-encounter-replay.ts';
 import { drawTrace, measuredClock } from '../../../source/recompile/model-draw-trace.ts';
@@ -53,6 +53,12 @@ type Named = { readonly name: string };
     assert.ok(readFileSync(join(dir, 'run/run.input'), 'utf8').startsWith(read(night.navigation)));
   } finally { rmSync(dir, { recursive: true, force: true }); }
 }
+
+// --- the overall status: equivalence is shown night by night, so no night shows none
+assert.equal(overallStatus([]), 'UNKNOWN', 'a comparison over no nights is not equivalence');
+assert.equal(overallStatus(['EQUIVALENT_ON_READ_WINDOWS', 'EQUIVALENT_ON_READ_WINDOWS']), 'EQUIVALENT_ON_READ_WINDOWS');
+assert.equal(overallStatus(['EQUIVALENT_ON_READ_WINDOWS', 'UNKNOWN', 'DIVERGENT']), 'DIVERGENT');
+assert.equal(overallStatus(['EQUIVALENT_ON_READ_WINDOWS', 'UNKNOWN']), 'UNKNOWN');
 
 // --- the clock: update 0 is one 60 Hz frame; a captured interval becomes 1-3 updates (catch-up)
 {
