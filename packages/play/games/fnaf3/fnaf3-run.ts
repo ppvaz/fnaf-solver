@@ -24,7 +24,9 @@ import { performance } from 'node:perf_hooks';
 import { AdbCompanionPort, AdbHidProcess } from '../../src/campaign/physical-ports.ts';
 import { HidWireTransport } from '../../src/venues/phone/hid.ts';
 import { loadRegionSet, regionOpener } from '../../bin/phone/native-regions.ts';
-import { Actor, type Point, type RegionRead, RegionRecorder, RunRecord, onStopSignal, startVideo } from '../../bin/phone/night-kit.ts';
+import {
+  Actor, type Point, type RegionRead, RegionRecorder, RunRecord, onStopSignal, relaunchToTitle, releaseContacts, startVideo,
+} from '../../bin/phone/night-kit.ts';
 import { Reader, type StoredPair, boxLuma, loadPairs, medianLuma, occupancy, stateScore } from './fnaf3-detectors.ts';
 import { resolveSerial } from '../../bin/phone/local-profile.ts';
 
@@ -80,6 +82,9 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const stamp = () => new Date().toISOString().replace(/[-:.]/g, '');
 const sha256 = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex');
 function fail(message: string): never { throw new Error(`fnaf3-run: ${message}`); }
+// The title gate: the logo's bright share (Reader.title) on the title screen;
+// the office reads 0.00 and a death's static dims the logo to 0.06-0.15.
+const TITLE_GATE = 0.2;
 // Set by onStopSignal: the night's loop ends at its next step.
 const STOP = { requested: false };
 
@@ -174,7 +179,7 @@ export async function raiseMonitor({ act, c, eyes, reader }: Hands, tries = 3) {
     const f = await eyes.until((fr) => reader.selected(fr) !== null, at, 1500);
     if (f) return { frame: f, tries: i + 1, ms: f.imageHostMs - at };
     const now = eyes.now();
-    if (now && reader.title(now) >= 0.2) return null;
+    if (now && reader.title(now) >= TITLE_GATE) return null;
     await sleep(600);
   }
   return null;
@@ -327,7 +332,7 @@ async function calibrate({ act, c, record, eyes, reader, snapTo, stopAfterMs, ep
   const mark = (phase: string, f: object = {}) => record.event('phase', { phase, atNightMs: Math.round(nightMs()), ...f });
   const over = () => {
     const f = eyes.now();
-    return f && reader.title(f) >= 0.2;
+    return f && reader.title(f) >= TITLE_GATE;
   };
   const monitorUp = async () => {
     const r = await raiseMonitor({ act, c, eyes, reader });
@@ -831,23 +836,25 @@ async function main(argv: string[]) {
     await record.capture(name, await readFile(target));
     await record.event('snap-ms', { name, ms: Math.round(performance.now() - at) });
   };
-  let hidProcess = null as AdbHidProcess | null; let recorder = null as RegionRecorder | null;
+  let hidProcess = null as AdbHidProcess | null; let hid = null as HidWireTransport | null;
+  let recorder = null as RegionRecorder | null;
   let entered = false; let error = null as Error | null;
   let video = null as ReturnType<typeof startVideo> | null;
   try {
     await snapTo('title-before');
     const adbHid = new AdbHidProcess({ serial });
     hidProcess = adbHid;
-    const hid = new HidWireTransport({ write: (l) => adbHid.write(l), ready: () => adbHid.ready(), contactMs: CONTACT_MS });
-    await hid.start();
-    const act = new Actor(hid, record, CONTACT_MS);
+    const wire = new HidWireTransport({ write: (l) => adbHid.write(l), ready: () => adbHid.ready(), contactMs: CONTACT_MS });
+    hid = wire;
+    await wire.start();
+    const act = new Actor(wire, record, CONTACT_MS);
     recorder = new RegionRecorder(regionOpener(serial, regionModel.set, { port }), join(captureDir, 'regions.ndjson.gz'),
       { onReopen: (row) => { record.event('regions-reopened', { ...row }).catch(() => {}); } });
     await recorder.start();
     const eyes = new Eyes(recorder, reader);
     await sleep(500);
     const t = eyes.now();
-    if (!t || reader.title(t) < 0.2) fail(`not on the title (title gate ${t ? reader.title(t).toFixed(2) : 'no frame'})`);
+    if (!t || reader.title(t) < TITLE_GATE) fail(`not on the title (title gate ${t ? reader.title(t).toFixed(2) : 'no frame'})`);
 
     if (options.video) video = startVideo(serial, id);
     entered = true;
@@ -897,7 +904,7 @@ async function main(argv: string[]) {
   } catch (e) {
     error = e as Error;
   } finally {
-    try { await hidProcess?.close(); } catch { /* the lease bounds cleanup */ }
+    await releaseContacts(hid, hidProcess);
     if (recorder) {
       await recorder.stop();
       record.document.regions = { frames: recorder.frames, reopened: recorder.reopened, failure: recorder.failure,
@@ -912,14 +919,20 @@ async function main(argv: string[]) {
     }
     if (entered) {
       // FNaF 3 banks a won night before its minigame (fnaf3-first-night-20260920),
-      // so whatever follows the night can be abandoned. Leave the title up.
+      // so whatever follows the night can be abandoned. Leave the title up, as
+      // the title gate reads it on a fresh region channel.
+      const openTitle = regionOpener(serial, regionModel.set, { port });
+      let titleChannel = null as Awaited<ReturnType<typeof openTitle>> | null;
       try {
-        execFileSync('adb', ['-s', serial, 'shell', 'am', 'force-stop', PACKAGE], { timeout: 10000 });
-        execFileSync('adb', ['-s', serial, 'shell', 'am', 'start', '-W', '-n', ACTIVITY], { timeout: 30000 });
-        await sleep(10000);
-        await snapTo('title-after');
-        record.document.recovery = 'RELAUNCHED_TO_TITLE (snap retained, read by a person)';
+        record.document.recovery = await relaunchToTitle({ pkg: PACKAGE, activity: ACTIVITY, snapTo,
+          adb: (args, timeout) => { execFileSync('adb', ['-s', serial, ...args], { timeout }); },
+          onTitle: async () => {
+            titleChannel ??= await openTitle(false);
+            const f = await titleChannel.read();
+            return f.seq >= 0 && reader.title(f) >= TITLE_GATE;
+          } });
       } catch (e) { record.document.recovery = `FAILED: ${(e as Error).message}`; error ??= e as Error; }
+      finally { titleChannel?.close(); }
     }
   }
   if (error) {

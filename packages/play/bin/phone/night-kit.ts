@@ -297,6 +297,39 @@ export class RegionRecorder {
   }
 }
 
+/** Release any held contact, then end the HID process: a contact held when a night errors must not outlive it. */
+export async function releaseContacts(hid: { abort(): Promise<unknown> } | null, hidProcess: { close(): Promise<unknown> } | null) {
+  try { await hid?.abort(); } catch { /* the process close below ends the stream either way */ }
+  try { await hidProcess?.close(); } catch { /* the lease bounds cleanup */ }
+}
+
+/**
+ * After a night, leave the game on its title: force-stop and start it, then wait for `onTitle` (the game's own title
+ * rule over a fresh read) within `boundMs`, and retain the title as a snap. A game without a title rule waits
+ * `settleMs` and says its relaunch is unverified; the retained snap is then for a person.
+ */
+export async function relaunchToTitle({ pkg, activity, snapTo, adb, onTitle = null, boundMs = 30000, pollMs = 500, settleMs = 10000 }:
+  { pkg: string, activity: string, snapTo: (name: string) => Promise<void>, adb: (args: string[], timeoutMs: number) => void,
+    onTitle?: (() => Promise<boolean>) | null, boundMs?: number, pollMs?: number, settleMs?: number }) {
+  adb(['shell', 'am', 'force-stop', pkg], 10000);
+  adb(['shell', 'am', 'start', '-W', '-n', activity], 30000);
+  if (!onTitle) {
+    await sleep(settleMs);
+    await snapTo('title-after');
+    return `RELAUNCHED_UNVERIFIED (no title rule for this game; the snap is retained for a person after ${settleMs} ms)`;
+  }
+  const until = performance.now() + boundMs;
+  while (performance.now() < until) {
+    if (await onTitle()) {
+      await snapTo('title-after');
+      return 'RELAUNCHED_TO_TITLE (the title rule read the title)';
+    }
+    await sleep(pollMs);
+  }
+  await snapTo('title-after');
+  throw new Error(`the title did not show within ${boundMs} ms of the relaunch`);
+}
+
 /**
  * A demonstration video of the night: screenrecord segments chained on the
  * host (the phone's own limit is 180 s), pulled and joined with ffmpeg after

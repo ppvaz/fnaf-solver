@@ -12,7 +12,7 @@ import { parseArgs, searchOrder, NEXT, VENT_OF, SystemsClock, chooseReboot, teac
 import { FEED, PICTURE_MASK, Reader, boxSamples, medianLuma, occupancy, decodePng, sampleBlocks, boxLuma, stateScore, IMAGE_GEOMETRY, CAMERA_FRAMES } from './fnaf3-detectors.ts';
 import { pngFromRegion } from '../../bin/phone/native-regions.ts';
 import type { AdbCompanionPort } from '../../src/campaign/physical-ports.ts';
-import { RegionRecorder, type RegionRead, type RunRecord } from '../../bin/phone/night-kit.ts';
+import { RegionRecorder, type RegionRead, type RunRecord, relaunchToTitle, releaseContacts } from '../../bin/phone/night-kit.ts';
 
 const failures: string[] = [];
 let checks = 0;
@@ -306,6 +306,31 @@ async function recorderRun({ endAt = 10000, stillUntil = 0, restartAt = Infinity
   const dead = await recorderRun({ restartAt: 2000, freshFails: true });
   ok(`a restart with no reachable endpoint is a named failure (${dead.recorder.failure})`,
     /could not be reopened/.test(dead.recorder.failure ?? ''));
+}
+
+// --- teardown: release before close, and a relaunch read by the title rule ------------------
+{
+  const calls: string[] = [];
+  await releaseContacts({ abort: async () => { calls.push('abort'); throw new Error('stream gone'); } },
+    { close: async () => { calls.push('close'); } });
+  ok(`a held contact is released before the HID process closes, even when the release fails (${calls.join(',')})`,
+    calls.join(',') === 'abort,close');
+  const adb: string[] = [];
+  const snaps: string[] = [];
+  let reads = 0;
+  const verified = await relaunchToTitle({ pkg: 'p', activity: 'p/.A', snapTo: async (name) => { snaps.push(name); },
+    adb: (args) => { adb.push(args.join(' ')); }, onTitle: async () => ++reads >= 3, pollMs: 1 });
+  ok('the relaunch force-stops and starts the game', adb.join('|') === 'shell am force-stop p|shell am start -W -n p/.A');
+  ok(`a relaunch is verified by the title rule, not a fixed wait (${verified})`, /^RELAUNCHED_TO_TITLE/.test(verified) && reads === 3);
+  ok('the title is retained as a snap', snaps.join() === 'title-after');
+  let refused = '';
+  try {
+    await relaunchToTitle({ pkg: 'p', activity: 'p/.A', snapTo: async () => {}, adb: () => {}, onTitle: async () => false,
+      boundMs: 20, pollMs: 1 });
+  } catch (e) { refused = (e as Error).message; }
+  ok(`a title that never shows is an error (${refused})`, /did not show/.test(refused));
+  const blind = await relaunchToTitle({ pkg: 'p', activity: 'p/.A', snapTo: async () => {}, adb: () => {}, settleMs: 1 });
+  ok(`without a title rule the relaunch says it is unverified (${blind})`, /^RELAUNCHED_UNVERIFIED/.test(blind));
 }
 
 if (failures.length) {

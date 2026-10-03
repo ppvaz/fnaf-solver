@@ -27,7 +27,8 @@ import { AdbCompanionPort, AdbHidProcess } from '../../src/campaign/physical-por
 import { HidWireTransport } from '../../src/venues/phone/hid.ts';
 import { loadRegionSet, regionOpener } from '../../bin/phone/native-regions.ts';
 import {
-  Actor, type Point, type RegionRead, RegionRecorder, RunRecord, interruptibleSleep, onStopSignal, startVideo,
+  Actor, type Point, type RegionRead, RegionRecorder, RunRecord, interruptibleSleep, onStopSignal, relaunchToTitle, releaseContacts,
+  startVideo,
 } from '../../bin/phone/night-kit.ts';
 import { audioPreflight } from '../../bin/companion/audio-players.ts';
 import { resolveSerial } from '../../bin/phone/local-profile.ts';
@@ -1057,7 +1058,8 @@ async function main(argv: string[]) {
     await port.snap(`f4s${n}`, target);
     await record.capture(name, await readFile(target));
   };
-  let hidProcess = null as AdbHidProcess | null; let recorder = null as RegionRecorder | null;
+  let hidProcess = null as AdbHidProcess | null; let hid = null as HidWireTransport | null;
+  let recorder = null as RegionRecorder | null;
   let cues = null as ReturnType<typeof startCues> | null;
   let entered = false; let error = null as (Error & { refused?: boolean }) | null; let video = null as ReturnType<typeof startVideo> | null;
   try {
@@ -1078,9 +1080,10 @@ async function main(argv: string[]) {
     hidProcess = adbHid;
     // One sleep port the Actor can cut short: a door hold is ONE contact (holdWhile).
     const naps = interruptibleSleep();
-    const hid = new HidWireTransport({ write: l => adbHid.write(l), ready: () => adbHid.ready(), contactMs: CONTACT_MS, sleep: naps.sleep });
-    await hid.start();
-    const act = new Actor(hid, record, CONTACT_MS, { interrupt: naps.interrupt });
+    const wire = new HidWireTransport({ write: l => adbHid.write(l), ready: () => adbHid.ready(), contactMs: CONTACT_MS, sleep: naps.sleep });
+    hid = wire;
+    await wire.start();
+    const act = new Actor(wire, record, CONTACT_MS, { interrupt: naps.interrupt });
 
     const live = startCues(captureDir, options.night);
     cues = live;
@@ -1143,7 +1146,7 @@ async function main(argv: string[]) {
   } catch (e) {
     error = e as Error;
   } finally {
-    try { await hidProcess?.close(); } catch { /* the lease bounds cleanup */ }
+    await releaseContacts(hid, hidProcess);
     if (recorder) {
       await recorder.stop();
       record.document.regions = { frames: recorder.frames, reopened: recorder.reopened, failure: recorder.failure,
@@ -1163,13 +1166,11 @@ async function main(argv: string[]) {
     }
     if (entered) {
       // Abandon whatever follows the night (the minigame, a game over); the
-      // save already holds the result. Leave the title up.
+      // save already holds the result. Leave the title up. FNaF 4 has no
+      // title rule yet, so the relaunch says it is unverified.
       try {
-        execFileSync('adb', ['-s', serial, 'shell', 'am', 'force-stop', PACKAGE], { timeout: 10000 });
-        execFileSync('adb', ['-s', serial, 'shell', 'am', 'start', '-W', '-n', ACTIVITY], { timeout: 30000 });
-        await sleep(10000);
-        await snapTo('title-after');
-        record.document.recovery = 'RELAUNCHED_TO_TITLE (snap retained, read by a person)';
+        record.document.recovery = await relaunchToTitle({ pkg: PACKAGE, activity: ACTIVITY, snapTo,
+          adb: (args, timeout) => { execFileSync('adb', ['-s', serial, ...args], { timeout }); } });
       } catch (e) { record.document.recovery = `FAILED: ${(e as Error).message}`; error ??= e as Error; }
     }
   }

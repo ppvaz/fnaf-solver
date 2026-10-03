@@ -35,7 +35,7 @@ import { AdbDeviceBridge } from '../../src/campaign/adb-bridge.ts';
 import { AdbHidProcess } from '../../src/campaign/physical-ports.ts';
 import { HidWireTransport } from '../../src/venues/phone/hid.ts';
 import { resolveSerial } from '../../bin/phone/local-profile.ts';
-import { onStopSignal } from '../../bin/phone/night-kit.ts';
+import { onStopSignal, releaseContacts } from '../../bin/phone/night-kit.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '../../../..');
@@ -811,8 +811,7 @@ async function main(argv: string[]) {
     record.document.terminal = continueSent ? 'RUN_ERROR_AFTER_CONTINUE' : 'PRE_RUN_REFUSAL';
     await record.event('error', { message: record.document.error });
   } finally {
-    try { await hid?.abort(); } catch { /* release is best effort, teardown remains title-gated */ }
-    try { await hidProcess?.close(); } catch { /* the lease still bounds process cleanup */ }
+    await releaseContacts(hid, hidProcess);
     if (teachVisible) {
       try {
         await teachOverlay(serial, record, '--clear');
