@@ -3146,3 +3146,39 @@ Open: a night's screens (office and cameras) and FNaF 1/3/4's region-only load,
 not measured; REGION reads under a recording; the FNaF 1 teaching strip shown
 during a real night. Evidence IDs: `companion-capture-cpu-d9ecf3eadaba659a`,
 `census-workers-d620f3134c94d00a`, `sim-tick-cuts-3dbd77e91e511078`.
+
+## 2026-10-03 — Recovered audit integration and typed evidence readers (S2/S7)
+
+Resumed the stopped model-fixture repair, the audit's remaining gate and
+Companion commits, and the staged typed migration. The input trace and frame
+alignment readers now belong to Review and share their Perfetto boundary.
+Their retained cross-language record is
+[`typed-readers-1be092f5b7c278448fc9`](../docs/evidence/typed-resume-20261003/record.json):
+165 synthetic cases retain stdout and exit codes, with the source-derived
+inputtrace ID normalized. Six diagnostic differences are the renamed CLI
+extension or the runtime's missing-executable wording. The record pins both
+implementations and retains its fixture generators and recheck command.
+This is **FIXTURE** equivalence, not a same-phase phone twin or game acceptance.
+
+The audit's Companion protocol vectors and service split are integrated,
+alongside gates for package dependencies, registered tests, cast debt and
+function length. The named-model regression fixtures propagate their context
+to child checks. The CI Python check now verifies the pinned roots and their
+active dependency closure instead of rejecting mypy's required dependencies.
+
+The overnight fixture had a Linux-only signal-mask reader: on macOS its
+cleanup predicate never observed the blocked mask, waited past child exit,
+and then failed to signal the process group. A blocked/unblocked regression
+fails before the POSIX mask-reader fix. The existing fixture's record generator
+retains **FIXTURE PASS** as
+[`overnight-window-fixture-6acf4b74807cb49b`](../docs/evidence/overnight-window-portable-20261003.json),
+including double interrupt during cleanup, the signal barrage, settings
+restoration, recovery and lease release. Full CI-lane verdicts remain in the
+push gate's generated `push-gate-run-v1` records; these fixture records do not
+claim a complete CI verdict.
+
+Open: encounter-level device fidelity and real-phone cleanup remain unmeasured
+by this work; other Python tools still await migration. The Companion local
+night runner stays disabled pending the user's removal/redesign decision;
+its readiness proof, visual adapters and cancellation of prequeued commands
+are unresolved. No phone commands, installations or live queue jobs were run.

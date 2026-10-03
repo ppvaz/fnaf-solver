@@ -1,0 +1,880 @@
+{
+  "schema": "typed-reader-equivalence-v1",
+  "claimLevel": "FIXTURE",
+  "steps": [
+    "S2",
+    "S7"
+  ],
+  "implementation": "45be64e204ca681f1af7439e3651eb1d34fce1ad",
+  "sources": [
+    {
+      "path": "package-lock.json",
+      "sha256": "0db107c08699c0eb039edcf4c4f89bb6dabc84bc982a069f5e3c0ce525275ae3"
+    },
+    {
+      "path": "package.json",
+      "sha256": "958385278a6d55c0b56fe5c81188d6c778fedbacde73b7bdee1891b645073d57"
+    },
+    {
+      "path": "packages/kernel/src/annotation.ts",
+      "sha256": "9e2ef28abd64416c3e5229544b30e7fcb3f9235153823e4ee7ea50ed57163631"
+    },
+    {
+      "path": "packages/kernel/src/bindings.ts",
+      "sha256": "d56d78f7ff9db260ceac46194155c2fb985f905e6ff326d599056f0b920c093b"
+    },
+    {
+      "path": "packages/kernel/src/claim-envelope.ts",
+      "sha256": "4e4e74dfc58be3640297307cca3b7d3e661379596b355524578e8023e8bc870b"
+    },
+    {
+      "path": "packages/kernel/src/contracts/campaign-records.ts",
+      "sha256": "5e08594044a7d08984a8fb03cc61cf557b4d19df419b53a85d1cd09e2fb58049"
+    },
+    {
+      "path": "packages/kernel/src/contracts/experiment.ts",
+      "sha256": "5091d91a1d5707dcc3774ce4111819e650a145131201f4c0e32e38dd793b2a4b"
+    },
+    {
+      "path": "packages/kernel/src/contracts/index.ts",
+      "sha256": "d641c8781bb2bb1f22b2ff19ed0e4ef620441fede3663a551d1837b568d8c826"
+    },
+    {
+      "path": "packages/kernel/src/contracts/qualification.ts",
+      "sha256": "614c15ae223edbfcece21db44f8ac63a29c5e071122e463a6ac2bc41bfaa0e0d"
+    },
+    {
+      "path": "packages/kernel/src/contracts/types.ts",
+      "sha256": "591d1683cb54d6b57c6670861d31516c5fef3eace8f605df647b1931f44a1a98"
+    },
+    {
+      "path": "packages/kernel/src/contracts/venue-identity.ts",
+      "sha256": "c20196f83c78d6da8cff0a78f62729a3f4662e3968163e17e8ab251fbfed2e60"
+    },
+    {
+      "path": "packages/kernel/src/game-run.ts",
+      "sha256": "9d55ddc764d75d7eacc772d0b2de9742a3ca5c154cbab02e3ce055670cd562fb"
+    },
+    {
+      "path": "packages/kernel/src/index.ts",
+      "sha256": "cba7c0a5b72927e0a9763fabf2e8baa308bf0954ac41e7f8f30c66094ef7f9a2"
+    },
+    {
+      "path": "packages/kernel/src/labels.ts",
+      "sha256": "9cf88e714911fd327c297b2babcbd9ed096d2d7f7de874adaf97a4458487d720"
+    },
+    {
+      "path": "packages/kernel/src/outcome.ts",
+      "sha256": "e7e164c278691c3e999778ed4118348d8b589de9f93296dfcb48137e8b5b4202"
+    },
+    {
+      "path": "packages/kernel/src/py.ts",
+      "sha256": "d05ffcd1545eab50854f987628684b6e1ec4fdb5ecd30c272072bc7f7f703d74"
+    },
+    {
+      "path": "packages/kernel/src/pyargs.ts",
+      "sha256": "c0933e53cf1a058ec6953660ef581432254e627feaf4f9b75fc7a92479c3768a"
+    },
+    {
+      "path": "packages/kernel/src/pyfmt.ts",
+      "sha256": "2807ffc7f55a578800ee38e0e01ef19afeffab197bdc8b7a9190ab36bcb1321d"
+    },
+    {
+      "path": "packages/kernel/src/pyjson.ts",
+      "sha256": "a02ff4f595fcf5c5afd1440f96ff6071182502180723791bb6fc6756274a24a6"
+    },
+    {
+      "path": "packages/kernel/src/pystats.ts",
+      "sha256": "0d90c39b9ac8be01e3e4329af4ffe4c70b6e672199c98d1e39b403c90ac9f5a2"
+    },
+    {
+      "path": "packages/kernel/src/random.ts",
+      "sha256": "a02969b322673cd72ed30812e7fadaf7b544a7540521a8899df78583f987315d"
+    },
+    {
+      "path": "packages/kernel/src/seed.ts",
+      "sha256": "0b2ed052cfd4628d5d3d7c78bd226f2eae7370318ed52afdd6b68c961430ec75"
+    },
+    {
+      "path": "packages/kernel/src/time/event-clocks.ts",
+      "sha256": "60a9911cabd4363a8b49525febd5940bec34be0ab363a5b6f2281defff61b543"
+    },
+    {
+      "path": "packages/kernel/src/time/fact-link.ts",
+      "sha256": "58fe87372fe791d54fe28cc1f943d1407faa06779a36294735274244f4392302"
+    },
+    {
+      "path": "packages/kernel/src/time/index.ts",
+      "sha256": "4656400ba3f9aaef0aa703835cf75c1c21d4ca6c2581e097093bf9cbe35abce5"
+    },
+    {
+      "path": "packages/kernel/src/time/interval.ts",
+      "sha256": "b5dc18d0e69904ec8a7834f353d60323dd3b15c634e638c0c82acd064bdd1ed7"
+    },
+    {
+      "path": "packages/kernel/src/time/ports.ts",
+      "sha256": "78ba7ecaf70a24086ba10795775ecea0144b6778c81d535e3944aa2aca9cdfc1"
+    },
+    {
+      "path": "packages/kernel/src/types.ts",
+      "sha256": "7d154a371f28f8806e5a767dec3b852ae2b9b894b9f47923831239e0791886ef"
+    },
+    {
+      "path": "packages/review/bin/grade/input-frame-align.ts",
+      "sha256": "f29fc694b53a3985e43760d12956afcfb073670aa1bf256c431d76d7e83975f6"
+    },
+    {
+      "path": "packages/review/bin/grade/inputtrace.ts",
+      "sha256": "67171059309b9d14dccb6ac00aaab9ba59edf02eb927a37a17d25f4256bcb364"
+    },
+    {
+      "path": "packages/review/bin/grade/perfetto.ts",
+      "sha256": "04d6a8d339c528d9f6be95a0318a94cb89ef0a2e7bbfe2097de002f45fec03b9"
+    }
+  ],
+  "comparisons": [
+    {
+      "name": "inputtrace",
+      "original": {
+        "commit": "3cf64fc7d1341ed0fe85505e453f2436337613b2",
+        "path": "packages/play/bin/probe/inputtrace.py",
+        "sha256": "d0fa4829bcabe95b15ab54bcbed8a324e05020d1beb53855b00006b4a72dfda4"
+      },
+      "fixture": {
+        "path": "docs/evidence/typed-resume-20261003/inputtrace-fixture.txt",
+        "sha256": "4ce611d5f1eed66bcb3df7592b79a873964b9082ad2456baa2681ec38b8e6149"
+      },
+      "allComparedFieldsEqual": 42,
+      "cases": 44,
+      "diagnosticDifferences": [
+        {
+          "arguments": [],
+          "case": "NOPROC"
+        },
+        {
+          "arguments": [
+            "--frame-window-ms",
+            "x"
+          ],
+          "case": "rich"
+        }
+      ],
+      "results": [
+        {
+          "exit": 0,
+          "stdout_sha256": "b2b13c9819c804b2526e56dfaf3fbf91a3c918c25846d6e2d9b4f662e7c9038e"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "968b2810fa9d92d24298b015339f6af83b4bcc28df3484d78f6382f4dd5ed279"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "3e28a58918881dc27e2fde373aec3133f8b90f75ed830394cf030c13990a1c2c"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "7453b05d912072ca044c1189a3a9a01821fbf35ac99398d185c91fe16fae0792"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "a1382c1d61f199b8a718ba0552650c32fef3498b674a1f24ef112addbe18c1e9"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "466245c83ee7ab74c1430141c5d1ebe737e3c28c3f843656ab7c7546d3363c2f"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "111830c3dfa4d5a2907f8ece8f76868cf318039137525e8daf2223d24fa52817"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "682eba48fe93ddfcd72ed13d8d7dc5ad9542ce837ee2479713d0969167b238e4"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "6dbeb9426b59a3aaef530ec5a2e36b9e888b0be162cd45f0bdb199401b82338d"
+        },
+        {
+          "exit": 3,
+          "stdout_sha256": "31e15d8d6411763780ce55902d2f93a4c43c02f23a21d4b1540add8dec885b4c"
+        },
+        {
+          "exit": 3,
+          "stdout_sha256": "4d2a221b1c7196c064adfdfaaa31c38470d27f2b0564981c7ca3f4e5560bb7c1"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "20d0a977a7539629cb6cda62e51f5b6ba9c1caf52aacb2d970948b490cb47bcd"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "c0949cee11a40afeeae7a1d78dd214294e7bd35e78c62631b921fecdf07d42f5"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 1,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 1,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "7453b05d912072ca044c1189a3a9a01821fbf35ac99398d185c91fe16fae0792"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "a1382c1d61f199b8a718ba0552650c32fef3498b674a1f24ef112addbe18c1e9"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "682eba48fe93ddfcd72ed13d8d7dc5ad9542ce837ee2479713d0969167b238e4"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "b6cfb534ab1d7daf70aac6219323852c90be45df0c6c5355e99aeceff612be3e"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "682eba48fe93ddfcd72ed13d8d7dc5ad9542ce837ee2479713d0969167b238e4"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "cebc8b22c680b1916ca712884c55f6d92f54bf159b0d6182a2715e824146447c"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "5c9512a3be69bba0feba86ff4885db60385d55a08de0a4c0959477733bd68df3"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 1,
+          "stdout_sha256": "7453b05d912072ca044c1189a3a9a01821fbf35ac99398d185c91fe16fae0792"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "7453b05d912072ca044c1189a3a9a01821fbf35ac99398d185c91fe16fae0792"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "aeecbb8eb85f8a51e0ee6675500e93e706fc64b37ef9688f7c19e8f670dcde89"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "1106593e4c4e4066d736f7e3fd7d4bb2d633f16706caf8151aa0801bb96f3437"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "22a24b920e7194f943046c67d52728c43532a1cb9772d5a41663ba9bb84627e8"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "9e8800256f0cb47c306657f302aa5c7b852a1f8cfc7d0d481b158e41b1a40386"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "6d986b50f04d8628ffdb855ea8902e4187ca44a0a9364de3f31003beffb6f62b"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "1f557a9904ffa243b2be8507f5b9badb77cf48a1b8a9ab2dcb32d97b4927f448"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "bbde2f18f1636bf0a7e8cfeb09fa8d309612ed22ed782b4e4d152a182ed1429b"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "57247302a5fca632547a862370029fc8da63f25baa9841789d809cc190b31abd"
+        }
+      ],
+      "schema": "reader-comparison-v1",
+      "stdoutAndExitEqual": 44
+    },
+    {
+      "name": "input-frame-align",
+      "original": {
+        "commit": "3cf64fc7d1341ed0fe85505e453f2436337613b2",
+        "path": "packages/review/bin/grade/input-frame-align.py",
+        "sha256": "4ffb54650c4c9a644f348d8137d8afcc9030836f9c90e783afa3685ee252da61"
+      },
+      "fixture": {
+        "path": "docs/evidence/typed-resume-20261003/input-frame-align-fixture.txt",
+        "sha256": "d36a23e6f8c3c460e5d24e48d02a89beb4eeff37ef49690df49ecb49665cf95b"
+      },
+      "allComparedFieldsEqual": 117,
+      "cases": 121,
+      "diagnosticDifferences": [
+        {
+          "arguments": [
+            "--max-wait-ms",
+            "x"
+          ],
+          "case": "syn"
+        },
+        {
+          "arguments": [],
+          "case": "NOPROC"
+        },
+        {
+          "arguments": [],
+          "case": "ENVPROC"
+        },
+        {
+          "arguments": [
+            "--trace-processor",
+            "nope"
+          ],
+          "case": "syn"
+        }
+      ],
+      "results": [
+        {
+          "exit": 0,
+          "stdout_sha256": "a82e38da5157cb015b3f0f3d18bf641361d39fe1eb14e644c323e38b1c48c44e"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "cf0e5b54c5a8aa41520d4ad203e34a8b815bdeb0e00042e576ce75ddc2bbbfcf"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "7aa5474cc1f516f402bbbb195f429b465c53aaeb079afb7f5e248ecc513a40d2"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "7153fb30b1adcea3fd52242a46ef2d6c980f6ba7a9afe11fb0d95415997ae3ef"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "fff4b4afd3bc82e92a851c6f3c1a8fac214a0dc43686ed0904bf0505fc67c995"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "389626b8d73d0ccf60a2b247faca91240a2f3044faa6f32b3f8e222504e9b488"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "ab8562657efec297cd54d4c4e0a03b30e68e8720df96f70b016a6f51635c79d2"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "b4e59636e389674cf7df176d194eb0a0181ae77f91430f35418240affccee2d8"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "741f770de2694e722aeb8b65a914c80e5c15666b29fead379fb84869088a7955"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "4e2480a3ed4d3ef1d920412eb77c17e96842ae98116f163515de52dc794a0395"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "a82e38da5157cb015b3f0f3d18bf641361d39fe1eb14e644c323e38b1c48c44e"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "cf0e5b54c5a8aa41520d4ad203e34a8b815bdeb0e00042e576ce75ddc2bbbfcf"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "a82e38da5157cb015b3f0f3d18bf641361d39fe1eb14e644c323e38b1c48c44e"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "cf0e5b54c5a8aa41520d4ad203e34a8b815bdeb0e00042e576ce75ddc2bbbfcf"
+        },
+        {
+          "exit": 3,
+          "stdout_sha256": "1d040b066b84ee49896ba8766aaf5f33e8befb89c6a69e8b87f0ad52aee1ce6f"
+        },
+        {
+          "exit": 3,
+          "stdout_sha256": "a05f4e267c71b9f6ba7749c6a12c603791559c14f9292c6d102c8558156dc565"
+        },
+        {
+          "exit": 3,
+          "stdout_sha256": "029df30592536268e0f56e04c3cca86779e204bacc2f590c27331dcc885a633b"
+        },
+        {
+          "exit": 3,
+          "stdout_sha256": "2b1741744122708318582aa1cb7bf9031031c53255e56cb6a3b50f4a1b645a9e"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "05792fa1eaa9cd4212f25dd259eb28f3e881e3145031cbc35532007ed15fa23d"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "dbb06117b70ee27db70fee2c436106c7bf7847ab438f3a1b30b5a4eee5dc7062"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "f63d67cda1dc9fcf27410432f47948188d168fc96d3894899ad3ce7f40172547"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "394c5fbb35189599a910fad88d659d798da05c801bcbddfd669a9bbe1c904fc3"
+        },
+        {
+          "exit": 3,
+          "stdout_sha256": "05792fa1eaa9cd4212f25dd259eb28f3e881e3145031cbc35532007ed15fa23d"
+        },
+        {
+          "exit": 3,
+          "stdout_sha256": "a287649a95aa6b2856fb3499c7c8f5ac880285241ffc9bec8e1c45923378abd8"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 1,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 1,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 3,
+          "stdout_sha256": "1d040b066b84ee49896ba8766aaf5f33e8befb89c6a69e8b87f0ad52aee1ce6f"
+        },
+        {
+          "exit": 3,
+          "stdout_sha256": "a05f4e267c71b9f6ba7749c6a12c603791559c14f9292c6d102c8558156dc565"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "05792fa1eaa9cd4212f25dd259eb28f3e881e3145031cbc35532007ed15fa23d"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "dbb06117b70ee27db70fee2c436106c7bf7847ab438f3a1b30b5a4eee5dc7062"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "05792fa1eaa9cd4212f25dd259eb28f3e881e3145031cbc35532007ed15fa23d"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "dbb06117b70ee27db70fee2c436106c7bf7847ab438f3a1b30b5a4eee5dc7062"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "05792fa1eaa9cd4212f25dd259eb28f3e881e3145031cbc35532007ed15fa23d"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "dbb06117b70ee27db70fee2c436106c7bf7847ab438f3a1b30b5a4eee5dc7062"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "a82e38da5157cb015b3f0f3d18bf641361d39fe1eb14e644c323e38b1c48c44e"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "cf0e5b54c5a8aa41520d4ad203e34a8b815bdeb0e00042e576ce75ddc2bbbfcf"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "dc3c5203b45a9fd5a2e65f2e1afa587228bda27a9c16d44b384435ceafd55702"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "b89fe1a6d84e6a267859f81038b23afede1e9943a481a97eb447c2861b4b5c19"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "554efb8bfffce9ff63edc5a8c8c3103108bf82f6a5694d87b001a20dec2a858a"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "14c8d44ed266fb28396d30057494faedd9544550942230336570349dea39b04d"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "91dcd4f152b1a7665655dba9d899b75778a9776aa9bdd5b8ec0beededbe62c66"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "931db20e778c3d1537fa33858c22de69b2eb737d7fc2a10f5fa01efdb9f97604"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "b0bd8749a7e01babf63ee5607cebad912363d826f617aba08e3ada26e8f2e69f"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "52bd34a00b9d282716a86bf804a41701881a2d8be907bda817d08bed6cc1a478"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "a82e38da5157cb015b3f0f3d18bf641361d39fe1eb14e644c323e38b1c48c44e"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "cf0e5b54c5a8aa41520d4ad203e34a8b815bdeb0e00042e576ce75ddc2bbbfcf"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "9479871413bd0012c4a64acb6f91e68662735580d921521177f30a4b6f2aeee7"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "3a9bcd28b4b26e3ea9b24e8c43b5e8c056d68835703bc8d3fd81f57043a7fef9"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "7d480943513aa98f8c7bea04b5d9ac009f4357e08ffe34a5349948a508742372"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "71e4521851cda2f05e3342cc577280818222914900cc040b2f7ce059524a8e17"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "a82e38da5157cb015b3f0f3d18bf641361d39fe1eb14e644c323e38b1c48c44e"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "880f3805d4c4f97c3c3fe32c6cbe7ae925bf76fdd59b52d6e6b858e0c96dce66"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "c1ede2701f3ca353a80e848b4a2bdfa53feddda9c400ce33ea4421b1f172437a"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "d966439eeda556e6bc2f780871b9a5323783ac65ffa57e75268928d0467a792c"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "e821acc60b416ea1ee943b55532965100021cb883a19558aa20c4c0144ab6461"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "954f844fdd4032ef5713b8ad91d20567bfb8fea48290e156477d10ff549dbdb0"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "0742a2ef764ee134b0a8dbe8370e717a5111bf998c2bf5b7c8a5df66d4755b97"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "87629f14c7bbfcb7bc7bfe1eb201383a035b0a548c5af1fb29dab06f8f1da77f"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "2fff75eebb3060f0da3d7ed98c42c6465d30259aca667601c37889ef520af7ed"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 1,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 3,
+          "stdout_sha256": "1d040b066b84ee49896ba8766aaf5f33e8befb89c6a69e8b87f0ad52aee1ce6f"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 1,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "6a25b47d2af5795e5073403d30785249312fe6cff3d194c941c98b109cd6f618"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "a82e38da5157cb015b3f0f3d18bf641361d39fe1eb14e644c323e38b1c48c44e"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "cf0e5b54c5a8aa41520d4ad203e34a8b815bdeb0e00042e576ce75ddc2bbbfcf"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "a82e38da5157cb015b3f0f3d18bf641361d39fe1eb14e644c323e38b1c48c44e"
+        },
+        {
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "exit": 0,
+          "stdout_sha256": "cf0e5b54c5a8aa41520d4ad203e34a8b815bdeb0e00042e576ce75ddc2bbbfcf"
+        }
+      ],
+      "schema": "reader-comparison-v1",
+      "stdoutAndExitEqual": 121
+    }
+  ],
+  "method": "Compare retained Python readers with the typed readers using synthetic Perfetto rows, clocks, frame states and refusals. Inputtrace source-derived evidence IDs are normalized; stdout and exit codes must match for every case.",
+  "diagnostics": "Two inputtrace and four alignment cases differ only in CLI extension or runtime missing-program error wording. Stderr equality is measured only for the exit statuses recorded by each fixture.",
+  "notMeasured": [
+    "Live trace acquisition, game acceptance and device outcomes",
+    "Companion local-runner readiness and cancellation",
+    "Remaining Python migration",
+    "The full push-gate verdict, retained separately by push-gate"
+  ],
+  "reproducer": "FIXTURE_CHECK=1 node --input-type=module < docs/evidence/typed-resume-20261003/generate.txt",
+  "evidenceId": "typed-readers-1be092f5b7c278448fc9"
+}

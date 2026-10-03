@@ -1,0 +1,75 @@
+import hashlib, json
+import json, os, re, subprocess, sys, tempfile
+REPO, PY = sys.argv[1], sys.argv[2]
+HERE = sys.argv[3]
+OLD = [PY, os.path.join(HERE, 'inputtrace.py')]; NEW = [os.environ['FIXTURE_NODE'], os.path.join(REPO, 'packages/review/bin/grade/inputtrace.ts')]
+H = 'kind,ts_ns,dur_ns,name,thread_name,process_name,track_name\n'
+Q = '"kind","ts_ns","dur_ns","name","thread_name","process_name","track_name"\n'
+def row(kind, ts, dur, name, thread='main', proc='com.scottgames.fnaf2', track='com.scottgames.fnaf2/Main'):
+    q = lambda v: '"' + str(v).replace('"', '""') + '"'
+    return ','.join(q(v) for v in (kind, ts, dur, name, thread, proc, track)) + '\n'
+D = lambda a, dev, src='0x1002': f'dispatchInputEvent MotionEvent ACTION_{a} deviceId={dev} source={src} historySize=0'
+rich = Q + ''.join([
+  row('delivery', 1_000_000, 200_000, 'deliverInputEvent src=0x1002 eventTimeNano=900 id=0xABC'),
+  row('dispatch', 1_050_000, 10, D('DOWN', 7)), row('finish', 1_090_000, 10, 'finishDispatchCycleLocked(inputChannel=game, id=0xabc)'),
+  row('frame', 1_100_000, 10, 'Choreographer#doFrame 42'), row('dispatch', 2_000_000, 10, D('UP', -1)), row('frame', 2_050_000, 10, 'Choreographer#doFrame 43'),
+  row('dispatch', 3_000_000, 5, D('POINTER_DOWN(1)', 335)), row('frame', 90_000_000, 10, 'Choreographer#doFrame 0'), row('dispatch', 4_000_000, 7, 'dispatchInputEvent garbage'),
+  row('game_publish', 4_100_000, 1, 'publishMotionEvent(inputChannel=x com.scottgames.fnaf2 y, action=POINTER_UP(1))'),
+  row('game_publish', 4_200_000, 1, 'publishMotionEvent(inputChannel=x com.scottgames.fnaf2 y, action=DOWN)'),
+  row('dispatch', 5_000_000, 10, D('DOWN', 3)), row('delivery', 5_000_100, 10, 'deliverInputEvent src=0x1002 eventTimeNano=5 id=0x1'),
+  row('finish', 5_000_500, 10, 'finishDispatchCycle id=0x1'), row('frame', 5_000_000, 10, 'Choreographer#doFrame 7'), row('dispatch', 6_000_000, 10, D('MOVE', 3)),
+])
+ordinal = Q + row('dispatch', 10, 1, D('DOWN', 1)) + row('delivery', 20, 1, 'deliverInputEvent src=1 eventTimeNano=1 id=0x2') + row('dispatch', 30, 1, D('UP', 1)) + row('delivery', 40, 1, 'deliverInputEvent src=1 eventTimeNano=2 id=0x3') + row('frame', 41, 1, 'Choreographer#doFrame 9')
+unicode = Q + ''.join([
+  row('delivery', 10, 100, 'deliverInputEvent src=1 eventTimeNano=٥ id=0xA\n'), row('dispatch', 20, 1, 'dispatchInputEvent MotionEvent ACTION_DOWN deviceId=١٢ source=0x1 historySize=٠\n'),
+  row('finish', 30, 1, 'xid=0xa'), row('finish', 31, 1, 'id=0xag'), row('finish', 32, 1, 'éid=0xa'), row('finish', 33, 1, 'call id=0xa)'),
+  row('frame', 40, 1, 'Choreographer#doFrame ٣٤\n'), row('frame', 41, 1, 'Choreographer#doFrame 5\n\n'), row('dispatch', 50, 1, D('UP', 1) + '\r'),
+  row('game_publish', 60, 1, 'publishMotionEvent(inputChannel=com.scottgames.fnaf2, action=UP)\n'), row('dispatch', 70, 1, D('DOWN', 1) + ' '),
+])
+csvs = {
+  'unicode': unicode,
+  'rich': 'progress 10%\n' + rich, 'ordinal': ordinal, 'plain': H + 'dispatch,1,2,' + D('DOWN', 1) + ',main,,com.scottgames.fnaf2/Main\n',
+  'frames-only': H + 'frame,1,1,Choreographer#doFrame 1,main,p,t\n', 'publish-only': H + 'game_publish,5,1,"publishMotionEvent(inputChannel=a, action=DOWN)",t,p,q\n',
+  'no-header': 'nothing here\n', 'missing-col': 'kind,ts_ns\ndispatch,1\n', 'bad-row': H + 'dispatch,x,1,n,t,p,q\n', 'short-row': H + 'dispatch,1\n',
+  'crlf': rich.replace('\n', '\r\n'), 'empty-dur': H + 'dispatch,1,,' + D('DOWN', 1) + ',,,\n', 'long-row': H + 'dispatch,1,2,' + D('DOWN', 1) + ',a,b,c,EXTRA\n',
+}
+sf = {'sf.txt': '16666666\n0\n16666666\n17000000\n17000000\n33333332\n34000000\n', 'sf-empty.txt': 'no numbers\n', 'sf-one.txt': '16666666\n',
+      'sf-uni.txt': '١٦\n1\n2\n3\n4\n5\n6\n', 'sf-pad.txt': '  100 \n1\n10\n2\n3\n30\n4\n5\n70\n'}
+cases = [('unicode', ['--sf-latency', 'sf.txt'])]
+for name in csvs:
+    cases += [(name, []), (name, ['--json'])]
+cases += [('rich', ['--frame-window-ms', '0.06']), ('rich', ['--frame-window-ms', '0']), ('rich', ['--expected', '6']), ('rich', ['--expected', '5']),
+          ('rich', ['--sf-latency', 'sf.txt']), ('rich', ['--sf-latency', 'sf.txt', '--json']), ('rich', ['--sf-latency', 'sf-empty.txt']), ('rich', ['--sf-latency', 'sf-one.txt', '--json']),
+          ('rich', ['--sf-latency', 'sf-uni.txt', '--json']), ('rich', ['--sf-latency', 'sf-pad.txt']), ('rich', ['--sf-latency', 'missing.txt']), ('rich', ['--package', "o'reilly"]),
+          ('FAIL', []), ('MISSINGTRACE', []), ('NOPROC', []), ('rich', ['--frame-window-ms', 'x']), ('rich', ['--fr', '25', '--js'])]
+same = 0
+results = []
+diagnostic_differences = []
+with tempfile.TemporaryDirectory() as d:
+    for n, t in csvs.items(): open(os.path.join(d, n + '.csv'), 'w', newline='').write(t)
+    for n, t in sf.items(): open(os.path.join(d, n), 'w').write(t)
+    open(os.path.join(d, 'trace.pftrace'), 'wb').write(b'fixture')
+    proc = os.path.join(d, 'trace_processor')
+    open(proc, 'w').write('#!/bin/sh\nif [ -n "$FAKE_RC" ]; then echo "$FAKE_ERR" >&2; exit "$FAKE_RC"; fi\ncat "$FAKE_CSV"\n'); os.chmod(proc, 0o755)
+    for csvname, args in cases:
+        env = {**os.environ, 'FAKE_CSV': os.path.join(d, csvname + '.csv')}
+        trace = 'trace.pftrace'; extra = ['--trace-processor', proc]
+        if csvname == 'FAIL': env.update(FAKE_RC='4', FAKE_ERR='line one\nboom: trace bad')
+        if csvname == 'MISSINGTRACE': trace = 'nope.pftrace'
+        if csvname == 'NOPROC': extra = []; env['PATH'] = '/usr/bin:/bin'; env.pop('TRACE_PROCESSOR', None)
+        out = []
+        for cmd in (OLD, NEW):
+            p = subprocess.run(cmd + [trace] + extra + args, capture_output=True, cwd=d, env=env)
+            text = re.sub(r'inputtrace-[0-9a-f]{20}', 'inputtrace-ID', p.stdout.decode())
+            out.append((text, p.returncode, p.stderr.decode().strip().splitlines()[-1:] if p.returncode == 2 else ''))
+        assert out[0][:2] == out[1][:2], (csvname, args, out)
+        results.append({'stdout_sha256': hashlib.sha256(out[1][0].encode()).hexdigest(), 'exit': out[1][1]})
+        if out[0][2] != out[1][2]: diagnostic_differences.append({'case': csvname, 'arguments': args})
+        if out[0] == out[1]: same += 1
+        else:
+            a, b = out[0][0].splitlines(), out[1][0].splitlines()
+            k = next((i for i in range(min(len(a), len(b))) if a[i] != b[i]), min(len(a), len(b)))
+            print('DIFF', csvname, args, 'rc', out[0][1], out[1][1], '\n  py', a[k:k+2], out[0][2], '\n  ts', b[k:k+2], out[1][2])
+print(f'{same} same of {len(cases)}')
+
+print(json.dumps({"schema":"reader-comparison-v1", "cases":len(cases), "stdoutAndExitEqual":len(results), "allComparedFieldsEqual":same, "diagnosticDifferences":diagnostic_differences, "results":results},sort_keys=True))

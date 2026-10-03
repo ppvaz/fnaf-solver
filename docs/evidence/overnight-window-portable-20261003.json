@@ -1,0 +1,30 @@
+{
+  "schema": "overnight-window-fixture-v1",
+  "claimLevel": "FIXTURE",
+  "status": "PASS",
+  "checksPassed": 1589,
+  "sources": {
+    "apps/lab/overnight-window.py": "8ae609d47c8c520b55c21df269218d3b847b0ed19c7b6029304bcb187d174e27",
+    "apps/lab/night-job.py": "0d817fbbd8b0bf0e414e35cea5ec5968484868c15f0eb4fc53421ac9261d2133",
+    "apps/lab/test/test-overnight-window.py": "3d62e93cc07a48537ec5a1d032bb7cecfa1dc6dafafbba1e7450c7e921e7b0b4",
+    "packages/play/test/testdata/fake_phone.py": "31167aaf39e56e48a00115570431105f53c21749982f14d084706bf4b964de43"
+  },
+  "coverage": [
+    "normal-end",
+    "double-interrupt-during-restore",
+    "signal-barrage",
+    "killed-adb-retries",
+    "job-failure",
+    "hard-deadline",
+    "refusals",
+    "killed-window-recovery",
+    "lease-release",
+    "closed-adb-vocabulary",
+    "dnd-set-restore-refuse"
+  ],
+  "open": [
+    "Real-phone settings restoration and title recovery are unmeasured."
+  ],
+  "reproducer": "python3 apps/lab/test/test-overnight-window.py --record docs/evidence/overnight-window-portable-20261003.json",
+  "evidenceId": "overnight-window-fixture-6acf4b74807cb49b"
+}

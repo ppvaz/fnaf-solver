@@ -1,0 +1,59 @@
+// From the repository root: node --input-type=module < docs/evidence/typed-resume-20261003/generate.txt
+// Set FIXTURE_PYTHON to a Python 3 interpreter if python3 is not on PATH.
+// Recheck without writing: FIXTURE_CHECK=1 node --input-type=module < docs/evidence/typed-resume-20261003/generate.txt
+import { createHash } from 'node:crypto';
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
+const folder = 'docs/evidence/typed-resume-20261003';
+const implementation = '45be64e204ca681f1af7439e3651eb1d34fce1ad';
+const previous = '3cf64fc7';
+const python = process.env.FIXTURE_PYTHON ?? 'python3';
+const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
+const git = args => execFileSync('git', args);
+const paths = git(['ls-tree', '-r', '--name-only', implementation, '--', 'packages/kernel/src',
+  'packages/review/bin/grade/inputtrace.ts', 'packages/review/bin/grade/input-frame-align.ts',
+  'packages/review/bin/grade/perfetto.ts', 'package.json', 'package-lock.json']).toString().trim().split('\n');
+const sources = paths.map(path => {
+  const pinned = git(['show', `${implementation}:${path}`]);
+  if (sha256(readFileSync(path)) !== sha256(pinned)) throw new Error(`source changed: ${path}; revalidate explicitly`);
+  return { path, sha256: sha256(pinned) };
+});
+const temporary = mkdtempSync(join(tmpdir(), 'typed-reader-fixtures-'));
+try {
+  const comparisons = [];
+  for (const [name, originalPath] of [
+    ['inputtrace', 'packages/play/bin/probe/inputtrace.py'],
+    ['input-frame-align', 'packages/review/bin/grade/input-frame-align.py'],
+  ]) {
+    const old = git(['show', `${previous}:${originalPath}`]);
+    writeFileSync(join(temporary, `${name}.py`), old);
+    const fixture = `${folder}/${name}-fixture.txt`;
+    const output = execFileSync(python, [fixture, process.cwd(), python, temporary], {
+      encoding: 'utf8', maxBuffer: 16 * 1024 * 1024, env: { ...process.env, FIXTURE_NODE: process.execPath },
+    });
+    const comparison = JSON.parse(output.trim().split('\n').at(-1));
+    if (comparison.schema !== 'reader-comparison-v1' || comparison.cases !== comparison.stdoutAndExitEqual)
+      throw new Error(`${name}: incomplete comparison`);
+    comparisons.push({ name, original: { commit: git(['rev-parse', previous]).toString().trim(),
+      path: originalPath, sha256: sha256(old) }, fixture: { path: fixture, sha256: sha256(readFileSync(fixture)) },
+      ...comparison });
+  }
+  const body = {
+    schema: 'typed-reader-equivalence-v1', claimLevel: 'FIXTURE', steps: ['S2', 'S7'],
+    implementation, sources, comparisons,
+    method: 'Compare retained Python readers with the typed readers using synthetic Perfetto rows, clocks, frame states and refusals. Inputtrace source-derived evidence IDs are normalized; stdout and exit codes must match for every case.',
+    diagnostics: 'Two inputtrace and four alignment cases differ only in CLI extension or runtime missing-program error wording. Stderr equality is measured only for the exit statuses recorded by each fixture.',
+    notMeasured: ['Live trace acquisition, game acceptance and device outcomes', 'Companion local-runner readiness and cancellation', 'Remaining Python migration', 'The full push-gate verdict, retained separately by push-gate'],
+    reproducer: `FIXTURE_CHECK=1 node --input-type=module < ${folder}/generate.txt`,
+  };
+  const evidenceId = `typed-readers-${sha256(JSON.stringify(body)).slice(0, 20)}`;
+  const bytes = JSON.stringify({ ...body, evidenceId }, null, 2) + '\n';
+  const destination = `${folder}/record.json`;
+  if (process.env.FIXTURE_CHECK === '1') {
+    if (readFileSync(destination, 'utf8') !== bytes) throw new Error('retained fixture record differs');
+  } else writeFileSync(destination, bytes);
+  console.log(`${evidenceId}: ${comparisons.reduce((count, row) => count + row.cases, 0)} cases retain stdout and exit codes (FIXTURE)`);
+} finally { rmSync(temporary, { recursive: true, force: true }); }
