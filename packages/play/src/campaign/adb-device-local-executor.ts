@@ -637,6 +637,100 @@ function startGateLedger(c: RunContext, armGoAt: number, gated: GatedSchedule) {
   c.effectObservers.push(ledger);
 }
 
+/**
+ * Start the gate ledger at `at`, or hold the origin until execute() installs
+ * the hook: whichever comes later, the release or the hook, starts it.
+ */
+function requestGateLedger(c: RunContext, at: number) {
+  const { run, schedule } = c;
+  run.pendingGateLedgerAt = at;
+  if (run.startGateLedgerHook && schedule.gated) {
+    const origin = run.pendingGateLedgerAt;
+    run.pendingGateLedgerAt = null;
+    run.startGateLedgerHook(origin, schedule.gated);
+  }
+}
+
+/** Record the night's origin once, and say where it came from. */
+function recordNightGo(c: RunContext, at: number, source?: string) {
+  const { ex, run } = c;
+  if (run.nightAnchoredAt === null) run.nightAnchoredAt = at;
+  if (run.nightGoEmitted) return;
+  run.nightGoEmitted = true;
+  ex.onEvent({ type: 'hid.night-go', at: run.nightAnchoredAt,
+    ...(source ? { source } : {}) });
+}
+
+/**
+ * Write the night's schedule to the shared HID once the release arrives, and
+ * start the ledgers and the completion deadline from its first write. A late
+ * first write fails the handoff; any failure stops the run.
+ */
+function startSharedSchedule(c: RunContext, requestedAt: number): Promise<void> {
+  const { ex, run, schedule, armObserveOnce, sharedMode, processIdentity } = c;
+  if (!sharedMode || run.sharedReleaseInFlight || run.stopObserver || run.actuationHalt ||
+      ex.child !== processIdentity || !ex.running)
+    return run.sharedReleaseTask ?? Promise.resolve();
+  run.sharedReleaseInFlight = true;
+  run.sharedReleaseTask = (async () => {
+    recordNightGo(c, requestedAt, 'intro-handoff');
+    run.nightObserved = true;
+    // Set inside onFirstWrite; typed by assertion so the checker does not narrow it to its initial null.
+    let firstWriteAt = null as number | null;
+    try {
+      await feedShared(c, sharedScheduleBody(schedule, { armObserveOnce }), {
+        onFirstWrite: at => {
+          firstWriteAt = at;
+          run.handoffDelayMs = at - requestedAt;
+          ex.onEvent({ type: 'hid.handoff', requestedAt, firstWriteAt: at,
+            delayMs: run.handoffDelayMs, budgetMs: NIGHT_HANDOFF_BUDGET_MS });
+          if (run.handoffDelayMs > NIGHT_HANDOFF_BUDGET_MS) {
+            run.handoffFailure = invalidRun(
+              `night handoff was ${run.handoffDelayMs}ms late ` +
+              `(budget ${NIGHT_HANDOFF_BUDGET_MS}ms)`, 'late-night-handoff');
+            ex.onEvent({ type: 'hid.handoff.abort', delayMs: run.handoffDelayMs,
+              budgetMs: NIGHT_HANDOFF_BUDGET_MS, reason: 'late-night-handoff' });
+            throw run.handoffFailure;
+          }
+        },
+      });
+      // A halt that lands while the body is being written stops it; that
+      // is the halt working, not a failed handoff.
+      if (run.actuationHalt) return;
+      if (firstWriteAt === null) throw new Error('night handoff wrote no HID action');
+      const releasedAt = firstWriteAt;
+      run.nightReleasedAt = releasedAt;
+      if (schedule.gated) {
+        run.startControlEffectLedger('prefix', firstWriteAt,
+          schedule.gated.monitorTransitions.prefix, schedule.gated.maskTransitions.prefix,
+          { originUncertaintyMs: 50, attempt: 1,
+            phaseEndMs: schedule.gated.armReadyAtMs });
+        // Observe-once never waits for an arm release, so the wall time
+        // that corresponds to plan cursor `armReadyAtMs` is simply where
+        // the unparked prefix ends. That is the gate ledger's origin, and
+        // it is started here rather than deferred: the release is the last
+        // moment that knows it, and a one-shot drain installed earlier in
+        // execute() would run BEFORE this ever set it.
+        const prefixEndsAt = releasedAt + schedule.gated.armReadyAtMs;
+        if (armObserveOnce) requestGateLedger(c, prefixEndsAt);
+      } else {
+        run.startControlEffectLedger('full', firstWriteAt,
+          schedule.monitorTransitions, schedule.maskTransitions,
+          { phaseEndMs: schedule.plannedUntilMs });
+      }
+      run.completionTimer = setTimeout(() => {
+        void ex.stopProcess?.().catch(() => {});
+      }, Math.min(2147483647, Math.max(1000, schedule.plannedUntilMs + 10000)));
+      ex.onEvent({ type: 'hid.night-go-released', at: firstWriteAt,
+        originUncertaintyMs: 50, shared: true, handoffDelayMs: run.handoffDelayMs });
+    } catch (error) {
+      run.handoffFailure ??= error;
+      try { await stopRun(c); } catch { /* cleanup owns the final state */ }
+    }
+  })();
+  return run.sharedReleaseTask;
+}
+
 export class AdbDeviceLocalArtifactExecutor {
   declare serial: string;
   declare adb: string;
@@ -862,85 +956,7 @@ export class AdbDeviceLocalArtifactExecutor {
       observation: run.armObservation,
       ...(armObserveOnce ? { mode: 'observe-once' } : {}),
     } : undefined;
-    const requestGateLedger = (at: number) => {
-      run.pendingGateLedgerAt = at;
-      if (run.startGateLedgerHook && schedule.gated) {
-        const origin = run.pendingGateLedgerAt;
-        run.pendingGateLedgerAt = null;
-        run.startGateLedgerHook(origin, schedule.gated);
-      }
-    };
-    const recordNightGo = (at: number, source?: string) => {
-      if (run.nightAnchoredAt === null) run.nightAnchoredAt = at;
-      if (run.nightGoEmitted) return;
-      run.nightGoEmitted = true;
-      this.onEvent({ type: 'hid.night-go', at: run.nightAnchoredAt,
-        ...(source ? { source } : {}) });
-    };
-    const startSharedSchedule = (requestedAt: number): Promise<void> => {
-      if (!sharedMode || run.sharedReleaseInFlight || run.stopObserver || run.actuationHalt ||
-          this.child !== processIdentity || !this.running)
-        return run.sharedReleaseTask ?? Promise.resolve();
-      run.sharedReleaseInFlight = true;
-      run.sharedReleaseTask = (async () => {
-        recordNightGo(requestedAt, 'intro-handoff');
-        run.nightObserved = true;
-        // Set inside onFirstWrite; typed by assertion so the checker does not narrow it to its initial null.
-        let firstWriteAt = null as number | null;
-        try {
-          await feedShared(c, sharedScheduleBody(schedule, { armObserveOnce }), {
-            onFirstWrite: at => {
-              firstWriteAt = at;
-              run.handoffDelayMs = at - requestedAt;
-              this.onEvent({ type: 'hid.handoff', requestedAt, firstWriteAt: at,
-                delayMs: run.handoffDelayMs, budgetMs: NIGHT_HANDOFF_BUDGET_MS });
-              if (run.handoffDelayMs > NIGHT_HANDOFF_BUDGET_MS) {
-                run.handoffFailure = invalidRun(
-                  `night handoff was ${run.handoffDelayMs}ms late ` +
-                  `(budget ${NIGHT_HANDOFF_BUDGET_MS}ms)`, 'late-night-handoff');
-                this.onEvent({ type: 'hid.handoff.abort', delayMs: run.handoffDelayMs,
-                  budgetMs: NIGHT_HANDOFF_BUDGET_MS, reason: 'late-night-handoff' });
-                throw run.handoffFailure;
-              }
-            },
-          });
-          // A halt that lands while the body is being written stops it; that
-          // is the halt working, not a failed handoff.
-          if (run.actuationHalt) return;
-          if (firstWriteAt === null) throw new Error('night handoff wrote no HID action');
-          const releasedAt = firstWriteAt;
-          run.nightReleasedAt = releasedAt;
-          if (schedule.gated) {
-            run.startControlEffectLedger('prefix', firstWriteAt,
-              schedule.gated.monitorTransitions.prefix, schedule.gated.maskTransitions.prefix,
-              { originUncertaintyMs: 50, attempt: 1,
-                phaseEndMs: schedule.gated.armReadyAtMs });
-            // Observe-once never waits for an arm release, so the wall time
-            // that corresponds to plan cursor `armReadyAtMs` is simply where
-            // the unparked prefix ends. That is the gate ledger's origin, and
-            // it is started here rather than deferred: the release is the last
-            // moment that knows it, and a one-shot drain installed earlier in
-            // execute() would run BEFORE this ever set it.
-            const prefixEndsAt = releasedAt + schedule.gated.armReadyAtMs;
-            if (armObserveOnce) requestGateLedger(prefixEndsAt);
-          } else {
-            run.startControlEffectLedger('full', firstWriteAt,
-              schedule.monitorTransitions, schedule.maskTransitions,
-              { phaseEndMs: schedule.plannedUntilMs });
-          }
-          run.completionTimer = setTimeout(() => {
-            void this.stopProcess?.().catch(() => {});
-          }, Math.min(2147483647, Math.max(1000, schedule.plannedUntilMs + 10000)));
-          this.onEvent({ type: 'hid.night-go-released', at: firstWriteAt,
-            originUncertaintyMs: 50, shared: true, handoffDelayMs: run.handoffDelayMs });
-        } catch (error) {
-          run.handoffFailure ??= error;
-          try { await stopRun(c); } catch { /* cleanup owns the final state */ }
-        }
-      })();
-      return run.sharedReleaseTask;
-    };
-    this.nightReleaseAction = sharedMode ? startSharedSchedule : null;
+    this.nightReleaseAction = sharedMode ? requestedAt => startSharedSchedule(c, requestedAt) : null;
     try {
       // The marker is created on the phone immediately before `/system/bin/hid`
       // starts consuming the preloaded stream. Anchoring here avoids charging
@@ -964,7 +980,7 @@ export class AdbDeviceLocalArtifactExecutor {
           { phaseEndMs: schedule.plannedUntilMs });
       }
       if (sharedMode && releaseAlreadyGranted)
-        void startSharedSchedule(releaseAlreadyGrantedAt ?? this.clock.now());
+        void startSharedSchedule(c, releaseAlreadyGrantedAt ?? this.clock.now());
       // Native camera reads must not wait behind a full screencap + Python
       // lifecycle classification. An UNKNOWN frame is a reason to leave the
       // one-shot observation unresolved, not permission to destroy a
@@ -1307,13 +1323,13 @@ export class AdbDeviceLocalArtifactExecutor {
                   for (const resolve of this.nightAuthorizedListeners) resolve(authorizedAt);
                   this.nightAuthorizedListeners.clear();
                 } else {
-                  recordNightGo(refined ?? observeStartedAt, 'lifecycle');
+                  recordNightGo(c, refined ?? observeStartedAt, 'lifecycle');
                 }
                 if (portOwnsRelease) {
                   /* the composition's releaseNight() starts the schedule */
                 } else if (sharedMode) {
                   try {
-                    if (!run.sharedReleaseInFlight) await startSharedSchedule(this.clock.now());
+                    if (!run.sharedReleaseInFlight) await startSharedSchedule(c, this.clock.now());
                     if (run.stopObserver) break;
                     await run.sharedReleaseTask;
                     if (run.handoffFailure || run.stopObserver) break;
