@@ -188,9 +188,7 @@
   "typeDebt": {
     "recorded": "2026-10-01",
     "why": "Explicit any and non-null assertions per area when tools/test-type-debt.ts landed: the types JavaScript left implicit, written down. Pedro, 2026-10-01: real types everywhere, no explicit any, so an entry only shrinks (it rose once, when the six bundle-hashed .mjs joined as TypeScript), and an area that reaches none loses its entry and must stay at none.",
-    "entries": {
-      "debt:tools": 1
-    }
+    "entries": {}
   },
   "pythonCasts": {
     "recorded": "2026-10-03",

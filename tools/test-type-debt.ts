@@ -6,9 +6,7 @@
 // and the `x!` assertion -- and holds each area to its entry in tools/quality-baseline.json
 // (`typeDebt`, through tools/gate-kit.ts): a new one fails unless one is paid elsewhere in the area, a
 // paid one lowers the entry, and an area with no entry carries none. That is how an area stays typed
-// once it is: the kernel, Source, Play, Propose and Review src, Source's model draw trace and truth surface, Review's
-// venue grid and bins, Play's game runners and bins, Propose's bins, bindings, parked work and tests, the wiki, the trainer and its tests, the desktop
-// composition root, its bins and its tests, and the kernel's, Source's, Play's, Review's and the wiki's tests, since 2026-10-01.
+// once it is; since 2026-10-03, when tools paid its last, no area has an entry.
 //
 //   node tools/test-type-debt.ts          exit 0 when no area's debt grew, 1 naming each area that did
 //   node tools/test-type-debt.ts --list   print each area's count

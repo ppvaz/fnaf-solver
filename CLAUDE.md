@@ -175,17 +175,8 @@ gates that pin it, until the legacy branches are deleted.
 
 - No explicit `any`, anywhere. Strict mode refuses an implicit `any` but not a
   written one, so `tools/test-type-debt.ts` counts written `any` and `x!` per
-  area: an area without a `typeDebt` entry in `tools/quality-baseline.json`
-  carries none (`packages/kernel/src`, `packages/source/src`,
-  `packages/source/recompile`, `packages/source/decompile`,
-  `packages/play/src`, `packages/play/games`, `packages/play/bin`,
-  `packages/propose/src`, `packages/propose/bin`, `packages/propose/bindings`,
-  `packages/propose/parked`, `packages/review/src`, `packages/review/bin`,
-  `packages/review/venue-grid`, `apps/wiki` with its test, `apps/trainer/src`,
-  `apps/desktop/src`, `apps/desktop/bin`, `packages/kernel/test`,
-  `packages/source/test`, `packages/propose/test`, `packages/review/test`,
-  `packages/play/test`, `apps/desktop/test` and `apps/trainer/test` so far),
-  and the others only shrink.
+  area against `typeDebt` in `tools/quality-baseline.json`. Since 2026-10-03
+  no area has an entry (tools paid its last), so one written anywhere fails.
   The pass that wrote `any` to get there (`tools/ts-strict.ts`, 7a8393f0) is retired.
 - A validator takes `unknown`, narrows it with the kernel's guards (`isRecord`,
   `isList`, `isOneOf`, `isText`, `fail(): never`, `@sixam/kernel` labels) and

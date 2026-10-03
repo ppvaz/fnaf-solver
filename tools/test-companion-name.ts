@@ -43,7 +43,7 @@ export const STORED = [
 ];
 
 // Paths not scanned, each with its reason.
-export const UNSCANNED = [
+export const UNSCANNED: readonly (readonly [RegExp, string])[] = [
   [/^docs\/evidence\/|^docs\/chronicle\/|^tools\/recompile\/results\/|^plans\/archive\/|^packages\/propose\/bindings\/[^/]+\/[^/]+-winner\.json$|^docs\/research\/ROOT-README-HISTORY\.txt$/,
     'frozen byte for byte (CLAUDE.md, ADR 0002)'],
   [/^packages\/play\/profiles\/fnaf2\/moto-g56\/(?:hid-mediaprojection(?:-17ms)?|fixture-hid-screencap)\.json$|^android\/companion\/assets\/runners\//,
@@ -99,7 +99,7 @@ const refused = [];
 let scanned = 0;
 let unscanned = 0;
 for (const file of files) {
-  if (UNSCANNED.some(([pattern]) => (pattern as any).test(file))) { unscanned += 1; continue; }
+  if (UNSCANNED.some(([pattern]) => pattern.test(file))) { unscanned += 1; continue; }
   if (offenders(file).length) refused.push(`${file}: the path itself`);
   const path = join(ROOT, file);
   if (!existsSync(path) || !statSync(path).isFile()) continue;   // deleted in the working tree
