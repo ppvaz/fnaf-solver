@@ -59,7 +59,6 @@ public final class Fnaf2Legacy {
     public static final int TRACE_MAX_FRAMES = 36_000;
     public static final String TRACE_SCHEMA = "fnaf2-frame-trace-v3";
 
-    private static final char[] HEX = "0123456789abcdef".toCharArray();
     private static final int UNKNOWN = PixelWatch.UNKNOWN;
 
     private final int maxImages;
@@ -286,7 +285,7 @@ public final class Fnaf2Legacy {
         if (gridCopy != null) {
             out.append(" grid=").append(GRID_WIDTH).append('x').append(GRID_HEIGHT)
                     .append(" cells=");
-            appendHex(out, gridCopy);
+            NativeFrame.appendRgbHex(out, gridCopy);
         }
         return out.toString();
     }
@@ -478,14 +477,6 @@ public final class Fnaf2Legacy {
         return value == UNKNOWN ? "UNKNOWN" : Integer.toString(value);
     }
 
-    static void appendHex(StringBuilder out, int[] cells) {
-        for (int cell : cells) {
-            out.append(HEX[(cell >> 20) & 0xf]).append(HEX[(cell >> 16) & 0xf])
-                    .append(HEX[(cell >> 12) & 0xf]).append(HEX[(cell >> 8) & 0xf])
-                    .append(HEX[(cell >> 4) & 0xf]).append(HEX[cell & 0xf]);
-        }
-    }
-
     /**
      * Bounded, device-local visual trace. The Image timestamp and
      * System.nanoTime callback timestamp stay in the helper's monotonic
@@ -595,7 +586,7 @@ public final class Fnaf2Legacy {
                             .append(maskDownstroke[index]).append('\t')
                             .append(monitorDownstroke[index]).append('\t');
                     System.arraycopy(grid, index * CELLS, row, 0, CELLS);
-                    appendHex(line, row);
+                    NativeFrame.appendRgbHex(line, row);
                     line.append('\n');
                     output.write(line.toString().getBytes(StandardCharsets.US_ASCII));
                 }

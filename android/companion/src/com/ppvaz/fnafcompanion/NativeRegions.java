@@ -213,14 +213,8 @@ public final class NativeRegions {
                     .append(String.format(Locale.ROOT, "%d,%d,%d,%d,%d",
                             region.x, region.y, region.width, region.height, region.step))
                     .append(':');
-            for (int rgb : region.front) {
-                out.append(HEX[(rgb >> 20) & 0xf]).append(HEX[(rgb >> 16) & 0xf])
-                        .append(HEX[(rgb >> 12) & 0xf]).append(HEX[(rgb >> 8) & 0xf])
-                        .append(HEX[(rgb >> 4) & 0xf]).append(HEX[rgb & 0xf]);
-            }
+            NativeFrame.appendRgbHex(out, region.front);
         }
         return out.toString();
     }
-
-    private static final char[] HEX = "0123456789abcdef".toCharArray();
 }

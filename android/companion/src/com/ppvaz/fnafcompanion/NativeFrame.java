@@ -28,6 +28,19 @@ public interface NativeFrame {
     int rgb(int x, int y);
 
     /**
+     * Each pixel as six lowercase hex digits, RRGGBB, appended in order: the
+     * wire form of REGION reads and of the frozen trace's grid column.
+     */
+    static void appendRgbHex(StringBuilder out, int[] pixels) {
+        final String digits = "0123456789abcdef";
+        for (int rgb : pixels) {
+            out.append(digits.charAt((rgb >> 20) & 0xf)).append(digits.charAt((rgb >> 16) & 0xf))
+                    .append(digits.charAt((rgb >> 12) & 0xf)).append(digits.charAt((rgb >> 8) & 0xf))
+                    .append(digits.charAt((rgb >> 4) & 0xf)).append(digits.charAt(rgb & 0xf));
+        }
+    }
+
+    /**
      * A reusable view over one ImageReader plane (RGBA_8888), for the capture
      * thread only.
      *
