@@ -299,5 +299,119 @@
         "why": "these predate the lanes running under node --test (2026-10-02): each asserts at top level with node:assert and fails by its exit code, so a failure is still caught, but the lane reports the file as one opaque test. Converting a file means wrapping its checks in test() with their own names"
       }
     }
+  },
+  "castDebt": {
+    "recorded": "2026-10-03",
+    "why": "Unchecked casts per area (tools/test-type-debt.ts): `as T`, found()-style helpers and JSON parsed into an annotated type, counted from 2026-10-03, when the gate began to see them after the `any` and `x!` it already counted had moved there. An entry names where its area’s casts sit and what replaces them, and only shrinks.",
+    "entries": {
+      "cast:apps/desktop/bin": {
+        "count": 29,
+        "why": "fnaf1-custom-run.ts reading its run profile and the device classifier’s frames by assertion (25 of 29); validators over unknown at that boundary replace them (CLAUDE.md, Types)"
+      },
+      "cast:apps/desktop/src": {
+        "count": 64,
+        "why": "the evidence, MCP and device command lines’ reads of records and tool arguments (evidence 13, companion-mcp 10, device-cli 9); validators over unknown at that boundary replace them (CLAUDE.md, Types)"
+      },
+      "cast:apps/desktop/test": {
+        "count": 40,
+        "why": "fixtures the lab and FNaF 1 winner tests build by construction and read back typed (lab 14, test-fnaf1-winner 14)"
+      },
+      "cast:apps/trainer/src": {
+        "count": 51,
+        "why": "the browser app’s DOM lookups and stored settings (main 12, ui 8), where an `as HTMLElement` names an element the page is built with"
+      },
+      "cast:apps/trainer/test": {
+        "count": 48,
+        "why": "fixtures and DevTools replies the trainer tests read; the browser checks’ replies move behind the checked client of audit T1"
+      },
+      "cast:apps/wiki": {
+        "count": 10,
+        "why": "the chronicle reading its own curated JSON corpus; validators over unknown at that boundary replace them (CLAUDE.md, Types)"
+      },
+      "cast:packages/kernel/src": {
+        "count": 6,
+        "why": "the narrowing step inside the kernel’s own validators and envelope builders where it is not the function’s closing return"
+      },
+      "cast:packages/kernel/test": {
+        "count": 7,
+        "why": "planted records the kernel tests construct so that a validator can refuse them"
+      },
+      "cast:packages/play/bin": {
+        "count": 93,
+        "why": "the probes’ and audits’ reads of capture traces, region models and stroke traces (tap-stall-audit 20, intersection-state-gate 13); validators over unknown at that boundary replace them (CLAUDE.md, Types)"
+      },
+      "cast:packages/play/games": {
+        "count": 212,
+        "why": "the FNaF 1/3/4 runners’ reads of Companion replies and detector models (fnaf4-run 44, fnaf3-run 38, fnaf1-night-run 21); their profile reads were checked in audit PG14, and validators over unknown at that boundary replace them (CLAUDE.md, Types)"
+      },
+      "cast:packages/play/src": {
+        "count": 57,
+        "why": "Play’s campaign and venue code at its edges, Companion replies and bundle manifests, 57 across 25 modules; validators over unknown at that boundary replace them (CLAUDE.md, Types)"
+      },
+      "cast:packages/play/test": {
+        "count": 88,
+        "why": "fixtures the campaign and sensor tests construct by hand and pass as typed requests and frames"
+      },
+      "cast:packages/propose/bin": {
+        "count": 442,
+        "why": "the census, recompile and plan tools’ reads of committed records, predeclarations and model traces (phone-encounter-replay 33, phone-input-bracket-sweep 27, bundle 20), the largest boundary still read by assertion; sweep-common’s checked predeclaration reader (audit E5) is the pattern"
+      },
+      "cast:packages/propose/bindings": {
+        "count": 7,
+        "why": "the fact and gate registers’ reads of committed bindings; validators over unknown at that boundary replace them (CLAUDE.md, Types)"
+      },
+      "cast:packages/propose/parked": {
+        "count": 62,
+        "why": "parked Minus 7 work, frozen with the results it produced; it is neither typed nor ported until revived"
+      },
+      "cast:packages/propose/src": {
+        "count": 21,
+        "why": "the controller’s and experiment library’s reads of Sim snapshots and seed records (cycle-controller 5, cycle-library 4); validators over unknown at that boundary replace them (CLAUDE.md, Types)"
+      },
+      "cast:packages/propose/test": {
+        "count": 112,
+        "why": "fixtures the plan, bundle, actuator and controller tests construct and pass as typed plans (test-actuator 18, test-bundle 15)"
+      },
+      "cast:packages/review/bin": {
+        "count": 31,
+        "why": "the graders’ reads of run artifacts and draw traces (post-night-static 7, compare-draw-trace 7); validators over unknown at that boundary replace them (CLAUDE.md, Types)"
+      },
+      "cast:packages/review/src": {
+        "count": 51,
+        "why": "the solver’s and chronicle’s reads of tables and envelopes the checked readers of audit R7 have not reached (solver 11); validators over unknown at that boundary replace them (CLAUDE.md, Types)"
+      },
+      "cast:packages/review/test": {
+        "count": 65,
+        "why": "planted packs and records the evidence tests build to be accepted or refused"
+      },
+      "cast:packages/review/venue-grid": {
+        "count": 9,
+        "why": "the encounter study reading its own committed record; validators over unknown at that boundary replace them (CLAUDE.md, Types)"
+      },
+      "cast:packages/source/bin": {
+        "count": 1,
+        "why": "seed-recovery’s read of a recovered dump; validators over unknown at that boundary replace them (CLAUDE.md, Types)"
+      },
+      "cast:packages/source/decompile": {
+        "count": 11,
+        "why": "truth.ts reading the caller’s own event-sheet dump, a format no schema describes yet"
+      },
+      "cast:packages/source/recompile": {
+        "count": 6,
+        "why": "model-draw-trace’s reads of the recompiled game’s trace lines; validators over unknown at that boundary replace them (CLAUDE.md, Types)"
+      },
+      "cast:packages/source/src": {
+        "count": 16,
+        "why": "Source’s option and constant tables, given their literal types by assertion where a frozen object is built"
+      },
+      "cast:packages/source/test": {
+        "count": 112,
+        "why": "the Sim tests’ fixtures and snapshot reads (simtest 28)"
+      },
+      "cast:tools": {
+        "count": 33,
+        "why": "the gates’ reads of the repository’s own JSON tables (test-mistake-register 10, architecture-test 5); validators over unknown at that boundary replace them (CLAUDE.md, Types)"
+      }
+    }
   }
 }

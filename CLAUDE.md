@@ -177,6 +177,9 @@ gates that pin it, until the legacy branches are deleted.
   written one, so `tools/test-type-debt.ts` counts written `any` and `x!` per
   area against `typeDebt` in `tools/quality-baseline.json`. Since 2026-10-03
   no area has an entry (tools paid its last), so one written anywhere fails.
+  It also counts every cast that checks nothing (`castDebt`: `as T`, a
+  `found()`-style helper, JSON parsed into an annotated type), so a `!`
+  rewritten as `as T` is still debt; `present()` in the kernel is the check.
   The pass that wrote `any` to get there (`tools/ts-strict.ts`, 7a8393f0) is retired.
 - A validator takes `unknown`, narrows it with the kernel's guards (`isRecord`,
   `isList`, `isOneOf`, `isText`, `fail(): never`, `@sixam/kernel` labels) and
