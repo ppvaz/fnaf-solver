@@ -40,17 +40,17 @@
           ]
         },
         {
+          "file": "packages/play/src/campaign/control-observer.ts",
+          "evidence": [
+            "native-stroke",
+            "grid-anchor"
+          ]
+        },
+        {
           "file": "packages/play/src/campaign/gate-evidence.ts",
           "evidence": [
             "native-stroke",
             "grid-luma-fallback"
-          ]
-        },
-        {
-          "file": "packages/play/src/campaign/modern-campaign-ports.ts",
-          "evidence": [
-            "native-stroke",
-            "grid-anchor"
           ]
         },
         {
@@ -87,7 +87,7 @@
           ]
         },
         {
-          "file": "packages/play/src/campaign/modern-campaign-ports.ts",
+          "file": "packages/play/src/campaign/control-observer.ts",
           "evidence": [
             "native-stroke",
             "grid-anchor"
@@ -143,6 +143,12 @@
           ]
         },
         {
+          "file": "packages/play/src/campaign/control-observer.ts",
+          "evidence": [
+            "native-screen"
+          ]
+        },
+        {
           "file": "packages/play/src/campaign/lifecycle-state.ts",
           "evidence": [
             "python-classifier"
@@ -151,7 +157,6 @@
         {
           "file": "packages/play/src/campaign/modern-campaign-ports.ts",
           "evidence": [
-            "native-screen",
             "python-classifier"
           ]
         },

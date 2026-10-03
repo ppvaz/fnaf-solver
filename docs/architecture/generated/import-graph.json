@@ -1392,6 +1392,14 @@
       ]
     },
     {
+      "file": "packages/play/src/campaign/control-observer.ts",
+      "imports": [
+        "./adb-device-local-executor.ts",
+        "@sixam/play",
+        "node:fs/promises"
+      ]
+    },
+    {
       "file": "packages/play/src/campaign/custom-night.ts",
       "imports": [
         "@sixam/kernel",
@@ -1454,6 +1462,7 @@
         "./campaign-composition.ts",
         "./campaign-runner.ts",
         "./campaign.ts",
+        "./control-observer.ts",
         "./custom-night.ts",
         "./lifecycle-state.ts",
         "./night-anchor.ts",
@@ -1786,6 +1795,15 @@
         "../src/campaign/gate-evidence.ts",
         "../src/phone/control-exclusion.ts",
         "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/play/test/control-observer.test.ts",
+      "imports": [
+        "../src/campaign/control-observer.ts",
+        "@sixam/play",
+        "node:assert/strict",
+        "node:fs/promises"
       ]
     },
     {
