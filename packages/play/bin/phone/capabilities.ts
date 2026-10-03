@@ -17,8 +17,9 @@
 //
 //   node packages/play/bin/phone/capabilities.ts [--serial ID] [--json] [--out FILE]
 import { execFileSync } from 'node:child_process';
-import { writeFileSync } from 'node:fs';
+import { existsSync, writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
+import { profilePaths, resolveSerial } from './local-profile.ts';
 
 export const SCHEMA = 'device-capabilities-v1';
 
@@ -157,7 +158,14 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     return index >= 0 && process.argv[index + 1] && !process.argv[index + 1].startsWith('--')
       ? process.argv[index + 1] : undefined;
   };
-  const serial = flag('serial') ?? process.env.FNAF_SERIAL;
+  // --serial names the handset outright; otherwise FNAF_SERIAL or the local profile, as every runner resolves it. With
+  // none of them configured, adb's only device is asked.
+  const named = flag('serial');
+  let serial: string | undefined;
+  if (named !== undefined || process.env.FNAF_SERIAL || profilePaths().some(existsSync)) {
+    try { ({ serial } = named === undefined ? resolveSerial() : resolveSerial({ env: { '--serial': named }, names: ['--serial'] })); }
+    catch (error) { process.stderr.write(`capabilities: ${(error as Error).message}\n`); process.exit(2); }
+  }
   const value = report(probe(serial));
   const out = flag('out');
   if (out) { writeFileSync(out, `${JSON.stringify(value, null, 2)}\n`); process.stdout.write(`wrote ${out}\n`); }

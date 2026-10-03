@@ -2,6 +2,9 @@
 // stream is the campaign transport's vocabulary, glued and cut log rows are
 // read safely, and the chain's verdicts follow the pumps: a contact whose press
 // and release one pump drains is INVISIBLE. No device.
+import { spawnSync } from 'node:child_process';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { HID_FEATURE_REPORTS } from '@sixam/play';
 import { MONITOR_POINT, READY_DELAY_MS, SYNC, chain, jsonl, plan, readPlanFile, stream } from './practice-audit.ts';
 import { frameRow, updateRow } from './capture-latency.ts';
@@ -65,5 +68,26 @@ check(frameRow({ seq: 3, imageNs: '12', snapshotNs: '13', rttMs: 2.5, u16: null,
 check(refused(() => frameRow({ seq: 3, imageNs: 12, snapshotNs: '13', rttMs: 2.5, u16: null, margin: 0.1 }, 1)),
   'a frame row whose image clock is not a decimal string is refused');
 check(refused(() => updateRow({ u: 1, te: 2 }, 1)), 'an update row without its swap time is refused');
+
+// A live run resolves its serial the one way every runner does (local-profile.ts resolveSerial), so a malformed
+// FNAF_SERIAL is refused before the preflight reaches adb.
+{
+  const live = spawnSync(process.execPath, [new URL('./practice-audit.ts', import.meta.url).pathname, 'live', '--live', '--out',
+    join(tmpdir(), 'practice-audit-refused')], { encoding: 'utf8', timeout: 30000,
+    env: { ...process.env, CUE_HELPER_LEASE_OWNER_PID: '1', FNAF_SERIAL: 'not a serial!' } });
+  check(live.status !== 0 && /not a device serial token/.test(live.stderr),
+    `a malformed FNAF_SERIAL is refused before the phone is touched (${live.status}: ${live.stderr.trim().split('\n').at(-1)})`);
+}
+// capabilities.ts names its serial the same way.
+{
+  const caps = spawnSync(process.execPath, [new URL('../phone/capabilities.ts', import.meta.url).pathname, '--serial', 'not a serial!'],
+    { encoding: 'utf8', timeout: 30000 });
+  check(caps.status !== 0 && /not a device serial token/.test(caps.stderr),
+    `a malformed --serial is refused before adb is asked (${caps.status}: ${caps.stderr.trim().split('\n').at(-1)})`);
+  const envCaps = spawnSync(process.execPath, [new URL('../phone/capabilities.ts', import.meta.url).pathname],
+    { encoding: 'utf8', timeout: 30000, env: { ...process.env, FNAF_SERIAL: 'not a serial!' } });
+  check(envCaps.status !== 0 && /not a device serial token/.test(envCaps.stderr),
+    'a malformed FNAF_SERIAL is refused, not replaced by adb\'s default device');
+}
 
 console.log('practice-audit: plans, stream, log reading and chain verdicts hold');

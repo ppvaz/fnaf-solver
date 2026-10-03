@@ -899,6 +899,7 @@
     {
       "file": "packages/play/bin/phone/capabilities.ts",
       "imports": [
+        "./local-profile.ts",
         "node:child_process",
         "node:fs",
         "node:url"
@@ -1077,6 +1078,7 @@
       "file": "packages/play/bin/recompile/practice-audit.ts",
       "imports": [
         "../grade/tap-stall-audit.ts",
+        "../phone/local-profile.ts",
         "@sixam/kernel",
         "@sixam/play",
         "@sixam/play/campaign/hid-schedule",
@@ -1105,7 +1107,10 @@
       "imports": [
         "./capture-latency.ts",
         "./practice-audit.ts",
-        "@sixam/play"
+        "@sixam/play",
+        "node:child_process",
+        "node:os",
+        "node:path"
       ]
     },
     {

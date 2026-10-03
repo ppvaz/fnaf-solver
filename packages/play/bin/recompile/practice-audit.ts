@@ -37,6 +37,7 @@ import { isList, isRecord } from '@sixam/kernel';
 import { HID_DESCRIPTOR, HID_FEATURE_REPORTS, report } from '@sixam/play';
 import { DEFAULT_READY_DELAY_MS } from '@sixam/play/campaign/hid-schedule';
 import { parseInputEvents, touchEdges } from '../grade/tap-stall-audit.ts';
+import { resolveSerial } from '../phone/local-profile.ts';
 
 interface Point { readonly x: number, readonly y: number }
 /** One planned contact: when, how long, and where when not the plan's own point. */
@@ -499,8 +500,8 @@ async function live(args: string[]) {
   if (!args.includes('--live')) fail('dry by default: add --live to press the phone');
   if (process.env.CUE_HELPER_LEASE_OWNER_PID === undefined && process.env.FNAF_LEASE_HELD !== '1')
     fail('run under packages/play/src/safety/device-lock-exec.py SERIAL -- ... so the serial lease is held');
-  const serial: string = process.env.FNAF_SERIAL
-    ?? JSON.parse(readFileSync(join(ROOT, 'tools/device/local-profile.json'), 'utf8')).serial;
+  let serial: string;
+  try { ({ serial } = resolveSerial()); } catch (error) { fail((error as Error).message); }
   const out = resolve(opt(args, '--out') ?? fail('--out DIR is required'));
   if (!relative(ROOT, out).startsWith('..')) fail('--out must be outside the repository');
   mkdirSync(out, { recursive: true });
