@@ -69,6 +69,7 @@ import tempfile
 import time
 from datetime import datetime, time as clock_time, timedelta
 from pathlib import Path
+from types import ModuleType
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
@@ -79,9 +80,10 @@ import process_tree  # noqa: E402
 from companion_device_lock import DeviceBusy, DeviceLock, state_dir  # noqa: E402
 
 
-def _load(name: str, file: str):
+def _load(name: str, file: str | Path) -> ModuleType:
     spec = importlib.util.spec_from_file_location(name, HERE / file)
-    assert spec and spec.loader
+    if spec is None or spec.loader is None:  # an explicit refusal: python3 -O strips an assert
+        raise ImportError(f"cannot load {HERE / file}")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
