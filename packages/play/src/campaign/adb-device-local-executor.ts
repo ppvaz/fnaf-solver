@@ -384,6 +384,8 @@ interface RunContext {
   readonly spawned: ReturnType<typeof runAdbScript> | null;
   /** The running process (the shell or the shared HID) this run started, compared by identity. */
   readonly processIdentity: object | null;
+  /** The control-effect and gate ledgers this run started; teardown awaits them. */
+  readonly effectObservers: Promise<void>[];
   /** The executor's private ports, reached from outside the class. */
   readonly observeArm: () => ArmSample | Promise<ArmSample>;
   readonly observeControlState: () => unknown;
@@ -498,6 +500,141 @@ function haltActuation(c: RunContext, reason: string, at: number, detail: Record
     ex.onEvent({ type: 'lifecycle.actuation-stopped', at: ex.clock.now(), reason, method,
       ...(error === null ? {} : { error }) });
   })();
+}
+
+// Control reads, gates, corrections and arm retries all belong to the
+// schedule, so a halt ends them with it; the lifecycle observer is not
+// one of them.
+function controlStillRunning(c: RunContext) {
+  return !c.run.stopObserver && !c.run.actuationHalt && c.ex.child === c.processIdentity && c.ex.running;
+}
+
+/** Wait on the run's clock until `deadline`; false when the schedule stopped first. */
+async function waitUntil(c: RunContext, deadline: number) {
+  while (controlStillRunning(c)) {
+    const remainingMs = deadline - c.ex.clock.now();
+    if (remainingMs <= 0) return true;
+    await c.ex.clock.sleep(Math.min(remainingMs, 50));
+  }
+  return false;
+}
+
+/** One control-state read, queued behind the last; a failed read yields no sample. */
+function readControlState(c: RunContext) {
+  const { ex, run } = c;
+  let readStartedAt: number | null = null;
+  const read = run.controlReadTail.then(async () => {
+    if (!controlStillRunning(c)) return { sample: null, readStartedAt, readFinishedAt: ex.clock.now() };
+    readStartedAt = ex.clock.now();
+    try {
+      const sample = await c.observeControlState();
+      return { sample, readStartedAt, readFinishedAt: ex.clock.now() };
+    } catch {
+      return { sample: null, readStartedAt, readFinishedAt: ex.clock.now() };
+    }
+  });
+  // A bad diagnostic read must not poison later, independent samples.
+  run.controlReadTail = read.then(() => {}, () => {});
+  return read;
+}
+
+/**
+ * Watch each authored monitor/mask transition of one phase land on the device,
+ * reading control state from its contact to the next contact of the same
+ * signal; observation only, never an actuator.
+ */
+function startControlEffectLedger(c: RunContext, phase: string, originAt: number,
+  monitorTransitions: readonly MonitorTransition[], maskTransitions: readonly MaskTransition[],
+  { timelineOffsetMs = 0, originUncertaintyMs = 0, attempt = null, phaseEndMs = null }: LedgerOptions = {}) {
+  const { ex, run } = c;
+  if (typeof ex.observeControlState !== 'function') return;
+  const transitions = effectTransitions(monitorTransitions, maskTransitions)
+    .map(transition => ({ ...transition, relativeAtMs: transition.atMs - timelineOffsetMs }));
+  if (!transitions.length) return;
+  // Only the next authored transition of the SAME signal may legitimately
+  // change it, so that contact — or the phase's own end — bounds each
+  // observation window. Both come from the compiled plan, not a constant.
+  const windowEndsMs = transitions.map((transition, index) => transitions
+    .slice(index + 1).find(later => later.signal === transition.signal)?.relativeAtMs
+    ?? phaseEndMs);
+  ex.onEvent({ type: 'control.effect.phase', phase, originAt, originUncertaintyMs,
+    ...(attempt === null ? {} : { attempt }), transitionCount: transitions.length });
+  const ledger = (async () => {
+    for (const [index, transition] of transitions.entries()) {
+      if (!controlStillRunning(c)) break;
+      const contactAt = originAt + transition.relativeAtMs;
+      const windowEndMs = windowEndsMs[index];
+      const windowEndAt = windowEndMs === null ? Infinity : originAt + windowEndMs;
+      ex.onEvent({ type: 'control.effect.expected', phase, actionId: transition.actionId,
+        cycle: transition.cycle, signal: transition.signal, target: transition.target,
+        contactAt, windowEndAt, sampleBudget: CONTROL_EFFECT_MAX_SAMPLES,
+        originAt, originUncertaintyMs, ...(attempt === null ? {} : { attempt }) });
+      const reads: { sample: unknown, readStartedAt: number | null, readFinishedAt: number }[] = [];
+      if (!await waitUntil(c, contactAt)) break;
+      while (reads.length < CONTROL_EFFECT_MAX_SAMPLES && ex.clock.now() < windowEndAt) {
+        if (!controlStillRunning(c)) break;
+        const read = await readControlState(c);
+        if (read.readStartedAt === null) break;
+        reads.push(read);
+        ex.onEvent({ type: 'control.effect.sample', phase, actionId: transition.actionId,
+          cycle: transition.cycle, signal: transition.signal, target: transition.target,
+          sampleIndex: reads.length,
+          readStartedAt: read.readStartedAt, readFinishedAt: read.readFinishedAt,
+          sinceContactLowerMs: read.readStartedAt - contactAt,
+          sinceContactUpperMs: read.readFinishedAt - contactAt,
+          sample: compactControlSample(read.sample), ...(attempt === null ? {} : { attempt }) });
+        // Two distinct frames holding the target end the read early: the
+        // measurement is complete and the budget belongs to the next one.
+        if (controlEffectVerdict(reads, transition.signal, transition.target,
+          contactAt).status === 'PASS') break;
+      }
+      if (!reads.length) continue;
+      const verdict = controlEffectVerdict(reads, transition.signal, transition.target, contactAt);
+      const evidence = transition.signal === 'maskOn'
+        ? verdict.samples.find(sample => sample.maskEvidence)?.maskEvidence ?? 'diagnostic-unqualified'
+        : 'calibrated';
+      ex.onEvent({ type: 'control.effect.result', phase, actionId: transition.actionId,
+        cycle: transition.cycle, signal: transition.signal, target: transition.target,
+        contactAt, windowEndAt, resultAt: ex.clock.now(), status: verdict.status,
+        reason: verdict.reason, latency: verdict.latency, sampleCount: reads.length,
+        evidence, samples: verdict.samples, ...(attempt === null ? {} : { attempt }) });
+    }
+  })().catch(() => {
+    // A diagnostic observer must never become a second actuator failure
+    // mode. The absent result is visible from expected/sample events.
+    if (run.actuationHalt) return;
+    ex.onEvent({ type: 'control.effect.observer-error', phase,
+      ...(attempt === null ? {} : { attempt }) });
+  });
+  c.effectObservers.push(ledger);
+}
+
+// Each cycle boundary holds the stream until the device's mask parity
+// matches the plan's (cycle-gates.ts).
+function startGateLedger(c: RunContext, armGoAt: number, gated: GatedSchedule) {
+  const { ex, run, sharedMode } = c;
+  if (typeof ex.observeControlState !== 'function' || !gated.gates.length) return;
+  const ledger = runCycleGates(armGoAt, gated, {
+    clock: ex.clock, retryGapMs: ex.gateRetryGapMs, readWorstMs: ex.gateReadWorstMs, sharedMode,
+    onEvent: event => ex.onEvent(event), stillRunning: () => controlStillRunning(c),
+    halted: () => Boolean(run.actuationHalt),
+    waitUntil: deadline => waitUntil(c, deadline), readControlState: () => readControlState(c),
+    feedShared: lines => feedShared(c, lines),
+    touchArm: key => touchArm(c, key), stopRun: () => stopRun(c),
+  }).catch(async () => {
+    // After a halt the stream is already stopped and the observer owns
+    // the end of the run; a gate that fails then must not end it early.
+    if (run.actuationHalt) return;
+    // A parked stream never resumes on its own. An observer that dies
+    // silently would hang the night at a gate, so it fails the run
+    // instead and lets the shell unwind through its own trap.
+    ex.onEvent({ type: 'control.gate.observer-error' });
+    try {
+      if (sharedMode) await stopRun(c);
+      else await touchArm(c, 'fail');
+    } catch { /* the run is ending */ }
+  });
+  c.effectObservers.push(ledger);
 }
 
 export class AdbDeviceLocalArtifactExecutor {
@@ -706,7 +843,7 @@ export class AdbDeviceLocalArtifactExecutor {
     this.child = spawned === null ? sharedHid : spawned.child;
     const processIdentity = this.child;
     const c: RunContext = { ex: this, run, schedule, armVerification, armObserveOnce, sharedHid, sharedMode,
-      armControl, spawned, processIdentity,
+      armControl, spawned, processIdentity, effectObservers: [],
       observeArm: () => this.#observeArm(), observeControlState: () => this.#observeControlState() };
     this.stopProcess = () => stopProcess(c);
     const observedProcessPromise = processPromise.then(value => {
@@ -725,7 +862,6 @@ export class AdbDeviceLocalArtifactExecutor {
       observation: run.armObservation,
       ...(armObserveOnce ? { mode: 'observe-once' } : {}),
     } : undefined;
-    const effectObservers: Promise<void>[] = [];
     const requestGateLedger = (at: number) => {
       run.pendingGateLedgerAt = at;
       if (run.startGateLedgerHook && schedule.gated) {
@@ -820,122 +956,8 @@ export class AdbDeviceLocalArtifactExecutor {
       this.onEvent({ type: 'hid.schedule-start', startedAt, actionCount: schedule.actionCount,
         phaseOffsetMs: schedule.phaseOffsetMs });
       const startupDeadline = startedAt + STARTUP_GRACE_MS;
-      // Control reads, gates, corrections and arm retries all belong to the
-      // schedule, so a halt ends them with it; the lifecycle observer is not
-      // one of them.
-      const controlStillRunning = () => !run.stopObserver && !run.actuationHalt &&
-        this.child === processIdentity && this.running;
-      const waitUntil = async (deadline: number) => {
-        while (controlStillRunning()) {
-          const remainingMs = deadline - this.clock.now();
-          if (remainingMs <= 0) return true;
-          await this.clock.sleep(Math.min(remainingMs, 50));
-        }
-        return false;
-      };
-      const readControlState = () => {
-        let readStartedAt: number | null = null;
-        const read = run.controlReadTail.then(async () => {
-          if (!controlStillRunning()) return { sample: null, readStartedAt, readFinishedAt: this.clock.now() };
-          readStartedAt = this.clock.now();
-          try {
-            const sample = await this.#observeControlState();
-            return { sample, readStartedAt, readFinishedAt: this.clock.now() };
-          } catch {
-            return { sample: null, readStartedAt, readFinishedAt: this.clock.now() };
-          }
-        });
-        // A bad diagnostic read must not poison later, independent samples.
-        run.controlReadTail = read.then(() => {}, () => {});
-        return read;
-      };
-      run.startControlEffectLedger = (phase, originAt, monitorTransitions, maskTransitions,
-        { timelineOffsetMs = 0, originUncertaintyMs = 0, attempt = null, phaseEndMs = null } = {}) => {
-        if (typeof this.observeControlState !== 'function') return;
-        const transitions = effectTransitions(monitorTransitions, maskTransitions)
-          .map(transition => ({ ...transition, relativeAtMs: transition.atMs - timelineOffsetMs }));
-        if (!transitions.length) return;
-        // Only the next authored transition of the SAME signal may legitimately
-        // change it, so that contact — or the phase's own end — bounds each
-        // observation window. Both come from the compiled plan, not a constant.
-        const windowEndsMs = transitions.map((transition, index) => transitions
-          .slice(index + 1).find(later => later.signal === transition.signal)?.relativeAtMs
-          ?? phaseEndMs);
-        this.onEvent({ type: 'control.effect.phase', phase, originAt, originUncertaintyMs,
-          ...(attempt === null ? {} : { attempt }), transitionCount: transitions.length });
-        const ledger = (async () => {
-          for (const [index, transition] of transitions.entries()) {
-            if (!controlStillRunning()) break;
-            const contactAt = originAt + transition.relativeAtMs;
-            const windowEndMs = windowEndsMs[index];
-            const windowEndAt = windowEndMs === null ? Infinity : originAt + windowEndMs;
-            this.onEvent({ type: 'control.effect.expected', phase, actionId: transition.actionId,
-              cycle: transition.cycle, signal: transition.signal, target: transition.target,
-              contactAt, windowEndAt, sampleBudget: CONTROL_EFFECT_MAX_SAMPLES,
-              originAt, originUncertaintyMs, ...(attempt === null ? {} : { attempt }) });
-            const reads: { sample: unknown, readStartedAt: number | null, readFinishedAt: number }[] = [];
-            if (!await waitUntil(contactAt)) break;
-            while (reads.length < CONTROL_EFFECT_MAX_SAMPLES && this.clock.now() < windowEndAt) {
-              if (!controlStillRunning()) break;
-              const read = await readControlState();
-              if (read.readStartedAt === null) break;
-              reads.push(read);
-              this.onEvent({ type: 'control.effect.sample', phase, actionId: transition.actionId,
-                cycle: transition.cycle, signal: transition.signal, target: transition.target,
-                sampleIndex: reads.length,
-                readStartedAt: read.readStartedAt, readFinishedAt: read.readFinishedAt,
-                sinceContactLowerMs: read.readStartedAt - contactAt,
-                sinceContactUpperMs: read.readFinishedAt - contactAt,
-                sample: compactControlSample(read.sample), ...(attempt === null ? {} : { attempt }) });
-              // Two distinct frames holding the target end the read early: the
-              // measurement is complete and the budget belongs to the next one.
-              if (controlEffectVerdict(reads, transition.signal, transition.target,
-                contactAt).status === 'PASS') break;
-            }
-            if (!reads.length) continue;
-            const verdict = controlEffectVerdict(reads, transition.signal, transition.target, contactAt);
-            const evidence = transition.signal === 'maskOn'
-              ? verdict.samples.find(sample => sample.maskEvidence)?.maskEvidence ?? 'diagnostic-unqualified'
-              : 'calibrated';
-            this.onEvent({ type: 'control.effect.result', phase, actionId: transition.actionId,
-              cycle: transition.cycle, signal: transition.signal, target: transition.target,
-              contactAt, windowEndAt, resultAt: this.clock.now(), status: verdict.status,
-              reason: verdict.reason, latency: verdict.latency, sampleCount: reads.length,
-              evidence, samples: verdict.samples, ...(attempt === null ? {} : { attempt }) });
-          }
-        })().catch(() => {
-          // A diagnostic observer must never become a second actuator failure
-          // mode. The absent result is visible from expected/sample events.
-          if (run.actuationHalt) return;
-          this.onEvent({ type: 'control.effect.observer-error', phase,
-            ...(attempt === null ? {} : { attempt }) });
-        });
-        effectObservers.push(ledger);
-      };
-      // Each cycle boundary holds the stream until the device's mask parity
-      // matches the plan's (cycle-gates.ts).
-      const startGateLedger = (armGoAt: number, gated: GatedSchedule) => {
-        if (typeof this.observeControlState !== 'function' || !gated.gates.length) return;
-        const ledger = runCycleGates(armGoAt, gated, {
-          clock: this.clock, retryGapMs: this.gateRetryGapMs, readWorstMs: this.gateReadWorstMs, sharedMode,
-          onEvent: event => this.onEvent(event), stillRunning: controlStillRunning, halted: () => Boolean(run.actuationHalt),
-          waitUntil, readControlState, feedShared: lines => feedShared(c, lines),
-          touchArm: key => touchArm(c, key), stopRun: () => stopRun(c),
-        }).catch(async () => {
-          // After a halt the stream is already stopped and the observer owns
-          // the end of the run; a gate that fails then must not end it early.
-          if (run.actuationHalt) return;
-          // A parked stream never resumes on its own. An observer that dies
-          // silently would hang the night at a gate, so it fails the run
-          // instead and lets the shell unwind through its own trap.
-          this.onEvent({ type: 'control.gate.observer-error' });
-          try {
-            if (sharedMode) await stopRun(c);
-            else await touchArm(c, 'fail');
-          } catch { /* the run is ending */ }
-        });
-        effectObservers.push(ledger);
-      };
+      run.startControlEffectLedger = (phase, originAt, monitorTransitions, maskTransitions, options) =>
+        startControlEffectLedger(c, phase, originAt, monitorTransitions, maskTransitions, options);
       if (!schedule.gated && !sharedMode) {
         run.startControlEffectLedger('full', startedAt + schedule.readyDelayMs,
           schedule.monitorTransitions, schedule.maskTransitions,
@@ -954,9 +976,9 @@ export class AdbDeviceLocalArtifactExecutor {
           this.onEvent({ type: 'arm.unresolved', mode: 'observe-once', reason: 'arm-window-unavailable' });
           return;
         }
-        while (controlStillRunning() && run.nightAnchoredAt === null)
+        while (controlStillRunning(c) && run.nightAnchoredAt === null)
           await this.clock.sleep(this.pollMs);
-        if (!controlStillRunning() || run.nightAnchoredAt === null)
+        if (!controlStillRunning(c) || run.nightAnchoredAt === null)
           return;
         // Read only where the plan shows the camera map (arm-observation.ts): the
         // old single read at armReadyAtMs + settle fell after k2/k3's opening
@@ -976,7 +998,7 @@ export class AdbDeviceLocalArtifactExecutor {
         let attempt = 0;
         for (const [index, readAtMs] of readTimes.entries()) {
           attempt = index + 1;
-          if (!await waitUntil(origin + readAtMs)) return;
+          if (!await waitUntil(c, origin + readAtMs)) return;
           sample = null;
           try { sample = await this.#observeArm(); }
           catch { /* an unavailable frame remains unresolved */ }
@@ -1011,11 +1033,11 @@ export class AdbDeviceLocalArtifactExecutor {
           reason: 'camera-pair-mismatch', expected: JSON.parse(expected), observed: JSON.parse(key) });
         await stopRun(c);
       };
-      run.startGateLedgerHook = startGateLedger;
+      run.startGateLedgerHook = (armGoAt, gated) => startGateLedger(c, armGoAt, gated);
       if (run.pendingGateLedgerAt !== null && schedule.gated) {
         const origin = run.pendingGateLedgerAt;
         run.pendingGateLedgerAt = null;
-        startGateLedger(origin, schedule.gated);
+        startGateLedger(c, origin, schedule.gated);
       }
       const armObservationTask = armObserveOnce && armVerification ? observeArmOnce(armVerification) : (async () => {
         const gate = schedule.gated;
@@ -1047,9 +1069,9 @@ export class AdbDeviceLocalArtifactExecutor {
           this.onEvent({ type: 'arm.retry', attempt: run.armAttempt,
             elapsedMs: this.clock.now() - startedAt, reason });
         };
-        while (!run.armVerified && controlStillRunning()) {
+        while (!run.armVerified && controlStillRunning(c)) {
           await this.clock.sleep(this.pollMs);
-          if (!controlStillRunning()) break;
+          if (!controlStillRunning(c)) break;
           if (nextCheckAt === Infinity) {
             if (run.nightAnchoredAt === null) continue;
             nextCheckAt = (run.nightReleasedAt ?? run.nightAnchoredAt) + gate.armReadyAtMs + this.armSettleMs;
@@ -1112,7 +1134,7 @@ export class AdbDeviceLocalArtifactExecutor {
                     // the bounded state evidence, so do not run a competing
                     // remainder ledger while the stream is parked. Ungated
                     // schedules still get the full diagnostic ledger below.
-                    startGateLedger(armGoAt, gate);
+                    startGateLedger(c, armGoAt, gate);
                   }
                   run.armVerified = true;
                   run.armObservation = sample;
@@ -1165,7 +1187,7 @@ export class AdbDeviceLocalArtifactExecutor {
                  run.nativeNightAt === null && !run.nightObserved) {
             const startedAt = this.clock.now();
             let sample: unknown = null;
-            try { ({ sample } = await readControlState()); } catch { sample = null; }
+            try { ({ sample } = await readControlState(c)); } catch { sample = null; }
             run.nativeAnchorSamples += 1;
             const screen = (sample as { screen?: unknown } | null | undefined)?.screen;
             if (screen === NATIVE_NIGHT_SCREEN) { run.nativeNightAt = startedAt; break; }
@@ -1436,7 +1458,7 @@ export class AdbDeviceLocalArtifactExecutor {
       if (run.completionTimer !== null) clearTimeout(run.completionTimer);
       this.nightReleaseAction = null;
       this.unblockNightRelease();
-      await Promise.all([run.observer, run.armObserver, run.actuationStop, ...effectObservers]);
+      await Promise.all([run.observer, run.armObserver, run.actuationStop, ...c.effectObservers]);
       const anr = await readAnrEvents(this.adb, this.serial);
       if (anr !== null) this.onEvent({ type: 'device.anr', count: anr.length, lines: anr });
       this.child = null; this.running = false;
