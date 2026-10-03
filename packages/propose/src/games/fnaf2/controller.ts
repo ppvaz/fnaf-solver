@@ -70,6 +70,9 @@ export function guardIntents(intents: readonly Intent[], scheduled: readonly (nu
 // (engine.js setMonitor toggles on MON_RAISING/MON_LOWERING).
 export const PRESS_COOLDOWN = GUARD_FRAMES + C.s(0.15);
 
+/** A controller's fields a decision snapshot leaves out (the `_` bookkeeping fields are left out too). */
+const NOT_DECISION_STATE = new Set(['opts', 'log', 'threat', 'phaseClock']);
+
 export class ReactiveController {
   declare opts: ControllerOptions;
   declare log: { frame: number, what: string }[];
@@ -100,14 +103,18 @@ export class ReactiveController {
   // The snapshot reads and restores this controller's own fields by name.
   #fields() { return this as unknown as Record<string, unknown>; }
 
+  /**
+   * The fields a decision may change: every own field but the options, the log (truncated instead), the bookkeeping
+   * fields (`_`), and the threat and phase clock objects the controller is handed, which it does not own.
+   */
+  #decisionKeys() {
+    return Object.keys(this).filter((key) => !key.startsWith('_') && !NOT_DECISION_STATE.has(key));
+  }
+
   beginDecision() {
     const state: Record<string, unknown> = {};
     const fields = this.#fields();
-    for (const key of Object.keys(this)) {
-      if (key === 'opts' || key === 'log' || key.startsWith('_') ||
-          key === 'threat' || key === 'phaseClock') continue;
-      state[key] = structuredClone(fields[key]);
-    }
+    for (const key of this.#decisionKeys()) state[key] = structuredClone(fields[key]);
     this._decisionSnapshot = { state, logLength: this.log.length };
     this._pendingIntents = null;
   }
@@ -115,11 +122,7 @@ export class ReactiveController {
   _restoreDecision() {
     const snap = this._decisionSnapshot;
     if (!snap) return;
-    for (const key of Object.keys(this)) {
-      if (key === 'opts' || key === 'log' || key.startsWith('_') ||
-          key === 'threat' || key === 'phaseClock') continue;
-      if (!(key in snap.state)) delete this.#fields()[key];
-    }
+    for (const key of this.#decisionKeys()) if (!(key in snap.state)) delete this.#fields()[key];
     Object.assign(this, snap.state);
     this.log.length = snap.logLength;
   }
@@ -266,11 +269,6 @@ export class BlackoutReactive extends ReactiveController {
   }
 }
 
-export const CONTROLLERS: { blackoutReactive: typeof BlackoutReactive,
-  ventThreatReactive?: typeof VentThreatReactive, mangleThreatReactive?: typeof MangleThreatReactive } = {
-  blackoutReactive: BlackoutReactive,
-  ventThreatReactive: undefined,
-  mangleThreatReactive: undefined }; // replaced below
 
 // Vent-threat reaction: the BB eviction the scheduled mask cannot deliver.
 // Android's mask counter is a CONTINUOUS hold -- five consecutive
@@ -691,7 +689,6 @@ export class VentThreatReactive extends ReactiveController {
   }
 }
 
-CONTROLLERS.ventThreatReactive = VentThreatReactive;
 
 // Mangle's office-context s0020 proximity static is a sustained audio cue
 // (g732/733), not a visual opening read. Once detected, the safe response is
@@ -713,4 +710,3 @@ export class MangleThreatReactive extends VentThreatReactive {
 // Short alias for policy callers that name the character rather than the
 // threat source.
 export const MangleReactive = MangleThreatReactive;
-CONTROLLERS.mangleThreatReactive = MangleThreatReactive;

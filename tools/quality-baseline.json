@@ -93,7 +93,6 @@
       "export:packages/play/src/campaign/physical-ports.ts#createAdbModernPorts": 1,
       "export:packages/play/src/player/estimator.ts#ESTIMATOR_SCHEMA": 1,
       "export:packages/play/src/player/estimator.ts#TRACE_LIMIT": 1,
-      "export:packages/propose/src/games/fnaf2/controller.ts#CONTROLLERS": 1,
       "export:packages/propose/src/games/fnaf2/controller.ts#MangleReactive": 1,
       "export:packages/propose/src/games/fnaf2/controller.ts#PRESS_COOLDOWN": 1,
       "export:packages/propose/src/games/fnaf2/controller.ts#ReactiveController": 1,
