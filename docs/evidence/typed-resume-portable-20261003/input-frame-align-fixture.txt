@@ -1,0 +1,121 @@
+import hashlib, json
+import os, re, subprocess, sys, tempfile
+REPO, PY = sys.argv[1], sys.argv[2]
+HERE = sys.argv[3]
+OLD = [PY, os.path.join(HERE, 'input-frame-align.py')]
+NEW = [os.environ['FIXTURE_NODE'], os.path.join(REPO, 'packages/review/bin/grade/input-frame-align.ts')]
+Q = '"kind","ts_ns","dur_ns","name","thread_name","process_name","track_name"\n'
+H = 'kind,ts_ns,dur_ns,name,thread_name,process_name,track_name\n'
+def row(kind, ts, name, dur=1):
+    q = lambda v: '"' + str(v).replace('"', '""') + '"'
+    return ','.join(q(v) for v in (kind, ts, dur, name, 'main', 'com.scottgames.fnaf2', 'game')) + '\n'
+P = lambda a: f'publishMotionEvent(inputChannel=game, action={a})'
+R = lambda s: f'receiveMessage(inputChannel=game, seq={s}, type=MOTION)'
+F = lambda s: f'receiveMessage(inputChannel=game, seq={s}, type=FINISHED)'
+D = lambda a, dev: f'dispatchInputEvent MotionEvent ACTION_{a} deviceId={dev} source=0x1002 historySize=0'
+def synthetic(actions, injected=True, dev=9, finish=True):
+    rows = []
+    if injected:
+        for ts, a, s in [(1, 'DOWN', '0x1'), (4, 'MOVE', '0x2'), (7, 'UP', '0x3')]:
+            rows += [row('publish', ts, P(a)), row('receive', ts + 1, R(s)), row('finish', ts + 2, F(s)), row('dispatch', ts, D(a, -1))]
+    for k, (ts, a) in enumerate(actions):
+        s = hex(0x10 + k)
+        rows += [row('publish', ts, P(a)), row('receive', ts + 1, R(s)), row('dispatch', ts, D(a, dev))]
+        if finish: rows.append(row('finish', ts + 2, F(s)))
+    return Q + ''.join(rows)
+four = [(100_000_000, 'DOWN'), (110_000_000, 'UP'), (300_000_000, 'DOWN'), (310_000_000, 'UP'), (500_000_000, 'DOWN'), (510_000_000, 'UP'), (700_000_000, 'DOWN'), (710_000_000, 'UP')]
+csvs = {
+  'syn': synthetic(four), 'syn-nofinish': synthetic(four, finish=False), 'syn-injected': synthetic(four, dev=-1),
+  'syn-pointer': synthetic([(100_000_000, 'DOWN'), (105_000_000, 'POINTER_DOWN(1)'), (108_000_000, 'POINTER_UP(1)'), (110_000_000, 'UP'), (300_000_000, 'UP'), (500_000_000, 'DOWN'), (505_000_000, 'DOWN'), (510_000_000, 'UP')]),
+  'syn-early': synthetic([(-50_000_000, 'DOWN'), (-40_000_000, 'UP'), (900_000_000, 'DOWN'), (910_000_000, 'UP')]),
+  'progress': 'loading 10%\n' + synthetic(four), 'crlf': synthetic(four).replace('\n', '\r\n'),
+  'none': H, 'publish-only': H + row('publish', 5, P('DOWN')), 'mismatch': Q + row('publish', 1, P('DOWN')) + row('publish', 2, P('UP')) + row('receive', 3, R('0x1')),
+  'noaction': Q + row('publish', 1, 'publishMotionEvent(inputChannel=game, act=DOWN)') + row('receive', 2, R('0x1')),
+  'dispatch-differs': Q + row('publish', 1, P('DOWN')) + row('receive', 2, R('0x1')) + row('dispatch', 1, D('UP', 9)),
+  'unicode': Q + ''.join([row('publish', 1, P('DOWN') + '\n'), row('receive', 2, R('0xAB') + ' \u00e9'), row('finish', 3, 'xseq=0xab'), row('finish', 4, 'seq=0xABg'), row('finish', 5, F('0xab')),
+      row('dispatch', 1, D('DOWN', '\u0661\u0662') + '\n'), row('publish', 10, P('UP')), row('receive', 11, '\u00e9seq=0x2'), row('receive', 12, R('0x2')), row('dispatch', 10, D('UP', '\u0663'))]),
+  'wordseq': Q + row('publish', 1, P('DOWN')) + row('receive', 2, 'receiveMessage(xseq=0x1)'),
+  'no-header': 'nothing\n', 'missing-col': 'kind,ts_ns\npublish,1\n', 'bad-row': H + 'publish,x,1,n,t,p,q\n', 'short-row': H + 'publish,1\n', 'short-other': H + 'other,1\n',
+  'long-row': H + 'publish,1,2,"' + P('DOWN') + '",a,b,c,EXTRA\nreceive,2,1,"' + R('0x1') + '",a,b,c\n', 'empty-dur': H + 'publish,1,,"' + P('DOWN') + '",,,\nreceive,2,,"' + R('0x1') + '",,,\n',
+  'uni-ts': H + 'publish,\u0661,1,"' + P('DOWN') + '",t,p,q\nreceive, 2 ,1,"' + R('0x1') + '",t,p,q\n',
+}
+clocks = {
+  'clock0': 'snapshot_id,clock_name,clock_value\n0,BOOTTIME,100\n0,MONOTONIC,100\n',
+  'clock-even': '"snapshot_id","clock_name","clock_value"\n0,BOOTTIME,1003\n0,MONOTONIC,0\n1,BOOTTIME,1000\n1,MONOTONIC,0\n',
+  'clock-neg': 'snapshot_id,clock_name,clock_value\n0,BOOTTIME,0\n0,MONOTONIC,3\n1,BOOTTIME,0\n1,MONOTONIC,2\n',
+  'clock-big': 'snapshot_id,clock_name,clock_value\n0,BOOTTIME,100000000000000001\n0,MONOTONIC,0\n1,BOOTTIME,100000000000000004\n1,MONOTONIC,0\n2,BOOTTIME,5\n2,REALTIME,1\n',
+  'clock-spread': 'snapshot_id,clock_name,clock_value\n0,BOOTTIME,1500000\n0,MONOTONIC,0\n1,BOOTTIME,1700000\n1,MONOTONIC,0\n2,BOOTTIME,1600001\n2,MONOTONIC,0\n',
+  'clock-nopair': 'snapshot_id,clock_name,clock_value\n0,BOOTTIME,1\n1,MONOTONIC,1\n', 'clock-noheader': 'x\n', 'clock-bad': 'snapshot_id,clock_name,clock_value\nz,BOOTTIME,1\n',
+  'clock-short': 'snapshot_id,clock_name,clock_value\n0\n', 'clock-nocol': 'snapshot_id,clock_value\n0,1\n',
+}
+def tsv(rows, header='# schema=fnaf2-frame-trace-v3 fps=60 note=a=b  bare __proto__=x =y', cols='seq\timage_ns\tinterval_ns\tmask_downstroke\tmonitor_downstroke\textra', blank=True):
+    body = '\n'.join(f'{k + 1}\t{t * 1_000_000}\t0\t{m}\t{n}\tz' for k, (t, m, n) in enumerate(rows))
+    return header + '\n' + cols + '\n' + ('\n \t\n' if blank else '') + body + '\n'
+states = [(0, 142, 144), (90, 142, 144), (120, 4, 24), (140, 0, 144), (320, 0, 0), (360, 142, 144), (520, 4, 20), (550, 142, 20), (720, 4, 0), (740, 142, 0), (800, 142, 144)]
+frames = {
+  'f.tsv': tsv(states), 'f-nofinal.tsv': tsv(states[:-1]), 'f-unsorted.tsv': tsv(list(reversed(states)) + [(800, 142, 144), (801, -1, 144)]),
+  'f-bad-schema.tsv': tsv(states, header='# schema=other'), 'f-missing.tsv': tsv(states, cols='seq\timage_ns'), 'f-short.tsv': '# schema=fnaf2-frame-trace-v3\nseq\n',
+  'f-count.tsv': tsv(states) + '1\t2\n', 'f-num.tsv': tsv(states) + '1\tx\t0\t0\t0\tz\n', 'f-blank.tsv': tsv([], blank=True),
+  'f-crlf.tsv': tsv(states).replace('\n', '\r\n'), 'f-uni.tsv': tsv(states) + '\u0669\u0669\t\u0669\u0660\u0660\u0660\u0660\u0660\u0660\u0660\u0660\t0\t 1 \t1_0\tz\n', 'f-one.tsv': tsv([(5, 142, 144)]),
+  'f-25.tsv': tsv([(0, 142, 144), (30, 142, 144), (40, 4, 144), (100, 4, 144)]),
+}
+binary = {'f-bom.tsv': b'\xef\xbb\xbf' + tsv(states).encode(), 'f-utf8.tsv': tsv(states).encode() + b'1\t\xff\n', 'f-surrogate.tsv': tsv(states).encode() + b'\xed\xa0\x80\n'}
+cases = []
+for c in csvs: cases += [(c, 'clock0', 'f.tsv', []), (c, 'clock0', 'f.tsv', ['--json'])]
+for c in clocks: cases += [('syn', c, 'f.tsv', []), ('syn', c, 'f.tsv', ['--json'])]
+for f in list(frames) + list(binary): cases += [('syn', 'clock0', f, []), ('syn', 'clock0', f, ['--json'])]
+cases += [('syn', 'clock0', 'f.tsv', ['--max-wait-ms', '50']), ('syn', 'clock0', 'f.tsv', ['--max-wait-ms', '0']), ('syn', 'clock0', 'f.tsv', ['--max-wait-ms', '-1']),
+  ('syn', 'clock0', 'f.tsv', ['--max-wait-ms', 'nan']), ('syn', 'clock0', 'f.tsv', ['--max-wait-ms', 'inf']), ('none', 'clock0', 'f.tsv', ['--max-wait-ms', 'inf']),
+  ('syn', 'clock0', 'f.tsv', ['--max-wait-ms', 'x']), ('syn', 'clock0', 'f.tsv', ['--max-wait-ms', '1e308', '--json']), ('syn', 'clock0', 'f.tsv', ['--max-wait-ms', '1e-300']),
+  ('syn', 'clock0', 'f.tsv', ['--package', "o'reilly$&$1"]), ('syn', 'clock0', 'f.tsv', ['--package', '']), ('syn', 'clock0', 'f.tsv', ['--package', 'a\nb']),
+  ('syn', 'clock0', 'f.tsv', ['--max', '3000', '--js']), ('FAIL', 'clock0', 'f.tsv', []), ('FAILCLOCK', 'clock0', 'f.tsv', []), ('SIGNAL', 'clock0', 'f.tsv', []),
+  ('BADUTF8', 'clock0', 'f.tsv', []), ('BADERR', 'clock0', 'f.tsv', []), ('MISSINGTRACE', 'clock0', 'f.tsv', []), ('syn', 'clock0', 'nope.tsv', []), ('NOPROC', 'clock0', 'f.tsv', []),
+  ('ENVPROC', 'clock0', 'f.tsv', []), ('PATHPROC', 'clock0', 'f.tsv', []), ('syn', 'clock0', 'f.tsv', ['--trace-processor', 'nope']), ('syn', 'clock0', './/f.tsv', ['--json'])]
+same = 0
+results = []
+diagnostic_differences = []
+codes = {}
+with tempfile.TemporaryDirectory() as d:
+    for n, t in csvs.items(): open(os.path.join(d, n + '.csv'), 'w', newline='').write(t)
+    for n, t in clocks.items(): open(os.path.join(d, n + '.csv'), 'w', newline='').write(t)
+    for n, t in frames.items(): open(os.path.join(d, n), 'w', newline='').write(t)
+    for n, t in binary.items(): open(os.path.join(d, n), 'wb').write(t)
+    open(os.path.join(d, 'trace.pftrace'), 'wb').write(b'fixture')
+    open(os.path.join(d, 'bad.bin'), 'wb').write(b'kind,ts_ns\n\xff\n')
+    proc = os.path.join(d, 'trace_processor')
+    open(proc, 'w').write('#!/bin/sh\n[ -n "$FAKE_SIG" ] && kill -9 $$\nif [ -n "$FAKE_RC" ]; then case "$3" in *clock_snapshot*) [ -n "$FAKE_CLOCKONLY" ] && { printf "$FAKE_ERR" >&2; exit "$FAKE_RC"; };; *) [ -z "$FAKE_CLOCKONLY" ] && { printf "$FAKE_ERR" >&2; exit "$FAKE_RC"; };; esac; fi\n'
+                          'case "$3" in *clock_snapshot*) cat "$FAKE_CLOCK";; *) cat "$FAKE_CSV";; esac\n'); os.chmod(proc, 0o755)
+    os.mkdir(os.path.join(d, 'bin')); os.symlink(proc, os.path.join(d, 'bin', 'trace_processor_shell'))
+    for csvname, clockname, frame, args in cases:
+        env = {k: v for k, v in os.environ.items() if k != 'TRACE_PROCESSOR'}
+        env.update(FAKE_CSV=os.path.join(d, csvname + '.csv'), FAKE_CLOCK=os.path.join(d, clockname + '.csv'))
+        trace = 'trace.pftrace'; extra = ['--trace-processor', proc]
+        if csvname in ('FAIL', 'FAILCLOCK'): env.update(FAKE_CSV=os.path.join(d, 'syn.csv'), FAKE_RC='4', FAKE_ERR='line one\\nboom: trace bad\\n  ')
+        if csvname == 'FAILCLOCK': env['FAKE_CLOCKONLY'] = '1'
+        if csvname == 'SIGNAL': env['FAKE_SIG'] = '1'
+        if csvname == 'BADUTF8': env['FAKE_CSV'] = os.path.join(d, 'bad.bin')
+        if csvname == 'BADERR': env.update(FAKE_RC='3', FAKE_ERR='\\377\\n')
+        if csvname == 'MISSINGTRACE': trace = 'nope.pftrace'
+        if csvname == 'NOPROC': extra = []; env['PATH'] = '/usr/bin:/bin'
+        if csvname == 'ENVPROC': extra = []; env['PATH'] = os.path.join(d, 'bin') + ':/usr/bin:/bin'; env['FAKE_CSV'] = os.path.join(d, 'syn.csv')
+        cwd = d
+        if csvname == 'PATHPROC':
+            extra = []; env['PATH'] = os.path.join(d, 'bin') + ':/usr/bin:/bin'; env['FAKE_CSV'] = os.path.join(d, 'syn.csv')
+            cwd = os.path.join(d, 'bin'); trace = os.path.join(d, trace); frame = os.path.join(d, frame)
+        out = []
+        for cmd in (OLD, NEW):
+            p = subprocess.run(cmd + [trace, frame] + extra + args, capture_output=True, cwd=cwd, env=env)
+            out.append((p.stdout.decode(), p.returncode, p.stderr.decode().strip().splitlines()[-1:] if p.returncode in (2, 3) else ''))
+        codes[out[0][1]] = codes.get(out[0][1], 0) + 1
+        if csvname == 'PATHPROC' or (csvname, clockname, frame, args) == ('syn', 'clock-spread', 'f.tsv', []): print(out[1][0][:900])
+        assert out[0][:2] == out[1][:2], (csvname, args, out)
+        results.append({'stdout_sha256': hashlib.sha256(out[1][0].replace(d, '<FIXTURE_ROOT>').encode()).hexdigest(), 'exit': out[1][1]})
+        if out[0][2] != out[1][2]: diagnostic_differences.append({'case': csvname, 'arguments': args})
+        if out[0] == out[1]: same += 1
+        else:
+            a, b = out[0][0].splitlines(), out[1][0].splitlines()
+            k = next((i for i in range(min(len(a), len(b))) if a[i] != b[i]), min(len(a), len(b)))
+            print('DIFF', csvname, clockname, frame, args, 'rc', out[0][1], out[1][1], '\n  py', a[k:k+2], out[0][2], '\n  ts', b[k:k+2], out[1][2])
+print(f'{same} same of {len(cases)}', codes)
+
+print(json.dumps({"schema":"reader-comparison-v2", "cases":len(cases), "stdoutAndExitEqual":len(results), "allComparedFieldsEqual":same, "diagnosticDifferences":diagnostic_differences, "results":results},sort_keys=True))

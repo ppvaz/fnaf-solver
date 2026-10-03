@@ -3182,3 +3182,13 @@ by this work; other Python tools still await migration. The Companion local
 night runner stays disabled pending the user's removal/redesign decision;
 its readiness proof, visual adapters and cancellation of prequeued commands
 are unresolved. No phone commands, installations or live queue jobs were run.
+
+**Reproducibility correction, same session.** The first reader record's
+stdout digests retained randomly named temporary fixture directories. Its
+165 paired stdout/exit comparisons stand, but the advertised byte-exact
+record recheck could not reproduce those digests. The frozen record is kept.
+Its generated successor,
+[`typed-readers-3281149915632f03b650`](../docs/evidence/typed-resume-portable-20261003/record.json),
+normalizes the temporary root only when hashing retained output; each paired
+stdout/exit comparison still happens before that extra normalization. It
+names what it supersedes and retains the portable fixtures and generator.
