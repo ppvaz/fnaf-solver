@@ -157,10 +157,20 @@ public final class CaptureService extends Service {
     private long regionSequence;
     // One whole native frame on request (SNAP verb): the menu and title
     // readers' input, replacing the full-display screencap. Copied on the
-    // capture thread, encoded on the control thread.
-    private volatile CountDownLatch snapRequest;
-    private int[] snapPixels;
-    private long snapImageNs;
+    // capture thread, encoded on the control thread. The TCP and local-socket
+    // listeners both dispatch, so one SNAP runs at a time (snapLock), and each
+    // carries its own pixels: a request that timed out cannot hand its frame,
+    // or a null, to the next one.
+    private static final class SnapRequest {
+        final CountDownLatch done = new CountDownLatch(1);
+        int[] pixels;
+        long imageNs;
+    }
+    private final Object snapLock = new Object();
+    private volatile SnapRequest snapRequest;
+    // A target change resets the legacy readers; it must not interleave with a
+    // TRACE start on the other listener.
+    private final Object targetLock = new Object();
     // FNaF 2's remaining on-device readers, quarantined.
     private final Fnaf2Legacy legacy = new Fnaf2Legacy(IMAGE_READER_MAX_IMAGES);
     private final Object lessonLock = new Object();
@@ -207,14 +217,16 @@ public final class CaptureService extends Service {
             if (next == null) return "target-unknown";
             if (installedBuild(next.packageName) == null) return "target-not-installed";
         }
-        Targets.Target previous = target;
-        if (previous == next) return null;
-        if (legacy.traceActive()) return "target-busy-trace";
-        target = next;
-        getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-                .putString(PREF_TARGET, next == null ? null : next.packageName).apply();
-        // The legacy readers' onset and watch belong to one target.
-        legacy.reset();
+        synchronized (targetLock) {
+            Targets.Target previous = target;
+            if (previous == next) return null;
+            if (legacy.traceActive()) return "target-busy-trace";
+            target = next;
+            getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+                    .putString(PREF_TARGET, next == null ? null : next.packageName).apply();
+            // The legacy readers' onset and watch belong to one target.
+            legacy.reset();
+        }
         publishCombinedStatus(projection == null ? "UNAVAILABLE" : "RUNNING");
         return null;
     }
@@ -431,10 +443,10 @@ public final class CaptureService extends Service {
                             plane.getRowStride(), plane.getPixelStride());
                     if (nativeCapture()) {
                         nativeRegions.capture(frameView, ++regionSequence, imageNs, callbackNs);
-                        CountDownLatch snap = snapRequest;
-                        if (snap != null && snap.getCount() > 0) {
-                            copySnap(buffer, plane.getRowStride(), plane.getPixelStride(), imageNs);
-                            snap.countDown();
+                        SnapRequest snap = snapRequest;
+                        if (snap != null && snap.done.getCount() > 0) {
+                            copySnap(snap, buffer, plane.getRowStride(), plane.getPixelStride(), imageNs);
+                            snap.done.countDown();
                         }
                     }
                     if (!sessionActive(generation)) return;
@@ -892,10 +904,18 @@ public final class CaptureService extends Service {
         if (field.length < 3) return "ERROR trace-usage";
         switch (field[2]) {
             case "start":
-                return field.length == 4 ? legacy.traceStart(field[3],
-                        new File(getFilesDir(), "frame-traces"), nativeCapture(),
-                        System.nanoTime(), SystemClock.elapsedRealtimeNanos())
-                        : "ERROR trace-start-usage";
+                if (field.length != 4) return "ERROR trace-start-usage";
+                // The dispatcher checked the target outside this lock; a TARGET
+                // on the other listener may have moved it since.
+                synchronized (targetLock) {
+                    if (!legacyActive()) {
+                        Targets.Target current = target;
+                        return "ERROR legacy-inactive target="
+                                + (current == null ? "NONE" : current.packageName);
+                    }
+                    return legacy.traceStart(field[3], new File(getFilesDir(), "frame-traces"),
+                            nativeCapture(), System.nanoTime(), SystemClock.elapsedRealtimeNanos());
+                }
             case "stop": {
                 if (field.length != 3) return "ERROR trace-stop-usage";
                 String reply = legacy.traceStop();
@@ -946,10 +966,11 @@ public final class CaptureService extends Service {
         }
     }
 
-    /** Capture thread: the whole native frame as ARGB, for one SNAP. */
-    private void copySnap(ByteBuffer buffer, int rowStride, int pixelStride, long imageNs) {
-        int width = captureWidth;
-        int height = captureHeight;
+    /** Capture thread: the whole native frame as ARGB, into the SNAP that asked. */
+    private void copySnap(SnapRequest request, ByteBuffer buffer, int rowStride, int pixelStride,
+            long imageNs) {
+        int width = NativeFrame.WIDTH;
+        int height = NativeFrame.HEIGHT;
         int[] out = new int[width * height];
         byte[] row = new byte[rowStride];
         ByteBuffer view = buffer.duplicate();
@@ -962,8 +983,8 @@ public final class CaptureService extends Service {
                         | ((row[at + 1] & 0xff) << 8) | (row[at + 2] & 0xff);
             }
         }
-        snapPixels = out;
-        snapImageNs = imageNs;
+        request.pixels = out;
+        request.imageNs = imageNs;
     }
 
     /**
@@ -974,33 +995,32 @@ public final class CaptureService extends Service {
     private String snapControl(String[] field) {
         if (field.length != 3 || !Fnaf2Legacy.validLabel(field[2])) return "ERROR snap-usage";
         if (!nativeCapture()) return "ERROR snap-native-resolution-required";
-        CountDownLatch latch = new CountDownLatch(1);
-        snapRequest = latch;
-        try {
-            if (!latch.await(2000, TimeUnit.MILLISECONDS)) return "ERROR snap-no-frame";
-        } catch (InterruptedException error) {
-            Thread.currentThread().interrupt();
-            return "ERROR snap-interrupted";
-        } finally {
-            snapRequest = null;
+        synchronized (snapLock) {
+            SnapRequest request = new SnapRequest();
+            snapRequest = request;
+            try {
+                if (!request.done.await(2000, TimeUnit.MILLISECONDS)) return "ERROR snap-no-frame";
+            } catch (InterruptedException error) {
+                Thread.currentThread().interrupt();
+                return "ERROR snap-interrupted";
+            } finally {
+                snapRequest = null;
+            }
+            File directory = new File(getFilesDir(), "frames");
+            if (!directory.isDirectory() && !directory.mkdirs()) return "ERROR snap-directory";
+            File file = new File(directory, field[2] + ".png");
+            Bitmap bitmap = Bitmap.createBitmap(request.pixels, NativeFrame.WIDTH, NativeFrame.HEIGHT,
+                    Bitmap.Config.ARGB_8888);
+            try (FileOutputStream stream = new FileOutputStream(file)) {
+                if (!bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)) return "ERROR snap-encode";
+            } catch (IOException error) {
+                return "ERROR snap-write";
+            } finally {
+                bitmap.recycle();
+            }
+            return "OK path=files/frames/" + file.getName() + " imageNs=" + request.imageNs
+                    + " snapshotNs=" + System.nanoTime();
         }
-        int[] pixels = snapPixels;
-        long imageNs = snapImageNs;
-        snapPixels = null;
-        File directory = new File(getFilesDir(), "frames");
-        if (!directory.isDirectory() && !directory.mkdirs()) return "ERROR snap-directory";
-        File file = new File(directory, field[2] + ".png");
-        Bitmap bitmap = Bitmap.createBitmap(pixels, captureWidth, captureHeight,
-                Bitmap.Config.ARGB_8888);
-        try (FileOutputStream stream = new FileOutputStream(file)) {
-            if (!bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)) return "ERROR snap-encode";
-        } catch (IOException error) {
-            return "ERROR snap-write";
-        } finally {
-            bitmap.recycle();
-        }
-        return "OK path=files/frames/" + file.getName() + " imageNs=" + imageNs
-                + " snapshotNs=" + System.nanoTime();
     }
 
     /**
