@@ -30,7 +30,7 @@ const complain = (message: string) => { console.error(message); failed = 1; };
 // The real tap table, read from coords.sh rather than restated here -- a stub
 // that drifts from the value it stands in for tests the stub -- plus the camera
 // sweep coordinates the probe library carries.
-const taps = new Map();
+const taps = new Map<string, readonly [number, number]>();
 for (const line of readFileSync(join(HERE, 'coords.sh'), 'utf8').split('\n')) {
   const m = line.match(/^([A-Z0-9_]+)="(\d+) (\d+)"/);
   if (m) taps.set(m[1], [Number(m[2]), Number(m[3])]);
@@ -42,11 +42,30 @@ for (const [name, point] of Object.entries(COORDS)) taps.set(name, point);
 if (probeToRaw !== toRaw)
   complain('hid-sweep-probe.ts carries its own transform again; re-export the transport\'s');
 
-// The Companion holds no transform and no control coordinates of its own.
-const java = readFileSync(join(ROOT, 'android/companion/src/com/ppvaz/fnafcompanion/NightRunner.java'), 'utf8');
-if (/\* 20 \/ 9|\* 9 \/ 20|CONTROL_MAP|new Point\(/.test(java))
-  complain('NightRunner.java carries a screen transform or a control map again; it presses the points in its bundle\'s ' +
-    `${HID_CONTROLS_FILE}, derived by the transport`);
+// Every real tap maps through the one transform to the point the formula above
+// names, inside the raw panel.
+for (const [name, [x, y]] of taps) {
+  const raw = toRaw([x, y]);
+  const want = [Math.floor((1080 - y) * 20 / 9), Math.floor(x * 9 / 20)];
+  if (raw[0] !== want[0] || raw[1] !== want[1])
+    complain(`${name} (${x}, ${y}) maps to ${JSON.stringify(raw)}, the formula gives ${JSON.stringify(want)}`);
+  if (!(raw[0] >= 0 && raw[0] <= 2400 && raw[1] >= 0 && raw[1] <= 1080))
+    complain(`${name} (${x}, ${y}) maps outside the raw panel: ${JSON.stringify(raw)}`);
+}
+
+// The Companion holds no transform and no control coordinates of its own, in
+// any of its sources, however the arithmetic is spaced.
+const carriesTransform = (source: string) => /\*\s*20\s*\/\s*9|\*\s*9\s*\/\s*20|CONTROL_MAP|new Point\(/.test(source);
+if (!carriesTransform('x*20/9') || !carriesTransform('y * 9/20'))
+  complain('the transform pattern misses a compactly spaced copy');
+const companion = join(ROOT, 'android/companion/src');
+const javaFiles = readdirSync(companion, { recursive: true, encoding: 'utf8' }).filter(name => name.endsWith('.java'));
+if (javaFiles.length < 5) complain(`only ${javaFiles.length} Companion sources found under ${companion}; the layout changed`);
+for (const name of javaFiles) {
+  if (carriesTransform(readFileSync(join(companion, name), 'utf8')))
+    complain(`${name} carries a screen transform or a control map again; the Companion presses the points in its bundle's ` +
+      `${HID_CONTROLS_FILE}, derived by the transport`);
+}
 
 // Every committed Companion route bundle carries the controls the transport
 // derives from the profile beside it, bound to that profile's sha256.
