@@ -124,7 +124,7 @@
     },
     {
       "id": "review",
-      "command": "node packages/review/src/cli.ts",
+      "command": "node packages/review/bin/cli.ts",
       "lifecycle": "supported"
     },
     {
@@ -2666,6 +2666,12 @@
       "id": "packages/propose/bindings/gates.ts",
       "invocation": "packages/propose/bindings/gates.ts [--measure --description TEXT]",
       "kind": "register",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/cli.ts",
+      "invocation": "packages/review/bin/cli.ts",
+      "kind": "report",
       "lifecycle": "supported"
     },
     {

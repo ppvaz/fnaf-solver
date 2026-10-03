@@ -199,7 +199,7 @@ export function promotionsRecord(result: ReturnType<typeof queryPromotions>, { d
       `UNTRACKED_WINNER_DEBT ${result.open.untrackedWinnerDebt.summary}.`,
     labels: 'A query over committed evidence: it measures nothing and promotes nothing. The edges it re-derives carry ' +
       'DEVICE_MEASURED claims already promoted; the open winners are MODEL_ONLY.',
-    method: { tool: 'packages/review/src/cli.ts', command,
+    method: { tool: 'packages/review/bin/cli.ts', command,
       git: { commit, dirtyInputs, note: 'the query code is in the commit that adds this record' } },
     query: result,
   };

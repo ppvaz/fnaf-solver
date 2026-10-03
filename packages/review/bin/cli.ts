@@ -23,9 +23,9 @@ import { writeFileSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { ClaimEnvelope, RefusalEnvelope } from '@sixam/kernel';
-import { promotionsQueryEnvelope } from './envelopes.ts';
-import { QUERY_COMMAND, QUERY_INPUTS, promotionsRecord, queryPromotions } from './promotions-query.ts';
-import { auditRuns, runAuditRecord } from './run-audit.ts';
+import { promotionsQueryEnvelope } from '../src/envelopes.ts';
+import { QUERY_COMMAND, QUERY_INPUTS, promotionsRecord, queryPromotions } from '../src/promotions-query.ts';
+import { auditRuns, runAuditRecord } from '../src/run-audit.ts';
 
 const ROOT = resolve(fileURLToPath(new URL('../../..', import.meta.url)));
 const USAGE = `Usage: npm run review -- query promotions [--envelope] [--write FILE] [--date YYYY-MM-DD]
@@ -117,7 +117,7 @@ if (verb === 'query' && (what === 'promotions' || what === 'audit')) {
 const VERBS = ['query', 'describe', 'review', 'promote', 'check', 'resource', 'truth'];
 if (!VERBS.includes(verb)) usage(verb ? `unknown verb ${verb}` : 'a verb is required');
 // The solver is loaded only for its verbs, so `query promotions` runs exactly as it always has.
-const { createSolver } = await import('./solver.ts');
+const { createSolver } = await import('../src/solver.ts');
 const solver = createSolver({ root: ROOT });
 
 if (verb === 'query') {

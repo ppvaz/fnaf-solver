@@ -8,7 +8,7 @@
     "@sixam/source": "file:../source"
   },
   "bin": {
-    "fnaf2-review": "src/cli.ts"
+    "fnaf2-review": "bin/cli.ts"
   },
   "exports": {
     "./chronicle-schema": "./src/chronicle-schema.ts",

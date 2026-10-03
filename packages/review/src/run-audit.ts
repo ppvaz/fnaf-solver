@@ -242,7 +242,7 @@ export function runAuditRecord(result: ReturnType<typeof auditRuns>, { date, com
       `${Object.entries(result.undecided as Record<string, number>).sort((a, b) => b[1] - a[1]).map(([reason, n]) => `${reason} ${n}`).join(', ')}.`,
     labels: 'An instrument over committed packs: the run data are DEVICE_MEASURED as packed, the phase response it reads is ' +
       'MODEL_ONLY, and an attribution promotes nothing.',
-    method: { tool: 'packages/review/src/cli.ts', command, instrument: RUN_AUDIT_INSTRUMENT,
+    method: { tool: 'packages/review/bin/cli.ts', command, instrument: RUN_AUDIT_INSTRUMENT,
       git: { commit, dirtyInputs, note: 'the audit code is in the commit that adds this record' } },
     audit: result,
   };

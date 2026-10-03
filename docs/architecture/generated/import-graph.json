@@ -4022,6 +4022,20 @@
       ]
     },
     {
+      "file": "packages/review/bin/cli.ts",
+      "imports": [
+        "../src/envelopes.ts",
+        "../src/promotions-query.ts",
+        "../src/run-audit.ts",
+        "../src/solver.ts",
+        "@sixam/kernel",
+        "node:child_process",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "packages/review/bin/grade/actuation-frame-metric.ts",
       "imports": [
         "@sixam/kernel",
@@ -4211,20 +4225,6 @@
       "imports": [
         "@sixam/kernel",
         "@sixam/source"
-      ]
-    },
-    {
-      "file": "packages/review/src/cli.ts",
-      "imports": [
-        "./envelopes.ts",
-        "./promotions-query.ts",
-        "./run-audit.ts",
-        "./solver.ts",
-        "@sixam/kernel",
-        "node:child_process",
-        "node:fs",
-        "node:path",
-        "node:url"
       ]
     },
     {

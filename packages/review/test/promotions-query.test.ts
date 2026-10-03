@@ -24,7 +24,7 @@ const ROOT = resolve(fileURLToPath(new URL('../../..', import.meta.url)));
 
 // The CLI runs beside the in-process query: each compiles every committed winner (~8 s).
 const cliRun = new Promise<{ status: number | null, stdout: string, stderr: string }>((done, fail) => {
-  const child = spawn(process.execPath, [join(ROOT, 'packages/review/src/cli.ts'), 'query', 'promotions'], { cwd: ROOT });
+  const child = spawn(process.execPath, [join(ROOT, 'packages/review/bin/cli.ts'), 'query', 'promotions'], { cwd: ROOT });
   let stdout = '';
   let stderr = '';
   child.stdout.on('data', chunk => { stdout += chunk; });

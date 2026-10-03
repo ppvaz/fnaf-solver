@@ -44,7 +44,7 @@ interface Described {
 interface ChronicleRow { readonly id: string, readonly date: string, readonly kind: string, readonly game: string, readonly sources: readonly unknown[] }
 
 const ROOT = resolve(fileURLToPath(new URL('../../..', import.meta.url)));
-const CLI = join(ROOT, 'packages/review/src/cli.ts');
+const CLI = join(ROOT, 'packages/review/bin/cli.ts');
 // truth reads a host's own local dump; this test runs with none configured, in process and in the CLI it spawns.
 process.env[VAULT_ENV] = join(tmpdir(), `solver-test-no-vault-${process.pid}.json`);
 
