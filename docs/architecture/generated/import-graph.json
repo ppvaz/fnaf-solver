@@ -813,7 +813,8 @@
         "./pyargs.ts",
         "./pyfmt.ts",
         "./pyjson.ts",
-        "./pystats.ts"
+        "./pystats.ts",
+        "./pywave.ts"
       ]
     },
     {
@@ -925,6 +926,14 @@
       "file": "packages/kernel/test/pystats.test.ts",
       "imports": [
         "../src/pystats.ts",
+        "node:assert/strict",
+        "node:test"
+      ]
+    },
+    {
+      "file": "packages/kernel/test/pywave.test.ts",
+      "imports": [
+        "../src/pywave.ts",
         "node:assert/strict",
         "node:test"
       ]
@@ -4530,6 +4539,16 @@
       ]
     },
     {
+      "file": "packages/review/bin/recompile/audio-report.ts",
+      "imports": [
+        "@sixam/kernel/py",
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "packages/review/bin/recompile/compare-draw-trace.ts",
       "imports": [
         "../../../source/recompile/model-draw-trace.ts",
@@ -4545,6 +4564,19 @@
         "node:crypto",
         "node:fs",
         "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/review/bin/recompile/test-audio-records.ts",
+      "imports": [
+        "./audio-report.ts",
+        "@sixam/kernel/py",
+        "node:assert/strict",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:test",
         "node:url"
       ]
     },
@@ -5148,12 +5180,58 @@
       ]
     },
     {
+      "file": "packages/source/recompile/game-builds.ts",
+      "imports": [
+        "./record-io.ts",
+        "@sixam/kernel/py",
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "packages/source/recompile/model-draw-trace.ts",
       "imports": [
         "@sixam/source/fnaf2",
         "\\.\\/([\\w-]+\\.ts)",
         "node:fs",
         "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/source/recompile/record-io.ts",
+      "imports": [
+        "@sixam/kernel/py",
+        "node:crypto",
+        "node:fs",
+        "node:path"
+      ]
+    },
+    {
+      "file": "packages/source/recompile/sound-map.ts",
+      "imports": [
+        "./record-io.ts",
+        "@sixam/kernel/py",
+        "node:child_process",
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/source/recompile/test-recompile-records.ts",
+      "imports": [
+        "./game-builds.ts",
+        "./sound-map.ts",
+        "@sixam/kernel/py",
+        "node:assert/strict",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:test",
         "node:url"
       ]
     },

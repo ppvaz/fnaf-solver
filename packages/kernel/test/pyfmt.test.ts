@@ -2,7 +2,9 @@
 // negative value that rounds to zero is kept. pyRepr against repr(float), and pyDumps against json.dumps:
 // its separators, escapes, indent and floats. Each expected string was printed by CPython 3.12.
 import assert from 'node:assert/strict';
-import { PyFloat, pyDumps, pyFixed, pyFloat, pyInt, pyPath, pyRegExp, pyRepr, pyRound, pySplit, pySplitLines } from '../src/pyfmt.ts';
+import {
+  PyFloat, pyDumps, pyFixed, pyFloat, pyFloatValue, pyInt, pyIntValue, pyKeyValues, pyPath, pyRegExp, pyRepr, pyRound, pySplit, pySplitLimit, pySplitLines,
+} from '../src/pyfmt.ts';
 
 const CASES: [number, number, string][] = [
   [0.125, 2, '0.12'], [0.375, 2, '0.38'], [2.5, 0, '2'], [3.5, 0, '4'], [-0.125, 2, '-0.12'], [-2.5, 0, '-2'],
@@ -75,5 +77,11 @@ for (const [pattern, text, want] of searches) {
   const match = pyRegExp(pattern, pattern.includes('groups') ? 'i' : '').exec(text);
   assert.deepEqual(match ? [...match] : null, want, `${pattern} in ${JSON.stringify(text)}`);
 }
+
+// str.split with a limit, dict() over KEY=VALUE pairs, and int() and float() with their ValueError, as CPython gives them.
+assert.deepEqual([pySplitLimit('a:b:c', ':', 1), pySplitLimit('abc', ':', 1), pySplitLimit('a::', ':', 2)], [['a', 'b:c'], ['abc'], ['a', '', '']]);
+assert.deepEqual([...pyKeyValues(['k=v=w', 'x='])], [['k', 'v=w'], ['x', '']]);
+assert.throws(() => pyIntValue('x'), { message: "invalid literal for int() with base 10: 'x'" });
+assert.throws(() => pyFloatValue('x'), { message: "could not convert string to float: 'x'" });
 
 console.log(`pyfmt: ${CASES.length} fixed, ${REPRS.length} repr, 6 json.dumps and ${PATHS.length} path values print as Python prints them, and split, splitlines, float, int and round read as Python reads; ${searches.length} patterns search as re does`);

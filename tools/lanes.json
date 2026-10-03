@@ -116,7 +116,10 @@
       "apps/desktop/test/test-deathchart.ts",
       "packages/propose/test/policyartifacttest.ts",
       "packages/propose/test/policysearchtest.ts",
-      "packages/kernel/test/pystats.test.ts"
+      "packages/kernel/test/pystats.test.ts",
+      "packages/kernel/test/pywave.test.ts",
+      "packages/review/bin/recompile/test-audio-records.ts",
+      "packages/source/recompile/test-recompile-records.ts"
     ],
     "steps": [
       [
@@ -177,10 +180,6 @@
       [
         "python3",
         "packages/play/bin/calibrate/test-camera-calibrate.py"
-      ],
-      [
-        "python3",
-        "packages/review/bin/recompile/test-audio-records.py"
       ]
     ]
   },

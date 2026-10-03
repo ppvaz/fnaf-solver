@@ -174,8 +174,8 @@
         "why": "parked Minus 7 Python (cue detection, latency experiments) frozen with the results it produced; parked work is neither ported nor typed until it is revived"
       },
       "py:packages/review/bin": {
-        "count": 592,
-        "why": "26 graders and recompile readers, nine on Pillow, numpy or SciPy (typed in place); the 17 stdlib-only ones are being ported one at a time (Pedro, 2026-10-02: unforced Python is ported to TypeScript (characterize, port, compare, switch), not typed in place)"
+        "count": 504,
+        "why": "24 graders and recompile readers, nine on Pillow, numpy or SciPy (typed in place); the 15 stdlib-only ones are being ported one at a time (Pedro, 2026-10-02: unforced Python is ported to TypeScript (characterize, port, compare, switch), not typed in place)"
       }
     }
   },
@@ -189,8 +189,8 @@
     "why": "typing.cast calls per area: an assertion mypy takes on trust, the Python form of the as-casts TypeScript's type-debt gate counts. Counted from 2026-10-03 (tools/python_types.py); an entry only shrinks.",
     "entries": {
       "py-cast:packages/source/recompile": {
-        "count": 9,
-        "why": "narrowings mypy cannot see when the count began: Pillow pixel access returns a union for every image mode while native-frame.py reads one RGB and one L image (4 calls); game-builds.py narrows rows its earlier steps filled in (3); sound-map.py passes a list or an ndarray its caller chose (2)"
+        "count": 4,
+        "why": "narrowings mypy cannot see: Pillow pixel access returns a union for every image mode while native-frame.py reads one RGB and one L image (4 calls); game-builds.py's 3 and sound-map.py's 2 left with their TypeScript ports"
       }
     }
   },

@@ -18,13 +18,18 @@ export interface PyOption {
   readonly name: string, readonly takes?: 'flag' | 'value', readonly required?: boolean,
   readonly type?: 'int' | 'float', readonly choices?: readonly string[], readonly append?: boolean, readonly metavar?: string,
 }
-/** The positionals in order; an optional one (nargs='?') may be absent, and the last may take the rest (nargs='*'). */
-export interface PyPositional { readonly name: string, readonly optional?: boolean, readonly rest?: boolean, readonly choices?: readonly string[] }
+/** The positionals in order; an optional one (nargs='?') may be absent, and the last may take the rest (nargs='*', or
+ *  nargs='+' when it is also required). */
+export interface PyPositional {
+  readonly name: string, readonly optional?: boolean, readonly rest?: boolean, readonly required?: boolean, readonly choices?: readonly string[],
+}
 
 export interface PyArgs {
   /** Each option given: true for a flag, its value, or every value when it appends. */
   readonly options: Readonly<Record<string, string | boolean | readonly string[]>>,
   readonly positionals: readonly string[],
+  /** With known, what parse_known_args left over instead of refusing it. */
+  readonly extras?: readonly string[],
 }
 
 const NEGATIVE = /^-\d+$|^-\d*\.\d+$/;
@@ -38,7 +43,7 @@ function usage(prog: string, options: readonly PyOption[], positionals: readonly
   }
   for (const positional of positionals) {
     const name = positional.choices ? `{${positional.choices.join(',')}}` : positional.name;
-    parts.push(positional.rest ? `[${name} ...]` : positional.optional ? `[${name}]` : name);
+    parts.push(positional.rest ? (positional.required ? `${name} [${name} ...]` : `[${name} ...]`) : positional.optional ? `[${name}]` : name);
   }
   return `usage: ${prog} ${parts.join(' ')}`;
 }
@@ -49,8 +54,8 @@ export function pyArgsError(prog: string, options: readonly PyOption[], position
 }
 
 /** The parsed command line, or the exit code and the text argparse printed (to stdout for help, else stderr). */
-export function pyArgs(argv: readonly string[], prog: string, options: readonly PyOption[], positionals: readonly PyPositional[] = []):
-  PyArgs | { readonly exit: 0 | 2, readonly text: string } {
+export function pyArgs(argv: readonly string[], prog: string, options: readonly PyOption[], positionals: readonly PyPositional[] = [],
+  { known = false } = {}): PyArgs | { readonly exit: 0 | 2, readonly text: string } {
   const line = usage(prog, options, positionals);
   const refuse = (message: string) => pyArgsError(prog, options, positionals, message);
   const names = ['--help', ...options.map(option => option.name)];
@@ -128,8 +133,57 @@ export function pyArgs(argv: readonly string[], prog: string, options: readonly 
     } else given[flag] = inline;
   }
   const missing = [...fixed.filter((positional, k) => !positional.optional && k >= loose.length).map(positional => positional.name),
+    ...positionals.filter(positional => positional.rest && positional.required && !rest.length).map(positional => positional.name),
     ...options.filter(option => option.required && given[option.name] === undefined).map(option => option.name)];
   if (missing.length) return refuse(`the following arguments are required: ${missing.join(', ')}`);
+  if (known) return { options: given, positionals: [...loose, ...rest], extras: extra };
   if (extra.length) return refuse(`unrecognized arguments: ${extra.join(' ')}`);
   return { options: given, positionals: [...loose, ...rest] };
 }
+
+/** One subcommand's options and positionals, as add_subparsers().add_parser(name) declared them. */
+export interface PySubcommand { readonly options: readonly PyOption[], readonly positionals?: readonly PyPositional[] }
+
+/** A command line with add_subparsers(dest=dest, required=True): the main parser takes the command and -h, and
+ *  refuses what neither it nor the subcommand recognised; the subcommand's own refusals carry `PROG name` and its
+ *  usage. */
+export function pySubcommands(argv: readonly string[], prog: string, dest: string, commands: Readonly<Record<string, PySubcommand>>):
+  { readonly command: string, readonly args: PyArgs } | { readonly exit: 0 | 2, readonly text: string } {
+  const names = Object.keys(commands);
+  const line = `usage: ${prog} [-h] {${names.join(',')}} ...`;
+  const refuse = (message: string) => ({ exit: 2 as const, text: `${line}\n${prog}: error: ${message}` });
+  const extras: string[] = [];
+  for (let k = 0; k < argv.length; k += 1) {
+    let token = argv[k];
+    if (token === '--') {
+      if (k + 1 >= argv.length) break;
+      k += 1;
+      token = argv[k];
+    } else if (token.startsWith('-') && token !== '-' && !NEGATIVE.test(token)) {
+      const flag = token.includes('=') ? token.slice(0, token.indexOf('=')) : token;
+      if (token === '-h' || (flag.startsWith('--') && flag.length > 2 && '--help'.startsWith(flag))) return { exit: 0, text: line };
+      extras.push(token);
+      continue;
+    }
+    const command = commands[token];
+    if (command === undefined || !Object.hasOwn(commands, token)) return refuse(`argument ${dest}: invalid choice: ${pyStrRepr(token)} (choose from ${names.join(', ')})`);
+    const parsed = pyArgs(argv.slice(k + 1), `${prog} ${token}`, command.options, command.positionals ?? [], { known: true });
+    if ('exit' in parsed) return parsed;
+    const left = [...extras, ...(parsed.extras ?? [])];
+    if (left.length) return refuse(`unrecognized arguments: ${left.join(' ')}`);
+    return { command: token, args: { options: parsed.options, positionals: parsed.positionals } };
+  }
+  return refuse(`the following arguments are required: ${dest}`);
+}
+
+/** A parsed option's value, or null where it was not given (or is a flag). */
+export const pyOptionText = (args: PyArgs, name: string): string | null => {
+  const value = args.options[name];
+  return typeof value === 'string' ? value : null;
+};
+
+/** An appended option's values, or null where it was never given (argparse's default). */
+export const pyOptionList = (args: PyArgs, name: string): readonly string[] | null => {
+  const value = args.options[name];
+  return Array.isArray(value) ? value : null;
+};

@@ -655,8 +655,8 @@
       "lifecycle": "supported"
     },
     {
-      "id": "game-builds.py",
-      "invocation": "game-builds.py",
+      "id": "game-builds.ts",
+      "invocation": "game-builds.ts",
       "kind": "Report: `record` adds or replaces one game's row in a `recompile-game-builds-v1` record. The row holds conversion, host binary, a bounded no-input harness boot (frames visited, exit code, GL errors, sample plays), APK hash and package, and its audio record's evidenceId, all derived from the step outputs. `check` re-derives statuses and the evidenceId and resolves each audio record under `results/`.",
       "lifecycle": "supported"
     },
@@ -667,9 +667,21 @@
       "lifecycle": "supported"
     },
     {
-      "id": "sound-map.py",
-      "invocation": "sound-map.py",
-      "kind": "Report/check: `record` writes a game's `recompile-sound-map-v1` table. For each bank record it gives the handle, bank index, name, declared length and rate, and its `res/raw` file by the retail rule (`s%04d` by **handle**) with that file's sha256, duration, rate and channels. It adds the converted asset and its play sites, audition correlations against the handle's file and the bank index's file, and phone-measured anchors. `check` re-derives the file names, the declared-length agreement, asset ids, anchors, summary and evidenceId without any audio. In `npm run test:unit` via `test-audio-records.py`.",
+      "id": "sound-map.ts",
+      "invocation": "sound-map.ts",
+      "kind": "Report/check: `record` writes a game's `recompile-sound-map-v1` table. For each bank record it gives the handle, bank index, name, declared length and rate, and its `res/raw` file by the retail rule (`s%04d` by **handle**) with that file's sha256, duration, rate and channels. It adds the converted asset and its play sites, audition correlations against the handle's file and the bank index's file, and phone-measured anchors. `check` re-derives the file names, the declared-length agreement, asset ids, anchors, summary and evidenceId without any audio. In `npm run test:unit` via `test-recompile-records.ts`.",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "record-io.ts",
+      "invocation": "record-io.ts",
+      "kind": "Library for `game-builds.ts` and `sound-map.ts`: files read as Python's `open()`, `glob()` and `json.load()` read them, and a file's sha256.",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "test-recompile-records.ts",
+      "invocation": "test-recompile-records.ts",
+      "kind": "FIXTURE for the build and sound-map records on synthetic step outputs and tables (statuses, boot sums, file names, lengths, anchors, refusals), then a recheck of every committed `recompile-game-builds-v1` and `recompile-sound-map-v1` result. In `npm run test:unit`.",
       "lifecycle": "supported"
     },
     {
@@ -3037,8 +3049,8 @@
       "lifecycle": "supported"
     },
     {
-      "id": "packages/review/bin/recompile/audio-report.py",
-      "invocation": "packages/review/bin/recompile/audio-report.py",
+      "id": "packages/review/bin/recompile/audio-report.ts",
+      "invocation": "packages/review/bin/recompile/audio-report.ts",
       "kind": "Report: `record` joins the probe, the generated `assets.h` and play sites, an audition run (`CHOWDREN_AUDIO_AUDITION`) and bounded game runs (`CHOWDREN_AUDIO_TRACE` plus openal-soft's wave backend) into a `recompile-audio-v1` record. Each sound gets its file, format, event ids, audition RMS/peak and play counts. `check` re-derives the totals and the evidenceId. No audio is written.",
       "lifecycle": "supported"
     },
@@ -3055,9 +3067,9 @@
       "lifecycle": "supported"
     },
     {
-      "id": "packages/review/bin/recompile/test-audio-records.py",
-      "invocation": "packages/review/bin/recompile/test-audio-records.py",
-      "kind": "FIXTURE for both records on a synthetic mix, trace, probe and build steps (thresholds, totals, refusals), then a recheck of every committed `recompile-audio-v1` and `recompile-game-builds-v1` result. In `npm run test:unit`.",
+      "id": "packages/review/bin/recompile/test-audio-records.ts",
+      "invocation": "packages/review/bin/recompile/test-audio-records.ts",
+      "kind": "FIXTURE for the audio record on a synthetic mix, trace and probe (thresholds, totals, refusals), then a recheck of every committed `recompile-audio-v1` result; Source's `recompile/test-recompile-records.ts` covers the build and sound-map records. In `npm run test:unit`.",
       "lifecycle": "supported"
     },
     {

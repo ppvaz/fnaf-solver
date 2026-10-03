@@ -2,7 +2,7 @@
 // spec (prog 't'; trace, extra nargs='?'; --start-ns int, --json store_true, --only choices, --ref append,
 // --out required), and each expected verdict and message is the one argparse gave.
 import assert from 'node:assert/strict';
-import { pyArgs, pyArgsError } from '../src/pyargs.ts';
+import { pyArgs, pyArgsError, pySubcommands } from '../src/pyargs.ts';
 
 const parse = (argv: string[]) => pyArgs(argv, 't', [{ name: '--start-ns', type: 'int' }, { name: '--json', takes: 'flag' },
   { name: '--only', choices: ['gif', 'all'] }, { name: '--ref', append: true }, { name: '--out', required: true }],
@@ -51,6 +51,18 @@ assert.equal(parsed(["it's"]), 't: error: argument command: invalid choice: "it\
 assert.equal(parsed([]), 't: error: the following arguments are required: command');
 const usageLine = commands(['-h']);
 assert.ok('exit' in usageLine && usageLine.text === 'usage: t [-h] [--dump DUMP] [--xor XOR] {frames,objects,group} [args ...]');
+
+// add_subparsers(dest='cmd', required=True), against argparse 3.12.12: the main parser takes the command and what
+// nobody recognised; a subcommand refuses its own requirements under its own prog and usage.
+const subcommands = (argv: string[]) => {
+  const result = pySubcommands(argv, 't', 'cmd', { record: { options: [{ name: '--game', required: true }, { name: '--run', append: true }] },
+    check: { options: [], positionals: [{ name: 'records', rest: true, required: true }] } });
+  return 'exit' in result ? result.text : result;
+};
+assert.deepEqual(subcommands(['check', 'a', 'b']), { command: 'check', args: { options: {}, positionals: ['a', 'b'] } });
+assert.equal(subcommands(['check']), 'usage: t check [-h] records [records ...]\nt check: error: the following arguments are required: records');
+assert.equal(subcommands(['rec', '--game', 'g']), "usage: t [-h] {record,check} ...\nt: error: argument cmd: invalid choice: 'rec' (choose from record, check)");
+assert.equal(subcommands(['record', '--game', 'g', 'extra']), 'usage: t [-h] {record,check} ...\nt: error: unrecognized arguments: extra');
 
 // parser.error after the parse prints the same usage line.
 const spec = [{ name: '--rate', type: 'int', required: true }] as const;

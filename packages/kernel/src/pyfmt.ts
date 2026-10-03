@@ -71,42 +71,38 @@ export class PyFloat {
 export type PyJson = null | boolean | number | bigint | string | PyFloat | readonly PyJson[] | ReadonlyMap<string, PyJson>
   | { readonly [key: string]: PyJson };
 
-const pyString = (text: string) =>
-  JSON.stringify(text).replace(/[\u007f-\uffff]/g, char => `\\u${char.charCodeAt(0).toString(16).padStart(4, '0')}`);
+const pyString = (text: string, ensureAscii = true) => (ensureAscii
+  ? JSON.stringify(text).replace(/[\u007f-\uffff]/g, char => `\\u${char.charCodeAt(0).toString(16).padStart(4, '0')}`) : JSON.stringify(text));
 const pyFloatJson = (x: number) => Number.isNaN(x) ? 'NaN' : x === Infinity ? 'Infinity' : x === -Infinity ? '-Infinity' : pyRepr(x);
-
-// Python orders strings by code point; JavaScript's < compares UTF-16 units, which differ past U+FFFF.
-function byCodePoint(a: string, b: string) {
-  const x = [...a], y = [...b];
-  for (let k = 0; k < Math.min(x.length, y.length); k += 1)
-    if (x[k] !== y[k]) return (x[k].codePointAt(0) ?? 0) - (y[k].codePointAt(0) ?? 0);
-  return x.length - y.length;
-}
 
 /**
  * `json.dumps(value)` with Python's defaults: ', ' and ': ' between items, every character outside space
  * to ~ escaped, a float as repr writes it, a bigint as the int it was. With indent,
- * `json.dumps(value, indent=N)`: one item per line and ',' at each line's end; with sortKeys, sort_keys=True.
+ * `json.dumps(value, indent=N)`: one item per line and ',' at each line's end; with sortKeys, sort_keys=True;
+ * separators as json.dumps takes them ([item, key], e.g. [',', ':']); with ensureAscii false, ensure_ascii=False
+ * (only the quote, the backslash and control characters escaped).
  */
-export function pyDumps(value: PyJson, indent?: number, { sortKeys = false } = {}): string {
+export function pyDumps(value: PyJson, indent?: number,
+  { sortKeys = false, separators, ensureAscii = true }: { sortKeys?: boolean, separators?: readonly [string, string], ensureAscii?: boolean } = {}): string {
+  const [itemSeparator, keySeparator] = separators ?? [indent === undefined ? ', ' : ',', ': '];
   // A Map keeps its keys in the order they came, as a dict does (json.loads reads an object into one).
   const pairs = (item: ReadonlyMap<string, PyJson> | { readonly [key: string]: PyJson }) => (item instanceof Map ? [...item] : Object.entries(item));
   const write = (item: PyJson, level: number): string => {
     if (item === null) return 'null';
     if (typeof item === 'boolean') return item ? 'true' : 'false';
-    if (typeof item === 'string') return pyString(item);
+    if (typeof item === 'string') return pyString(item, ensureAscii);
     if (typeof item === 'number') return Number.isInteger(item) ? BigInt(item).toString() : pyFloatJson(item);
     if (typeof item === 'bigint') return item.toString();
     if (item instanceof PyFloat) return pyFloatJson(item.value);
     const list = isList(item);
     const parts = list ? item.map(entry => write(entry, level + 1))
-      : (sortKeys ? [...pairs(item)].sort(([a], [b]) => byCodePoint(a, b)) : pairs(item))
-        .map(([key, entry]) => `${pyString(key)}: ${write(entry, level + 1)}`);
+      : (sortKeys ? [...pairs(item)].sort(([a], [b]) => pyCompare(a, b)) : pairs(item))
+        .map(([key, entry]) => `${pyString(key, ensureAscii)}${keySeparator}${write(entry, level + 1)}`);
     const [open, close] = list ? ['[', ']'] : ['{', '}'];
     if (!parts.length) return open + close;
-    if (indent === undefined) return open + parts.join(', ') + close;
+    if (indent === undefined) return open + parts.join(itemSeparator) + close;
     const pad = `\n${' '.repeat(indent * (level + 1))}`;
-    return `${open}${pad}${parts.join(`,${pad}`)}\n${' '.repeat(indent * level)}${close}`;
+    return `${open}${pad}${parts.join(`${itemSeparator}${pad}`)}\n${' '.repeat(indent * level)}${close}`;
   };
   return write(value, 0);
 }
@@ -257,3 +253,55 @@ export function pyCompare(a: string, b: string): number {
   }
   return x.length - y.length;
 }
+
+/** int(text): the int, or the ValueError int() raised, as a RangeError. */
+export function pyIntValue(text: string | undefined): bigint {
+  const value = text === undefined ? null : pyInt(text);
+  if (value === null) throw new RangeError(`invalid literal for int() with base 10: '${text}'`);
+  return value;
+}
+
+/** float(text): the float, or the ValueError float() raised, as a RangeError. */
+export function pyFloatValue(text: string | undefined): number {
+  const value = text === undefined ? null : pyFloat(text);
+  if (value === null) throw new RangeError(`could not convert string to float: '${text}'`);
+  return value;
+}
+
+/** text.split(separator, limit): at most limit cuts, the rest left in the last piece. */
+export function pySplitLimit(text: string, separator: string, limit: number): string[] {
+  const out: string[] = [];
+  let rest = text;
+  while (out.length < limit) {
+    const cut = rest.indexOf(separator);
+    if (cut < 0) break;
+    out.push(rest.slice(0, cut));
+    rest = rest.slice(cut + separator.length);
+  }
+  return [...out, rest];
+}
+
+/** a, b, ... = text.split(separator, count - 1): the pieces, or the ValueError of too few. */
+export function pyUnpack(text: string, separator: string, count: number): string[] {
+  const parts = pySplitLimit(text, separator, count - 1);
+  if (parts.length !== count) throw new RangeError(`not enough values to unpack (expected ${count}, got ${parts.length})`);
+  return parts;
+}
+
+/** dict(kv.split('=', 1) for kv in values): a ValueError for a value without '='. */
+export function pyKeyValues(values: readonly string[]): Map<string, string> {
+  return new Map(values.map((kv, k) => {
+    const parts = pySplitLimit(kv, '=', 1);
+    if (parts.length !== 2) throw new RangeError(`dictionary update sequence element #${k} has length 1; 2 is required`);
+    return [parts[0], parts[1]] as const;
+  }));
+}
+
+/** list[index]: Python's negative indices and its IndexError. */
+export function pyAt<T>(list: readonly T[], index: number): T {
+  if (index >= list.length || index < -list.length) throw new RangeError('list index out of range');
+  return list[index < 0 ? list.length + index : index];
+}
+
+/** AssertionError: what a Python script raised, uncaught, when a record disagreed with itself. */
+export class PyAssertionError extends Error {}

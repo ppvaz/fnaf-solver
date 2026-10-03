@@ -277,6 +277,69 @@ export function pyReadText(bytes: Uint8Array, errors: 'strict' | 'replace' = 'st
   return pyDecodeUtf8(bytes, errors).replace(/\r\n?/g, '\n');
 }
 
+/** KeyError: a dict read for a key it does not hold. */
+export class PyKeyError extends RangeError {}
+
+const typeName = (value: PyValue) => (value === null ? 'NoneType' : typeof value === 'boolean' ? 'bool' : typeof value === 'bigint' ? 'int'
+  : typeof value === 'string' ? 'str' : pyIsList(value) ? 'list' : pyIsDict(value) ? 'dict' : 'float');
+
+/** dict.get(key): None for a key it does not hold; on anything but a dict an AttributeError, as a TypeError. */
+export function pyGet(value: PyValue, key: string): PyValue {
+  if (!pyIsDict(value)) throw new TypeError(`'${typeName(value)}' object has no attribute 'get'`);
+  return value.get(key) ?? null;
+}
+
+/** dict[key]: a KeyError for a key it does not hold, a TypeError on anything but a dict. */
+export function pyItem(value: PyValue, key: string): PyValue {
+  if (!pyIsDict(value)) throw new TypeError(`'${typeName(value)}' object is not subscriptable`);
+  const found = value.get(key);
+  if (found === undefined) throw new PyKeyError(pyStrRepr(key));
+  return found;
+}
+
+/** len() of a str (in code points), list or dict; a TypeError for anything else. */
+export function pyLen(value: PyValue): bigint {
+  if (typeof value === 'string') return BigInt([...value].length);
+  if (pyIsList(value)) return BigInt(value.length);
+  if (pyIsDict(value)) return BigInt(value.size);
+  throw new TypeError(`object of type '${typeName(value)}' has no len()`);
+}
+
+/** A bool, int or float as the number Python compares, else a TypeError. */
+function operand(value: PyValue): bigint | number {
+  const found = numeric(value);
+  if (found === null) throw new TypeError(`'${typeName(value)}' is not a number`);
+  return found;
+}
+
+/** sum(values): from the int 0, left to right, an int while every term is one and a float from the first float. */
+export function pySum(values: readonly PyValue[]): bigint | PyFloat {
+  let total: bigint | number = 0n;
+  for (const value of values) {
+    const term = operand(value);
+    total = typeof total === 'bigint' && typeof term === 'bigint' ? total + term : Number(total) + Number(term);
+  }
+  return typeof total === 'bigint' ? total : new PyFloat(total);
+}
+
+/** How Python orders two numbers, exactly across int and float: -1, 0 or 1, or null when either is NaN (every
+ *  comparison with NaN is false). */
+export function pyCompareNumbers(a: PyValue, b: PyValue): -1 | 0 | 1 | null {
+  const [x, y] = [operand(a), operand(b)];
+  if (typeof x === 'bigint' && typeof y === 'bigint') return x < y ? -1 : x > y ? 1 : 0;
+  if (typeof x === 'number' && typeof y === 'number') return Number.isNaN(x) || Number.isNaN(y) ? null : x < y ? -1 : x > y ? 1 : 0;
+  const [int, float, flip] = typeof x === 'bigint' ? [x, Number(y), 1] : [BigInt(y), Number(x), -1];
+  if (Number.isNaN(float)) return null;
+  // The int against the float: past either infinity, else against its floor and any fraction.
+  let order: -1 | 0 | 1;
+  if (!Number.isFinite(float)) order = float > 0 ? -1 : 1;
+  else {
+    const floor = BigInt(Math.floor(float));
+    order = int < floor ? -1 : int > floor ? 1 : float > Math.floor(float) ? -1 : 0;
+  }
+  return flip === 1 ? order : order === 0 ? 0 : order === 1 ? -1 : 1;
+}
+
 /** Python's UnicodeDecodeError, a ValueError there and so a RangeError here. */
 export class PyUnicodeDecodeError extends RangeError {}
 

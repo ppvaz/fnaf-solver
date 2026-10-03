@@ -800,6 +800,24 @@
       }
     },
     {
+      "id": "packages/kernel/test/pywave.test.ts",
+      "lane": "test:unit",
+      "owner": "@sixam/kernel",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.ts per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
       "id": "packages/kernel/test/venue-identity.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/kernel",
@@ -4131,7 +4149,7 @@
       }
     },
     {
-      "id": "packages/review/bin/recompile/test-audio-records.py",
+      "id": "packages/review/bin/recompile/test-audio-records.ts",
       "lane": "test:unit",
       "owner": "package boundary",
       "timeoutMs": 180000,
@@ -4560,6 +4578,24 @@
     },
     {
       "id": "packages/source/recompile/test-mobile-parser.py",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.ts per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/source/recompile/test-recompile-records.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
