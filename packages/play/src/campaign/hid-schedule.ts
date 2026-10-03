@@ -32,10 +32,14 @@ export const DEFAULT_READY_DELAY_MS = 7000;
 // correction is needed: releasing early would let each gate advance the
 // stream and reintroduce the drift that refuted the per-action host lane.
 // Measured on device 2026-09-09 (campaign-2026-09-09T15-18-01): one control
-// read is 190 ms at p50 and 374 ms at worst, and the mask effect needs up to
-// 712 ms to appear. A gate therefore has to afford up to three reads, a
-// corrective contact, and that settle before it may release.
+// read is 190 ms at p50 and GATE_READ_WORST_MS at worst, and the mask effect
+// needs up to 712 ms to appear. A gate therefore has to afford up to three
+// reads, a corrective contact, and that settle before it may release.
 export const GATE_BUDGET_MIN_MS = 2200;
+// The slowest control read of that measurement. A gate starts a re-read only
+// when one this slow, and the correction it may call for, still lands before
+// the gate's release (adb-device-local-executor.ts).
+export const GATE_READ_WORST_MS = 374;
 // A gate spends its idle rather than a fixed constant, so a plan that idles
 // longer buys more attempts and one that idles less is simply not gated.
 export const GATE_BUDGET_MAX_MS = 4000;
@@ -427,8 +431,8 @@ function compileArmSegments(request: ExecutorRequest, actions: readonly Timed[],
   // be parity-corrected, and says so rather than pressing something else.
   const maskAction = remainder.find(({ action }) => action.control === V.mask &&
     typeof action.targetMaskOn === 'boolean');
-  const maskCorrection = maskAction
-    ? compileActionEvents(request, [{ action: maskAction.action, atMs: 0 }]).events : null;
+  const maskCompiled = maskAction ? compileActionEvents(request, [{ action: maskAction.action, atMs: 0 }]) : null;
+  const maskCorrection = maskCompiled?.events ?? null;
   // The monitor chain has the same single-miss fragility the mask chain has:
   // one lost monitor press inverts every later toggle (observed on device
   // 2026-09-14, night7-n7-420-minimal-m2: the +5300 monitor tap of cycle 5
@@ -437,8 +441,9 @@ function compileArmSegments(request: ExecutorRequest, actions: readonly Timed[],
   // a maskless plan is the plan's own monitor-down tap.
   const monitorDownAction = remainder.find(({ action }) => action.control === V.monitor &&
     action.targetMonitorUp === false);
-  const monitorCorrection = monitorDownAction && !maskCorrection
-    ? compileActionEvents(request, [{ action: monitorDownAction.action, atMs: 0 }]).events : null;
+  const monitorCompiled = monitorDownAction && !maskCorrection
+    ? compileActionEvents(request, [{ action: monitorDownAction.action, atMs: 0 }]) : null;
+  const monitorCorrection = monitorCompiled?.events ?? null;
   return Object.freeze({
     register,
     prefix: Object.freeze(prefixCompiled.events),
@@ -446,6 +451,8 @@ function compileArmSegments(request: ExecutorRequest, actions: readonly Timed[],
     gates: Object.freeze(remainderCompiled.gates),
     maskCorrection: maskCorrection ? Object.freeze(maskCorrection) : null,
     monitorCorrection: monitorCorrection ? Object.freeze(monitorCorrection) : null,
+    // How long the stream spends playing whichever correction a gate may send.
+    correctionMs: (maskCompiled ?? monitorCompiled)?.cursor ?? 0,
     rearm: Object.freeze(rearmCompiled.events),
     monitorTransitions: Object.freeze({
       prefix: monitorTransitionsOf(prefix),

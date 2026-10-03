@@ -248,6 +248,8 @@ assert.equal(gateSchedule.gated.remainderSegments.length, gates.length + 1,
   'the stream must be split into one more segment than it has gates');
 assert.ok(Number(gateSchedule.gated.maskCorrection?.length) > 0,
   'the corrective contact must be compiled from the authored mask press');
+assert.equal(gateSchedule.gated.correctionMs, 33,
+  'a gate knows how long its correction plays, so its re-reads leave room for it');
 // The gate is carved out of existing idle: it never displaces a contact.
 for (const entry of gates)
   assert.ok(gateRequest.blocks.every(item => item.actions.every(inner =>
@@ -669,6 +671,40 @@ try {
     'the gate event must not carry a verification it waited for');
   assert.ok(!settleLog.some(event => event.type === 'control.gate.verify'),
     'a correction is not read back: that read would sit beside the release');
+
+  // A GATE NEVER READS PAST ITS OWN RELEASE.
+  //
+  // Five spaced re-reads take a gate's refusal rate from 8% to under 0.2%, but
+  // only the ones that fit before the release may run: a state that resolves on
+  // a read finishing after the release would release late, and that lag moves
+  // every later contact. A re-read starts only when its spacing, a worst-case
+  // read and the corrective contact all fit before the release; a state still
+  // unresolved then is UNKNOWN, which stops the night instead of shifting it.
+  // The fixture's state never resolves, so an unbounded gate reads five times,
+  // 25 ms apart, past its budget (at most 60 ms here); bounded, it re-reads
+  // only while a spacing and a 5 ms worst-case read still fit.
+  const boundLog: ExecutorEvent[] = [];
+  const boundLifecycle = finishAfter(boundLog, event => event.type === 'control.gate.abort');
+  let boundSequence = 0;
+  const bounded = new AdbDeviceLocalArtifactExecutor({ serial: 'fixture-device', adb: gateAdb,
+    readyDelayMs: 1, pollMs: 250, observe: boundLifecycle.observe,
+    onEvent: boundLifecycle.onEvent,
+    timing: { pollMs: 1, armSettleMs: 0, armObservationWindowMs: 500, gateRetryGapMs: 25, gateReadWorstMs: 5,
+      gateMinSlackMs: 10, gateBudgetMinMs: 10, gateBudgetMaxMs: 60, gateBudgetReserveMs: 40 },
+    observeArm: async () => ({ sequence: ++boundSequence + 500,
+      highlights: ['cam:8', 'cam:11'], viewing: null }),
+    observeControlState: async () => ({ sequence: ++boundSequence, ageUs: 10, screen: 'FNAF2_NIGHT',
+      monitorUp: false, maskOn: null, maskReason: 'ambiguous-threshold', gridLuma: 4, maskEvidence: 'fixture' }) });
+  await bounded.execute(fastGateRequest);
+  const boundGate = boundLog.find(event => event.type === 'control.gate');
+  assert.ok(boundGate, 'the bounded fixture must reach a gate');
+  const boundGateReads = boundGate.reads as { startedAt: number | null, finishedAt: number }[];
+  assert.ok(boundGateReads.length >= 1 && boundGateReads.length < 5,
+    `a gate reads at least once and re-reads only inside its budget (${boundGateReads.length} reads)`);
+  assert.ok(boundGateReads.every(read => read.finishedAt <= Number(boundGate.releaseAt)),
+    `no gate read may finish after the gate releases (${boundGateReads.length} reads, last at ` +
+    `${boundGateReads.at(-1)?.finishedAt}, release at ${boundGate.releaseAt})`);
+  assert.equal(boundGate.status, 'UNKNOWN', 'a state unresolved by the release is unknown at the release');
 
   // Darkness stays unknown: mask-on and a blacked-out office read alike.
   const darkLog: ExecutorEvent[] = [];

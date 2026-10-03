@@ -17,7 +17,7 @@ import { validateExecutorRequest } from './artifact-executor.ts';
 import type { ArmVerification } from './artifact-executor.ts';
 import { buttonStrokeState } from '@sixam/play';
 import {
-  DEFAULT_READY_DELAY_MS, GATE_BUDGET_MAX_MS, GATE_BUDGET_MIN_MS, GATE_BUDGET_RESERVE_MS, GATE_MIN_SLACK_MS,
+  DEFAULT_READY_DELAY_MS, GATE_BUDGET_MAX_MS, GATE_BUDGET_MIN_MS, GATE_BUDGET_RESERVE_MS, GATE_MIN_SLACK_MS, GATE_READ_WORST_MS,
   SHARED_HID_RELEASE, compileDeviceLocalHidSchedule, sharedScheduleBody,
 } from './hid-schedule.ts';
 import type { HidSchedule } from './hid-schedule.ts';
@@ -51,6 +51,7 @@ interface ExecutorTiming {
   readonly armSettleMs?: number;
   readonly armObservationWindowMs?: number;
   readonly gateRetryGapMs?: number;
+  readonly gateReadWorstMs?: number;
   readonly pollMs?: number;
   readonly gateMinSlackMs?: number;
   readonly gateBudgetMinMs?: number;
@@ -287,6 +288,7 @@ export class AdbDeviceLocalArtifactExecutor {
   declare armSettleMs: number;
   declare armObservationWindowMs: number;
   declare gateRetryGapMs: number;
+  declare gateReadWorstMs: number;
   declare staticTerminalWaitMs: number;
   declare observerGapBoundMs: number;
   declare gateTiming: { minSlackMs: number; budgetMinMs: number; budgetMaxMs: number; budgetReserveMs: number; };
@@ -332,6 +334,7 @@ export class AdbDeviceLocalArtifactExecutor {
       armSettleMs: timing.armSettleMs ?? ARM_SETTLE_MS,
       armObservationWindowMs: timing.armObservationWindowMs ?? ARM_OBSERVATION_WINDOW_MS,
       gateRetryGapMs: timing.gateRetryGapMs ?? GATE_RETRY_GAP_MS,
+      gateReadWorstMs: timing.gateReadWorstMs ?? GATE_READ_WORST_MS,
       pollMs: timing.pollMs ?? pollMs,
       gateMinSlackMs: timing.gateMinSlackMs ?? GATE_MIN_SLACK_MS,
       gateBudgetMinMs: timing.gateBudgetMinMs ?? GATE_BUDGET_MIN_MS,
@@ -350,6 +353,7 @@ export class AdbDeviceLocalArtifactExecutor {
     this.armSettleMs = timingValues.armSettleMs;
     this.armObservationWindowMs = timingValues.armObservationWindowMs;
     this.gateRetryGapMs = timingValues.gateRetryGapMs;
+    this.gateReadWorstMs = timingValues.gateReadWorstMs;
     this.staticTerminalWaitMs = timingValues.staticTerminalWaitMs;
     this.observerGapBoundMs = timingValues.observerGapBoundMs;
     this.gateTiming = { minSlackMs: timingValues.gateMinSlackMs,
@@ -873,7 +877,13 @@ export class AdbDeviceLocalArtifactExecutor {
               // the same game moment, so an animation that refuses one read
               // refuses all three and a night ends on a state that would have
               // resolved on its own.
-              if (attempt > 0) await waitUntil(Date.now() + this.gateRetryGapMs);
+              if (attempt > 0) {
+                // A re-read whose answer, and the correction it may call for,
+                // would land after the release would release late, and that
+                // lag moves every later contact. Unresolved by then is UNKNOWN.
+                if (Date.now() + this.gateRetryGapMs + this.gateReadWorstMs + gated.correctionMs > releaseAt) break;
+                await waitUntil(Date.now() + this.gateRetryGapMs);
+              }
               const read = await readControlState();
               reads.push({ startedAt: read.readStartedAt, finishedAt: read.readFinishedAt });
               sample = compactControlSample(read.sample);
