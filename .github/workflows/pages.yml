@@ -45,6 +45,11 @@ jobs:
         run: |
           node apps/trainer/test/build.ts
           sudo cp dist/index.html _site/index.html
+      # The entry a visitor's phone loads, in a phone-sized browser, before it
+      # is published: the 2026-09-30 trainer that failed on load shipped
+      # because nothing ran this here. The runner image carries Chrome.
+      - name: The published entry loads in a browser
+        run: node apps/trainer/test/pages.test.ts
       - uses: actions/upload-pages-artifact@v3
         with:
           path: ./_site

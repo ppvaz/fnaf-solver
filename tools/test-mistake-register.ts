@@ -340,7 +340,7 @@ export function missingPaths({ scripts, ciText, exists, lanes = LANES }: {
 
 // --- item 13 and item 5 on the tree -----------------------------------------
 const ciText = readFileSync(join(ROOT, '.github/workflows/ci.yml'), 'utf8');
-const { reached, backlog } = ciReach(ROOT, { context: CONTEXT, ciText });
+const { reached, backlog } = ciReach(ROOT, { context: CONTEXT });
 const files = trackedFiles();
 const { verdicts, stale } = coverage({ files, reached, backlog, exempt: EXEMPT,
   readText: path => readFileSync(join(ROOT, path), 'utf8') });

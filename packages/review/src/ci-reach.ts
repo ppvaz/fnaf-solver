@@ -1,16 +1,16 @@
-// Which files a CI step runs, read the way CI runs them: each `run:` of .github/workflows/ci.yml as
+// Which files a CI step runs, read the way CI runs them: each `run:` of every .github/workflows file as
 // command lines, through `npm run` scripts (package.json), the lanes as data (tools/lanes.json) and
 // tools/test.ts's own selection (`--list`), never by matching a file's name in some text. The one
 // answer the gates and Review's S7 row share (tools/test-mistake-register.ts item 13, the grade-run
 // coverage gate, roadmap.ts): four readers of "does CI run this" had disagreed on the same file.
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { isRecord } from '@sixam/kernel';
 import { readLanes } from './lanes.ts';
 import type { Lane } from './lanes.ts';
 
-const CI_WORKFLOW = '.github/workflows/ci.yml';
+const WORKFLOWS = '.github/workflows';
 
 /** Split shell text into simple commands (arrays of words). Quote-aware,
  *  keeps `$(...)` as one word, and treats && || ; | & and newlines as
@@ -198,10 +198,17 @@ export function walk(text: string, via: string, sink: Sink, context: WalkContext
   }
 }
 
-/** Every file a CI step runs, with the first route that reaches it, and the
- *  BACKLOG reason of each tools/test.ts entry CI names but does not run. */
+/** Every workflow under .github/workflows: CI's checks, and the Pages build that gates a deploy. */
+function workflows(root: string) {
+  const dir = join(root, WORKFLOWS);
+  return (existsSync(dir) ? readdirSync(dir) : []).filter(name => /\.ya?ml$/.test(name)).sort()
+    .map(name => ({ name, text: readFileSync(join(dir, name), 'utf8') }));
+}
+
+/** Every file a workflow step runs, with the first route that reaches it, and the
+ *  BACKLOG reason of each tools/test.ts entry a step names but does not run. */
 export function ciReach(root: string, { context = walkContext(root), ciText }: { context?: WalkContext, ciText?: string } = {}) {
-  const text = ciText ?? (existsSync(join(root, CI_WORKFLOW)) ? readFileSync(join(root, CI_WORKFLOW), 'utf8') : '');
+  const texts = ciText === undefined ? workflows(root) : [{ name: 'ci.yml', text: ciText }];
   const reached = new Map<string, string>();
   const backlog = new Map<string, string>();
   const sink: Sink = {
@@ -211,7 +218,7 @@ export function ciReach(root: string, { context = walkContext(root), ciText }: {
       if (entry?.backlog) backlog.set(path, entry.backlog);
     },
   };
-  for (const step of ciSteps(text)) walk(step.run, `ci.yml "${step.name}"`, sink, context);
+  for (const { name, text } of texts) for (const step of ciSteps(text)) walk(step.run, `${name} "${step.name}"`, sink, context);
   for (const path of reached.keys()) backlog.delete(path);
   return { reached, backlog };
 }

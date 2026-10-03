@@ -462,7 +462,8 @@
         "node:fs",
         "node:module",
         "node:path",
-        "node:url"
+        "node:url",
+        "node:vm"
       ]
     },
     {
