@@ -1,186 +1,117 @@
-// Headless smoke test over the Chrome DevTools Protocol. No dependencies:
-// Node 22 ships a global WebSocket.
-import { spawn } from 'node:child_process';
-import { chromeBinary, chromeArgs } from '../../../tools/chrome.ts';
-import { mkdtempSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+// The trainer in a real browser: the menu loads, the arcade lab's fixture path
+// scores, saves, exports and resets, a full night starts and takes taps and
+// holds, and a finished night draws its report. Until 2026-10-02 this printed
+// each value and passed on any run without a console error, so a monitor tap
+// that lowered the monitor and a camera tap the game refused both "passed".
+//
+//   node apps/trainer/test/browser.test.ts [url]   # default: the dev server on :8731
+import assert from 'node:assert/strict';
+import { after, before, test } from 'node:test';
+import { launch, pageUrl } from './cdp.ts';
+import type { Page } from './cdp.ts';
 
-const URL_ = process.argv[2] || 'http://localhost:8731/dist/index.html';
-const PORT = 9333;
-const profile = mkdtempSync(join(tmpdir(), 'm7-chrome-'));
+let page: Page;
+before(async () => {
+  page = await launch();
+  await page.open(pageUrl());
+  await page.waitFor('the app', '!!window.app', value => value === true, 10_000);
+});
+after(async () => { await page?.close(); });
 
-const chrome = spawn(chromeBinary(), chromeArgs(PORT, profile), { stdio: 'ignore' });
+const is = (want: unknown) => (value: unknown) => value === want;
+/** Pointer down then up on the control `selector`, as one tap; `id` is the pointer. */
+const tap = (selector: string, id = 1) => page.evaluate(`(() => {
+  const el = document.querySelector(${JSON.stringify(selector)});
+  for (const type of ['pointerdown', 'pointerup']) el.dispatchEvent(new PointerEvent(type, { bubbles: true, pointerId: ${id} }));
+  return true; })()`);
+const pointer = (selector: string, type: 'pointerdown' | 'pointerup', id: number) => page.evaluate(`(() => {
+  document.querySelector(${JSON.stringify(selector)}).dispatchEvent(new PointerEvent('${type}', { bubbles: true, pointerId: ${id} }));
+  return true; })()`);
+const shown = (id: string) => `document.getElementById(${JSON.stringify(id)}).classList.contains("shown")`;
+/** A unit's stun left in frames, under whichever movement clock the Sim runs. */
+const STUN_LEFT = '(u => window.app.sim.opts.sourcedMovementClock ? u.stunRemaining : Math.max(0, u.stunUntil - window.app.sim.frame))';
 
-const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
+test('the menu loads', async () => {
+  assert.equal(await page.evaluate('document.title'), 'Minus 7 Trainer');
+  assert.equal(await page.evaluate('document.querySelectorAll("#mode-list .mode").length'), 10, 'one row per lesson');
+  assert.equal(await page.evaluate(shown('menu')), true);
+  // Chrome runs with --enable-automation, so a bot's trace posts dry and never
+  // enters the human census (main.ts postTrace).
+  assert.equal(await page.evaluate('navigator.webdriver'), true, 'the page knows a bot is playing');
+});
 
-/** An entry of Chrome's /json target list. */
-interface Target { readonly type: string, readonly webSocketDebuggerUrl: string }
-/** What this test reads of a DevTools exception or console argument. */
-interface RemoteObject { readonly type: string, readonly value?: unknown, readonly description?: string }
-interface ExceptionDetails { readonly text: string, readonly exception?: RemoteObject }
-/** What this test reads of each DevTools method's reply; any other reply it ignores. */
-interface Replies {
-  'Runtime.evaluate': { readonly result?: { readonly value?: unknown }, readonly exceptionDetails?: ExceptionDetails };
-  'Page.captureScreenshot': { readonly data: string };
-}
-type Reply<M extends string> = M extends keyof Replies ? Replies[M] : unknown;
-/** A DevTools message: the reply to a request carries its id, and its result or an error. */
-interface Message<R> { readonly id?: number, readonly result: R, readonly error?: { readonly message: string } }
-/** The events this test reads; it passes over every other message. */
-type CdpEvent =
-  | { readonly method: 'Runtime.consoleAPICalled', readonly params: { readonly type: string, readonly args: readonly RemoteObject[] } }
-  | { readonly method: 'Runtime.exceptionThrown', readonly params: { readonly exceptionDetails: ExceptionDetails } };
+test('the arcade lab scores, saves, exports and resets its fixture set', async () => {
+  await page.evaluate('localStorage.removeItem("m7.arcade.progress")');
+  await page.evaluate('document.querySelector(\'[data-ui="arcade"]\').click()');
+  await page.waitFor('arcade panel', shown('arcade'), is(true), 2_000);
+  assert.equal(await page.evaluate('document.getElementById("arcade").textContent.includes("FIXTURE / PRACTICE")'), true,
+    'the fixture set says it is one');
+  assert.equal(await page.evaluate('document.querySelectorAll("#arcade-choices [data-arcade-answer]").length'), 2);
+  await page.evaluate('document.querySelector("#arcade-choices [data-arcade-answer]").click()');
+  await page.waitFor('answer feedback', 'document.getElementById("arcade-feedback").textContent.length > 0', is(true), 2_000);
+  assert.equal(await page.evaluate('JSON.parse(localStorage["m7.arcade.progress"]).scored'), 1, 'the answer is scored and saved');
+  await page.evaluate('document.getElementById("btn-arcade-export").click()');
+  assert.equal(await page.evaluate('!document.getElementById("arcade-export").hidden'), true, 'the export is shown');
+  await page.evaluate('document.getElementById("btn-arcade-reset").click()');
+  assert.equal(await page.evaluate('JSON.parse(localStorage["m7.arcade.progress"]).scored'), 0, 'reset clears the score');
+  await page.evaluate('document.querySelector("#arcade [data-close]").click()');
+  await page.waitFor('menu again', shown('menu'), is(true), 2_000);
+});
 
-async function targets(): Promise<Target[]> {
-  for (let i = 0; i < 60; i++) {
-    try { const r = await fetch(`http://127.0.0.1:${PORT}/json`); return await r.json(); }
-    catch { await sleep(250); }
-  }
-  throw new Error('chrome did not start');
-}
+test('a full night starts and runs', async () => {
+  await page.evaluate('document.querySelector(\'[data-mode="night"]\').click()');
+  await page.waitFor('the brief', shown('brief'), is(true), 2_000);
+  await page.evaluate('document.getElementById("btn-brief-go").click()');
+  await page.waitFor('the run panel', shown('run'), is(true), 3_000);
+  assert.equal(await page.evaluate('!!document.querySelector("#hud .hud-timer")'), true, 'the stage has its HUD');
+  assert.equal(await page.evaluate('document.querySelectorAll("#map .camb").length'), 12, 'one button per camera');
+  await page.waitFor('the Sim advancing', 'window.app.sim.frame', value => typeof value === 'number' && value >= 60, 5_000);
+  assert.match(String(await page.evaluate('document.getElementById("t-main").textContent')), /^\d+:\d\d$/, 'the timer reads m:ss');
+});
 
-let id = 0;
-function rpc<M extends string>(ws: WebSocket, method: M, params = {}) {
-  const mid = ++id;
-  return new Promise<Reply<M>>((res, rej) => {
-    const on = (e: MessageEvent) => {
-      const m: Message<Reply<M>> = JSON.parse(e.data);
-      if (m.id !== mid) return;
-      ws.removeEventListener('message', on);
-      m.error ? rej(new Error(`${method}: ${m.error.message}`)) : res(m.result);
-    };
-    ws.addEventListener('message', on);
-    ws.send(JSON.stringify({ id: mid, method, params }));
-  });
-}
+test('taps and holds reach the Sim', async () => {
+  // The night opens on the cameras, on CAM 11 (curriculum.ts, lesson `night`).
+  assert.deepEqual(await page.evaluate('({ monitor: window.app.sim.monitor, cam: window.app.sim.cam })'), { monitor: 'up', cam: 11 });
+  await tap('[data-act="cam:10"]');
+  await page.waitFor('CAM 10 selected', 'window.app.sim.cam', is(10), 1_000);
+  await pointer('[data-widget="camlight"]', 'pointerdown', 2);
+  await page.waitFor('the camera light held', 'window.app.sim.lightHeld', is(true), 1_000);
+  await pointer('[data-widget="camlight"]', 'pointerup', 2);
+  await page.waitFor('the camera light released', 'window.app.sim.lightHeld', is(false), 1_000);
+  // A flash on a unit's own start room holds nobody: stunCam exempts the
+  // withereds on CAM 08, where all three start.
+  await tap('[data-act="cam:8"]');
+  await page.waitFor('CAM 08 selected', 'window.app.sim.cam', is(8), 1_000);
+  await pointer('[data-widget="camlight"]', 'pointerdown', 2);
+  await page.waitFor('the light on CAM 08', 'window.app.sim.lightHeld', is(true), 1_000);
+  assert.equal(await page.evaluate(`Math.max(0, ...window.app.sim.units.filter(u => u.path[u.idx] === 8).map(${STUN_LEFT}))`), 0,
+    'nobody on CAM 08 is held by the flash');
+  await pointer('[data-widget="camlight"]', 'pointerup', 2);
+  await tap('[data-act="monitor"]');
+  await page.waitFor('the monitor down', 'window.app.sim.monitor', is('down'), 2_000);
+  await tap('[data-act="monitor"]');
+  await page.waitFor('the monitor up again', 'window.app.sim.monitor', is('up'), 2_000);
+  console.log(`  screenshot: ${await page.screenshot('run.png')}`);
+});
 
-const logs: string[] = [], errors: string[] = [];
+test('a finished night draws its report', async () => {
+  // Play the rest of the night out at once, with no inputs, so the report has a whole night in it.
+  await page.evaluate(`(() => { const a = window.app; a.running = false;
+    while (a.sim.alive && !a.sim.won) { a.sim.tick(); a.sim.events.length = 0; }
+    a.finish(); return true; })()`);
+  await page.waitFor('the report', shown('report'), is(true), 3_000);
+  assert.equal(await page.evaluate(`(() => { const s = window.app.sim, head = document.getElementById("rep-head").textContent;
+    return s.won ? head === "6 AM — cleared" : !!s.death && head.startsWith("Died at "); })()`), true,
+    'the headline says how the night ended');
+  await page.waitFor('the timeline', 'document.getElementById("rep-canvas").width > 0', is(true), 2_000);
+  assert.equal(await page.evaluate(`[...document.querySelectorAll("#rep-stats div")]
+    .some(row => row.querySelector("b")?.textContent === "Light used")`), true, 'the stats include the light budget');
+  assert.equal(await page.evaluate(`[...document.querySelectorAll("#rep-stats div")]
+    .every(row => row.querySelector("b")?.textContent && row.querySelector("span")?.textContent)`), true,
+    'every stat row has a label and a value');
+  console.log(`  screenshot: ${await page.screenshot('report.png')}`);
+});
 
-async function main() {
-  // A fresh Chrome opens about:blank (chromeArgs), a page target.
-  const t = (await targets()).find(x => x.type === 'page') as Target;
-  const ws = new WebSocket(t.webSocketDebuggerUrl);
-  await new Promise<Event>(r => ws.addEventListener('open', r));
-
-  ws.addEventListener('message', (e) => {
-    const m: CdpEvent = JSON.parse(e.data);
-    if (m.method === 'Runtime.consoleAPICalled') {
-      const txt = m.params.args.map(a => a.value ?? a.description ?? a.type).join(' ');
-      logs.push(`${m.params.type}: ${txt}`);
-      if (m.params.type === 'error') errors.push(txt);
-    }
-    if (m.method === 'Runtime.exceptionThrown') {
-      const d = m.params.exceptionDetails;
-      errors.push(d.exception?.description || d.text);
-    }
-  });
-
-  await rpc(ws, 'Runtime.enable');
-  await rpc(ws, 'Page.enable');
-  await rpc(ws, 'Log.enable');
-  await rpc(ws, 'Page.navigate', { url: URL_ });
-  await sleep(1500);
-
-  const evalJs = async (expr: string) => {
-    const r = await rpc(ws, 'Runtime.evaluate', { expression: expr, awaitPromise: true, returnByValue: true });
-    if (r.exceptionDetails) errors.push(r.exceptionDetails.exception?.description || r.exceptionDetails.text);
-    return r.result?.value;
-  };
-
-  const step = async (label: string, expr: string) => {
-    const v = await evalJs(expr);
-    console.log(`  ${label}: ${JSON.stringify(v)}`);
-    return v;
-  };
-
-  console.log('\n— load —');
-  await step('title', 'document.title');
-  await step('modes rendered', 'document.querySelectorAll("#mode-list .mode").length');
-  await step('menu visible', 'document.getElementById("menu").classList.contains("shown")');
-
-  console.log('\n— arcade lab fixture path —');
-  await evalJs('localStorage.removeItem("m7.arcade.progress")');
-  await evalJs('document.querySelector(\'[data-ui="arcade"]\').click()');
-  await sleep(250);
-  await step('arcade panel shown', 'document.getElementById("arcade").classList.contains("shown")');
-  await step('fixture label visible', 'document.getElementById("arcade").textContent.includes("FIXTURE / PRACTICE")');
-  await step('prediction choices', 'document.querySelectorAll("#arcade-choices [data-arcade-answer]").length');
-  await evalJs('document.querySelector("#arcade-choices [data-arcade-answer]").click()');
-  await sleep(100);
-  await step('answer feedback', 'document.getElementById("arcade-feedback").textContent.length > 0');
-  await step('local score recorded', 'JSON.parse(localStorage["m7.arcade.progress"]).scored');
-  await evalJs('document.getElementById("btn-arcade-export").click()');
-  await step('progress export visible', '!document.getElementById("arcade-export").hidden');
-  await evalJs('document.getElementById("btn-arcade-reset").click()');
-  await step('reset clears score', 'JSON.parse(localStorage["m7.arcade.progress"]).scored');
-  await evalJs('document.querySelector("#arcade [data-close]").click()');
-  await sleep(150);
-
-  console.log('\n— start a full night —');
-  await evalJs('document.querySelector(\'[data-mode="night"]\').click()');
-  await sleep(250);
-  await step('brief shown', 'document.getElementById("brief").classList.contains("shown")');
-  await evalJs('document.getElementById("btn-brief-go").click()');
-  await sleep(600);
-  await step('run panel shown', 'document.getElementById("run").classList.contains("shown")');
-  await step('stage has hud', '!!document.querySelector("#hud .hud-timer")');
-  await step('cam buttons', 'document.querySelectorAll("#map .camb").length');
-  await step('sim exists', '!!window.app?.sim');
-  await sleep(1200);
-  await step('sim frame advancing', 'window.app.sim.frame');
-  await step('timer text', 'document.getElementById("t-main").textContent');
-
-  console.log('\n— simulate touch input —');
-  await evalJs(`(() => {
-    const fire = (el, type, id=1) => el.dispatchEvent(new PointerEvent(type, {bubbles:true, pointerId:id, clientX:10, clientY:10}));
-    const tap = (sel) => { const el=document.querySelector(sel); fire(el,'pointerdown'); fire(el,'pointerup'); };
-    window.__tap = tap;
-    tap('[data-act="monitor"]');
-    return true;
-  })()`);
-  await sleep(400);
-  await step('monitor state', 'window.app.sim.monitor');
-  await evalJs('window.__tap(\'[data-act="cam:10"]\')');
-  await sleep(200);
-  await step('current cam', 'window.app.sim.cam');
-  await evalJs(`(() => { const el=document.querySelector('[data-act="light"]');
-    el.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,pointerId:2})); return 1; })()`);
-  await sleep(120);
-  await step('light held', 'window.app.sim.lightHeld');
-  // Flash a room that actually has somebody in it this early in the night.
-  await evalJs('(() => { const s = window.app.sim; if (s.monitor !== "up") { s.monitor = "up"; s.monAnim = 0; } return true; })()');
-  await sleep(120);
-  await evalJs('(() => { const s = window.app.sim; window.__busy = s.units[0].path[s.units[0].idx];'
-    + ' window.__tap(`[data-act="cam:${window.__busy}"]`); return window.__busy; })()');
-  await sleep(150);
-  await step('flashed cam', 'window.__busy');
-  await step('stun applied (frames)', 'Math.max(0,...window.app.sim.units.filter(u=>u.path[u.idx]===window.__busy).map(u=>u.stunUntil-window.app.sim.frame))');
-  await evalJs(`(() => { const el=document.querySelector('[data-act="light"]');
-    el.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,pointerId:2})); return 1; })()`);
-
-  const shot0 = await rpc(ws, 'Page.captureScreenshot', { format: 'png' });
-  (await import('node:fs')).writeFileSync('/tmp/m7-run.png', Buffer.from(shot0.data, 'base64'));
-
-  console.log('\n— report path —');
-  // Fast-forward a whole night so the report has something real in it.
-  await evalJs(`(() => { const a=window.app; a.running=false;
-    while (a.sim.alive && !a.sim.won) { a.sim.tick(); a.sim.events.length=0; }
-    a.finish(); return a.sim.frame; })()`);
-  await sleep(500);
-  await step('report shown', 'document.getElementById("report").classList.contains("shown")');
-  await step('report head', 'document.getElementById("rep-head").textContent');
-  await step('timeline drawn', 'document.getElementById("rep-canvas").width > 0');
-  await step('stats rows', 'document.querySelectorAll("#rep-stats div").length');
-
-  const shot = await rpc(ws, 'Page.captureScreenshot', { format: 'png' });
-  const fs = await import('node:fs');
-  fs.writeFileSync(process.argv[3] || '/tmp/m7-report.png', Buffer.from(shot.data, 'base64'));
-
-  console.log(`\nconsole errors: ${errors.length}`);
-  for (const e of errors.slice(0, 10)) console.log('  ! ' + e.split('\n')[0]);
-  ws.close(); chrome.kill();
-  process.exit(errors.length ? 1 : 0);
-}
-
-main().catch(e => { console.error(e); chrome.kill(); process.exit(2); });
+test('no console error or uncaught exception', () => {
+  assert.deepEqual(page.problems, []);
+});

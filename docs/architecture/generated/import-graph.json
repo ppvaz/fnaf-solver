@@ -438,11 +438,9 @@
     {
       "file": "apps/trainer/test/browser.test.ts",
       "imports": [
-        "../../../tools/chrome.ts",
-        "node:child_process",
-        "node:fs",
-        "node:os",
-        "node:path"
+        "./cdp.ts",
+        "node:assert/strict",
+        "node:test"
       ]
     },
     {
@@ -461,6 +459,17 @@
       "file": "apps/trainer/test/calibration.test.ts",
       "imports": [
         "../../../tools/chrome.ts",
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path"
+      ]
+    },
+    {
+      "file": "apps/trainer/test/cdp.ts",
+      "imports": [
+        "../../../tools/chrome.ts",
+        "@sixam/kernel",
         "node:child_process",
         "node:fs",
         "node:os",

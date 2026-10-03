@@ -334,22 +334,8 @@
       "timeoutSource": "tools/test.ts per-test watchdog",
       "deterministic": true,
       "determinismSignals": [],
-      "fixedSleeps": [
-        "setTimeout(r, ms",
-        "sleep(250",
-        "sleep(1500",
-        "sleep(250",
-        "sleep(100",
-        "sleep(150",
-        "sleep(250",
-        "sleep(600",
-        "sleep(1200",
-        "sleep(400",
-        "sleep(200",
-        "sleep(120"
-      ],
+      "fixedSleeps": [],
       "sharedResources": [
-        "browser",
         "device-transport",
         "local-http-port"
       ],

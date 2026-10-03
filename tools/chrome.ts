@@ -1,4 +1,5 @@
-// Locating the headless browser the five DevTools-Protocol tools drive.
+// Locating the headless browser the trainer's browser checks drive
+// (apps/trainer/test/cdp.ts).
 //
 // `google-chrome` is the Linux package name. macOS ships Chrome inside an app
 // bundle and puts nothing by that name on PATH, so every browser test here was
@@ -22,7 +23,7 @@ export function chromeBinary() {
 }
 
 // Whether the binary chromeBinary() picked actually exists, so a runner can
-// skip the browser suite with a reason instead of five ENOENT stack traces.
+// refuse the browser suite with a reason instead of an ENOENT stack trace per check.
 export function chromeAvailable() {
   const bin = chromeBinary();
   return bin.includes('/')
@@ -30,10 +31,14 @@ export function chromeAvailable() {
     : spawnSync('command', ['-v', bin], { shell: true }).status === 0;
 }
 
-// The standard flags all five tools pass. `port` and `profile` differ per tool
-// so two of them can run at once.
+// The flags every check passes. Port 0 has Chrome take a free port and write
+// it to the profile's DevToolsActivePort, so checks running at once never
+// contend for one. `--enable-automation` sets navigator.webdriver, which is
+// how the trainer knows a bot is playing and posts its trace as a dry run:
+// without it a check's perfectly timed presses landed in captures/traces as
+// a person's.
 export const chromeArgs = (port: number, profile: string) => [
   '--headless=new', `--remote-debugging-port=${port}`, `--user-data-dir=${profile}`,
-  '--no-first-run', '--no-default-browser-check', '--disable-gpu',
+  '--no-first-run', '--no-default-browser-check', '--disable-gpu', '--enable-automation',
   '--window-size=880,420', 'about:blank',
 ];
