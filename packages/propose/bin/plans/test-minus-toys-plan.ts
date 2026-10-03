@@ -15,7 +15,7 @@
 //     camera flash explicitly; the simulator maps it to its context-dependent
 //     action.
 import { readFileSync } from 'node:fs';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { OPENING, LOOP, KNOBS0, build, replay, emitPlan, schedule, maskWindows, phaseScan } from './minus-toys-plan.ts';
@@ -186,12 +186,12 @@ for (const night of ['2', '7']) {
   // --gate exits 0; and it refuses any night but 1.
   execFileSync('node', [join(here, 'minus-toys-plan.ts'), '--night=1', '--minimal', '--gate'],
     { stdio: 'ignore' });
-  let refused = false;
-  try {
-    execFileSync('node', [join(here, 'minus-toys-plan.ts'), '--night=3', '--minimal'],
-      { stdio: 'ignore' });
-  } catch { refused = true; }
-  check(refused, '--minimal did not refuse night 3 (it is Night 1 only)');
+  // Its own refusal, not any exit: a crash would also exit non-zero.
+  const minimalNight3 = spawnSync('node', [join(here, 'minus-toys-plan.ts'), '--night=3', '--minimal'],
+    { encoding: 'utf8' });
+  check(minimalNight3.status !== 0 && /--minimal is Night 1 only/.test(minimalNight3.stderr),
+    `--minimal did not refuse night 3 (it is Night 1 only): exit ${minimalNight3.status}, ` +
+    `${minimalNight3.stderr.trim().split('\n').slice(-1)[0] ?? ''}`);
 }
 
 // --- 1c. the arm's phase sensitivity (2026-08-29, r2/r3 device coin flip) ----

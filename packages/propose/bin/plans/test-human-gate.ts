@@ -27,9 +27,9 @@ const text = `#night ${recipe.night}\n` + Object.entries(plan).map(([name, lines
 const { night: parsedNight, plan: parsed } = parsePlanText(text);
 check('round-trips the emitted plan', JSON.stringify(parsed) === JSON.stringify(plan));
 check('the plan names its own night', parsedNight === 6);
-let threw = false;
-try { parsePlanText('#cycle x 1000\n0 teleport monitor 100\n'); } catch { threw = true; }
-check('unknown instruction refused', threw);
+let unknownInstruction = '';
+try { parsePlanText('#cycle x 1000\n0 teleport monitor 100\n'); } catch (e) { unknownInstruction = (e as Error).message; }
+check('unknown instruction refused', /instruction this gate cannot price/.test(unknownInstruction), unknownInstruction);
 // The gate prices a plan against the night it names. A default of 6 would
 // have gated a Night 3 plan against Night 6's AI table; see plans/13.
 let unnamed = '';

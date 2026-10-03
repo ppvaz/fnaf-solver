@@ -202,9 +202,9 @@ for (const { night, attack, detections } of rows) {
     /never arms him/.test(threw), threw || 'built a plan anyway');
 
   // And the builder, not just the resolver.
-  let builtAnyway = false;
-  try { build({ night: 1, captureFn: () => nightSixLog }); builtAnyway = true; } catch { /* expected */ }
-  check('build() refuses the same mismatch', !builtAnyway);
+  let builtThrew = '';
+  try { build({ night: 1, captureFn: () => nightSixLog }); } catch (e) { builtThrew = (e as Error).message; }
+  check('build() refuses the same mismatch', /never arms him/.test(builtThrew), builtThrew || 'built a plan anyway');
 }
 
 // A plan that does not name its night is not gated against a guess.

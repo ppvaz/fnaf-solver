@@ -22,10 +22,15 @@ type CompiledAction = { readonly control?: string, readonly requiresMonitorUp?: 
   readonly compound?: string, readonly ventControl?: string };
 
 const check = (condition: unknown, message: string) => { if (!condition) throw new Error(message); };
+// Only a refusal from the code under test counts (the bundle's, or the device
+// executor's request check): a TypeError from a bug would otherwise pass every
+// one of these checks.
 const expectFailure = (fn: () => unknown, message: string) => {
-  let failed = false;
-  try { fn(); } catch { failed = true; }
-  check(failed, message);
+  let refusal: unknown = null;
+  try { fn(); } catch (error) { refusal = error; }
+  check(refusal, message);
+  check(refusal instanceof Error && /^device (bundle|executor): /.test(refusal.message),
+    `${message} -- it threw, but not a bundle or executor refusal: ${refusal instanceof Error ? refusal.message : String(refusal)}`);
 };
 
 // The fixtures were tuned to the legacy model (KNOBS0 loses Nights 2 and 7 under fnaf2-sourced, and a PASS
