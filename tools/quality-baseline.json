@@ -418,10 +418,6 @@
         "count": 242,
         "why": "the FNaF 4 pilot’s warden task, one generator over the whole night; split with the FNaF 4 runner’s policy/device split"
       },
-      "fn:packages/propose/src/games/fnaf2/controller.ts#VentThreatReactive.decide": {
-        "count": 236,
-        "why": "the reactive controller’s decision; behaviour-critical, so a split first needs replay equivalence (audit E23)"
-      },
       "fn:packages/source/decompile/truth.ts#createTruth": {
         "count": 346,
         "why": "the truth surface over the caller’s own event-sheet dump (parse, index, query in one closure); split when the dump format gets the schema it lacks (castDebt names the same boundary)"

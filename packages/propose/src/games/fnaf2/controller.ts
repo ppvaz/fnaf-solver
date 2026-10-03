@@ -285,6 +285,9 @@ export class BlackoutReactive extends ReactiveController {
 // the independent sustained static audio fact. Hold is time-based (the
 // opening read is UNKNOWN while the mask animates), then verified after the
 // drop.
+/** What VentThreatReactive.decide reads once per decision. */
+type DecisionRead = ReturnType<VentThreatReactive['readDecision']>;
+
 export class VentThreatReactive extends ReactiveController {
   declare openingFact: string;
   declare threatValue: unknown;
@@ -450,6 +453,26 @@ export class VentThreatReactive extends ReactiveController {
   decide(obs: Observation, ctx: DecisionContext): readonly Intent[] {
     this.beginDecision();
     if (this.dead) return [];
+    const read = this.readDecision(obs, ctx);
+    const struck = this.decideStrike(read);
+    if (struck) return struck;
+    // Each state's step, in order: idle can start a rescue and fall through into securing.
+    if (this.state === 'idle') {
+      const idled = this.decideIdle(read);
+      if (idled) return idled;
+    }
+    if (this.state === 'covered') return this.decideCovered(read);
+    if (this.state === 'banking') return this.decideBanking(read, obs);
+    if (this.state === 'securing') return this.decideSecuring(read);
+    if (this.state === 'holding') return this.decideHolding(read);
+    if (this.state === 'verifying') return this.decideVerifying(read);
+    // restoring: raise the monitor back so the base schedule resumes.
+    if (this.state === 'restoring') return this.decideRestoring(read);
+    return [];
+  }
+
+  /** What one decision reads: the facts, the coverage and cue bookkeeping, and whether a threat stands. */
+  readDecision(obs: Observation, ctx: DecisionContext) {
     const f = ctx.frame;
     if (ctx.phaseClock) this.phaseClock = ctx.phaseClock;
     this.maskWindow = ctx.maskWindow ?? null;
@@ -475,7 +498,6 @@ export class VentThreatReactive extends ReactiveController {
     // Restarts trust the selected fact only: the BB audio opening-cue window
     // (12 s) outlives the eviction itself, and restarting on its afterglow
     // would re-mask a cleared opening.
-    const out: Intent[] = [];
     // Edge bookkeeping for the audio 'pending' cue (first thud): the fact is
     // level for ~20 s, banking must fire once per cue.
     const ventVal = this.openingFact === 'leftOpening' ? val(obs.bbVent, false) : false;
@@ -486,7 +508,12 @@ export class VentThreatReactive extends ReactiveController {
     // margin -- cheap.)
     if (maskValue === true && this.maskOnAt < 0) this.maskOnAt = f;
     if (maskValue === false) this.maskOnAt = -1;
+    return { f, maskValue, masked, monUp, opening, cooling, factThreat, audioCueId, freshAudioThreat, threatened, pendingEdge };
+  }
 
+  /** A threat that outlived its hold: a strike, and past the limit, standing down; or null. */
+  decideStrike({ f, factThreat }: DecisionRead): readonly Intent[] | null {
+    const out: Intent[] = [];
     // A threat that outlives its hold+verify cycle is a strike against
     // "still at the opening"; past maxFailedHolds (6 by default), treat it as
     // BB-inside and stand down.
@@ -506,181 +533,194 @@ export class VentThreatReactive extends ReactiveController {
       this.flashed = false;
       return out;
     }
+    return null;
+  }
 
-    if (this.state === 'idle') {
-      if (!threatened) {
-        // Early-cue banking: the FIRST thud (BB pending, not yet dangerous --
-        // laughs are belief only, per the owner's play) and the cams are up:
-        // keep winding past the schedule's release to top the box before any
-        // rescue can spend it. Bounded by the stun clock; OFF by default until
-        // the phase clock exists (the extension slides the frame-anchored
-        // plan against the game's 5 s grid).
-        if (this.bankingEnabled && !cooling && monUp === true && pendingEdge) {
-          this.state = 'banking';
-          this.bankStart = f;
-          this.note(f, 'BB pending (first thud) -> banking wind');
-        }
+  /** Idle: bank on a first thud, or choose between standing by, extending and a full rescue; null to rescue. */
+  decideIdle({ f, maskValue, masked, monUp, cooling, audioCueId, freshAudioThreat, threatened, pendingEdge }: DecisionRead): readonly Intent[] | null {
+    const out: Intent[] = [];
+    if (!threatened) {
+      // Early-cue banking: the FIRST thud (BB pending, not yet dangerous --
+      // laughs are belief only, per the owner's play) and the cams are up:
+      // keep winding past the schedule's release to top the box before any
+      // rescue can spend it. Bounded by the stun clock; OFF by default until
+      // the phase clock exists (the extension slides the frame-anchored
+      // plan against the game's 5 s grid).
+      if (this.bankingEnabled && !cooling && monUp === true && pendingEdge) {
+        this.state = 'banking';
+        this.bankStart = f;
+        this.note(f, 'BB pending (first thud) -> banking wind');
+      }
+      return out;
+    }
+    // A dropped or mid-animation mask read is UNKNOWN, not proof that the
+    // mask is off. Wait for a known polarity before choosing a toggle.
+    if (maskValue === null) return out;
+    // Three-way coverage decision over the tick-count RANGE (lo/hi).
+    if (masked && ((this.maskWindow?.endFrame ?? 0) > 0 || this.maskWindowFrames > 0) &&
+        this.maskOnAt >= 0) {
+      const [lo, hi] = this.coverageRange();
+      if (lo >= C.VENT_MASK_TICKS) {
+        this.state = 'covered';
+        if (freshAudioThreat) this.consumedAudioCueId = audioCueId;
+        this.note(f, `scheduled mask covers >= ${lo} boundaries -> stand by`);
         return out;
       }
-      // A dropped or mid-animation mask read is UNKNOWN, not proof that the
-      // mask is off. Wait for a known polarity before choosing a toggle.
-      if (maskValue === null) return out;
-      // Three-way coverage decision over the tick-count RANGE (lo/hi).
-      if (masked && ((this.maskWindow?.endFrame ?? 0) > 0 || this.maskWindowFrames > 0) &&
-          this.maskOnAt >= 0) {
-        const [lo, hi] = this.coverageRange();
-        if (lo >= C.VENT_MASK_TICKS) {
-          this.state = 'covered';
-          if (freshAudioThreat) this.consumedAudioCueId = audioCueId;
-          this.note(f, `scheduled mask covers >= ${lo} boundaries -> stand by`);
-          return out;
-        }
-        if (hi >= C.VENT_MASK_TICKS) {
-          // Ambiguous: latch the bounded extension of the CURRENT mask --
-          // guarantee the fifth boundary under the latest-phase reading.
-          this.state = 'holding';
-          this.since = this.maskOnAt;
-          this.firstTick = this.guaranteedFifthTick();
-          if (freshAudioThreat) this.consumedAudioCueId = audioCueId;
-          this.note(f, `coverage ambiguous (${lo}..${hi}) -> bounded extension`);
-          return out;
-        }
-        this.note(f, `uncovered (max ${hi} boundaries) -> full rescue`);
+      if (hi >= C.VENT_MASK_TICKS) {
+        // Ambiguous: latch the bounded extension of the CURRENT mask --
+        // guarantee the fifth boundary under the latest-phase reading.
+        this.state = 'holding';
+        this.since = this.maskOnAt;
+        this.firstTick = this.guaranteedFifthTick();
+        if (freshAudioThreat) this.consumedAudioCueId = audioCueId;
+        this.note(f, `coverage ambiguous (${lo}..${hi}) -> bounded extension`);
+        return out;
       }
+      this.note(f, `uncovered (max ${hi} boundaries) -> full rescue`);
+    }
+    this.state = 'securing';
+    this.since = -1;
+    this.firstTick = -1;
+    this.flashed = false;
+    if (freshAudioThreat) this.consumedAudioCueId = audioCueId;
+    this.note(f, 'vent threat -> drop-to-flash, then mask');
+    return null;
+  }
+
+  /** Covered: the schedule's own mask evicts; nothing to do. */
+  decideCovered({ maskValue, threatened }: DecisionRead): readonly Intent[] {
+    const out: Intent[] = [];
+    // The schedule owns this mask and it will cross enough boundaries to
+    // evict; the correct action is nothing. If the mask drops before the
+    // threat cleared, fall back to idle for a fresh (uncovered) evaluation.
+    if (maskValue === false || !threatened) this.state = 'idle';
+    return out;
+  }
+
+  /** Banking: keep winding until the box is topped or a threat arrives. */
+  decideBanking({ f, cooling, threatened }: DecisionRead, obs: Observation): readonly Intent[] {
+    const out: Intent[] = [];
+    // A threat while banking outranks the bank.
+    if (threatened) {
       this.state = 'securing';
       this.since = -1;
-      this.firstTick = -1;
       this.flashed = false;
-      if (freshAudioThreat) this.consumedAudioCueId = audioCueId;
-      this.note(f, 'vent threat -> drop-to-flash, then mask');
+      this.note(f, 'threat while banking -> evict now');
+      return this.emit(f, [{ action: 'windRelease', at: f }]);
     }
-
-    if (this.state === 'covered') {
-      // The schedule owns this mask and it will cross enough boundaries to
-      // evict; the correct action is nothing. If the mask drops before the
-      // threat cleared, fall back to idle for a fresh (uncovered) evaluation.
-      if (maskValue === false || !threatened) this.state = 'idle';
-      return out;
+    const pie = val(obs.boxPie, null);
+    if ((pie !== null && Number(pie) >= this.bankTarget) || f - this.bankStart >= this.bankCapFrames) {
+      this.state = 'idle';
+      this.note(f, 'banked -> release and resume');
+      return this.emit(f, [{ action: 'windRelease', at: f }]);
     }
+    if (!cooling) return this.emit(f, [{ action: 'wind', at: f }]);
+    return out;
+  }
 
-    if (this.state === 'banking') {
-      // A threat while banking outranks the bank.
-      if (threatened) {
-        this.state = 'securing';
-        this.since = -1;
-        this.flashed = false;
-        this.note(f, 'threat while banking -> evict now');
-        return this.emit(f, [{ action: 'windRelease', at: f }]);
-      }
-      const pie = val(obs.boxPie, null);
-      if ((pie !== null && Number(pie) >= this.bankTarget) || f - this.bankStart >= this.bankCapFrames) {
-        this.state = 'idle';
-        this.note(f, 'banked -> release and resume');
-        return this.emit(f, [{ action: 'windRelease', at: f }]);
-      }
-      if (!cooling) return this.emit(f, [{ action: 'wind', at: f }]);
-      return out;
+  /** Securing: lower the monitor, pulse the hall, then mask. */
+  decideSecuring({ f, maskValue, masked, monUp, cooling }: DecisionRead): readonly Intent[] {
+    const out: Intent[] = [];
+    if (maskValue === null) return out;
+    // Mask observed fully on after our own press -> the hold begins (the
+    // tick anchor was set when the press was emitted). Without this the
+    // securing block would re-press the mask and toggle it back off.
+    if (masked && this.since >= 0) { this.state = 'holding'; return out; }
+    // The pre-mask hall pulse is what pays for the hold: the light zeroes D
+    // while Foxy stands at the hall (engine.js:679) and the lock needs
+    // D >= ~20 at a 5 s check (engine.js:938, ai 1 on Night 2) -- a 5-tick
+    // hold accrues only ~6 past a fresh zero. Measured without it: ONE
+    // scheduled pulse swallowed by the hold took D from its 0..10 saw-tooth
+    // past 20 -> lock + same-tick strike (foxy:294/300). With the mask
+    // already on (the common case: detection lands in the scheduled mask
+    // phase) the pulse must wait for the drop -- the mask blocks every
+    // non-mask action -- so the sequence is drop -> flash -> re-mask, and
+    // the tick counter restarts from the re-mask (g293 zeroes on re-entry;
+    // there is nothing worth keeping at <=4 ticks anyway).
+    if (cooling) return out;
+    if (monUp === true) {
+      this.loweredMonitor = true;
+      this.note(f, 'lower monitor first');
+      return this.emit(f, [{ action: 'monitor', at: f }]);
     }
-
-    if (this.state === 'securing') {
-      if (maskValue === null) return out;
-      // Mask observed fully on after our own press -> the hold begins (the
-      // tick anchor was set when the press was emitted). Without this the
-      // securing block would re-press the mask and toggle it back off.
-      if (masked && this.since >= 0) { this.state = 'holding'; return out; }
-      // The pre-mask hall pulse is what pays for the hold: the light zeroes D
-      // while Foxy stands at the hall (engine.js:679) and the lock needs
-      // D >= ~20 at a 5 s check (engine.js:938, ai 1 on Night 2) -- a 5-tick
-      // hold accrues only ~6 past a fresh zero. Measured without it: ONE
-      // scheduled pulse swallowed by the hold took D from its 0..10 saw-tooth
-      // past 20 -> lock + same-tick strike (foxy:294/300). With the mask
-      // already on (the common case: detection lands in the scheduled mask
-      // phase) the pulse must wait for the drop -- the mask blocks every
-      // non-mask action -- so the sequence is drop -> flash -> re-mask, and
-      // the tick counter restarts from the re-mask (g293 zeroes on re-entry;
-      // there is nothing worth keeping at <=4 ticks anyway).
-      if (cooling) return out;
-      if (monUp === true) {
-        this.loweredMonitor = true;
-        this.note(f, 'lower monitor first');
-        return this.emit(f, [{ action: 'monitor', at: f }]);
-      }
-      if (monUp === false) {
-        if (!this.flashed) {
-          if (masked) {
-            this.note(f, 'drop the scheduled mask to make room for the pulse');
-            return this.emit(f, [{ action: 'mask', at: f }]);
-          }
-          this.flashed = true;
-          this.note(f, 'pre-mask hall pulse (zero Foxy D)');
-          return this.emit(f, [{ action: 'hall', at: f }]);
+    if (monUp === false) {
+      if (!this.flashed) {
+        if (masked) {
+          this.note(f, 'drop the scheduled mask to make room for the pulse');
+          return this.emit(f, [{ action: 'mask', at: f }]);
         }
-        // Mask ON: ticks count from fully-on (the press + anim); anchor the
-        // eviction to the first tick boundary after that, not to wall clock.
-        this.since = f + C.MASK_ANIM_ON;
-        this.firstTick = this.guaranteedFifthTick(this.since);
-        this.note(f, 'mask on -> hold 5 consecutive ticks');
-        return this.emit(f, [{ action: 'mask', at: f }]);
+        this.flashed = true;
+        this.note(f, 'pre-mask hall pulse (zero Foxy D)');
+        return this.emit(f, [{ action: 'hall', at: f }]);
       }
-      return out;   // UNKNOWN: animating
+      // Mask ON: ticks count from fully-on (the press + anim); anchor the
+      // eviction to the first tick boundary after that, not to wall clock.
+      this.since = f + C.MASK_ANIM_ON;
+      this.firstTick = this.guaranteedFifthTick(this.since);
+      this.note(f, 'mask on -> hold 5 consecutive ticks');
+      return this.emit(f, [{ action: 'mask', at: f }]);
     }
+    return out;   // UNKNOWN: animating
+  }
 
-    if (this.state === 'holding') {
-      // The engine refuses every non-mask action while masked; the harness
-      // additionally suppresses the base schedule only while the mask must be
-      // up (securing/holding) -- verifying and restoring run it, because the
-      // schedule's raise+wind rows after the drop are the point. The
-      // scheduled hall slot the hold swallows is paid for by the pre-flash.
-      // Phase-aligned drop: firstTick is already the final fifth one-second
-      // boundary at or after fully-on (+2 frames so that boundary's increment
-      // has processed), not a wall-clock deadline plus another four ticks.
-      const dropAt = this.firstTick >= 0
-        ? this.firstTick
-        : this.since + C.s(C.VENT_MASK_TICKS) + 30;
-      if (maskValue === null) return out;
-      if (maskValue === false) {
-        this.state = 'verifying';
-        this.note(f, 'mask already off -> verify');
-        return out;
-      }
-      if (f >= Math.min(dropAt, this.since + this.hardCapFrames)) {
-        this.state = 'verifying';
-        this.note(f, 'hold elapsed -> drop and verify');
-        return this.emit(f, [{ action: 'mask', at: f }]);
+  /** Holding: drop the mask once the fifth boundary has passed. */
+  decideHolding({ f, maskValue }: DecisionRead): readonly Intent[] {
+    const out: Intent[] = [];
+    // The engine refuses every non-mask action while masked; the harness
+    // additionally suppresses the base schedule only while the mask must be
+    // up (securing/holding) -- verifying and restoring run it, because the
+    // schedule's raise+wind rows after the drop are the point. The
+    // scheduled hall slot the hold swallows is paid for by the pre-flash.
+    // Phase-aligned drop: firstTick is already the final fifth one-second
+    // boundary at or after fully-on (+2 frames so that boundary's increment
+    // has processed), not a wall-clock deadline plus another four ticks.
+    const dropAt = this.firstTick >= 0
+      ? this.firstTick
+      : this.since + C.s(C.VENT_MASK_TICKS) + 30;
+    if (maskValue === null) return out;
+    if (maskValue === false) {
+      this.state = 'verifying';
+      this.note(f, 'mask already off -> verify');
+      return out;
+    }
+    if (f >= Math.min(dropAt, this.since + this.hardCapFrames)) {
+      this.state = 'verifying';
+      this.note(f, 'hold elapsed -> drop and verify');
+      return this.emit(f, [{ action: 'mask', at: f }]);
+    }
+    return out;
+  }
+
+  /** Verifying: wait for the opening to read clear. */
+  decideVerifying({ f, opening, cooling }: DecisionRead): readonly Intent[] {
+    const out: Intent[] = [];
+    if (cooling) return out;
+    if (opening.state === 'OBSERVED') {
+      if (opening.value === this.clearValue) {
+        this.state = this.loweredMonitor ? 'restoring' : 'idle';
+        this.note(f, 'opening clear');
       }
       return out;
     }
-
-    if (this.state === 'verifying') {
-      if (cooling) return out;
-      if (opening.state === 'OBSERVED') {
-        if (opening.value === this.clearValue) {
-          this.state = this.loweredMonitor ? 'restoring' : 'idle';
-          this.note(f, 'opening clear');
-        }
-        return out;
-      }
-      // UNKNOWN for too long (dropped reads) -> give up cleanly rather than
-      // camp the mask forever; the box is not winding.
-      if (f - this.since > this.hardCapFrames + C.MASK_ANIM_OFF + PRESS_COOLDOWN) {
-        this.state = 'idle';
-        this.loweredMonitor = false;
-        this.note(f, 'verify gave up (no reads)');
-      }
-      return out;
+    // UNKNOWN for too long (dropped reads) -> give up cleanly rather than
+    // camp the mask forever; the box is not winding.
+    if (f - this.since > this.hardCapFrames + C.MASK_ANIM_OFF + PRESS_COOLDOWN) {
+      this.state = 'idle';
+      this.loweredMonitor = false;
+      this.note(f, 'verify gave up (no reads)');
     }
+    return out;
+  }
 
-    // restoring: raise the monitor back so the base schedule resumes.
-    if (this.state === 'restoring') {
-      if (cooling) return out;
-      if (monUp === true) { this.state = 'idle'; this.loweredMonitor = false; return out; }
-      if (monUp === false) {
-        this.note(f, 'raise monitor -> resume base');
-        return this.emit(f, [{ action: 'monitor', at: f }]);
-      }
-      return out;
+  /** Restoring: raise the monitor back so the base schedule resumes. */
+  decideRestoring({ f, monUp, cooling }: DecisionRead): readonly Intent[] {
+    const out: Intent[] = [];
+    if (cooling) return out;
+    if (monUp === true) { this.state = 'idle'; this.loweredMonitor = false; return out; }
+    if (monUp === false) {
+      this.note(f, 'raise monitor -> resume base');
+      return this.emit(f, [{ action: 'monitor', at: f }]);
     }
-
     return out;
   }
 }
