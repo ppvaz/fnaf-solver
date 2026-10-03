@@ -441,10 +441,6 @@
       "fn:packages/source/src/games/fnaf2/plant-options.ts#defaultSimOptions": {
         "count": 489,
         "why": "the FNaF 2 Sim’s option table as one function body, data rather than branching; fnaf2-1020-0f’s sourced-model flip owns plant-options.ts and settles which options remain before it is split"
-      },
-      "fn:packages/source/src/games/fnaf4/sim-fnaf4.ts#Fnaf4Sim.step": {
-        "count": 350,
-        "why": "FNaF 4’s per-frame step, kept in one function so it reads in the event sheet’s order; a split must keep that order, which the FNaF 4 census replays pin"
       }
     }
   }

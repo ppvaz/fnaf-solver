@@ -301,8 +301,28 @@ export class Fnaf4Sim {
   step() {
     if (this.over) return this.over;
     this.frame += 1;
-    const ms = MS_PER_FRAME;
+    // The sections in the event sheet's order; each reads what the ones before it wrote this frame.
+    this.stepArrivals();
+    if (this.stepClock()) return this.over;
+    this.stepForcedAppearances();
+    const ticks = this.tickEveryTimers();
+    this.stepDraws();
+    this.stepFoxy();
+    this.stepBonnieChica(ticks);
+    this.stepForcedDoor(ticks);
+    this.stepFlashlight();
+    this.stepBedTurn();
+    this.stepFreddy(ticks);
+    this.stepBlackFlash();
+    this.stepBedroom(ticks);
+    this.stepFredbear(ticks);
+    this.stepIdle();
+    this.stepForcedTurn();
+    return this.over;
+  }
 
+  /** Arrivals at the end of a walk. */
+  stepArrivals() {
     // --- g97-g104: arrivals. Walking home with `foxy got you` is lethal on
     // arrival (g101-g103 test the return-walk states 12/19/31), reading the
     // state last frame's g282/g283 left behind -- the order the sheet sees.
@@ -310,11 +330,15 @@ export class Fnaf4Sim {
       this.follow = this.pendingStation;
       if (this.foxyGotYou && this.follow !== FOLLOW.hub) this.die('foxy');
     }
+  }
 
+  /** The clock and the hour's difficulty rows; true when the night is won. */
+  stepClock() {
+    const ms = MS_PER_FRAME;
     // --- the clock [g568-g573]
     if (this.timers.hour.tick(ms)) {
       this.hour += 1;
-      if (this.hour === CLOCK.winHour) { this.over = '6AM'; return this.over; }
+      if (this.hour === CLOCK.winHour) { this.over = '6AM'; return true; }
     }
 
     // Difficulty rows fire as an hour begins, exactly once per hour.
@@ -322,7 +346,11 @@ export class Fnaf4Sim {
       this.appliedHour = this.hour;
       this.levels = settledLevels(applyRows(MODEL.rows, this.night, this.hour, this.levels), 'FNaF 4');
     }
+    return false;
+  }
 
+  /** The forced appearances at hall-near. */
+  stepForcedAppearances() {
     // --- g629/g630: the forced appearances -- once the drawn hour passes,
     // the character lands at hall-near while the player is at the hub.
     if (!this.bonnieForced && this.forceBonnie > 0 && this.forceBonnie <= this.hour
@@ -333,7 +361,11 @@ export class Fnaf4Sim {
         && this.follow === FOLLOW.hub && !this.foxyGotYou && this.hour !== 12) {
       this.chica = 'nearR'; this.chicaTag = 2; this.chicaForced = true;
     }
+  }
 
+  /** Advance the Every timers that tick every frame, and say which fired. */
+  tickEveryTimers() {
+    const ms = MS_PER_FRAME;
     // The Every timers whose group lists them first advance every frame the
     // frame runs, so they are ticked here rather than inside their branches:
     // g295/g301, g342/g344, g428, g502/g503, g522/g523, g590/g591.
@@ -346,7 +378,12 @@ export class Fnaf4Sim {
     const tickRepelR = this.timers.doorRepelR.tick(ms);
     const tickEject = this.timers.fbEject.tick(ms);
     const tickForceTurn = this.timers.forceTurn.tick(ms);
+    return { tickRetreatB, tickRetreatC, tickDismissL, tickDismissR, tickBedCheck, tickRepelL, tickRepelR, tickEject, tickForceTurn };
+  }
 
+  /** The four per-second AV0 draws. */
+  stepDraws() {
+    const ms = MS_PER_FRAME;
     // --- g229: four draws every second, in action order -- foxy's AV0
     // against 10, then Bonnie, Chica and Fredbear's against 2. Only
     // Fredbear's steers anything (his walk resolution, g522/g523); the other
@@ -358,7 +395,11 @@ export class Fnaf4Sim {
       this.rng.int(0, 1);              // Chica AV0
       this.fbDir = this.rng.int(0, 1) + 1;
     }
+  }
 
+  /** Foxy: his roll, walk, closet charge and `foxy got you`. */
+  stepFoxy() {
+    const ms = MS_PER_FRAME;
     // --- Foxy [g236 roll, g230-g235 + g261/g262 walk, g264 charge]
     let foxyPulse = false;
     if (this.timers.foxyRoll.tick(ms)) {
@@ -385,7 +426,11 @@ export class Fnaf4Sim {
     // g276/g279 set the pose (derived); g282/g283: `foxy got you`, set at
     // AV2 >= 10 and cleared below it, every frame.
     this.foxyGotYou = this.foxyAv2 >= FOXY_CLOSET.av2GotYou ? 1 : 0;
+  }
 
+  /** Bonnie and Chica: their rolls and one-zone moves. */
+  stepBonnieChica({ tickRetreatB, tickRetreatC }: ReturnType<Fnaf4Sim['tickEveryTimers']>) {
+    const ms = MS_PER_FRAME;
     // --- Bonnie and Chica [g284/g285 rolls; chains g291-g301]
     //
     // A passed roll sets their AV1 pulse, and the pulse moves them ONE zone:
@@ -432,7 +477,10 @@ export class Fnaf4Sim {
         this.chica = 'farR'; this.chicaTag = 1; this.chicaPulse = 0;             // g301
       }
     }
+  }
 
+  /** The forced door and its interlock. */
+  stepForcedDoor({ tickDismissL, tickDismissR }: ReturnType<Fnaf4Sim['tickEveryTimers']>) {
     // --- the forced door [g341-g344, g352] -- unchanged from the traced
     // two-close cycle with the shared interlock.
     if (this.leftDoorShut === 0 && this.rightDoorShut === 0) this.interlock = 0;  // g352
@@ -452,7 +500,10 @@ export class Fnaf4Sim {
         this.chica = 'right'; this.interlock = 2;                                // g344
       }
     }
+  }
 
+  /** The flashlight at a door. */
+  stepFlashlight() {
     // --- the flashlight [g345/g346 kill at near; g68/g84 push far home]
     if (this.flashing === 1 && this.atLeftDoor) {
       if (this.bonnie === 'nearL') this.die('bonnie-flash');
@@ -462,12 +513,19 @@ export class Fnaf4Sim {
       if (this.chica === 'nearR') this.die('chica-flash');
       else if (this.chica === 'farR') { this.chica = 'center'; this.chicaTag = 0; }
     }
+  }
 
+  /** The bed-turn resolving. */
+  stepBedTurn() {
     // --- the bed-turn (44) resolving [g375/g376, g438, g374]. It reads the
     // `foxy got you` this frame's g282/g283 just wrote, which is the order
     // the sheet sees (283 < 375 < 438).
     if (this.turning > 0 && --this.turning === 0) this.resolveBedTurn();
+  }
 
+  /** Freddy's meter, the bed kill and the forced turn it raises. */
+  stepFreddy({ tickBedCheck }: ReturnType<Fnaf4Sim['tickEveryTimers']>) {
+    const ms = MS_PER_FRAME;
     // --- Freddy's meter [g397/g398/g399/g401]
     if (this.timers.freddyFill.tick(ms) && !this.viewingBed) {
       this.freddyCounter += this.levels.freddy ?? 0;                             // g397
@@ -489,7 +547,10 @@ export class Fnaf4Sim {
 
     // --- g439: at the bed with `foxy got you` raises the forced turn.
     if (this.atBed && this.foxyGotYou && !this.over) this.forceTurn = 1;
+  }
 
+  /** The black flash. */
+  stepBlackFlash() {
     // --- the black flash [g464-g469]
     const is80 = this.freddyCounter >= BLACK_FLASH.armAt;
     if (is80 && !this.counterWas80) {
@@ -505,7 +566,11 @@ export class Fnaf4Sim {
       this.blackFlash = Math.max(1, this.blackFlash - 1);                        // g467
       if (this.blackFlash === 1) this.die('black-flash');                        // g468/g469
     }
+  }
 
+  /** The bedroom dwell counters and the forced turn. */
+  stepBedroom({ tickForceTurn }: ReturnType<Fnaf4Sim['tickEveryTimers']>) {
+    const ms = MS_PER_FRAME;
     // --- the bedroom [g447/g478 resets, g484/g479 dwell, g485/g481 the
     // hall-view resets, g486/g480 entry, g590/g591 the forced turn]
     //
@@ -531,7 +596,11 @@ export class Fnaf4Sim {
     }
     if (this.atBed && (this.bonnieAV7 || this.chicaAV7)
         && tickForceTurn) this.forceTurn = 1;                                     // g590/g591
+  }
 
+  /** Fredbear: his walk, the doors and closet that repel him, his dwell and his flash. */
+  stepFredbear({ tickRepelL, tickRepelR, tickEject }: ReturnType<Fnaf4Sim['tickEveryTimers']>) {
+    const ms = MS_PER_FRAME;
     // --- Fredbear [g490-g523 walk, g554-g567 dwell]
     if ((this.levels.fredbear ?? 0) > 0 && !this.fbSpawned) {
       this.fredbear = 'centre'; this.fbSpawned = true;                           // g490
@@ -617,7 +686,11 @@ export class Fnaf4Sim {
         else this.fredcheck = 0;
       }
     }
+  }
 
+  /** The idle counters. */
+  stepIdle() {
+    const ms = MS_PER_FRAME;
     // --- the idle counters [g592, g566, g594; g567 resets all three the
     // moment a `carpet run` exists, which in this model is any walk or turn]
     if (this.walking) {
@@ -636,7 +709,10 @@ export class Fnaf4Sim {
         this.forceTurn = 1;
       }
     }
+  }
 
+  /** The forced turn, from anywhere. */
+  stepForcedTurn() {
     // --- g589: the forced turn, from anywhere.
     if (this.forceTurn) {
       this.forceTurn = 0;
@@ -645,8 +721,6 @@ export class Fnaf4Sim {
         this.beginBedTurn();
       }
     }
-
-    return this.over;
   }
 
   armFlash(fixed: number) {
