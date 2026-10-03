@@ -410,10 +410,6 @@
     "recorded": "2026-10-03",
     "why": "Functions, methods and arrows whose body spans more than 200 lines (tools/test-function-length.ts). An entry names the split that remains and why it is not done yet, and only shrinks; a new long function fails.",
     "entries": {
-      "fn:packages/propose/bin/plans/artifact-commands.ts#compileCycle": {
-        "count": 213,
-        "why": "compiles one cycle into HID commands; the bundle tests pin every compiled plan’s bytes, so a split must keep each output byte for byte"
-      },
       "fn:packages/propose/bin/recompile/phone-input-bracket-sweep.ts#simulateFamily": {
         "count": 209,
         "why": "one input-bracket family’s expansion, replay and scoring in the phone input sweep; split into those three with the sweep’s next revision, which test-phone-input-bracket-sweep re-derives its committed results through"

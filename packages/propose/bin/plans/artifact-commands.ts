@@ -215,9 +215,212 @@ export const SEAM_FLOORS = Object.freeze({
 type Seam = Readonly<{ cycle: string, relation: string, atMs: number, kind: string, gapMs: number, floorMs: number,
   slackMs: number, floor: SeamFloor, first: string | null, then: string }>;
 
+/** What compileCycle tracks across a cycle's rows: the controls' state, and when the last transitions began. */
+interface CycleTracker {
+  readonly state: CycleState;
+  monitorUpAt: number, monitorDownAt: number, monitorTransitionAt: number, monitorTransitionMs: number,
+  monitorTransition: string | null,   // 'monitor-up' or 'monitor-down': the last transition's direction
+  maskOffAt: number, maskOnAt: number,
+}
+/** Records one measured gap against a timing floor. */
+type SeamRecorder = (relation: string, row: ParsedRow, gapMs: number, floor: SeamFloor, first: string | null, then: string) => void;
+
+/** A row's refusals and seams before it acts: the mask, the monitor's position and animations, the viewed feed. */
+function rowGates(cycle: string, row: ParsedRow, isMaskRow: boolean, t: CycleTracker,
+  { seam, pressOf, declaredViewing }: { seam: SeamRecorder, pressOf: (row: ParsedRow) => string, declaredViewing: string | null }) {
+  // Once the mask owns the surface, every other control is an impossible
+  // plan. `maskraise` is the one explicit exception: it is the reviewed
+  // mask-off + raise compound, and its internal timing owns the transition.
+  if (t.state.maskOn && !isMaskRow && row.kind !== 'maskraise')
+    throw new TypeError(`${cycle}: ${row.kind} is illegal while the mask is up; ` +
+      'only the mask-off control or maskraise may proceed');
+  if (row.kind === 'maskraise' && !t.state.maskOn)
+    throw new TypeError(`${cycle}: maskraise requires the mask to be up at its start`);
+
+  if (!isMaskRow && row.at - t.maskOffAt < MASK_ANIM_OFF_MS)
+    throw new TypeError(`${cycle}: ${row.kind} at +${row.at} ms lands inside the ` +
+      `${MASK_ANIM_OFF_MS} ms mask-off animation from +${t.maskOffAt} ms, where the engine drops it`);
+  if (!isMaskRow) seam('after-mask-off-animation', row, row.at - t.maskOffAt, 'maskAnimOffMs', 'mask-off', pressOf(row));
+
+  const rawControl = row.kind === 'tap' || row.kind === 'hold' ? semantic(row.control) : null;
+  const needsMonitorDown = rawControl === V.hallLight || rawControl === V.leftVentLight ||
+    rawControl === V.rightVentLight || row.kind === 'hall' || row.kind === 'hallvent' ||
+    row.kind === 'hallraise' || row.kind === 'read';
+  const needsMonitorUpNow = camera(controlOf(row)) || row.kind === 'sweep' || row.kind === 'camdrop' ||
+    rawControl === V.cameraFeedLight || rawControl === V.wind;
+  if (needsMonitorDown && t.state.monitorUp)
+    throw new TypeError(`${cycle}: ${row.kind} ${rawControl ?? ''} requires monitor down`);
+  // The box is on CAM 11 and the engine only credits a wind while that camera
+  // is the VIEWED feed: plant-model.js `winding && monitor === MON_UP &&
+  // viewing === C.BOX_CAM`. The compiler required only monitor-up, so a plan
+  // could schedule a wind with another camera viewed, compile clean, and be a
+  // silent no-op on the phone -- the box drains and the Puppet arrives. On
+  // 2026-09-20 a Night 5 run died at 48.4 s that way, with the arm unresolved
+  // so nothing had confirmed CAM 11 was up; the box empties in 20 s at that
+  // night's drain rate.
+  //
+  // The double-camera glitch makes "which camera is viewed" something a
+  // last-tapped tracker gets wrong -- the route taps cam11 then cam9 and the
+  // glitch keeps cam11 VIEWED with cam9 as the marker -- so this checks the
+  // plan's own declaration instead of trying to model the glitch. A plan that
+  // winds must declare the box camera as its viewing feed.
+  if (rawControl === V.wind && declaredViewing && declaredViewing !== `cam:${C.BOX_CAM}`)
+    throw new TypeError(`${cycle}: wind at +${row.at} ms needs cam:${C.BOX_CAM} viewed (the box ` +
+      `camera), but the plan declares #arm-verify-viewing ${declaredViewing}`);
+  if (needsMonitorUpNow && !t.state.monitorUp)
+    throw new TypeError(`${cycle}: ${row.kind} ${rawControl ?? ''} requires monitor up`);
+
+  // A second monitor transition cannot reverse the first one mid-animation.
+  // Hall flashes during monitor lowering remain legal; the mask is different:
+  // its button is absent while the monitor is coming down, so a mask contact
+  // in this interval is an illegal device action even though the simulator
+  // accepts the semantic press.
+  const startsMonitorTransition = (row.kind === 'tap' || row.kind === 'hold') &&
+    rawControl === V.monitor || row.kind === 'hallraise' || row.kind === 'maskraise' ||
+    row.kind === 'camdrop';
+  if (startsMonitorTransition && row.at - t.monitorTransitionAt < t.monitorTransitionMs)
+    throw new TypeError(`${cycle}: ${row.kind} at +${row.at} ms reverses the monitor ` +
+      `inside its ${t.monitorTransitionMs} ms animation from +${t.monitorTransitionAt} ms`);
+  if (startsMonitorTransition)
+    seam('monitor-reversal', row, row.at - t.monitorTransitionAt,
+      t.monitorTransition === 'monitor-up' ? 'monitorAnimUpMs' : 'monitorAnimDownMs',
+      t.monitorTransition, t.state.monitorUp ? 'monitor-down' : 'monitor-up');
+
+  // rule: a press that needs the monitor up must clear the raise animation
+  const needsMonitorUp = row.kind === 'camdrop' || row.kind === 'sweep' ||
+    ((row.kind === 'tap' || row.kind === 'hold') &&
+      (camera(row.control) || semantic(row.control) === V.wind ||
+        semantic(row.control) === V.cameraFeedLight));
+  if (needsMonitorUp) {
+    const isWind = (row.kind === 'tap' || row.kind === 'hold') && semantic(row.control) === V.wind;
+    const readyMs = isWind ? MONITOR_READY_WIND_MS : MONITOR_READY_CAMERA_MS;
+    seam(isWind ? 'after-monitor-raise-wind' : 'after-monitor-raise-camera',
+      row, row.at - t.monitorUpAt, isWind ? 'monitorReadyWindMs' : 'monitorReadyCameraMs',
+      'monitor-up', isWind ? 'wind' : 'camera');
+    if (row.at - t.monitorUpAt < readyMs)
+      throw new TypeError(`${cycle}: ${row.kind} at +${row.at} ms is within ${readyMs} ms of the ` +
+        `monitor raise at +${t.monitorUpAt} ms; that control is not reliably on screen yet and the contact ` +
+        'hits the office underneath (device: wind missed at raise+200 ms, works at raise+450 ms)');
+  }
+  if (isMaskRow)
+    seam('mask-after-monitor-down', row, row.at - t.monitorTransitionAt, 'monitorMaskReadyMs', t.monitorTransition, 'mask');
+  if (isMaskRow && row.at - t.monitorTransitionAt < MONITOR_MASK_READY_MS)
+    throw new TypeError(`${cycle}: mask at +${row.at} ms lands before the mask ` +
+      `control reappears after monitor lowering from +${t.monitorTransitionAt} ms; ` +
+      `requires ${MONITOR_MASK_READY_MS} ms (device trace: fully visible at ~382.5 ms)`);
+}
+
+/** A row's actions, advancing the tracker as each transition begins. */
+function rowActions(cycle: string, row: ParsedRow, id: number, t: CycleTracker, seam: SeamRecorder) {
+  const actions: object[] = [];
+  // Read before the kinds below narrow it away, for the refusal of a kind none of them is.
+  const kind: string = row.kind;
+  if (row.kind === 'tap' || row.kind === 'hold') {
+    const control = semantic(row.control);
+    if (control === V.monitor) {
+      t.state.monitorUp = !t.state.monitorUp;
+      t.monitorTransitionAt = row.at;
+      t.monitorTransitionMs = t.state.monitorUp ? MONITOR_ANIM_UP_MS : MONITOR_ANIM_DOWN_MS;
+      t.monitorTransition = t.state.monitorUp ? 'monitor-up' : 'monitor-down';
+      if (t.state.monitorUp) t.monitorUpAt = row.at;
+      if (!t.state.monitorUp) { t.monitorDownAt = row.at; t.state.camera = null; }
+      actions.push(action(cycle, row, id, { kind: 'ensure', control,
+        targetMonitorUp: t.state.monitorUp, durationMs: row.duration }));
+    } else if (control === V.mask) {
+      if (t.state.monitorUp) throw new TypeError(`${cycle}: mask toggle requires monitor down`);
+      if (t.state.maskOn) {
+        seam('after-mask-on-animation', row, row.at - t.maskOnAt, 'maskAnimOnMs', 'mask-on', 'mask-off');
+        if (row.at - t.maskOnAt < MASK_ANIM_ON_MS)
+          throw new TypeError(`${cycle}: mask toggle at +${row.at} ms lands inside the ` +
+            `${MASK_ANIM_ON_MS} ms mask-on animation from +${t.maskOnAt} ms, where the engine drops it`);
+      }
+      t.state.maskOn = !t.state.maskOn;
+      if (!t.state.maskOn) t.maskOffAt = row.at; else t.maskOnAt = row.at;
+      actions.push(action(cycle, row, id, { kind: 'press', control,
+        requiresMonitorUp: false, targetMaskOn: t.state.maskOn, durationMs: row.duration }));
+    } else {
+      const needsUp = camera(row.control) || control === V.wind || control === V.cameraFeedLight;
+      actions.push(action(cycle, row, id, { kind: row.kind, control,
+        requiresMonitorUp: needsUp ? true : undefined, durationMs: row.duration }));
+    }
+  } else if (row.kind === 'hall') {
+    actions.push(action(cycle, row, id, { kind: 'hold', control: V.hallLight,
+      requiresMonitorUp: false, durationMs: row.duration }));
+  } else if (row.kind === 'hallvent') {
+    actions.push(action(cycle, row, id, { kind: 'compound', compound: 'hallvent',
+      control: V.hallLight, ventControl: V.rightVentLight, requiresMonitorUp: false,
+      durationMs: row.duration }));
+  } else if (row.kind === 'hallraise') {
+    if (t.state.monitorUp) throw new TypeError(`${cycle}: hallraise starts with monitor up`);
+    t.state.monitorUp = true;
+    t.monitorTransitionAt = row.at;
+    t.monitorTransitionMs = MONITOR_ANIM_UP_MS;
+    t.monitorTransition = 'monitor-up';
+    t.monitorUpAt = row.at;
+    actions.push(action(cycle, row, id, { kind: 'compound', compound: 'hallraise',
+      control: V.hallLight, requiresMonitorUp: false, targetMonitorUp: true,
+      durationMs: row.duration }));
+  } else if (row.kind === 'maskraise') {
+    if (t.state.monitorUp) throw new TypeError(`${cycle}: maskraise starts with monitor up`);
+    // The compound's internal gap is deliberately NOT checked against
+    // MASK_ANIM_OFF_MS. That was tried on 2026-09-19 and was wrong: the
+    // device measured this exact transition (actuator.ts: a monitor press
+    // after a mask-off press, 0 of 17 lost at or above 180 ms), and the
+    // compound's gap is MASK_RAISE_GAP_MS (300 ms; bundle.mjs refuses less).
+    // Refusing it would contradict a measurement with a model constant --
+    // mistake-register item 10 in the other direction.
+    seam('after-mask-on-animation', row, row.at - t.maskOnAt, 'maskAnimOnMs', 'mask-on', 'mask-off');
+    if (row.at - t.maskOnAt < MASK_ANIM_ON_MS)
+      throw new TypeError(`${cycle}: maskraise at +${row.at} ms takes the mask off inside the ` +
+        `${MASK_ANIM_ON_MS} ms mask-on animation from +${t.maskOnAt} ms, where the engine drops it`);
+    t.state.maskOn = false; t.state.monitorUp = true;
+    t.maskOffAt = row.at;
+    t.monitorTransitionAt = row.at + row.gap;
+    t.monitorTransitionMs = MONITOR_ANIM_UP_MS;
+    t.monitorTransition = 'monitor-up';
+    t.monitorUpAt = row.at + row.gap;
+    actions.push(action(cycle, row, id, { kind: 'compound', compound: 'maskraise',
+      control: row.mode === 'hall' ? V.hallLight : V.monitor, requiresMonitorUp: false,
+      targetMaskOn: false, targetMonitorUp: true, gapMs: row.gap,
+      durationMs: row.duration }));
+  } else if (row.kind === 'sweep') {
+    if (!t.state.monitorUp) throw new TypeError(`${cycle}: sweep requires monitor up`);
+    const cams = row.cams.map((token: string) => Number(token.split(':')[0]));
+    for (const [camIndex, cam] of cams.entries()) {
+      const lightMs = row.cams[camIndex].includes(':')
+        ? Number(row.cams[camIndex].split(':')[1]) : row.contact;
+      actions.push(action(cycle, { at: row.at + camIndex * row.spacing }, `${id}-cam${cam}`,
+        { kind: 'sweep-slot', control: `cam:${cam}`, requiresMonitorUp: true,
+          selectMs: row.contact, settleMs: isLightAfter(row.contact) ? LA_SETTLE_MS : 0, lightMs }));
+    }
+  } else if (row.kind === 'read') {
+    if (t.state.monitorUp) throw new TypeError(`${cycle}: vent read requires monitor down`);
+    t.state.maskOn = true;
+    // "The read owns the prophylactic mask-on press" (recipe.ts): it lands
+    // after the held vent window plus the released-input gap, not at row.at.
+    t.maskOnAt = row.at + row.duration + row.gap;
+    actions.push(action(cycle, row, id, { kind: 'observe-left', control: V.leftVentLight,
+      requiresMonitorUp: false, durationMs: row.duration, maskGapMs: row.gap,
+      targetMaskOn: true }));
+  } else if (row.kind === 'camdrop') {
+    if (!t.state.monitorUp) throw new TypeError(`${cycle}: camdrop requires monitor up`);
+    t.state.monitorUp = false;
+    t.monitorDownAt = row.at + row.lead;
+    t.monitorTransitionAt = t.monitorDownAt;
+    t.monitorTransitionMs = MONITOR_ANIM_DOWN_MS;
+    t.monitorTransition = 'monitor-down';
+    actions.push(action(cycle, row, id, { kind: 'compound', compound: 'camdrop',
+      control: V.cameraFeedLight, requiresMonitorUp: true, targetMonitorUp: false,
+      leadMs: row.lead, durationMs: row.contact, tailMs: row.tail }));
+  } else {
+    throw new TypeError(`${cycle}: unsupported artifact row ${kind}`);
+  }
+  return actions;
+}
+
 export function compileCycle(cycle: string, rows: readonly ParsedRow[], initial = initialState(cycle), seams: Seam[] = [],
   declaredViewing: string | null = null) {
-  const seam = (relation: string, row: ParsedRow, gapMs: number, floor: SeamFloor, first: string | null, then: string) => {
+  const seam: SeamRecorder = (relation: string, row: ParsedRow, gapMs: number, floor: SeamFloor, first: string | null, then: string) => {
     if (!Number.isFinite(gapMs)) return;   // no prior transition to measure against
     if (!Object.hasOwn(SEAM_FLOORS, floor)) throw new TypeError(`${cycle}: seam ${relation} names no SEAM_FLOORS key (${floor})`);
     const floorMs = SEAM_FLOORS[floor];
@@ -226,207 +429,21 @@ export function compileCycle(cycle: string, rows: readonly ParsedRow[], initial 
   };
   const pressOf = (row: ParsedRow) => (row.kind === 'tap' || row.kind === 'hold' ? semantic(row.control) : row.kind);
   if (!Array.isArray(rows)) throw new TypeError('artifact cycle rows must be an array');
-  const state: CycleState = { ...initial };
   // When the monitor raise and the mask-off press began, so a press cannot be
   // scheduled inside an animation the engine drops it during.
-  let monitorUpAt = -Infinity;
-  let monitorDownAt = -Infinity;
-  let monitorTransitionAt = -Infinity;
-  let monitorTransitionMs = 0;
-  let monitorTransition: string | null = null;   // 'monitor-up' or 'monitor-down': the last transition's direction
-  let maskOffAt = -Infinity;
-  let maskOnAt = -Infinity;
+  const t: CycleTracker = { state: { ...initial }, monitorUpAt: -Infinity, monitorDownAt: -Infinity,
+    monitorTransitionAt: -Infinity, monitorTransitionMs: 0, monitorTransition: null, maskOffAt: -Infinity, maskOnAt: -Infinity };
   const blocks: Readonly<{ schema: string, id: string, cycle: string, atMs: number, actions: readonly object[] }>[] = [];
   for (const [rowIndex, row] of rows.entries()) {
     const id = rowIndex + 1;
-    const actions: object[] = [];
     validateRowContacts(cycle, row);
     const isMaskRow = (row.kind === 'tap' || row.kind === 'hold') && semantic(row.control) === V.mask;
-
-    // Once the mask owns the surface, every other control is an impossible
-    // plan. `maskraise` is the one explicit exception: it is the reviewed
-    // mask-off + raise compound, and its internal timing owns the transition.
-    if (state.maskOn && !isMaskRow && row.kind !== 'maskraise')
-      throw new TypeError(`${cycle}: ${row.kind} is illegal while the mask is up; ` +
-        'only the mask-off control or maskraise may proceed');
-    if (row.kind === 'maskraise' && !state.maskOn)
-      throw new TypeError(`${cycle}: maskraise requires the mask to be up at its start`);
-
-    if (!isMaskRow && row.at - maskOffAt < MASK_ANIM_OFF_MS)
-      throw new TypeError(`${cycle}: ${row.kind} at +${row.at} ms lands inside the ` +
-        `${MASK_ANIM_OFF_MS} ms mask-off animation from +${maskOffAt} ms, where the engine drops it`);
-    if (!isMaskRow) seam('after-mask-off-animation', row, row.at - maskOffAt, 'maskAnimOffMs', 'mask-off', pressOf(row));
-
-    const rawControl = row.kind === 'tap' || row.kind === 'hold' ? semantic(row.control) : null;
-    const needsMonitorDown = rawControl === V.hallLight || rawControl === V.leftVentLight ||
-      rawControl === V.rightVentLight || row.kind === 'hall' || row.kind === 'hallvent' ||
-      row.kind === 'hallraise' || row.kind === 'read';
-    const needsMonitorUpNow = camera(controlOf(row)) || row.kind === 'sweep' || row.kind === 'camdrop' ||
-      rawControl === V.cameraFeedLight || rawControl === V.wind;
-    if (needsMonitorDown && state.monitorUp)
-      throw new TypeError(`${cycle}: ${row.kind} ${rawControl ?? ''} requires monitor down`);
-    // The box is on CAM 11 and the engine only credits a wind while that camera
-    // is the VIEWED feed: plant-model.js `winding && monitor === MON_UP &&
-    // viewing === C.BOX_CAM`. The compiler required only monitor-up, so a plan
-    // could schedule a wind with another camera viewed, compile clean, and be a
-    // silent no-op on the phone -- the box drains and the Puppet arrives. On
-    // 2026-09-20 a Night 5 run died at 48.4 s that way, with the arm unresolved
-    // so nothing had confirmed CAM 11 was up; the box empties in 20 s at that
-    // night's drain rate.
-    //
-    // The double-camera glitch makes "which camera is viewed" something a
-    // last-tapped tracker gets wrong -- the route taps cam11 then cam9 and the
-    // glitch keeps cam11 VIEWED with cam9 as the marker -- so this checks the
-    // plan's own declaration instead of trying to model the glitch. A plan that
-    // winds must declare the box camera as its viewing feed.
-    if (rawControl === V.wind && declaredViewing && declaredViewing !== `cam:${C.BOX_CAM}`)
-      throw new TypeError(`${cycle}: wind at +${row.at} ms needs cam:${C.BOX_CAM} viewed (the box ` +
-        `camera), but the plan declares #arm-verify-viewing ${declaredViewing}`);
-    if (needsMonitorUpNow && !state.monitorUp)
-      throw new TypeError(`${cycle}: ${row.kind} ${rawControl ?? ''} requires monitor up`);
-
-    // A second monitor transition cannot reverse the first one mid-animation.
-    // Hall flashes during monitor lowering remain legal; the mask is different:
-    // its button is absent while the monitor is coming down, so a mask contact
-    // in this interval is an illegal device action even though the simulator
-    // accepts the semantic press.
-    const startsMonitorTransition = (row.kind === 'tap' || row.kind === 'hold') &&
-      rawControl === V.monitor || row.kind === 'hallraise' || row.kind === 'maskraise' ||
-      row.kind === 'camdrop';
-    if (startsMonitorTransition && row.at - monitorTransitionAt < monitorTransitionMs)
-      throw new TypeError(`${cycle}: ${row.kind} at +${row.at} ms reverses the monitor ` +
-        `inside its ${monitorTransitionMs} ms animation from +${monitorTransitionAt} ms`);
-    if (startsMonitorTransition)
-      seam('monitor-reversal', row, row.at - monitorTransitionAt,
-        monitorTransition === 'monitor-up' ? 'monitorAnimUpMs' : 'monitorAnimDownMs',
-        monitorTransition, state.monitorUp ? 'monitor-down' : 'monitor-up');
-
-    // rule: a press that needs the monitor up must clear the raise animation
-    const needsMonitorUp = row.kind === 'camdrop' || row.kind === 'sweep' ||
-      ((row.kind === 'tap' || row.kind === 'hold') &&
-        (camera(row.control) || semantic(row.control) === V.wind ||
-          semantic(row.control) === V.cameraFeedLight));
-    if (needsMonitorUp) {
-      const isWind = (row.kind === 'tap' || row.kind === 'hold') && semantic(row.control) === V.wind;
-      const readyMs = isWind ? MONITOR_READY_WIND_MS : MONITOR_READY_CAMERA_MS;
-      seam(isWind ? 'after-monitor-raise-wind' : 'after-monitor-raise-camera',
-        row, row.at - monitorUpAt, isWind ? 'monitorReadyWindMs' : 'monitorReadyCameraMs',
-        'monitor-up', isWind ? 'wind' : 'camera');
-      if (row.at - monitorUpAt < readyMs)
-        throw new TypeError(`${cycle}: ${row.kind} at +${row.at} ms is within ${readyMs} ms of the ` +
-          `monitor raise at +${monitorUpAt} ms; that control is not reliably on screen yet and the contact ` +
-          'hits the office underneath (device: wind missed at raise+200 ms, works at raise+450 ms)');
-    }
-    if (isMaskRow)
-      seam('mask-after-monitor-down', row, row.at - monitorTransitionAt, 'monitorMaskReadyMs', monitorTransition, 'mask');
-    if (isMaskRow && row.at - monitorTransitionAt < MONITOR_MASK_READY_MS)
-      throw new TypeError(`${cycle}: mask at +${row.at} ms lands before the mask ` +
-        `control reappears after monitor lowering from +${monitorTransitionAt} ms; ` +
-        `requires ${MONITOR_MASK_READY_MS} ms (device trace: fully visible at ~382.5 ms)`);
-    if (row.kind === 'tap' || row.kind === 'hold') {
-      const control = semantic(row.control);
-      if (control === V.monitor) {
-        state.monitorUp = !state.monitorUp;
-        monitorTransitionAt = row.at;
-        monitorTransitionMs = state.monitorUp ? MONITOR_ANIM_UP_MS : MONITOR_ANIM_DOWN_MS;
-        monitorTransition = state.monitorUp ? 'monitor-up' : 'monitor-down';
-        if (state.monitorUp) monitorUpAt = row.at;
-        if (!state.monitorUp) { monitorDownAt = row.at; state.camera = null; }
-        actions.push(action(cycle, row, id, { kind: 'ensure', control,
-          targetMonitorUp: state.monitorUp, durationMs: row.duration }));
-      } else if (control === V.mask) {
-        if (state.monitorUp) throw new TypeError(`${cycle}: mask toggle requires monitor down`);
-        if (state.maskOn) {
-          seam('after-mask-on-animation', row, row.at - maskOnAt, 'maskAnimOnMs', 'mask-on', 'mask-off');
-          if (row.at - maskOnAt < MASK_ANIM_ON_MS)
-            throw new TypeError(`${cycle}: mask toggle at +${row.at} ms lands inside the ` +
-              `${MASK_ANIM_ON_MS} ms mask-on animation from +${maskOnAt} ms, where the engine drops it`);
-        }
-        state.maskOn = !state.maskOn;
-        if (!state.maskOn) maskOffAt = row.at; else maskOnAt = row.at;
-        actions.push(action(cycle, row, id, { kind: 'press', control,
-          requiresMonitorUp: false, targetMaskOn: state.maskOn, durationMs: row.duration }));
-      } else {
-        const needsUp = camera(row.control) || control === V.wind || control === V.cameraFeedLight;
-        actions.push(action(cycle, row, id, { kind: row.kind, control,
-          requiresMonitorUp: needsUp ? true : undefined, durationMs: row.duration }));
-      }
-    } else if (row.kind === 'hall') {
-      actions.push(action(cycle, row, id, { kind: 'hold', control: V.hallLight,
-        requiresMonitorUp: false, durationMs: row.duration }));
-    } else if (row.kind === 'hallvent') {
-      actions.push(action(cycle, row, id, { kind: 'compound', compound: 'hallvent',
-        control: V.hallLight, ventControl: V.rightVentLight, requiresMonitorUp: false,
-        durationMs: row.duration }));
-    } else if (row.kind === 'hallraise') {
-      if (state.monitorUp) throw new TypeError(`${cycle}: hallraise starts with monitor up`);
-      state.monitorUp = true;
-      monitorTransitionAt = row.at;
-      monitorTransitionMs = MONITOR_ANIM_UP_MS;
-      monitorTransition = 'monitor-up';
-      monitorUpAt = row.at;
-      actions.push(action(cycle, row, id, { kind: 'compound', compound: 'hallraise',
-        control: V.hallLight, requiresMonitorUp: false, targetMonitorUp: true,
-        durationMs: row.duration }));
-    } else if (row.kind === 'maskraise') {
-      if (state.monitorUp) throw new TypeError(`${cycle}: maskraise starts with monitor up`);
-      // The compound's internal gap is deliberately NOT checked against
-      // MASK_ANIM_OFF_MS. That was tried on 2026-09-19 and was wrong: the
-      // device measured this exact transition (actuator.ts: a monitor press
-      // after a mask-off press, 0 of 17 lost at or above 180 ms), and the
-      // compound's gap is MASK_RAISE_GAP_MS (300 ms; bundle.mjs refuses less).
-      // Refusing it would contradict a measurement with a model constant --
-      // mistake-register item 10 in the other direction.
-      seam('after-mask-on-animation', row, row.at - maskOnAt, 'maskAnimOnMs', 'mask-on', 'mask-off');
-      if (row.at - maskOnAt < MASK_ANIM_ON_MS)
-        throw new TypeError(`${cycle}: maskraise at +${row.at} ms takes the mask off inside the ` +
-          `${MASK_ANIM_ON_MS} ms mask-on animation from +${maskOnAt} ms, where the engine drops it`);
-      state.maskOn = false; state.monitorUp = true;
-      maskOffAt = row.at;
-      monitorTransitionAt = row.at + row.gap;
-      monitorTransitionMs = MONITOR_ANIM_UP_MS;
-      monitorTransition = 'monitor-up';
-      monitorUpAt = row.at + row.gap;
-      actions.push(action(cycle, row, id, { kind: 'compound', compound: 'maskraise',
-        control: row.mode === 'hall' ? V.hallLight : V.monitor, requiresMonitorUp: false,
-        targetMaskOn: false, targetMonitorUp: true, gapMs: row.gap,
-        durationMs: row.duration }));
-    } else if (row.kind === 'sweep') {
-      if (!state.monitorUp) throw new TypeError(`${cycle}: sweep requires monitor up`);
-      const cams = row.cams.map((token: string) => Number(token.split(':')[0]));
-      for (const [camIndex, cam] of cams.entries()) {
-        const lightMs = row.cams[camIndex].includes(':')
-          ? Number(row.cams[camIndex].split(':')[1]) : row.contact;
-        actions.push(action(cycle, { at: row.at + camIndex * row.spacing }, `${id}-cam${cam}`,
-          { kind: 'sweep-slot', control: `cam:${cam}`, requiresMonitorUp: true,
-            selectMs: row.contact, settleMs: isLightAfter(row.contact) ? LA_SETTLE_MS : 0, lightMs }));
-      }
-    } else if (row.kind === 'read') {
-      if (state.monitorUp) throw new TypeError(`${cycle}: vent read requires monitor down`);
-      state.maskOn = true;
-      // "The read owns the prophylactic mask-on press" (recipe.ts): it lands
-      // after the held vent window plus the released-input gap, not at row.at.
-      maskOnAt = row.at + row.duration + row.gap;
-      actions.push(action(cycle, row, id, { kind: 'observe-left', control: V.leftVentLight,
-        requiresMonitorUp: false, durationMs: row.duration, maskGapMs: row.gap,
-        targetMaskOn: true }));
-    } else if (row.kind === 'camdrop') {
-      if (!state.monitorUp) throw new TypeError(`${cycle}: camdrop requires monitor up`);
-      state.monitorUp = false;
-      monitorDownAt = row.at + row.lead;
-      monitorTransitionAt = monitorDownAt;
-      monitorTransitionMs = MONITOR_ANIM_DOWN_MS;
-      monitorTransition = 'monitor-down';
-      actions.push(action(cycle, row, id, { kind: 'compound', compound: 'camdrop',
-        control: V.cameraFeedLight, requiresMonitorUp: true, targetMonitorUp: false,
-        leadMs: row.lead, durationMs: row.contact, tailMs: row.tail }));
-    } else {
-      throw new TypeError(`${cycle}: unsupported artifact row ${row.kind}`);
-    }
+    rowGates(cycle, row, isMaskRow, t, { seam, pressOf, declaredViewing });
+    const actions = rowActions(cycle, row, id, t, seam);
     blocks.push(Object.freeze({ schema: 'artifact-action-block-v1', id: `${cycle}-block-${id}`,
       cycle, atMs: row.at, actions: Object.freeze(actions) }));
   }
-  return Object.freeze({ cycle, initial: Object.freeze({ ...initial }), final: Object.freeze({ ...state }),
+  return Object.freeze({ cycle, initial: Object.freeze({ ...initial }), final: Object.freeze({ ...t.state }),
     blocks: Object.freeze(blocks) });
 }
 
