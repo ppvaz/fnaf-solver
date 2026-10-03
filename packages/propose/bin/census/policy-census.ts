@@ -46,6 +46,7 @@ import { STRATEGY_REGISTRY, compileBundle, validateWinner } from '../plans/bundl
 import { ANCHOR_AIMS } from '../../bindings/fact-register.ts';
 import { build, replay as replayToys, schedule } from '../plans/minus-toys-plan.ts';
 import { DeviceActuator } from '../../../play/bin/phone/actuator.ts';
+import { SEAM_FLOORS } from '../plans/artifact-commands.ts';
 import { currentPath } from '@sixam/review/renamed-path';
 import { forkBlocks, gitState } from './winner-census.ts';
 import type { BlockRow, ForkedChild, Loss } from './winner-census.ts';
@@ -157,11 +158,22 @@ export function exactNight(binding: AnchorBinding, night: number, seed: number, 
   return { won, reason: r.sim.won ? (won ? 'won' : 'unarmed') : (r.sim.death?.reason ?? 'alive'), frame: r.sim.frame };
 }
 
-/** One device-lane night: the aim's epoch, every press late by its own draw from the latency band. */
-export function deviceNight(binding: AnchorBinding, night: number, seed: number) {
+/**
+ * The phone's mask-button floor the device lane applies, as device-lane.ts and night7-robustness-field.ts do: the
+ * simulator takes a mask press the phone loses inside the monitor's lowering animation (actuator.ts maskFloorMs).
+ */
+export const DEVICE_MASK_FLOOR_MS = SEAM_FLOORS.maskButtonFullyVisibleAfterMonitorDownMs;
+
+/**
+ * One device-lane night: the aim's epoch, every press late by its own draw from the latency band, through the
+ * phone's mask floor. `maskFloorMs: null` replays a record whose lane ran without one.
+ */
+export function deviceNight(binding: AnchorBinding, night: number, seed: number,
+  { maskFloorMs = DEVICE_MASK_FLOOR_MS }: { maskFloorMs?: number | null } = {}) {
   const sim = new Sim({ night, seed });
   const queue = queueAt(binding.knobs, binding.aimEpochMs);
-  const actuator = new DeviceActuator(sim, { seed, lateMinMs: binding.latencyMs[0], lateMaxMs: binding.latencyMs[1] });
+  const actuator = new DeviceActuator(sim, { seed, lateMinMs: binding.latencyMs[0], lateMaxMs: binding.latencyMs[1],
+    maskFloorMs });
   let i = 0;
   let splitAt = -1;
   while (sim.alive && !sim.won) {
@@ -175,7 +187,7 @@ export function deviceNight(binding: AnchorBinding, night: number, seed: number)
   }
   const won = sim.won && splitAt >= 0;
   return { won, reason: sim.won ? (won ? 'won' : 'unarmed') : (sim.death?.reason ?? 'alive'), frame: sim.frame,
-    seamDrops: actuator.seamDrops };
+    seamDrops: actuator.seamDrops, maskFloorDrops: actuator.maskFloorDrops };
 }
 
 /** A policy family: its bindings, their schedule classes, and one night in each lane. */
@@ -292,6 +304,7 @@ export function buildRecord({ spec, reg, bindings, classes, exactRows, deviceRow
       planSha256: binding.planSha256, bandMs: binding.bandMs, members: own.reduce((s, c) => s + c.epochsMs.count, 0),
       classes: own, value: { development: value('development'), heldOut: value('heldOut') },
       device: { epochMs: binding.aimEpochMs, latencyMs: { lo: binding.latencyMs[0], hi: binding.latencyMs[1] },
+        maskFloorMs: DEVICE_MASK_FLOOR_MS,
         development: byBlock(deviceRows, 'development', binding.name), heldOut: byBlock(deviceRows, 'heldOut', binding.name) } };
   });
   const selectedName = selectPolicy(spec, out);
@@ -337,7 +350,8 @@ export function buildRecord({ spec, reg, bindings, classes, exactRows, deviceRow
     method: { tool: 'packages/propose/bin/census/policy-census.ts', command, git, jobs, wallSeconds,
       win: 'sim.won AND splitAt >= 0 (a 6 AM with the split armed), as winner-phase-census.ts scores it',
       exactLane: 'minus-toys-plan.ts replay({night, seed, knobs, epochMs}) at each class\'s representative epoch',
-      deviceLane: 'the same queue at aim + onsetBias, each press through actuator.ts DeviceActuator (perPress, lateness U[latency.min, latency.max] ms)' },
+      deviceLane: 'the same queue at aim + onsetBias, each press through actuator.ts DeviceActuator (perPress, lateness U[latency.min, latency.max] ms, ' +
+        `the phone's ${DEVICE_MASK_FLOOR_MS} ms mask-button floor after a lowering monitor press)` },
     bindings: out,
     selection: { rule: 'the highest worst-class win rate on the development block; then the highest member-weighted mean; then the spec\'s tie order',
       selected: selectedName },

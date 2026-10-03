@@ -23,8 +23,10 @@ import { fileURLToPath } from 'node:url';
 import { validateExperimentResultV2, validateExperimentSpecV2 } from '@sixam/kernel/contracts';
 import { SEED_FLOOR, decideExperiment, resolveCensusCohort } from '@sixam/propose/census';
 import {
-  CENSUS_KIND, anchorBandBindings, deviceNight, exactNight, observe, pMaxRate, scheduleClasses, selectPolicy,
+  CENSUS_KIND, DEVICE_MASK_FLOOR_MS, anchorBandBindings, deviceNight, exactNight, observe, pMaxRate, scheduleClasses,
+  selectPolicy,
 } from './policy-census.ts';
+import { SEAM_FLOORS } from '../plans/artifact-commands.ts';
 import type { CensusSpec, buildRecord } from './policy-census.ts';
 import type { Loss } from './winner-census.ts';
 
@@ -157,11 +159,24 @@ for (const binding of bindings) {
   for (const seed of cohort.heldOut.slice(0, 2)) {
     const want = expect(recorded.device.heldOut, seed);
     if (!want) continue;
-    const got = deviceNight(binding, night, seed);
+    // A record replays with the mask floor its device lane ran with; one that states none ran without it.
+    const got = deviceNight(binding, night, seed, { maskFloorMs: recorded.device.maskFloorMs ?? null });
     replays += 1;
     assert.equal(got.won, want.won, `${binding.name} device seed ${seed}: won`);
     if (!want.won) assert.deepEqual([got.reason, got.frame], [want.reason, want.frame], `${binding.name} device seed ${seed}: death`);
   }
+}
+// The device lane carries the phone's mask-button floor (actuator.ts maskFloorMs), which the simulator does
+// not draw: a floor no press clears drops a mask press, so the option reaches the actuator, and the default
+// is the phone's.
+{
+  const [binding] = bindings;
+  const night = spec.family.grid.night;
+  const seed = cohort.heldOut[0];
+  assert.equal(DEVICE_MASK_FLOOR_MS, SEAM_FLOORS.maskButtonFullyVisibleAfterMonitorDownMs);
+  assert.ok(deviceNight(binding, night, seed, { maskFloorMs: 60_000 }).maskFloorDrops > 0, 'the device lane ignores its mask floor');
+  assert.deepEqual(deviceNight(binding, night, seed), deviceNight(binding, night, seed, { maskFloorMs: DEVICE_MASK_FLOOR_MS }),
+    'the device lane does not default to the phone\'s mask floor');
 }
 console.log(`policy census: ${name} (${record.evidenceId}) holds its pre-registration ${record.preregistration.specSha256.slice(0, 12)}, ` +
   `re-derives its selection (${selectedName}), observation, ${decided.explanations.length} explanation tags and P_max ` +

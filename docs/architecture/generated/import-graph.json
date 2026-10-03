@@ -2041,6 +2041,7 @@
       "imports": [
         "../../../play/bin/phone/actuator.ts",
         "../../bindings/fact-register.ts",
+        "../plans/artifact-commands.ts",
         "../plans/bundle.ts",
         "../plans/minus-toys-plan.ts",
         "./winner-census.ts",
@@ -2125,6 +2126,7 @@
       "file": "packages/propose/bin/census/test-policy-census.ts",
       "imports": [
         "../../../source/recompile/model-draw-trace.ts",
+        "../plans/artifact-commands.ts",
         "../recompile/rebuild-options-census.ts",
         "./policy-census.ts",
         "./winner-census.ts",
