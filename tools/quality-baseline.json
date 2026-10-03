@@ -446,10 +446,6 @@
         "count": 321,
         "why": "test-bundle’s checks: a run of independent checks under one model-options scope; they become node:test cases with the lanes’ move to node:test (audit G6)"
       },
-      "fn:packages/review/src/solver.ts#createSolver": {
-        "count": 338,
-        "why": "the solver interface’s verbs over one set of shared tables; audit R13 took describe and the shared tables out (490 to 338 lines), and the per-verb split is next"
-      },
       "fn:packages/source/decompile/truth.ts#createTruth": {
         "count": 346,
         "why": "the truth surface over the caller’s own event-sheet dump (parse, index, query in one closure); split when the dump format gets the schema it lacks (castDebt names the same boundary)"
