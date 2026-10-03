@@ -7,6 +7,7 @@
 // phone, MCU, USB-HID device, or audio route has been measured.
 
 import { isList, isOneOf } from '@sixam/kernel';
+import { isFiniteNumber as finite } from '@sixam/kernel/contracts';
 import type { BenchTraceSample, BenchTransportTrace } from '@sixam/kernel/contracts';
 
 export const BENCH_TRACE_SCHEMA = 'bench-transport-trace-v1';
@@ -35,7 +36,6 @@ type Continuation = { readonly upstreamDropAtMs: number, readonly completed: boo
   readonly approval: { readonly cycleId: string, readonly actionIds: readonly string[] },
   readonly emitted: readonly unknown[], readonly replacementActions: readonly unknown[] };
 const clone = <T>(value: T): T => structuredClone(value);
-const finite = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value);
 
 function fail(message: string): never { throw new TypeError(`bench trace: ${message}`); }
 

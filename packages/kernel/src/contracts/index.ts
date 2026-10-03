@@ -40,13 +40,18 @@ export const CLOCKS: readonly ClockName[] = Object.freeze([
 export const CONTROL_KINDS = Object.freeze(['press', 'release', 'hold', 'select'] as const);
 export const CLAIM_LEVELS = Object.freeze(['MODEL_ONLY', 'FIXTURE', 'DEVICE_MEASURED'] as const);
 
-const finite = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value);
-const requiredString = (value: unknown, label: string) => {
+/** A finite number: not NaN, not an infinity, not a numeric string. */
+export const isFiniteNumber = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value);
+const finite = isFiniteNumber;
+/** `value` when it is a non-empty string of at most 256 characters; a refusal naming `label` otherwise. */
+export const requiredString = (value: unknown, label: string) => {
   if (typeof value !== 'string' || value.length === 0 || value.length > 256)
     throw new TypeError(`${label} must be a non-empty bounded string`);
   return value;
 };
+/** A contract's refusal, as every validator of a registered contract words it (exported as failContract). */
 function fail(message: string): never { throw new TypeError(`contract: ${message}`); }
+export { fail as failContract };
 
 export function validateClockRef(value: unknown, label = 'clock'): ClockRef {
   if (!isRecord(value) || !isOneOf(CLOCKS, value.clock) || !finite(value.value) || value.value < 0)

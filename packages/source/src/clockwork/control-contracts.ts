@@ -12,16 +12,9 @@ import {
   unknownProfilePoints,
 } from './control-registry.ts';
 import { isOneOf, isRecord } from '@sixam/kernel';
-import { CONTROL_KINDS, validateClockRef, validateProfile } from '@sixam/kernel/contracts';
+import { CONTROL_KINDS, failContract as fail, isFiniteNumber as finite, requiredString, validateClockRef, validateProfile } from '@sixam/kernel/contracts';
 import type { ControlCatalog, ControlCommand, DeviceProfileGame, ResolvedDeviceProfile } from '@sixam/kernel/contracts';
 
-const finite = (value: unknown) => typeof value === 'number' && Number.isFinite(value);
-const requiredString = (value: unknown, label: string) => {
-  if (typeof value !== 'string' || value.length === 0 || value.length > 256)
-    throw new TypeError(`${label} must be a non-empty bounded string`);
-  return value;
-};
-function fail(message: string): never { throw new TypeError(`contract: ${message}`); }
 
 // `semantic-control-v1` is parametric by game (D5). The accepted set is
 // generated from the control catalogs (control-registry.js), never written out
