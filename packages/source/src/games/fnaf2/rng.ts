@@ -21,7 +21,8 @@ export class Rng {
   declare seed: number;
   declare state: number;
   declare worst: boolean;
-  constructor(seed = Date.now() >>> 0, worst = false) {
+  // The seed is the caller's: a stream drawn from the wall clock could not be replayed.
+  constructor(seed: number, worst = false) {
     this.seed = seed & RNG_MASK;
     this.state = this.seed;
     this.worst = worst;

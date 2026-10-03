@@ -151,8 +151,6 @@ function ambientEntropy(file: ts.SourceFile) {
 const AMBIENT_ENTROPY_TOLERATED = new Map([
   ['packages/source/src/games/fnaf2/plant-options.ts', { count: 1,
     why: 'an unseeded Sim draws a natural seed; every census and gate passes its seed' }],
-  ['packages/source/src/games/fnaf2/rng.ts', { count: 1,
-    why: 'the generator\'s default seed for an unseeded Sim; the same default as plant-options.js' }],
 ]);
 
 /** Writes into the process-global search knobs. */

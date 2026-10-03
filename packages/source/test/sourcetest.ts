@@ -865,7 +865,7 @@ ok('build 296', 'taking the mask off is slower than putting it on',
   const unseen = new Set(Array.from({ length: 65536 }, (_, i) => i));
   const periods = [];
   while (unseen.size) {
-    const start = unseen.values().next().value;
+    const [start] = unseen;
     const p = new Rng(start);
     let period = 0;
     do { unseen.delete(p.state); p.next(); period++; } while (p.state !== start);
