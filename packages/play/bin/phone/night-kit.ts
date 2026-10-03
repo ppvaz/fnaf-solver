@@ -8,7 +8,8 @@ import { createHash } from 'node:crypto';
 import { type ChildProcess, spawn, execFileSync } from 'node:child_process';
 import { finished } from 'node:stream/promises';
 import { type Gzip, createGzip } from 'node:zlib';
-import { join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { performance } from 'node:perf_hooks';
 import type { AdbCompanionPort } from '../../src/campaign/physical-ports.ts';
 
@@ -25,6 +26,31 @@ export type RegionRead = Awaited<ReturnType<RegionChannel['read']>>;
 interface CaptureFrame { name: string, path: string, sha256: string, atWallMs: number }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../../..');
+
+/** What a child process left. */
+export interface RunResult { code: number | null, signal: NodeJS.Signals | null, timedOut: boolean, stdout: string, stderr: string }
+type RunOptions = { input?: string | Buffer | null, timeoutMs?: number, env?: NodeJS.ProcessEnv };
+
+/** Run a command from the repository root to its end, its output collected; past `timeoutMs` it is sent SIGTERM. */
+export function runProcess(command: string, args: string[], { input = null, timeoutMs = 15000, env = {} }: RunOptions = {}) {
+  return new Promise<RunResult>((resolvePromise, reject) => {
+    const child = spawn(command, args, { cwd: ROOT, shell: false, stdio: ['pipe', 'pipe', 'pipe'],
+      env: { ...process.env, ...env } });
+    const stdout: Buffer[] = [], stderr: Buffer[] = [];
+    let timedOut = false;
+    const timer = setTimeout(() => { timedOut = true; child.kill('SIGTERM'); }, timeoutMs);
+    child.stdout.on('data', chunk => stdout.push(chunk));
+    child.stderr.on('data', chunk => stderr.push(chunk));
+    child.once('error', error => { clearTimeout(timer); reject(error); });
+    child.once('close', (code, signal) => {
+      clearTimeout(timer);
+      resolvePromise({ code, signal, timedOut, stdout: Buffer.concat(stdout).toString('utf8'),
+        stderr: Buffer.concat(stderr).toString('utf8') });
+    });
+    if (input === null) child.stdin.end(); else child.stdin.end(input);
+  });
+}
 const sha256 = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex');
 
 /** A run's document (run.json) and its event rows (events.jsonl), host clocks named. */

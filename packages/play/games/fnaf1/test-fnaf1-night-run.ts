@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { performance } from 'node:perf_hooks';
 import { AUDIO_LINK_ARGS, Fnaf1Controls, audioLinkState, night1Staging, parseArgs, validateRoute } from './fnaf1-night-run.ts';
+import { titleConsensus } from './fnaf1-menu-probe.ts';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const route = JSON.parse(readFileSync(join(here, '../../profiles/fnaf1/moto-g56/fnaf1-community-loop-moto-g56-v207.json'), 'utf8'));
@@ -75,6 +76,27 @@ assert.deepEqual(AUDIO_LINK_ARGS, ['--ensure', '--game-package', 'com.scottgames
   await assert.rejects(gated.press('leftDoor'), /Night 1 hands-off gate refused leftDoor/);
   await assert.rejects(gated.panTo('right'), /Night 1 hands-off gate refused pan-right/);
   assert.equal(sent.length, 0, 'a refused control sends nothing');
+}
+
+// The night runner reads its title through the probe's consensus: one refused frame in a triple is retried, not a
+// refusal of the night (the title static refuses about one frame in ten), and a title that never agrees still refuses.
+{
+  const script = ['items=continue,newGame', 'ambiguous:static-bar', 'items=continue,newGame',
+    'items=continue,newGame', 'items=continue,newGame', 'items=continue,newGame'];
+  let n = 0;
+  const read = async () => {
+    const output = script[Math.min(n, script.length - 1)];
+    n += 1;
+    return { confident: !output.startsWith('ambiguous'), output, stderr: '', code: 0, frame: `f${n}` };
+  };
+  const quiet = { capture: async () => '', event: async () => ({}) };
+  const bridge = { serial: 'FAKE0001', capturePng: async () => null };
+  const agreed = await titleConsensus(bridge, quiet, 'title-before-continue', ['continue'], { frames: 3, intervalMs: 0, read });
+  assert.equal(agreed, 'items=continue,newGame', 'a triple with one static-refused frame is read again, not a refused night');
+  assert.equal(n, 6, 'the second triple decides');
+  await assert.rejects(titleConsensus(bridge, quiet, 'title', ['continue'], { frames: 3, intervalMs: 0, attempts: 2,
+    read: async () => ({ confident: false, output: 'ambiguous:static-bar', stderr: '', code: 1, frame: 'f' }) }),
+  /title consensus refused \(continue\) 2 times/);
 }
 
 // A live run outside the wrapper is refused before it resolves a serial or touches a phone.

@@ -965,6 +965,7 @@
         "node:path",
         "node:perf_hooks",
         "node:stream/promises",
+        "node:url",
         "node:zlib"
       ]
     },
@@ -1139,11 +1140,11 @@
       "file": "packages/play/games/fnaf1/fnaf1-menu-probe.ts",
       "imports": [
         "../../bin/phone/local-profile.ts",
+        "../../bin/phone/night-kit.ts",
         "../../src/campaign/adb-bridge.ts",
         "../../src/campaign/physical-ports.ts",
         "../../src/venues/phone/hid.ts",
         "@sixam/kernel",
-        "node:child_process",
         "node:crypto",
         "node:fs",
         "node:fs/promises",
@@ -1161,8 +1162,8 @@
         "../../src/campaign/adb-bridge.ts",
         "../../src/campaign/physical-ports.ts",
         "../../src/venues/phone/hid.ts",
+        "./fnaf1-menu-probe.ts",
         "@sixam/kernel",
-        "node:child_process",
         "node:crypto",
         "node:fs",
         "node:fs/promises",
@@ -1204,6 +1205,7 @@
     {
       "file": "packages/play/games/fnaf1/test-fnaf1-night-run.ts",
       "imports": [
+        "./fnaf1-menu-probe.ts",
         "./fnaf1-night-run.ts",
         "node:assert/strict",
         "node:child_process",

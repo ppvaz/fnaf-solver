@@ -28,7 +28,6 @@ import { access, copyFile, mkdir, readFile, stat, writeFile, appendFile } from '
 import { constants as fsConstants } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
-import { spawn } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { performance } from 'node:perf_hooks';
 import { AdbDeviceBridge } from '../../src/campaign/adb-bridge.ts';
@@ -36,7 +35,8 @@ import { AdbHidProcess } from '../../src/campaign/physical-ports.ts';
 import { HidWireTransport } from '../../src/venues/phone/hid.ts';
 import { isList, isRecord } from '@sixam/kernel';
 import { resolveSerial } from '../../bin/phone/local-profile.ts';
-import { onStopSignal, releaseContacts } from '../../bin/phone/night-kit.ts';
+import { onStopSignal, releaseContacts, runProcess as run } from '../../bin/phone/night-kit.ts';
+import { type TitleRead, titleConsensus, titleRead } from './fnaf1-menu-probe.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '../../../..');
@@ -91,11 +91,6 @@ interface TeachModel {
   readonly schema: string, readonly target: { readonly package: string, readonly build: string };
   readonly presenter: { readonly package: string, readonly lesson: string }, readonly stages: readonly string[];
 }
-/** What a child process left. */
-interface RunResult { code: number | null, signal: NodeJS.Signals | null, timedOut: boolean, stdout: string, stderr: string }
-type RunOptions = { input?: string | Buffer | null, timeoutMs?: number, env?: NodeJS.ProcessEnv };
-/** The title observer's verdict on one native frame. */
-interface TitleRead { confident: boolean, output: string, stderr: string, frame: string, code: number | null }
 /** fnaf1-door-light.py's JSON line. */
 interface DoorVerdict { readonly status?: unknown, readonly reason?: unknown, readonly state?: unknown }
 /** A bridge built on the serial the lease resolved. */
@@ -266,24 +261,6 @@ export function night1Staging(route: unknown) {
   return Object.freeze({ ...staging });
 }
 
-function run(command: string, args: string[], { input = null, timeoutMs = 15000, env = {} }: RunOptions = {}) {
-  return new Promise<RunResult>((resolvePromise, reject) => {
-    const child = spawn(command, args, { cwd: ROOT, shell: false, stdio: ['pipe', 'pipe', 'pipe'],
-      env: { ...process.env, ...env } });
-    const stdout: Buffer[] = [], stderr: Buffer[] = [];
-    let timedOut = false;
-    const timer = setTimeout(() => { timedOut = true; child.kill('SIGTERM'); }, timeoutMs);
-    child.stdout.on('data', chunk => stdout.push(chunk));
-    child.stderr.on('data', chunk => stderr.push(chunk));
-    child.once('error', error => { clearTimeout(timer); reject(error); });
-    child.once('close', (code, signal) => {
-      clearTimeout(timer);
-      resolvePromise({ code, signal, timedOut, stdout: Buffer.concat(stdout).toString('utf8'),
-        stderr: Buffer.concat(stderr).toString('utf8') });
-    });
-    if (input === null) child.stdin.end(); else child.stdin.end(input);
-  });
-}
 
 function parseJsonLine(text: string, context: string): DoorVerdict {
   try { return JSON.parse(text.trim()); }
@@ -355,30 +332,6 @@ class RunRecord {
     this.document.updatedAt = new Date().toISOString();
     await writeFile(join(this.outdir, 'run.json'), `${JSON.stringify(this.document, null, 2)}\n`);
   }
-}
-
-async function titleRead(bridge: Bridge, record: RunRecord, label: string): Promise<TitleRead> {
-  const png = await bridge.capturePng(bridge.serial);
-  if (!png) fail('native title capture failed');
-  const path = await record.capture(label, png);
-  const observed = await run(TITLE_OBSERVER, [], { input: png, timeoutMs: 10000 });
-  const result = { confident: observed.code === 0, output: observed.stdout.trim(), stderr: observed.stderr.trim(),
-    frame: path, code: observed.code };
-  await record.event('title-read', result);
-  return result;
-}
-
-async function titleConsensus(bridge: Bridge, record: RunRecord, frames: number, prefix: string) {
-  const reads: TitleRead[] = [];
-  for (let index = 0; index < frames; index += 1) {
-    const read = await titleRead(bridge, record, `${prefix}-${index + 1}`);
-    reads.push(read);
-    await sleep(TITLE_INTERVAL_MS);
-  }
-  const values = reads.map(read => read.output);
-  if (reads.some(read => !read.confident) || new Set(values).size !== 1 || !values[0].split('=')[1]?.split(',').includes('continue'))
-    fail(`FNaF 1 title consensus refused: ${values.join(' | ')}`);
-  return reads[0];
 }
 
 async function waitForTitleToLeave(bridge: Bridge, record: RunRecord) {
@@ -684,7 +637,8 @@ async function abortRestart(serial: string, bridge: Bridge, record: RunRecord, r
   await record.event('abort-restart-launch', { code: launched.code, output: `${launched.stdout}${launched.stderr}`.trim() });
   if (launched.code !== 0 || !/Status:\s*ok/i.test(`${launched.stdout}${launched.stderr}`))
     fail(`explicit abort restart launch failed: ${(launched.stdout || launched.stderr).trim()}`);
-  await titleConsensus(bridge, record, route.title.consensusFrames, 'post-abort-restart-title');
+  await titleConsensus(bridge, record, 'post-abort-restart-title', ['continue'],
+    { frames: route.title.consensusFrames, intervalMs: TITLE_INTERVAL_MS });
   record.document.abortRestart = 'TITLE_CONFIRMED';
 }
 
@@ -740,7 +694,8 @@ async function main(argv: string[]) {
     record.document.teachingOverlay = { requested: true, status: 'PREFLIGHT_READY', model: bindings.teachingOverlay };
     audioBase = await startAudio(serial, id, record);
     await record.save('TITLE_GATE');
-    await titleConsensus(bridge, record, route.title.consensusFrames, 'title-before-continue');
+    await titleConsensus(bridge, record, 'title-before-continue', ['continue'],
+    { frames: route.title.consensusFrames, intervalMs: TITLE_INTERVAL_MS });
 
     const adbHid = new AdbHidProcess({ serial });
     hidProcess = adbHid;
@@ -750,7 +705,8 @@ async function main(argv: string[]) {
     await record.event('hid-ready', { contactMs: route.controls.contactMs });
     // Re-read after HID registration.  No stale title observation authorises
     // a menu action; FNaF 2's model is never present in this call chain.
-    await titleConsensus(bridge, record, route.title.consensusFrames, 'title-immediate-before-continue');
+    await titleConsensus(bridge, record, 'title-immediate-before-continue', ['continue'],
+    { frames: route.title.consensusFrames, intervalMs: TITLE_INTERVAL_MS });
     const continuePoint = route.title.requiredItem === 'continue'
       ? { x: titleModel.items.continue[0], y: titleModel.items.continue[1] } : null;
     if (!continuePoint) fail('route does not name a safe Continue point');

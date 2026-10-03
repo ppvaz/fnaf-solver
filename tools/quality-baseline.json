@@ -154,7 +154,7 @@
       "clone:packages/play/bin/phone/night-kit.ts <> packages/play/games/fnaf1/fnaf1-menu-probe.ts": 12,
       "clone:packages/play/bin/phone/night-kit.ts <> packages/play/games/fnaf1/fnaf1-night-run.ts": 6,
       "clone:packages/play/bin/recompile/practice-audit.ts <> packages/propose/bin/census/fnaf1-device-lane.ts": 6,
-      "clone:packages/play/games/fnaf1/fnaf1-menu-probe.ts <> packages/play/games/fnaf1/fnaf1-night-run.ts": 27,
+      "clone:packages/play/games/fnaf1/fnaf1-menu-probe.ts <> packages/play/games/fnaf1/fnaf1-night-run.ts": 12,
       "clone:packages/play/games/fnaf3/fnaf3-run.ts <> packages/play/games/fnaf4/fnaf4-run.ts": 33,
       "clone:packages/play/games/fnaf3/fnaf3-run.ts <> packages/propose/src/games/policy-fnaf3.ts": 8,
       "clone:packages/play/src/sensors/fnaf2/calibration-state-rule.ts <> packages/play/src/sensors/fnaf2/monitor-rule.ts": 7,

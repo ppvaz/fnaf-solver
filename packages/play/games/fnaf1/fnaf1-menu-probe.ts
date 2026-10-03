@@ -51,20 +51,20 @@ import { access, appendFile, mkdir, readFile, writeFile } from 'node:fs/promises
 import { constants as fsConstants } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
-import { spawn } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { performance } from 'node:perf_hooks';
 import { AdbDeviceBridge } from '../../src/campaign/adb-bridge.ts';
 import { AdbHidProcess } from '../../src/campaign/physical-ports.ts';
 import { HidWireTransport } from '../../src/venues/phone/hid.ts';
 import { resolveSerial } from '../../bin/phone/local-profile.ts';
+import { runProcess as run } from '../../bin/phone/night-kit.ts';
 import { isList } from '@sixam/kernel';
 
 /** The title observer's verdict on one native frame. */
-interface TitleRead { confident: boolean, output: string, code: number | null, frame: string }
-/** What a child process left. */
-interface RunResult { code: number | null, signal: NodeJS.Signals | null, timedOut: boolean, stdout: string, stderr: string }
-type RunOptions = { input?: string | Buffer | null, timeoutMs?: number, env?: NodeJS.ProcessEnv };
+export interface TitleRead { confident: boolean, output: string, stderr: string, code: number | null, frame: string }
+/** What a title read writes into: a FNaF 1 runner's or the probe's record. */
+interface TitleRecord { capture(name: string, png: Buffer): Promise<string>, event(type: string, fields?: object): Promise<unknown> }
+type FrameSource = Pick<Bridge, 'capturePng' | 'serial'>;
 /** fnaf1-custom-night-read.py's verdict on one Custom Night frame. */
 interface DialRead {
   readonly screen: string, readonly status?: string, readonly reason?: string,
@@ -171,24 +171,6 @@ export function parseArgs(argv: string[]) {
   return Object.freeze(options);
 }
 
-function run(command: string, args: string[], { input = null, timeoutMs = 15000, env = {} }: RunOptions = {}) {
-  return new Promise<RunResult>((resolvePromise, reject) => {
-    const child = spawn(command, args, { cwd: ROOT, shell: false, stdio: ['pipe', 'pipe', 'pipe'],
-      env: { ...process.env, ...env } });
-    const stdout: Buffer[] = [], stderr: Buffer[] = [];
-    let timedOut = false;
-    const timer = setTimeout(() => { timedOut = true; child.kill('SIGTERM'); }, timeoutMs);
-    child.stdout.on('data', chunk => stdout.push(chunk));
-    child.stderr.on('data', chunk => stderr.push(chunk));
-    child.once('error', error => { clearTimeout(timer); reject(error); });
-    child.once('close', (code, signal) => {
-      clearTimeout(timer);
-      resolvePromise({ code, signal, timedOut, stdout: Buffer.concat(stdout).toString('utf8'),
-        stderr: Buffer.concat(stderr).toString('utf8') });
-    });
-    if (input === null) child.stdin.end(); else child.stdin.end(input);
-  });
-}
 
 const relativeToRoot = (path: string) => relative(ROOT, path).replaceAll('\\', '/');
 
@@ -241,12 +223,13 @@ class ProbeRecord {
   }
 }
 
-async function titleRead(bridge: Bridge, record: ProbeRecord, label: string): Promise<TitleRead> {
+/** One native frame through the FNaF 1 title observer, retained in the record. */
+async function titleRead(bridge: FrameSource, record: TitleRecord, label: string): Promise<TitleRead> {
   const png = await bridge.capturePng(bridge.serial);
-  if (!png) fail('native capture failed');
+  if (!png) throw new Error('native title capture failed');
   const frame = await record.capture(label, png);
   const observed = await run(TITLE_OBSERVER, [], { input: png, timeoutMs: 10000 });
-  const read = { confident: observed.code === 0, output: observed.stdout.trim(), code: observed.code, frame };
+  const read = { confident: observed.code === 0, output: observed.stdout.trim(), stderr: observed.stderr.trim(), code: observed.code, frame };
   await record.event('title-read', read);
   return read;
 }
@@ -289,15 +272,18 @@ async function waitForTitle(bridge: Bridge, record: ProbeRecord, prefix: string)
 /**
  * Three fresh, identical, confident reads that list what the caller needs. The
  * title static refuses about one frame in ten (`ambiguous:static-bar`), so a
- * refused triple is retried a bounded number of times rather than read.
+ * refused triple is retried a bounded number of times rather than read. The
+ * night runner reads its title this way too, at its own frame count and pace.
  */
-async function titleConsensus(bridge: Bridge, record: ProbeRecord, prefix: string, required: readonly string[]) {
+async function titleConsensus(bridge: FrameSource, record: TitleRecord, prefix: string, required: readonly string[],
+  { frames = CONSENSUS_FRAMES, intervalMs = FRAME_INTERVAL_MS, attempts = CONSENSUS_ATTEMPTS, read = titleRead }:
+    { frames?: number, intervalMs?: number, attempts?: number, read?: typeof titleRead } = {}) {
   let values: string[] = [];
-  for (let attempt = 1; attempt <= CONSENSUS_ATTEMPTS; attempt += 1) {
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
     const reads: TitleRead[] = [];
-    for (let index = 0; index < CONSENSUS_FRAMES; index += 1) {
-      reads.push(await titleRead(bridge, record, `${prefix}-${attempt}-${index + 1}`));
-      await sleep(FRAME_INTERVAL_MS);
+    for (let index = 0; index < frames; index += 1) {
+      reads.push(await read(bridge, record, `${prefix}-${attempt}-${index + 1}`));
+      await sleep(intervalMs);
     }
     values = reads.map(read => read.output);
     const items = values[0].startsWith('items=') ? values[0].slice('items='.length).split(',') : [];
@@ -307,7 +293,7 @@ async function titleConsensus(bridge: Bridge, record: ProbeRecord, prefix: strin
     }
     await record.event('title-consensus-refused', { prefix, attempt, values });
   }
-  fail(`FNaF 1 title consensus refused (${required.join('+')}) ${CONSENSUS_ATTEMPTS} times; last: ${values.join(' | ')}`);
+  throw new Error(`FNaF 1 title consensus refused (${required.join('+')}) ${attempts} times; last: ${values.join(' | ')}`);
 }
 
 async function stageTitle(bridge: Bridge, record: ProbeRecord, options: Options) {
