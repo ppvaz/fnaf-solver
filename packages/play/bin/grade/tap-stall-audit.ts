@@ -50,6 +50,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { isList, isRecord } from '@sixam/kernel';
 import { buttonStrokeState } from '@sixam/play';
 
 /** One row of a fnaf2-frame-trace-v3 stroke trace. */
@@ -199,6 +200,32 @@ export const EFFECT_WINDOW_MS = Object.freeze({
 });
 
 const fail: (message: string) => never = message => { throw new TypeError(`tap-stall-audit: ${message}`); };
+const finiteNumber = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value);
+
+/** request.json's bundle plans, checked as far as the audit reads them: the timing and every action's time and kind. */
+export function requestPlans(request: unknown): Plan[] {
+  const bundle = isRecord(request) ? request.bundle : undefined;
+  const plans = isRecord(bundle) ? bundle.plans : undefined;
+  if (plans === undefined) return [];
+  if (!isList(plans)) fail('request.json bundle.plans is not a list');
+  plans.forEach((plan, p) => {
+    const timing = isRecord(plan) ? plan.timing : undefined;
+    if (!isRecord(plan) || !isRecord(timing) || ![timing.periodMs, timing.loopStartMs, timing.stopAtMs].every(finiteNumber) ||
+        (plan.night !== undefined && !Number.isInteger(plan.night)) || !isRecord(plan.cycles))
+      fail(`request.json plan ${p} has no timing {periodMs, loopStartMs, stopAtMs} or no cycles`);
+    for (const [name, cycle] of Object.entries(plan.cycles)) {
+      const blocks = isRecord(cycle) ? cycle.blocks : undefined;
+      if (!isList(blocks)) fail(`request.json plan ${p} cycle ${name} has no blocks`);
+      for (const block of blocks) {
+        const actions = isRecord(block) ? block.actions : undefined;
+        if (!isList(actions) || !actions.every((a) => isRecord(a) && typeof a.id === 'string' && typeof a.kind === 'string' &&
+            finiteNumber(a.atMs) && finiteNumber(a.durationMs)))
+          fail(`request.json plan ${p} cycle ${name} has an action without {id, kind, atMs, durationMs}`);
+      }
+    }
+  });
+  return plans as unknown as Plan[];
+}
 
 /**
  * Rows of a `fnaf2-frame-trace-v3` TSV with the two native stroke scores.
@@ -827,21 +854,19 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   }
   try {
     const events = readJsonl(join(run, 'events.jsonl'));
-    const request = JSON.parse(readFileSync(join(run, 'request.json'), 'utf8'));
-    const plans: Plan[] = request?.bundle?.plans ?? [];
+    const plans = requestPlans(JSON.parse(readFileSync(join(run, 'request.json'), 'utf8')));
     const night = arg('night');
     const plan = night === undefined ? plans[0] : plans.find(entry => entry.night === Number(night));
     if (!plan) fail(`request.json binds no plan${night === undefined ? '' : ` for night ${night}`}`);
     const trace = parseStrokeTrace(readFileSync(tracePath, 'utf8'));
     const inputEvents = inputPath ? parseInputEvents(readFileSync(inputPath, 'utf8')) : null;
-    // request.json binds it (checked above).
-    const report: Report & { run?: string, frameTrace?: string } = audit({ events, plan: plan as Plan, trace, inputEvents });
+    const report: Report & { run?: string, frameTrace?: string } = audit({ events, plan, trace, inputEvents });
     report.run = run;
     report.frameTrace = tracePath;
     const out = arg('out');
     if (out) writeFileSync(out, JSON.stringify(report, null, 2) + '\n');
     const text = process.argv.includes('--json') ? JSON.stringify(report, null, 2)
-      : formatReport(report) + (process.argv.includes('--transitions') ? '\n' + formatTransitions(report, trace, plan as Plan) : '');
+      : formatReport(report) + (process.argv.includes('--transitions') ? '\n' + formatTransitions(report, trace, plan) : '');
     process.stdout.write(text + '\n');
     process.exit(report.verdict === 'CONTACT_LOST' || report.verdict === 'HALL_DARK' ? 3 : 0);
   } catch (error) {

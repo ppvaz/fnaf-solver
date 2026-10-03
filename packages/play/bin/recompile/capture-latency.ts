@@ -22,6 +22,7 @@ import { execFileSync } from 'node:child_process';
 import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { isRecord } from '@sixam/kernel';
 import { AdbCompanionPort } from '../../src/campaign/physical-ports.ts';
 import { resolveSerial } from '../phone/local-profile.ts';
 
@@ -108,12 +109,31 @@ interface FrameRow { seq: number, imageNs: string, snapshotNs: string, rttMs: nu
 /** A calibration update row (apply-calib-mod.py): its index, and the CLOCK_MONOTONIC ns its events ended and its swap returned. */
 interface UpdateRow { u: number, te: number, ts: number }
 
+const finiteNumber = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value);
+
+/** A frames.jsonl row, checked; a row of another shape throws, naming its line. */
+export function frameRow(value: unknown, line: number): FrameRow {
+  if (!isRecord(value) || !Number.isInteger(value.seq) || typeof value.imageNs !== 'string' || typeof value.snapshotNs !== 'string' ||
+      !finiteNumber(value.rttMs) || !(value.u16 === null || Number.isInteger(value.u16)) || !finiteNumber(value.margin))
+    throw new Error(`capture-latency: frames.jsonl line ${line} is not {seq, imageNs, snapshotNs, rttMs, u16, margin}`);
+  return value as unknown as FrameRow;
+}
+
+/** A calibration update row, checked; a row of another shape throws, naming its line. */
+export function updateRow(value: unknown, line: number): UpdateRow {
+  if (!isRecord(value) || ![value.u, value.te, value.ts].every(Number.isInteger))
+    throw new Error(`capture-latency: calib-updates.jsonl line ${line} is not {u, te, ts}`);
+  return value as unknown as UpdateRow;
+}
+
 export function grade(framesText: string, updatesText: string) {
-  const frames: FrameRow[] = framesText.split('\n').filter(Boolean).map(l => JSON.parse(l));
+  const frames = framesText.split('\n').flatMap((l, i) => (l ? [frameRow(JSON.parse(l), i + 1)] : []));
   const rows: UpdateRow[] = [];
-  for (const line of updatesText.split('\n')) {
+  for (const [i, line] of updatesText.split('\n').entries()) {
     if (!line.startsWith('{"u"')) continue;
-    try { rows.push(JSON.parse(line)); } catch { /* a row cut at the pull */ }
+    let parsed: unknown;
+    try { parsed = JSON.parse(line); } catch { continue; }   // a row cut at the pull
+    rows.push(updateRow(parsed, i + 1));
   }
   if (rows.length === 0) throw new Error('no calibration update rows');
   const byU = new Map(rows.map(r => [r.u, r]));

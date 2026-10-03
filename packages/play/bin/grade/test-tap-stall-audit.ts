@@ -5,7 +5,7 @@
 // never goes up, the camdrop's tap at +24000 raises it instead, and the mask
 // tap at +24449 arrives with the mask button absent and lowers the monitor.
 import { type Graded, type InTrace, type Plan, type PlanAction, audit, clockBracket, expandContacts, exposure, formatReport, formatTransitions,
-  hallCells, hallLumaOf, parseInputEvents, parseStrokeTrace, touchEdges, HALL_ROI, SCHEMA } from './tap-stall-audit.ts';
+  hallCells, hallLumaOf, parseInputEvents, parseStrokeTrace, requestPlans, touchEdges, HALL_ROI, SCHEMA } from './tap-stall-audit.ts';
 
 const check = (condition: unknown, message: string) => { if (!condition) throw new Error(message); };
 /** A row, field or grade the fixture builds by construction. */
@@ -272,6 +272,17 @@ check(cycle1 && !cycle1.includes('monitor-up@+101') && cycle1.includes('monitor-
   const maskOn = hypotheses.monotonic.perControl['mask-on'];
   check(maskOn && found(maskOn.releaseToEffect).median === found(maskOn.pressToEffect).median - 33, 'release-edge latency is the press-edge latency minus the hold');
   check(formatReport(withL).includes('actuation latency (getevent'), 'the report prints the latency section');
+}
+
+// request.json's plans are checked as far as the audit reads them.
+{
+  const action = { id: 'a', kind: 'press', atMs: 0, durationMs: 33 };
+  const plan = { night: 5, timing: { periodMs: 1000, loopStartMs: 0, stopAtMs: 5000 }, cycles: { c0: { blocks: [{ actions: [action] }] } } };
+  check(requestPlans({ bundle: { plans: [plan] } }).length === 1, 'a bundle plan reads');
+  check(requestPlans({}).length === 0, 'a request without a bundle binds no plan');
+  expectFailure(() => requestPlans({ bundle: { plans: [{ ...plan, timing: { periodMs: 1000 } }] } }), 'a plan without its loop timing is refused');
+  expectFailure(() => requestPlans({ bundle: { plans: [{ ...plan, cycles: { c0: { blocks: [{ actions: [{ ...action, atMs: 'soon' }] }] } } }] } }),
+    'an action without a numeric time is refused');
 }
 
 console.log('test-tap-stall-audit: ok');

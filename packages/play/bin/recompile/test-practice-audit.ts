@@ -3,7 +3,8 @@
 // read safely, and the chain's verdicts follow the pumps: a contact whose press
 // and release one pump drains is INVISIBLE. No device.
 import { HID_FEATURE_REPORTS } from '@sixam/play';
-import { MONITOR_POINT, READY_DELAY_MS, SYNC, chain, jsonl, plan, stream } from './practice-audit.ts';
+import { MONITOR_POINT, READY_DELAY_MS, SYNC, chain, jsonl, plan, readPlanFile, stream } from './practice-audit.ts';
+import { frameRow, updateRow } from './capture-latency.ts';
 
 const check = (ok: unknown, message: string) => { if (!ok) throw new Error(message); };
 /** A statistic the fixture produces by construction. */
@@ -52,5 +53,17 @@ check(result.rows[1].verdict === 'INVISIBLE', 'one pump draining press and relea
 check(result.flagsAgree, 'the polled flags must agree with the verdicts');
 check(Math.abs(found(result.press.kernelToPollMs).min - 12) < 1e-6 && Math.abs(found(result.press.dispatchMs).min - 2) < 1e-6,
   'the chain terms are the stamps\' differences');
+
+// A plan.json is read back through its check, and a malformed one is refused before grading.
+const refused = (fn: () => unknown) => { try { fn(); return false; } catch { return true; } };
+check(readPlanFile(JSON.parse(JSON.stringify(sweep))).contacts.length === sweep.contacts.length, 'a written plan reads back');
+check(refused(() => readPlanFile({ ...sweep, contacts: [{ index: 0, atMs: 0, holdMs: 'long', gapMs: 1 }] })),
+  'a contact without a numeric hold is refused');
+check(refused(() => readPlanFile({ ...sweep, point: null })), 'a plan without its point is refused');
+// The recompile lane's other grader reads its rows the same way (capture-latency.ts).
+check(frameRow({ seq: 3, imageNs: '12', snapshotNs: '13', rttMs: 2.5, u16: null, margin: 0.1 }, 1).seq === 3, 'a frame row reads');
+check(refused(() => frameRow({ seq: 3, imageNs: 12, snapshotNs: '13', rttMs: 2.5, u16: null, margin: 0.1 }, 1)),
+  'a frame row whose image clock is not a decimal string is refused');
+check(refused(() => updateRow({ u: 1, te: 2 }, 1)), 'an update row without its swap time is refused');
 
 console.log('practice-audit: plans, stream, log reading and chain verdicts hold');

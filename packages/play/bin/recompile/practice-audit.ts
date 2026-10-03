@@ -33,6 +33,7 @@ import { execFileSync, spawn } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { isList, isRecord } from '@sixam/kernel';
 import { HID_DESCRIPTOR, HID_FEATURE_REPORTS, report } from '@sixam/play';
 import { parseInputEvents, touchEdges } from '../grade/tap-stall-audit.ts';
 
@@ -565,14 +566,33 @@ async function live(args: string[]) {
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 function opt(args: string[], name: string) { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : undefined; }
 
+const finiteNumber = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value);
+const isPoint = (value: unknown) => isRecord(value) && finiteNumber(value.x) && finiteNumber(value.y);
+
+/** A plan.json that plan() wrote, checked before grading reads it; a bad one throws. */
+export function readPlanFile(value: unknown): Plan {
+  if (!isRecord(value) || !Number.isInteger(value.seed) || typeof value.kind !== 'string' || !isPoint(value.point) ||
+      !finiteNumber(value.readyDelayMs) || !finiteNumber(value.spanMs) || !isList(value.contacts))
+    throw new Error('practice-audit: plan.json is not a practice plan {seed, kind, point, readyDelayMs, spanMs, contacts}');
+  value.contacts.forEach((contact, i) => {
+    if (!isRecord(contact) || !Number.isInteger(contact.index) || ![contact.atMs, contact.holdMs, contact.gapMs].every(finiteNumber) ||
+        (contact.point !== undefined && !isPoint(contact.point)) || (contact.sync !== undefined && typeof contact.sync !== 'boolean'))
+      throw new Error(`practice-audit: plan.json contact ${i} is not {index, atMs, holdMs, gapMs, point?, sync?}`);
+  });
+  return value as unknown as Plan;
+}
+
 function gradeDir(args: string[]) {
   const dir = resolve(opt(args, '--in') ?? fail('--in DIR is required'));
   const read = (f: string) => readFileSync(join(dir, f), 'utf8');
-  const planJson: Plan = JSON.parse(read('plan.json'));
+  const planJson = readPlanFile(JSON.parse(read('plan.json')));
   const getevent = read('getevent.txt');
   const inputEdges = jsonl<InputEdge>(read('practice-input.jsonl'));
   const stateRows = jsonl<StateRow>(read('practice-state.jsonl'));
-  const meta: { apkSha256?: string } = existsSync(join(dir, 'meta.json')) ? JSON.parse(read('meta.json')) : {};
+  const metaJson: unknown = existsSync(join(dir, 'meta.json')) ? JSON.parse(read('meta.json')) : {};
+  const apkSha256 = isRecord(metaJson) ? metaJson.apkSha256 : undefined;
+  if (apkSha256 !== undefined && typeof apkSha256 !== 'string') fail('meta.json apkSha256 is not a string');
+  const meta = { apkSha256 };
   const { kernelEdges, ...graded } = grade({ planJson, getevent, inputEdges, stateRows });
   const result: typeof graded & { chain?: ReturnType<typeof chain> } = graded;
   if (existsSync(join(dir, 'calib-updates.jsonl')) && existsSync(join(dir, 'calib-input.jsonl'))) {

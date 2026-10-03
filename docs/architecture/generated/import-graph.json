@@ -877,6 +877,7 @@
     {
       "file": "packages/play/bin/grade/tap-stall-audit.ts",
       "imports": [
+        "@sixam/kernel",
         "@sixam/play",
         "node:fs",
         "node:path",
@@ -1064,6 +1065,7 @@
       "imports": [
         "../../src/campaign/physical-ports.ts",
         "../phone/local-profile.ts",
+        "@sixam/kernel",
         "node:child_process",
         "node:crypto",
         "node:fs",
@@ -1075,6 +1077,7 @@
       "file": "packages/play/bin/recompile/practice-audit.ts",
       "imports": [
         "../grade/tap-stall-audit.ts",
+        "@sixam/kernel",
         "@sixam/play",
         "node:child_process",
         "node:crypto",
@@ -1098,6 +1101,7 @@
     {
       "file": "packages/play/bin/recompile/test-practice-audit.ts",
       "imports": [
+        "./capture-latency.ts",
         "./practice-audit.ts",
         "@sixam/play"
       ]
