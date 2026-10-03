@@ -34,6 +34,7 @@ import { createServer } from 'node:net';
 import { appendFileSync, closeSync, copyFileSync, mkdirSync, openSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { captureRoot } from '../../../../play/bin/phone/local-profile.ts';
 
 /**
  * One watched instance as the harness writes it: position, visibility and
@@ -76,7 +77,8 @@ export interface PilotGame {
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '../../../../..');
 const IMAGE = 'fnaf2-chowdren:buster';
-const MOUNT = '/home/pedro/fnaf-apks';
+// The container mounts this host's capture root at the same path, so a run directory names one place on both sides.
+const MOUNT = captureRoot();
 // The native runtime environment: SDL's offscreen driver on a surfaceless EGL
 // display (Mesa llvmpipe), audio to OpenAL Soft's null backend. Forcing
 // LIBGL_ALWAYS_SOFTWARE here crashes EGL's device selection.

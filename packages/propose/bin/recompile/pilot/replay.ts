@@ -31,11 +31,13 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { NATIVE_ENV, loadGame } from './pilot.ts';
 import { currentPath } from '@sixam/review/renamed-path';
+import { captureRoot } from '../../../../play/bin/phone/local-profile.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '../../../../..');
 const IMAGE = 'fnaf2-chowdren:buster';
-const MOUNT = '/home/pedro/fnaf-apks';
+// The container mounts this host's capture root at the same path, so a run directory names one place on both sides.
+const MOUNT = captureRoot();
 
 /** What a replay plays into a fresh run: the rows and the save before them, on which binary and assets, at which seed. */
 /** The committed save fixtures a --record replay starts from. */

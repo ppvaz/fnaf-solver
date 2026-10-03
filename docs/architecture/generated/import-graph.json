@@ -2962,6 +2962,7 @@
     {
       "file": "packages/propose/bin/recompile/pilot/pilot.ts",
       "imports": [
+        "../../../../play/bin/phone/local-profile.ts",
         "node:child_process",
         "node:fs",
         "node:net",
@@ -2984,6 +2985,7 @@
     {
       "file": "packages/propose/bin/recompile/pilot/replay.ts",
       "imports": [
+        "../../../../play/bin/phone/local-profile.ts",
         "./pilot.ts",
         "@sixam/review/renamed-path",
         "node:child_process",
