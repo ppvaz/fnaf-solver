@@ -87,7 +87,7 @@ const report = {
   instruments: [
     { tool: 'packages/play/bin/probe/inputtrace.py', needs: 'a Perfetto app input-dispatch data source (android.input.inputevent)',
       available: false, ifMissing: 'use the Companion native frame trace instead' },
-    { tool: 'packages/review/bin/grade/actuation-frame-metric.py', needs: 'the Companion native frame trace', available: true },
+    { tool: 'packages/review/bin/grade/actuation-frame-metric.ts', needs: 'the Companion native frame trace', available: true },
     { tool: 'packages/review/bin/grade/input-frame-align.py', needs: 'both traces', available: null, ifMissing: 'alignment needs dispatch' },
     { tool: 'packages/review/bin/grade/run-timeline.py, grade-night.py, grade-minus7.py', needs: 'screenrecord', available: true },
   ],
@@ -103,7 +103,7 @@ const missing = refusedBy(checkCapabilitiesFirst({ instrument: 'packages/play/bi
 assert.equal(missing.remedy, 'use the Companion native frame trace instead', 'the report\'s own ifMissing is the remedy');
 refusedBy(checkCapabilitiesFirst({ instrument: 'input-frame-align.py', capabilities: report }), 'capabilities-first',
   'an instrument whose need the report could not read');
-passes(checkCapabilitiesFirst({ instrument: 'packages/review/bin/grade/actuation-frame-metric.py', capabilities: report }), 'an offered instrument');
+passes(checkCapabilitiesFirst({ instrument: 'packages/review/bin/grade/actuation-frame-metric.ts', capabilities: report }), 'an offered instrument');
 passes(checkCapabilitiesFirst({ instrument: 'grade-night.py', capabilities: report }), 'one tool of a multi-tool entry, by name');
 const unlisted = passes(checkCapabilitiesFirst({ instrument: 'tools/device/new-probe.py', capabilities: report }), 'an instrument the report does not list');
 assert.ok(unlisted.notMeasured.some(item => item.includes('lists no entry')));

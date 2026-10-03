@@ -3950,6 +3950,15 @@
       ]
     },
     {
+      "file": "packages/review/bin/grade/actuation-frame-metric.ts",
+      "imports": [
+        "@sixam/kernel",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "packages/review/bin/grade/clocktrace.ts",
       "imports": [
         "node:child_process",
@@ -3989,6 +3998,16 @@
         "node:fs",
         "node:path",
         "node:url"
+      ]
+    },
+    {
+      "file": "packages/review/bin/grade/test-actuation-frame-metric.ts",
+      "imports": [
+        "./actuation-frame-metric.ts",
+        "node:assert/strict",
+        "node:fs",
+        "node:os",
+        "node:path"
       ]
     },
     {

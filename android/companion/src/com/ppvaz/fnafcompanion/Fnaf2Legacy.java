@@ -28,7 +28,7 @@ import java.util.Locale;
  * <li>{@code WATCH}/{@code READ}: the twelve camera-button pixels behind the
  *     arm check;</li>
  * <li>{@code TRACE}: the frozen {@code fnaf2-frame-trace-v3} file that
- *     {@code night-run.sh} pulls and {@code actuation-frame-metric.py},
+ *     {@code night-run.sh} pulls and {@code actuation-frame-metric.ts},
  *     {@code tap-stall-audit.mjs} and {@code phase-reconstruct.mjs} read.</li>
  * </ul>
  * <p>The capture service runs it only while the target is FNaF 2; any other

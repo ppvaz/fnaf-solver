@@ -68,27 +68,37 @@ export class PyFloat {
 }
 
 /** What pyDumps writes. An object's integer-like keys come first in JavaScript, so a ported record avoids them. */
-export type PyJson = null | boolean | number | string | PyFloat | readonly PyJson[] | { readonly [key: string]: PyJson };
+export type PyJson = null | boolean | number | bigint | string | PyFloat | readonly PyJson[] | { readonly [key: string]: PyJson };
 
 const pyString = (text: string) =>
   JSON.stringify(text).replace(/[\u007f-\uffff]/g, char => `\\u${char.charCodeAt(0).toString(16).padStart(4, '0')}`);
 const pyFloatJson = (x: number) => Number.isNaN(x) ? 'NaN' : x === Infinity ? 'Infinity' : x === -Infinity ? '-Infinity' : pyRepr(x);
 
+// Python orders strings by code point; JavaScript's < compares UTF-16 units, which differ past U+FFFF.
+function byCodePoint(a: string, b: string) {
+  const x = [...a], y = [...b];
+  for (let k = 0; k < Math.min(x.length, y.length); k += 1)
+    if (x[k] !== y[k]) return (x[k].codePointAt(0) ?? 0) - (y[k].codePointAt(0) ?? 0);
+  return x.length - y.length;
+}
+
 /**
  * `json.dumps(value)` with Python's defaults: ', ' and ': ' between items, every character outside space
- * to ~ escaped, a float as repr writes it. With indent, `json.dumps(value, indent=N)`: one item per line
- * and ',' at each line's end.
+ * to ~ escaped, a float as repr writes it, a bigint as the int it was. With indent,
+ * `json.dumps(value, indent=N)`: one item per line and ',' at each line's end; with sortKeys, sort_keys=True.
  */
-export function pyDumps(value: PyJson, indent?: number): string {
+export function pyDumps(value: PyJson, indent?: number, { sortKeys = false } = {}): string {
   const write = (item: PyJson, level: number): string => {
     if (item === null) return 'null';
     if (typeof item === 'boolean') return item ? 'true' : 'false';
     if (typeof item === 'string') return pyString(item);
     if (typeof item === 'number') return Number.isInteger(item) ? BigInt(item).toString() : pyFloatJson(item);
+    if (typeof item === 'bigint') return item.toString();
     if (item instanceof PyFloat) return pyFloatJson(item.value);
     const list = isList(item);
     const parts = list ? item.map(entry => write(entry, level + 1))
-      : Object.entries(item).map(([key, entry]) => `${pyString(key)}: ${write(entry, level + 1)}`);
+      : (sortKeys ? Object.entries(item).sort(([a], [b]) => byCodePoint(a, b)) : Object.entries(item))
+        .map(([key, entry]) => `${pyString(key)}: ${write(entry, level + 1)}`);
     const [open, close] = list ? ['[', ']'] : ['{', '}'];
     if (!parts.length) return open + close;
     if (indent === undefined) return open + parts.join(', ') + close;

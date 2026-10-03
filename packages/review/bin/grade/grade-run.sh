@@ -378,7 +378,7 @@ fi
 # the Companion's native frame trace, which only a run that requested one has.
 if [ -n "$FRAME_TRACE" ]; then
   step "native-frame state coverage for the actuation" \
-    python3 "$HERE/actuation-frame-metric.py" "$FRAME_TRACE"
+    node "$HERE/actuation-frame-metric.ts" "$FRAME_TRACE"
   # Every scheduled contact against the frames: was the button there, did the
   # effect follow, did a stall longer than the contact cover it. This is the
   # join that read night5-strokes3's two CORRECTED cycles as lost 33 ms MONITOR

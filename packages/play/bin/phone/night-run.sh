@@ -245,7 +245,7 @@ CAMPAIGN_DIR=""
 # The Companion's native frame trace, which is the instrument that measured
 # the mask button's appearance in the first place (absent to 322 ms after
 # monitor-down, faint at ~337 ms, fully visible at ~382.5 ms) and the one
-# `actuation-frame-metric.py` and `input-frame-align.py` both read.
+# `actuation-frame-metric.ts` and `input-frame-align.py` both read.
 #
 # Perfetto cannot answer the same question on this handset: it advertises
 # `android.inputmethod` and no `android.input.inputevent`, so there is no app

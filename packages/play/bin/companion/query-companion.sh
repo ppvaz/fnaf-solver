@@ -449,7 +449,7 @@ if [ "$VERB" = trace ]; then
       fi
       adb shell run-as "$PACKAGE" rm -f "files/frame-traces/$name" >/dev/null 2>&1 || true
       echo "wrote $target ($bytes bytes)"
-      metric_args=("$HERE/../../../../packages/review/bin/grade/actuation-frame-metric.py" "$target")
+      metric_args=("$HERE/../../../../packages/review/bin/grade/actuation-frame-metric.ts" "$target")
       if [ -n "${FRAME_TRACE_METRIC_START_NS:-}" ]; then
         metric_args+=(--start-ns "$FRAME_TRACE_METRIC_START_NS")
       fi
@@ -459,7 +459,7 @@ if [ "$VERB" = trace ]; then
       # Keep this as the final line of a successful trace stop: every physical
       # actuation report carries the native-frame UNKNOWN percentage, and an
       # unbounded report says so explicitly instead of hiding setup frames.
-      python3 "${metric_args[@]}"
+      node "${metric_args[@]}"
       ;;
   esac
   exit 0

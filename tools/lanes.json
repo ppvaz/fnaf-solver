@@ -256,13 +256,13 @@
       "packages/play/test/clock-map.test.ts",
       "packages/play/test/calibration-state-rule.test.ts",
       "packages/play/bin/probe/test-intersection-state-gate.ts",
-      "packages/play/bin/probe/test-hid-intersection-probe.ts"
+      "packages/play/bin/probe/test-hid-intersection-probe.ts",
+      "packages/review/bin/grade/test-actuation-frame-metric.ts"
     ],
     "steps": [
       ["python3","packages/play/bin/calibrate/test-mask-calibrate.py"],
       ["python3","packages/play/bin/probe/test-inputtrace.py"],
-      ["python3","packages/review/bin/grade/test-input-frame-align.py"],
-      ["python3","packages/review/bin/grade/test-actuation-frame-metric.py"]
+      ["python3","packages/review/bin/grade/test-input-frame-align.py"]
     ]
   }
 }

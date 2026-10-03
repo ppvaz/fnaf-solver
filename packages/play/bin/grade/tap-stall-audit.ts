@@ -30,7 +30,7 @@
 //
 // WHAT IT IS NOT
 //
-// actuation-frame-metric.py reads the trace alone (state coverage, no
+// actuation-frame-metric.ts reads the trace alone (state coverage, no
 // schedule). input-frame-align.py aligns a Perfetto input trace to frames, and
 // this handset advertises no `android.input.inputevent` source, so that tool
 // cannot run here. This one aligns the SCHEDULE -- the compiled blocks in the

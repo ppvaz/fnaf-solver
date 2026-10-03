@@ -45,7 +45,11 @@ assert.deepEqual([pyFloat('1_0.5'), pyFloat(' \u0662.5\u3000'), pyFloat('-inf')]
 assert.deepEqual([pyFloat('\x1f2'), pyFloat('0x10'), pyFloat('1__0')], [null, null, null], 'ValueError in Python');
 assert.deepEqual([0.5, 1.5, 2.5, -2.5, 1789512694248.5].map(pyRound), [0, 2, 2, -2, 1789512694248]);
 assert.deepEqual([pyRound(NaN), pyRound(Infinity)], [null, null], 'ValueError and OverflowError in Python');
-// int() in base 10 and 16, as a bigint.
+// int() in base 10 and 16, as a bigint; json.dumps(sort_keys=True) orders keys by code point (an astral
+// character after U+FFFF, where UTF-16 order puts it before) and prints an int past 2**53 whole.
 assert.deepEqual([pyInt('0x_1F', 16), pyInt(' +0_7 '), pyInt('-ff', 16), pyInt('\u0661\u0662')], [31n, 7n, -255n, 12n]);
 assert.deepEqual([pyInt('0x', 16), pyInt('_1'), pyInt('1__2'), pyInt('1.0'), pyInt('0x1')], [null, null, null, null, null], 'ValueError in Python');
-console.log(`pyfmt: ${CASES.length} fixed, ${REPRS.length} repr, 4 json.dumps and ${PATHS.length} path values print as Python prints them, and split, splitlines, float, int and round read as Python reads`);
+assert.equal(pyDumps({ b: 1, '\u{1F600}': 2, '\uffff': 3, a: { d: 4, c: 5 } }, undefined, { sortKeys: true }),
+  '{"a": {"c": 5, "d": 4}, "b": 1, "\\uffff": 3, "\\ud83d\\ude00": 2}');
+assert.equal(pyDumps(1n << 70n), '1180591620717411303424');
+console.log(`pyfmt: ${CASES.length} fixed, ${REPRS.length} repr, 6 json.dumps and ${PATHS.length} path values print as Python prints them, and split, splitlines, float, int and round read as Python reads`);

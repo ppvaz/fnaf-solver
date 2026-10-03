@@ -2717,8 +2717,8 @@
       "lifecycle": "supported"
     },
     {
-      "id": "packages/review/bin/grade/actuation-frame-metric.py",
-      "invocation": "packages/review/bin/grade/actuation-frame-metric.py TRACE [--start-ns N] [--end-ns N] [--json]",
+      "id": "packages/review/bin/grade/actuation-frame-metric.ts",
+      "invocation": "packages/review/bin/grade/actuation-frame-metric.ts TRACE [--start-ns N] [--end-ns N] [--json]",
       "kind": "report",
       "lifecycle": "supported"
     },
@@ -2729,8 +2729,8 @@
       "lifecycle": "supported"
     },
     {
-      "id": "packages/review/bin/grade/test-actuation-frame-metric.py",
-      "invocation": "packages/review/bin/grade/test-actuation-frame-metric.py",
+      "id": "packages/review/bin/grade/test-actuation-frame-metric.ts",
+      "invocation": "packages/review/bin/grade/test-actuation-frame-metric.ts",
       "kind": "check",
       "lifecycle": "supported"
     },
