@@ -8,14 +8,14 @@
 // and that the CLI prints the in-process query byte for byte and exits 0.
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { basename, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { canonicalJson, stableHash } from '@sixam/kernel/contracts';
 import { CUSTODY_CLASSES, isUnknown, validateAnnotation } from '@sixam/kernel';
 import { PACKS_DIR, trackedWinners, winnerFiles } from '../src/evidence-pack.ts';
 import { GRAPH_FILE, PROMOTION_EDGE } from '../src/evidence-promotion.ts';
-import { compareEdges, promotionsRecord, queryPromotions } from '../src/promotions-query.ts';
+import { QUERY_INPUTS, compareEdges, promotionsRecord, queryPromotions } from '../src/promotions-query.ts';
 
 /** A claim-evidence-v1 edge, by the fields this test reads. */
 interface GraphEdge { readonly from: string, readonly to: string, readonly type: string, readonly [field: string]: unknown }
@@ -125,6 +125,9 @@ assert.ok(!isUnknown(result.promoted[0].custody.class));
 const cli = await cliRun;
 assert.equal(cli.status, 0, `npm run review -- query promotions exits 0; stderr: ${cli.stderr}`);
 assert.equal(cli.stdout, `${JSON.stringify(result, null, 2)}\n`, 'the CLI prints the in-process query byte for byte');
+
+// A record's dirty-input list is only as good as the paths it watches: each must exist.
+assert.deepEqual(QUERY_INPUTS.filter(path => !existsSync(join(ROOT, path))), [], 'every input the query names exists in this checkout');
 
 console.log(`promotions query: ${result.edges.matched} of ${graphEdges.length} PROMOTED_BY edges re-derive byte for byte from ` +
   `${result.lift.packs} packs (${Object.entries(result.edges.byCustody).map(([k, n]) => `${k} ${n}`).join(', ')}; ` +

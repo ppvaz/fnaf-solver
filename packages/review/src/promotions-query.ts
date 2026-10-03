@@ -211,5 +211,5 @@ export function promotionsRecord(result: ReturnType<typeof queryPromotions>, { d
 }
 
 /** The paths the query reads, for a record's dirty-input list. */
-export const QUERY_INPUTS = Object.freeze(['packages/review', 'packages/kernel', 'packages/source', 'packages/core', 'packages/propose', WINNER_HASHES,
+export const QUERY_INPUTS = Object.freeze(['packages/review', 'packages/kernel', 'packages/source', 'packages/propose', WINNER_HASHES,
   ANCHOR_AIMS_FILE, BINDINGS_DIR, PACKS_DIR, GRAPH_FILE]);
