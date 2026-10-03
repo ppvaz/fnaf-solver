@@ -756,6 +756,82 @@ async function restartAfterAbortStep(cp: PortsContext, reason: unknown) {
   }
 }
 
+/**
+ * The runner's ports: the composed set, with the attempt, the stop after a terminal, the release and
+ * the cleanup that own the pre-armed execution and the shared title HID.
+ */
+function campaignPorts(cp: PortsContext, composed: ReturnType<typeof composeCampaignPorts>) {
+  const { artifactRequestFor, closeMenuHid, localExecutor, onEvent, teachClear } = cp;
+  return {
+  ...composed.ports,
+  stopAttempt: async ({ terminal: ended, reason }: { terminal: unknown, reason: string }) => {
+    // What the terminal port above returned.
+    const terminal = ended as { outcome?: string, why?: unknown } | null | undefined;
+    // The terminal port may observe game-over before the executor's own
+    // lifecycle poll does. Stopping here is the last gate before retryReady
+    // or save() can read the title, so no stale HID stream can reach menu.
+    await localExecutor.abort(`campaign-${reason ?? 'terminal'}:${terminal?.outcome ?? 'unknown'}`);
+    await teachClear(`terminal:${terminal?.outcome ?? 'unknown'}`);
+    // The shared title process is deliberately reused through a healthy
+    // intro, but a terminal ends that ownership. Closing it is what kills
+    // the already-buffered report stream; a retry will open a fresh process.
+    await closeMenuHid();
+    onEvent({ type: 'campaign.terminal.actuator-stopped',
+      outcome: terminal?.outcome ?? null, reason: reason ?? null, hidClosed: true });
+    // An Invalid attempt leaves the game mid-night: restart it to the title,
+    // which a retry waits for and a hold after two in a row leaves the phone
+    // at (a death reaches the title by itself).
+    if (terminal?.outcome === 'invalid')
+      await restartAfterAbortStep(cp, new Error(`invalid run: ${terminal.why}`));
+  },
+  executeAttempt: async ({ target }: { target: CampaignTarget }) => {
+    // intro() pre-armed the schedule during the intro card; the attempt
+    // owns that execution. A retry (or any path that skipped intro)
+    // falls back to composing the request here.
+    // An executor failure tagged Invalid (invalidRun) ends the attempt as an
+    // Invalid run instead of failing the campaign's port.
+    const settle = (execution: Promise<unknown>) => execution.catch((error: unknown) => {
+      const tagged = error as { invalid?: unknown, message?: string } | null | undefined;
+      if (typeof tagged?.invalid !== 'string') throw error;
+      onEvent({ type: 'campaign.attempt.invalid', why: tagged.invalid, detail: tagged.message });
+      return { status: 'INVALID', why: tagged.invalid, detail: tagged.message };
+    });
+    if (cp.pendingExecution) {
+      const pending = cp.pendingExecution;
+      cp.pendingExecution = null;
+      return settle(pending);
+    }
+    // A retry can reach the attempt port after intro has already returned;
+    // grant the shared HID handoff before starting a fresh executor.
+    localExecutor.releaseNight();
+    return settle(localExecutor.execute(artifactRequestFor(target)));
+  },
+  releaseAll: async () => {
+    const hadPendingExecution = cp.pendingExecution !== null;
+    cp.pendingExecution = null;
+    try {
+      await composed.ports.releaseAll();
+    } finally {
+      await closeMenuHid();
+      // The runner also uses releaseAll for a HOLD reached after menu()
+      // pre-armed the next attempt. That is an abort of a live game state,
+      // even though executeAttempt was never consumed, so leave no night
+      // running behind for the next attempt or operator.
+      if (hadPendingExecution)
+        await restartAfterAbortStep(cp, new Error('campaign stopped with a pre-armed attempt'));
+    }
+  },
+  cleanup: async (reason: unknown) => {
+    cp.pendingExecution = null;
+    try { await composed.ports.cleanup(reason); }
+    finally {
+      await closeMenuHid();
+      await teachClear(`cleanup:${reason ?? 'unknown'}`);
+    }
+  },
+  };
+}
+
 /** Refuse options a live composition cannot run: their types, the night anchor's aim and bound, the arm mode, the profile. */
 function checkPortOptions({ teachOverlay, venueBindings, nightAnchorAimMs, allowSaveReset, captureRestarted, startResidueMs,
   nightAnchorPeriodMs, nightAnchorMaxK, armMode, profile }: { teachOverlay: boolean, venueBindings: unknown,
@@ -1016,74 +1092,7 @@ export async function createCampaignPorts(options: CampaignPortOptions) {
     terminal: args => terminalStep(cp, args), terminalVerification: args => terminalVerificationStep(cp, args),
     save: args => saveStep(cp, args), retryReady: args => retryReadyStep(cp, args), localExecutor,
     restartAfterAbort: reason => restartAfterAbortStep(cp, reason) });
-  const ports = {
-    ...composed.ports,
-    stopAttempt: async ({ terminal: ended, reason }: { terminal: unknown, reason: string }) => {
-      // What the terminal port above returned.
-      const terminal = ended as { outcome?: string, why?: unknown } | null | undefined;
-      // The terminal port may observe game-over before the executor's own
-      // lifecycle poll does. Stopping here is the last gate before retryReady
-      // or save() can read the title, so no stale HID stream can reach menu.
-      await localExecutor.abort(`campaign-${reason ?? 'terminal'}:${terminal?.outcome ?? 'unknown'}`);
-      await teachClear(`terminal:${terminal?.outcome ?? 'unknown'}`);
-      // The shared title process is deliberately reused through a healthy
-      // intro, but a terminal ends that ownership. Closing it is what kills
-      // the already-buffered report stream; a retry will open a fresh process.
-      await closeMenuHid();
-      onEvent({ type: 'campaign.terminal.actuator-stopped',
-        outcome: terminal?.outcome ?? null, reason: reason ?? null, hidClosed: true });
-      // An Invalid attempt leaves the game mid-night: restart it to the title,
-      // which a retry waits for and a hold after two in a row leaves the phone
-      // at (a death reaches the title by itself).
-      if (terminal?.outcome === 'invalid')
-        await restartAfterAbortStep(cp, new Error(`invalid run: ${terminal.why}`));
-    },
-    executeAttempt: async ({ target }: { target: CampaignTarget }) => {
-      // intro() pre-armed the schedule during the intro card; the attempt
-      // owns that execution. A retry (or any path that skipped intro)
-      // falls back to composing the request here.
-      // An executor failure tagged Invalid (invalidRun) ends the attempt as an
-      // Invalid run instead of failing the campaign's port.
-      const settle = (execution: Promise<unknown>) => execution.catch((error: unknown) => {
-        const tagged = error as { invalid?: unknown, message?: string } | null | undefined;
-        if (typeof tagged?.invalid !== 'string') throw error;
-        onEvent({ type: 'campaign.attempt.invalid', why: tagged.invalid, detail: tagged.message });
-        return { status: 'INVALID', why: tagged.invalid, detail: tagged.message };
-      });
-      if (cp.pendingExecution) {
-        const pending = cp.pendingExecution;
-        cp.pendingExecution = null;
-        return settle(pending);
-      }
-      // A retry can reach the attempt port after intro has already returned;
-      // grant the shared HID handoff before starting a fresh executor.
-      localExecutor.releaseNight();
-      return settle(localExecutor.execute(artifactRequestFor(target)));
-    },
-    releaseAll: async () => {
-      const hadPendingExecution = cp.pendingExecution !== null;
-      cp.pendingExecution = null;
-      try {
-        await composed.ports.releaseAll();
-      } finally {
-        await closeMenuHid();
-        // The runner also uses releaseAll for a HOLD reached after menu()
-        // pre-armed the next attempt. That is an abort of a live game state,
-        // even though executeAttempt was never consumed, so leave no night
-        // running behind for the next attempt or operator.
-        if (hadPendingExecution)
-          await restartAfterAbortStep(cp, new Error('campaign stopped with a pre-armed attempt'));
-      }
-    },
-    cleanup: async (reason: unknown) => {
-      cp.pendingExecution = null;
-      try { await composed.ports.cleanup(reason); }
-      finally {
-        await closeMenuHid();
-        await teachClear(`cleanup:${reason ?? 'unknown'}`);
-      }
-    },
-  };
+  const ports = campaignPorts(cp, composed);
   const close = async () => {
     try { await closeMenuHid(); }
     finally {
