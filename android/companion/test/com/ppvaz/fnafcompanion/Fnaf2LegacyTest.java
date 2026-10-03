@@ -151,6 +151,26 @@ public final class Fnaf2LegacyTest {
         check("a plane-less frame is kept with UNKNOWN values",
                 Integer.toString(Integer.MIN_VALUE).equals(missing[7]) && "0".equals(missing[6]));
 
+        // A trace that fills stops recording but stays held: a capture stop
+        // must still write it (it used to save only an ACTIVE one, so a full
+        // trace was dropped and blocked every later TRACE start).
+        check("no trace is held after a stop", legacy.traceDetach() == null);
+        long fullStart = traceStart + 10 * SECOND;
+        check("a second trace starts", legacy.traceStart("t3", directory, true, fullStart, 0L)
+                .startsWith("OK trace=ACTIVE"));
+        for (int i = 0; i <= Fnaf2Legacy.TRACE_MAX_FRAMES; i++) {
+            legacy.onTraceFrame(office, fullStart + i * 16_666_667L, fullStart + i * 16_666_667L, 5L);
+        }
+        check("a full trace stops recording", !legacy.traceActive());
+        java.util.function.Supplier<String> held = legacy.traceDetach();
+        check("a full trace is still held for writing", held != null);
+        String written = held == null ? "" : held.get();
+        check("the held full trace is written", written.startsWith("OK trace=FULL label=t3")
+                && written.contains("frames=" + Fnaf2Legacy.TRACE_MAX_FRAMES));
+        check("a written trace frees the next start", legacy.traceStart("t4", directory, true,
+                fullStart + Fnaf2Legacy.TRACE_MAX_FRAMES * 16_666_667L, 0L).startsWith("OK trace=ACTIVE"));
+        legacy.traceStop();
+
         // The Companion's own activity on screen is the helper, never a game
         // label, whatever the frame's colours.
         legacy.onFrame(office, traceStart + SECOND, traceStart + SECOND, 0L, false, true);

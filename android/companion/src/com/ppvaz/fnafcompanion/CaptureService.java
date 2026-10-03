@@ -51,6 +51,7 @@ import java.security.SecureRandom;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 
 /**
  * The Companion's capture service: one user-approved MediaProjection at the
@@ -1158,11 +1159,17 @@ public final class CaptureService extends Service {
         if (overlayController != null) {
             overlayController.onCaptureStopped();
         }
-        if (legacy.traceStatus().startsWith("trace=ACTIVE")) {
-            // Preserve an in-flight diagnostic trace across an app abort or
-            // projection teardown. The frame file is still written on the
-            // service thread and remains pullable through run-as.
-            Log.i(TAG, "frame trace during stop: " + legacy.traceStop());
+        // Preserve a held diagnostic trace -- recording, or full and waiting
+        // for TRACE stop -- across an app abort or projection teardown. Its
+        // file can run to tens of megabytes, so it is written on its own
+        // thread, not on the main thread ahead of releasing the projection;
+        // it stays pullable through run-as.
+        Supplier<String> heldTrace = legacy.traceDetach();
+        if (heldTrace != null) {
+            new Thread(() -> {
+                Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
+                Log.i(TAG, "frame trace during stop: " + heldTrace.get());
+            }, "trace-save").start();
         }
 
         if (audioProbe != null) audioProbe.stop();

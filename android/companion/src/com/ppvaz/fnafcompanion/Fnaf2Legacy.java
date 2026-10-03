@@ -1,11 +1,14 @@
 package com.ppvaz.fnafcompanion;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Locale;
+import java.util.function.Supplier;
 
 /**
  * LEGACY (FNaF 2 retail 2.0.7 on the moto g56): every on-device reader the
@@ -50,7 +53,8 @@ public final class Fnaf2Legacy {
     /**
      * A complete ten-minute night at 60 Hz. At native 2400x1080 the retained
      * grid plus the control values is about 27 MB, far cheaper than image
-     * buffers. The trace is written only after stop, on the control thread.
+     * buffers. The trace is written only after stop: on the control thread for
+     * {@code TRACE stop}, on its own thread when a capture stop saves it.
      */
     public static final int TRACE_MAX_FRAMES = 36_000;
     public static final String TRACE_SCHEMA = "fnaf2-frame-trace-v3";
@@ -358,13 +362,28 @@ public final class Fnaf2Legacy {
 
     /** {@code TRACE <token> stop}: write the retained rows and report the file. */
     public String traceStop() {
+        Supplier<String> held = traceDetach();
+        return held == null ? "ERROR trace-not-active" : held.get();
+    }
+
+    /**
+     * Detaches the held trace -- recording, or full and no longer recording --
+     * and returns the write of its file, for the caller to run where a
+     * multi-megabyte write may block; null when no trace is held. A full trace
+     * stays held until this is called, so a capture stop can still save it.
+     */
+    public Supplier<String> traceDetach() {
         FrameTrace stopped;
         synchronized (traceLock) {
             stopped = trace;
-            if (stopped == null) return "ERROR trace-not-active";
+            if (stopped == null) return null;
             traceActive = false;
             trace = null;
         }
+        return () -> writeTrace(stopped);
+    }
+
+    private String writeTrace(FrameTrace stopped) {
         try {
             stopped.write();
             lastTrace = stopped.status(stopped.full ? "FULL" : "STOPPED");
@@ -542,7 +561,8 @@ public final class Fnaf2Legacy {
         }
 
         void write() throws IOException {
-            try (FileOutputStream output = new FileOutputStream(file, false)) {
+            // Up to 36,000 rows of ~1.2 KB: one syscall per row without a buffer.
+            try (OutputStream output = new BufferedOutputStream(new FileOutputStream(file, false), 1 << 16)) {
                 String header = "# schema=" + TRACE_SCHEMA
                         + " image_clock=helper-monotonic-ns"
                         + " elapsed_clock=android-elapsed-realtime-ns"
