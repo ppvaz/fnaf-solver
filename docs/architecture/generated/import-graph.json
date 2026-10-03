@@ -4424,6 +4424,30 @@
       ]
     },
     {
+      "file": "packages/review/src/solver-describe.ts",
+      "imports": [
+        "./counts.ts",
+        "./envelopes.ts",
+        "./evidence-pack.ts",
+        "./evidence-promotion.ts",
+        "./pack-lift.ts",
+        "./promotions-query.ts",
+        "./registers.ts",
+        "./solver-shared.ts",
+        "@sixam/kernel",
+        "@sixam/source",
+        "@sixam/source/truth"
+      ]
+    },
+    {
+      "file": "packages/review/src/solver-shared.ts",
+      "imports": [
+        "./registers.ts",
+        "@sixam/kernel",
+        "@sixam/source/truth"
+      ]
+    },
+    {
       "file": "packages/review/src/solver.ts",
       "imports": [
         "./counts.ts",
@@ -4435,6 +4459,8 @@
         "./promotions-query.ts",
         "./refusals.ts",
         "./registers.ts",
+        "./solver-describe.ts",
+        "./solver-shared.ts",
         "@sixam/kernel",
         "@sixam/kernel/contracts",
         "@sixam/source",
