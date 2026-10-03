@@ -41,6 +41,7 @@ import type { BlockRow, ForkedChild, Loss } from '../census/winner-census.ts';
 import { heldOutSeeds } from '../../../../packages/propose/bin/census/winner-phase-census.ts';
 import { STRATEGY_REGISTRY, validateWinner } from './bundle.ts';
 import { found } from '../lookup.ts';
+import { refuseUnknownFlags } from '../flags.ts';
 
 const MENU_MODEL = new URL('../../../play/profiles/fnaf2/moto-g56/custom-night-moto-g56-v207.json', import.meta.url);
 
@@ -258,6 +259,7 @@ export function populationRecord({ rows, start, count, git, date, command }: {
 }
 
 async function population(argv: string[]) {
+  refuseUnknownFlags(argv, ['population', 'count', 'jobs', 'start', 'date', 'out']);
   const flag = <T extends string | null>(name: string, dflt: T): string | T => { const i = argv.indexOf(`--${name}`); return i < 0 ? dflt : argv[i + 1]; };
   const jobs = Number(flag('jobs', '1'));
   const start = Number(flag('start', '0'));
@@ -392,6 +394,7 @@ export function planeRecord({ rows, a, b, bases, count, git, date, command }: {
 }
 
 async function plane(argv: string[]) {
+  refuseUnknownFlags(argv, ['plane', 'bases', 'count', 'jobs', 'date', 'out']);
   const flag = <T extends string | null>(name: string, dflt: T): string | T => { const i = argv.indexOf(`--${name}`); return i < 0 ? dflt : argv[i + 1]; };
   const [a, b] = flag('plane', 'bb,foxy').split(',');
   const bases = flag('bases', '0,20').split(',').map(Number);
@@ -499,6 +502,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href &
            process.argv.includes('--population')) {
   population(process.argv.slice(2)).catch((error) => { console.error(error.message); process.exitCode = 1; });
 } else if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  refuseUnknownFlags(process.argv.slice(2), ['runs', 'preset', 'bands', 'epochs', 'gate', 'band']);
   const arg = <T extends string | null>(name: string, dflt: T): string | T => {
     const v = process.argv.find(a => a.startsWith(`--${name}=`));
     return v === undefined ? dflt : v.slice(name.length + 3);

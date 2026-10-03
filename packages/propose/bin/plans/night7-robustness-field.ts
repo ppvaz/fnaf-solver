@@ -47,6 +47,7 @@ import type { BlockRow, ForkedChild, Loss } from '../census/winner-census.ts';
 import { heldOutSeeds, nightBindings } from '../../../../packages/propose/bin/census/winner-phase-census.ts';
 import { winnerTag } from '@sixam/kernel';
 import { found } from '../lookup.ts';
+import { refuseUnknownFlags } from '../flags.ts';
 
 export const FIELD_KIND = 'night7-robustness-field-v1';
 export const FIELD_FRAMES = 20;
@@ -373,6 +374,7 @@ async function main(argv: string[]) {
     (process as ForkedChild).send(fieldPart(Number(fieldCount), Number(part), Number(parts), only === '-' ? null : only.split(',')));
     return;
   }
+  refuseUnknownFlags(argv, ['count', 'lane-count', 'jobs', 'schedules', 'date', 'out']);
   const flag = <T extends string | null>(name: string, dflt: T): string | T => { const i = argv.indexOf(`--${name}`); return i < 0 ? dflt : argv[i + 1]; };
   const fieldCount = Number(flag('count', '100'));
   const laneCount = Number(flag('lane-count', '500'));

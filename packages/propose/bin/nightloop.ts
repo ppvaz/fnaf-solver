@@ -28,8 +28,10 @@ import * as C from '@sixam/source/fnaf2';
 import { wilsonInterval } from '../../review/src/stat.ts';
 import { runNight } from './nightloop-run.ts';
 import { SimPool } from './census/pool.ts';
+import { refuseUnknownFlags } from './flags.ts';
 
 const RUN_MODULE = new URL('./nightloop-run.ts', import.meta.url).href;
+refuseUnknownFlags(process.argv.slice(2), ['assert', 'quiet', 'seeds', 'nights', 'seed-base', 'workers', 'policy', 'gate', 'arms']);
 const flag = (name: string) => process.argv.includes(`--${name}`);
 const option = <T>(name: string, fallback: T): string | T => {
   const found = process.argv.find(a => a.startsWith(`--${name}=`));

@@ -48,6 +48,7 @@ import { DEFAULT_LATCH_HOLD_MS, DEFAULT_MIN_LEAD_MS } from '../../../play/src/ca
 import { heldOutSeeds, nightBindings } from '../census/winner-phase-census.ts';
 import { winnerTag } from '@sixam/kernel';
 import { found } from '../lookup.ts';
+import { refuseUnknownFlags } from '../flags.ts';
 
 const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '../../../..');
 // The anchor aims packages/propose/bindings/fact-register.ts declares, as `npm run catalog` writes them out
@@ -230,6 +231,7 @@ async function main(argv: string[]) {
     (process as ForkedChild).send(block(Number(count), Number(from), Number(to)));
     return;
   }
+  refuseUnknownFlags(argv, ['count', 'jobs', 'date', 'out']);
   const flag = <T extends string | null>(name: string, dflt: T): string | T => { const i = argv.indexOf(`--${name}`); return i < 0 ? dflt : argv[i + 1]; };
   const count = Number(flag('count', '300'));
   const jobs = Number(flag('jobs', '1'));

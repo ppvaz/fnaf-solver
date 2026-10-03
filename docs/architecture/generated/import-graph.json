@@ -2340,6 +2340,7 @@
       "imports": [
         "../../review/src/stat.ts",
         "./census/pool.ts",
+        "./flags.ts",
         "./nightloop-run.ts",
         "@sixam/source/fnaf2"
       ]
@@ -2390,6 +2391,7 @@
         "../../../play/bin/phone/actuator.ts",
         "../../../play/src/campaign/artifact-executor.ts",
         "../../../play/src/campaign/hid-schedule.ts",
+        "../flags.ts",
         "./artifact-commands.ts",
         "@sixam/kernel/contracts",
         "@sixam/source",
@@ -2484,6 +2486,7 @@
         "../../../../packages/propose/bin/census/winner-phase-census.ts",
         "../../../play/bin/phone/actuator.ts",
         "../census/winner-census.ts",
+        "../flags.ts",
         "../lookup.ts",
         "./bundle.ts",
         "./minus-toys-plan.ts",
@@ -2500,6 +2503,7 @@
         "../../../../packages/propose/bin/census/winner-phase-census.ts",
         "../../../play/bin/phone/actuator.ts",
         "../census/winner-census.ts",
+        "../flags.ts",
         "../lookup.ts",
         "./artifact-commands.ts",
         "./minus-toys-plan.ts",
@@ -2519,6 +2523,7 @@
         "../../../play/src/campaign/night-anchor.ts",
         "../census/winner-census.ts",
         "../census/winner-phase-census.ts",
+        "../flags.ts",
         "../lookup.ts",
         "./bundle.ts",
         "./night7-presets.ts",
@@ -3314,6 +3319,13 @@
       "imports": [
         "@sixam/propose/strategies/right-vent-camp",
         "node:url"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/test-bin-helpers.ts",
+      "imports": [
+        "./flags.ts",
+        "./lookup.ts"
       ]
     },
     {

@@ -1811,6 +1811,18 @@
       "lifecycle": "supported"
     },
     {
+      "id": "packages/propose/bin/flags.ts",
+      "invocation": "packages/propose/bin/flags.ts",
+      "kind": "module",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/test-bin-helpers.ts",
+      "invocation": "packages/propose/bin/test-bin-helpers.ts",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
       "id": "packages/propose/bin/lookup.ts",
       "invocation": "packages/propose/bin/lookup.ts",
       "kind": "module",

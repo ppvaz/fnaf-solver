@@ -50,6 +50,7 @@ import type { ExecutorRequest } from '../../../play/src/campaign/artifact-execut
 import { compileDeviceLocalHidSchedule } from '../../../play/src/campaign/hid-schedule.ts';
 import { DeviceActuator } from '../../../play/bin/phone/actuator.ts';
 import { SEAM_FLOORS } from './artifact-commands.ts';
+import { refuseUnknownFlags } from '../flags.ts';
 
 export const FUSION_POLL_MS = 33;
 const frame = (ms: number) => Math.round(ms * FPS / 1000);
@@ -193,6 +194,7 @@ export function playLane({ events, seed, night, epochMs = 0, customNight = undef
 }
 
 async function main(argv: string[]) {
+  refuseUnknownFlags(argv, ['bundle', 'night', 'seeds', 'epoch', 'late', 'dials', 'no-merge', 'no-floor', 'no-seams']);
   const flag = (name: string, dflt: string | null) => { const i = argv.indexOf(`--${name}`); return i < 0 ? dflt : argv[i + 1]; };
   const bundle = flag('bundle', null); const night = Number(flag('night', 'NaN'));
   if (!bundle || !Number.isInteger(night)) throw new Error('usage: device-lane.ts --bundle DIR --night N [--seeds N] [--epoch MS]');

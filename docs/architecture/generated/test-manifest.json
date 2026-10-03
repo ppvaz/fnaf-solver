@@ -3029,6 +3029,24 @@
       }
     },
     {
+      "id": "packages/propose/bin/test-bin-helpers.ts",
+      "lane": "test:unit",
+      "owner": "@sixam/propose",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.ts per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
       "id": "packages/propose/bin/ventreacttest.ts",
       "lane": "test:unit",
       "owner": "@sixam/propose",
