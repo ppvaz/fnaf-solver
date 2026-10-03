@@ -18,7 +18,7 @@ import { readFileSync } from 'node:fs';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { OPENING, LOOP, KNOBS0, build, replay, emitPlan, schedule, maskWindows, phaseScan } from './minus-toys-plan.ts';
+import { OPENING, LOOP, KNOBS0, armedBy, build, replay, emitPlan, schedule, maskWindows, phaseScan } from './minus-toys-plan.ts';
 import { DOUBLE_GLITCH_CAMERA_PAIRS } from '../../../play/bin/probe/arm-verification.ts';
 import { parsePlan } from './bundle.ts';
 import { compileArtifactPlans } from './artifact-commands.ts';
@@ -191,6 +191,17 @@ for (const night of ['2', '7']) {
   check(minimalNight3.status !== 0 && /--minimal is Night 1 only/.test(minimalNight3.stderr),
     `--minimal did not refuse night 3 (it is Night 1 only): exit ${minimalNight3.status}, ` +
     `${minimalNight3.stderr.trim().split('\n').slice(-1)[0] ?? ''}`);
+
+  // The gate excuses a worst-mode loss only to a killer the table has not
+  // armed by the hour it struck. Night 1's Toy Bonnie is 0 until the 2 AM row
+  // (g674) and armed from it; the Puppet is armed from midnight (g815). A
+  // night-wide peak would call Toy Bonnie armed all night and excuse nothing,
+  // or, read the other way, excuse a loss after 2 AM.
+  const twoAm = 2 * C.HOUR_FRAMES;
+  check(!armedBy(1, 'toybonnie', twoAm - 1), 'Toy Bonnie read as armed before the Night 1 2 AM row');
+  check(armedBy(1, 'toybonnie', twoAm), 'Toy Bonnie read as unarmed from the Night 1 2 AM row');
+  check(armedBy(1, 'puppet', 0), 'the Puppet read as unarmed at Night 1 midnight');
+  check(!armedBy(1, 'bb', 6 * C.HOUR_FRAMES - 1), 'Balloon Boy read as armed on Night 1, whose table never names him');
 }
 
 // --- 1c. the arm's phase sensitivity (2026-08-29, r2/r3 device coin flip) ----

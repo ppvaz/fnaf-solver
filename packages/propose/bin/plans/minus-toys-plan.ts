@@ -577,10 +577,33 @@ export function emitPlan(night: number, knobs?: Partial<Knobs> | null) {
 }
 
 // death.reason -> the AI id the sourced table gates it on (for canAct checks).
-const REASON_AI = {
+const REASON_AI: Readonly<Record<string, string>> = {
   'golden-freddy': 'golden', 'golden-freddy-hall': 'golden',
   foxy: 'foxy', puppet: 'puppet', 'balloon-boy': 'bb',
 };
+/**
+ * The AI id of whoever killed a dead Sim, or null when the death names none.
+ * An inside-office death is the committed unit's (its attack animation names
+ * it), so the reason alone does not say who.
+ */
+export function killerOf(sim: Sim): string | null {
+  const reason = sim.death?.reason;
+  if (reason === 'inside-office')
+    return sim.attackAnimation?.who ?? sim.units.find(unit => unit.committedAt >= 0)?.id ?? null;
+  return reason !== undefined && Object.hasOwn(REASON_AI, reason) ? REASON_AI[reason] : null;
+}
+/**
+ * Whether the sourced table has set any AI for `id` by the hour of `atFrame`.
+ * g673 zeroes every counter at night start, so a character no row has named
+ * yet is at 0 -- the hour matters, not the night's peak (Night 1's Toy Bonnie
+ * is 0 until 2 AM and 3 after).
+ */
+export function armedBy(night: number, id: string, atFrame: number) {
+  const hour = Math.floor(atFrame / C.HOUR_FRAMES);
+  for (let h = 0; h <= hour; h += 1)
+    if (C.aiUpdates(night, h).some(row => row.set[id] !== undefined && row.set[id] !== 0)) return true;
+  return false;
+}
 
 function gate(night: number, knobs: Partial<Knobs> | undefined, runs = 3000) {
   const minimal = !!clone(knobs).minimal;
@@ -590,12 +613,14 @@ function gate(night: number, knobs: Partial<Knobs> | undefined, runs = 3000) {
     const n = population.length;
     let wins = 0;
     const lossReasons = new Set<string>();
+    const losses: { killer: string | null, frame: number }[] = [];
     const lossFrames: number[] = [];
     for (const seed of population) {
       const r = replay({ night, worst, seed, knobs });
       if (r.sim.won && r.splitAt >= 0) wins++;
       else if (r.sim.death) {
         lossReasons.add(r.sim.death.reason);
+        losses.push({ killer: killerOf(r.sim), frame: r.sim.death.frame });
         lossFrames.push(r.sim.death.frame);
       }
     }
@@ -606,16 +631,20 @@ function gate(night: number, knobs: Partial<Knobs> | undefined, runs = 3000) {
     // The minimal plan carries no defensive mask/monitor churn, so worst-mode
     // pinning -- which forces AI-0 animatronics to advance and spawn -- reaches
     // states the sourced table forbids. Accept a worst-mode loss ONLY if every
-    // loss is to an animatronic canAct() says cannot act on this night. A loss
-    // to any reachable threat, or any loss on normal seeds, is a real failure.
+    // loss is to an animatronic the table has not armed by the hour it struck.
+    // A loss to any armed threat, or any loss on normal seeds, is a real failure.
     const artifactOnly = minimal && worst && lossFrames.length === n &&
       // Worst mode forces characters through their pre-2-AM routes even though
-      // Night 1's sourced AI table cannot arm them.  The first real minimal
-      // action is at 2 AM, so only a loss before that boundary is an artifact.
-      lossFrames.every(at => at < frame(KNOBS0.minLoopStartMs));
+      // Night 1's sourced AI table cannot arm them yet.  The first real minimal
+      // action is at 2 AM, so only a loss before that boundary is an artifact,
+      // and only to a killer still at AI 0 at that hour.
+      lossFrames.every(at => at < frame(KNOBS0.minLoopStartMs)) &&
+      losses.every(({ killer, frame: at }) => killer !== null && !armedBy(night, killer, at));
+    const killers = [...new Set(losses.map(loss => loss.killer ?? 'an unnamed killer'))];
     if (artifactOnly) {
-      console.log(`  worst-mode losses are pinned-RNG artifacts (${[...lossReasons].join(', ')} ` +
-        `-- all AI 0 on night ${night}); the normal-seed gate is the proof`);
+      console.log(`  worst-mode losses are pinned-RNG artifacts (${[...lossReasons].join(', ')} by ` +
+        `${killers.join(', ')} -- each at AI 0 at the hour it struck on night ${night}); ` +
+        'the normal-seed gate is the proof');
       continue;
     }
     return false;
