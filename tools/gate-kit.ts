@@ -60,7 +60,11 @@ export function loadBaseline(section: string, root: string = ROOT) {
 export function ratchet(found: Map<string, {count: number, detail?: string}>, baseline: {entries: Record<string, number | {count: number, why: string}>}): string[] {
   const failures = [];
   const recorded = new Map(Object.entries(baseline.entries ?? {}).map(([key, entry]) => {
-    if (typeof entry === 'number') return [key, entry];
+    // A bare count records debt without saying why it is accepted (CLAUDE.md: `{count, why}` only).
+    if (typeof entry === 'number') {
+      failures.push(`${key}: a bare count records debt without a reason; write it as {count, why}`);
+      return [key, entry];
+    }
     if (!entry || typeof entry.why !== 'string' || !entry.why.trim() || !Number.isInteger(entry.count))
       failures.push(`${key}: a baseline entry is a count or {count, why} with a reason`);
     return [key, entry?.count];

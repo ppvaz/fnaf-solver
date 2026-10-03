@@ -2,7 +2,7 @@
   "schema": "quality-baseline-v1",
   "fileSize": {
     "recorded": "2026-09-30",
-    "why": "Source files already over the ceiling when tools/test-file-size.ts landed; an entry only shrinks.",
+    "why": "Source files over the 2,000-line ceiling. None is accepted today; a file that must exceed it is recorded as {count, why} naming why it cannot be split.",
     "entries": {}
   },
   "deadCode": {
@@ -143,22 +143,49 @@
   },
   "pythonTypes": {
     "recorded": "2026-10-01",
-    "why": "mypy --strict errors (explicit Any refused) per area when tools/test-python-types.ts landed. Pedro, 2026-10-01: real types everywhere, Python alongside TypeScript, so an entry only shrinks, and an area that reaches none loses its entry and must stay at none.",
+    "why": "mypy --strict errors (explicit Any refused) per area (Pedro, 2026-10-01: real types everywhere, Python alongside TypeScript). An entry names what its area holds and how its count reaches none: typed in place where Chowdren, numpy or Pillow forces Python, ported where nothing does; an area that reaches none loses its entry and must stay at none.",
     "entries": {
-      "py:apps/lab": 104,
-      "py:apps/lab/test": 41,
-      "py:packages/play/bin": 378,
-      "py:packages/play/games": 127,
-      "py:packages/play/src": 225,
-      "py:packages/play/test": 54,
-      "py:packages/propose/parked": 381,
-      "py:packages/review/bin": 785,
-      "py:packages/source/decompile": 349
+      "py:apps/lab": {
+        "count": 104,
+        "why": "five stdlib-only lab scheduler and queue scripts; Pedro, 2026-10-02: unforced Python is ported to TypeScript (characterize, port, compare, switch), not typed in place, so this count falls to none by porting"
+      },
+      "py:apps/lab/test": {
+        "count": 41,
+        "why": "the four stdlib-only tests of those lab scripts, ported with them (Pedro, 2026-10-02: unforced Python is ported to TypeScript (characterize, port, compare, switch), not typed in place)"
+      },
+      "py:packages/play/bin": {
+        "count": 378,
+        "why": "19 scripts, 8 of them Pillow, numpy or SciPy frame and audio analysis that stays Python and is typed in place; the 11 stdlib-only ones are ported (Pedro, 2026-10-02: unforced Python is ported to TypeScript (characterize, port, compare, switch), not typed in place)"
+      },
+      "py:packages/play/games": {
+        "count": 127,
+        "why": "eight FNaF 1 detectors and helpers, six on Pillow or numpy (typed in place), two stdlib-only (ported; Pedro, 2026-10-02: unforced Python is ported to TypeScript (characterize, port, compare, switch), not typed in place)"
+      },
+      "py:packages/play/src": {
+        "count": 225,
+        "why": "the screencap sensor and lifecycle readers, six of ten on Pillow (typed in place); the grid and screencap sensors they serve are discontinued and being converted, not extended (CLAUDE.md, Sensors)"
+      },
+      "py:packages/play/test": {
+        "count": 54,
+        "why": "five sensor tests, four of them on Pillow, typed in place with the sensors they check"
+      },
+      "py:packages/propose/parked": {
+        "count": 381,
+        "why": "parked Minus 7 Python (cue detection, latency experiments) frozen with the results it produced; parked work is neither ported nor typed until it is revived"
+      },
+      "py:packages/review/bin": {
+        "count": 785,
+        "why": "31 graders and recompile readers, nine on Pillow, numpy or SciPy (typed in place); the 22 stdlib-only ones are being ported one at a time (Pedro, 2026-10-02: unforced Python is ported to TypeScript (characterize, port, compare, switch), not typed in place)"
+      },
+      "py:packages/source/decompile": {
+        "count": 349,
+        "why": "seven stdlib-only readers of the event-sheet dump; Pedro, 2026-10-02: unforced Python is ported to TypeScript (characterize, port, compare, switch), not typed in place (Source’s truth.ts already reads the dump in TypeScript)"
+      }
     }
   },
   "typeDebt": {
     "recorded": "2026-10-01",
-    "why": "Explicit any and non-null assertions per area when tools/test-type-debt.ts landed: the types JavaScript left implicit, written down. Pedro, 2026-10-01: real types everywhere, no explicit any, so an entry only shrinks (it rose once, when the six bundle-hashed .mjs joined as TypeScript), and an area that reaches none loses its entry and must stay at none.",
+    "why": "Explicit any and non-null assertions per area. None is accepted today (Pedro, 2026-10-01: real types everywhere); one written anywhere fails.",
     "entries": {}
   },
   "pythonCasts": {

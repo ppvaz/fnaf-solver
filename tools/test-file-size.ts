@@ -38,10 +38,13 @@ export function oversized(files: Iterable<[string, string]>) {
   const planted = oversized([['a/long.js', long], ['a/short.py', 'x\n'], ['a/notes.md', long]]);
   assert.deepEqual([...planted.found.keys()], ['a/long.js'], 'a source file over the ceiling must be caught; prose is not source');
   assert.deepEqual(ratchet(planted.found, { entries: {} }), [`a/long.js: new (${CEILING + 1} lines, ceiling ${CEILING})`]);
-  assert.deepEqual(ratchet(planted.found, { entries: { 'a/long.js': CEILING + 1 } }), []);
-  assert.match(ratchet(planted.found, { entries: { 'a/long.js': CEILING + 5 } })[0], /shrank .*lower its entry/,
+  const accepted = (count: number) => ({ entries: { 'a/long.js': { count, why: 'a planted reason' } } });
+  assert.deepEqual(ratchet(planted.found, accepted(CEILING + 1)), []);
+  assert.match(ratchet(planted.found, { entries: { 'a/long.js': CEILING + 1 } })[0], /bare count/,
+    'a bare count must be refused: an entry names why it is accepted');
+  assert.match(ratchet(planted.found, accepted(CEILING + 5))[0], /shrank .*lower its entry/,
     'a recorded file that shrank must lower its entry');
-  assert.match(ratchet(new Map(), { entries: { 'a/long.js': CEILING + 1 } })[0], /gone; remove its entry/);
+  assert.match(ratchet(new Map(), accepted(CEILING + 1))[0], /gone; remove its entry/);
   assert.equal(lineCount('a\nb\n'), 2);
   assert.equal(lineCount('a\nb'), 2);
 }
