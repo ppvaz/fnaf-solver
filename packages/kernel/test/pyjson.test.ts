@@ -26,7 +26,10 @@ for (const [text, message] of refusals) assert.throws(() => pyLoads(text), { mes
 const bytes = (hex: string) => pyLoadsBytes(Buffer.from(hex, 'hex'));
 assert.throws(() => bytes('22ff22'), { message: "'utf-8' codec can't decode byte 0xff in position 1: invalid start byte" });
 assert.throws(() => bytes('22e28222'), { message: "'utf-8' codec can't decode bytes in position 1-2: invalid continuation byte" });
+// A surrogate is let through only whole; a broken one is refused as the strict decoder refuses its lead.
+assert.throws(() => bytes('22eda04322'), { message: "'utf-8' codec can't decode byte 0xed in position 1: invalid continuation byte" });
+assert.throws(() => bytes('22eda0'), { message: "'utf-8' codec can't decode byte 0xed in position 1: invalid continuation byte" });
 assert.equal(pyReprOf(bytes('22f09f988022')), "'\u{1F600}'");
 assert.equal(pyReprOf(bytes('efbbbf7b2261223a20317d')), "{'a': 1}");
 
-console.log(`pyjson: 3 values read and printed, ${refusals.length} refusals and 4 byte bodies as CPython's json.loads and repr give them`);
+console.log(`pyjson: 3 values read and printed, ${refusals.length} refusals and 6 byte bodies as CPython's json.loads and repr give them`);

@@ -237,11 +237,13 @@ function utf8(bytes: Uint8Array): string {
     // The second byte's range depends on the lead (no overlongs, no code points past U+10FFFF); a surrogate
     // (ED A0-BF) is let through, as surrogatepass does.
     const [low, high] = lead === 0xe0 ? [0xa0, 0xbf] : lead === 0xf0 ? [0x90, 0xbf] : lead === 0xf4 ? [0x80, 0x8f] : [0x80, 0xbf];
-    let n = 1;
-    for (; n < size; n += 1) {
-      if (k + n >= bytes.length) fail(k, bytes.length, 'unexpected end of data');
+    for (let n = 1; n < size; n += 1) {
       const byte = bytes[k + n];
-      if (n === 1 ? byte < low || byte > high : byte < 0x80 || byte > 0xbf) fail(k, k + n, 'invalid continuation byte');
+      if (k + n < bytes.length && (n === 1 ? byte >= low && byte <= high : byte >= 0x80 && byte <= 0xbf)) continue;
+      // surrogatepass takes a surrogate only whole; a broken one is refused as strict refuses its lead.
+      if (n > 1 && lead === 0xed && bytes[k + 1] >= 0xa0) fail(k, k + 1, 'invalid continuation byte');
+      if (k + n >= bytes.length) fail(k, bytes.length, 'unexpected end of data');
+      fail(k, k + n, 'invalid continuation byte');
     }
     let code = lead & (0xff >> (size + 1));
     for (let m = 1; m < size; m += 1) code = (code << 6) | (bytes[k + m] & 0x3f);
