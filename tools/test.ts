@@ -365,7 +365,7 @@ const ENGINE: Check[] = [
   ['screen map', ['../packages/play/bin/phone/test-screen-map.ts']],
   // Plan 18 Package 5: parse source-side InputDispatcher evidence without a
   // phone or a trace-processor dependency in the normal checkout.
-  ['input trace', ['../packages/play/bin/probe/test-inputtrace.ts']],
+  ['input trace', ['../packages/review/bin/grade/test-inputtrace.ts']],
   // Plan 18 Package 1 foundation: reproduce the three shell failures that
   // already cost recorded nights, without requiring a phone or shellcheck.
   ['shell footguns', ['../packages/play/bin/phone/test-shell-footguns.sh']],

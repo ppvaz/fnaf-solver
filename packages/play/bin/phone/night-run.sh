@@ -168,7 +168,7 @@ CAUSE_MODEL_PATH="packages/play/profiles/fnaf2/moto-g56/death-cause-withered-chi
 TRACE_TOOL="packages/play/bin/probe/atrace-input.sh"
 for path in "$BUNDLE/manifest.json" "$QUALIFICATION" "$TITLE_MODEL_PATH" \
             packages/propose/bin/report/phase-reconstruct.ts packages/review/bin/grade/run-timeline.py \
-            packages/play/src/sensors/screencap/title-observe.py packages/play/bin/probe/inputtrace.ts \
+            packages/play/src/sensors/screencap/title-observe.py packages/review/bin/grade/inputtrace.ts \
             "$TRACE_TOOL" apps/desktop/src/device-cli.ts apps/desktop/src/evidence.ts; do
   [ -e "$path" ] || die "missing required input: $path"
 done
@@ -252,7 +252,7 @@ CAMPAIGN_DIR=""
 # The Companion's native frame trace, which is the instrument that measured
 # the mask button's appearance in the first place (absent to 322 ms after
 # monitor-down, faint at ~337 ms, fully visible at ~382.5 ms) and the one
-# `actuation-frame-metric.ts` and `input-frame-align.py` both read.
+# `actuation-frame-metric.ts` and `input-frame-align.ts` both read.
 #
 # Perfetto cannot answer the same question on this handset: it advertises
 # `android.inputmethod` and no `android.input.inputevent`, so there is no app

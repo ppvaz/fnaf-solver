@@ -65,7 +65,7 @@ type Device = ReturnType<typeof probe>;
 /** An instrument, what it needs of the phone, and whether this phone has it (null: unread). */
 interface Instrument { tool: string, needs: string, capture: string, available: (d: Device) => boolean | null, ifMissing: string }
 const INSTRUMENTS: readonly Instrument[] = [
-  { tool: 'packages/play/bin/probe/inputtrace.ts',
+  { tool: 'packages/review/bin/grade/inputtrace.ts',
     needs: 'a Perfetto app input-dispatch data source (android.input.inputevent)',
     capture: 'packages/play/bin/probe/atrace-input.sh RUN SECONDS -- COMMAND',
     available: d => (d.perfettoDataSources === null ? null
@@ -80,7 +80,7 @@ const INSTRUMENTS: readonly Instrument[] = [
       '(night-run.sh --frame-trace does it around a run)',
     available: d => d.cueHelper !== null,
     ifMissing: 'install/verify the Companion; without it there is no native frame stream to grade.' },
-  { tool: 'packages/review/bin/grade/input-frame-align.py',
+  { tool: 'packages/review/bin/grade/input-frame-align.ts',
     needs: 'BOTH a Perfetto trace and the Companion native frame trace',
     capture: 'atrace-input.sh around the run, plus query-companion.sh trace start/stop',
     available: d => (d.perfettoDataSources === null ? null

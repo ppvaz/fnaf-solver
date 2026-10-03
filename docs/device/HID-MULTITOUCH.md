@@ -1455,7 +1455,7 @@ source needs to be requested explicitly next run).
 
 The repository now has `packages/play/bin/probe/atrace-input.sh`, which brackets a
 command with a phone-side Perfetto trace and flushes the trace before pulling
-it, plus `packages/play/bin/probe/inputtrace.ts`, which queries dispatch, delivery,
+it, plus `packages/review/bin/grade/inputtrace.ts`, which queries dispatch, delivery,
 identity, and candidate frame rows without adding a trace-processor dependency
 to the checkout. `grade-run.sh` consumes the artifact when it exists, and the
 parser has phone-free regression coverage. The wrapper refuses to overwrite a

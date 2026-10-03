@@ -835,18 +835,6 @@
       ]
     },
     {
-      "file": "packages/kernel/src/pyjson.ts",
-      "imports": [
-        "./pyfmt.ts"
-      ]
-    },
-    {
-      "file": "packages/kernel/src/pyjson.ts",
-      "imports": [
-        "./pyfmt.ts"
-      ]
-    },
-    {
       "file": "packages/kernel/src/seed.ts",
       "imports": [
         "./labels.ts",
@@ -1143,19 +1131,6 @@
       ]
     },
     {
-      "file": "packages/play/bin/probe/inputtrace.ts",
-      "imports": [
-        "@sixam/kernel",
-        "@sixam/kernel/py",
-        "node:child_process",
-        "node:crypto",
-        "node:fs",
-        "node:os",
-        "node:path",
-        "node:url"
-      ]
-    },
-    {
       "file": "packages/play/bin/probe/intersection-state-gate.ts",
       "imports": [
         "../../src/campaign/physical-ports.ts",
@@ -1179,19 +1154,6 @@
         "../phone/hid-sweep-probe.ts",
         "./hid-intersection-probe.ts",
         "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/play/bin/probe/test-inputtrace.ts",
-      "imports": [
-        "./inputtrace.ts",
-        "node:assert/strict",
-        "node:child_process",
-        "node:fs",
-        "node:os",
-        "node:path",
-        "node:test",
-        "node:url"
       ]
     },
     {
@@ -4334,12 +4296,47 @@
       ]
     },
     {
+      "file": "packages/review/bin/grade/input-frame-align.ts",
+      "imports": [
+        "./perfetto.ts",
+        "@sixam/kernel",
+        "@sixam/kernel/py",
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/review/bin/grade/inputtrace.ts",
+      "imports": [
+        "./perfetto.ts",
+        "@sixam/kernel",
+        "@sixam/kernel/py",
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "packages/review/bin/grade/office-seed-bracket.ts",
       "imports": [
         "@sixam/kernel/py",
         "node:fs",
         "node:path",
         "node:url"
+      ]
+    },
+    {
+      "file": "packages/review/bin/grade/perfetto.ts",
+      "imports": [
+        "@sixam/kernel",
+        "@sixam/kernel/py",
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path"
       ]
     },
     {
@@ -4389,6 +4386,27 @@
         "node:child_process",
         "node:fs",
         "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/review/bin/grade/test-input-frame-align.ts",
+      "imports": [
+        "./input-frame-align.ts",
+        "node:assert/strict",
+        "node:test"
+      ]
+    },
+    {
+      "file": "packages/review/bin/grade/test-inputtrace.ts",
+      "imports": [
+        "./inputtrace.ts",
+        "node:assert/strict",
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:test",
         "node:url"
       ]
     },

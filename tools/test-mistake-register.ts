@@ -450,7 +450,7 @@ for (const [item, gate] of REGISTER_GATES) {
   for (const [name, partial, want] of devices) {
     const device = partial as Probed; // the probe's fields the decision and the report read
     const decided = traceDecision(device).trace;
-    const allowed = !checkCapabilitiesFirst({ instrument: 'packages/play/bin/probe/inputtrace.ts', capabilities: capabilityReport(device) }).refused;
+    const allowed = !checkCapabilitiesFirst({ instrument: 'packages/review/bin/grade/inputtrace.ts', capabilities: capabilityReport(device) }).refused;
     if (decided !== want) fail(`capabilities.ts traceDecision runs the input trace on a phone whose input source is ${name}: ${decided}; item 8 says ${want}`);
     if (decided !== allowed) fail(`traceDecision (${decided}) and Review's checkCapabilitiesFirst (${allowed}) disagree on a phone whose input source is ${name}`);
   }

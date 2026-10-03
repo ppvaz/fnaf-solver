@@ -174,7 +174,7 @@
         "why": "parked Minus 7 Python (cue detection, latency experiments) frozen with the results it produced; parked work is neither ported nor typed until it is revived"
       },
       "py:packages/review/bin": {
-        "count": 785,
+        "count": 769,
         "why": "31 graders and recompile readers, nine on Pillow, numpy or SciPy (typed in place); the 22 stdlib-only ones are being ported one at a time (Pedro, 2026-10-02: unforced Python is ported to TypeScript (characterize, port, compare, switch), not typed in place)"
       },
       "py:packages/source/decompile": {

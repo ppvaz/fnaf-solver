@@ -1332,24 +1332,6 @@
       }
     },
     {
-      "id": "packages/play/bin/probe/test-inputtrace.ts",
-      "lane": "test:unit",
-      "owner": "@sixam/play",
-      "timeoutMs": 180000,
-      "timeoutSource": "tools/test.ts per-test watchdog",
-      "deterministic": true,
-      "determinismSignals": [],
-      "fixedSleeps": [],
-      "sharedResources": [],
-      "subprocesses": false,
-      "measurement": {
-        "status": "NOT_MEASURED",
-        "runs": 0,
-        "durationMs": null,
-        "flakiness": null
-      }
-    },
-    {
       "id": "packages/play/bin/probe/test-intersection-state-gate.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
@@ -3993,7 +3975,25 @@
       }
     },
     {
-      "id": "packages/review/bin/grade/test-input-frame-align.py",
+      "id": "packages/review/bin/grade/test-input-frame-align.ts",
+      "lane": "test:unit",
+      "owner": "package boundary",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.ts per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
+      "id": "packages/review/bin/grade/test-inputtrace.ts",
       "lane": "test:unit",
       "owner": "package boundary",
       "timeoutMs": 180000,

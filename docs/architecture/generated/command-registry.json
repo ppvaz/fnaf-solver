@@ -1177,20 +1177,8 @@
       "lifecycle": "supported"
     },
     {
-      "id": "packages/play/bin/probe/inputtrace.ts",
-      "invocation": "packages/play/bin/probe/inputtrace.ts TRACE [--trace-processor PATH] [--package PKG] [--sf-latency FILE]",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
       "id": "packages/play/bin/phone/test-screen-map.ts",
       "invocation": "packages/play/bin/phone/test-screen-map.ts",
-      "kind": "check",
-      "lifecycle": "supported"
-    },
-    {
-      "id": "packages/play/bin/probe/test-inputtrace.ts",
-      "invocation": "packages/play/bin/probe/test-inputtrace.ts",
       "kind": "check",
       "lifecycle": "supported"
     },
@@ -2803,8 +2791,26 @@
       "lifecycle": "supported"
     },
     {
-      "id": "packages/review/bin/grade/input-frame-align.py",
-      "invocation": "packages/review/bin/grade/input-frame-align.py INPUT.pftrace FRAME.tsv [--trace-processor PATH] [--json]",
+      "id": "packages/review/bin/grade/inputtrace.ts",
+      "invocation": "packages/review/bin/grade/inputtrace.ts TRACE [--trace-processor PATH] [--package PKG] [--sf-latency FILE]",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/grade/test-inputtrace.ts",
+      "invocation": "packages/review/bin/grade/test-inputtrace.ts",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/grade/perfetto.ts",
+      "invocation": "packages/review/bin/grade/perfetto.ts",
+      "kind": "lib",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/grade/input-frame-align.ts",
+      "invocation": "packages/review/bin/grade/input-frame-align.ts INPUT.pftrace FRAME.tsv [--trace-processor PATH] [--json]",
       "kind": "report",
       "lifecycle": "supported"
     },
@@ -2839,8 +2845,8 @@
       "lifecycle": "supported"
     },
     {
-      "id": "packages/review/bin/grade/test-input-frame-align.py",
-      "invocation": "packages/review/bin/grade/test-input-frame-align.py",
+      "id": "packages/review/bin/grade/test-input-frame-align.ts",
+      "invocation": "packages/review/bin/grade/test-input-frame-align.ts",
       "kind": "check",
       "lifecycle": "supported"
     },

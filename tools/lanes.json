@@ -413,16 +413,13 @@
       "packages/play/bin/probe/test-intersection-state-gate.ts",
       "packages/play/bin/probe/test-hid-intersection-probe.ts",
       "packages/review/bin/grade/test-actuation-frame-metric.ts",
-      "packages/play/bin/probe/test-inputtrace.ts"
+      "packages/review/bin/grade/test-inputtrace.ts",
+      "packages/review/bin/grade/test-input-frame-align.ts"
     ],
     "steps": [
       [
         "python3",
         "packages/play/bin/calibrate/test-mask-calibrate.py"
-      ],
-      [
-        "python3",
-        "packages/review/bin/grade/test-input-frame-align.py"
       ]
     ]
   }

@@ -5,21 +5,20 @@
 // reports missing correlations instead of turning them into dropped events: an input slice can exist without a
 // delivery or a usable frame signal, and those are different findings.
 //
-//   node packages/play/bin/probe/inputtrace.ts RUN-input.pftrace
-//   node packages/play/bin/probe/inputtrace.ts RUN-input.pftrace --trace-processor ./trace_processor
+//   node packages/review/bin/grade/inputtrace.ts RUN-input.pftrace
+//   node packages/review/bin/grade/inputtrace.ts RUN-input.pftrace --trace-processor ./trace_processor
 //
 // The command exits non-zero for an unreadable trace/query, an explicit `--expected` count mismatch, or a
 // trace with no matching app events. The last case is printed as `NO APP EVENTS` so a caller cannot mistake a
 // trace that recorded no input for a successful sweep.
 //
-// Ported from inputtrace.py: it prints and exits as that did. Its evidenceId still hashes the analyzer's own
-// source, so a result names the analyzer that produced it.
+// Ported from inputtrace.py: it prints and exits as that did. Its evidenceId hashes this analyzer and the
+// shared Perfetto source, so a result names the code that produced it.
 import { present, isRecord, isList } from '@sixam/kernel';
-import { spawnSync } from 'node:child_process';
+import { DISPATCH_RE, QUERY_PREFIX, formatQuery, which, queryText, csvBody } from './perfetto.ts';
 import { createHash } from 'node:crypto';
-import { accessSync, constants, existsSync, readFileSync, realpathSync, statSync } from 'node:fs';
-import { constants as osConstants } from 'node:os';
-import { delimiter, join, resolve } from 'node:path';
+import { existsSync, readFileSync, realpathSync, statSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   PyFloat, type PyJson, pyArgs, pyCsvDicts, pyDecodeUtf8, pyDumps, pyFixed, pyFloat, pyInt, pyMedian, pyPath, pyPstdev, pyRepr, pyReprOf,
@@ -32,28 +31,7 @@ const DEFAULT_FRAME_WINDOW_MS = 50.0;
 // The package filter belongs in SQL for two reasons: it keeps the CSV small on a whole-device trace, and it
 // prevents a launcher/system-ui touch from being counted as a game contact merely because it has the same
 // source value.
-const QUERY_TEMPLATE = `
-WITH joined AS (
-  SELECT
-    s.ts AS ts_ns,
-    s.dur AS dur_ns,
-    s.name AS name,
-    COALESCE(th.name, '') AS thread_name,
-    COALESCE(p.name, '') AS process_name,
-    COALESCE(t.name, '') AS track_name
-  FROM slice s
-  JOIN track t ON t.id = s.track_id
-  LEFT JOIN thread_track tt ON tt.id = s.track_id
-  LEFT JOIN thread th ON th.utid = tt.utid
-  LEFT JOIN process p ON p.upid = th.upid
-),
-app_joined AS (
-  SELECT * FROM joined
-  WHERE process_name = '{package}' OR INSTR(track_name, '{package}') > 0
-)
-SELECT 'dispatch' AS kind, ts_ns, dur_ns, name, thread_name, process_name, track_name
-FROM app_joined
-WHERE name GLOB 'dispatchInputEvent MotionEvent *'
+const QUERY_TEMPLATE = `${QUERY_PREFIX}
 UNION ALL
 SELECT 'delivery' AS kind, ts_ns, dur_ns, name, thread_name, process_name, track_name
 FROM app_joined
@@ -79,7 +57,7 @@ ORDER BY ts_ns;
 
 // Python's re, kept: `$` also matches before a final newline, \d is any Unicode decimal digit (int() then
 // reads it), and \b is a boundary between Unicode word characters and the rest.
-export const DISPATCH_RE = /^dispatchInputEvent MotionEvent ACTION_(?<action>[A-Z_]+(?:\(\p{Nd}+\))?) deviceId=(?<device_id>-?\p{Nd}+) source=(?<source>0x[0-9a-fA-F]+) historySize=(?<history_size>\p{Nd}+)(?=\n?$)/u;
+export { DISPATCH_RE } from './perfetto.ts';
 const DELIVERY_RE = /^deliverInputEvent [^\n]*?eventTimeNano=(?<event_time_ns>\p{Nd}+) id=(?<event_id>0x[0-9a-fA-F]+)(?=\n?$)/u;
 const ID_RE = /(?<![\p{L}\p{N}_])id=(?<event_id>0x[0-9a-fA-F]+)(?![\p{L}\p{N}_])/u;
 const FRAME_RE = /^Choreographer#doFrame (?<frame_id>\p{Nd}+)(?=\n?$)/u;
@@ -89,19 +67,9 @@ export const PUBLISHED_RE = /^publishMotionEvent\(inputChannel=[^\n]*?, action=(
 class InputTraceError extends Error {}
 
 /** Build the fixed query, escaping only the caller-supplied package. */
-export function buildQuery(pkg = DEFAULT_PACKAGE): string {
-  if (!pkg || pkg.includes('\r') || pkg.includes('\n')) throw new RangeError('package must be a non-empty single line');
-  const quoted = pkg.replaceAll("'", "''");
-  return QUERY_TEMPLATE.replaceAll('{package}', () => quoted);
-}
+export const buildQuery = (pkg = DEFAULT_PACKAGE): string => formatQuery(QUERY_TEMPLATE, pkg);
 
 /** Discard optional trace-processor progress text before the CSV header. */
-function csvBody(stdout: string): string {
-  const lines = pySplitLines(stdout);
-  const at = lines.findIndex(line => line.startsWith('"kind"') || line.startsWith('kind,'));
-  if (at < 0) throw new InputTraceError('trace processor returned no CSV header');
-  return lines.slice(at).join('\n');
-}
 
 export interface Row { kind: string | null, ts_ns: bigint, dur_ns: bigint, name: string | null, thread_name: string, process_name: string, track_name: string }
 
@@ -110,7 +78,7 @@ const rowRepr = (row: ReadonlyMap<string | null, string | null | string[]>) => `
 
 /** Parse trace_processor CSV into normalized rows. */
 export function parseQueryCsv(stdout: string): Row[] {
-  const { fieldnames, rows } = pyCsvDicts(csvBody(stdout));
+  const { fieldnames, rows } = pyCsvDicts(csvBody(stdout, message => { throw new InputTraceError(message); }));
   const required = ['kind', 'ts_ns', 'dur_ns', 'name', 'thread_name', 'process_name', 'track_name'];
   if (!required.every(name => (fieldnames ?? []).includes(name)))
     throw new InputTraceError(`trace-processor CSV lacks required columns (got ${(fieldnames ?? []).join(', ')})`);
@@ -308,13 +276,6 @@ export function parseSurfaceflingerLatency(text: string) {
 }
 
 /** shutil.which, for a command name or a path. */
-function which(name: string) {
-  const runnable = (file: string) => {
-    try { accessSync(file, constants.X_OK); return statSync(file).isFile(); } catch { return false; }
-  };
-  if (name.includes('/')) return runnable(name);
-  return (process.env.PATH ?? '').split(delimiter).some(dir => runnable(join(dir || '.', name)));
-}
 
 function findTraceProcessor(explicit: string | null): string {
   for (const candidate of [explicit, process.env.TRACE_PROCESSOR, 'trace_processor', 'trace_processor_shell'])
@@ -324,12 +285,7 @@ function findTraceProcessor(explicit: string | null): string {
 }
 
 export function runQuery(processor: string, trace: string, pkg: string): Row[] {
-  const result = spawnSync(processor, ['query', trace, buildQuery(pkg)], { maxBuffer: 1 << 30 });
-  if (result.error) throw new InputTraceError(`could not execute trace processor: ${result.error.message}`);
-  // text=True: both streams decoded strictly, so a bad byte is a ValueError.
-  const stdout = pyDecodeUtf8(result.stdout), stderr = pyDecodeUtf8(result.stderr);
-  // returncode: a signal's death is its negated number, a failure too.
-  const code = result.status ?? -present(Object.entries(osConstants.signals).find(([name]) => name === result.signal), 'exit signal')[1];
+  const { stdout, stderr, code } = queryText(processor, trace, buildQuery(pkg), message => { throw new InputTraceError(message); });
   if (code) {
     const detail = pySplitLines(pyStrip(stderr || stdout));
     throw new InputTraceError(`trace processor failed (${code}): ${detail.length ? detail[detail.length - 1] : 'no diagnostic'}`);
@@ -368,7 +324,8 @@ function main(argv: readonly string[]): number {
     const rows = runQuery(processor, trace, pkg);
     const report = analyze(rows, frameWindowMs);
     const traceHash = createHash('sha256').update(readFileSync(trace)).digest('hex');
-    const analyzer = createHash('sha256').update(readFileSync(fileURLToPath(import.meta.url))).digest('hex');
+    const analyzer = createHash('sha256').update(readFileSync(fileURLToPath(import.meta.url)))
+      .update(readFileSync(fileURLToPath(new URL('./perfetto.ts', import.meta.url)))).digest('hex');
     const evidenceId = `inputtrace-${createHash('sha256').update(pyDumps(new Map<string, PyJson>([['trace', traceHash], ['package', pkg],
       ['window', new PyFloat(frameWindowMs)], ['analyzer', analyzer]]), undefined, { sortKeys: true })).digest('hex').slice(0, 20)}`;
     let surfaceflinger: ReturnType<typeof parseSurfaceflingerLatency> | null = null;

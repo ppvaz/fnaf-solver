@@ -29,6 +29,7 @@ const lastPart = (path: string) => path.split('/').pop() as string;
 // Not instruments, and why. An entry here is a decision, not a formality:
 // deleting one is how a script gets promoted into grade-run.sh.
 const EXCLUDED = new Map([
+  ['perfetto.ts', 'shared query and process boundary, not an instrument; test-inputtrace.ts and test-input-frame-align.ts (device:calibration) exercise both callers'],
   ['office-seed-bracket.ts', 'the office frame seed bracket from a live MMFRuntime logcat; consumed by the seed-lock scorer, not by a run grade yet -- it joins grade-run.sh once runs retain mmfruntime.logcat'],
   ['grade-run.sh', 'the pipeline itself'],
   ['cycle-ledger.py', 'reads the retained video (and audio census) after a run; run by hand while its flash classes and colour rule are calibrated on Night 6 recordings (2026-09-13); its cycle timings come from the winner of the bundle the run names (test-cycle-ledger.py, 2026-09-14); joins grade-run.sh with tickphase.py'],
