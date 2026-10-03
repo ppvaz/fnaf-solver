@@ -4651,6 +4651,14 @@
       ]
     },
     {
+      "file": "packages/source/bin/seed-recovery.ts",
+      "imports": [
+        "@sixam/kernel",
+        "@sixam/source/fnaf2",
+        "node:fs"
+      ]
+    },
+    {
       "file": "packages/source/decompile/truth.ts",
       "imports": [
         "../src/index.ts",
@@ -5350,14 +5358,6 @@
         "../src/games/fnaf2/plant-model.ts",
         "../src/games/fnaf2/plant-options.ts",
         "node:assert/strict"
-      ]
-    },
-    {
-      "file": "packages/source/test/seed-recovery.ts",
-      "imports": [
-        "@sixam/kernel",
-        "@sixam/source/fnaf2",
-        "node:fs"
       ]
     },
     {

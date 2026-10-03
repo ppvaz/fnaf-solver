@@ -53,7 +53,7 @@ moved them here, with the description their tool index gave them.
 | Script | Kind | What it does |
 |---|---|---|
 | `packages/source/test/sourcetest.ts` | check | Direct assertions for sourced engine rules and reachable input states, keyed to event-sheet groups. Runs first in the engine suite so a wrong mechanism cannot hide behind unchanged population statistics. |
-| `packages/source/test/seed-recovery.ts` | report/module | Stock-APK RNG hypothesis CLI: turns a device-time or host-marker window into low-16-bit seed candidates, filters exact roll observations, and replays sourced event observations through the simulator. It reports candidates only; it never authorizes device actions. |
+| `packages/source/bin/seed-recovery.ts` | report/module | Stock-APK RNG hypothesis CLI: turns a device-time or host-marker window into low-16-bit seed candidates, filters exact roll observations, and replays sourced event observations through the simulator. It reports candidates only; it never authorizes device actions. |
 | `packages/source/test/seed-recoverytest.ts` | check | Phone-free regression for timestamp wrap, host/device marker windows, full-space roll filtering, event replay, and candidate-count bounds. |
 | `packages/source/test/propertytest.ts` | check | Dependency-free bounded property gate: shrinks a failing campaign seed, checks `Sim.snapshot()`/`restore()` identity and continuation, compares same-seed event traces, and proves Night 1 never arms Balloon Boy. |
 | `packages/source/test/test-night-models.ts` | check | Checks the four night models against figures derived independently of them: FNaF 1's published table and 8:55 night, FNaF 2's `config.js` round-trip, FNaF 3's handset-measured 240 s Night 1, and the roll arithmetic. |
