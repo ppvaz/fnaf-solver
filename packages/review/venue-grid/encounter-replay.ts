@@ -6,7 +6,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
-import { LEGACY_SIM_OPTIONS, Sim } from '@sixam/source/fnaf2';
+import { LEGACY_SIM_OPTIONS, Sim, rngStateAfterDraws } from '@sixam/source/fnaf2';
 import type { Unit } from '@sixam/source/fnaf2';
 import { MODEL_CONTEXT_LIGHT } from '@sixam/source';
 
@@ -80,12 +80,11 @@ function main(argv: string[]) {
     const fixed = 1000 / 60;
     const frameMs = (f: number) => (deltas ? (deltas[f - 1] ?? fixed) : fixed);
     const opts = { night: cfg.night ?? 6, seed, ...OPTS, frameMs, frameValue5: (f: number) => Math.min(4, frameMs(f) / (1000 / 60)) };
-    const lcg = (x: number, n: number) => { for (let i = 0; i < n; i++) x = (x * 31415 + 1) & 0xffff; return x; };
     const probe = new Sim({ ...opts, seed });
-    let k = 0; while (k <= 8 && lcg(seed & 0xffff, k) !== probe.rng.state) k++;
+    let k = 0; while (k <= 8 && rngStateAfterDraws(seed & 0xffff, k) !== probe.rng.state) k++;
     if (k > 8) throw new Error(`seed ${seed}: constructor state not within 8 draws`);
-    const s = k === 0 ? probe : new Sim({ ...opts, seed: lcg(seed & 0xffff, 1) });
-    if (k > 0) s.rng.state = lcg(seed & 0xffff, k);
+    const s = k === 0 ? probe : new Sim({ ...opts, seed: rngStateAfterDraws(seed & 0xffff, 1) });
+    if (k > 0) s.rng.state = rngStateAfterDraws(seed & 0xffff, k);
     // ledgers
     const hops: [frame: number, id: string, from: Unit['path'][number], to: Unit['path'][number]][] = [];
     // The Sim moves a unit through advanceUnit (its old name, advance, is PlantModel's clock since 2026-09-30).
@@ -116,8 +115,6 @@ function main(argv: string[]) {
     const w = windows.map(x => windowCode(x.first, x.until, cum)).join('');
     const ms = (f: number) => +(cumAt[f] ?? cum).toFixed(0);
     const cues = s.events.filter(e => e.type === 'office-cue').map(e => [ms(e.f), e.data]);
-    // No Sim emits this event (it came with the forensics copy this tool was made from): zeros counts none.
-    const zeros = s.events.filter(e => (e.type as string) === 'x-cam8-zero');
     const leaveCam8: Record<string, number> = {};
     for (const [f, id, from] of hops) if (from === 8 && !(id in leaveCam8)) leaveCam8[id] = ms(f);
     const hopCount: Record<string, number> = {}; for (const [, id] of hops) hopCount[id] = (hopCount[id] ?? 0) + 1;
@@ -127,7 +124,7 @@ function main(argv: string[]) {
     const foxyLock = s.events.filter(e => e.type === 'foxy-lock').map(e => ms(e.f));
     return { bbIn, insides, foxyLock, seed: seed & 0xffff, won: s.won, death: s.death?.reason ?? null, endMs: +cum.toFixed(0), w,
              windowStartMs: windows.map(x => x.t),
-             cueCount, hopCount, leaveCam8, zeros: zeros.length, firstCueMs: cues[0]?.[0] ?? null,
+             cueCount, hopCount, leaveCam8, firstCueMs: cues[0]?.[0] ?? null,
              ...(cfg.summaryOnly ? {} : { cues, hops: hops.map(([f, id, a, b]) => [ms(f), id, a, b]) }) };
   }
 
@@ -149,7 +146,7 @@ function main(argv: string[]) {
   writeFileSync(outPath, JSON.stringify({ schema: 'encounter-replay-v1', id, claimLevel: 'MODEL_ONLY', opts: OPTS, cfg, out }));
   if (!cfg.quiet) console.log(`${id} MODEL_ONLY`);
   if (!cfg.quiet) for (const n of out) for (const r of n.rows.slice(0, cfg.printRows ?? 5))
-    console.log(`${n.name} ${r.seed} ${r.won ? 'WON' : 'DEAD ' + r.death + '@' + r.endMs} ${r.w} ${r.score ? `hits ${r.score.hits}/${r.score.occ} agree ${r.score.agreeRead}/${r.score.comparedRead}, UNKNOWN ${r.score.unknownModel}` : ''} cues ${JSON.stringify(r.cueCount)} cam8 ${JSON.stringify(r.leaveCam8)} zeros ${r.zeros}`);
+    console.log(`${n.name} ${r.seed} ${r.won ? 'WON' : 'DEAD ' + r.death + '@' + r.endMs} ${r.w} ${r.score ? `hits ${r.score.hits}/${r.score.occ} agree ${r.score.agreeRead}/${r.score.comparedRead}, UNKNOWN ${r.score.unknownModel}` : ''} cues ${JSON.stringify(r.cueCount)} cam8 ${JSON.stringify(r.leaveCam8)}`);
 
 
 }
