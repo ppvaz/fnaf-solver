@@ -243,7 +243,7 @@ ok('cams 8, 6, 4 and 3 lead into no vent', [8, 6, 4, 3].every((n) => NEXT[n].eve
  * nothing while it is still; a capture restart at `restartAt` replaces the session (new endpoint, seq from 1) and
  * leaves an old channel reading its last frame. The run ends when the clock passes `endAt`.
  */
-async function recorderRun({ endAt = 10000, stillUntil = 0, restartAt = Infinity, freshFails = false }) {
+async function recorderRun({ endAt = 10000, stillUntil = 0, restartAt = Infinity, freshFails = false, noImageTime = false }) {
   let clock = 0;
   const now = () => clock;
   const pixels = new Uint32Array([0x808080]);
@@ -262,7 +262,7 @@ async function recorderRun({ endAt = 10000, stillUntil = 0, restartAt = Infinity
           const start = session === 0 ? stillUntil : restartAt;
           lastSeq = clock < start ? -1 : Math.floor((clock - start) / 33) + 1;
         }
-        return { seq: lastSeq, imageNs: BigInt(Math.round(clock * 1e6)), imageHostMs: clock, rttMs: 15,
+        return { seq: lastSeq, imageNs: BigInt(Math.round(clock * 1e6)), imageHostMs: noImageTime ? null : clock, rttMs: 15,
           regions: { v: { cols: 1, rows: 1, step: 1, pixels } } } as unknown as RegionRead;
       },
       close: () => { calls.closed += 1; },
@@ -285,7 +285,7 @@ async function recorderRun({ endAt = 10000, stillUntil = 0, restartAt = Infinity
     await recorder.loop;
     await recorder.stop();
     const rows = gunzipSync(readFileSync(join(dir, 'regions.ndjson.gz'))).toString('utf8').trim().split('\n').filter(Boolean)
-      .map((line) => JSON.parse(line) as { seq: number, imageHostMs: number });
+      .map((line) => JSON.parse(line) as { seq: number, imageHostMs: number | null, imageWallMs: number | null });
     return { recorder, seen, rows, calls, reopens };
   } finally { rmSync(dir, { recursive: true, force: true }); }
 }
@@ -304,6 +304,9 @@ async function recorderRun({ endAt = 10000, stillUntil = 0, restartAt = Infinity
   ok(`a still intro does not end the recording (${still.seen.length} frames)`, still.seen.length > 100 && still.calls.fresh === 0);
   // Both ways failing ends the recorder and says so, instead of reading a dead channel forever.
   const dead = await recorderRun({ restartAt: 2000, freshFails: true });
+  const untimed = await recorderRun({ endAt: 500, noImageTime: true });
+  ok('a frame without an image time has no wall time either, not the process start',
+    untimed.rows.length > 0 && untimed.rows.every((row) => row.imageHostMs === null && row.imageWallMs === null));
   ok(`a restart with no reachable endpoint is a named failure (${dead.recorder.failure})`,
     /could not be reopened/.test(dead.recorder.failure ?? ''));
 }

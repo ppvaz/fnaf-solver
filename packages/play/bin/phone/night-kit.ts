@@ -271,9 +271,8 @@ export class RegionRecorder {
         this.latest = r;
         const regions = Object.fromEntries(Object.entries(r.regions).map(([k, v]) =>
           [k, Buffer.from(new Uint8Array(v.pixels.buffer)).toString('base64')]));
-        // null adds as 0, as it did untyped.
         this.gzip.write(`${JSON.stringify({ seq: r.seq, imageHostMs: r.imageHostMs,
-          imageWallMs: performance.timeOrigin + (r.imageHostMs as number), sentAt: r.sentAt,
+          imageWallMs: r.imageHostMs === null ? null : performance.timeOrigin + r.imageHostMs, sentAt: r.sentAt,
           receivedAt: r.receivedAt, regions })}\n`);
         this.frames += 1;
         for (const fn of this.listeners) fn(r);
