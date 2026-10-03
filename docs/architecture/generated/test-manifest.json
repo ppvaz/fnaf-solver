@@ -231,10 +231,7 @@
       "deterministic": true,
       "determinismSignals": [],
       "fixedSleeps": [
-        "time.sleep(0.1",
-        "time.sleep(0.5",
-        "time.sleep(0.1",
-        "time.sleep(0.5"
+        "time.sleep(0.05"
       ],
       "sharedResources": [
         "device-transport"

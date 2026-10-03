@@ -116,6 +116,18 @@ def check(name: str, condition: bool, detail: object = "") -> None:
         failures.append(f"{name}: {str(detail)[:3000]}")
 
 
+def wait_for(predicate: object, what: str, limit: float = 120.0) -> bool:
+    """Poll until `predicate()` holds; a deadline passed is a failure, never a silent go-ahead."""
+    assert callable(predicate)
+    until = time.monotonic() + limit
+    while time.monotonic() < until:
+        if predicate():
+            return True
+        time.sleep(0.05)
+    check(f"waited for {what}", False, "timed out")
+    return False
+
+
 def clock(offset_s: float) -> str:
     return (datetime.now() + timedelta(seconds=offset_s)).strftime("%H:%M:%S")
 
@@ -216,6 +228,11 @@ class Case:
     def record(self) -> dict:
         files = sorted(self.windows.glob("window-*/window.json"))
         return json.loads(files[-1].read_text(encoding="utf-8")) if files else {}
+
+    def runner_mid_night(self, job_id: str) -> bool:
+        """The fake runner prints this once its signal handlers are in place (fake_phone.runner)."""
+        log = self.jobs_dir / job_id / "runner.log"
+        return log.exists() and "fake runner: mid-night" in log.read_text(encoding="utf-8", errors="replace")
 
     def job_record(self, job_id: str) -> dict:
         path = self.jobs_dir / job_id / "job.json"
@@ -443,10 +460,7 @@ def main() -> int:
         job = abort.enqueue("fnaf2", K3, 7)
         process = subprocess.Popen(abort.window_argv(3 * 3600), cwd=ROOT, env=abort.env("hang"),
                                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, start_new_session=True)
-        deadline = time.monotonic() + 120
-        while time.monotonic() < deadline and not abort.runner_calls():
-            time.sleep(0.1)
-        time.sleep(0.5)
+        wait_for(lambda: abort.runner_mid_night(job["id"]), "abort: the runner to be mid-night")
         check("abort: the night was running", abort.phone()["game"]["screen"] == "night", abort.phone()["game"])
         os.killpg(process.pid, signal.SIGINT)
         output, _ = process.communicate(timeout=180)
@@ -468,10 +482,8 @@ def main() -> int:
         job = killed.enqueue("fnaf2", K3, 7)
         process = subprocess.Popen(killed.window_argv(3 * 3600), cwd=ROOT, env=killed.env("stubborn"),
                                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, start_new_session=True)
-        deadline = time.monotonic() + 120
-        while time.monotonic() < deadline and not killed.runner_calls():
-            time.sleep(0.1)
-        time.sleep(0.5)
+        # SIGINT before the runner ignores it would test a runner that dies of it, not one that must be killed.
+        wait_for(lambda: killed.runner_mid_night(job["id"]), "killed: the runner to ignore SIGINT and SIGTERM")
         os.killpg(process.pid, signal.SIGINT)
         output, _ = process.communicate(timeout=180)
         window = killed.record()
