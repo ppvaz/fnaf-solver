@@ -179,7 +179,7 @@
     "entries": {
       "py:apps/lab": 111,
       "py:apps/lab/test": 58,
-      "py:apps/trainer/test": 132,
+      "py:apps/trainer/test": 80,
       "py:packages/play/bin": 378,
       "py:packages/play/games": 127,
       "py:packages/play/src": 225,

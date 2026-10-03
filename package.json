@@ -24,7 +24,7 @@
     "test:simulation": "node tools/test.ts --engine --extended",
     "test:trainer": "node tools/test.ts --browser",
     "test:browser:realtime": "node tools/test.ts --browser",
-    "build:trainer": "python3 apps/trainer/test/build.py",
+    "build:trainer": "node apps/trainer/test/build.ts",
     "serve:trainer": "python3 apps/trainer/test/serve.py 8731",
     "research": "node packages/propose/src/experiment/cli.ts",
     "policy": "node packages/propose/bin/policy/policy-inspect.ts",

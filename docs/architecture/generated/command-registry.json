@@ -99,7 +99,7 @@
     },
     {
       "id": "build:trainer",
-      "command": "python3 apps/trainer/test/build.py",
+      "command": "node apps/trainer/test/build.ts",
       "lifecycle": "supported"
     },
     {

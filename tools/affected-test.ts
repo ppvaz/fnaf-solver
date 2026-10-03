@@ -115,7 +115,7 @@ if (changed.some(path => path.startsWith('apps/desktop/')))
   for (const test of ['apps/desktop/test/companion-mcp.test.ts', 'apps/desktop/test/lab.test.ts'])
     add(`test:${test}`, 'node', [test]);
 if (changed.some(path => path.startsWith('apps/trainer/')))
-  add('trainer-build', 'python3', ['apps/trainer/test/build.py']);
+  add('trainer-build', 'node', ['apps/trainer/test/build.ts']);
 for (const path of changed.filter(p => /^packages\/[^/]+\/test\/.*\.test\.m?[jt]s$/.test(p)))
   add(`test:${path}`, 'node', [path]);
 if (changed.some(path => path.startsWith('docs/') || path.startsWith('plans/')))

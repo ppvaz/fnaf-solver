@@ -432,7 +432,7 @@ const BROWSER: Check[] = [
   ['lightcheck', ['../apps/trainer/test/light.test.ts']],
   ['phasetest', ['../apps/trainer/test/phase.test.ts']],
   ['lessontest', ['../apps/trainer/test/lesson.test.ts']],
-  // The Pages entry: build.py's bundle at /, over the repository's other
+  // The Pages entry: build.ts's bundle at /, over the repository's other
   // files, from its own GET-only server, the way pages.yml publishes it.
   ['pages entry', ['../apps/trainer/test/pages.test.ts']],
 ];
@@ -578,8 +578,8 @@ async function runGroup(group: readonly Check[], judge: boolean, { progress = fa
 // test the last build rather than the working tree.
 function build() {
   return new Promise<void>((resolve, reject) => {
-    spawn('python3', [join(TRAINER_TOOLS, 'build.py')], { cwd: ROOT, stdio: 'ignore' })
-      .on('close', c => c === 0 ? resolve() : reject(new Error(`build.py exited ${c}`)));
+    spawn(process.execPath, [join(TRAINER_TOOLS, 'build.ts')], { cwd: ROOT, stdio: 'ignore' })
+      .on('close', c => c === 0 ? resolve() : reject(new Error(`build.ts exited ${c}`)));
   });
 }
 

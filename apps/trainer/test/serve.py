@@ -264,7 +264,7 @@ class Handler(SimpleHTTPRequestHandler):
                 print('save-layout: dry run ok')
                 return self._json(200, {'ok': True, 'dry': True, 'build': '(dry run, not written)'})
             write_config(m, w)
-            build = subprocess.run([sys.executable, str(HERE / 'build.py')],
+            build = subprocess.run(['node', str(HERE / 'build.ts')],
                                    capture_output=True, text=True)
             print(f'saved layout -> packages/source/src/games/fnaf2/config.ts  ({build.stdout.strip()})')
             self._json(200, {'ok': True, 'build': build.stdout.strip()})

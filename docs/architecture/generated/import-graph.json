@@ -445,6 +445,18 @@
       ]
     },
     {
+      "file": "apps/trainer/test/build.ts",
+      "imports": [
+        "...",
+        "./x.js",
+        "@sixam/kernel",
+        "node:fs",
+        "node:module",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "apps/trainer/test/calibration.test.ts",
       "imports": [
         "../../../tools/chrome.ts",

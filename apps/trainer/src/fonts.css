@@ -1,7 +1,7 @@
 /* Latin subsets of the two faces the console design is drawn in, shipped with
    the repo so the trainer still looks right on a phone with no internet.
    Both are SIL Open Font License 1.1; see ../assets/fonts/LICENSE-*.txt.
-   apps/trainer/test/build.py inlines these as data URIs, so dist/index.html stays one file.
+   apps/trainer/test/build.ts inlines these as data URIs, so dist/index.html stays one file.
    Glyphs outside the latin range (▲ ▼ ✓ ←) fall back to the system face. */
 @font-face{font-family:'Chakra Petch';font-style:normal;font-weight:400;font-display:swap;
   src:url(../assets/fonts/chakra-petch-400-latin.woff2) format('woff2')}

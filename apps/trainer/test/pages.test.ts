@@ -7,7 +7,7 @@
 // browser check passed. Since the sources became TypeScript that a browser
 // cannot run (Pedro, 2026-09-30: "runtime .ts", with an Actions Pages build),
 // .github/workflows/pages.yml publishes the tree as the branch build did with
-// index.html replaced by build.py's bundle, types stripped. This builds that
+// index.html replaced by build.ts's bundle, types stripped. This builds that
 // bundle, serves it at / over the repository's other files, and fails on any
 // console error, uncaught exception, failed or 4xx request, or page wider than
 // a phone's screen, sideways or upright.
@@ -173,7 +173,7 @@ async function main(url: string, chrome: ChildProcess) {
 
 const given = process.argv.find(arg => /^https?:\/\//.test(arg));
 if (!given) {
-  const build = spawnSync('python3', [join(ROOT, 'apps/trainer/test/build.py')], { cwd: ROOT, encoding: 'utf8' });
+  const build = spawnSync(process.execPath, [join(ROOT, 'apps/trainer/test/build.ts')], { cwd: ROOT, encoding: 'utf8' });
   if (build.status !== 0) { console.error(build.stderr || build.stdout); process.exit(2); }
 }
 const server = given ? null : await staticServer();

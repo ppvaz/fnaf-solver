@@ -17,7 +17,7 @@ const restore = () => {
   try {
     if (readFileSync(CONFIG, 'utf8') !== SNAPSHOT) {
       writeFileSync(CONFIG, SNAPSHOT);
-      execFileSync('python3', [new URL('./build.py', import.meta.url).pathname], { stdio: 'ignore' });
+      execFileSync(process.execPath, [new URL('./build.ts', import.meta.url).pathname], { stdio: 'ignore' });
       console.log('(restored canonical core config and rebuilt)');
     }
   } catch (e) { console.error('RESTORE FAILED:', (e as Error).message); }

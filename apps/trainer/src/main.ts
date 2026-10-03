@@ -652,7 +652,7 @@ function factItem(id: string) {
   // Lessons and the page name only registered facts (route-facts.test.ts reads them all).
   const fact = factById(id) as NonNullable<ReturnType<typeof factById>>;
   // JSON.stringify quotes the address, so the bundle holds no quoted href
-  // around a template, which build.py's leftover-reference scan would flag.
+  // around a template, which build.ts's leftover-reference scan would flag.
   const record = fact.record ? ` <a class="rec" href=${JSON.stringify(REPOSITORY + fact.record)} target="_blank"
     rel="noopener" aria-label="evidence record ${fact.record}">record</a>` : '';
   return `<li class="fact"><b class="label label-${fact.label.toLowerCase()}">${fact.label}</b> ` +
