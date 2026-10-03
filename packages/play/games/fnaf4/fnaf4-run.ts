@@ -469,6 +469,513 @@ function teachFeed(port: AdbCompanionPort, record: RunRecord) {
 type Teach = ReturnType<typeof teachFeed>;
 const QUIET: Teach = { origin() {}, step() {}, door() {}, closet() {}, bed() {}, level() {}, cover() {}, bedLit() {}, fbMode() {}, fbAt() {}, fbHeard() {}, fbRan() {}, async clear() {} };
 
+/** The night loop's own state: the view it left the office on, and when it last went to the bed and the closet. */
+interface LoopState {
+  where: string;
+  lastBedMs: number;
+  foxyInside: boolean;
+  lastClosetMs: number;
+}
+
+/** What the night loop's helpers read: the hands and ears, the run record, the Fredbear tracker and the loop state. */
+interface NightLoop {
+  readonly FIRST_LISTEN_TICKS: number;
+  readonly FRED_FROM_MS: number;
+  readonly act: Actor;
+  readonly back: (views: readonly string[], boundMs: number) => Promise<Read | null>;
+  readonly c: Controls;
+  readonly ears: Ears;
+  readonly eyes: Eyes;
+  readonly fred: { side: Side | null, k: number, guess: Side | null, lastRunWall: number | null, heard: number, laughs: number,
+    fakes: number, roomChecks: number, holds: number };
+  readonly handledLaughs: Set<number>;
+  readonly hearing: Hearing;
+  readonly lGrid: ReturnType<typeof laughGrid>;
+  readonly lastClearMs: Record<Side, number>;
+  readonly levelOriginWall: number;
+  readonly log: (m: string, f?: object) => Promise<unknown>;
+  readonly nightMs: () => number;
+  readonly nowWall: () => number;
+  readonly pendingRoom: () => { k: number, ncc: number, accepted: boolean, room: boolean } | null;
+  readonly pt: (k: string) => { x: number, y: number };
+  readonly ran: () => void;
+  readonly record: RunRecord;
+  readonly roomPeriodMs: number;
+  readonly sGrid: ReturnType<typeof sideGrid>;
+  readonly shutViewOf: (side: Side) => 'doorL-shut' | 'doorR-shut';
+  readonly st: LoopState;
+  readonly staleDoors: () => Side[];
+  readonly stats: Stats;
+  readonly teach: Teach;
+  readonly unresolved: Set<Side>;
+}
+
+async function loopGo(nl: NightLoop, control: string, views: readonly string[], _boundMs: number, gesture = 'press'): Promise<Read | null> {
+  const { act, c, eyes, log, pt, st, stats, teach } = nl;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const at = performance.now();
+    // A double-tap control names its gap, a held one its hold.
+    if (gesture === 'double') await act.double(control, pt(control), c[control].gapMs as number);
+    else if (gesture === 'hold') await act.hold(control, pt(control), c[control].holdMs as number);
+    else await act.press(control, pt(control));
+    const f = await eyes.arrive(views, at, ARRIVE[control]);
+    // Every walk resets his stillness counter (g567: a carpet run exists).
+    if (f && ['leftDoor', 'rightDoor', 'closet', 'back'].includes(control)) teach.fbRan();
+    if (f) {
+      st.where = f.view;
+      if (f.loose) await log(`${control}: arrived loose at ${f.view} ${f.dist.toFixed(1)}`);
+      return f;
+    }
+    let now = eyes.now();
+    await log(`${control}: no ${views.join('/')} (see ${now?.view} ${now?.dist?.toFixed(1)})`);
+    // Not a view we know. The night is over only if that lasts: a jumpscare,
+    // the game over and 06:00 never turn back into a room within 5 s.
+    for (let waited = 0; (!now || now.dist >= 12) && waited < 5000; waited += 250) {
+      await sleep(250);
+      const read = eyes.now();
+      now = read;
+      const room = read && ROOM_VIEWS.find((v) => eyes.edgeDist(read, v) <= 0.8);
+      if (read && room) { now = { ...read, view: room, dist: 0 }; break; }
+    }
+    if (!now || now.dist >= 12) return null;
+    st.where = now.view;
+    if (views.includes(now.view)) return now;
+    // A back that lands in a room view has done its job, whichever of the
+    // three it is (the right door returns through follow 37 to room-right,
+    // g-follow); pressing the strip again from a room turns to the BED --
+    // n3b did exactly that and sat facing the bed until Foxy struck.
+    if (control === 'back' && ROOM_VIEWS.includes(now.view)) return now;
+  }
+  stats.lost += 1;
+  return null;
+}
+
+/**
+ * Hold the flashlight; the occupancy is the BEST frame of the hold against
+ * the EMPTY lit template (the beam flickers with danger), whatever template
+ * a frame is nearest to: n4c's Foxy at his last stage was nearer another
+ * view than the lit closet, read 'undefined', and went unheld twice. A
+ * flash with no frame at all reads as occupied (Infinity), never empty.
+ */
+async function loopFlash(nl: NightLoop, ms: number, litName: string) {
+  const { act, eyes, pt, stats } = nl;
+  const start = performance.now();
+  const done = act.hold('flashlight', pt('flashlight'), ms);
+  let occ = Infinity; let seen = -1;
+  while (performance.now() < start + ms + 40) {
+    const f = eyes.now();
+    if (f && f.seq !== seen) {
+      seen = f.seq;
+      if (f.imageHostMs > start + 60) occ = Math.min(occ, eyes.occupancy(f, litName));
+    }
+    await sleep(15);
+  }
+  await done;
+  stats.flashes += 1;
+  return occ;
+}
+
+async function loopDoor(nl: NightLoop, side: Side) {
+  const { act, ears, eyes, lastClearMs, log, nightMs, pt, stats, teach, unresolved } = nl;
+  const view = side === 'L' ? 'doorL' : 'doorR';
+  teach.step('WALK');
+  const arrived = await loopGo(nl, side === 'L' ? 'leftDoor' : 'rightDoor', [view], 3600, 'double');
+  if (!arrived) return false;
+  teach.step(side === 'L' ? 'LISTEN_LEFT' : 'LISTEN_RIGHT');
+  const t0 = wallOf(arrived.imageHostMs) + AUDIO_LAG_MS + 100;
+  // The breathing loop has quiet stretches of up to 4.5 s between breaths
+  // (breath-envelope); with the game's loop phase known (the level origin),
+  // a listen lasts until it has covered 0.5 s of loud or 1.4 s of medium
+  // breath -- n4e/n4g trusted 1.1-1.4 s listens that may have covered
+  // neither. It stops early on breathing that sits at the game's own phase.
+  const listen = async (fromWall: number, minMs = 900, maxMs = 4500) => {
+    const start = performance.now();
+    for (;;) {
+      const hop = ears.cues.events.findLast((e) => e.cue === 'breath');
+      if (hop) teach.level(hop.ncc);
+      const now = wallOf(performance.now());
+      const cov = ears.coverage(fromWall - AUDIO_LAG_MS, now - AUDIO_LAG_MS);
+      teach.cover(Math.min(1, Math.max(cov.loud / 0.5, cov.mid / 1.4)));
+      const h = ears.breath(fromWall, now);
+      const elapsed = performance.now() - start;
+      if (elapsed >= minMs && (h.game >= 2 || cov.loud >= 0.5 || cov.mid >= 1.4)) return { ...cov, enough: true };
+      if (elapsed >= maxMs) return { ...cov, enough: h.game >= 2 };
+      await sleep(120);
+    }
+  };
+  // A quiet verdict needs a listen that covered a breath: n4k lit the left
+  // hall after a listen that ran out at 60% coverage (the panel said so).
+  const judge = (h: ReturnType<Ears['breath']>, stepsSince: number, c: { readonly enough: boolean } | null) => {
+    if (h.game >= 2 || (h.consistent >= 3 && h.max >= 0.45)) return 'BREATH';
+    if (h.game === 1 || h.max >= 0.33 || ears.latest(['step'], stepsSince)) return 'DOUBT';
+    if (c && !c.enough) return 'DOUBT';
+    return 'CLEAR';
+  };
+  let cov = await listen(t0);
+  let heard = ears.breath(t0, wallOf(performance.now()));
+  let verdict = judge(heard, wallOf(arrived.imageHostMs) - 1500, cov);
+  // Footsteps while we walked up or listened are someone arriving who has
+  // not started breathing yet (n4e: Chica's steps at 80.3-81.7 s, a quiet
+  // listen, and the flash met her at hall-near). Doubt closes; it never lights.
+  const steps = ears.latest(['step'], wallOf(arrived.imageHostMs) - 1500);
+  await log(`door ${side} listen ${verdict}`, { ...heard, step: steps ? steps.ncc : null, loudS: +cov.loud.toFixed(2), midS: +cov.mid.toFixed(2) });
+  // What the panel says is why the loop holds: breathing, or footsteps of
+  // someone who is not breathing yet.
+  const why = () => (heard.game >= 1 || heard.max >= 0.33 ? 'BREATH' : 'STEPS');
+  teach.door(side, verdict === 'CLEAR' ? 'CLEAR' : why());
+  // A hold dismisses on the 3000 ms tick (g342) only while the door reads
+  // shut (follow 21, g337), which the close animation reaches 733 ms in
+  // (the animation bank): 3.4 s left 2.67 s shut and n4f's Bonnie sat
+  // through three holds. 4.2 s covers a whole tick shut.
+  for (let round = 0; verdict !== 'CLEAR' && round < 5; round += 1) {
+    teach.step(why() === 'STEPS' ? (side === 'L' ? 'STEPS_LEFT' : 'STEPS_RIGHT') : (side === 'L' ? 'HOLD_LEFT' : 'HOLD_RIGHT'));
+    teach.door(side, 'SHUT');
+    teach.level(null);
+    await act.hold('closeDoor', pt('closeDoor'), 4200);
+    stats.closes += 1;
+    teach.step(side === 'L' ? 'LISTEN_LEFT' : 'LISTEN_RIGHT');
+    // The door takes ~0.7 s to open again, and listening is off until it
+    // has (follow 22 -> 10/17): the listen starts after that.
+    const t1 = wallOf(performance.now()) + 700 + AUDIO_LAG_MS;
+    cov = await listen(t1, 1600);
+    heard = ears.breath(t1, wallOf(performance.now()));
+    verdict = judge(heard, t1 - AUDIO_LAG_MS, cov);
+    await log(`door ${side} after close ${verdict}`, { ...heard, loudS: +cov.loud.toFixed(2), midS: +cov.mid.toFixed(2) });
+    teach.door(side, verdict === 'CLEAR' ? 'CLEAR' : why());
+  }
+  teach.level(null);
+  teach.cover(null);
+  if (verdict !== 'CLEAR') {
+    unresolved.add(side);
+    await log(`door ${side} left without a flash, still breathing: no bed turn until it is cleared`);
+    return true;
+  }
+  unresolved.delete(side);
+  teach.step(side === 'L' ? 'FLASH_LEFT' : 'FLASH_RIGHT');
+  const occ = await loopFlash(nl, 350, `${view}-lit`);
+  // A lit, silent hall resets that side's bedroom dwell (g485/g481).
+  lastClearMs[side] = nightMs();
+  if (occ > OCCUPIED) stats.occupiedHall += 1;
+  teach.door(side, occ > OCCUPIED ? 'HALL' : 'CLEAR');
+  await log(`door ${side} flash occupancy ${occ?.toFixed(1)}`);
+  // The flashlight is a sub-cycle that returns to the door (follow 36/41 ->
+  // 17, g-flash); a back pressed before it lands is dropped -- n1a lost the
+  // first back at the right door in 18 of 18 cycles.
+  await eyes.wait([view], 800);
+  await sleep(120);
+  return true;
+}
+
+async function loopBed(nl: NightLoop) {
+  const { back, lastClearMs, log, nightMs, st, staleDoors, teach, unresolved } = nl;
+  for (const d of staleDoors()) {
+    await log(`bed waits for the ${d} door (${Math.round((nightMs() - lastClearMs[d]) / 1000)} s since it was cleared)`);
+    teach.step('BED_WAITS');
+    if (d === 'L' && st.where !== 'roomL' && !await loopGo(nl, 'panLeft', ['roomL'], 1500, 'hold')) return false;
+    if (d === 'R' && st.where !== 'roomR' && !await loopGo(nl, 'panRight', ['roomR'], 1500, 'hold')) return false;
+    if (!await loopDoor(nl, d)) return false;
+    const ret = await loopHome(nl, d === 'L' ? 'left' : 'right');
+    if (!ret) return false;
+    if (ret === 'FOXY' && !(await loopCentre(nl), await loopCloset(nl, nightMs())) ) return false;
+    if (ret === 'FOXY' && !await loopLeaveCloset(nl)) return false;
+  }
+  if (unresolved.size > 0) { teach.step('BED_WAITS'); await log(`bed skipped: ${[...unresolved].join('/')} still breathing`); return true; }
+  st.lastBedMs = nightMs();
+  teach.step('WALK');
+  const at = await loopGo(nl, 'bed', ['bed', 'doorR', 'doorL'], 1500);
+  if (!at) return false;
+  teach.step('BED');
+  // Freddles are distance from the empty lit bed; drain until it reads empty.
+  let occ = null as number | null;
+  for (let slice = 0; slice < 6; slice += 1) {
+    occ = await loopFlash(nl, 600, 'bed-lit');
+    teach.bed(occ <= OCCUPIED ? 'CLEAR' : 'FREDDLES');
+    if (slice >= 1 && occ <= OCCUPIED) break;
+  }
+  await log(`bed occupancy ${occ?.toFixed(1)}`);
+  teach.bedLit();
+  // The turn back is part of the bed: a caller never presses back itself,
+  // because from a room the same strip turns TO the bed.
+  return !!await back(ROOM_VIEWS, 1800);
+}
+
+/**
+ * The closet takes its double tap only with `follow` at 0 -- the room
+ * between the two looks (g172/g173) -- and a settled look left or right is
+ * follow 2 or 5 (g30-g37), so n4a's taps from room-right were refused
+ * twice while Foxy sat inside. A short pan toward the middle ends the look
+ * (follow 6 -> 0 on its animation, g36/g37); at 12 px/frame (g22/g24) a
+ * 160 ms hold from the right or 250 ms from the left leaves the closet's
+ * hitzone under x 1050 and outside both pan bands.
+ */
+async function loopCentre(nl: NightLoop) {
+  const { act, pt, st } = nl;
+  if (st.where === 'roomR') await act.hold('panLeft', pt('panLeft'), 160);
+  else if (st.where === 'roomL') await act.hold('panRight', pt('panRight'), 250);
+  else return;
+  st.where = 'middle';
+  await sleep(700);
+}
+
+/**
+ * Out of the closet. The walk back ends at follow 0 wherever the room was
+ * when the closet was entered (g31/g39), and after centre() that is about
+ * x 680 -- no template's room (n4d read the hub at 35.4 and gave up on the
+ * night at 2 AM). A full pan right then clamps the view at 788, room-right,
+ * which renders exactly.
+ */
+async function loopLeaveCloset(nl: NightLoop) {
+  const { act, pt } = nl;
+  await act.press('back', pt('back'));
+  await sleep(ARRIVE.back.minMs + 1100);
+  return !!await loopGo(nl, 'panRight', ['roomR'], 1500, 'hold');
+}
+
+/**
+ * The closet. Foxy inside is the lit closet's distance from its empty
+ * template (0.0 when empty). A hold is sized by what the light shows: every
+ * second shut takes a step off his attack and each passed 5 s roll adds one
+ * (g273, g236); n4b's 6 s holds only took 9.1 back to 5.1 and he climbed to
+ * the kill, so the hold grows with the stage he shows, and while he is
+ * inside the loop comes here twice a cycle. `enteredMs` (his entry seen on
+ * the way back from a door) buys the long first hold against the 3-7 steps
+ * he enters with.
+ */
+async function loopCloset(nl: NightLoop, enteredMs = 0) {
+  const { act, log, nightMs, pt, st, stats, teach } = nl;
+  st.lastClosetMs = nightMs();
+  teach.step('WALK');
+  const at = await loopGo(nl, 'closet', ['closet'], 3200, 'double');
+  if (!at) return false;
+  teach.step('CLOSET');
+  let occ = await loopFlash(nl, 400, 'closet-lit');
+  await log(`closet occupancy ${occ?.toFixed(1)}${enteredMs ? ' (entry seen)' : ''}`);
+  st.foxyInside = enteredMs > 0 || occ > OCCUPIED;
+  teach.closet(st.foxyInside ? 'FOXY' : 'EMPTY');
+  if (st.foxyInside) {
+    const holdMs = enteredMs > 0 || occ > 12 ? 9000 : occ > 7 ? 7000 : 5000;
+    teach.step('CLOSET_HOLD');
+    await act.hold('closeDoor', pt('closeDoor'), holdMs);
+    stats.closetHolds += 1;
+    teach.step('CLOSET');
+    occ = await loopFlash(nl, 400, 'closet-lit');
+    await log(`closet after ${holdMs} ms hold occupancy ${occ?.toFixed(1)}`);
+    st.foxyInside = occ > OCCUPIED;
+    teach.closet(st.foxyInside ? 'FOXY' : 'EMPTY');
+  }
+  return true;
+}
+
+/**
+ * Back from a door. The walk home ends at the hub (follow 13 -> X 750,
+ * g97/g99/g110) unless Foxy ran in behind us: then it ends through follow
+ * 37 with the closet creak and the view left on that door's side
+ * (g98/g100/g111), which is the entry a player sees and hears. So a return
+ * that lands in room-left or room-right is Foxy in the closet.
+ */
+async function loopHome(nl: NightLoop, side: string) {
+  const { back, log, st, stats, teach } = nl;
+  const f = await back(ROOM_VIEWS, 2600);
+  if (!f) return null;
+  // A read without its closet distance compares false.
+  if (f.view === 'hub' && (f.closetOff as number) > 10) {
+    await log(`closet stands open in the hub (${(f.closetOff as number).toFixed(1)}): Foxy is inside`);
+    st.foxyInside = true;
+    teach.closet('FOXY');
+  }
+  if (f.view !== 'hub') {
+    stats.foxyEntries = (stats.foxyEntries ?? 0) + 1;
+    await log(`foxy ran in behind the ${side} door (return ended in ${f.view})`);
+    teach.closet('FOXY');
+    return 'FOXY';
+  }
+  return 'HUB';
+}
+
+// Fold every decided grid tick into what we believe, and tell the panel
+// what was heard -- only what the grid accepted, never a raw cue line.
+function loopHearFred(nl: NightLoop) {
+  const { ears, fred, handledLaughs, hearing, lGrid, nightMs, nowWall, record, roomPeriodMs, sGrid, teach } = nl;
+  const now = nowWall();
+  for (const row of landings(ears.cues.events, sGrid, hearing.sideGrid, { fromK: fred.k + 1 })) {
+    if (!row.side || !sGrid.decided(row.k, now)) continue;
+    fred.side = row.side; fred.k = row.k; fred.heard += 1;
+    teach.fbHeard(row.side === 'L' ? 'RAN_LEFT' : 'RAN_RIGHT');
+    teach.fbAt(row.side === 'L' ? 'LEFT' : 'RIGHT');
+    record.event('policy', { atNightMs: Math.round(nightMs()), m: `fredbear landed ${row.side} (tick ${row.k})`, L: row.L, R: row.R }).catch(() => {});
+  }
+  for (const l of laughs(ears.cues.events, lGrid, hearing.laughGrid, roomPeriodMs)) {
+    if (!l.accepted || handledLaughs.has(l.k) || !lGrid.decided(l.k, now)) continue;
+    if (!l.room) {
+      handledLaughs.add(l.k); fred.fakes += 1;
+      record.event('policy', { atNightMs: Math.round(nightMs()), m: `fredbear laugh off the room period: a fake (10 s tick ${l.k})`, ncc: l.ncc }).catch(() => {});
+    }
+  }
+}
+
+/**
+ * To a door and hold it, one contact from the run until a reason to leave:
+ * he landed on the other side (released just after the next tick, so the
+ * door is shut on it), a laugh on the room period, 18 s since the last run
+ * (25 s still arms the black flash, g564), a guess that has had one tick
+ * shut, or the view is gone (a death).
+ * The close button is pressed during the run -- at (1990, 900) it cannot pan
+ * the room, which pans only below follow 7 (g21-g24).
+ */
+async function loopHoldDoor(nl: NightLoop, side: Side, guess: boolean) {
+  const { act, c, eyes, fred, hearing, log, nowWall, pendingRoom, pt, ran, sGrid, shutViewOf, st, teach } = nl;
+  const stepName = `${guess ? 'FB_GUESS' : 'FB_HOLD'}_${side === 'L' ? 'LEFT' : 'RIGHT'}`;
+  teach.step(stepName);
+  if (!guess) teach.fbAt(side === 'L' ? 'LEFT' : 'RIGHT');
+  if (!await loopToRoomView(nl, side)) return false;
+  await loopQuiet(nl, 'double');
+  // What was decided while we panned and waited for the slot re-plans the walk.
+  loopHearFred(nl);
+  if (pendingRoom() || (guess ? fred.side !== null : fred.side !== side)) return true;
+  const control = side === 'L' ? 'leftDoor' : 'rightDoor';
+  await act.double(control, pt(control), c[control].gapMs);
+  ran();
+  teach.door(side, 'SHUT');
+  const started = nowWall();
+  let shutAt = null as number | null; let lostSince = null as number | null; let releaseSlot = null as number | null;
+  let reason = null as string | null;
+  const heldK = fred.k;
+  const openView = side === 'L' ? 'doorL' : 'doorR';
+  fred.holds += 1;
+  const r = await act.holdWhile('closeDoor', pt('closeDoor'), hearing.idle.holdCapS * 1000 + 4000, () => {
+    const now = nowWall();
+    const f = eyes.now();
+    if (f && f.view === shutViewOf(side) && f.dist <= 2) shutAt ??= now;
+    // n5b: the double tap to shut read 3.24-3.35 s; a miss leaves us in a
+    // room view, where this touch pans the room (x > 819, g21-g24).
+    if (shutAt === null) return now - started > 4500 ? 'never-shut' : null;
+    // Fresh frames that are not this door for 1.5 s: the night ended under
+    // us (n5b's death read black, then white, while the hold ran on 7.5 s).
+    // A stale frame (none new for 400 ms) is not evidence either way.
+    if (f) {
+      const onDoor = (f.view === shutViewOf(side) || f.view === openView) && f.dist <= 2;
+      if (!onDoor) { lostSince ??= now; if (now - lostSince > 1500) return 'lost'; } else lostSince = null;
+    }
+    loopHearFred(nl);
+    if (pendingRoom()) return 'laugh';
+    if (releaseSlot === null) {
+      if (fred.k > heldK && fred.side !== side) { reason = 'moved'; releaseSlot = releaseAt(fred.k + 1, sGrid, hearing); }
+      else if (guess && fred.k > heldK && fred.side === side) { guess = false; teach.step(`FB_HOLD_${side === 'L' ? 'LEFT' : 'RIGHT'}`); teach.fbAt(side === 'L' ? 'LEFT' : 'RIGHT'); }
+      else if (guess && now > shutAt + sGrid.periodMs) { reason = 'guess'; releaseSlot = releaseAt(sGrid.nextK(now), sGrid, hearing); }
+      // Set when Fredbear's branch started.
+      else if (now - (fred.lastRunWall as number) > hearing.idle.holdCapS * 1000) { reason = 'still'; releaseSlot = releaseAt(sGrid.nextK(now), sGrid, hearing); }
+    }
+    return releaseSlot !== null && now >= releaseSlot ? reason : null;
+  });
+  st.where = shutAt !== null ? (side === 'L' ? 'doorL' : 'doorR') : st.where;
+  await log(`fredbear held ${side}${guess ? ' (a guess)' : ''} ${Math.round(r.heldMs)} ms: ${r.why}`,
+    { side, fredSide: fred.side, fredK: fred.k, shutAfterMs: shutAt === null ? null : Math.round(shutAt - started) });
+  if (r.why === 'lost') return false;
+  if (r.why === 'never-shut') {
+    const f = eyes.now();
+    st.where = f && ROOM_VIEWS.includes(f.view) && f.dist <= 0.8 ? f.view : 'unknown';
+    return !!f;
+  }
+  teach.door(side, 'CLEAR');
+  if (r.why === 'still' || r.why === 'max') teach.step('FB_MOVE');
+  if (!await loopOffDoor(nl, side)) return false;
+  if (r.why === 'laugh') return loopRoomCheck(nl);
+  return true;
+}
+
+/**
+ * A laugh on the room period: he is on the bed or in the closet (g639/g640),
+ * or it was g530's fake on the same tick. Every walk home runs the
+ * fredcheck (g97/g99/g104/g374), which kills once he has been there 10 s
+ * (g558): so the bed first, lit only until it reads empty, then the closet.
+ * Both are SEEN: the lit bed and the lit closet against their empty templates.
+ */
+async function loopRoomCheck(nl: NightLoop) {
+  const { act, back, eyes, fred, handledLaughs, lGrid, log, nowWall, pendingRoom, pt, ran, teach } = nl;
+  const l = pendingRoom();
+  if (l) handledLaughs.add(l.k);
+  fred.roomChecks += 1; fred.laughs += 1;
+  const sinceMs = l ? Math.round(nowWall() - lGrid.at(l.k)) : null;
+  await log(`fredbear room check (laugh ${l?.ncc} on the room period, ${sinceMs} ms ago)`);
+  teach.fbHeard('LAUGH'); teach.fbAt('ROOM'); teach.step('FB_BED');
+  if (!await loopGo(nl, 'bed', ['bed', 'doorR', 'doorL'], 1500)) return false;
+  // On the lit bed he leaves on its own ticks (g525-g527); an empty bed needs
+  // one lit frame (the light's first change is 53-117 ms at a settled
+  // station, cal0), so frames before 250 ms are not read. He counts as seen
+  // after three occupied frames in a row.
+  let bedOcc = Infinity; let run = 0; let bedSeen = false; let seenSeq = -1; const lit0 = performance.now();
+  const bed = await act.holdWhile('flashlight', pt('flashlight'), 8000, () => {
+    const f = eyes.now();
+    if (!f || f.seq === seenSeq || f.imageHostMs < lit0 + 250) return null;
+    seenSeq = f.seq;
+    bedOcc = eyes.occupancy(f, 'bed-lit');
+    run = bedOcc > OCCUPIED ? run + 1 : 0;
+    if (run >= 3) bedSeen = true;
+    return bedOcc <= OCCUPIED ? 'empty' : null;
+  });
+  await log(`fredbear bed ${bedSeen ? 'held him' : 'empty'} after ${Math.round(bed.heldMs)} ms: ${bed.why} (last occupancy ${bedOcc.toFixed(1)})`);
+  if (!await back(ROOM_VIEWS, 1800)) return false;
+  if (bedSeen && bed.why === 'empty') return true;
+  await loopCentre(nl);
+  teach.step('FB_CLOSET');
+  if (!await loopGo(nl, 'closet', ['closet'], 3200, 'double')) return false;
+  ran();
+  let occ = await loopFlash(nl, 400, 'closet-lit');
+  await log(`fredbear closet occupancy ${occ.toFixed(1)}`);
+  if (occ > OCCUPIED) {
+    // Shut, he walks out on the next 3000 ms tick (g522/g523), with a landing sound.
+    const heldK = fred.k;
+    const r = await act.holdWhile('closeDoor', pt('closeDoor'), 9000, () => { loopHearFred(nl); return fred.k > heldK ? 'ejected' : null; });
+    occ = await loopFlash(nl, 400, 'closet-lit');
+    await log(`fredbear closet held ${Math.round(r.heldMs)} ms: ${r.why}; occupancy now ${occ.toFixed(1)}`);
+  }
+  return loopLeaveCloset(nl).then((ok) => { if (ok) ran(); return ok; });
+}
+
+async function loopFredStep(nl: NightLoop): Promise<boolean> {
+  const { FIRST_LISTEN_TICKS, FRED_FROM_MS, fred, levelOriginWall, log, nowWall, pendingRoom, sGrid, st, teach } = nl;
+  loopHearFred(nl);
+  if (pendingRoom()) return loopRoomCheck(nl);
+  if (fred.side !== null) return loopHoldDoor(nl, fred.side, false);
+  // Nothing heard yet: he is in the centre until his first landing. Wait in
+  // a room view (never at a door: that is listening) for the first rolls.
+  const firstTicks = sGrid.nextK(levelOriginWall + FRED_FROM_MS + 1) + FIRST_LISTEN_TICKS;
+  if (fred.guess === null && !sGrid.decided(firstTicks, nowWall())) {
+    teach.step('FB_LISTEN'); teach.fbAt('UNKNOWN');
+    if (!ROOM_VIEWS.includes(st.where) && !await loopToRoomView(nl, 'L')) return false;
+    await sleep(120);
+    return true;
+  }
+  fred.guess = fred.guess === 'L' ? 'R' : 'L';
+  teach.fbAt('UNKNOWN');
+  await log(`fredbear not heard: guessing the ${fred.guess} door`);
+  return loopHoldDoor(nl, fred.guess, true);
+}
+
+async function loopToRoomView(nl: NightLoop, side: Side) {
+  const { st } = nl;
+  const view = side === 'L' ? 'roomL' : 'roomR';
+  return st.where === view || !!await loopGo(nl, side === 'L' ? 'panLeft' : 'panRight', [view], 1500, 'hold');
+}
+
+/** Off a door: wait for it to read open (a back pressed while it reopens is dropped: n5b 2 of 2), then back. */
+async function loopOffDoor(nl: NightLoop, side: Side) {
+  const { back, eyes, hearing, log, ran } = nl;
+  const open = await eyes.wait([side === 'L' ? 'doorL' : 'doorR'], hearing.door.openAfterReleaseMs[1] + 900);
+  if (!open) await log(`fredbear: the ${side} door never read open after the release`);
+  const f = await back(ROOM_VIEWS, 2600);
+  if (f) ran();
+  return f;
+}
+
+// A walk waits for its quiet slot: our own run is the loudest sound in the
+// mix and would hide a landing on the tick it covers (n5b: 32.4 s, 35.4 s).
+async function loopQuiet(nl: NightLoop, gesture: string) {
+  const { hearing, nowWall, roomPeriodMs, sGrid } = nl;
+  const wait = quietTapAt(nowWall(), sGrid, hearing, gesture, roomPeriodMs) - nowWall();
+  if (wait > 0) await sleep(wait);
+}
+
 /**
  * The community loop on the handset, stations confirmed by native frames and
  * doors decided by the A2DP breathing level (the published audio line; the
@@ -491,248 +998,26 @@ export async function loopNight({ act, c, record, eyes, ears, epochHostMs, stopA
   const nightMs = () => performance.now() - epochHostMs;
   const log = (m: string, f: object = {}) => record.event('policy', { atNightMs: Math.round(nightMs()), m, ...f });
   const stats: Stats = { cycles: 0, closes: 0, flashes: 0, occupiedHall: 0, closetHolds: 0, lost: 0 };
-  let where = 'roomL';
-
-  const go = async (control: string, views: readonly string[], _boundMs: number, gesture = 'press'): Promise<Read | null> => {
-    for (let attempt = 0; attempt < 2; attempt += 1) {
-      const at = performance.now();
-      // A double-tap control names its gap, a held one its hold.
-      if (gesture === 'double') await act.double(control, pt(control), c[control].gapMs as number);
-      else if (gesture === 'hold') await act.hold(control, pt(control), c[control].holdMs as number);
-      else await act.press(control, pt(control));
-      const f = await eyes.arrive(views, at, ARRIVE[control]);
-      // Every walk resets his stillness counter (g567: a carpet run exists).
-      if (f && ['leftDoor', 'rightDoor', 'closet', 'back'].includes(control)) teach.fbRan();
-      if (f) {
-        where = f.view;
-        if (f.loose) await log(`${control}: arrived loose at ${f.view} ${f.dist.toFixed(1)}`);
-        return f;
-      }
-      let now = eyes.now();
-      await log(`${control}: no ${views.join('/')} (see ${now?.view} ${now?.dist?.toFixed(1)})`);
-      // Not a view we know. The night is over only if that lasts: a jumpscare,
-      // the game over and 06:00 never turn back into a room within 5 s.
-      for (let waited = 0; (!now || now.dist >= 12) && waited < 5000; waited += 250) {
-        await sleep(250);
-        const read = eyes.now();
-        now = read;
-        const room = read && ROOM_VIEWS.find((v) => eyes.edgeDist(read, v) <= 0.8);
-        if (read && room) { now = { ...read, view: room, dist: 0 }; break; }
-      }
-      if (!now || now.dist >= 12) return null;
-      where = now.view;
-      if (views.includes(now.view)) return now;
-      // A back that lands in a room view has done its job, whichever of the
-      // three it is (the right door returns through follow 37 to room-right,
-      // g-follow); pressing the strip again from a room turns to the BED --
-      // n3b did exactly that and sat facing the bed until Foxy struck.
-      if (control === 'back' && ROOM_VIEWS.includes(now.view)) return now;
-    }
-    stats.lost += 1;
-    return null;
+  const st: LoopState = {
+    where: 'roomL',
+    lastBedMs: 0,
+    foxyInside: false,
+    lastClosetMs: 0,
   };
-  /**
-   * Hold the flashlight; the occupancy is the BEST frame of the hold against
-   * the EMPTY lit template (the beam flickers with danger), whatever template
-   * a frame is nearest to: n4c's Foxy at his last stage was nearer another
-   * view than the lit closet, read 'undefined', and went unheld twice. A
-   * flash with no frame at all reads as occupied (Infinity), never empty.
-   */
-  const flash = async (ms: number, litName: string) => {
-    const start = performance.now();
-    const done = act.hold('flashlight', pt('flashlight'), ms);
-    let occ = Infinity; let seen = -1;
-    while (performance.now() < start + ms + 40) {
-      const f = eyes.now();
-      if (f && f.seq !== seen) {
-        seen = f.seq;
-        if (f.imageHostMs > start + 60) occ = Math.min(occ, eyes.occupancy(f, litName));
-      }
-      await sleep(15);
-    }
-    await done;
-    stats.flashes += 1;
-    return occ;
-  };
-
-  const door = async (side: Side) => {
-    const view = side === 'L' ? 'doorL' : 'doorR';
-    teach.step('WALK');
-    const arrived = await go(side === 'L' ? 'leftDoor' : 'rightDoor', [view], 3600, 'double');
-    if (!arrived) return false;
-    teach.step(side === 'L' ? 'LISTEN_LEFT' : 'LISTEN_RIGHT');
-    const t0 = wallOf(arrived.imageHostMs) + AUDIO_LAG_MS + 100;
-    // The breathing loop has quiet stretches of up to 4.5 s between breaths
-    // (breath-envelope); with the game's loop phase known (the level origin),
-    // a listen lasts until it has covered 0.5 s of loud or 1.4 s of medium
-    // breath -- n4e/n4g trusted 1.1-1.4 s listens that may have covered
-    // neither. It stops early on breathing that sits at the game's own phase.
-    const listen = async (fromWall: number, minMs = 900, maxMs = 4500) => {
-      const start = performance.now();
-      for (;;) {
-        const hop = ears.cues.events.findLast((e) => e.cue === 'breath');
-        if (hop) teach.level(hop.ncc);
-        const now = wallOf(performance.now());
-        const cov = ears.coverage(fromWall - AUDIO_LAG_MS, now - AUDIO_LAG_MS);
-        teach.cover(Math.min(1, Math.max(cov.loud / 0.5, cov.mid / 1.4)));
-        const h = ears.breath(fromWall, now);
-        const elapsed = performance.now() - start;
-        if (elapsed >= minMs && (h.game >= 2 || cov.loud >= 0.5 || cov.mid >= 1.4)) return { ...cov, enough: true };
-        if (elapsed >= maxMs) return { ...cov, enough: h.game >= 2 };
-        await sleep(120);
-      }
-    };
-    // A quiet verdict needs a listen that covered a breath: n4k lit the left
-    // hall after a listen that ran out at 60% coverage (the panel said so).
-    const judge = (h: ReturnType<Ears['breath']>, stepsSince: number, c: { readonly enough: boolean } | null) => {
-      if (h.game >= 2 || (h.consistent >= 3 && h.max >= 0.45)) return 'BREATH';
-      if (h.game === 1 || h.max >= 0.33 || ears.latest(['step'], stepsSince)) return 'DOUBT';
-      if (c && !c.enough) return 'DOUBT';
-      return 'CLEAR';
-    };
-    let cov = await listen(t0);
-    let heard = ears.breath(t0, wallOf(performance.now()));
-    let verdict = judge(heard, wallOf(arrived.imageHostMs) - 1500, cov);
-    // Footsteps while we walked up or listened are someone arriving who has
-    // not started breathing yet (n4e: Chica's steps at 80.3-81.7 s, a quiet
-    // listen, and the flash met her at hall-near). Doubt closes; it never lights.
-    const steps = ears.latest(['step'], wallOf(arrived.imageHostMs) - 1500);
-    await log(`door ${side} listen ${verdict}`, { ...heard, step: steps ? steps.ncc : null, loudS: +cov.loud.toFixed(2), midS: +cov.mid.toFixed(2) });
-    // What the panel says is why the loop holds: breathing, or footsteps of
-    // someone who is not breathing yet.
-    const why = () => (heard.game >= 1 || heard.max >= 0.33 ? 'BREATH' : 'STEPS');
-    teach.door(side, verdict === 'CLEAR' ? 'CLEAR' : why());
-    // A hold dismisses on the 3000 ms tick (g342) only while the door reads
-    // shut (follow 21, g337), which the close animation reaches 733 ms in
-    // (the animation bank): 3.4 s left 2.67 s shut and n4f's Bonnie sat
-    // through three holds. 4.2 s covers a whole tick shut.
-    for (let round = 0; verdict !== 'CLEAR' && round < 5; round += 1) {
-      teach.step(why() === 'STEPS' ? (side === 'L' ? 'STEPS_LEFT' : 'STEPS_RIGHT') : (side === 'L' ? 'HOLD_LEFT' : 'HOLD_RIGHT'));
-      teach.door(side, 'SHUT');
-      teach.level(null);
-      await act.hold('closeDoor', pt('closeDoor'), 4200);
-      stats.closes += 1;
-      teach.step(side === 'L' ? 'LISTEN_LEFT' : 'LISTEN_RIGHT');
-      // The door takes ~0.7 s to open again, and listening is off until it
-      // has (follow 22 -> 10/17): the listen starts after that.
-      const t1 = wallOf(performance.now()) + 700 + AUDIO_LAG_MS;
-      cov = await listen(t1, 1600);
-      heard = ears.breath(t1, wallOf(performance.now()));
-      verdict = judge(heard, t1 - AUDIO_LAG_MS, cov);
-      await log(`door ${side} after close ${verdict}`, { ...heard, loudS: +cov.loud.toFixed(2), midS: +cov.mid.toFixed(2) });
-      teach.door(side, verdict === 'CLEAR' ? 'CLEAR' : why());
-    }
-    teach.level(null);
-    teach.cover(null);
-    if (verdict !== 'CLEAR') {
-      unresolved.add(side);
-      await log(`door ${side} left without a flash, still breathing: no bed turn until it is cleared`);
-      return true;
-    }
-    unresolved.delete(side);
-    teach.step(side === 'L' ? 'FLASH_LEFT' : 'FLASH_RIGHT');
-    const occ = await flash(350, `${view}-lit`);
-    // A lit, silent hall resets that side's bedroom dwell (g485/g481).
-    lastClearMs[side] = nightMs();
-    if (occ > OCCUPIED) stats.occupiedHall += 1;
-    teach.door(side, occ > OCCUPIED ? 'HALL' : 'CLEAR');
-    await log(`door ${side} flash occupancy ${occ?.toFixed(1)}`);
-    // The flashlight is a sub-cycle that returns to the door (follow 36/41 ->
-    // 17, g-flash); a back pressed before it lands is dropped -- n1a lost the
-    // first back at the right door in 18 of 18 cycles.
-    await eyes.wait([view], 800);
-    await sleep(120);
-    return true;
-  };
-
   // Freddy fills his meter by his AI every 4 s while the bed is unwatched
   // (g397) and lighting the bed at 60 kills (g427/g428); at Night 4's 4 that
   // is 60 in a minute, and n4c died on a bed light 57 s after the last one,
   // its cycle stretched by door and closet holds. So the bed is not once a
   // cycle but whenever it is due.
   const BED_EVERY_MS = night >= 6 ? 28000 : 35000;
-  let lastBedMs = 0;
-  const bedDue = () => nightMs() - lastBedMs > BED_EVERY_MS && unresolved.size === 0;
-  const bed = async () => {
-    for (const d of staleDoors()) {
-      await log(`bed waits for the ${d} door (${Math.round((nightMs() - lastClearMs[d]) / 1000)} s since it was cleared)`);
-      teach.step('BED_WAITS');
-      if (d === 'L' && where !== 'roomL' && !await go('panLeft', ['roomL'], 1500, 'hold')) return false;
-      if (d === 'R' && where !== 'roomR' && !await go('panRight', ['roomR'], 1500, 'hold')) return false;
-      if (!await door(d)) return false;
-      const ret = await home(d === 'L' ? 'left' : 'right');
-      if (!ret) return false;
-      if (ret === 'FOXY' && !(await centre(), await closet(nightMs())) ) return false;
-      if (ret === 'FOXY' && !await leaveCloset()) return false;
-    }
-    if (unresolved.size > 0) { teach.step('BED_WAITS'); await log(`bed skipped: ${[...unresolved].join('/')} still breathing`); return true; }
-    lastBedMs = nightMs();
-    teach.step('WALK');
-    const at = await go('bed', ['bed', 'doorR', 'doorL'], 1500);
-    if (!at) return false;
-    teach.step('BED');
-    // Freddles are distance from the empty lit bed; drain until it reads empty.
-    let occ = null as number | null;
-    for (let slice = 0; slice < 6; slice += 1) {
-      occ = await flash(600, 'bed-lit');
-      teach.bed(occ <= OCCUPIED ? 'CLEAR' : 'FREDDLES');
-      if (slice >= 1 && occ <= OCCUPIED) break;
-    }
-    await log(`bed occupancy ${occ?.toFixed(1)}`);
-    teach.bedLit();
-    // The turn back is part of the bed: a caller never presses back itself,
-    // because from a room the same strip turns TO the bed.
-    return !!await back(ROOM_VIEWS, 1800);
-  };
+  const bedDue = () => nightMs() - st.lastBedMs > BED_EVERY_MS && unresolved.size === 0;
 
-  /**
-   * The closet takes its double tap only with `follow` at 0 -- the room
-   * between the two looks (g172/g173) -- and a settled look left or right is
-   * follow 2 or 5 (g30-g37), so n4a's taps from room-right were refused
-   * twice while Foxy sat inside. A short pan toward the middle ends the look
-   * (follow 6 -> 0 on its animation, g36/g37); at 12 px/frame (g22/g24) a
-   * 160 ms hold from the right or 250 ms from the left leaves the closet's
-   * hitzone under x 1050 and outside both pan bands.
-   */
-  const centre = async () => {
-    if (where === 'roomR') await act.hold('panLeft', pt('panLeft'), 160);
-    else if (where === 'roomL') await act.hold('panRight', pt('panRight'), 250);
-    else return;
-    where = 'middle';
-    await sleep(700);
-  };
-
-  /**
-   * Out of the closet. The walk back ends at follow 0 wherever the room was
-   * when the closet was entered (g31/g39), and after centre() that is about
-   * x 680 -- no template's room (n4d read the hub at 35.4 and gave up on the
-   * night at 2 AM). A full pan right then clamps the view at 788, room-right,
-   * which renders exactly.
-   */
-  const leaveCloset = async () => {
-    await act.press('back', pt('back'));
-    await sleep(ARRIVE.back.minMs + 1100);
-    return !!await go('panRight', ['roomR'], 1500, 'hold');
-  };
-
-  /**
-   * The closet. Foxy inside is the lit closet's distance from its empty
-   * template (0.0 when empty). A hold is sized by what the light shows: every
-   * second shut takes a step off his attack and each passed 5 s roll adds one
-   * (g273, g236); n4b's 6 s holds only took 9.1 back to 5.1 and he climbed to
-   * the kill, so the hold grows with the stage he shows, and while he is
-   * inside the loop comes here twice a cycle. `enteredMs` (his entry seen on
-   * the way back from a door) buys the long first hold against the 3-7 steps
-   * he enters with.
-   */
-  let foxyInside = false;
   // Foxy climbs one step per passed 5 s roll once inside and kills at 10 from
   // the 3-7 he enters with (g236, g273): 15 s at the fastest where every roll
   // passes (Night 6 on). n4j's closet went ~50 s unchecked across two door
   // episodes. So the closet is also kept due.
-  let lastClosetMs = 0;
   const CLOSET_EVERY_MS = night >= 6 ? 15000 : 20000;
-  const closetDue = () => nightMs() - lastClosetMs > CLOSET_EVERY_MS;
+  const closetDue = () => nightMs() - st.lastClosetMs > CLOSET_EVERY_MS;
   // A door left with someone still breathing at it: the bed turn is what
   // kills with his bedroom flag (g375/g376), so no bed until it is cleared.
   const unresolved = new Set<Side>();
@@ -744,56 +1029,8 @@ export async function loopNight({ act, c, record, eyes, ears, epochHostMs, stopA
   const lastClearMs: Record<Side, number> = { L: -Infinity, R: -Infinity };
   const FRESH_MS = Math.max(4000, (20 - Math.min(night, 8) - 4) * 1000);
   const staleDoors = () => (['L', 'R'] as const).filter((d) => nightMs() - lastClearMs[d] > FRESH_MS);
-  const closet = async (enteredMs = 0) => {
-    lastClosetMs = nightMs();
-    teach.step('WALK');
-    const at = await go('closet', ['closet'], 3200, 'double');
-    if (!at) return false;
-    teach.step('CLOSET');
-    let occ = await flash(400, 'closet-lit');
-    await log(`closet occupancy ${occ?.toFixed(1)}${enteredMs ? ' (entry seen)' : ''}`);
-    foxyInside = enteredMs > 0 || occ > OCCUPIED;
-    teach.closet(foxyInside ? 'FOXY' : 'EMPTY');
-    if (foxyInside) {
-      const holdMs = enteredMs > 0 || occ > 12 ? 9000 : occ > 7 ? 7000 : 5000;
-      teach.step('CLOSET_HOLD');
-      await act.hold('closeDoor', pt('closeDoor'), holdMs);
-      stats.closetHolds += 1;
-      teach.step('CLOSET');
-      occ = await flash(400, 'closet-lit');
-      await log(`closet after ${holdMs} ms hold occupancy ${occ?.toFixed(1)}`);
-      foxyInside = occ > OCCUPIED;
-      teach.closet(foxyInside ? 'FOXY' : 'EMPTY');
-    }
-    return true;
-  };
 
-  /**
-   * Back from a door. The walk home ends at the hub (follow 13 -> X 750,
-   * g97/g99/g110) unless Foxy ran in behind us: then it ends through follow
-   * 37 with the closet creak and the view left on that door's side
-   * (g98/g100/g111), which is the entry a player sees and hears. So a return
-   * that lands in room-left or room-right is Foxy in the closet.
-   */
-  const home = async (side: string) => {
-    const f = await back(ROOM_VIEWS, 2600);
-    if (!f) return null;
-    // A read without its closet distance compares false.
-    if (f.view === 'hub' && (f.closetOff as number) > 10) {
-      await log(`closet stands open in the hub (${(f.closetOff as number).toFixed(1)}): Foxy is inside`);
-      foxyInside = true;
-      teach.closet('FOXY');
-    }
-    if (f.view !== 'hub') {
-      stats.foxyEntries = (stats.foxyEntries ?? 0) + 1;
-      await log(`foxy ran in behind the ${side} door (return ended in ${f.view})`);
-      teach.closet('FOXY');
-      return 'FOXY';
-    }
-    return 'HUB';
-  };
-
-  const back = (views: readonly string[], boundMs: number) => go('back', views, boundMs);
+  const back = (views: readonly string[], boundMs: number) => loopGo(nl, 'back', views, boundMs);
 
   // --- Fredbear (Night 5; Nights 6-8 from 4 AM) --------------------------------
   // Every landing of his on a living-room side plays that side's sound (fb-left
@@ -823,181 +1060,14 @@ export async function loopNight({ act, c, record, eyes, ears, epochHostMs, stopA
   const fred = { side: null as Side | null, k: -Infinity, guess: null as Side | null, lastRunWall: null as number | null, heard: 0, laughs: 0,
     fakes: 0, roomChecks: 0, holds: 0 };
   const handledLaughs = new Set<number>();
-  // Fold every decided grid tick into what we believe, and tell the panel
-  // what was heard -- only what the grid accepted, never a raw cue line.
-  const hearFred = () => {
-    const now = nowWall();
-    for (const row of landings(ears.cues.events, sGrid, hearing.sideGrid, { fromK: fred.k + 1 })) {
-      if (!row.side || !sGrid.decided(row.k, now)) continue;
-      fred.side = row.side; fred.k = row.k; fred.heard += 1;
-      teach.fbHeard(row.side === 'L' ? 'RAN_LEFT' : 'RAN_RIGHT');
-      teach.fbAt(row.side === 'L' ? 'LEFT' : 'RIGHT');
-      record.event('policy', { atNightMs: Math.round(nightMs()), m: `fredbear landed ${row.side} (tick ${row.k})`, L: row.L, R: row.R }).catch(() => {});
-    }
-    for (const l of laughs(ears.cues.events, lGrid, hearing.laughGrid, roomPeriodMs)) {
-      if (!l.accepted || handledLaughs.has(l.k) || !lGrid.decided(l.k, now)) continue;
-      if (!l.room) {
-        handledLaughs.add(l.k); fred.fakes += 1;
-        record.event('policy', { atNightMs: Math.round(nightMs()), m: `fredbear laugh off the room period: a fake (10 s tick ${l.k})`, ncc: l.ncc }).catch(() => {});
-      }
-    }
-  };
   const pendingRoom = () => laughs(ears.cues.events, lGrid, hearing.laughGrid, roomPeriodMs)
     .find((l) => l.accepted && l.room && !handledLaughs.has(l.k) && lGrid.decided(l.k, nowWall())) ?? null;
-  // A walk waits for its quiet slot: our own run is the loudest sound in the
-  // mix and would hide a landing on the tick it covers (n5b: 32.4 s, 35.4 s).
-  const quiet = async (gesture: string) => {
-    const wait = quietTapAt(nowWall(), sGrid, hearing, gesture, roomPeriodMs) - nowWall();
-    if (wait > 0) await sleep(wait);
-  };
   const ran = () => { fred.lastRunWall = nowWall(); teach.fbRan(); };
-  const toRoomView = async (side: Side) => {
-    const view = side === 'L' ? 'roomL' : 'roomR';
-    return where === view || !!await go(side === 'L' ? 'panLeft' : 'panRight', [view], 1500, 'hold');
-  };
-  /** Off a door: wait for it to read open (a back pressed while it reopens is dropped: n5b 2 of 2), then back. */
-  const offDoor = async (side: Side) => {
-    const open = await eyes.wait([side === 'L' ? 'doorL' : 'doorR'], hearing.door.openAfterReleaseMs[1] + 900);
-    if (!open) await log(`fredbear: the ${side} door never read open after the release`);
-    const f = await back(ROOM_VIEWS, 2600);
-    if (f) ran();
-    return f;
-  };
   const shutViewOf = (side: Side) => (side === 'L' ? 'doorL-shut' : 'doorR-shut');
-  /**
-   * To a door and hold it, one contact from the run until a reason to leave:
-   * he landed on the other side (released just after the next tick, so the
-   * door is shut on it), a laugh on the room period, 18 s since the last run
-   * (25 s still arms the black flash, g564), a guess that has had one tick
-   * shut, or the view is gone (a death).
-   * The close button is pressed during the run -- at (1990, 900) it cannot pan
-   * the room, which pans only below follow 7 (g21-g24).
-   */
-  const holdDoor = async (side: Side, guess: boolean) => {
-    const stepName = `${guess ? 'FB_GUESS' : 'FB_HOLD'}_${side === 'L' ? 'LEFT' : 'RIGHT'}`;
-    teach.step(stepName);
-    if (!guess) teach.fbAt(side === 'L' ? 'LEFT' : 'RIGHT');
-    if (!await toRoomView(side)) return false;
-    await quiet('double');
-    // What was decided while we panned and waited for the slot re-plans the walk.
-    hearFred();
-    if (pendingRoom() || (guess ? fred.side !== null : fred.side !== side)) return true;
-    const control = side === 'L' ? 'leftDoor' : 'rightDoor';
-    await act.double(control, pt(control), c[control].gapMs);
-    ran();
-    teach.door(side, 'SHUT');
-    const started = nowWall();
-    let shutAt = null as number | null; let lostSince = null as number | null; let releaseSlot = null as number | null;
-    let reason = null as string | null;
-    const heldK = fred.k;
-    const openView = side === 'L' ? 'doorL' : 'doorR';
-    fred.holds += 1;
-    const r = await act.holdWhile('closeDoor', pt('closeDoor'), hearing.idle.holdCapS * 1000 + 4000, () => {
-      const now = nowWall();
-      const f = eyes.now();
-      if (f && f.view === shutViewOf(side) && f.dist <= 2) shutAt ??= now;
-      // n5b: the double tap to shut read 3.24-3.35 s; a miss leaves us in a
-      // room view, where this touch pans the room (x > 819, g21-g24).
-      if (shutAt === null) return now - started > 4500 ? 'never-shut' : null;
-      // Fresh frames that are not this door for 1.5 s: the night ended under
-      // us (n5b's death read black, then white, while the hold ran on 7.5 s).
-      // A stale frame (none new for 400 ms) is not evidence either way.
-      if (f) {
-        const onDoor = (f.view === shutViewOf(side) || f.view === openView) && f.dist <= 2;
-        if (!onDoor) { lostSince ??= now; if (now - lostSince > 1500) return 'lost'; } else lostSince = null;
-      }
-      hearFred();
-      if (pendingRoom()) return 'laugh';
-      if (releaseSlot === null) {
-        if (fred.k > heldK && fred.side !== side) { reason = 'moved'; releaseSlot = releaseAt(fred.k + 1, sGrid, hearing); }
-        else if (guess && fred.k > heldK && fred.side === side) { guess = false; teach.step(`FB_HOLD_${side === 'L' ? 'LEFT' : 'RIGHT'}`); teach.fbAt(side === 'L' ? 'LEFT' : 'RIGHT'); }
-        else if (guess && now > shutAt + sGrid.periodMs) { reason = 'guess'; releaseSlot = releaseAt(sGrid.nextK(now), sGrid, hearing); }
-        // Set when Fredbear's branch started.
-        else if (now - (fred.lastRunWall as number) > hearing.idle.holdCapS * 1000) { reason = 'still'; releaseSlot = releaseAt(sGrid.nextK(now), sGrid, hearing); }
-      }
-      return releaseSlot !== null && now >= releaseSlot ? reason : null;
-    });
-    where = shutAt !== null ? (side === 'L' ? 'doorL' : 'doorR') : where;
-    await log(`fredbear held ${side}${guess ? ' (a guess)' : ''} ${Math.round(r.heldMs)} ms: ${r.why}`,
-      { side, fredSide: fred.side, fredK: fred.k, shutAfterMs: shutAt === null ? null : Math.round(shutAt - started) });
-    if (r.why === 'lost') return false;
-    if (r.why === 'never-shut') {
-      const f = eyes.now();
-      where = f && ROOM_VIEWS.includes(f.view) && f.dist <= 0.8 ? f.view : 'unknown';
-      return !!f;
-    }
-    teach.door(side, 'CLEAR');
-    if (r.why === 'still' || r.why === 'max') teach.step('FB_MOVE');
-    if (!await offDoor(side)) return false;
-    if (r.why === 'laugh') return roomCheck();
-    return true;
-  };
-  /**
-   * A laugh on the room period: he is on the bed or in the closet (g639/g640),
-   * or it was g530's fake on the same tick. Every walk home runs the
-   * fredcheck (g97/g99/g104/g374), which kills once he has been there 10 s
-   * (g558): so the bed first, lit only until it reads empty, then the closet.
-   * Both are SEEN: the lit bed and the lit closet against their empty templates.
-   */
-  const roomCheck = async () => {
-    const l = pendingRoom();
-    if (l) handledLaughs.add(l.k);
-    fred.roomChecks += 1; fred.laughs += 1;
-    const sinceMs = l ? Math.round(nowWall() - lGrid.at(l.k)) : null;
-    await log(`fredbear room check (laugh ${l?.ncc} on the room period, ${sinceMs} ms ago)`);
-    teach.fbHeard('LAUGH'); teach.fbAt('ROOM'); teach.step('FB_BED');
-    if (!await go('bed', ['bed', 'doorR', 'doorL'], 1500)) return false;
-    // On the lit bed he leaves on its own ticks (g525-g527); an empty bed needs
-    // one lit frame (the light's first change is 53-117 ms at a settled
-    // station, cal0), so frames before 250 ms are not read. He counts as seen
-    // after three occupied frames in a row.
-    let bedOcc = Infinity; let run = 0; let bedSeen = false; let seenSeq = -1; const lit0 = performance.now();
-    const bed = await act.holdWhile('flashlight', pt('flashlight'), 8000, () => {
-      const f = eyes.now();
-      if (!f || f.seq === seenSeq || f.imageHostMs < lit0 + 250) return null;
-      seenSeq = f.seq;
-      bedOcc = eyes.occupancy(f, 'bed-lit');
-      run = bedOcc > OCCUPIED ? run + 1 : 0;
-      if (run >= 3) bedSeen = true;
-      return bedOcc <= OCCUPIED ? 'empty' : null;
-    });
-    await log(`fredbear bed ${bedSeen ? 'held him' : 'empty'} after ${Math.round(bed.heldMs)} ms: ${bed.why} (last occupancy ${bedOcc.toFixed(1)})`);
-    if (!await back(ROOM_VIEWS, 1800)) return false;
-    if (bedSeen && bed.why === 'empty') return true;
-    await centre();
-    teach.step('FB_CLOSET');
-    if (!await go('closet', ['closet'], 3200, 'double')) return false;
-    ran();
-    let occ = await flash(400, 'closet-lit');
-    await log(`fredbear closet occupancy ${occ.toFixed(1)}`);
-    if (occ > OCCUPIED) {
-      // Shut, he walks out on the next 3000 ms tick (g522/g523), with a landing sound.
-      const heldK = fred.k;
-      const r = await act.holdWhile('closeDoor', pt('closeDoor'), 9000, () => { hearFred(); return fred.k > heldK ? 'ejected' : null; });
-      occ = await flash(400, 'closet-lit');
-      await log(`fredbear closet held ${Math.round(r.heldMs)} ms: ${r.why}; occupancy now ${occ.toFixed(1)}`);
-    }
-    return leaveCloset().then((ok) => { if (ok) ran(); return ok; });
-  };
-  const fredStep = async (): Promise<boolean> => {
-    hearFred();
-    if (pendingRoom()) return roomCheck();
-    if (fred.side !== null) return holdDoor(fred.side, false);
-    // Nothing heard yet: he is in the centre until his first landing. Wait in
-    // a room view (never at a door: that is listening) for the first rolls.
-    const firstTicks = sGrid.nextK(levelOriginWall + FRED_FROM_MS + 1) + FIRST_LISTEN_TICKS;
-    if (fred.guess === null && !sGrid.decided(firstTicks, nowWall())) {
-      teach.step('FB_LISTEN'); teach.fbAt('UNKNOWN');
-      if (!ROOM_VIEWS.includes(where) && !await toRoomView('L')) return false;
-      await sleep(120);
-      return true;
-    }
-    fred.guess = fred.guess === 'L' ? 'R' : 'L';
-    teach.fbAt('UNKNOWN');
-    await log(`fredbear not heard: guessing the ${fred.guess} door`);
-    return holdDoor(fred.guess, true);
-  };
 
+  const nl: NightLoop = { FIRST_LISTEN_TICKS, FRED_FROM_MS, act, back, c, ears, eyes, fred, handledLaughs, hearing, lGrid,
+    lastClearMs, levelOriginWall, log, nightMs, nowWall, pendingRoom, pt, ran, record, roomPeriodMs, sGrid, shutViewOf, st,
+    staleDoors, stats, teach, unresolved };
   let fredStarted = false;
   while (nightMs() < stopAfterMs && !shouldStop()) {
     if (fredActive()) {
@@ -1007,38 +1077,38 @@ export async function loopNight({ act, c, record, eyes, ears, epochHostMs, stopA
         teach.fbAt('UNKNOWN');
         fred.lastRunWall = nowWall();
       }
-      if (!await fredStep()) break;
+      if (!await loopFredStep(nl)) break;
       continue;
     }
-    if (where !== 'roomL') {
-      if (!await go('panLeft', ['roomL'], 1500, 'hold')) break;
+    if (st.where !== 'roomL') {
+      if (!await loopGo(nl, 'panLeft', ['roomL'], 1500, 'hold')) break;
     }
     // The closet's double tap at x 1050 is inside it from the hub and from
     // room-right, never from room-left (controls-fnaf4 closet).
     const toCloset = async (enteredMs: number) => {
-      await centre();
-      if (!await closet(enteredMs)) return false;
-      return leaveCloset();
+      await loopCentre(nl);
+      if (!await loopCloset(nl, enteredMs)) return false;
+      return loopLeaveCloset(nl);
     };
-    if (!await door('L')) break;
-    let ret = await home('left');
+    if (!await loopDoor(nl, 'L')) break;
+    let ret = await loopHome(nl, 'left');
     if (!ret) break;
-    if (bedDue() && !await bed()) break;
-    if ((ret === 'FOXY' || foxyInside || closetDue()) && !await toCloset(ret === 'FOXY' ? nightMs() : 0)) break;
-    if (where !== 'roomR') {
-      if (!await go('panRight', ['roomR'], 1500, 'hold')) break;
+    if (bedDue() && !await loopBed(nl)) break;
+    if ((ret === 'FOXY' || st.foxyInside || closetDue()) && !await toCloset(ret === 'FOXY' ? nightMs() : 0)) break;
+    if (st.where !== 'roomR') {
+      if (!await loopGo(nl, 'panRight', ['roomR'], 1500, 'hold')) break;
     }
-    if (!await door('R')) break;
-    ret = await home('right');
+    if (!await loopDoor(nl, 'R')) break;
+    ret = await loopHome(nl, 'right');
     if (!ret) break;
-    if (ret !== 'FOXY' && bedDue() && !await bed()) break;
+    if (ret !== 'FOXY' && bedDue() && !await loopBed(nl)) break;
     // The closet before the bed: Foxy's kill fires as a bed turn finishes
     // (g438), so he is set back right before it (n3a died on that turn).
-    await centre();
-    if (!await closet(ret === 'FOXY' ? nightMs() : 0)) break;
-    if (!await leaveCloset()) break;
-    // bed() checks stale doors first and skips the turn while one breathes.
-    if (!await bed()) break;
+    await loopCentre(nl);
+    if (!await loopCloset(nl, ret === 'FOXY' ? nightMs() : 0)) break;
+    if (!await loopLeaveCloset(nl)) break;
+    // loopBed checks stale doors first and skips the turn while one breathes.
+    if (!await loopBed(nl)) break;
     stats.cycles += 1;
   }
   if (fredStarted) stats.fredbear = { heard: fred.heard, holds: fred.holds, roomChecks: fred.roomChecks, fakes: fred.fakes, lastSide: fred.side };

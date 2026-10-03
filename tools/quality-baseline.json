@@ -418,10 +418,6 @@
         "count": 385,
         "why": "the lab’s composition root (status, next, doctor, morning, sessions); audit D3 moved the host readers and the doctor out (593 to 385 lines), and the session and morning verbs are the next split"
       },
-      "fn:packages/play/games/fnaf4/fnaf4-run.ts#loopNight": {
-        "count": 559,
-        "why": "the FNaF 4 night loop (doors, bed, closet, hearing) over live frames; splitting the policy step from the device step needs a live FNaF 4 night, and audit PG10’s teardown change is not yet confirmed on a phone"
-      },
       "fn:packages/propose/bin/census/fnaf1-device-lane.ts#grid420": {
         "count": 256,
         "why": "the FNaF 1 device lane’s 4/20 grid census; test-fnaf1-device-lane re-runs the committed population record’s 33 replays through it, so a split must keep them identical"
