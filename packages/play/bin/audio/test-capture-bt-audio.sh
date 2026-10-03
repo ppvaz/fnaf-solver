@@ -22,7 +22,7 @@ exit 1
 EOF
 chmod +x "$TMP/bin/bluealsa-cli"
 
-MAC=10:2B:1C:DA:18:2C
+MAC=00:11:22:33:44:55
 ready="$(MOCK_BLUEALSA_ROUTE=ready PATH="$TMP/bin:$PATH" \
   "$HERE/capture-bt-audio.sh" --check "$MAC")"
 [[ "$ready" == audio-route=READY* ]]
@@ -46,4 +46,15 @@ set -e
 [ "$status" -eq 2 ]
 [[ "$invalid" == Bluetooth\ MAC\ must\ have\ the\ form\ 00:11:22:33:44:55 ]]
 
-echo "bt audio: route preflight distinguishes ready, disconnected, and invalid inputs"
+set +e
+unset_mac="$(env -u FNAF_BT_MAC FNAF_LOCAL_PROFILE="$TMP/no-profile.json" PATH="$TMP/bin:$PATH" \
+  "$HERE/capture-bt-audio.sh" --check 2>&1)"
+status=$?
+set -e
+[ "$status" -eq 2 ]
+[[ "$unset_mac" == *"no Bluetooth address"* ]]
+from_env="$(FNAF_BT_MAC="$MAC" MOCK_BLUEALSA_ROUTE=ready FNAF_LOCAL_PROFILE="$TMP/no-profile.json" PATH="$TMP/bin:$PATH" \
+  "$HERE/capture-bt-audio.sh" --check)"
+[[ "$from_env" == audio-route=READY*mac=$MAC ]]
+
+echo "bt audio: route preflight distinguishes ready, disconnected, and invalid inputs, and takes no committed address"

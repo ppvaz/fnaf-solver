@@ -23,7 +23,6 @@
 # at the moment of the tap: this script never sends input to the game.
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
-DEFAULT_MAC=10:2B:1C:DA:18:2C
 A2DP_SOURCE_UUID=0000110a-0000-1000-8000-00805f9b34fb
 DEFAULT_GAME=com.scottgames.fnaf2
 SETTINGS_PACKAGE=com.android.settings
@@ -73,7 +72,10 @@ case "$GAME" in
     exit 2
     ;;
 esac
-MAC="${1:-$DEFAULT_MAC}"
+# The phone's address: the argument, else FNAF_BT_MAC or the untracked local
+# profile (local-profile.ts bt-mac), never a committed default.
+MAC="${1:-}"
+[ -n "$MAC" ] || MAC="$(node "$HERE/../phone/local-profile.ts" bt-mac)" || exit 2
 [ "$#" -le 1 ] || { echo "bt-link: too many arguments" >&2; exit 2; }
 DEV_PATH="/org/bluez/hci0/dev_${MAC//:/_}"
 PCM="/org/bluealsa/hci0/dev_${MAC//:/_}/a2dpsnk/source"

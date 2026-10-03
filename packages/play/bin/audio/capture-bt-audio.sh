@@ -34,32 +34,38 @@
 # Commit the derived fingerprint (packages/propose/parked/minus7/cue/reference-report.py) instead.
 set -euo pipefail
 
-DEFAULT_MAC=10:2B:1C:DA:18:2C
+HERE="$(cd "$(dirname "$0")" && pwd)"
+# The phone's address: the argument, else FNAF_BT_MAC or the untracked local
+# profile (local-profile.ts bt-mac), never a committed default. --stop reads
+# the capture's sidecar and needs none.
+profile_mac() { node "$HERE/../phone/local-profile.ts" bt-mac; }
 MODE=record
+MAC=""
 if [ "${1:-}" = "--check" ]; then
   MODE=check
-  MAC=${2:-$DEFAULT_MAC}
+  MAC=${2:-}
 elif [ "${1:-}" = "--start" ]; then
   MODE=start
   BASE=${2:?usage: capture-bt-audio.sh --start OUT_BASENAME [bt-mac]}
-  MAC=${3:-$DEFAULT_MAC}
+  MAC=${3:-}
 elif [ "${1:-}" = "--stop" ]; then
   MODE=stop
   BASE=${2:?usage: capture-bt-audio.sh --stop OUT_BASENAME}
-  MAC=$DEFAULT_MAC
 else
   SECS=${1:?usage: capture-bt-audio.sh <seconds> [outdir] [bt-mac]}
   OUT=${2:-$HOME/fnaf-apks/bt-audio-captures}
-  MAC=${3:-$DEFAULT_MAC}
+  MAC=${3:-}
   case "$SECS" in *[!0-9]*) echo "seconds must be a whole number" >&2; exit 2 ;; esac
 fi
 
-if ! [[ "$MAC" =~ ^([[:xdigit:]]{2}:){5}[[:xdigit:]]{2}$ ]]; then
-  echo "Bluetooth MAC must have the form 00:11:22:33:44:55" >&2
-  exit 2
+if [ "$MODE" != stop ]; then
+  [ -n "$MAC" ] || MAC="$(profile_mac)" || exit 2
+  if ! [[ "$MAC" =~ ^([[:xdigit:]]{2}:){5}[[:xdigit:]]{2}$ ]]; then
+    echo "Bluetooth MAC must have the form 00:11:22:33:44:55" >&2
+    exit 2
+  fi
 fi
 
-HERE="$(cd "$(dirname "$0")" && pwd)"
 REPO="$(cd "$HERE/../../../.." && pwd)"
 COLLECTOR="$HERE/bt-audio-collector.py"
 DEV="dev_$(echo "$MAC" | tr ':' '_')"
