@@ -57,8 +57,7 @@
 // MODEL_ONLY: the simulator under two option sets. No device run; actuator
 // lateness, seam loss and the frame phase the phone re-rolls are not in it,
 // and no option default changes.
-import { createHash } from 'node:crypto';
-import type { BinaryLike } from 'node:crypto';
+import { sha256 } from './sweep-common.ts';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -82,7 +81,6 @@ export const ALPHA = 0.05;
 // A listing longer than this is kept as a count and a hash of the full list.
 export const MAX_LISTED = 20;
 
-const sha256 = (bytes: BinaryLike) => createHash('sha256').update(bytes).digest('hex');
 
 /** Sim options, as model-draw-trace.ts makes them from model-options JSON. */
 type SimOptions = ReturnType<typeof simOptionsFrom>;

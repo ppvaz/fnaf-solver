@@ -24,9 +24,8 @@
 // An engine change that moves a scored seed fails here; the fix is to re-run
 // the census in the diff that changed the engine. A committed winner the
 // record does not cover is reported as UNSCORED_WINNERS, not failed.
+import { sha256 } from './sweep-common.ts';
 import assert from 'node:assert/strict';
-import { createHash } from 'node:crypto';
-import type { BinaryLike } from 'node:crypto';
 import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -39,7 +38,6 @@ import { currentPath } from '@sixam/review/renamed-path';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
 const EVIDENCE = join(ROOT, 'docs/evidence');
-const sha256 = (bytes: BinaryLike) => createHash('sha256').update(bytes).digest('hex');
 // A lookup the record says succeeds; the assertion that follows reads it.
 const found = <T>(value: T | undefined) => value as T;
 /** A subject the tree offers. */

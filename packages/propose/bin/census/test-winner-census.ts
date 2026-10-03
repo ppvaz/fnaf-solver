@@ -16,10 +16,10 @@
 // bindings and seed block as censused, and every band edge, the declared
 // phase and each partial cell's first listed loss replaying as recorded --
 // the cells an engine change would move first.
+import { sha256 } from '../recompile/sweep-common.ts';
 import { GOLDEN_MODEL_SEEDS } from '@sixam/propose/seeds';
 import { SEED_FLOOR } from '@sixam/propose/census';
 import assert from 'node:assert/strict';
-import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -43,7 +43,6 @@ withModelOptions(simOptionsFrom({}), () => {
 const current = (path: string) => currentPath(ROOT, path) ?? path;
 const EVIDENCE = join(ROOT, 'docs/evidence');
 const HELD_OUT_SAMPLE = 4;
-const sha256 = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex');
 
 const recordName = readdirSync(EVIDENCE).filter((name) => /^fnaf2-winner-census-\d{8}\.json$/.test(name)).sort().pop();
 assert.ok(recordName, 'no docs/evidence/fnaf2-winner-census-YYYYMMDD.json is committed');

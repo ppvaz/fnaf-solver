@@ -2,19 +2,16 @@
 // FIXTURE for phone-stream-census.ts's decision rule, then docs/evidence/full06-stream-census-20261001.json re-derived
 // from its own rows and the committed predeclaration. Needs no model run, frame trace or press file. In `npm run test:unit`.
 import assert from 'node:assert/strict';
-import { createHash } from 'node:crypto';
-import type { BinaryLike } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { decide } from './phone-stream-census.ts';
-import { recordId } from './sweep-common.ts';
+import { recordId, sha256 } from './sweep-common.ts';
 import { chiSquare, missExpectation, tally } from './phone-occupancy-rates.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
 const read = (path: string) => readFileSync(join(ROOT, path));
 const json = (path: string) => JSON.parse(read(path).toString('utf8'));
-const sha256 = (bytes: BinaryLike) => createHash('sha256').update(bytes).digest('hex');
 const rule = { identifyMinPrefix: 20, identifyMarginWindows: 4 };
 const row = (state: number, prefix: number, agree = prefix) => ({ state, prefix, agree });
 

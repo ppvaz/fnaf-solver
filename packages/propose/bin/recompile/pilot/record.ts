@@ -20,8 +20,7 @@
  * `check` re-derives the verdict and the evidenceId from the record and the
  * committed input fixture.
  */
-import { createHash } from 'node:crypto';
-import type { BinaryLike } from 'node:crypto';
+import { sha256 } from '../sweep-common.ts';
 import { copyFileSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -50,7 +49,6 @@ export interface PilotNightRecord {
   saveAfter: Readonly<Record<string, string>>, winKeys: readonly string[], status: string | null;
 }
 
-const sha256 = (bytes: BinaryLike) => createHash('sha256').update(bytes).digest('hex');
 
 function canonical(value: unknown): string {
   if (isList(value)) return `[${value.map(canonical).join(',')}]`;

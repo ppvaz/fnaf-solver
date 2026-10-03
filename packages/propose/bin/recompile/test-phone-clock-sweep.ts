@@ -2,10 +2,9 @@
 // FIXTURE for phone-clock-sweep.ts (the rate scaling, the match and ranking rules, the derived
 // summaries and the verdict), then the committed sweep result's own arithmetic, re-derived from
 // its rows and the retained control without the model or any private input. In `npm run test:unit`.
+import { sha256 } from './sweep-common.ts';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
-import type { BinaryLike } from 'node:crypto';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -15,7 +14,6 @@ import type { SweepResult } from './phone-clock-sweep.ts';
 import { officeClock, traceTick } from './phone-encounter-replay.ts';
 
 const read = (rel: string) => readFileSync(new URL(`../../../../${rel}`, import.meta.url), 'utf8');
-const sha256 = (value: BinaryLike) => createHash('sha256').update(value).digest('hex');
 /** A committed night, and a committed cell, as the checks below read them. */
 type Named = { readonly name: string };
 type Cell = {

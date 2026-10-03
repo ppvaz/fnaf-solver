@@ -2,19 +2,16 @@
 // FIXTURE for phone-early-perturbation.ts (family, contact shifts, LCG steps, rule), then
 // docs/evidence/full06-early-perturbation-20261001.json re-derived from its distinct outcomes. No model run or private input.
 import assert from 'node:assert/strict';
-import { createHash } from 'node:crypto';
-import type { BinaryLike } from 'node:crypto';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { decide, earlyPredeclaration, family, memberContacts } from './phone-early-perturbation.ts';
-import { fanOut, predeclared, recordId, stepRng, sweepArgs } from './sweep-common.ts';
+import { fanOut, predeclared, recordId, sha256, stepRng, sweepArgs } from './sweep-common.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
 const read = (path: string) => readFileSync(join(ROOT, path));
 const json = (path: string) => JSON.parse(read(path).toString('utf8'));
-const sha256 = (bytes: BinaryLike) => createHash('sha256').update(bytes).digest('hex');
 
 // --- the family and its members
 const contacts = [{ control: 'monitor', downFrame: 2, upFrame: 4 }, { control: 'cam', downFrame: 10, upFrame: 11 }, { control: 'mask', downFrame: 20, upFrame: 22 }];

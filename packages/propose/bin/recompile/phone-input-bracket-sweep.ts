@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 // Exhaust the measured visual-response update brackets before full-06's first divergent window.
 // This is a host-model sensitivity analysis, not a claim about device input dispatch.
+import { sha256 } from './sweep-common.ts';
 import { execFileSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
-import type { BinaryLike } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -28,7 +27,6 @@ const RESULT = 'tools/recompile/results/phone-input-bracket-full-06-20260928.jso
 const SCHEMA = 'recompile-phone-input-bracket-sweep-v1';
 const PHONE_CODE: Readonly<Record<string, string>> = Object.freeze({ withbonnie: 'B', withchica: 'C', withfreddy: 'F', toybonnie: 'b',
   toychica: 'c', toyfreddy: 'f', mangle: 'M', bb: 'x' });
-const sha256 = (value: BinaryLike) => createHash('sha256').update(value).digest('hex');
 const bytes = (path: string) => readFileSync(resolve(ROOT, current(path)));
 const json = (path: string) => JSON.parse(bytes(path).toString('utf8'));
 const idOf = (result: object) => `recompile-phone-input-bracket-${sha256(JSON.stringify({ ...result, evidenceId: undefined })).slice(0, 16)}`;

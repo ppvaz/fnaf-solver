@@ -32,8 +32,7 @@
 // the run directory lives outside the repository beside the harness.
 // MODEL_ONLY for the host side; the phone rows are rebuilt-runtime device
 // measurements, never retail evidence.
-import { createHash } from 'node:crypto';
-import type { BinaryLike } from 'node:crypto';
+import { sha256 } from './sweep-common.ts';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -47,7 +46,6 @@ const GAME = [1024, 768], NATIVE = [2400, 1080];
 
 function fail(message: string): never { console.error(`calib-replay: ${message}`); process.exit(2); }
 const opt = (args: readonly string[], name: string) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : undefined; };
-const sha256 = (text: BinaryLike) => createHash('sha256').update(text).digest('hex');
 
 /** An update-log row, as visit() tells the kinds apart: a session header, a frame's seed, or an update. */
 export interface CalibRow { readonly session?: unknown, readonly seed?: number, readonly f?: number, readonly u?: number }

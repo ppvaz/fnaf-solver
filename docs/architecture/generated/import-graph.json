@@ -2012,10 +2012,10 @@
       "file": "packages/propose/bin/census/fnaf1-device-lane.ts",
       "imports": [
         "../../../play/games/fnaf1/fnaf1-winner.ts",
+        "../recompile/sweep-common.ts",
         "./winner-census.ts",
         "@sixam/source/fnaf1",
         "node:child_process",
-        "node:crypto",
         "node:fs",
         "node:os",
         "node:path",
@@ -2027,10 +2027,10 @@
       "file": "packages/propose/bin/census/fnaf1-population-checkpoints.ts",
       "imports": [
         "../../../play/games/fnaf1/fnaf1-winner.ts",
+        "../recompile/sweep-common.ts",
         "./fnaf1-device-lane.ts",
         "./winner-census.ts",
         "@sixam/kernel",
-        "node:crypto",
         "node:fs",
         "node:os",
         "node:path",
@@ -2148,6 +2148,7 @@
         "../../../source/recompile/model-draw-trace.ts",
         "../plans/bundle.ts",
         "../recompile/rebuild-options-census.ts",
+        "../recompile/sweep-common.ts",
         "./winner-census.ts",
         "@sixam/kernel/contracts",
         "@sixam/propose/census",
@@ -2155,7 +2156,6 @@
         "@sixam/review/renamed-path",
         "@sixam/source/fnaf2",
         "node:assert/strict",
-        "node:crypto",
         "node:fs",
         "node:path",
         "node:url"
@@ -2165,12 +2165,12 @@
       "file": "packages/propose/bin/census/winner-census.ts",
       "imports": [
         "../plans/bundle.ts",
+        "../recompile/sweep-common.ts",
         "@sixam/kernel",
         "@sixam/propose/seeds",
         "@sixam/review/evidence-pack",
         "@sixam/source/fnaf2",
         "node:child_process",
-        "node:crypto",
         "node:fs",
         "node:os",
         "node:path",
@@ -2182,11 +2182,11 @@
       "imports": [
         "../plans/bundle.ts",
         "../plans/minus-toys-plan.ts",
+        "../recompile/sweep-common.ts",
         "./winner-census.ts",
         "@sixam/kernel",
         "@sixam/propose/seeds",
         "@sixam/source/fnaf2",
-        "node:crypto",
         "node:fs",
         "node:os",
         "node:path",
@@ -2544,13 +2544,13 @@
     {
       "file": "packages/propose/bin/policy/policy-artifact.ts",
       "imports": [
+        "../recompile/sweep-common.ts",
         "./policy-equivalence.ts",
         "./policy-interpreter.ts",
         "./policy-ir.ts",
         "@sixam/kernel",
         "@sixam/propose/policy",
         "@sixam/propose/seeds",
-        "node:crypto",
         "node:fs",
         "node:url"
       ]
@@ -2642,7 +2642,7 @@
       "imports": [
         "../../../source/recompile/model-draw-trace.ts",
         "./schedule-to-input.ts",
-        "node:crypto",
+        "./sweep-common.ts",
         "node:fs",
         "node:path",
         "node:url"
@@ -2678,7 +2678,7 @@
       "file": "packages/propose/bin/recompile/hour-grid-fit.ts",
       "imports": [
         "./phone-encounter-replay.ts",
-        "node:crypto",
+        "./sweep-common.ts",
         "node:fs",
         "node:url",
         "node:util"
@@ -2691,9 +2691,9 @@
         "./compare-schedule-replay.ts",
         "./phone-encounter-replay.ts",
         "./schedule-to-input.ts",
+        "./sweep-common.ts",
         "@sixam/review/renamed-path",
         "@sixam/source/fnaf2",
-        "node:crypto",
         "node:fs",
         "node:path",
         "node:url"
@@ -2709,7 +2709,6 @@
         "./schedule-to-input.ts",
         "./sweep-common.ts",
         "@sixam/source/fnaf2",
-        "node:crypto",
         "node:fs",
         "node:path",
         "node:url"
@@ -2741,10 +2740,10 @@
         "../plans/minus-toys-plan.ts",
         "./compare-schedule-replay.ts",
         "./schedule-to-input.ts",
+        "./sweep-common.ts",
         "@sixam/review/renamed-path",
         "@sixam/source",
         "@sixam/source/fnaf2",
-        "node:crypto",
         "node:fs",
         "node:path",
         "node:url"
@@ -2757,10 +2756,10 @@
         "./compare-schedule-replay.ts",
         "./phone-encounter-replay.ts",
         "./schedule-to-input.ts",
+        "./sweep-common.ts",
         "@sixam/review/renamed-path",
         "@sixam/source/fnaf2",
         "node:child_process",
-        "node:crypto",
         "node:fs",
         "node:path",
         "node:url"
@@ -2855,9 +2854,9 @@
         "./compare-schedule-replay.ts",
         "./phone-encounter-replay.ts",
         "./schedule-to-input.ts",
+        "./sweep-common.ts",
         "@sixam/review/renamed-path",
         "@sixam/source/fnaf2",
-        "node:crypto",
         "node:fs",
         "node:os",
         "node:path",
@@ -2918,10 +2917,10 @@
     {
       "file": "packages/propose/bin/recompile/pilot/record.ts",
       "imports": [
+        "../sweep-common.ts",
         "./pilot.ts",
         "@sixam/kernel",
         "@sixam/review/renamed-path",
-        "node:crypto",
         "node:fs",
         "node:path",
         "node:url"
@@ -2984,9 +2983,9 @@
         "../census/winner-phase-census.ts",
         "../plans/bundle.ts",
         "../plans/night7-presets.ts",
+        "./sweep-common.ts",
         "@sixam/kernel",
         "@sixam/source/fnaf2",
-        "node:crypto",
         "node:fs",
         "node:os",
         "node:path",
@@ -2998,8 +2997,8 @@
       "imports": [
         "../plans/bundle.ts",
         "../plans/minus-toys-plan.ts",
+        "./sweep-common.ts",
         "@sixam/source",
-        "node:crypto",
         "node:fs",
         "node:path",
         "node:url"
@@ -3038,8 +3037,8 @@
       "file": "packages/propose/bin/recompile/test-hour-grid-fit.ts",
       "imports": [
         "./hour-grid-fit.ts",
+        "./sweep-common.ts",
         "node:assert/strict",
-        "node:crypto",
         "node:fs"
       ]
     },
@@ -3048,9 +3047,9 @@
       "imports": [
         "./phone-clock-sweep.ts",
         "./phone-encounter-replay.ts",
+        "./sweep-common.ts",
         "node:assert/strict",
         "node:child_process",
-        "node:crypto",
         "node:fs",
         "node:os",
         "node:path",
@@ -3075,7 +3074,6 @@
         "./phone-early-perturbation.ts",
         "./sweep-common.ts",
         "node:assert/strict",
-        "node:crypto",
         "node:fs",
         "node:os",
         "node:path",
@@ -3088,10 +3086,10 @@
         "../../../source/recompile/model-draw-trace.ts",
         "./phone-encounter-replay.ts",
         "./phone-input-bracket-sweep.ts",
+        "./sweep-common.ts",
         "@sixam/review/renamed-path",
         "node:assert/strict",
         "node:child_process",
-        "node:crypto",
         "node:fs",
         "node:os",
         "node:path",
@@ -3117,7 +3115,6 @@
         "./phone-seed-scan.ts",
         "./sweep-common.ts",
         "node:assert/strict",
-        "node:crypto",
         "node:fs",
         "node:os",
         "node:path",
@@ -3130,7 +3127,6 @@
         "./phone-static-readout.ts",
         "./sweep-common.ts",
         "node:assert/strict",
-        "node:crypto",
         "node:fs",
         "node:path",
         "node:url"
@@ -3143,7 +3139,6 @@
         "./phone-stream-census.ts",
         "./sweep-common.ts",
         "node:assert/strict",
-        "node:crypto",
         "node:fs",
         "node:path",
         "node:url"
@@ -3155,10 +3150,10 @@
         "../../../source/recompile/model-draw-trace.ts",
         "../census/winner-census.ts",
         "./rebuild-options-census.ts",
+        "./sweep-common.ts",
         "@sixam/review/renamed-path",
         "@sixam/source/fnaf2",
         "node:assert/strict",
-        "node:crypto",
         "node:fs",
         "node:path",
         "node:url"

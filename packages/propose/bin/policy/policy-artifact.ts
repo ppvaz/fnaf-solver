@@ -4,7 +4,7 @@
 // of policy. This artifact keeps the canonical policy, its hash, and the
 // device projection together, then checks the projection against the same
 // compiler/equivalence gate used by the offline campaign.
-import { createHash } from 'node:crypto';
+import { sha256 } from '../recompile/sweep-common.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { canonicalPolicy, validatePolicy } from '@sixam/propose/policy';
@@ -17,7 +17,6 @@ import { phaseOf, replayPolicy } from './policy-interpreter.ts';
 
 export const ARTIFACT_SCHEMA = 'policy-artifact-v1';
 
-const sha256 = (text: string) => createHash('sha256').update(text).digest('hex');
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value));
 
 export function compilePolicyArtifact(program: PolicyProgram = minimalPolicy()) {

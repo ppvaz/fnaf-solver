@@ -24,9 +24,8 @@
 // A census is a MODEL result. It says what the simulator does with the
 // schedule; it prices no actuator lateness, seam loss or frame phase the phone
 // re-rolls, and it cannot be promoted as a device claim.
+import { sha256 } from '../recompile/sweep-common.ts';
 import { execFileSync, fork } from 'node:child_process';
-import { createHash } from 'node:crypto';
-import type { BinaryLike } from 'node:crypto';
 import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
@@ -50,7 +49,6 @@ export const MAX_LISTED_LOSSES = 1000;
 const SWEEP_STRIDE = 2246822519;
 const TUNING_COUNT = 3000;
 
-const sha256 = (text: BinaryLike) => createHash('sha256').update(text).digest('hex');
 
 /** A lost night: its seed, what ended it, and the frame it ended on. */
 export type Loss = [seed: number, reason: string, frame: number];

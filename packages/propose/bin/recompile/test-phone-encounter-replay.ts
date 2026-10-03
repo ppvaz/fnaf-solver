@@ -2,10 +2,9 @@
 // FIXTURE for phone-encounter-replay.ts (clock, press rules, window codes, scoring, the rebuild's occupant),
 // then the committed rebuild-vs-phone record's own arithmetic, re-derived from its rows without the binary
 // or any private input. In `npm run test:unit`.
+import { sha256 } from './sweep-common.ts';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
-import type { BinaryLike } from 'node:crypto';
 import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -25,7 +24,6 @@ const ROOT = fileURLToPath(new URL('../../../../', import.meta.url));
 
 // A repository path, or one a committed record names where the file stood when it was written.
 const read = (rel: string) => readFileSync(new URL(`../../../../${currentPath(ROOT, rel) ?? rel}`, import.meta.url), 'utf8');
-const sha256 = (value: BinaryLike) => createHash('sha256').update(value).digest('hex');
 // A lookup or optional field the fixture knows is there; the assertion reads it.
 const found = <T>(value: T | null | undefined) => value as T;
 /** A committed night, record row or result row, as the checks below find it. */

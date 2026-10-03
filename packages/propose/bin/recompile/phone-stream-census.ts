@@ -13,8 +13,7 @@
 // agreeing prefix reaches the predeclared floor through the whole night. The decision rule is the predeclaration's,
 // applied here verbatim; this file never chooses a threshold. MODEL_ONLY: a state that fits is a hypothesis about
 // the phone, not a measurement of it.
-import { createHash } from 'node:crypto';
-import type { BinaryLike } from 'node:crypto';
+import { sha256 } from './sweep-common.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { cpus } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
@@ -32,7 +31,6 @@ const CONFIG = 'packages/propose/bin/recompile/phone-encounter-nights.json';
 export const SCHEMA = 'phone-stream-census-v1';
 export const STATES = 0x10000;
 const CODE: Readonly<Record<string, string>> = { withbonnie: 'B', withchica: 'C', withfreddy: 'F', toybonnie: 'b', toychica: 'c', toyfreddy: 'f', mangle: 'M', bb: 'x' };
-const sha256 = (bytes: BinaryLike) => createHash('sha256').update(bytes).digest('hex');
 // Every path the config names leads to a file (test-phone-encounter-replay.ts follows each).
 const current = (path: string) => currentPath(ROOT, path) as string;
 

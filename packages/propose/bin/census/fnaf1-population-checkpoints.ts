@@ -4,7 +4,7 @@
 // the pinned policy, options, range and block size, and retain every raw loss.
 //   nice -n 10 node packages/propose/bin/census/fnaf1-population-checkpoints.ts --route winner \
 //     --checkpoints artifacts/fnaf1-winner-population --jobs 3 --out FILE
-import { createHash } from 'node:crypto';
+import { sha256 } from '../recompile/sweep-common.ts';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
@@ -17,7 +17,6 @@ import { designBlock, forkBlocks, gitState } from './winner-census.ts';
 import { loadWinner, materialize, removeTree } from '../../../play/games/fnaf1/fnaf1-winner.ts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../../..');
-const sha256 = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex');
 const json = (value: unknown) => `${JSON.stringify(value, null, 2)}\n`;
 const read = (file: string): unknown => JSON.parse(readFileSync(file, 'utf8'));
 const atomicWrite = (file: string, value: unknown) => {

@@ -19,8 +19,8 @@
 //   node packages/propose/bin/census/winner-phase-census.ts --night 7 --count 3000 --window 1000 --jobs 7 --out FILE
 //
 // MODEL_ONLY, exact lane: the phase is the only thing moved.
+import { sha256 } from '../recompile/sweep-common.ts';
 import { parseArgs } from 'node:util';
-import { createHash } from 'node:crypto';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -49,7 +49,6 @@ export const STEP_MS = 1000 / FPS;
 // A phase cell some seeds win and some lose is where the seed matters; its
 // losses are listed so a gate can replay them. Cells are few, lists short.
 const MAX_LISTED_PARTIAL = 200;
-const sha256 = (text: string) => createHash('sha256').update(text).digest('hex');
 /** Every Minus Toys knob, as the emitter fills them. */
 type ToysKnobs = typeof KNOBS0;
 /** A night's phase-aware binding: its file and plan digests, its replay knobs and its declared epoch. */

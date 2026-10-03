@@ -4,7 +4,6 @@
 // refused for another predeclaration), then every docs/evidence/s2-region-readout*.json re-derived from its rows.
 // No phone, capture or model scan. In `npm run test:unit`.
 import assert from 'node:assert/strict';
-import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -12,11 +11,10 @@ import { fileURLToPath } from 'node:url';
 import { deriveInputs, identifyReading, measuredNight, periodValue, readoutStrength, regionImages, updateOf } from './phone-region-readout.ts';
 import { anchorIndex, seedCandidates } from './phone-seed-readout.ts';
 import { identifySeed } from './phone-seed-scan.ts';
-import { powerCheckPassed, recordId, stepRng } from './sweep-common.ts';
+import { powerCheckPassed, recordId, sha256, stepRng } from './sweep-common.ts';
 import { check as checkEncounters } from './phone-encounter-replay.ts';
 
 const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '../../../..');
-const sha = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex');
 const step = (s: number) => (s * 31415 + 1) & 0xffff;
 const along = (s: number, n: number) => { let x = s; for (let i = 0; i < n; i += 1) x = step(x); return x; };
 
@@ -73,7 +71,7 @@ assert.equal(identifyReading(rule, [{ state: top, r: null }]).verdict, 'UNIDENTI
       { type: 'origin.anchor', status: 'released', releasedAimMs: 2434.02 }].map((r) => JSON.stringify(r)).join('\n'));
     writeFileSync(join(root, 'captures/static-readouts/r1.jsonl'), 'rows\n');
     const inputs = deriveInputs('r1', 'abc', root);
-    assert.deepEqual([inputs.onsetDeviceMs, inputs.releasedAimMs, inputs.readout.sha256], [309804879.3, 2434.02, sha('rows\n')]);
+    assert.deepEqual([inputs.onsetDeviceMs, inputs.releasedAimMs, inputs.readout.sha256], [309804879.3, 2434.02, sha256('rows\n')]);
     const pre = { night: { winner: 'w', staticReadout: { region: 'static_view' } }, method: { seedToFirstFrameMs: 81 } };
     const night = measuredNight(pre, inputs, 'abc');
     assert.equal(night.releaseAfterRunStartMs, 81 + 2434.02);
@@ -142,7 +140,7 @@ assert.equal(powerCheckPassed([1, -2], (n) => n > 0), false, 'one planted state 
 // compare result's arithmetic rechecked, the rebuild and the model at 6 AM and alike on every window, the control dead
 {
   const rec = JSON.parse(readFileSync(join(ROOT, 'docs/evidence/rebuild-release20-full06-20261001.json'), 'utf8'));
-  assert.equal(rec.result.sha256, sha(readFileSync(join(ROOT, rec.result.path))), 'the compare result is the committed one');
+  assert.equal(rec.result.sha256, sha256(readFileSync(join(ROOT, rec.result.path))), 'the compare result is the committed one');
   checkEncounters(JSON.parse(readFileSync(join(ROOT, rec.result.path), 'utf8')));
   const r20 = rec.variants['landed-r20']; const ctl = rec.variants.landed;
   assert.equal(r20.rebuilt.outcome.result, '6am'); assert.equal(r20.model.outcome.result, '6am');
@@ -156,7 +154,7 @@ assert.equal(powerCheckPassed([1, -2], (n) => n > 0), false, 'one planted state 
 // only full-06's outcome moves to the phone's
 {
   const rec = JSON.parse(readFileSync(join(ROOT, 'docs/evidence/rebuild-release20-three-nights-20261001.json'), 'utf8'));
-  assert.equal(rec.result.sha256, sha(readFileSync(join(ROOT, rec.result.path))), 'the three-night result is the committed one');
+  assert.equal(rec.result.sha256, sha256(readFileSync(join(ROOT, rec.result.path))), 'the three-night result is the committed one');
   checkEncounters(JSON.parse(readFileSync(join(ROOT, rec.result.path), 'utf8')));
   const agrees = rec.nights.filter((n: { variants: Record<string, { derived: { rebuiltOutcome: { agrees: boolean | null } } }> }) => n.variants['landed-r20'].derived.rebuiltOutcome.agrees === true).map((n: { name: string }) => n.name);
   assert.deepEqual(agrees, ['full-06'], 'with releases at 20 ms only full-06\'s outcome agrees with the phone');
@@ -170,7 +168,7 @@ for (const file of records) {
   if (rec.schema === 'phone-region-readout-v1-inputs') {
     // A night's derived inputs: bound to a committed predeclaration, read from a committed pack.
     const pre = readdirSync(join(ROOT, 'docs/evidence')).filter((f) => f.includes('-predeclaration-'))
-      .find((f) => sha(readFileSync(join(ROOT, 'docs/evidence', f))) === rec.predeclarationSha256);
+      .find((f) => sha256(readFileSync(join(ROOT, 'docs/evidence', f))) === rec.predeclarationSha256);
     assert.ok(pre, `${file}: no committed predeclaration has sha256 ${rec.predeclarationSha256}`);
     const derived = deriveInputs(rec.run, rec.predeclarationSha256, ROOT, { readoutSha256: rec.readout.sha256 });
     assert.deepEqual(derived, rec, `${file}: re-derived from the pack`);
@@ -197,6 +195,6 @@ for (const file of records) {
   const { id } = rec;
   assert.equal(id, recordId(id.slice(0, id.lastIndexOf('-')), rec), `${file}: record id`);
   if (rec.predeclaration?.path && existsSync(join(ROOT, rec.predeclaration.path)))
-    assert.equal(rec.predeclaration.sha256, sha(readFileSync(join(ROOT, rec.predeclaration.path))), `${file}: the predeclaration is the committed one`);
+    assert.equal(rec.predeclaration.sha256, sha256(readFileSync(join(ROOT, rec.predeclaration.path))), `${file}: the predeclaration is the committed one`);
 }
 console.log(`phone-region-readout: update rule, alias-aware reading, strength recovery and night-input fixtures${records.length ? `, and ${records.length} record(s) re-derived` : ''}`);

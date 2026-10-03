@@ -20,8 +20,7 @@
 // rows and the retained control, without the model or any private input.
 //
 // Content-free: codes, counts, times and hashes. MODEL_ONLY; nothing promotes anything.
-import { createHash } from 'node:crypto';
-import type { BinaryLike } from 'node:crypto';
+import { sha256 } from './sweep-common.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -39,7 +38,6 @@ import type { Sim } from '@sixam/source/fnaf2';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
 // A path a committed record names, where it lives now (records keep the paths they were written with).
 const current = (path: string) => currentPath(ROOT, path) ?? path;
-const sha256 = (value: BinaryLike) => createHash('sha256').update(value).digest('hex');
 export const SCHEMA = 'phone-clock-sweep-result-v1';
 export const MODEL_FRAMES = 40000;
 const CODE: Readonly<Record<string, string>> = { withbonnie: 'B', withchica: 'C', withfreddy: 'F', toybonnie: 'b', toychica: 'c', toyfreddy: 'f', mangle: 'M', bb: 'x' };

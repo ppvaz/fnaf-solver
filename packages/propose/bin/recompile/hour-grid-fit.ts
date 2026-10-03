@@ -12,14 +12,12 @@
 // night frame. The fit is the least-squares phase of t = zero + 70000 k. Content-free: times, luma and
 // counts only. The reads are DEVICE_MEASURED observations from the retained capture; nothing here replays
 // or promotes anything.
+import { sha256 } from './sweep-common.ts';
 import { parseArgs } from 'node:util';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { createHash } from 'node:crypto';
-import type { BinaryLike } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 import { traceColumns } from './phone-encounter-replay.ts';
 
-const sha256 = (v: BinaryLike) => createHash('sha256').update(v).digest('hex');
 
 /** An hour's transition: the first dark interstitial frame near it, or none found. */
 export type Transition = { k: number, imageMs: number, luma: number, prevLuma: number } | { k: number, imageMs: null };

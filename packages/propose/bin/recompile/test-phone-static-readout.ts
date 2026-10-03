@@ -3,18 +3,15 @@
 // docs/evidence/full06-static-readout*-20261001.json re-derived from its rows: verdicts, cycle positions, neighbourhood
 // states and record ids. No model run, frame trace or capture. In `npm run test:unit`.
 import assert from 'node:assert/strict';
-import { createHash } from 'node:crypto';
-import type { BinaryLike } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cycleIndex, detrend, identify, lumaByImage, pearson, regionMeanLuma, staticPredeclaration } from './phone-static-readout.ts';
-import { checkSweepPredeclaration, recordId } from './sweep-common.ts';
+import { checkSweepPredeclaration, recordId, sha256 } from './sweep-common.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
 const read = (path: string) => readFileSync(join(ROOT, path));
 const json = (path: string) => JSON.parse(read(path).toString('utf8'));
-const sha256 = (bytes: BinaryLike) => createHash('sha256').update(bytes).digest('hex');
 const step = (s: number) => (s * 31415 + 1) & 0xffff;
 const along = (from: number, n: number) => { let s = from; for (let i = 0; i < n; i += 1) s = step(s); return s; };
 

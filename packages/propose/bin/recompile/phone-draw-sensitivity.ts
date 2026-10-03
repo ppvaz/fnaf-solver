@@ -24,9 +24,7 @@
 // Explanations it characterizes, not tests (the record is exploratory, made after the sweeps were first run by
 // hand): E-press, the readout's window prediction depends on press landing through press-anchored draw sites;
 // E-clock, a trace-free night's 60 Hz clock keeps the window's draw interleaving.
-import { stepRng } from './sweep-common.ts';
-import { createHash } from 'node:crypto';
-import type { BinaryLike } from 'node:crypto';
+import { sha256, stepRng } from './sweep-common.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -48,7 +46,6 @@ const PREDECLARATIONS = ['docs/evidence/full06-static-readout-predeclaration-202
   'docs/evidence/full06-static-readout-detrended-predeclaration-20261001.json'];
 const INJECTED = 12345;
 const SHIFT = 30;
-const sha256 = (bytes: BinaryLike) => createHash('sha256').update(bytes).digest('hex');
 /** A traced night of the config. */
 type TracedNight = NightConfig & { readonly trace: NonNullable<NightConfig['trace']> };
 /** A clock variant: the update deltas and the contacts mapped onto them. */

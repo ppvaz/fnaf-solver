@@ -45,8 +45,7 @@
 //
 // Content-free: codes, ticks, times and hashes. The rebuild and the model are MODEL_ONLY; phone reads and
 // terminals are reused DEVICE_MEASURED observations named by their records. Nothing here promotes anything.
-import { createHash } from 'node:crypto';
-import type { BinaryLike } from 'node:crypto';
+import { sha256 } from './sweep-common.ts';
 import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -67,7 +66,6 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
 // A repository path a config names, where it lives now: the configs are hash-bound and keep the paths
 // they were written with (ADR 0002 principle 9), and the files they name have moved since.
 const current = (path: string) => currentPath(ROOT, path) ?? path;
-const sha256 = (value: BinaryLike) => createHash('sha256').update(value).digest('hex');
 export const FRAME_MS = 1000 / 60;
 export const OFFICE_FRAME = 3;
 export const WINDOW_MS = 1500;

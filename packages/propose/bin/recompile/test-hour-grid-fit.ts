@@ -1,15 +1,13 @@
 #!/usr/bin/env node
 // FIXTURE for the trace-derived hour grid and the committed DEVICE_MEASURED records. The arithmetic
 // checks run in a clean checkout; source frame traces remain hash-named inputs and are not required.
+import { sha256 } from './sweep-common.ts';
 import assert from 'node:assert/strict';
-import { createHash } from 'node:crypto';
-import type { BinaryLike } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { check, fitHourGrid, hourGridArgs, hourTransitions, SCHEMA } from './hour-grid-fit.ts';
 import type { Checked, Transition } from './hour-grid-fit.ts';
 
 const read = (rel: string) => readFileSync(new URL(`../../../../${rel}`, import.meta.url), 'utf8');
-const sha256 = (value: BinaryLike) => createHash('sha256').update(value).digest('hex');
 
 // --- detect a dark interstitial after each expected hour and fit its phase
 {

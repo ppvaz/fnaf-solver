@@ -32,9 +32,9 @@
 //   node packages/propose/bin/census/fnaf1-device-lane.ts --population [--route tree|winner] [--jobs 7] [--out FILE]
 //        # grid420, every seed, three lanes: the tree's, or the committed winner's pinned one
 
+import { sha256 } from '../recompile/sweep-common.ts';
 import { parseArgs } from 'node:util';
 import { execFileSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
 import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -757,7 +757,6 @@ export type RouteWinner = Fnaf1Winner & {
 };
 // Every winner pins the lane at one of the paths it has stood at.
 const pinnedLaneFile = (winner: Fnaf1Winner) => LANE_FILES.find((path) => path in winner.sources) as string;
-const sha256 = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex');
 
 /**
  * Where the lane file last hashed to `pinned` in history, and the commits that

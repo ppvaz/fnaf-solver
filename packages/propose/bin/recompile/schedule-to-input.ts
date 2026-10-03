@@ -24,8 +24,7 @@
 // harness raises one new-touch trigger per update, where Android dispatches every touch.
 //
 // Content-free: control names, times and window points only. MODEL_ONLY input; no device claim.
-import { createHash } from 'node:crypto';
-import type { BinaryLike } from 'node:crypto';
+import { sha256 } from './sweep-common.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -59,7 +58,6 @@ export type ControlPoints = Readonly<Record<string, readonly [number, number]>>;
 /** A harness row: a touch going down at its point, or the pointer coming up. */
 export interface HarnessRow { tick: number, op: 'down' | 'up', pointer: number, x?: number, y?: number, control: string }
 
-const sha256 = (value: BinaryLike) => createHash('sha256').update(value).digest('hex');
 export const frameOf = (ms: number) => Math.round(ms * FPS / 1000);
 
 /** The profile's control points in window pixels, one per control name the schedules use. */
