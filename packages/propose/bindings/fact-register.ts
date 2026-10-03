@@ -454,10 +454,6 @@ function migrationFor(winnerHash: string) {
   return null;
 }
 
-/**
- * The registered aim for a binding, with its evidence read and checked, or a
- * refusal naming why. Never guesses: an unknown binding is `null`.
- */
 /** The fields of an anchor aim's evidence record this check reads. */
 interface AimEvidence {
   readonly binding: string;
@@ -465,8 +461,32 @@ interface AimEvidence {
   readonly aimMs: number;
   readonly winningBands?: readonly { readonly fromMs: number; readonly toMs: number }[];
   readonly latencyMs?: { readonly min: number; readonly max: number };
+  readonly onsetBiasMs?: unknown;
   readonly confirmations3000?: readonly { readonly wins: number; readonly seeds: number; readonly epochMs: number }[];
   readonly kLimit?: { readonly maxK?: number };
+}
+
+/**
+ * The epoch an aim actually delivers at k = 0: the executor releases at
+ * latched onset + aim, the latched onset leads the frame trace by the onset
+ * bias, and the game acts an input latency later, so
+ * effective = aim + onsetBias + [latency.min, latency.max].
+ *
+ * The one derivation: the phone-side check below and test-anchor-aim-band.ts
+ * both read it, so the gate cannot pass an epoch the phone check derives
+ * differently. The register's own terms are the ones that run; evidence that
+ * states a different number for either is refused, never silently preferred.
+ * An entry that states no bias is checked at 0 and says so (`biasStated`).
+ */
+export function effectiveEpoch(entry: AnchorAim, evidence: Pick<AimEvidence, 'latencyMs' | 'onsetBiasMs'>) {
+  const latency = entry.latencyMs ?? { min: 0, max: 0 };
+  if (evidence.latencyMs && (evidence.latencyMs.min !== latency.min || evidence.latencyMs.max !== latency.max))
+    return { ok: false as const, reason: `the evidence states latency [${evidence.latencyMs.min}, ${evidence.latencyMs.max}], the register [${latency.min}, ${latency.max}]` };
+  const bias = entry.onsetBiasMs ?? 0;
+  if (typeof evidence.onsetBiasMs === 'number' && evidence.onsetBiasMs !== bias)
+    return { ok: false as const, reason: `the evidence measured an onset bias of ${evidence.onsetBiasMs} ms, the register runs ${bias}` };
+  return { ok: true as const, minMs: entry.aimMs + bias + latency.min, maxMs: entry.aimMs + bias + latency.max,
+    bias, biasStated: entry.onsetBiasMs !== undefined, latency };
 }
 
 /** A registered aim checked against its evidence, or the refusal that says why not. */
@@ -475,9 +495,15 @@ export type AimLookup =
   | AnchorAim & {
     readonly ok: true;
     readonly band: { readonly fromMs: number; readonly toMs: number };
+    readonly effective: { readonly minMs: number; readonly maxMs: number; readonly biasStated: boolean };
     readonly winnerHash: string;
     readonly migratedFrom: { readonly hash: string; readonly winner: string } | null;
   };
+
+/**
+ * The registered aim for a binding, with its evidence read and checked, or a
+ * refusal naming why. Never guesses: an unknown binding is a refusal.
+ */
 
 export function anchorAimFor(winnerHash: string): AimLookup {
   const asked = winnerHash;
@@ -504,20 +530,17 @@ export function anchorAimFor(winnerHash: string): AimLookup {
     return { ok: false, reason: `anchor aim evidence ${entry.evidence} is for binding ${evidence.binding}, not ${winnerHash}` };
   if (evidence.night !== entry.night || evidence.aimMs !== entry.aimMs)
     return { ok: false, reason: `anchor aim evidence ${entry.evidence} disagrees with the register (night ${evidence.night}, aim ${evidence.aimMs})` };
-  const latency = entry.latencyMs ?? { min: 0, max: 0 };
   // The helper's latched onset leads the frame trace's first night frame
   // (measured -65..-75 ms on 2026-09-13); an entry that states the bias is
   // checked at the epoch the phone actually delivers.
-  const bias = entry.onsetBiasMs ?? 0;
-  const effectiveMin = entry.aimMs + bias + latency.min;
-  const effectiveMax = entry.aimMs + bias + latency.max;
+  const epoch = effectiveEpoch(entry, evidence);
+  if (!epoch.ok) return { ok: false, reason: `${entry.evidence}: ${epoch.reason}` };
+  const { minMs: effectiveMin, maxMs: effectiveMax, latency } = epoch;
   const band = (evidence.winningBands ?? []).find(b => b.fromMs + ANCHOR_AIM_MIN_MARGIN_MS <= effectiveMin &&
     effectiveMax <= b.toMs - ANCHOR_AIM_MIN_MARGIN_MS);
   if (!band)
-    return { ok: false, reason: `aim ${entry.aimMs} ms + latency [${latency.min}, ${latency.max}] = effective [${effectiveMin}, ${effectiveMax}] ` +
+    return { ok: false, reason: `aim ${entry.aimMs} ms + bias ${epoch.bias} + latency [${latency.min}, ${latency.max}] = effective [${effectiveMin}, ${effectiveMax}] ` +
       `is not inside a winning band of ${entry.evidence} with ${ANCHOR_AIM_MIN_MARGIN_MS} ms margin` };
-  if (evidence.latencyMs && (evidence.latencyMs.min !== latency.min || evidence.latencyMs.max !== latency.max))
-    return { ok: false, reason: `${entry.evidence} states latency [${evidence.latencyMs.min}, ${evidence.latencyMs.max}], the register [${latency.min}, ${latency.max}]` };
   // A bundle gated at an anchor epoch (winner.anchorEpochMs) must be gated at
   // an epoch this aim can deliver: inside the effective interval at some k.
   if (entry.qualifiedEpochMs !== undefined) {
@@ -542,6 +565,7 @@ export function anchorAimFor(winnerHash: string): AimLookup {
       return { ok: false, reason: `${entry.evidence} limits k to ${evidence.kLimit?.maxK}, the register says ${entry.maxK}` };
   }
   return { ok: true, ...entry, band, winnerHash,
+    effective: { minMs: effectiveMin, maxMs: effectiveMax, biasStated: epoch.biasStated },
     migratedFrom: migration ? { hash: asked, winner: migration.file } : null };
 }
 
