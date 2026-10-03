@@ -4,13 +4,13 @@
 // occupancy score's two jobs: static alone stays low, a figure does not,
 // and the region recorder it reads its night through (night-kit.ts), across
 // the ways a night took the CLI's recorder on 2026-10-01.
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { gunzipSync } from 'node:zlib';
 import { parseArgs, searchOrder, NEXT, VENT_OF, SystemsClock, chooseReboot, teachFeed, raiseMonitor } from './fnaf3-run.ts';
 import { FEED, PICTURE_MASK, Reader, boxSamples, medianLuma, occupancy, decodePng, sampleBlocks, boxLuma, stateScore, IMAGE_GEOMETRY, CAMERA_FRAMES } from './fnaf3-detectors.ts';
-import { pngFromRegion } from '../../bin/phone/native-regions.ts';
+import { loadRegionSet, pngFromRegion } from '../../bin/phone/native-regions.ts';
 import type { AdbCompanionPort } from '../../src/campaign/physical-ports.ts';
 import { RegionRecorder, type RegionRead, type RunRecord, relaunchToTitle, releaseContacts } from '../../bin/phone/night-kit.ts';
 
@@ -334,6 +334,24 @@ async function recorderRun({ endAt = 10000, stillUntil = 0, restartAt = Infinity
   ok(`a title that never shows is an error (${refused})`, /did not show/.test(refused));
   const blind = await relaunchToTitle({ pkg: 'p', activity: 'p/.A', snapTo: async () => {}, adb: () => {}, settleMs: 1 });
   ok(`without a title rule the relaunch says it is unverified (${blind})`, /^RELAUNCHED_UNVERIFIED/.test(blind));
+}
+
+// --- a region model is checked, and a bad one is an error the runner can clean up after -----
+{
+  const dir = mkdtempSync(join(tmpdir(), 'regions-'));
+  const write = (name: string, value: unknown) => { const path = join(dir, name); writeFileSync(path, JSON.stringify(value)); return path; };
+  try {
+    const good = { schema: 'native-regions-v1', sets: { night: { title: { x: 1, y: 2, width: 3, height: 4, step: 2 } } } };
+    ok('a well-formed set loads', loadRegionSet(write('good.json', good), 'night').set.title.width === 3);
+    throws('another schema is refused', () => loadRegionSet(write('schema.json', { ...good, schema: 'x' }), 'night'));
+    throws('a missing set is refused', () => loadRegionSet(write('set.json', good), 'day'));
+    throws('a rectangle without a width is refused', () => loadRegionSet(write('rect.json',
+      { schema: 'native-regions-v1', sets: { night: { title: { x: 1, y: 2, height: 4 } } } }), 'night'));
+    throws('a measured control without a point is refused', () => loadRegionSet(write('control.json',
+      { ...good, controlsMeasuredFrom: { cam4bButton: { x: 'left' } } }), 'night'));
+    const committed = loadRegionSet(new URL('../../profiles/fnaf3/moto-g56/regions-fnaf3-moto-g56-v204.json', import.meta.url).pathname, 'night');
+    ok('the committed FNaF 3 night set loads', Object.keys(committed.set).includes('title'));
+  } finally { rmSync(dir, { recursive: true, force: true }); }
 }
 
 if (failures.length) {

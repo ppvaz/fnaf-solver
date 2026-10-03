@@ -23,22 +23,54 @@ import { writeFileSync, mkdirSync, readFileSync, appendFileSync } from 'node:fs'
 import { join } from 'node:path';
 import { deflateSync } from 'node:zlib';
 import { AdbCompanionPort } from '../../src/campaign/physical-ports.ts';
+import { isRecord } from '@sixam/kernel';
 import { resolveSerial } from './local-profile.ts';
 import { REGION_STALL_MS, RegionStream } from './night-kit.ts';
 
 /** A registered rectangle of native display pixels, sampled every `step`. */
 interface Rect { readonly x: number, readonly y: number, readonly width: number, readonly height: number, readonly step?: number }
+/** A `native-regions-v1` model: named sets of rectangles, and the control points it was measured from. */
+export interface RegionModel {
+  readonly schema: 'native-regions-v1';
+  readonly sets: Readonly<Record<string, Readonly<Record<string, Rect>>>>;
+  readonly controlsMeasuredFrom?: Readonly<Record<string, { readonly x: number, readonly y: number }>>;
+}
 type RegionChannel = ReturnType<AdbCompanionPort['openRegions']>;
 /** What `record` needs of a channel. */
 type RecordChannel = Pick<RegionChannel, 'read' | 'close'>;
 
 function fail(message: string): never { console.error(`native-regions: ${message}`); process.exit(2); }
 
+const finite = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value);
+
+function refuseModel(where: string, why: string): never { throw new Error(`native-regions: ${where} ${why}`); }
+
+/** Check a parsed region model; a bad one throws, naming where. */
+export function validateRegionModel(value: unknown, where: string): RegionModel {
+  if (!isRecord(value) || value.schema !== 'native-regions-v1') refuseModel(where, 'is not native-regions-v1');
+  const { sets, controlsMeasuredFrom } = value;
+  if (!isRecord(sets)) refuseModel(where, 'has no sets');
+  for (const [setName, set] of Object.entries(sets)) {
+    if (!isRecord(set)) refuseModel(where, `set ${setName} is not a record of rectangles`);
+    for (const [name, rect] of Object.entries(set)) {
+      if (!isRecord(rect) || ![rect.x, rect.y, rect.width, rect.height].every(finite) || (rect.step !== undefined && !finite(rect.step)))
+        refuseModel(where, `set ${setName} region ${name} is not a rectangle {x, y, width, height, step?}`);
+    }
+  }
+  if (controlsMeasuredFrom !== undefined) {
+    if (!isRecord(controlsMeasuredFrom)) refuseModel(where, 'controlsMeasuredFrom is not a record of points');
+    for (const [name, point] of Object.entries(controlsMeasuredFrom)) {
+      if (!isRecord(point) || !finite(point.x) || !finite(point.y)) refuseModel(where, `control ${name} is not a point {x, y}`);
+    }
+  }
+  return value as unknown as RegionModel;
+}
+
+/** Load a region model and one of its sets; a bad model or a missing set throws, so a runner's teardown still runs. */
 export function loadRegionSet(path: string, name: string) {
-  const model = JSON.parse(readFileSync(path, 'utf8'));
-  if (model.schema !== 'native-regions-v1') fail(`${path} is not native-regions-v1`);
-  const set: Readonly<Record<string, Rect>> | undefined = model.sets?.[name];
-  if (!set) fail(`${path} has no set ${name}`);
+  const model = validateRegionModel(JSON.parse(readFileSync(path, 'utf8')), path);
+  const set = model.sets[name];
+  if (!set) throw new Error(`native-regions: ${path} has no set ${name}`);
   return { model, set };
 }
 

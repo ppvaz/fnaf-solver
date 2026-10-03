@@ -946,6 +946,7 @@
         "../../src/campaign/physical-ports.ts",
         "./local-profile.ts",
         "./night-kit.ts",
+        "@sixam/kernel",
         "node:fs",
         "node:path",
         "node:zlib"

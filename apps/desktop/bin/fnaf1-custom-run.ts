@@ -474,8 +474,7 @@ async function main(argv: string[]) {
     doc.dialsAtEntry = start.dials;
     doc.dialsSet = await setDials(bridge, record, hid, customNight, CONTACT_MS, options.dials as NonNullable<typeof options.dials>, 'set'); // parseArgs refuses a live night without dials
 
-    // loadRegionSet refuses a missing set
-    recorder = new RegionRecorder(regionOpener(serial, regionModel.set as NonNullable<typeof regionModel.set>, { port }),
+    recorder = new RegionRecorder(regionOpener(serial, regionModel.set, { port }),
       join(captureDir, 'regions.ndjson.gz'), { onReopen: (row) => { record.event('regions-reopened', { ...row }).catch(() => {}); } });
     await recorder.start();
     await sleep(500);
