@@ -95,7 +95,20 @@
       "packages/play/games/fnaf4/test-fnaf4-fredbear.ts",
       "packages/play/bin/companion/test-audio-players.ts",
       "packages/play/bin/recompile/test-practice-audit.ts",
-      "packages/play/bin/recompile/test-rebuild-night.ts"
+      "packages/play/bin/recompile/test-rebuild-night.ts",
+      "packages/propose/test/test-hid-trace.ts",
+      "packages/play/bin/phone/test-screen-map.ts",
+      "packages/review/test/stat.test.ts",
+      "packages/play/bin/phone/test-hid-sweep-probe.ts",
+      "packages/play/test/hid-report.test.ts",
+      "packages/propose/test/policygrammartest.ts",
+      "packages/propose/bin/policy/test-policy-ir.ts",
+      "packages/review/bin/legacy/test-index-observations.ts",
+      "apps/trainer/test/trace.test.ts",
+      "packages/propose/bin/policy/test-policy-interpreter.ts",
+      "apps/desktop/test/test-deathchart.ts",
+      "packages/propose/test/policyartifacttest.ts",
+      "packages/propose/test/policysearchtest.ts"
     ],
     "steps": [
       ["python3","packages/review/bin/recompile/test-phone-input-ledger.py"],
@@ -108,6 +121,16 @@
       ["python3","packages/play/games/fnaf1/test-fnaf1-teach-overlay.py"],
       ["python3","packages/play/src/sensors/screencap/test-sensor.py"],
       ["node","tools/affected-test.ts","--self-check"],
+      ["python3","packages/source/decompile/test-aimap.py"],
+      ["packages/play/bin/audio/test-bt-audio-link.sh"],
+      ["python3","packages/play/bin/calibrate/test-monitor-calibrate.py"],
+      ["python3","packages/review/bin/grade/test-camtrace.py"],
+      ["python3","packages/review/bin/grade/test-sweepcheck.py"],
+      ["python3","packages/review/bin/legacy/test-validate-session.py"],
+      ["python3","packages/play/test/test-intro-card.py"],
+      ["packages/play/bin/phone/test-select-adb.sh"],
+      ["bash","packages/play/bin/audio/test-capture-bt-audio.sh"],
+      ["python3","packages/play/bin/calibrate/test-camera-calibrate.py"],
       ["python3","packages/review/bin/recompile/test-audio-records.py"]
     ]
   },

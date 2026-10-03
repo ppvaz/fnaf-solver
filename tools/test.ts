@@ -29,6 +29,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join, relative } from 'node:path';
 import { chromeBinary, chromeAvailable } from './chrome.ts';
 import { startDevServer } from '../apps/trainer/test/dev-server.ts';
+import { readLanes } from '@sixam/review/lanes';
 
 const TOOLS = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(TOOLS, '..');
@@ -605,6 +606,23 @@ for (const name of BACKLOG.keys())
 
 let engine = extended ? ENGINE : ENGINE.filter(([name]) => !EXTENDED_ENGINE.has(name));
 if (gates) engine = engine.filter(([name]) => !BACKLOG.has(name));
+// --gates runs in unit:slow, which the push gate skips by default; a check one of the default lanes
+// (unit, contracts, core) already runs is left to it, so it runs once and before a push.
+const inDefaultLanes = (() => {
+  const lanes = readLanes(ROOT);
+  const runs = new Set<string>();
+  const visit = (name: string) => {
+    for (const file of lanes[name]?.node ?? []) runs.add(file);
+    for (const step of lanes[name]?.steps ?? []) if (step[0] === 'lane') visit(step[1]); else runs.add(step.slice(1).join(' '));
+  };
+  for (const name of ['unit', 'contracts', 'core']) visit(name);
+  return ([, argv]: Check) => {
+    const [script, ...args] = argv;
+    const path = relative(ROOT, join(TOOLS, script));
+    return runs.has([path, ...args].join(' ')) || (!args.length && runs.has(path));
+  };
+})();
+if (gates) engine = engine.filter(entry => !inDefaultLanes(entry));
 
 // `--list` prints every registered entry, one JSON object per line, with
 // whether THESE flags would run it, and runs nothing. test-mistake-register.ts

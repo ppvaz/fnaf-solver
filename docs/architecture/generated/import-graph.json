@@ -5713,6 +5713,9 @@
     {
       "file": "tools/affected-test.ts",
       "imports": [
+        "./gate-kit.ts",
+        "./module-refs.ts",
+        "@sixam/review/lanes",
         "node:assert/strict",
         "node:child_process",
         "node:fs",
@@ -6101,6 +6104,7 @@
       "imports": [
         "../apps/trainer/test/dev-server.ts",
         "./chrome.ts",
+        "@sixam/review/lanes",
         "node:child_process",
         "node:path",
         "node:url"
