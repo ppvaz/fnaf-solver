@@ -41,6 +41,7 @@ for (const [paths, expected, why] of cases) {
 }
 assert.deepEqual(pathKind('apps/desktop/src/companion-mcp.ts'), { kind: 'code', area: 'solver-interface' }, 'the MCP server is the solver interface');
 assert.deepEqual(pathKind('apps/desktop/src/lab.ts'), { kind: 'code', area: 'solver-interface' });
+assert.deepEqual(pathKind('apps/desktop/src/evidence.ts'), { kind: 'code', area: 'solver-interface' }, 'the evidence CLI, where tools/evidence.js moved');
 assert.deepEqual(pathKind('packages/play/bin/phone/actuator.ts'), { kind: 'code', area: 'controller' });
 assert.deepEqual(pathKind('packages/propose/bin/plans/bundle.ts'), { kind: 'code', area: 'controller' }, 'moved device code keeps its area');
 assert.deepEqual(pathKind('packages/propose/bin/recompile/pilot/pilot.ts'), { kind: 'code', area: null }, 'rebuild tooling is outside the four areas');

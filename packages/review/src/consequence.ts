@@ -69,8 +69,8 @@ const BOOKKEEPING = [
 
 /** The four areas whose code counts when a gate exercises it. The first that matches names it. */
 export const CODE_AREAS = Object.freeze(([
-  { area: 'solver-interface', test: path => /^packages\/(?:review|kernel)\/src\//.test(path) || path.startsWith('apps/desktop/src/')
-    || path === 'tools/evidence.js' },
+  // The evidence CLI that was tools/evidence.js is apps/desktop/src/evidence.ts since the ADR 0002 moves.
+  { area: 'solver-interface', test: path => /^packages\/(?:review|kernel)\/src\//.test(path) || path.startsWith('apps/desktop/src/') },
   { area: 'companion', test: path => path.startsWith('android/companion/') },
   { area: 'trainer', test: path => path.startsWith('apps/trainer/') },
   // tools/device's code keeps its area as the ADR 0002 layout moves it: Play's executor and phone
