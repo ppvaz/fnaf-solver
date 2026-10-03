@@ -2,6 +2,12 @@ package com.ppvaz.fnafcompanion;
 
 import static com.ppvaz.fnafcompanion.Check.check;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
+
 /** Host-only contract for the native-region primitive. */
 public final class NativeRegionsTest {
     /** A frame whose pixel encodes its own coordinates, so a copy can be audited. */
@@ -24,7 +30,7 @@ public final class NativeRegionsTest {
         return null;
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         NativeRegions regions = new NativeRegions(2400, 1080);
         check("empty read has no frame", "-1".equals(field(regions.read(), "seq")));
 
@@ -79,6 +85,40 @@ public final class NativeRegionsTest {
         regions.clear();
         check("clear empties", regions.size() == 0 && "-1".equals(field(regions.read(), "seq")));
 
+        readsTheSharedVector();
         Check.done("NativeRegionsTest: all checks passed");
+    }
+
+    /**
+     * The writer half of the REGION read contract: the regions and capture in
+     * companion-region-read-v1.txt read back as exactly its line, which the
+     * host's parseRegionRead decodes in companion-region-read.test.ts.
+     */
+    private static void readsTheSharedVector() throws IOException {
+        List<String> vector = Files.readAllLines(Paths.get(System.getProperty(
+                "region.vector", "packages/play/test/testdata/companion-region-read-v1.txt")),
+                StandardCharsets.UTF_8);
+        NativeRegions regions = new NativeRegions(2400, 1080);
+        String expected = null;
+        long[] capture = null;
+        for (String row : vector) {
+            if (row.startsWith("region: ")) {
+                String[] f = row.substring(8).split(" ");
+                check("vector region " + f[0] + " is accepted", regions.set(f[0], Integer.parseInt(f[1]),
+                        Integer.parseInt(f[2]), Integer.parseInt(f[3]), Integer.parseInt(f[4]),
+                        Integer.parseInt(f[5])) == null);
+            } else if (row.startsWith("capture: ")) {
+                String[] f = row.substring(9).split(" ");
+                capture = new long[] {Long.parseLong(f[0]), Long.parseLong(f[1]), Long.parseLong(f[2])};
+            } else if (row.startsWith("line: ")) {
+                expected = row.substring(6);
+            }
+        }
+        check("the vector names a capture and a line", capture != null && expected != null);
+        if (capture == null || expected == null) return;
+        regions.capture(new Frame(2400, 1080), capture[0], capture[1], capture[2]);
+        String read = regions.read();
+        check("the read is the vector line\n  expected " + expected + "\n  actual   " + read,
+                expected.equals(read));
     }
 }

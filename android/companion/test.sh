@@ -63,6 +63,7 @@ for test in "${TESTS[@]}"; do
   props=()
   case "$class" in
     CompanionStatusTest) props=("-Dstatus.vector=$TESTDATA/companion-status-v1.txt") ;;
+    NativeRegionsTest) props=("-Dregion.vector=$TESTDATA/companion-region-read-v1.txt") ;;
     TargetsTest) props=("-Dtargets.model=$PROFILES/companion-targets-v1.json") ;;
     HidControlsTest) props=("-Dhid.bundle=$HERE/assets/runners/generated/minus-toys") ;;
     CycleLessonTest) props=("-Dteach.vector=$TESTDATA/teach-lesson-night7-k3.txt") ;;

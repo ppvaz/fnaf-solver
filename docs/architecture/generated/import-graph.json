@@ -1798,6 +1798,14 @@
       ]
     },
     {
+      "file": "packages/play/test/companion-region-read.test.ts",
+      "imports": [
+        "../src/venues/phone/companion.ts",
+        "node:assert/strict",
+        "node:fs"
+      ]
+    },
+    {
       "file": "packages/play/test/companion-status.test.ts",
       "imports": [
         "../src/venues/phone/companion-status.ts",

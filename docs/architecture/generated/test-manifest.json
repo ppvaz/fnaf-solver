@@ -1854,6 +1854,24 @@
       }
     },
     {
+      "id": "packages/play/test/companion-region-read.test.ts",
+      "lane": "test:unit",
+      "owner": "@sixam/play",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.ts per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
       "id": "packages/play/test/companion-status.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",

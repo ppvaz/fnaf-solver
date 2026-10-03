@@ -1,0 +1,15 @@
+# The REGION read reply of cue-helper-control-v1, held from both sides.
+#
+# The Companion's NativeRegions (NativeRegionsTest.java) registers the
+# `region:` rows below, copies one frame with the `capture:` fields, and must
+# read exactly `line:`. The host's parseRegionRead
+# (packages/play/test/companion-region-read.test.ts) must decode that line,
+# behind `OK ` and with a snapshotNs, to the same regions and pixels. The
+# frame's pixel (x, y) is (x << 12) | y, so each sample names its own native
+# coordinates: sample i of a region is (x + (i % cols) * step,
+# y + floor(i / cols) * step).
+
+region: door_left 100 600 3 2 1
+region: strip 10 20 6 3 3
+capture: 7 1234 1300
+line: seq=7 imageNs=1234 copiedNs=1300 captured=1 regions=2 door_left=100,600,3,2,1:064258065258066258064259065259066259 strip=10,20,6,3,3:00a01400d014
