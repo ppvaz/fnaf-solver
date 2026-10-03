@@ -14,12 +14,11 @@
 //                     hashes are the ones the run record bound.
 //   claimIdentity     the dial vector the run's own Custom Night readback observed before the night began.
 // The attestation is written only by `npm run evidence -- attest` after these re-derive (evidence-promotion.ts).
-import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { custodyWinnerFiles, packCustody, runnerGame } from './evidence-pack.ts';
 import type { readPack } from './evidence-pack.ts';
-import { jsonObject, jsonlRecords, objectOrNull } from './records.ts';
+import { jsonObject, jsonlRecords, objectOrNull, sha256 } from './records.ts';
 import type { JsonObject } from './records.ts';
 import { isList, isRecord } from '@sixam/kernel';
 
@@ -84,7 +83,6 @@ const FNAF1_STARS_FILE = 'title-stars.json';
 const FNAF1_STARS_SCHEMA = 'fnaf1-title-stars-v1';
 const FNAF1_WINNER_SCHEMA = 'fnaf1-route-winner-v1';
 const DIALS = ['freddy', 'bonnie', 'chica', 'foxy'];
-const sha256 = (data: string | Buffer) => createHash('sha256').update(data).digest('hex');
 
 /** Committed FNaF 1 route winners (active and retired), repository-relative. */
 function fnaf1WinnerFiles(root: string): string[] {

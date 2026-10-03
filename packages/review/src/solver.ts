@@ -19,14 +19,15 @@ import { canonicalJson } from '@sixam/kernel/contracts';
 import { REPOSITORY_TARGET, claimEnvelope, isList, isRecord, isRefusal, isUnknown, refusalEnvelope, unknown, validateClaimEnvelope } from '@sixam/kernel';
 import type { EnvelopeLabel } from '@sixam/kernel';
 import { videoTerminal } from './evidence-cohort.ts';
-import { ATTESTATION_FILE, PACKS_DIR, packPromotionChecks, readPack, trackedWinners, winnerFiles } from './evidence-pack.ts';
+import { ATTESTATION_FILE, PACKS_DIR, packIds, packPromotionChecks, readPack, trackedWinners, winnerFiles } from './evidence-pack.ts';
+import { sortedCounts as sorted, tally } from './counts.ts';
 import { GRAPH_FILE, PROMOTION_EDGE, derivePromotion, fnaf1PromotionChecks, readGraph, recordPromotion } from './evidence-promotion.ts';
 import { FNAF2, ONE_CLEAR, PLAN12, levelLabel, promotionsQueryEnvelope } from './envelopes.ts';
 import { liftPack } from './pack-lift.ts';
 import { queryPromotions } from './promotions-query.ts';
 import { CHECKS, RULE_CITES, checkUnknownAsNumber } from './refusals.ts';
 import { ARCHIVED_ROUTES, CHRONICLE_ATTRIBUTION, CHRONICLE_DIR, CHRONICLE_SCHEMA_MODULE, COMMAND_REGISTRY,
-  CONTRACT_REGISTER, CONTROL_CATALOG_DIR, GAMES, controlCatalogFile, catalogUnknowns, chronicleLabel, gameKey, isNegative, packDirectories,
+  CONTRACT_REGISTER, CONTROL_CATALOG_DIR, GAMES, controlCatalogFile, catalogUnknowns, chronicleLabel, gameKey, isNegative,
   readArchivedRoutes, readChronicle, readCommandRegistry, readContracts, readPackRow, readPacks, resolveGame } from './registers.ts';
 
 export const SURFACE_DOC = 'docs/device/COMPANION-MCP.md';
@@ -58,13 +59,6 @@ type PackRow = ReturnType<typeof readPackRow>;
 type ValidPackRow = Extract<PackRow, { valid: true }>;
 
 const shellQuote = (text: unknown) => `'${String(text).replaceAll("'", "'\\''")}'`;
-// A key is a property name, as indexing with it would make it.
-const tally = <T>(items: readonly T[], key: (item: T) => unknown) => items.reduce((counts, item) => {
-  const value = String(key(item));
-  counts[value] = (counts[value] ?? 0) + 1;
-  return counts;
-}, ({} as Record<string, number>));
-const sorted = (counts: Readonly<Record<string, number>>) => Object.fromEntries(Object.entries(counts).sort(([a], [b]) => a.localeCompare(b)));
 
 /** A caller's argument refused: the rule, what was wrong, and what is accepted. */
 const badArgument = (because: string, remedy: string) => refusalEnvelope({ rule: 'invalid-argument', because, cite: [SURFACE_DOC], remedy });
@@ -355,7 +349,7 @@ export function createSolver({ root, winners: winnersOverride, truth: truthOverr
   function loadPack(id: string): { refusal: ReturnType<typeof refusalEnvelope> }
     | { row: ValidPackRow, lifted: ReturnType<typeof liftPack>, dir: string } {
     if (typeof id !== 'string' || !PACK_ID.test(id) || id.startsWith('.')) return { refusal: badArgument('a pack id is letters, digits, dots, dashes and underscores', 'name a directory under docs/evidence/runs') };
-    if (!packDirectories(root).includes(id)) return { refusal: badArgument(`no committed pack is named ${id}`, 'query packs lists them') };
+    if (!packIds(root).includes(id)) return { refusal: badArgument(`no committed pack is named ${id}`, 'query packs lists them') };
     const row = readPackRow(root, id);
     if (!row.valid) return { refusal: refusalEnvelope({ rule: 'pack-integrity', because: `${id} fails its integrity check: ${row.error}`,
       cite: [`${PACKS_DIR}/${id}/pack.json`], remedy: 'a pack whose files no longer match their sha256 is not read; restore it from git' }) };

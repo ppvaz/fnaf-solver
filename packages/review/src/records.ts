@@ -1,5 +1,6 @@
 // Reading the JSON a pack or a record holds: text in, a checked object out, every field `unknown`
 // until the reader narrows it. A typed annotation on JSON.parse checks nothing (CLAUDE.md, Types).
+import { createHash } from 'node:crypto';
 import { isList, isRecord } from '@sixam/kernel';
 
 /** A JSON object whose fields the reader has not narrowed yet. */
@@ -42,3 +43,6 @@ export const listOrEmpty = (value: unknown): readonly unknown[] => (isList(value
 
 /** `value` when it is a string, else null. */
 export const textOrNull = (value: unknown) => (typeof value === 'string' ? value : null);
+
+/** The sha256 hex a record cites for the bytes it read. */
+export const sha256 = (data: string | Buffer) => createHash('sha256').update(data).digest('hex');

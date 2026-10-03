@@ -12,7 +12,8 @@ import { fileURLToPath } from 'node:url';
 import { isUnknown, validateGameRun } from '@sixam/kernel';
 import type { GameRun, Unknown } from '@sixam/kernel';
 import { PACKS_DIR } from '../src/evidence-pack.ts';
-import { liftPack, packIds, reportedFromTerminal } from '../src/pack-lift.ts';
+import { liftPack, reportedFromTerminal } from '../src/pack-lift.ts';
+import { packIds } from '../src/evidence-pack.ts';
 
 const ROOT = resolve(fileURLToPath(new URL('../../..', import.meta.url)));
 

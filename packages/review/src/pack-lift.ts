@@ -11,7 +11,7 @@
 // across as the kernel's class (`complete` for a pack packed from the campaign directory as the
 // campaign wrote it, `recovered` for one rebuilt from its night-run log) with the pack's own `lost`
 // list; a custody the kernel has no class for (`incomplete-campaign`) is UNKNOWN with its reason.
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { aborted, death, invalid, isRecord, sixAm, timeout, unknown, validateGameRun } from '@sixam/kernel';
 import type { CampaignResult, Unknown } from '@sixam/kernel';
@@ -201,4 +201,3 @@ export function liftPack(root: string, id: string) {
 }
 
 /** Every committed pack, in directory order. */
-export const packIds = (root: string) => readdirSync(join(root, PACKS_DIR)).sort();

@@ -25,12 +25,12 @@
 // Each verdict is a kernel Annotation (subject GameRun, class = the attribution) listing the
 // sha256 of every file it read. The phase response is a model result (MODEL_ONLY); the run data
 // are the device's; the attribution promotes neither.
-import { createHash } from 'node:crypto';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { canonicalJson } from '@sixam/kernel/contracts';
 import { isList, isRecord, validateAnnotation } from '@sixam/kernel';
 import { PACKS_DIR, verifiedPack } from './evidence-pack.ts';
+import { sha256 } from './records.ts';
 
 export const RUN_AUDIT_INSTRUMENT = 'run-audit@1';
 export const RUN_AUDIT_KIND = 'run-audit-v1';
@@ -49,7 +49,6 @@ type PhaseRecord = { readonly terminal?: { readonly lastNightAt?: unknown, reado
 type RunReport = { readonly effects?: { readonly systematicMisses?: readonly { readonly verdict?: unknown, readonly key?: unknown }[],
   readonly tally?: Readonly<Record<string, unknown>> }, readonly arm?: { readonly status?: unknown } };
 
-const sha256 = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex');
 // Date.parse reads its argument as text, as String() does.
 const epoch = (at: unknown) => (typeof at === 'number' ? at : Date.parse(String(at)));
 const recordOrNull = (value: unknown) => (isRecord(value) ? value : null);

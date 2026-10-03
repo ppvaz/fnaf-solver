@@ -18,18 +18,17 @@
 // sha256. A promotion is never silent: `promote` records a PROMOTED_BY edge in
 // docs/evidence/graph.json naming the attestation, its author and the pack's custody, and
 // `list`/`show` print who attested and what custody lost.
-import { createHash } from 'node:crypto';
-import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { canonicalJson, stableHash, validateSaveProof } from '@sixam/kernel/contracts';
 import { AI_DIALS, PUPPET_AI } from '@sixam/source/fnaf2';
 import { campaignEntry } from './evidence-campaign.ts';
 import { deriveFnaf1Promotion } from './fnaf1-promotion.ts';
 import { AGENT_DELEGATION, ATTESTATION_FILE, ATTESTATION_SCHEMA, PACKS_DIR, RECOVERY_RECORD, attestationStatus,
-  custodyWinnerFiles, packCustody, packManifestComplete, packPromotionChecks, readPack, runnerGame } from './evidence-pack.ts';
+  custodyWinnerFiles, packCustody, packIds, packManifestComplete, packPromotionChecks, readPack, runnerGame } from './evidence-pack.ts';
 import type { RunPack } from './evidence-pack.ts';
 import { lastDialReadback, requestedDials } from './custom-night.ts';
-import { jsonObject, jsonlRecords, objectOrNull } from './records.ts';
+import { jsonObject, jsonlRecords, objectOrNull, sha256 } from './records.ts';
 import type { JsonObject } from './records.ts';
 import { isList, isRecord } from '@sixam/kernel';
 import type { CampaignAttempt } from '@sixam/kernel';
@@ -56,7 +55,6 @@ export const GRAPH_FILE = 'docs/evidence/graph.json';
 export const PROMOTION_EDGE = 'PROMOTED_BY';
 export const PROMOTION_SUMMARY_SCHEMA = 'plan12-promotion-summary-v1';
 
-const sha256 = (data: string | Buffer) => createHash('sha256').update(data).digest('hex');
 const night7Label = (dials: Readonly<Record<string, number>>) => AI_DIALS.every(dial => dials[dial] === 20) ? '10-20'
   : AI_DIALS.filter(dial => dials[dial] > 0).map(dial => `${dial}${dials[dial]}`).join('-') || 'all0';
 
@@ -317,7 +315,7 @@ export function promotionSummary(root: string, winners: Map<string, string>) {
   const refusedWins: { id: string, night?: string, failing: string[], custody?: string }[] = [];
   const stale: { id: string, reason: string }[] = [];
   const promoted: { id: string, night: string, claim: string, custody: unknown, attestedBy: unknown, packSha256: string }[] = [];
-  for (const id of readdirSync(join(root, PACKS_DIR)).sort()) {
+  for (const id of packIds(root)) {
     let loaded = null;
     try { loaded = readPack(join(root, PACKS_DIR, id)); } catch (error) {
       (nights.INVALID ??= { packs: 0, executorWins: 0, attested: 0, promoted: 0, refused: {} }).packs += 1;

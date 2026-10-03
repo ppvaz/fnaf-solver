@@ -33,13 +33,12 @@
 // that threw, which the CLI writes but does not print. Pedro, 2026-09-27: Plan 12 accepts a
 // recovered pack fully, the same as one whose directory survived, so its manifest is complete
 // when its result and events came back; `custody.lost` stays in the pack and in every reading.
-import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { canonicalJson, stableHash } from '@sixam/kernel/contracts';
 import { BINDINGS_DIR, isList, isRecord } from '@sixam/kernel';
 import { PACKAGES } from '@sixam/source';
-import { jsonObject, jsonlRecords, textOrNull } from './records.ts';
+import { jsonObject, jsonlRecords, sha256, textOrNull } from './records.ts';
 import type { JsonObject } from './records.ts';
 import { isCampaignResult, campaignEntry, campaignPromotionChecks } from './evidence-campaign.ts';
 import type { CampaignWrapper } from './evidence-campaign.ts';
@@ -60,6 +59,8 @@ export const AGENT_DELEGATION = 'pedro-2026-09-27';
 /** The checks a v2 attestation must list as verified: every promotion check but itself. */
 export const ATTESTED_CHECKS = Object.freeze(['offlineEvidence', 'terminalPass', 'manifestComplete', 'winnerCommitted']);
 export const PACKS_DIR = 'docs/evidence/runs';
+/** The committed pack ids, in directory order. */
+export const packIds = (root: string) => readdirSync(join(root, PACKS_DIR)).sort();
 export const RECOVERY_RECORD = 'docs/evidence/custody-recovery-20260925.json';
 
 // What the campaign itself writes; the gate's manifestComplete needs the first three.
@@ -130,7 +131,6 @@ export interface RunPack {
 type Redactions = { paths: number, pixelArrays: number, frameRefs: number };
 type Recovery = { result: string | null, events: string };
 
-const sha256 = (data: string | Buffer) => createHash('sha256').update(data).digest('hex');
 
 /**
  * Throw unless `text` is free of pixel-shaped payloads.

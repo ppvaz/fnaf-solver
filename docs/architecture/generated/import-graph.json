@@ -4277,7 +4277,6 @@
         "@sixam/kernel",
         "@sixam/kernel/contracts",
         "@sixam/source",
-        "node:crypto",
         "node:fs",
         "node:path"
       ]
@@ -4293,7 +4292,6 @@
         "@sixam/kernel",
         "@sixam/kernel/contracts",
         "@sixam/source/fnaf2",
-        "node:crypto",
         "node:fs",
         "node:path"
       ]
@@ -4304,7 +4302,6 @@
         "./evidence-pack.ts",
         "./records.ts",
         "@sixam/kernel",
-        "node:crypto",
         "node:fs",
         "node:path"
       ]
@@ -4350,13 +4347,13 @@
     {
       "file": "packages/review/src/promotions-query.ts",
       "imports": [
+        "./counts.ts",
         "./evidence-pack.ts",
         "./evidence-promotion.ts",
         "./pack-lift.ts",
         "./records.ts",
         "@sixam/kernel",
         "@sixam/kernel/contracts",
-        "node:crypto",
         "node:fs",
         "node:path"
       ]
@@ -4364,7 +4361,8 @@
     {
       "file": "packages/review/src/records.ts",
       "imports": [
-        "@sixam/kernel"
+        "@sixam/kernel",
+        "node:crypto"
       ]
     },
     {
@@ -4412,9 +4410,9 @@
       "file": "packages/review/src/run-audit.ts",
       "imports": [
         "./evidence-pack.ts",
+        "./records.ts",
         "@sixam/kernel",
         "@sixam/kernel/contracts",
-        "node:crypto",
         "node:fs",
         "node:path"
       ]
@@ -4422,6 +4420,7 @@
     {
       "file": "packages/review/src/solver.ts",
       "imports": [
+        "./counts.ts",
         "./envelopes.ts",
         "./evidence-cohort.ts",
         "./evidence-pack.ts",

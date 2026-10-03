@@ -13,7 +13,7 @@ import type { EnvelopeLabel } from '@sixam/kernel';
 import type { ControlDescriptor } from '@sixam/kernel/contracts';
 import { KINDS, ROUTES, RUNGS, SCHEMAS, V1_GAME, checkCorpus, readEntries } from './chronicle-schema.ts';
 import type { ChronicleCheckpoint } from './chronicle-schema.ts';
-import { PACKS_DIR, attestationStatus, packCustody, packEntry, readPack } from './evidence-pack.ts';
+import { PACKS_DIR, attestationStatus, packCustody, packEntry, packIds, readPack } from './evidence-pack.ts';
 import type { RunPack } from './evidence-pack.ts';
 import { GRAPH_FILE, PROMOTION_EDGE, readGraph } from './evidence-promotion.ts';
 import { jsonObject, listOrEmpty, objectOrNull } from './records.ts';
@@ -191,8 +191,6 @@ export function packGame(dir: string, loaded: {pack: RunPack, files: readonly st
 /** The graph's PROMOTED_BY edges by the run node they bind. */
 export const promotionEdges = (root: string) => new Map(readGraph(root).edges.filter(edge => edge.type === PROMOTION_EDGE).map(edge => [edge.to, edge] as const));
 
-/** The committed pack ids, in directory order. */
-export const packDirectories = (root: string) => readdirSync(join(root, PACKS_DIR)).sort();
 
 /**
  * One committed pack, read through its integrity check, with its game, index entry, custody,
@@ -228,7 +226,7 @@ export function readPackRow(root: string, id: string, edges: ReturnType<typeof p
 /** Every committed pack, as readPackRow reads it. */
 export function readPacks(root: string) {
   const edges = promotionEdges(root);
-  return packDirectories(root).map(id => readPackRow(root, id, edges));
+  return packIds(root).map(id => readPackRow(root, id, edges));
 }
 
 export const gameKey = (value: unknown) => (isUnknown(value) ? 'UNKNOWN' : value);
