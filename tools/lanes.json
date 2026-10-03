@@ -119,12 +119,13 @@
       "packages/kernel/test/pystats.test.ts",
       "packages/kernel/test/pywave.test.ts",
       "packages/review/bin/recompile/test-audio-records.ts",
-      "packages/source/recompile/test-recompile-records.ts"
+      "packages/source/recompile/test-recompile-records.ts",
+      "packages/review/bin/recompile/test-phone-input-ledger.ts"
     ],
     "steps": [
       [
         "python3",
-        "packages/review/bin/recompile/test-phone-input-ledger.py"
+        "packages/review/bin/recompile/test-phone-audio-cues.py"
       ],
       [
         "python3",

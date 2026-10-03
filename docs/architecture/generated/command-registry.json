@@ -3079,8 +3079,8 @@
       "lifecycle": "supported"
     },
     {
-      "id": "packages/review/bin/recompile/phone-input-ledger.py",
-      "invocation": "packages/review/bin/recompile/phone-input-ledger.py TRACE.tsv FIRST REBUILD_TRACE [--cycles N] [--json OUT]",
+      "id": "packages/review/bin/recompile/phone-input-ledger.ts",
+      "invocation": "packages/review/bin/recompile/phone-input-ledger.ts TRACE.tsv FIRST REBUILD_TRACE [--cycles N] [--json OUT]",
       "kind": "Per cycle, the first phone frame (and its reconstructed update) where the bottom-control signature turns monitor-up/office and mask-on/office, the office view brightens for the hall flash and darkens again, and the window's right-eyehole occupant by cell colour, against the first update of the same events in a rebuild trace (`viewing`, mask watch, `viewing hall light`, `in danger` with the overlap letter). Differences are phone minus rebuild in updates; a display frame lags its update by an unmeasured 1-2 frames. DEVICE_MEASURED frames against a MODEL_ONLY replay.",
       "lifecycle": "supported"
     },
@@ -3091,9 +3091,15 @@
       "lifecycle": "supported"
     },
     {
-      "id": "packages/review/bin/recompile/test-phone-input-ledger.py",
-      "invocation": "packages/review/bin/recompile/test-phone-input-ledger.py",
-      "kind": "The frame classifiers and the catch-up clock on synthetic cells, then every difference, alignment, hash and id of the input-registration record re-derived from its retained rows; no trace, capture, numpy or binary. In `npm run test:unit`.",
+      "id": "packages/review/bin/recompile/test-phone-input-ledger.ts",
+      "invocation": "packages/review/bin/recompile/test-phone-input-ledger.ts",
+      "kind": "The frame classifiers and the catch-up clock on synthetic cells, then every difference, alignment, hash and id of the input-registration record re-derived from its retained rows, and the cue and rebuild records it cites read back; no trace, capture, numpy or binary. In `npm run test:unit`.",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/recompile/test-phone-audio-cues.py",
+      "invocation": "packages/review/bin/recompile/test-phone-audio-cues.py",
+      "kind": "`phone-audio-cues.py`'s offset rule: `solve_offset` and `compare_plays` on synthetic and retained onsets, and every number of the full06 audio-realignment record re-derived from the cue reads, the rebuild's plays and the run pack (neither function needs numpy). In `npm run test:unit`.",
       "lifecycle": "supported"
     },
     {
