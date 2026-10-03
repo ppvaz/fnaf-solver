@@ -46,13 +46,22 @@ if grep -q 'PEDRO-OK' "$msgfile"; then
   exit 0
 fi
 
-# Reference to evidence from a prior commit?
+# Reference to evidence from a prior commit? It must name evidence (a path
+# under artifacts/ or docs/evidence/, as staged evidence is) that HEAD holds:
+# EVIDENCE:CLAUDE.md, or a record only the working tree has, is no evidence.
 ref=$(sed -n 's/.*EVIDENCE:\([^ ,)"'"'"']*\).*/\1/p' "$msgfile" | head -n 1)
 if [ -n "$ref" ]; then
-  if [ -e "$ref" ] || git cat-file -e "HEAD:$ref" 2>/dev/null; then
+  case "$ref" in
+    artifacts/*|docs/evidence/*) ;;
+    *)
+      echo "consequence lock: EVIDENCE:$ref names no evidence (a path under artifacts/ or docs/evidence/)." >&2
+      exit 1
+      ;;
+  esac
+  if git cat-file -e "HEAD:$ref" 2>/dev/null; then
     exit 0
   fi
-  echo "consequence lock: EVIDENCE ref not found: $ref" >&2
+  echo "consequence lock: EVIDENCE:$ref is in no prior commit." >&2
   exit 1
 fi
 

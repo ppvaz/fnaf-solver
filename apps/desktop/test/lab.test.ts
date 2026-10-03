@@ -138,6 +138,13 @@ try {
   verdict = dry(`Note the lab\n\nEVIDENCE:${'docs/evidence/prior-record-20260929.json'}\n`);
   assert.equal(verdict.hook.verdict, 'ACCEPT', 'a reference to prior evidence lets the hook accept');
   assert.equal(verdict.consequence.consequence, 'bookkeeping', 'and the change is still bookkeeping');
+  // EVIDENCE: names evidence a prior commit holds: not any file, and not a record no commit has.
+  write(root, 'docs/evidence/uncommitted-record-20260930.json', '{"schema": "evidence-record-v1"}\n');
+  for (const ref of ['CLAUDE.md', 'docs/evidence/uncommitted-record-20260930.json']) {
+    verdict = dry(`Note the lab\n\nEVIDENCE:${ref}\n`);
+    assert.equal(verdict.hook.verdict, 'REFUSE', `EVIDENCE:${ref} is not evidence from a prior commit`);
+  }
+  rmSync(join(root, 'docs/evidence/uncommitted-record-20260930.json'));
   const lines: string[] = [];
   assert.equal(main(['commit', '--dry'], { root, lab, write: text => lines.push(text) }), 1, 'the CLI exits 1 when the hook would refuse');
   assert.match(lines.join(''), /WOULD REFUSE/);
