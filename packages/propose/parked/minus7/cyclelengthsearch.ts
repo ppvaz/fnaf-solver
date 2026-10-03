@@ -18,7 +18,6 @@
 import { build, devicePlan, idleUntilMs } from '../../bin/plans/recipe.ts';
 import { modelGate } from '../../bin/plans/human-gate.ts';
 import { run } from './hid-device-pilot.ts';
-import * as C from '@sixam/source/fnaf2';
 
 const arg = (k: string, d: string) => {
   const m = process.argv.find(a => a.startsWith(`--${k}=`));
@@ -93,7 +92,6 @@ function scoreGate(night: number, attackWindowMs: number, runs: number, shape: s
 }
 
 function fmtDeaths(d: Readonly<Record<string, number>>, runs: number) {
-  const total = Object.values(d).reduce((a, b) => a + b, 0) || 1;
   return Object.entries(d).sort((a, b) => b[1] - a[1]).slice(0, 4)
     .map(([k, v]) => `${k} ${(100 * v / runs).toFixed(0)}%`).join('  ') || '(none)';
 }

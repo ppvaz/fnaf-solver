@@ -35,7 +35,6 @@ const SPECS = Object.freeze([
   { id: 'fixture-hall-03', target: 'next-hall-state', outcome: 'THREAT', stateFamily: 'hall-threat' },
 ]);
 
-function clone<T>(value: T) { return structuredClone(value); }
 
 function fixtureSpec(spec: (typeof SPECS)[number], index: number) {
   const atMs = index * 1000;

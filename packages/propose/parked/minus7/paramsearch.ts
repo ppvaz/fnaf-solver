@@ -10,14 +10,12 @@
 // The objective's first key dominates at the current margin: min over the
 // searched nights of modelGate survival under `--shape`. Frontier admission is
 // a --admit-seed re-evaluation; screening during beam expansion is at --runs.
-import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { build, devicePlan, idleUntilMs } from '../../bin/plans/recipe.ts';
 import { modelGate } from '../../bin/plans/human-gate.ts';
 import { makeSearchKnobs } from './hid-device-pilot.ts';
 import { canonicalJson } from '@sixam/kernel/contracts';
-import * as C from '@sixam/source/fnaf2';
 
 const arg = (k: string, d: string) => {
   const m = process.argv.find(a => a.startsWith(`--${k}=`));

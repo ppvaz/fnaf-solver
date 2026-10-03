@@ -5,7 +5,7 @@
 
 import * as C from '@sixam/source/fnaf2';
 import { FNAF2_CONTROL_VOCABULARY as V } from '@sixam/source';
-import { FUSION_POLL_MS, LA_SETTLE_MS, MASK_ANIM_ON_MS, MIN_CONTACT_MS, MONITOR_READY_WIND_MS, RAISE_MARGIN_MS, SEAM_MARGIN_MS,
+import { FUSION_POLL_MS, LA_SETTLE_MS, MASK_ANIM_ON_MS, MIN_CONTACT_MS, MONITOR_READY_WIND_MS, RAISE_MARGIN_MS,
   isLightAfter } from './recipe.ts';
 
 // [SOURCED] The engine animates the monitor and the mask, and drops input that

@@ -17,7 +17,7 @@
 // captured at a moment the schedule believed was the office.
 import { pathToFileURL } from 'node:url';
 import * as C from '@sixam/source/fnaf2';
-import { build, devicePlan, MONITOR_ANIM_UP_MS, RAISE_MARGIN_MS, DEVICE_SPACING_MS, MODEL_SLOT_MS, MIN_CONTACT_MS } from '../../bin/plans/recipe.ts';
+import { build, devicePlan, MONITOR_ANIM_UP_MS, RAISE_MARGIN_MS, MODEL_SLOT_MS, MIN_CONTACT_MS } from '../../bin/plans/recipe.ts';
 
 // The sourced constant, not the swipe-era one.
 //

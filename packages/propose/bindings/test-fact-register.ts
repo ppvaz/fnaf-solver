@@ -50,7 +50,6 @@ for (const [fact, info] of Object.entries(register.facts)) {
     continue;
   }
   if (!best) { process.stdout.write(`${fact}: no producer found\n`); continue; }
-  const bestAt = rank.indexOf(best);
   // The rule is "must USE the strongest available evidence", not "must contain
   // no weaker path". A guarded fallback is legitimate -- the executor keeps the
   // bright-grid refutation for helper builds that publish no stroke scores, and

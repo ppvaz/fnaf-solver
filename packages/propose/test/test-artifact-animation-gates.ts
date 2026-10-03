@@ -11,13 +11,10 @@
 // exist at contact time, and only the compiler can see the difference.
 import * as C from '@sixam/source/fnaf2';
 import { compileCycle, SEAM_FLOORS } from '../bin/plans/artifact-commands.ts';
-import { MIN_CONTACT_MS } from '../bin/plans/recipe.ts';
 import type { ParsedRow } from '../bin/plans/artifact-commands.ts';
 
 const check = (ok: unknown, message: string) => { if (!ok) throw new Error(message); };
-const MONITOR_ANIM_UP_MS = Math.round(C.MONITOR_ANIM_UP * 1000 / C.FPS);
 const MASK_ANIM_OFF_MS = Math.round(C.MASK_ANIM_OFF * 1000 / C.FPS);
-const MONITOR_ANIM_DOWN_MS = Math.round(C.MONITOR_ANIM_DOWN * 1000 / C.FPS);
 // IMPORTED, not restated. This line used to recompute the floor as
 // `MONITOR_ANIM_DOWN_MS + MIN_CONTACT_MS`, so when the compiler re-anchored it
 // to the measured ~382.5 ms mask-button visibility the test kept asserting the

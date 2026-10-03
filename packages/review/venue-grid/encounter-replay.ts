@@ -76,7 +76,7 @@ function main(argv: string[]) {
     })];
   }
 
-  function run(night: NightCfg, seed: number, deltas: number[] | null, presses: readonly Press[]) {
+  function run(seed: number, deltas: number[] | null, presses: readonly Press[]) {
     const fixed = 1000 / 60;
     const frameMs = (f: number) => (deltas ? (deltas[f - 1] ?? fixed) : fixed);
     const opts = { night: cfg.night ?? 6, seed, ...OPTS, frameMs, frameValue5: (f: number) => Math.min(4, frameMs(f) / (1000 / 60)) };
@@ -136,7 +136,7 @@ function main(argv: string[]) {
     const presses = JSON.parse(readFileSync(night.presses, 'utf8')).actions
       .map(([t, k, a]: Press): Press => [t, k, a === 'light' ? MODEL_CONTEXT_LIGHT : a]);
     const rows = night.seeds.map(seed => {
-      const r: ReturnType<typeof run> & { score?: ReturnType<typeof score> } = run(night, seed, deltas, presses);
+      const r: ReturnType<typeof run> & { score?: ReturnType<typeof score> } = run(seed, deltas, presses);
       r.score = score(night.phone, r.w);
       return r;
     });

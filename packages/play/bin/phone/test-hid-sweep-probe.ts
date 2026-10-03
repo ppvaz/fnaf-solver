@@ -182,7 +182,6 @@ check(litMs <= budget, `a sweep must draw at most ${budget} ms of light, got ${l
   // nothing did NOT (it put the select on contact 1 with a zeroed contact 0).
   for (const e of la.filter((x): x is Extract<HidEvent, { command: 'report' }> => x.command === 'report'))
     check(e.report[1] === 1, `LIGHT_AFTER reports must be single-contact, got count ${e.report[1]}`);
-  const key2 = ([x, y]: readonly [number, number]) => `${x},${y}`;
   for (const cam of ['cam10', 'cam4', 'cam7'] as const) {
     const camXY = key(COORDS[cam]);
     const selDown = events.find(e => e.down && e.xy === camXY);

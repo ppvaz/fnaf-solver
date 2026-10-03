@@ -18,7 +18,6 @@ import { execFileSync } from 'node:child_process';
 import { replay } from '../../bin/plans/recipe.ts';
 import { jitterPlan, parsePlanText } from '../../bin/plans/human-gate.ts';
 import type { PlanRows } from '../../bin/plans/human-gate.ts';
-import { Rng } from '@sixam/source/fnaf2';
 
 const arg = (k: string, d: string) => {
   const m = process.argv.find(a => a.startsWith(`--${k}=`));
@@ -87,13 +86,12 @@ function main() {
       for (const d of deltas) {
         if ((shifts[row.id] || 0) === d) continue;
         const trial = { ...shifts, [row.id]: d };
-        let ok = true;
         try {
           const w = survival(plan, night, idleUntilMs, seeds, 60, trial);
           if (w - cur > bestGain) { bestGain = w - cur; bestId = row.id; bestD = d; bestWon = w; }
           if (round === 0 && w - base >= Math.max(6, seeds * 0.01))
             console.log(`  ${row.id.padEnd(14)} ${row.line.split(' ').slice(1).join(' ').padEnd(22)} ${d > 0 ? '+' : ''}${d}fr (${f2ms(d)}ms) -> ${w}/${seeds}  (${w - base > 0 ? '+' : ''}${w - base})`);
-        } catch { ok = false; }
+        } catch { /* a shift the model refuses is not a candidate */ }
       }
     }
     if (!bestId) break;

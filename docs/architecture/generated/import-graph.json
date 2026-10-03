@@ -3376,10 +3376,8 @@
         "../../review/src/stat.ts",
         "./plans/minus-toys-jitter.ts",
         "./plans/minus-toys-plan.ts",
-        "@sixam/play/sim",
         "@sixam/propose/fnaf2",
-        "@sixam/source/fnaf2",
-        "node:url"
+        "@sixam/source/fnaf2"
       ]
     },
     {
@@ -3463,8 +3461,7 @@
       "imports": [
         "../../bin/plans/human-gate.ts",
         "../../bin/plans/recipe.ts",
-        "./hid-device-pilot.ts",
-        "@sixam/source/fnaf2"
+        "./hid-device-pilot.ts"
       ]
     },
     {
@@ -3558,8 +3555,6 @@
         "../../bin/plans/recipe.ts",
         "./hid-device-pilot.ts",
         "@sixam/kernel/contracts",
-        "@sixam/source/fnaf2",
-        "node:child_process",
         "node:fs",
         "node:path"
       ]
@@ -3637,7 +3632,6 @@
       "imports": [
         "../../bin/plans/human-gate.ts",
         "../../bin/plans/recipe.ts",
-        "@sixam/source/fnaf2",
         "node:child_process"
       ]
     },
@@ -4107,8 +4101,7 @@
         "../bin/plans/minus-toys-plan.ts",
         "@sixam/play/sim",
         "@sixam/propose/fnaf2",
-        "@sixam/source/fnaf2",
-        "node:url"
+        "@sixam/source/fnaf2"
       ]
     },
     {
@@ -4148,7 +4141,6 @@
       "file": "packages/propose/test/test-artifact-animation-gates.ts",
       "imports": [
         "../bin/plans/artifact-commands.ts",
-        "../bin/plans/recipe.ts",
         "@sixam/source/fnaf2"
       ]
     },

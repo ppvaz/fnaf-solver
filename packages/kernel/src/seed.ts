@@ -13,7 +13,7 @@
  */
 import { fail, isOneOf, isRecord } from './labels.ts';
 import { validateInterval } from './time/interval.ts';
-import type { Seed, SeedBelief, SeedProvenance } from './types.ts';
+import type { Seed, SeedProvenance } from './types.ts';
 
 export const SEED_PROVENANCES = Object.freeze(['natural', 'pinned', 'identified'] as const);
 export const SEED_BELIEFS = Object.freeze(['known', 'candidates', 'unknown'] as const);

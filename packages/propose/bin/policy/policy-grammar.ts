@@ -5,7 +5,7 @@
 // the next search package.  Setup targets are named so a candidate cannot
 // smuggle in an unsourced opening as an anonymous list of taps.
 import {
-  BRANCH_SCHEMA, POLICY_SCHEMA, canonicalPolicy, validateBranch, validatePolicy,
+  POLICY_SCHEMA, validateBranch, validatePolicy,
 } from '@sixam/propose/policy';
 import type { Branch, PolicyAction, PolicyPhase, PolicyProgram, RepeatPhase } from '@sixam/propose/policy';
 import { isRecord } from '@sixam/kernel';

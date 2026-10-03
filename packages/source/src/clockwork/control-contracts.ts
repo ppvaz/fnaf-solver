@@ -8,7 +8,7 @@
  * texts are unchanged. CONTRACT:semantic-control-v1 CONTRACT:device-profile-v1.
  */
 import {
-  CONTROL_CATALOGS, GAME_PACKAGES, catalogAcceptsControl, controlCatalogFor, gameOfTargetBuild,
+  GAME_PACKAGES, catalogAcceptsControl, controlCatalogFor, gameOfTargetBuild,
   unknownProfilePoints,
 } from './control-registry.ts';
 import { isOneOf, isRecord } from '@sixam/kernel';

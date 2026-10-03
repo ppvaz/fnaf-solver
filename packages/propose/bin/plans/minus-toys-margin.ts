@@ -124,7 +124,7 @@ if (ARM_AT === undefined) {
   const bands: [number, number][] = [];
   let open: number | null = null;
   for (let lag = 0; lag <= PERIOD; lag += SCAN) {
-    const lost = !allSurvive((cycle, index, at) => (at >= ARM_AT ? lag : 0));
+    const lost = !allSurvive((_cycle, _index, at) => (at >= ARM_AT ? lag : 0));
     if (lost && open === null) open = lag;
     if (!lost && open !== null) { bands.push([open, lag]); open = null; }
   }

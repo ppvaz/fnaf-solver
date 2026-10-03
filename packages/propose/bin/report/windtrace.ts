@@ -23,7 +23,6 @@ import { jitterPlan, parsePlanText } from '../plans/human-gate.ts';
 import { execSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import * as E from '@sixam/source/fnaf2';
-import * as C from '@sixam/source/fnaf2';
 
 const arg = <T>(name: string, def: T): string | T => {
   const v = (process.argv.find(a => a.startsWith(`--${name}=`)) || '').split('=')[1];

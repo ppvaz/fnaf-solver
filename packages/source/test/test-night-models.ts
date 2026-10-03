@@ -21,7 +21,7 @@
 //   node packages/source/test/test-night-models.ts
 
 import {
-  GAMES, GAME_IDS, PACKAGES, scheduleFor, peakFor, canActIn, nightsOf,
+  GAME_IDS, PACKAGES, scheduleFor, peakFor, canActIn, nightsOf,
   rollChance, rollsInHour, opportunities, modelFor, fnaf1, fnaf2, fnaf3, fnaf4,
 } from '@sixam/source';
 import { AI_BY_NIGHT, aiCap } from '@sixam/source/fnaf2';

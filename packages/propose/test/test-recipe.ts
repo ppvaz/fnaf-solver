@@ -8,7 +8,7 @@
 // Nothing caught it, because nothing checked the stream the runner emits.
 import { build, track, devicePlan, replay, MIN_CONTACT_MS, DEVICE_SPACING_MS,
          MODEL_SLOT_MS, FUSION_POLL_MS, MASK_RAISE_GAP_MS, SWEEP_SELECT_MS, LA_SELECT_MS, LA_SETTLE_MS,
-         SWEEP_RELEASED_MS, sweepCamMs, sweepCams, sweepSpanMs } from '../bin/plans/recipe.ts';
+         SWEEP_RELEASED_MS, sweepCams, sweepSpanMs } from '../bin/plans/recipe.ts';
 import { DEVICE_CONSTRAINTS } from '@sixam/propose/fnaf2';
 // The released floor the cycle gate holds every plan to; the HID auditor reads the same one.
 const MIN_RELEASED_MS = DEVICE_CONSTRAINTS.minReleasedMs;

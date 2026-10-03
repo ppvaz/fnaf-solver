@@ -243,7 +243,7 @@ export function neighbourhoodP(scanRs: readonly number[], bestR: number, size: n
   return 1 - below ** size;
 }
 
-async function confirm(pre: StaticPre & { readonly kind: 'confirm' }, record: object, args: SweepArgs, inp: Inputs, fr: Frames, workers: number, all: readonly number[],
+async function confirm(pre: StaticPre & { readonly kind: 'confirm' }, record: object, args: SweepArgs, inp: Inputs, workers: number, all: readonly number[],
   t0: number) {
   const { radius, alpha, minHits } = pre.decisionRule;
   const windows = [];
@@ -283,7 +283,7 @@ async function main(argv: string[]) {
   const all = Array.from({ length: 0x10000 }, (_, s) => s);
   const cycle = cycleIndex(pre.seed);
   const t0 = Date.now();
-  if (pre.kind === 'confirm') return confirm(pre, record, args, inp, fr, workers, all, t0);
+  if (pre.kind === 'confirm') return confirm(pre, record, args, inp, workers, all, t0);
   const windows = [];
   for (const win of pre.windows) {
     const control = predict(inp, { injectAt: win.injectAt, frames: win.endFrame });

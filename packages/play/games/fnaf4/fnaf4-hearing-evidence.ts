@@ -235,7 +235,7 @@ export function viewsBlock(rows: readonly ViewRow[], events: readonly RunEvent[]
 
 /** JSON with every array of plain values on one line. */
 export function compactJson(value: unknown) {
-  return JSON.stringify(value, null, 2).replace(/\[\s+([^\[\]{}]*?)\s+\]/g, (m: string, inner: string) => `[${inner.split(/,\s+/).join(', ')}]`);
+  return JSON.stringify(value, null, 2).replace(/\[\s+([^\[\]{}]*?)\s+\]/g, (_m: string, inner: string) => `[${inner.split(/,\s+/).join(', ')}]`);
 }
 
 function main(argv: string[]) {

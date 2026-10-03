@@ -267,7 +267,7 @@ export function check(result: SweepResult) {
 
 // ---------------------------------------------------------------- the sweep
 
-function nightInputs(sweepCfg: SweepConfig, nightCfg: NightConfig, inputsRoot: string, modelOptions: unknown) {
+function nightInputs(nightCfg: NightConfig, inputsRoot: string, modelOptions: unknown) {
   const winner = JSON.parse(readFileSync(resolve(ROOT, current(nightCfg.winner)), 'utf8'));
   const sched = phoneSchedule(winner, nightCfg.night, nightCfg.originMs);
   const pressCount = checkPressFile(sched.queueMs, JSON.parse(privateText(inputsRoot, nightCfg.presses)));
@@ -328,7 +328,7 @@ function sweep(sweepCfg: SweepConfig, cfgPath: string, inputsRoot: string, only:
     const controlVariant = sweepCfg.control.variant[nightCfg.name];
     const retained = refNight.variants.find((v: { readonly variant: string }) => v.variant === controlVariant);
     if (!retained) throw new Error(`${nightCfg.name} has no retained ${controlVariant} variant`);
-    const inputs = nightInputs(sweepCfg, nightCfg, inputsRoot, modelOptions);
+    const inputs = nightInputs(nightCfg, inputsRoot, modelOptions);
     const controlCell = runCell(inputs, nightCfg, 0, 0);
     if (controlCell.codes !== retained.windows.model)
       throw new Error(`${nightCfg.name}: control cell ${controlCell.codes.slice(0, 20)} is not the retained ${controlVariant} model windows ${retained.windows.model.slice(0, 20)}`);

@@ -349,7 +349,7 @@ let fieldLine = '';
     // A schedule without a loop camdrop indexes the field by undefined, which reads no cell, as it always has.
     const seamAxis = Object.keys(rec.field).find(t => /^loop#\d+:mask$/.test(t) && rec.field[t].atMs > (rec.field[Object.keys(rec.field).find(u => /camdrop\/monitor$/.test(u) && u.startsWith('loop')) as string]?.atMs ?? Infinity));
     if (seamAxis && rec.camdropMaskSeam) edges(seamAxis);
-    for (const [lane, key, opts] of [['jitter', 'jitter', (J: number) => ({ shifts: { ALL: -J }, band: J > 0 ? [0, 2 * J] as const : null })],
+    for (const [lane, , opts] of [['jitter', 'jitter', (J: number) => ({ shifts: { ALL: -J }, band: J > 0 ? [0, 2 * J] as const : null })],
       ['lateness', 'late', (L: number) => ({ band: L > 0 ? [0, L] as const : null })]] as const) {
       const data = rec[lane];
       if (data.maxAllWinMs !== null) for (const seed of laneSeeds.slice(0, 2)) {

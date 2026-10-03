@@ -11,10 +11,7 @@
 // mask the extra tick, then hands back. The threat is real, not injected: BB is
 // live at AI 3 on the story Night 2 table from 1 AM (g676). Mangle occupancy is
 // intentionally not claimed until Observer has a separately calibrated fact.
-import { pathToFileURL } from 'node:url';
 import * as C from '@sixam/source/fnaf2';
-import { Rng } from '@sixam/source/fnaf2';
-import { Observer } from '@sixam/play/sim';
 import { VentThreatReactive } from '@sixam/propose/fnaf2';
 import { replay, KNOBS0, ENGINE_PHASE_ORACLE } from './plans/minus-toys-plan.ts';
 import { evalEnsemble } from './plans/minus-toys-jitter.ts';

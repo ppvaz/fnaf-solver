@@ -27,7 +27,7 @@
 //   node packages/propose/bindings/fact-register.ts --anchor-max-k WINNER_HASH (prints maxK, exit 3 if none)
 //   node packages/propose/bindings/fact-register.ts --anchor-period-ms WINNER_HASH (prints the aim's timer period, exit 3 if none)
 import { readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
-import { join, relative, resolve } from 'node:path';
+import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { stableHash } from '@sixam/kernel/contracts';
 

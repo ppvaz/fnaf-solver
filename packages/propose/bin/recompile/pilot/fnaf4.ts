@@ -46,7 +46,7 @@ function nav({ run }: PolicyOptions): PilotPolicy {
   writeFileSync(out, '');
   const log = (o: object) => appendFileSync(out, JSON.stringify(o) + '\n');
   let queue: Queued[] = [];
-  let lastFrame = null as number | null, frameStart = 0, taps = 0;
+  let lastFrame = null as number | null, frameStart = 0;
   const tap = (v: View, name: string, delay = 0) => {
     const o = v.one(name);
     if (!o || !inWindow(o.c)) { log({ t: v.tick, f: v.frame, miss: name, c: o?.c }); return; }
@@ -489,7 +489,6 @@ function warden({ run, knobs: options }: PolicyOptions, rev = 1): PilotPolicy {
     yield* holdZone(ctx, CLOSE, (v) => (v.one('foxy')?.al?.[2] ?? 0) > (knobs.foxyTo ?? (rev >= 3 ? 3 : 1)) && places(v).foxy === 'in closet'
       && (v.cv('Freddy counter') ?? 0) < (knobs.bedUrgent ?? 42) + 2, 600);
   }
-  function* listen(side: Side): Task { yield* door(side); yield* hold(10); }
   // View a hall whose occupant has left while its dwell stands (g481/g485
   // zero it while the hall is viewed); a near occupant ends the hold, since
   // a light on a near occupant is a jumpscare (g345/g346).

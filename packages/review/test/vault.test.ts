@@ -178,7 +178,10 @@ try {
   rmSync(join(repo, 'captures', 'run-a.hid'));
   const refs = refused(['refs']);
   check(refs.includes('references media that is not here'), `expected a refs refusal:\n${refs}`);
-  const report = (() => { try { run(['refs']); } catch (error) { return (error as SpawnSyncReturns<string>).stdout; } })() as string; // refs exits 1, refused above
+  const report = (() => {
+    try { run(['refs']); } catch (error) { return (error as SpawnSyncReturns<string>).stdout; }
+    throw new Error('vault refs exited 0 over dangling references');
+  })();
   check(report.includes('captures/gone-input.pftrace'), `expected the dangling trace:\n${report}`);
   check(report.includes('in no pack manifest'), `expected the unrecoverable note:\n${report}`);
   check(new RegExp(`captures/run-a.hid\\n\\s+in pack ${pack}`).test(report),

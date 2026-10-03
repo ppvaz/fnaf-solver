@@ -306,7 +306,7 @@ export async function createCampaignPorts(options: CampaignPortOptions) {
     // arm-verified plan".  Only the double-camera-glitch strategies (minus-toys,
     // minus3) carry that header, so the default locked every glitchless
     // strategy -- Minus 7 among them -- out of the device lane entirely.
-    machineOnly = false, allowSaveReset = false, armMode = undefined, captureRestarted = false,
+    allowSaveReset = false, armMode = undefined, captureRestarted = false,
     nightAnchorAimMs = null, nightAnchorMaxK = null, nightAnchorPeriodMs = 1000, nightAnchorStrict = false, nightAnchorAuthorizeOnLatch = false,
     teachOverlay = false, venueBindings = [], startResidueMs = null } = options;
   if (typeof teachOverlay !== 'boolean') throw new TypeError('teachOverlay must be boolean');

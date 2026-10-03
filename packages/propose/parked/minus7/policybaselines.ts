@@ -98,7 +98,7 @@ export function minus7Policy({ slackMs = 0, slackModel = 'iid', seed = 1,
 // without its stun-lock should collapse; if it does not, the score is coming
 // from somewhere other than the mechanism the strategy claims.
 export const NO_STUN_CYCLE = DEFAULT_CYCLE.filter(
-  ([fr, kind, act]) => !(act === 'light' && fr > 50));
+  ([fr, , act]) => !(act === 'light' && fr > 50));
 
 // --------------------------------------------------------- Jason-style loop
 // A coarse repeating phase: wind for most of it, then one office block that
@@ -513,7 +513,7 @@ export const windOnlyPolicy = (): Policy => {
   return {
     name: 'wind-only', version: 1, observation: 'truth',
     reset() { done = false; },
-    step(obs, api) {
+    step(_obs, api) {
       if (done) return;
       done = true;
       api.tap(api.frame + ms(100), 'monitor');

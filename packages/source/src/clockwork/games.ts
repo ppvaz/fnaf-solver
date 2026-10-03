@@ -29,7 +29,7 @@ import type { NightModel } from './night-model.ts';
 export * from './night-model.ts';
 export { fnaf1, fnaf2, fnaf3, fnaf4 };
 
-export const GAMES = {
+const GAMES = {
   fnaf1: fnaf1.MODEL,
   fnaf2: fnaf2.MODEL,
   fnaf3: fnaf3.MODEL,

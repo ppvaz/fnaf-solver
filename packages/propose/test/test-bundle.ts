@@ -166,7 +166,7 @@ withModelOptions(simOptionsFrom({}), () => { try {
   check(/^#schema hid-controls-v1\n#profile fixture-hid-screencap\n#profile-sha256 [0-9a-f]{64}\n/.test(controlsText) &&
     /^mask \d+ \d+$/m.test(controlsText), 'bundle did not carry the HID controls derived from its profile');
   const planted = JSON.parse(readFileSync(join(bundlePath, 'manifest.json'), 'utf8'));
-  writeFileSync(controlsPath, controlsText.replace(/^mask (\d+) /m, (m, x) => `mask ${Number(x) + 1} `));
+  writeFileSync(controlsPath, controlsText.replace(/^mask (\d+) /m, (_m, x) => `mask ${Number(x) + 1} `));
   expectFailure(() => validateBundle(bundlePath), 'validator accepted a moved control in hid-controls.txt');
   writeFileSync(controlsPath, controlsText);
   check(planted.controls?.sha256 && validateBundle(bundlePath).status === 'READY',

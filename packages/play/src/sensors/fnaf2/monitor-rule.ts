@@ -54,10 +54,6 @@ const cellFeatures: Readonly<Record<CellFeature, (cell: unknown) => number>> = {
     return Math.min(r, g) - b;
   },
 };
-const KNOWN_FEATURES = { ...cellFeatures,
-  helper_grid_grey_cells: 'grey',
-  helper_grid_mean_luma: 'gridLuma',
-};
 const UNKNOWN_REASONS = new Set([
   'frame-pending', 'frame-stale', 'screen-identity', 'frame-dark',
   'feature-missing', 'ambiguous-threshold', 'sensor-mismatch',

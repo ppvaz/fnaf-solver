@@ -12,7 +12,7 @@
 import { pathToFileURL } from 'node:url';
 import * as C from '@sixam/source/fnaf2';
 import { Sim } from '@sixam/source/fnaf2';
-import { run, DEFAULT_SEARCH_KNOBS, makeSearchKnobs, MASK_OFF_INPUT_FRAMES } from '../../parked/minus7/hid-device-pilot.ts';
+import { run, DEFAULT_SEARCH_KNOBS, makeSearchKnobs } from '../../parked/minus7/hid-device-pilot.ts';
 
 // The phone's measured contact floor. The Moto g56 accepted 33 ms contacts
 // on camera-select, monitor, mask and hall controls; 100 ms was margin from

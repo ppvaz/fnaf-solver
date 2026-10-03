@@ -106,7 +106,7 @@ function lockForControl(state: Estimator, factName: string, reason: string) {
   }
 }
 
-function maxAgeFor(state: Estimator, factName: string, fact: IncomingFact, maxAgeMs: Readonly<Record<string, unknown>> | undefined) {
+function maxAgeFor(factName: string, fact: IncomingFact, maxAgeMs: Readonly<Record<string, unknown>> | undefined) {
   const explicit = maxAgeMs?.[factName] ?? fact.maxAgeMs;
   if (explicit === undefined || explicit === null) return Infinity;
   if (!finite(explicit) || explicit < 0)
@@ -273,7 +273,7 @@ export function update(estimator: Estimator, { facts = {}, nowMs = null, maxAgeM
         observedAtMs: observed, receivedAtMs: received });
       continue;
     }
-    const maxAge = maxAgeFor(next, name, fact, maxAgeMs);
+    const maxAge = maxAgeFor(name, fact, maxAgeMs);
     if (received - observed > maxAge) {
       markStale(next, name, fact, received, observed, maxAge);
       continue;

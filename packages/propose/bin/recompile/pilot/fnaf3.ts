@@ -182,7 +182,7 @@ function survey2({ run }: PolicyOptions): PilotPolicy {
   writeFileSync(out, '');
   const note = (o: object) => appendFileSync(out, JSON.stringify(o) + '\n');
   const script: [number, string, (v: View) => boolean][] = [
-    [60, 'pan right', (v) => (hands.holdXY(1000, 384, 70), true)],
+    [60, 'pan right', () => (hands.holdXY(1000, 384, 70), true)],
     [150, 'monitor up', (v) => tapProxy(hands, v, 'olivier_FlipHitbox.Active', 'flip it out')],
     [220, 'cam 10', (v) => tapProxy(hands, v, 'olivier_cameraHitboxA.Active', 'cam 10')],
     [280, 'cam 09', (v) => tapProxy(hands, v, 'olivier_cameraHitboxA.Active', 'cam 09')],
@@ -193,7 +193,7 @@ function survey2({ run }: PolicyOptions): PilotPolicy {
     [700, 'cam 08', (v) => tapProxy(hands, v, 'olivier_cameraHitboxA.Active', 'cam 08')],
     [760, 'play audio', (v) => tapVisible(hands, v, 'play button')],
     [900, 'monitor down', (v) => tapProxy(hands, v, 'olivier_FlipHitbox.Active', 'flip it out')],
-    [960, 'pan left', (v) => (hands.holdXY(20, 384, 70), true)],
+    [960, 'pan left', () => (hands.holdXY(20, 384, 70), true)],
     [1060, 'maintenance up', (v) => tapProxy(hands, v, 'olivier_FlipHitbox.Active', 'screen two flipper')],
     [1140, 'reboot vent', (v) => tapVisible(hands, v, 'ventilation text')],
     [1700, 'exit', (v) => tapVisible(hands, v, 'exit text')],

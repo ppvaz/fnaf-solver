@@ -399,7 +399,7 @@ function compileArmWindow(request: ExecutorRequest, actions: readonly Timed[]) {
 
 function compileArmSegments(request: ExecutorRequest, actions: readonly Timed[], register: string, plan: ArmedPlan,
   armWindow = compileArmWindow(request, actions), gateTiming: GateTiming = {}) {
-  const { firstWind, prefix, prefixCompiled, armReadyAtMs } = armWindow;
+  const { firstWind, prefix, prefixCompiled } = armWindow;
   // A minimal Night 1 has a steady CAM 09 flash at 140150 ms and its first
   // wind at 140300 ms. That flash is not part of the arm prefix: it must stay
   // behind the same host gate as the wind, otherwise a missed opening would

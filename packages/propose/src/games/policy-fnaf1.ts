@@ -51,7 +51,6 @@ export const CAM = { showStage: 1, dining: 2, westHall: 3, eastHall: 4,
  * flick the camera, idle. A door that a flash finds occupied shuts for
  * `doorFrames` and is then re-checked by the next flash on that side.
  *
- * @param knobs.lightFrames frames a door-light flash lasts
  * @param knobs.camFrames frames a camera flick lasts
  * @param knobs.doorFrames frames a door stays shut before re-check
  * @param knobs.idleFrames frames of nothing at the end of a cycle
@@ -74,7 +73,7 @@ function onBudget(sim: Fnaf1Sim, slack: number) {
 }
 
 export function communityLoop({
-  lightFrames = 1, camFrames = 6, camEvery = 44, checkEvery = 60,
+  camFrames = 6, camEvery = 44, checkEvery = 60,
   heldCheckEvery = 12,
   maxShutFrames = Infinity, budgetSlack = 0.5, bothLights = false,
   park = CAM.eastCorner,

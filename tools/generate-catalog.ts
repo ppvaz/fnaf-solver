@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Generate checked-in inventories from executable repository truth. */
 import { readFile, writeFile } from 'node:fs/promises';
-import { mkdtempSync, readdirSync, rmSync } from 'node:fs';
+import { mkdtempSync, rmSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';

@@ -74,7 +74,7 @@ export function secondPass(this: Sim, f: number) {
 }
 
 /** The per-second pass helpers; mask2 is read when each part starts. */
-export function passTools(this: Sim, f: number) {
+export function passTools(this: Sim, _f: number) {
   const every = (key: string, ms: number) => this.passEvery(this.passTimers[key] ??= { v: 0, init: false }, ms);
   /** Random(n) == 1 */
   const one = (n: number) => this.rng.int(0, n - 1, 1) === 1;

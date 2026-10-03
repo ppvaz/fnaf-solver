@@ -92,7 +92,6 @@ export function report(events: readonly RunEvent[]) {
   // as an arm failure.
   const armAborted = first('arm.failed');
   const armUnresolved = first('arm.unresolved');
-  const armFailed = armAborted ?? armUnresolved;
   const phaseInvalid = first('phase.invalid');
   const gates = all('control.gate');
   const gateAborts = all('control.gate.abort');

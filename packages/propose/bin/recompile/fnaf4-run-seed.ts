@@ -18,7 +18,7 @@
 // fourth (Random(2), 1 = right); the roll (g286, Random(20) + 1 <= AI) is the next draw, or the eighth when the
 // 5000 ms group's three draws share the update. MODEL_ONLY over a DEVICE_MEASURED night. Host-only.
 import { parseArgs } from 'node:util';
-import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { appendFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { LEVEL_ORIGIN_MS } from '../../../play/games/fnaf4/fnaf4-run.ts';
