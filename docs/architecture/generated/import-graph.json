@@ -495,11 +495,9 @@
     {
       "file": "apps/trainer/test/lesson.test.ts",
       "imports": [
-        "../../../tools/chrome.ts",
-        "node:child_process",
-        "node:fs",
-        "node:os",
-        "node:path"
+        "./cdp.ts",
+        "node:assert/strict",
+        "node:test"
       ]
     },
     {
@@ -514,11 +512,9 @@
     {
       "file": "apps/trainer/test/light.test.ts",
       "imports": [
-        "../../../tools/chrome.ts",
-        "node:child_process",
-        "node:fs",
-        "node:os",
-        "node:path"
+        "./cdp.ts",
+        "node:assert/strict",
+        "node:test"
       ]
     },
     {
@@ -546,11 +542,9 @@
     {
       "file": "apps/trainer/test/phase.test.ts",
       "imports": [
-        "../../../tools/chrome.ts",
-        "node:child_process",
-        "node:fs",
-        "node:os",
-        "node:path"
+        "./cdp.ts",
+        "node:assert/strict",
+        "node:test"
       ]
     },
     {

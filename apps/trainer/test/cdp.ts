@@ -177,14 +177,12 @@ export async function launch({ domains = ['Runtime', 'Page'] }: { domains?: read
         await evaluate('location.href !== "about:blank" && document.readyState === "complete"') === true ? true : undefined);
     },
     async waitFor(label, expression, accept, timeoutMs) {
-      let last: unknown;
-      try {
-        return await until(label, timeoutMs, async () => {
-          last = await evaluate(expression);
-          return accept(last) ? { value: last } : undefined;
-        }).then(found => found.value);
-      } catch (error) {
-        throw new Error(`${label}: still ${JSON.stringify(last)} after ${timeoutMs} ms (${(error as Error).message})`);
+      const deadline = Date.now() + timeoutMs;
+      for (;;) {
+        const value = await evaluate(expression);
+        if (accept(value)) return value;
+        if (Date.now() >= deadline) throw new Error(`${label}: still ${JSON.stringify(value)} after ${timeoutMs} ms`);
+        await sleep(50);
       }
     },
     async screenshot(name) {

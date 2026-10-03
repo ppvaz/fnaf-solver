@@ -1,36 +1,44 @@
 // Drives the lesson ladder with an in-page "perfect player" that taps whatever
 // the coach is currently cueing. Checks control gating, cueing, streaks and the
-// pass screen.
-import { spawn } from 'node:child_process';
-import { chromeBinary, chromeArgs } from '../../../tools/chrome.ts';
-import { mkdtempSync } from 'node:fs'; import { tmpdir } from 'node:os'; import { join } from 'node:path';
+// pass screen. Each lesson waits for its pass screen, with a deadline, instead
+// of sleeping a fixed 47-58 s.
+//
+//   node apps/trainer/test/lesson.test.ts [url] [--wind-only]
+import assert from 'node:assert/strict';
+import { after, before, test } from 'node:test';
+import { launch, pageUrl } from './cdp.ts';
+import type { Page } from './cdp.ts';
 
-const BASE = process.argv.find(arg => /^https?:\/\//.test(arg)) ||
-  'http://localhost:8731/dist/index.html';
-const PORT = 9337;
-const chrome = spawn(chromeBinary(),
-  chromeArgs(PORT, mkdtempSync(join(tmpdir(), 'm7l-'))), { stdio: 'ignore' });
-const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
-/** An entry of Chrome's /json target list; a fresh Chrome opens about:blank, a page target. */
-interface Target { readonly type: string, readonly webSocketDebuggerUrl: string }
-interface ExceptionDetails { readonly text: string, readonly exception?: { readonly description?: string } }
-/** What this test reads of each DevTools method's reply; any other reply it ignores. */
-interface Replies {
-  'Runtime.evaluate': { readonly result?: { readonly value?: unknown }, readonly exceptionDetails?: ExceptionDetails };
-  'Page.captureScreenshot': { readonly data: string };
+const WIND_ONLY = process.argv.includes('--wind-only');
+
+let page: Page;
+before(async () => {
+  page = await launch();
+  await page.open(pageUrl());
+  await page.waitFor('the app', '!!window.app', value => value === true, 10_000);
+  await page.evaluate('localStorage.removeItem("m7.progress"); location.reload(); true');
+  await page.waitFor('the app after a reload', '!!window.app && document.getElementById("menu").classList.contains("shown")',
+    value => value === true, 10_000);
+});
+after(async () => {
+  await page?.evaluate('clearInterval(window.__auto); window.__release && window.__release(); true').catch(() => {});
+  await page?.close();
+});
+
+const is = (want: unknown) => (value: unknown) => value === want;
+const atLeast = (floor: number) => (value: unknown) => typeof value === 'number' && value >= floor;
+const show = async (label: string, expression: string) => { console.log(`  ${label}: ${JSON.stringify(await page.evaluate(expression))}`); };
+const PASSED = 'document.getElementById("passed").classList.contains("shown")';
+const VISIBLE = `[...document.querySelectorAll('[data-widget]')]
+  .filter(e=>!e.classList.contains('hidden-ctrl')).map(e=>e.dataset.widget).sort().join()`;
+/** A unit's stun left in frames, under whichever movement clock the Sim runs. */
+const STUN_LEFT = '(u => window.app.sim.opts.sourcedMovementClock ? u.stunRemaining : Math.max(0, u.stunUntil - window.app.sim.frame))';
+/** Click `selector`, then wait for `panel` to be shown. */
+async function go(selector: string, panel: string) {
+  await page.evaluate(`document.querySelector(${JSON.stringify(selector)}).click(); true`);
+  await page.waitFor(`${panel} after ${selector}`, `document.getElementById(${JSON.stringify(panel)}).classList.contains("shown")`,
+    is(true), 3_000);
 }
-type Reply<M extends string> = M extends keyof Replies ? Replies[M] : unknown;
-/** A DevTools message: the reply to a request carries its id, and its result or an error. */
-interface Message<R> { readonly id?: number, readonly result: R, readonly error?: { readonly message: string } }
-/** The event this test reads; it passes over every other message. */
-interface CdpEvent { readonly method: 'Runtime.exceptionThrown', readonly params: { readonly exceptionDetails: ExceptionDetails } }
-let id = 0;
-const rpc = <M extends string>(ws: WebSocket, m: M, p = {}) => new Promise<Reply<M>>((res, rej) => { const mid = ++id;
-  const on = (e: MessageEvent) => { const x: Message<Reply<M>> = JSON.parse(e.data); if (x.id !== mid) return;
-    ws.removeEventListener('message', on); x.error ? rej(new Error(x.error.message)) : res(x.result); };
-  ws.addEventListener('message', on); ws.send(JSON.stringify({ id: mid, method: m, params: p })); });
-
-const errs: string[] = [], fails: string[] = [];
 
 // tapped as soon as each step falls due — a metronomically perfect player
 // `hold` decides whether the bot lets go: a held input stays down until the
@@ -67,142 +75,108 @@ window.__auto = setInterval(() => {
   else el.dispatchEvent(new PointerEvent('pointerup', {bubbles:true, pointerId:31}));
 }, 8); true`;
 const AUTOPLAYER = player(true);
+const STOP_PLAYER = 'clearInterval(window.__auto); window.__release && window.__release(); true';
 
-async function main() {
-  for (let i = 0; i < 60; i++) { try { await fetch(`http://127.0.0.1:${PORT}/json`); break; } catch { await sleep(200); } }
-  const t: Target = (await (await fetch(`http://127.0.0.1:${PORT}/json`)).json()).find((x: Target) => x.type === 'page');
-  const ws = new WebSocket(t.webSocketDebuggerUrl);
-  await new Promise<Event>(r => ws.addEventListener('open', r));
-  ws.addEventListener('message', e => { const m: CdpEvent = JSON.parse(e.data);
-    if (m.method === 'Runtime.exceptionThrown') errs.push(m.params.exceptionDetails.exception?.description || m.params.exceptionDetails.text); });
-  await rpc(ws, 'Runtime.enable'); await rpc(ws, 'Page.enable');
-  await rpc(ws, 'Page.navigate', { url: BASE }); await sleep(1500);
+// Fast focused regression for the only held coach input. This keeps the
+// normal ladder's full target counts intact while making hold-plumbing bugs
+// debuggable without waiting through the earlier lessons.
+test('focused WIND hold', { skip: !WIND_ONLY }, async () => {
+  await go('[data-mode="wind"]', 'brief');
+  await go('#btn-brief-go', 'run');
+  await page.evaluate(player(false));
+  await page.waitFor('two graded cycles of tapping', 'window.app.coach.cycles', atLeast(2), 40_000);
+  await show('after tap bot', `(()=>{const a=window.app; return {
+    winding: a.sim.winding, expected: a.coach.expected?.id || null,
+    monitor: a.sim.monitor, cam: a.sim.cam, dropEverything: a.sim.dropEverything,
+    windFrames: a.coach.windFrames, lastHeld: a.coach.lastHeld || 0,
+    streak: a.coach.streak, cycles: a.coach.cycles,
+    mistakes: a.sim.mistakes.slice(-4).map(m=>m.code).join()
+  };})()`);
+  await page.evaluate(`clearInterval(window.__auto); window.__release && window.__release();
+    window.app.start("wind").then(() => { window.app.sim.opts.stalledEnabled = false; return true; })`);
+  await page.evaluate(AUTOPLAYER);
+  await page.waitFor('holding builds a streak', 'window.app.coach.streak > 0', is(true), 60_000);
+  await show('state', `(()=>{const a=window.app; return {
+    held: window.__held?.dataset.act || null,
+    winding: a.sim.winding, isWinding: a.sim.isWinding,
+    monitor: a.sim.monitor, cam: a.sim.cam,
+    expected: a.coach.expected?.id || null,
+    windFrames: a.coach.windFrames, lastHeld: a.coach.lastHeld || 0,
+    streak: a.coach.streak, cycles: a.coach.cycles,
+    tail: a.coach.results.slice(-6).map(r=>r.grade).join()
+  };})()`);
+  await page.evaluate(STOP_PLAYER);
+});
 
-  const ev = async (expr: string) => { const r = await rpc(ws, 'Runtime.evaluate', { expression: expr, awaitPromise: true, returnByValue: true });
-    if (r.exceptionDetails) errs.push(r.exceptionDetails.exception?.description || r.exceptionDetails.text);
-    return r.result?.value; };
-  const expect = async (label: string, expr: string, want: unknown) => { const v = await ev(expr);
-    const ok = JSON.stringify(v) === JSON.stringify(want);
-    console.log(`  ${ok ? 'ok  ' : 'FAIL'} ${label}: ${JSON.stringify(v)}${ok ? '' : ` (want ${JSON.stringify(want)})`}`);
-    if (!ok) fails.push(label); return v; };
-  const show = async (l: string, e: string) => { console.log(`  ${l}: ${JSON.stringify(await ev(e))}`); };
+test('the menu is a ladder', { skip: WIND_ONLY }, async () => {
+  assert.equal(await page.evaluate('document.querySelectorAll("#mode-list .mode").length'), 10, 'lesson count');
+  assert.equal(await page.evaluate('document.querySelector("#mode-list .mode").className.includes("next")'), true, 'first is next');
+  assert.equal(await page.evaluate('document.querySelectorAll("#mode-list .mode.later").length > 0'), true, 'later ones dimmed');
+});
 
-  await ev('localStorage.removeItem("m7.progress")');
-  await ev('location.reload()'); await sleep(1200);
-
-  // Fast focused regression for the only held coach input. This keeps the
-  // normal ladder's full target counts intact while making hold-plumbing bugs
-  // debuggable without waiting through the earlier lessons.
-  if (process.argv.includes('--wind-only')) {
-    console.log('\n— focused WIND hold —');
-    await ev('document.querySelector(\'[data-mode="wind"]\').click()'); await sleep(200);
-    await ev('document.getElementById("btn-brief-go").click()'); await sleep(500);
-    await ev(player(false));
-    await sleep(16000);
-    await show('after tap bot', `(()=>{const a=window.app; return {
-      winding: a.sim.winding, expected: a.coach.expected?.id || null,
-      monitor: a.sim.monitor, cam: a.sim.cam, dropEverything: a.sim.dropEverything,
-      windFrames: a.coach.windFrames, lastHeld: a.coach.lastHeld || 0,
-      streak: a.coach.streak, cycles: a.coach.cycles,
-      mistakes: a.sim.mistakes.slice(-4).map(m=>m.code).join()
-    };})()`);
-    await ev(`clearInterval(window.__auto); window.__release && window.__release();
-      window.app.start("wind").then(() => { window.app.sim.opts.stalledEnabled = false; })`);
-    await sleep(500);
-    await ev(AUTOPLAYER);
-    await sleep(24000);
-    await show('state', `(()=>{const a=window.app; return {
-      held: window.__held?.dataset.act || null,
-      winding: a.sim.winding, isWinding: a.sim.isWinding,
-      monitor: a.sim.monitor, cam: a.sim.cam,
-      expected: a.coach.expected?.id || null,
-      windFrames: a.coach.windFrames, lastHeld: a.coach.lastHeld || 0,
-      streak: a.coach.streak, cycles: a.coach.cycles,
-      tail: a.coach.results.slice(-6).map(r=>r.grade).join()
-    };})()`);
-    await expect('holding builds a streak', 'window.app.coach.streak > 0', true);
-    await ev('clearInterval(window.__auto); window.__release && window.__release()');
-    console.log(`\nconsole errors: ${errs.length}`);
-    console.log(fails.length ? `FAILURES: ${fails.join(', ')}` : 'all assertions passed');
-    ws.close(); chrome.kill(); process.exit(fails.length || errs.length ? 1 : 0);
-  }
-
-  console.log('\n— menu is a ladder —');
-  await expect('lesson count', 'document.querySelectorAll("#mode-list .mode").length', 10);
-  await expect('first is next', 'document.querySelector("#mode-list .mode").className.includes("next")', true);
-  await expect('later ones dimmed', 'document.querySelectorAll("#mode-list .mode.later").length > 0', true);
-
-  console.log('\n— lesson 1: the beat —');
-  await ev('document.querySelector(\'[data-mode="beat"]\').click()'); await sleep(250);
-  await expect('brief shown', 'document.getElementById("brief").classList.contains("shown")', true);
+test('lesson 1, the beat, passes for a perfect player', { skip: WIND_ONLY }, async () => {
+  await go('[data-mode="beat"]', 'brief');
   await show('pass criterion', 'document.getElementById("brief-pass").textContent');
-  await ev('document.getElementById("btn-brief-go").click()'); await sleep(500);
-  await expect('only LIGHT visible', `[...document.querySelectorAll('[data-widget]')]
-     .filter(e=>!e.classList.contains('hidden-ctrl')).map(e=>e.dataset.widget).sort().join()`, 'light');
-  await expect('cams dimmed', 'document.getElementById("map").classList.contains("dim-cams")', true);
-  await ev(AUTOPLAYER);
-  await sleep(47000);
-  await show('streak', 'document.getElementById("coach-streak").textContent');
-  await expect('passed screen', 'document.getElementById("passed").classList.contains("shown")', true);
+  await go('#btn-brief-go', 'run');
+  assert.equal(await page.evaluate(VISIBLE), 'light', 'only LIGHT visible');
+  assert.equal(await page.evaluate('document.getElementById("map").classList.contains("dim-cams")'), true, 'cams dimmed');
+  await page.evaluate(AUTOPLAYER);
+  await page.waitFor('the beat passed', PASSED, is(true), 90_000);
   await show('passed text', 'document.getElementById("passed-title").textContent');
-  await expect('progress saved', 'JSON.parse(localStorage["m7.progress"]).beat.passed', true);
+  assert.equal(await page.evaluate('JSON.parse(localStorage["m7.progress"]).beat.passed'), true, 'progress saved');
+});
 
-  console.log('\n— lesson 2 unlocked and reachable —');
-  await ev('document.getElementById("btn-next-lesson").click()'); await sleep(250);
-  await expect('brief is sweep', 'document.getElementById("brief-title").textContent', 'The sweep');
-  await ev('document.getElementById("btn-brief-go").click()'); await sleep(400);
-  await expect('cams live', 'document.getElementById("map").classList.contains("dim-cams")', false);
-  await expect('monitor hidden', 'document.querySelector(\'[data-widget="monitor"]\').classList.contains("hidden-ctrl")', true);
-  await expect('starts on cams', 'window.app.sim.monitor', 'up');
-  await ev(AUTOPLAYER); await sleep(47000);
-  await show('sweep streak', 'document.getElementById("coach-streak").textContent');
-  await expect('sweep passed', 'document.getElementById("passed").classList.contains("shown")', true);
-  await show('stun held', 'Math.max(0,...window.app.sim.units.filter(u=>[10,4,7].includes(u.path[u.idx])).map(u=>u.stunUntil-window.app.sim.frame))');
+test('lesson 2, the sweep, is unlocked, reachable and passes', { skip: WIND_ONLY }, async () => {
+  await page.evaluate(STOP_PLAYER);
+  await go('#btn-next-lesson', 'brief');
+  assert.equal(await page.evaluate('document.getElementById("brief-title").textContent'), 'The sweep', 'brief is sweep');
+  await go('#btn-brief-go', 'run');
+  assert.equal(await page.evaluate('document.getElementById("map").classList.contains("dim-cams")'), false, 'cams live');
+  assert.equal(await page.evaluate('document.querySelector(\'[data-widget="monitor"]\').classList.contains("hidden-ctrl")'), true,
+    'monitor hidden');
+  assert.equal(await page.evaluate('window.app.sim.monitor'), 'up', 'starts on cams');
+  await page.evaluate(AUTOPLAYER);
+  await page.waitFor('the sweep passed', PASSED, is(true), 90_000);
+  await show('stun held', `Math.max(0,...window.app.sim.units.filter(u=>[10,4,7].includes(u.path[u.idx])).map(${STUN_LEFT}))`);
+});
 
-  console.log('\n— winding must be HELD, not tapped —');
-  await ev('document.getElementById("btn-passed-menu").click()'); await sleep(200);
-  await ev('document.querySelector(\'[data-mode="wind"]\').click()'); await sleep(200);
-  await ev('document.getElementById("btn-brief-go").click()'); await sleep(400);
-  await ev(player(false));            // taps the wind button instead of holding
-  await sleep(16000);
-  await expect('tapping wind never passes', 'window.app.coach.streak', 0);
+test('winding must be HELD, not tapped', { skip: WIND_ONLY }, async () => {
+  await page.evaluate(STOP_PLAYER);
+  await go('#btn-passed-menu', 'menu');
+  await go('[data-mode="wind"]', 'brief');
+  await go('#btn-brief-go', 'run');
+  await page.evaluate(player(false));            // taps the wind button instead of holding
+  await page.waitFor('two graded cycles of tapping', 'window.app.coach.cycles', atLeast(2), 40_000);
+  assert.equal(await page.evaluate('window.app.coach.streak'), 0, 'tapping wind never passes');
   await show('flagged', 'window.app.coach.results.slice(-4).map(r=>r.grade).join()');
   // The deliberately bad phase can let a nonlethal stalled unit reach its
   // opening and trigger the sourced monitor forcedown. Test correct holding
   // from a clean lesson rather than asking the bot to repair that state.
-  await ev(`clearInterval(window.__auto); window.__release && window.__release();
-    window.app.start("wind").then(() => { window.app.sim.opts.stalledEnabled = false; })`);
-  await sleep(500);
-  await ev(AUTOPLAYER);               // now actually hold it
-  await sleep(24000);
-  await show('holding: streak', 'document.getElementById("coach-streak").textContent');
+  await page.evaluate(`clearInterval(window.__auto); window.__release && window.__release();
+    window.app.start("wind").then(() => { window.app.sim.opts.stalledEnabled = false; return true; })`);
+  await page.evaluate(AUTOPLAYER);               // now actually hold it
+  await page.waitFor('holding builds a streak', 'window.app.coach.streak > 0', is(true), 60_000);
   await show('held seconds', 'window.app.coach.lastHeld?.toFixed(2)');
-  await expect('holding builds a streak', 'window.app.coach.streak > 0', true);
+});
 
-  console.log('\n— jump to the full cycle —');
-  await ev('clearInterval(window.__auto); window.__release && window.__release()');
-  await ev('document.getElementById("btn-quit").click()'); await sleep(200);
-  await ev('document.querySelector(\'[data-mode="cycle"]\').click()'); await sleep(200);
-  await ev('document.getElementById("btn-brief-go").click()'); await sleep(400);
+test('the full cycle passes', { skip: WIND_ONLY }, async () => {
+  await page.evaluate(STOP_PLAYER);
+  await go('#btn-quit', 'menu');
+  await go('[data-mode="cycle"]', 'brief');
+  await go('#btn-brief-go', 'run');
   // This is a browser/coach contract check. Threat dynamics have their own
   // deterministic engine tests; a random nonlethal forcedown must not make a
   // metronomically correct input sequence flaky here.
-  await ev('window.app.sim.opts.stalledEnabled = false');
-  await expect('controls (cams up)', `[...document.querySelectorAll('[data-widget]')]
-     .filter(e=>!e.classList.contains('hidden-ctrl')).map(e=>e.dataset.widget).sort().join()`,
-     'camlight,mask,monitor,wind');
-  await ev(AUTOPLAYER); await sleep(58000);
-  await show('cycle streak', 'document.getElementById("coach-streak").textContent');
+  await page.evaluate('window.app.sim.opts.stalledEnabled = false; true');
+  assert.equal(await page.evaluate(VISIBLE), 'camlight,mask,monitor,wind', 'controls (cams up)');
+  await page.evaluate(AUTOPLAYER);
+  await page.waitFor('the cycle passed', PASSED, is(true), 120_000);
   await show('cycles run', 'window.app.coach.cycles');
   await show('best streak', 'window.app.coach.bestStreak');
-  await expect('cycle passed', 'document.getElementById("passed").classList.contains("shown")', true);
+  await page.evaluate(STOP_PLAYER);
+  console.log(`  screenshot: ${await page.screenshot('lesson.png')}`);
+});
 
-  await ev('clearInterval(window.__auto)');
-  const shot = await rpc(ws, 'Page.captureScreenshot', { format: 'png' });
-  (await import('node:fs')).writeFileSync('/tmp/m7-lesson.png', Buffer.from(shot.data, 'base64'));
-  console.log(`\nconsole errors: ${errs.length}`);
-  errs.slice(0, 6).forEach(e => console.log('  ! ' + String(e).split('\n')[0]));
-  console.log(fails.length ? `FAILURES: ${fails.join(', ')}` : 'all assertions passed');
-  ws.close(); chrome.kill(); process.exit(fails.length || errs.length ? 1 : 0);
-}
-main().catch(e => { console.error(e); chrome.kill(); process.exit(2); });
+test('no console error or uncaught exception', () => {
+  assert.deepEqual(page.problems, []);
+});

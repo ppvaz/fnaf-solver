@@ -428,24 +428,9 @@
         "performance.now",
         "performance.now"
       ],
-      "fixedSleeps": [
-        "setTimeout(r, ms",
-        "sleep(200",
-        "sleep(1500",
-        "sleep(1200",
-        "sleep(200",
-        "sleep(500",
-        "sleep(16000",
-        "sleep(500",
-        "sleep(24000",
-        "sleep(250",
-        "sleep(500",
-        "sleep(47000"
-      ],
+      "fixedSleeps": [],
       "sharedResources": [
-        "browser",
-        "device-transport",
-        "local-http-port"
+        "device-transport"
       ],
       "subprocesses": true,
       "measurement": {
@@ -481,22 +466,8 @@
       "timeoutSource": "tools/test.ts per-test watchdog",
       "deterministic": true,
       "determinismSignals": [],
-      "fixedSleeps": [
-        "setTimeout(r, ms",
-        "sleep(200",
-        "sleep(1500",
-        "sleep(120",
-        "sleep(200",
-        "sleep(500",
-        "sleep(1300",
-        "sleep(150",
-        "sleep(150",
-        "sleep(120",
-        "sleep(120",
-        "sleep(150"
-      ],
+      "fixedSleeps": [],
       "sharedResources": [
-        "browser",
         "device-transport",
         "local-http-port"
       ],
@@ -563,21 +534,11 @@
       "deterministic": true,
       "determinismSignals": [],
       "fixedSleeps": [
-        "setTimeout(r, ms",
         "setTimeout((",
         "setTimeout((",
-        "sleep(200",
-        "sleep(1500",
-        "sleep(150",
-        "sleep(200",
-        "sleep(600",
-        "sleep(1300",
-        "sleep(22000",
-        "setTimeout(r, 6",
-        "sleep(400"
+        "setTimeout(r, 6"
       ],
       "sharedResources": [
-        "browser",
         "local-http-port"
       ],
       "subprocesses": true,

@@ -1,35 +1,33 @@
 // Drives lessons 7 (Phase A) and 8 (Phase B) in a real browser. These are the
 // two lessons that have only ever been checked headlessly.
-import { spawn } from 'node:child_process';
-import { chromeBinary, chromeArgs } from '../../../tools/chrome.ts';
-import { mkdtempSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os'; import { join } from 'node:path';
+//
+// Until 2026-10-02 Phase A's one assertion, that cameras up on the 5 s interval
+// reset the streak to 0, passed whether or not there was a streak to reset,
+// and Phase B asserted only that the lesson was running: its duel was printed.
+// Both now wait for the state they test, with a deadline, instead of sleeping.
+//
+//   node apps/trainer/test/phase.test.ts [url]   # default: the dev server on :8731
+import assert from 'node:assert/strict';
+import { after, before, test } from 'node:test';
+import { launch, pageUrl } from './cdp.ts';
+import type { Page } from './cdp.ts';
 
-const BASE = process.argv[2] || 'http://localhost:8731/dist/index.html';
-const PORT = 9345;
-const chrome = spawn(chromeBinary(),
-  chromeArgs(PORT, mkdtempSync(join(tmpdir(), 'm7p-'))), { stdio: 'ignore' });
-const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
-/** An entry of Chrome's /json target list; a fresh Chrome opens about:blank, a page target. */
-interface Target { readonly type: string, readonly webSocketDebuggerUrl: string }
-interface ExceptionDetails { readonly exception?: { readonly description?: string } }
-/** What this test reads of each DevTools method's reply; any other reply it ignores. */
-interface Replies {
-  'Runtime.evaluate': { readonly result?: { readonly value?: unknown } };
-  'Page.captureScreenshot': { readonly data: string };
-}
-type Reply<M extends string> = M extends keyof Replies ? Replies[M] : unknown;
-/** A DevTools message: the reply to a request carries its id, and its result or an error. */
-interface Message<R> { readonly id?: number, readonly result: R, readonly error?: { readonly message: string } }
-/** The event this test reads; it passes over every other message. */
-interface CdpEvent { readonly method: 'Runtime.exceptionThrown', readonly params: { readonly exceptionDetails: ExceptionDetails } }
-let id = 0;
-const rpc = <M extends string>(ws: WebSocket, m: M, p = {}) => new Promise<Reply<M>>((res, rej) => { const mid = ++id;
-  const on = (e: MessageEvent) => { const x: Message<Reply<M>> = JSON.parse(e.data); if (x.id !== mid) return;
-    ws.removeEventListener('message', on); x.error ? rej(new Error(x.error.message)) : res(x.result); };
-  ws.addEventListener('message', on); ws.send(JSON.stringify({ id: mid, method: m, params: p })); });
+let page: Page;
+before(async () => {
+  page = await launch();
+  await page.open(pageUrl());
+  await page.waitFor('the app', '!!window.app', value => value === true, 10_000);
+  await page.evaluate('localStorage.removeItem("m7.progress"); location.reload(); true');
+  await page.waitFor('the app after a reload', '!!window.app && document.getElementById("menu").classList.contains("shown")',
+    value => value === true, 10_000);
+});
+after(async () => {
+  await page?.evaluate('clearInterval(window.__duel); clearInterval(window.__auto); true').catch(() => {});
+  await page?.close();
+});
 
-const errs: (string | undefined)[] = [], fails: string[] = [];
+const is = (want: unknown) => (value: unknown) => value === want;
+const atLeast = (floor: number) => (value: unknown) => typeof value === 'number' && value >= floor;
 
 // Plays the coached cycle, holding inputs that must be held.
 const CYCLE_BOT = `window.__auto && clearInterval(window.__auto);
@@ -72,82 +70,62 @@ window.__duel=setInterval(()=>{const app=window.app; if(!app||!app.running)retur
  }
 },8); true`;
 
-async function main() {
-  for (let i = 0; i < 60; i++) { try { await fetch(`http://127.0.0.1:${PORT}/json`); break; } catch { await sleep(200); } }
-  const t: Target = (await (await fetch(`http://127.0.0.1:${PORT}/json`)).json()).find((x: Target) => x.type === 'page');
-  const ws = new WebSocket(t.webSocketDebuggerUrl);
-  await new Promise<Event>(r => ws.addEventListener('open', r));
-  ws.addEventListener('message', e => { const m: CdpEvent = JSON.parse(e.data);
-    if (m.method === 'Runtime.exceptionThrown') errs.push(m.params.exceptionDetails.exception?.description); });
-  await rpc(ws, 'Runtime.enable'); await rpc(ws, 'Page.enable');
-  await rpc(ws, 'Page.navigate', { url: BASE }); await sleep(1500);
+/** Leave whatever is running, open lesson `id`'s brief and start it. */
+async function openLesson(id: string) {
+  await page.evaluate('clearInterval(window.__auto); window.__rel && window.__rel(); true');
+  await page.evaluate('document.getElementById("btn-quit")?.click(); document.querySelector("[data-close]")?.click(); true');
+  await page.evaluate(`document.querySelector('[data-mode="${id}"]').click()`);
+  await page.waitFor(`the ${id} brief`, 'document.getElementById("brief").classList.contains("shown")', is(true), 2_000);
+  await page.evaluate('document.getElementById("btn-brief-go").click()');
+  await page.waitFor(`the ${id} lesson running`, 'window.app.running && window.app.modeKey', is(id), 3_000);
+}
 
-  const ev = async (e: string) => (await rpc(ws, 'Runtime.evaluate', { expression: e, awaitPromise: true, returnByValue: true })).result?.value;
-  const show = async (l: string, e: string) => { const v = await ev(e); console.log(`  ${l}: ${JSON.stringify(v)}`); return v; };
-  const expect = async (l: string, e: string, want: unknown) => { const v = await ev(e);
-    const ok = JSON.stringify(v) === JSON.stringify(want);
-    console.log(`  ${ok ? 'ok  ' : 'FAIL'} ${l}: ${JSON.stringify(v)}${ok ? '' : ` (want ${JSON.stringify(want)})`}`);
-    if (!ok) fails.push(l); return v; };
-  const open = async (id: string) => { await ev('document.getElementById("btn-quit")?.click()');
-    await ev('document.querySelector("[data-close]")?.click()'); await sleep(150);
-    await ev(`document.querySelector('[data-mode="${id}"]').click()`); await sleep(200);
-    await ev('document.getElementById("btn-brief-go").click()'); await sleep(600); };
-
-  await ev('localStorage.removeItem("m7.progress")'); await ev('location.reload()'); await sleep(1300);
-
-  console.log('\n— Phase A (lesson 7) —');
-  await open('phaseA');
-  await expect('running', 'window.app.running', true);
-  await show('drill', 'window.app.mode.drill');
-  await ev(CYCLE_BOT);
-  await sleep(22000);
-  await show('BB stage', 'window.app.sim.bb.stage');
-  await show('BB in opening', 'window.app.sim.bb.inOpening');
-  await show('cams up at the 5s interval?', `(() => {
-    const s = window.app.sim; return { monitor: s.monitor, t: s.t.toFixed(2) }; })()`);
-  await show('streak', 'document.getElementById("coach-streak").textContent');
-  await show('alive', 'window.app.sim.alive');
-  await show('BB entered office', 'window.app.sim.death?.reason || "no"');
-  await show('flagged grades', 'window.app.coach.results.slice(-6).map(r=>r.grade).join()');
-  // Does the lesson actually grade the thing it claims to teach?
-  await show('script ids', 'window.app.coach.script.map(s=>s.id).join()');
+test('Phase A grades the cameras being down when the 5 s interval lands', async () => {
+  await openLesson('phaseA');
+  assert.equal(await page.evaluate('window.app.mode.drill'), 'phaseA');
+  assert.equal(await page.evaluate('window.app.coach.script.some(step => step.id === "drop-for-bb")'), true,
+    'the lesson teaches the drop for BB');
+  await page.evaluate(CYCLE_BOT);
+  // A perfect player builds a streak: the precondition for the reset below
+  // to mean anything (it read 4 of 6 after 22 s on 2026-10-02).
+  await page.waitFor('a streak from the perfect player', 'window.app.coach.streak', atLeast(1), 40_000);
+  assert.equal(await page.evaluate('window.app.sim.alive'), true, 'the player is alive');
+  assert.equal(await page.evaluate('window.app.sim.death?.reason ?? null'), null, 'BB never entered the office');
+  assert.deepEqual(await page.evaluate('window.app.coach.results.filter(r => r.grade !== "good" && r.grade !== "ok").map(r => r.grade)'), [],
+    'every graded press was on time');
+  await page.screenshot('phaseA-streak.png');
 
   // The point of the lesson: cams up when the interval lands must fail you.
-  await show('streak before', 'window.app.coach.streak');
-  await ev('clearInterval(window.__auto); window.__rel && window.__rel();');
-  await ev(`(async () => {
+  await page.evaluate('clearInterval(window.__auto); window.__rel && window.__rel(); true');
+  await page.evaluate(`(async () => {
     const s = window.app.sim;
-    // pin the monitor up straight through the next 5s interval
+    // Pin the monitor up straight through the next 5 s interval.
     const target = (Math.floor(s.frame / 300) + 1) * 300;
     while (s.frame < target + 20) { s.monitor = 'up'; s.monAnim = 0; await new Promise(r => setTimeout(r, 6)); }
     return true; })()`);
-  await sleep(400);
-  await expect('cams up at interval resets the streak', 'window.app.coach.streak', 0);
-  await show('lane said', 'window.app.ui.lane.pops.map(p=>p.label).slice(-3).join(" | ")');
-  writeFileSync('/tmp/m7-phaseA.png', Buffer.from((await rpc(ws, 'Page.captureScreenshot', { format: 'png' })).data, 'base64'));
+  await page.waitFor('the streak reset', 'window.app.coach.streak', is(0), 2_000);
+  assert.equal(await page.evaluate('window.app.ui.lane.pops.some(p => p.label === "CAMS WERE UP")'), true,
+    'the lane says why');
+});
 
-  console.log('\n— Phase B (lesson 8) —');
-  await ev('clearInterval(window.__auto); window.__rel && window.__rel()');
-  await open('phaseB');
-  await expect('running', 'window.app.running', true);
-  await show('coach enabled', 'window.app.coach.enabled');
-  await show('lane shown', 'getComputedStyle(document.getElementById("lane")).display');
-  await ev(DUEL_BOT);
-  await sleep(25000);
-  await show('duel attempts', 'window.app.duel.marks.length');
-  await show('last duel (ms)', 'window.app.duel.lastResult ? Math.round(window.app.duel.lastResult*1000) : null');
-  await show('best duel (ms)', 'window.app.duel.best ? Math.round(window.app.duel.best*1000) : null');
-  await show('duel wins', 'window.app.duelWins');
-  await show('streak text', 'document.getElementById("coach-streak").textContent');
-  await show('passed?', 'document.getElementById("passed").classList.contains("shown")');
-  await show('alive', 'window.app.sim.alive');
-  await show('duel lane drawn', 'window.app.ui.duelMode');
-  writeFileSync('/tmp/m7-phaseB.png', Buffer.from((await rpc(ws, 'Page.captureScreenshot', { format: 'png' })).data, 'base64'));
+test('Phase B times the duel after BB leaves', async () => {
+  await openLesson('phaseB');
+  assert.equal(await page.evaluate('window.app.coach.enabled'), false, 'the duel is not coached on cues');
+  assert.equal(await page.evaluate('window.app.ui.duelMode'), true, 'the duel lane is drawn');
+  assert.equal(await page.evaluate('getComputedStyle(document.getElementById("lane")).display'), 'block');
+  await page.evaluate(DUEL_BOT);
+  // A fast player wins a duel inside the lesson's 700 ms target (one win at
+  // 17 ms within 25 s on 2026-10-02); each attack re-arms after 90 frames.
+  await page.waitFor('a duel won', 'window.app.duelWins', atLeast(1), 60_000);
+  const result = await page.evaluate('window.app.duel.lastResult');
+  assert.ok(typeof result === 'number' && result >= 0 && result <= 0.7, `the last duel, ${String(result)} s, is inside 0.7 s`);
+  assert.equal(await page.evaluate('window.app.duel.marks.length > 0'), true, 'the attempt is marked');
+  assert.match(String(await page.evaluate('document.getElementById("coach-streak").textContent')), /^\d+ \/ 6 {2}\(\d+ms\)$/,
+    'the streak shows wins of six and the last time');
+  assert.equal(await page.evaluate('window.app.sim.alive'), true);
+  await page.screenshot('phaseB-duel.png');
+});
 
-  await ev('clearInterval(window.__duel); clearInterval(window.__auto)');
-  console.log(`\nconsole errors: ${errs.length}`);
-  errs.slice(0, 5).forEach(e => console.log('  ! ' + String(e).split('\n')[0]));
-  console.log(fails.length ? `FAILURES: ${fails.join(', ')}` : 'no hard failures');
-  ws.close(); chrome.kill(); process.exit(fails.length || errs.length ? 1 : 0);
-}
-main().catch(e => { console.error(e); chrome.kill(); process.exit(2); });
+test('no console error or uncaught exception', () => {
+  assert.deepEqual(page.problems, []);
+});
