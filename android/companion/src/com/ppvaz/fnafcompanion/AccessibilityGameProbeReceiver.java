@@ -18,8 +18,14 @@ public final class AccessibilityGameProbeReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         if (intent == null) return;
-        int x = intent.getIntExtra(EXTRA_X, 400);
-        int y = intent.getIntExtra(EXTRA_Y, 985);
+        // The point comes from the caller's resolved profile, never from here:
+        // an intent without one is refused rather than tapped at a default.
+        if (!intent.hasExtra(EXTRA_X) || !intent.hasExtra(EXTRA_Y)) {
+            Log.w(TAG, "game-probe-receiver refused: no x/y extras");
+            return;
+        }
+        int x = intent.getIntExtra(EXTRA_X, -1);
+        int y = intent.getIntExtra(EXTRA_Y, -1);
         long durationMs = Math.max(1L, Math.min(30000L,
                 intent.getLongExtra(EXTRA_DURATION_MS, 33L)));
         long delayMs = Math.max(0L, Math.min(30000L,
