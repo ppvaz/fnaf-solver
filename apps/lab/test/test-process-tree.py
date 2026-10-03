@@ -13,7 +13,9 @@ Covered:
   two; a child already gone is not signalled again; a child that outlives the
   last grace is reported;
 - night-job.py stops a stubborn runner (INT and TERM ignored, inherited by its
-  child) and that runner's child, on a host without /proc.
+  child) and that runner's child, on a host without /proc;
+- companion-queue.py does the same for a job, and a child orphaned holding the
+  job's output does not hold the queue past the last grace.
 """
 
 from __future__ import annotations
@@ -168,12 +170,40 @@ def night_job_stops_the_tree(base: Path) -> None:
           time.monotonic() - started)
 
 
+def queue_stops_the_tree(base: Path) -> None:
+    setattr(process_tree, "PROC", base / "no-proc")
+    queue = load("companion_queue", "companion-queue.py")
+    setattr(queue, "JOB_STOP_GRACE_S", 0.3)
+    setattr(queue, "JOB_TERM_GRACE_S", 0.3)
+    setattr(queue, "JOB_KILL_GRACE_S", 2.0)
+    started = time.monotonic()
+    code, output, stopped, _signals = queue.run_job(["sh", "-c", STUBBORN.replace("60", "20")], dict(os.environ), 1.0)
+    grandchild = next((int(line.split()[1]) for line in output.splitlines() if line.startswith("grandchild ")), None)
+    check("queue: a stubborn job and its child are stopped at the ceiling, not after the child's 20 s",
+          stopped == "timeout" and code == -signal.SIGKILL and time.monotonic() - started < 10,
+          (code, stopped, time.monotonic() - started, output))
+    if grandchild is not None and alive(grandchild):
+        os.kill(grandchild, signal.SIGKILL)
+
+    # The job exits at SIGINT, but its background child (SIGINT ignored, as in any
+    # non-interactive shell) is orphaned holding the output pipe: no tree reaches it.
+    started = time.monotonic()
+    code, output, stopped, _signals = queue.run_job(["sh", "-c", "sleep 20 & echo \"orphan $!\"; wait"],
+                                                    dict(os.environ), 1.0)
+    orphan = next((int(line.split()[1]) for line in output.splitlines() if line.startswith("orphan ")), None)
+    check("queue: an orphan holding the output does not hold the queue past its last grace",
+          stopped == "timeout" and time.monotonic() - started < 10, (code, stopped, time.monotonic() - started))
+    if orphan is not None and alive(orphan):
+        os.kill(orphan, signal.SIGKILL)
+
+
 def main() -> int:
     with tempfile.TemporaryDirectory(prefix="process-tree-test-") as directory:
         base = Path(directory)
         reads_the_tree(base)
         stops(base)
         night_job_stops_the_tree(base)
+        queue_stops_the_tree(base)
     if failures:
         print("process tree FAILED:", file=sys.stderr)
         for failure in failures:

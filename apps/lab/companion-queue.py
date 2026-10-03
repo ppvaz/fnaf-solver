@@ -32,6 +32,7 @@ if str(HERE) not in sys.path:
     sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parents[1] / "packages/play/src/safety"))  # the serial lease: Play's
 import night_jobs  # noqa: E402
+import process_tree  # noqa: E402
 from companion_device_lock import state_dir  # noqa: E402
 
 ROOT = HERE.parents[1]
@@ -44,9 +45,12 @@ NIGHT_JOB_COMMAND = [sys.executable, str(HERE / "night-job.py")]
 # ceiling fits before the window's own deadline.
 JOB_TIMEOUT_S = 360.0
 # A job that outlives its ceiling: SIGINT, then SIGTERM, then SIGKILL to its
-# whole process tree, each after this grace.
+# whole process tree, each followed by its grace. The last one bounds the wait
+# for the output too: a child orphaned before the tree was read (ppid 1, out
+# of any tree) can hold the pipe open for as long as it lives.
 JOB_STOP_GRACE_S = 120.0
 JOB_TERM_GRACE_S = 20.0
+JOB_KILL_GRACE_S = 10.0
 DEVICE_REASONS = {
     "absent": "device-unavailable",
     "locked": "device-locked",
@@ -486,38 +490,6 @@ def release_running(reason: str) -> list[str]:
         return []
 
 
-def process_tree(pid: int) -> list[int]:
-    """`pid` and every descendant, from /proc; just `pid` where /proc is absent."""
-    children: dict[int, list[int]] = {}
-    try:
-        for entry in os.listdir("/proc"):
-            if not entry.isdigit():
-                continue
-            try:
-                stat = Path(f"/proc/{entry}/stat").read_text(encoding="utf-8")
-            except OSError:
-                continue
-            # comm may hold spaces and parentheses: fields resume after the last ')'.
-            ppid = int(stat.rsplit(")", 1)[1].split()[1])
-            children.setdefault(ppid, []).append(int(entry))
-    except OSError:
-        return [pid]
-    tree, frontier = [], [pid]
-    while frontier:
-        current = frontier.pop()
-        tree.append(current)
-        frontier.extend(children.get(current, []))
-    return tree
-
-
-def signal_tree(pid: int, signum: int) -> None:
-    for member in process_tree(pid):
-        try:
-            os.kill(member, signum)
-        except (ProcessLookupError, PermissionError):
-            pass
-
-
 class Interrupted:
     """Records SIGINT/SIGTERM/SIGHUP while a job runs, and never raises.
 
@@ -557,16 +529,19 @@ def run_job(command: list[str], env: dict, timeout_s: float) -> tuple[int, str, 
         try:
             output, _ = child.communicate(timeout=timeout_s)
         except subprocess.TimeoutExpired:
-            stopped, output = "timeout", ""
-            for signum, grace in ((signal.SIGINT, JOB_STOP_GRACE_S), (signal.SIGTERM, JOB_TERM_GRACE_S),
-                                  (signal.SIGKILL, None)):
-                signal_tree(child.pid, signum)
-                try:
-                    more, _ = child.communicate(timeout=grace)
-                    output += more or ""
-                    break
-                except subprocess.TimeoutExpired:
-                    continue
+            stopped = "timeout"
+            drained: list[str] = []
+
+            def drain(grace: float) -> None:
+                # communicate keeps what it read before a timeout and returns it all on the call that completes.
+                more, _ = child.communicate(timeout=grace)
+                drained.append(more or "")
+
+            process_tree.stop(child, lambda signum: process_tree.signal_tree(child.pid, signum),
+                              (JOB_STOP_GRACE_S, JOB_TERM_GRACE_S, JOB_KILL_GRACE_S), wait=drain)
+            output = "".join(drained)
+            if child.poll() is None:  # outlived SIGKILL's grace: reported as killed, as night-job.py does
+                return -signal.SIGKILL, output, stopped, list(interrupted.signals)
         return child.returncode, output or "", stopped, list(interrupted.signals)
 
 
