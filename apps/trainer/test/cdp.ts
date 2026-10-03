@@ -109,9 +109,16 @@ export async function launch({ domains = ['Runtime', 'Page'] }: { domains?: read
   let exited: string | null = null;
   chrome.on('error', error => { exited = error.message; });
   chrome.on('exit', code => { exited ??= `Chrome exited with ${code}`; });
-  // A check that crashes must not leave its browser running.
+  // A check that crashes, or is stopped, must not leave its browser running:
+  // tools/test.ts stops a check past its deadline with SIGTERM, on which Node
+  // exits without an 'exit' event. A headless Chrome leaked that way on
+  // 2026-10-01 held :9345 for days, and every later run of the old phase
+  // check drove it instead of its own.
   const reap = () => { chrome.kill('SIGKILL'); };
+  const stopped = (signal: NodeJS.Signals) => { reap(); process.exit(signal === 'SIGINT' ? 130 : 143); };
   process.once('exit', reap);
+  process.once('SIGINT', stopped);
+  process.once('SIGTERM', stopped);
 
   const port = await until('DevTools port from Chrome', STARTUP_MS, () => {
     if (exited) throw new Error(`Chrome did not start: ${exited}`);
@@ -195,6 +202,8 @@ export async function launch({ domains = ['Runtime', 'Page'] }: { domains?: read
     async close() {
       socket.close();
       process.removeListener('exit', reap);
+      process.removeListener('SIGINT', stopped);
+      process.removeListener('SIGTERM', stopped);
       if (chrome.exitCode === null && chrome.signalCode === null) {
         const gone = new Promise<boolean>(resolve => chrome.once('exit', () => resolve(true)));
         chrome.kill();
