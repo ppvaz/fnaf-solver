@@ -80,6 +80,8 @@ until 2026-09-30).
 | `pages.test.ts [url]` | check | Browser group (`pages entry`). The Pages entry as a visitor's phone gets it: `build.ts`'s bundle at `/`, as `pages.yml` publishes it, over the repository's other files, from its own GET-only static server (or the live site given as `url`), upright and sideways at phone sizes; runs and quits a lesson with real (CDP) taps. Fails on any console error, exception, failed or 4xx request, sideways scroll, or a layout save offered where no dev server is. |
 
 The browser group runs through `npm run test:trainer` (`node tools/test.ts
---browser`), which builds `dist/` and starts `serve.py` when port 8731 is free.
+--browser`), which builds `dist/`, starts its own `serve.py` on a free port
+(`dev-server.ts`) and gives each check that page's address; without Chrome it
+fails, because nothing ran.
 CI does not run it: a trainer graded in real-time milliseconds on a shared
 runner says nothing about the code when it fails (`.github/workflows/ci.yml`).

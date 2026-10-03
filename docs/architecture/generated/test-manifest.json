@@ -613,9 +613,7 @@
       "timeoutSource": "tools/test.ts per-test watchdog",
       "deterministic": true,
       "determinismSignals": [],
-      "fixedSleeps": [
-        "setTimeout(r, 25"
-      ],
+      "fixedSleeps": [],
       "sharedResources": [
         "local-http-port"
       ],
@@ -5758,8 +5756,7 @@
       ],
       "fixedSleeps": [
         "setTimeout((",
-        "setTimeout((",
-        "setTimeout(r, 25"
+        "setTimeout(("
       ],
       "sharedResources": [
         "browser",

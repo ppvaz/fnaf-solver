@@ -28,15 +28,20 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, relative } from 'node:path';
 import { chromeBinary, chromeAvailable } from './chrome.ts';
+import { startDevServer } from '../apps/trainer/test/dev-server.ts';
 
 const TOOLS = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(TOOLS, '..');
 const TRAINER_TOOLS = join(ROOT, 'apps', 'trainer', 'test');
-const PORT = 8731;
-const PAGE = `http://localhost:${PORT}/dist/index.html`;
 
-/** A check: its name, and the script it runs (relative to tools/) with its arguments. */
-type Check = [string, string[]];
+/**
+ * How a check runs: its deadline (180 s unless it names one), and whether it
+ * loads the trainer from the dev server this runner starts, whose page address
+ * it is then given as its last argument.
+ */
+interface CheckOptions { readonly timeoutMs?: number, readonly devServer?: boolean }
+/** A check: its name, the script it runs (relative to tools/) with its arguments, and how it runs. */
+type Check = [string, string[], CheckOptions?];
 
 const ENGINE: Check[] = [
   // First, because it is the only check that fails on a wrong *rule* rather
@@ -61,11 +66,11 @@ const ENGINE: Check[] = [
   // sensor cadence + latency + drops) and the blackout-reactive controller
   // (animation-window guard, lower-mask-verify-raise, graceful under a noisy
   // observer).
-  ['reactivetest', ['../packages/propose/test/reactivetest.ts', '--assert']],
+  ['reactivetest', ['../packages/propose/test/reactivetest.ts', '--assert'], { timeoutMs: 300_000 }],
   // Plan 19/21 BB vent policy: this is deliberately a release gate. Its
   // measured policy regressions must fail -- they are not printable
   // known-negatives that allow --assert to pass.
-  ['vent reactive', ['../packages/propose/bin/ventreacttest.ts', '--assert']],
+  ['vent reactive', ['../packages/propose/bin/ventreacttest.ts', '--assert'], { timeoutMs: 900_000 }],
   // Mangle audio-static contexts and the named five-tick mask response;
   // kept separate from the BB gate so the two audio channels cannot cross.
   ['mangle reactive', ['../packages/propose/test/mangletest.ts', '--assert']],
@@ -113,7 +118,7 @@ const ENGINE: Check[] = [
   // Plan 16 pkg 1/3 gates: Sim.snapshot()/restore() bit-identity, the semantic
   // action layer, and the parameter search harness reproducing the 803feb3
   // ladder on a zero perturbation.
-  ['minus7 search', ['../packages/propose/parked/minus7/test-search.ts']],
+  ['minus7 search', ['../packages/propose/parked/minus7/test-search.ts'], { timeoutMs: 600_000 }],
   ['reactive pilot', ['../packages/propose/parked/minus7/reactive-pilot.ts', '200', '--assert']],
   ['reactive pilot --worst', ['../packages/propose/parked/minus7/reactive-pilot.ts', '100', '--worst', '--assert']],
   // The human-slack budget, measured 2026-08-25: reactive Minus 7 holds
@@ -203,7 +208,7 @@ const ENGINE: Check[] = [
   // glitch loop still clears nights 2 and 7 in the exact model with the split
   // armed, the no-split control still loses, and every instruction kind and
   // control it emits is one the on-phone interpreter implements.
-  ['minus toys plan', ['../packages/propose/bin/plans/test-minus-toys-plan.ts']],
+  ['minus toys plan', ['../packages/propose/bin/plans/test-minus-toys-plan.ts'], { timeoutMs: 360_000 }],
   // The per-instruction timing margin map for that plan: how far each press can
   // move before a seed dies. Pins the two facts the 2026-08-28 device-run
   // writeup rests on -- the split-arming pair has ~one Fusion poll of slack, and
@@ -231,7 +236,7 @@ const ENGINE: Check[] = [
   // checks verify both layers against mocks, exercise the sole runner path
   // with a fake adb, and assert the shipped Night 6 plan PASSES (648/1200 with
   // the sourced Fusion LCG and measured-safe maskraise compound).
-  ['human gate', ['../packages/propose/bin/plans/test-human-gate.ts']],
+  ['human gate', ['../packages/propose/bin/plans/test-human-gate.ts'], { timeoutMs: 240_000 }],
   // The gate counts the deaths and prints its top four; on Night 2 that cut
   // says "Foxy, mostly" when Foxy is 58% and the office is 42%. deathchart.ts
   // charts the whole census by the engine's own kill() reasons. This pins the
@@ -427,11 +432,11 @@ const BACKLOG = new Map([
   ['docs', 'run by the CI documentation step'],
 ]);
 const BROWSER: Check[] = [
-  ['browsertest', ['../apps/trainer/test/browser.test.ts']],
-  ['caltest', ['../apps/trainer/test/calibration.test.ts']],
-  ['lightcheck', ['../apps/trainer/test/light.test.ts']],
-  ['phasetest', ['../apps/trainer/test/phase.test.ts']],
-  ['lessontest', ['../apps/trainer/test/lesson.test.ts']],
+  ['browsertest', ['../apps/trainer/test/browser.test.ts'], { timeoutMs: 360_000, devServer: true }],
+  ['caltest', ['../apps/trainer/test/calibration.test.ts'], { timeoutMs: 360_000, devServer: true }],
+  ['lightcheck', ['../apps/trainer/test/light.test.ts'], { devServer: true }],
+  ['phasetest', ['../apps/trainer/test/phase.test.ts'], { devServer: true }],
+  ['lessontest', ['../apps/trainer/test/lesson.test.ts'], { timeoutMs: 360_000, devServer: true }],
   // The Pages entry: build.ts's bundle at /, over the repository's other
   // files, from its own GET-only server, the way pages.yml publishes it.
   ['pages entry', ['../apps/trainer/test/pages.test.ts']],
@@ -532,15 +537,8 @@ function runTool(argv: string[], { timeoutMs = 120_000, streamLabel = null as st
 // silent terminal is indistinguishable from a hung one. The verdict block that
 // follows is in list order, so a run stays diffable against the last one.
 async function runGroup(group: readonly Check[], judge: boolean, { progress = false, concurrent = true, concurrency = 6 } = {}) {
-  const one = async ([name, argv]: Check) => {
+  const one = async ([name, argv, { timeoutMs = 180_000 } = {}]: Check) => {
     if (progress) process.stderr.write(`    ... ${name} started\n`);
-    const timeoutMs = name === 'minus7 search' ? 600_000
-      : name === 'vent reactive' ? 900_000
-      : name === 'reactivetest' ? 300_000
-        : name === 'human gate' ? 240_000
-      : name === 'minus toys plan' ? 360_000
-          : name.startsWith('browser') || name === 'caltest' || name === 'lessontest'
-            ? 360_000 : 180_000;
     const r = await runTool(argv, {
       timeoutMs,
       streamLabel: progress ? name : null,
@@ -583,27 +581,12 @@ function build() {
   });
 }
 
-const reachable = async () => {
-  try { return (await fetch(PAGE)).ok; } catch { return false; }
-};
-
-async function serve() {
-  if (await reachable()) return null;   // the user already has one running
-  const child = spawn('python3', [join(TRAINER_TOOLS, 'serve.py'), String(PORT)],
-    { cwd: ROOT, stdio: 'ignore' });
-  for (let i = 0; i < 40; i++) {
-    if (await reachable()) return child;
-    await new Promise<void>(r => setTimeout(r, 25));
-  }
-  child.kill();
-  throw new Error(`apps/trainer/test/serve.py never answered on ${PORT}`);
-}
-
 const gates = process.argv.includes('--gates');
 const only = process.argv.includes('--engine') || gates ? 'engine'
   : process.argv.includes('--browser') ? 'browser' : 'all';
 const extended = process.argv.includes('--extended') || only === 'all';
 let failed = 0;
+let browserSkipped = false;
 
 for (const name of BACKLOG.keys())
   if (!ENGINE.some(([entry]) => entry === name))
@@ -641,14 +624,20 @@ if (only !== 'engine') {
   console.log('browser checks');
   if (!chromeAvailable()) {
     console.log(`  SKIP  no Chrome at ${chromeBinary()} -- set $CHROME to override`);
+    browserSkipped = true;
   } else {
     await build();
-    const server = await serve();
+    // Its own server on a free port: whatever answers on :8731 may be another
+    // checkout's build, and the checks would grade that instead of this tree.
+    const server = await startDevServer();
+    const page = `${server.origin}/dist/index.html`;
     try {
-      failed += await runGroup(BROWSER, true,
+      const checks = BROWSER.map(([name, argv, options]): Check =>
+        [name, options?.devServer ? [...argv, page] : argv, options]);
+      failed += await runGroup(checks, true,
         { progress: true, concurrent: process.argv.includes('--parallel') });
     }
-    finally { server?.kill(); }
+    finally { server.stop(); }
   }
 }
 
@@ -657,5 +646,13 @@ if (process.argv.includes('--reports')) {
   await runGroup(REPORTS, false, {});
 }
 
-console.log(failed ? `\n${failed} check(s) failed` : '\nall checks passed');
-process.exitCode = failed ? 1 : 0;
+// A group asked for by name that could not run is not a pass: `--browser`
+// without Chrome ran nothing. A full run says the group was left out.
+if (browserSkipped && only === 'browser') {
+  console.log('\nno browser check ran: there is no Chrome here');
+  process.exitCode = 1;
+} else {
+  console.log(failed ? `\n${failed} check(s) failed`
+    : browserSkipped ? '\nevery check that ran passed; the browser group did not run (no Chrome)' : '\nall checks passed');
+  process.exitCode = failed ? 1 : 0;
+}

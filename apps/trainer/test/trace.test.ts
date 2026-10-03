@@ -4,17 +4,15 @@
 // raw material for a future HumanActuator's bands (plans/04), so what matters
 // is exactly what a lateness census needs: cycle attribution, null-delta miss
 // rows, and the wind hold as a duration rather than a press.
-import { spawn } from 'node:child_process';
 import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
+import { isList, isRecord } from '@sixam/kernel';
 import { Coach } from '@sixam/trainer';
 import * as C from '@sixam/source/fnaf2';
+import { startDevServer } from './dev-server.ts';
 import { summarize } from './tracereport.ts';
 
-const HERE = dirname(fileURLToPath(import.meta.url));
-const ROOT = join(HERE, '..', '..', '..');
 let failed = 0;
 const check = (name: string, cond: boolean, detail = '') => {
   if (!cond) { failed++; console.error(`FAIL ${name}${detail ? ` -- ${detail}` : ''}`); }
@@ -95,55 +93,48 @@ check('trace is not the rolling results array', (coach.trace as unknown) !== coa
 }
 
 // ------------------------------------------------------- serve.py /save-trace
-const PORT = 8747;
 const traceDir = mkdtempSync(join(tmpdir(), 'fnaf-traces-'));
-const server = spawn('python3', [join(HERE, 'serve.py'), String(PORT)],
-  { cwd: ROOT, stdio: 'ignore', env: { ...process.env, FNAF_TRACE_DIR: traceDir } });
+const server = await startDevServer({ env: { ...process.env, FNAF_TRACE_DIR: traceDir } });
 
-/** What serve.py answers a /save-trace POST with. */
-interface SaveReply { readonly ok?: boolean, readonly dry?: boolean, readonly file?: string, readonly error?: string }
-const post = async (body: unknown): Promise<{ status: number, body: SaveReply }> => {
-  const res = await fetch(`http://127.0.0.1:${PORT}/save-trace`, {
+/** What serve.py answers a /save-trace POST with: its status, and its body if that is a JSON object. */
+const post = async (body: unknown) => {
+  const res = await fetch(`${server.origin}/save-trace`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
-  return { status: res.status, body: await res.json().catch(() => ({})) };
+  const answer: unknown = await res.json().catch(() => null);
+  return { status: res.status, body: isRecord(answer) ? answer : {} };
 };
 
 try {
-  let up = false;
-  for (let i = 0; i < 40 && !up; i++) {
-    try { up = (await fetch(`http://127.0.0.1:${PORT}/index.html`)).ok; }
-    catch { await new Promise<void>(r => setTimeout(r, 25)); }
-  }
-  check('serve.py answered', up);
-  if (up) {
-    const trace = { v: 1, lesson: 'cycle', steps: coach.trace, holds: coach.holds, events: [] };
-    const dry = await post({ ...trace, dry: true });
-    check('dry run validates without writing', dry.status === 200 && dry.body.dry === true,
-      JSON.stringify(dry));
-    check('dry run wrote nothing', readdirSync(traceDir).length === 0);
+  const trace = { v: 1, lesson: 'cycle', steps: coach.trace, holds: coach.holds, events: [] };
+  const dry = await post({ ...trace, dry: true });
+  check('dry run validates without writing', dry.status === 200 && dry.body.dry === true,
+    JSON.stringify(dry));
+  check('dry run wrote nothing', readdirSync(traceDir).length === 0);
 
-    const bad = await post({ ...trace, v: 2 });
-    check('unknown version refused', bad.status === 400);
-    const noLesson = await post({ ...trace, lesson: '../evil' });
-    check('bad lesson id refused', noLesson.status === 400);
-    const noSteps = await post({ v: 1, lesson: 'cycle', steps: [] });
-    check('empty steps refused', noSteps.status === 400);
+  const bad = await post({ ...trace, v: 2 });
+  check('unknown version refused', bad.status === 400);
+  const noLesson = await post({ ...trace, lesson: '../evil' });
+  check('bad lesson id refused', noLesson.status === 400);
+  const noSteps = await post({ v: 1, lesson: 'cycle', steps: [] });
+  check('empty steps refused', noSteps.status === 400);
 
-    const real = await post(trace);
-    check('real save accepted', real.status === 200 && !!real.body.file, JSON.stringify(real));
-    const files = readdirSync(traceDir);
-    check('trace file written', files.length === 1, JSON.stringify(files));
-    if (files.length === 1) {
-      const saved = JSON.parse(readFileSync(join(traceDir, files[0]), 'utf8'));
-      check('server stamped provenance', typeof saved.savedAt === 'string' && !!saved.commit,
+  const real = await post(trace);
+  check('real save accepted', real.status === 200 && typeof real.body.file === 'string', JSON.stringify(real));
+  const files = readdirSync(traceDir);
+  check('trace file written', files.length === 1, JSON.stringify(files));
+  if (files.length === 1) {
+    const saved: unknown = JSON.parse(readFileSync(join(traceDir, files[0]), 'utf8'));
+    check('the saved trace is an object', isRecord(saved));
+    if (isRecord(saved)) {
+      check('server stamped provenance', typeof saved.savedAt === 'string' && typeof saved.commit === 'string' && saved.commit !== '',
         JSON.stringify({ savedAt: saved.savedAt, commit: saved.commit }));
-      check('rows survived the round trip', saved.steps.length === coach.trace.length);
+      check('rows survived the round trip', isList(saved.steps) && saved.steps.length === coach.trace.length);
     }
   }
 } finally {
-  server.kill();
+  server.stop();
   rmSync(traceDir, { recursive: true, force: true });
 }
 

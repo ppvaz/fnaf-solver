@@ -486,6 +486,13 @@
       ]
     },
     {
+      "file": "apps/trainer/test/dev-server.ts",
+      "imports": [
+        "node:child_process",
+        "node:url"
+      ]
+    },
+    {
       "file": "apps/trainer/test/exercise.test.ts",
       "imports": [
         "@sixam/trainer/training",
@@ -575,14 +582,14 @@
     {
       "file": "apps/trainer/test/trace.test.ts",
       "imports": [
+        "./dev-server.ts",
         "./tracereport.ts",
+        "@sixam/kernel",
         "@sixam/source/fnaf2",
         "@sixam/trainer",
-        "node:child_process",
         "node:fs",
         "node:os",
-        "node:path",
-        "node:url"
+        "node:path"
       ]
     },
     {
@@ -5912,6 +5919,7 @@
     {
       "file": "tools/test.ts",
       "imports": [
+        "../apps/trainer/test/dev-server.ts",
         "./chrome.ts",
         "node:child_process",
         "node:path",
