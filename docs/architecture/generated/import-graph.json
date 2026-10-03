@@ -450,7 +450,7 @@
       "imports": [
         "...",
         "./x.js",
-        "@sixam/kernel",
+        "@sixam/kernel/py",
         "node:fs",
         "node:module",
         "node:path",
@@ -625,6 +625,7 @@
       "file": "apps/wiki/fnaf1-teach-media.ts",
       "imports": [
         "@sixam/kernel",
+        "@sixam/kernel/py",
         "node:child_process",
         "node:fs",
         "node:path"
@@ -717,8 +718,6 @@
         "./game-run.ts",
         "./labels.ts",
         "./outcome.ts",
-        "./pyargs.ts",
-        "./pyfmt.ts",
         "./seed.ts",
         "./time/interval.ts",
         "./types.ts"
@@ -736,6 +735,13 @@
         "./labels.ts",
         "./time/interval.ts",
         "./types.ts"
+      ]
+    },
+    {
+      "file": "packages/kernel/src/py.ts",
+      "imports": [
+        "./pyargs.ts",
+        "./pyfmt.ts"
       ]
     },
     {
@@ -4115,6 +4121,7 @@
       "file": "packages/review/bin/grade/actuation-frame-metric.ts",
       "imports": [
         "@sixam/kernel",
+        "@sixam/kernel/py",
         "node:fs",
         "node:path",
         "node:url"
@@ -4130,7 +4137,7 @@
     {
       "file": "packages/review/bin/grade/office-seed-bracket.ts",
       "imports": [
-        "@sixam/kernel",
+        "@sixam/kernel/py",
         "node:fs",
         "node:path",
         "node:url"
@@ -4223,7 +4230,7 @@
     {
       "file": "packages/review/bin/legacy/index-observations.ts",
       "imports": [
-        "@sixam/kernel",
+        "@sixam/kernel/py",
         "node:crypto",
         "node:fs",
         "node:path"
@@ -4243,7 +4250,7 @@
     {
       "file": "packages/review/bin/recompile/af-tracks.ts",
       "imports": [
-        "@sixam/kernel",
+        "@sixam/kernel/py",
         "node:fs"
       ]
     },
@@ -4292,7 +4299,7 @@
     {
       "file": "packages/review/bin/report/find-events.ts",
       "imports": [
-        "@sixam/kernel",
+        "@sixam/kernel/py",
         "node:child_process"
       ]
     },

@@ -38,7 +38,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { PyFloat, pyArgs, pyDumps, pyFixed, pyFloat, pyRound, pySplit, pySplitLines } from '@sixam/kernel';
+import { PyFloat, pyArgs, pyDumps, pyFixed, pyFloat, pyRound, pySplit, pySplitLines } from '@sixam/kernel/py';
 
 const OFFICE_LOAD = 'loading frame #:4';
 const START = 'Starting new frame';

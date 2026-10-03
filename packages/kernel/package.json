@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./contracts": "./src/contracts/index.ts",
+    "./py": "./src/py.ts",
     "./time": "./src/time/index.ts"
   },
   "types": "./src/types.ts"

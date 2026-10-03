@@ -12,7 +12,7 @@
 import { createHash } from 'node:crypto';
 import { closeSync, existsSync, lstatSync, openSync, readSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { pyArgs, pyDumps, pyPath } from '@sixam/kernel';
+import { pyArgs, pyDumps, pyPath } from '@sixam/kernel/py';
 
 type Record_ = { kind: string, authority: string, join: string | null, note: string };
 const record = (kind: string, authority: string, join: string | null = null, note = ''): Record_ => ({ kind, authority, join, note });

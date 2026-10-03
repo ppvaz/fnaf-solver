@@ -10,7 +10,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, statSyn
 import { stripTypeScriptTypes } from 'node:module';
 import { basename, dirname, extname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { pyFixed } from '@sixam/kernel';
+import { pyFixed } from '@sixam/kernel/py';
 
 // Node 22.13 added it; the @types/node this repository pins (22.10) does not declare it yet.
 declare module 'node:module' {

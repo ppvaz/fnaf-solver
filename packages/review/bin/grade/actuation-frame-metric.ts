@@ -22,7 +22,8 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { PyFloat, isList, isRecord, pyArgs, pyDumps, pyFixed, pyInt, pyPath, pySplit, pySplitLines } from '@sixam/kernel';
+import { isList, isRecord } from '@sixam/kernel';
+import { PyFloat, pyArgs, pyDumps, pyFixed, pyInt, pyPath, pySplit, pySplitLines } from '@sixam/kernel/py';
 
 const DEFAULT_MONITOR = fileURLToPath(new URL('../../../play/profiles/fnaf2/moto-g56/monitor-rule-moto-g56-v207.json', import.meta.url));
 const DEFAULT_MASK = fileURLToPath(new URL('../../../play/profiles/fnaf2/moto-g56/mask-rule-moto-g56-v207.json', import.meta.url));

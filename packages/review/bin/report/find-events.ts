@@ -7,7 +7,7 @@
 //
 //   node packages/review/bin/report/find-events.ts video.mp4
 import { spawnSync } from 'node:child_process';
-import { pyFixed } from '@sixam/kernel';
+import { pyFixed } from '@sixam/kernel/py';
 
 const path = process.argv[2];
 if (path === undefined) throw new Error('usage: find-events.ts video.mp4');

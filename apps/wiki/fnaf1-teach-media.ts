@@ -16,7 +16,8 @@
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { PyFloat, isRecord, pyArgs, pyDumps, pyFixed, pyFloat, pyPath, pyRound, pySplit, pySplitLines } from '@sixam/kernel';
+import { isRecord } from '@sixam/kernel';
+import { PyFloat, pyArgs, pyDumps, pyFixed, pyFloat, pyPath, pyRound, pySplit, pySplitLines } from '@sixam/kernel/py';
 
 // The Companion's FNaF 1 panel, native pixels (Fnaf1Lesson.java).
 const PANEL = [560, 110, 1340, 330];

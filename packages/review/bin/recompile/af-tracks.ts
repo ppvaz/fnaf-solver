@@ -10,7 +10,7 @@
 //
 //   node packages/review/bin/recompile/af-tracks.ts DUMPSYS.txt PID
 import { readFileSync } from 'node:fs';
-import { pyDumps } from '@sixam/kernel';
+import { pyDumps } from '@sixam/kernel/py';
 
 type Track = { kind: 'fast' | 'normal', slot: string | null, sampleRate: number };
 type Thread = { thread: string, type: string, flags: string | null, standby: string | null, tracks: Track[] };
