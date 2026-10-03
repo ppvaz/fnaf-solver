@@ -103,6 +103,8 @@
       "packages/review/test/stat.test.ts",
       "packages/play/bin/phone/test-hid-sweep-probe.ts",
       "packages/play/bin/audio/test-bt-audio-collector.ts",
+      "packages/source/decompile/test-instances.ts",
+      "packages/source/decompile/test-aimap.ts",
       "packages/play/test/hid-report.test.ts",
       "packages/propose/test/policygrammartest.ts",
       "packages/propose/bin/policy/test-policy-ir.ts",
@@ -119,10 +121,6 @@
       [
         "python3",
         "packages/review/bin/recompile/test-phone-input-ledger.py"
-      ],
-      [
-        "python3",
-        "packages/source/decompile/test-instances.py"
       ],
       [
         "python3",
@@ -152,10 +150,6 @@
         "node",
         "tools/affected-test.ts",
         "--self-check"
-      ],
-      [
-        "python3",
-        "packages/source/decompile/test-aimap.py"
       ],
       [
         "packages/play/bin/audio/test-bt-audio-link.sh"

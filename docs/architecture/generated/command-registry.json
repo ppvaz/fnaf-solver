@@ -475,26 +475,26 @@
       "lifecycle": "supported"
     },
     {
-      "id": "packages/source/decompile/readdump.py",
-      "invocation": "packages/source/decompile/readdump.py",
+      "id": "packages/source/decompile/readdump.ts",
+      "invocation": "packages/source/decompile/readdump.ts",
       "kind": "query",
       "lifecycle": "supported"
     },
     {
-      "id": "packages/source/decompile/coverage.py",
-      "invocation": "packages/source/decompile/coverage.py",
+      "id": "packages/source/decompile/coverage.ts",
+      "invocation": "packages/source/decompile/coverage.ts",
       "kind": "report",
       "lifecycle": "supported"
     },
     {
-      "id": "packages/source/decompile/aimap.py",
-      "invocation": "packages/source/decompile/aimap.py [event-sheet]",
+      "id": "packages/source/decompile/aimap.ts",
+      "invocation": "packages/source/decompile/aimap.ts [event-sheet]",
       "kind": "report",
       "lifecycle": "supported"
     },
     {
-      "id": "packages/source/decompile/test-instances.py",
-      "invocation": "packages/source/decompile/test-instances.py",
+      "id": "packages/source/decompile/test-instances.ts",
+      "invocation": "packages/source/decompile/test-instances.ts",
       "kind": "check",
       "lifecycle": "supported"
     },
@@ -517,8 +517,8 @@
       "lifecycle": "supported"
     },
     {
-      "id": "packages/source/decompile/test-aimap.py",
-      "invocation": "packages/source/decompile/test-aimap.py",
+      "id": "packages/source/decompile/test-aimap.ts",
+      "invocation": "packages/source/decompile/test-aimap.ts",
       "kind": "check",
       "lifecycle": "supported"
     },

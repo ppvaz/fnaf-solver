@@ -12,15 +12,15 @@
 // what no prose writes is the dumper's field grammar: `OT n NUM n OI n`,
 // `[0]ot=..,num=..,oi=..`, `22:ExpressionParameter:cmp=`, the CTFAK-rendered
 // `IF  obj -> CompareCounter (COMPARISON{= Long[7]})`, and the header and row
-// shapes readdump.py prints. The three forms are those of
+// shapes readdump.ts prints. The three forms are those of
 // packages/source/decompile/EventTextDumper.cs (tabular), the older rendered
-// `03-04-Office.txt` (packages/source/decompile/aimap.py), and packages/source/decompile/readdump.py.
+// `03-04-Office.txt` (packages/source/decompile/aimap.ts), and packages/source/decompile/readdump.ts.
 //
 // Measured 2026-09-29, locally against the FNaF 2 dump (which stays outside
 // the repo): every line of each form is caught -- 15232 tabular C/A rows (also
 // with tabs turned to spaces), their 10616 PARAMS bodies alone, 6162
 // GROUP/OBJECT/instance records, 5083 rendered IF/DO lines and 1332 group
-// headers of 03-04-Office.txt, and 6374 lines readdump.py prints for frame 3.
+// headers of 03-04-Office.txt, and 6374 lines readdump.ts prints for frame 3.
 // No signature fires on any of the 1060 commit messages in the history
 // (`--log 1060`). Over the 2302 tracked text files it fires in six: the
 // synthetic fixtures of three packages/source/decompile/test-*.py, two grammar notes with
@@ -89,12 +89,12 @@ export const SIGNATURES = [
   },
   {
     id: 'group-header',
-    what: 'a group or frame header as the rendered sheet or readdump.py prints it',
+    what: 'a group or frame header as the rendered sheet or readdump.ts prints it',
     re: /^[\s>]*--- group \d+ ---|\bFRAME \d+ GROUP \d+ +flags=|^[\s>]*FRAME \d+: .*\(\d+ event groups\)/,
   },
   {
     id: 'readdump-row',
-    what: 'a condition or action row as readdump.py prints it (C ot= num= oi= [name])',
+    what: 'a condition or action row as readdump.ts prints it (C ot= num= oi= [name])',
     re: new RegExp(String.raw`${LEAD}!?[CA] ot=-?\d+ num=-?\d+ oi=-?\d+ \[`),
   },
 ];
@@ -140,8 +140,8 @@ export function refusal(hits: readonly Hit[]) {
   lines.push(
     'Cite instead, and paraphrase:',
     '  - the group id: "g673", or a range "g618-g619";',
-    '  - the dump file and line: "03-04-Office.txt:1234", or a packages/source/decompile/readdump.py',
-    '    command a reader with the dump can run ("readdump.py group 3 673");',
+    '  - the dump file and line: "03-04-Office.txt:1234", or a packages/source/decompile/readdump.ts',
+    '    command a reader with the dump can run ("readdump.ts group 3 673");',
     '  - what the group does, in your own words: "g673 zeroes every AI unless the',
     '    night is 7", not the IF/DO or C/A lines that say it.',
     'Rewrite the message and commit again; PEDRO-OK does not waive this check.',

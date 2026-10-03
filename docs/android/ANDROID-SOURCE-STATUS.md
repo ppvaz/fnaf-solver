@@ -45,8 +45,8 @@ markers -- a `Set position` onto a missing marker does nothing in Fusion, so
 under either reading W. Foxy could never have left CAM 08. Under the runtime's
 rule all twelve markers are placed once, 196 of 205 Office instances join to
 an object the Office events reference (154 and 158 under the wrong rules),
-and the approach markers form one column. `readdump.py --lo-xor` (default 48)
-and `packages/source/decompile/test-instances.py` carry it; `SOURCE-DUMP-GUIDE.md` §4 has the
+and the approach markers form one column. `readdump.ts --lo-xor` (default 48)
+and `packages/source/decompile/test-instances.ts` carry it; `SOURCE-DUMP-GUIDE.md` §4 has the
 table and the retraction of the recompile join that backed the first pass.
 
 The Office layout that falls out (frame units, hotspot-corrected boxes):
@@ -156,7 +156,7 @@ Consequences for this ledger:
 ## 2026-08-20: coverage, measured
 
 Every pass before this one was a targeted lookup: it answered its own question
-and said nothing about what had not been read. `packages/source/decompile/coverage.py` now
+and said nothing about what had not been read. `packages/source/decompile/coverage.ts` now
 classifies all 1332 office-frame groups by what they can change and diffs that
 against every group number cited in the repo. Current state: **72% of the
 state-writing groups and 86% of the input groups are cited**, with 87 unread
@@ -400,7 +400,7 @@ move" reading in the community write-ups; see `MINUS-7-STRATEGY.md` §6.
 
 Gate 0 of the [on-device audio-cue controller plan](../../plans/08-audio-cue-controller.md)
 asks one question: does any cue uniquely announce a state edge? Frame 3 has 40
-distinct sample handles across 161 play actions. `readdump.py sounds 3` indexes
+distinct sample handles across 161 play actions. `readdump.ts sounds 3` indexes
 them; the answer for the edges the controller cares about is mostly *no*, and
 that removes a planned action from scope.
 
@@ -1086,7 +1086,7 @@ is a grading-model correction, not a new simulated rule.
 | Mechanic | Evidence / implementation status |
 | --- | --- |
 | Night clock and movement cadence | Global 1000 ms ticker, 70 ticks/hour, movement opportunity every 5000 ms |
-| Movement RNG and the AI table | `Random(20)+1 <= AI`, with the Puppet's bare `<=` variant (g494-497). The per-night/per-hour levels are implemented 2026-08-23 from g673-684 (table), g787 (Custom Night dials), g804 (Golden Freddy below night 6), g815-821 (Puppet) and the caps g829/g830/g856-863. Rebuild the table from the dump with `packages/source/decompile/aimap.py`. **Generator sourced 2026-08-25 from the APK runtime:** `RunLoop/CRun.random` advances `graine = (graine * 31415 + 1) & 0xffff` and returns `(graine * N) >>> 16`; absent a frame seed chunk, `CRun` seeds it from the low 16 bits of `System.currentTimeMillis()`. `src/rng.js` is the bit-exact port and `sourcetest.ts` pins its vectors, scaling, seed truncation, and four disjoint 16,384-state cycles. |
+| Movement RNG and the AI table | `Random(20)+1 <= AI`, with the Puppet's bare `<=` variant (g494-497). The per-night/per-hour levels are implemented 2026-08-23 from g673-684 (table), g787 (Custom Night dials), g804 (Golden Freddy below night 6), g815-821 (Puppet) and the caps g829/g830/g856-863. Rebuild the table from the dump with `packages/source/decompile/aimap.ts`. **Generator sourced 2026-08-25 from the APK runtime:** `RunLoop/CRun.random` advances `graine = (graine * 31415 + 1) & 0xffff` and returns `(graine * N) >>> 16`; absent a frame seed chunk, `CRun` seeds it from the low 16 bits of `System.currentTimeMillis()`. `src/rng.js` is the bit-exact port and `sourcetest.ts` pins its vectors, scaling, seed truncation, and four disjoint 16,384-state cycles. |
 | Main route graph | Re-extracted 2026-08-20 from the true-name dump, including the off-camera `hall stage 1`/`hall stage 2` transit markers (120/121) |
 | Per-edge monitor gates | Final approaches use cams-up conditions; Toy Bonnie's polarity is inverted (monitor DOWN + `right light`); Toy Chica's final hop is unconditioned |
 | Office-light movement latch | Physical light state is immediate; the `viewing hall light` latch persists to the next one-second event and guards only specific route edges (W. Chica and Toy Bonnie exempt) |

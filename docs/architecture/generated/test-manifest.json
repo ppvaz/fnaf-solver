@@ -4486,7 +4486,7 @@
       }
     },
     {
-      "id": "packages/source/decompile/test-aimap.py",
+      "id": "packages/source/decompile/test-aimap.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,
@@ -4504,7 +4504,7 @@
       }
     },
     {
-      "id": "packages/source/decompile/test-instances.py",
+      "id": "packages/source/decompile/test-instances.ts",
       "lane": "test:unit",
       "owner": "@sixam/source",
       "timeoutMs": 180000,

@@ -7,7 +7,7 @@
 # OUTSIDE the repository, and this script refuses to write anywhere inside it.
 # Commit the fingerprint report from packages/propose/parked/minus7/cue/reference-report.py instead.
 #
-# Handles are the same numbers the event sheet plays: `readdump.py sounds 3`
+# Handles are the same numbers the event sheet plays: `readdump.ts sounds 3`
 # lists them, and res/raw/sNNNN.* in the APK is indexed by handle.
 set -euo pipefail
 

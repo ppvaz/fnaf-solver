@@ -5061,6 +5061,59 @@
       ]
     },
     {
+      "file": "packages/source/decompile/aimap.ts",
+      "imports": [
+        "./readdump.ts",
+        "@sixam/kernel/py",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/source/decompile/coverage.ts",
+      "imports": [
+        "./readdump.ts",
+        "@sixam/kernel/py",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/source/decompile/readdump.ts",
+      "imports": [
+        "@sixam/kernel/py",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/source/decompile/test-aimap.ts",
+      "imports": [
+        "./aimap.ts",
+        "node:assert/strict",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:test"
+      ]
+    },
+    {
+      "file": "packages/source/decompile/test-instances.ts",
+      "imports": [
+        "./readdump.ts",
+        "node:assert/strict",
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:test",
+        "node:url"
+      ]
+    },
+    {
       "file": "packages/source/decompile/truth.ts",
       "imports": [
         "../src/index.ts",

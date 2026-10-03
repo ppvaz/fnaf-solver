@@ -610,7 +610,7 @@ Two things to measure on a Night 1 run:
    fix of the game clock against the pilot's wall clock over a whole night with
    nothing else moving.
 2. **An audio phase clock — the winding tick, now sourced (2026-08-29).**
-   `readdump.py sounds 3 33` → **groups 637 and 644 only**, both playing
+   `readdump.ts sounds 3 33` → **groups 637 and 644 only**, both playing
    `Sample 'WinD'` (handle 33, `res/raw/s0033.wav`, a **0.284 s** mono ratchet)
    on a `Time: 500 loops: 0` — a **global "Every 500 ms" timer** — while the
    wind button is held and `viewing == 11`. g637 is the mouse-hold twin

@@ -4,8 +4,11 @@
  * unique prefix, a value as `--name value` or `--name=value`; a value that starts with '-' is taken only when
  * it is '-' or looks like a negative number; `--` ends the options, and is dropped where a positional slot is
  * still open or it follows the argument that filled the last one (else argparse called it unrecognized); a
- * repeated option keeps its last value, or every value when it appends. A refusal exits 2 with argparse's message after a one-line usage; -h and --help
- * print the usage and exit 0 (argparse's help listed every option; this prints the usage line only).
+ * repeated option keeps its last value, or every value when it appends. A last positional may take the rest
+ * (nargs='*'): as argparse 3.12 consumes positionals a run at a time between options, one that took values in a
+ * run is closed by the option after it, and one that took none stays open for the next run. A positional with
+ * choices is checked as it is filled. A refusal exits 2 with argparse's message after a one-line usage; -h and
+ * --help print the usage and exit 0 (argparse's help listed every option; this prints the usage line only).
  */
 import { pyFloat, pyInt } from './pyfmt.ts';
 import { pyStrRepr } from './pyjson.ts';
@@ -15,8 +18,8 @@ export interface PyOption {
   readonly name: string, readonly takes?: 'flag' | 'value', readonly required?: boolean,
   readonly type?: 'int' | 'float', readonly choices?: readonly string[], readonly append?: boolean, readonly metavar?: string,
 }
-/** The positionals in order; an optional one (nargs='?') may be absent. */
-export interface PyPositional { readonly name: string, readonly optional?: boolean }
+/** The positionals in order; an optional one (nargs='?') may be absent, and the last may take the rest (nargs='*'). */
+export interface PyPositional { readonly name: string, readonly optional?: boolean, readonly rest?: boolean, readonly choices?: readonly string[] }
 
 export interface PyArgs {
   /** Each option given: true for a flag, its value, or every value when it appends. */
@@ -33,7 +36,10 @@ function usage(prog: string, options: readonly PyOption[], positionals: readonly
     const text = option.takes === 'flag' ? option.name : `${option.name} ${metavar}`;
     parts.push(option.required ? text : `[${text}]`);
   }
-  for (const positional of positionals) parts.push(positional.optional ? `[${positional.name}]` : positional.name);
+  for (const positional of positionals) {
+    const name = positional.choices ? `{${positional.choices.join(',')}}` : positional.name;
+    parts.push(positional.rest ? `[${name} ...]` : positional.optional ? `[${name}]` : name);
+  }
   return `usage: ${prog} ${parts.join(' ')}`;
 }
 
@@ -49,22 +55,45 @@ export function pyArgs(argv: readonly string[], prog: string, options: readonly 
   const refuse = (message: string) => pyArgsError(prog, options, positionals, message);
   const names = ['--help', ...options.map(option => option.name)];
   const given: Record<string, string | boolean | string[]> = {};
+  const fixed = positionals.filter(item => !item.rest);
+  const takesRest = positionals.length > fixed.length;
   const loose: string[] = [];
+  const rest: string[] = [];
   const extra: string[] = [];
   let filledLast = false;   // the previous token filled a positional slot
+  let restOpen = takesRest, restTaken = false;
+  const open = () => loose.length < fixed.length || restOpen;
   const positional = (token: string) => {
-    filledLast = loose.length < positionals.length;
-    if (filledLast) loose.push(token); else extra.push(token);
+    filledLast = open();
+    if (loose.length < fixed.length) {
+      const choices = fixed[loose.length].choices;
+      if (choices && !choices.includes(token))
+        return refuse(`argument ${fixed[loose.length].name}: invalid choice: ${pyStrRepr(token)} (choose from ${choices.join(', ')})`);
+      loose.push(token);
+    } else if (restOpen) {
+      rest.push(token);
+      restTaken = true;
+    } else extra.push(token);
+    return null;
   };
   for (let k = 0; k < argv.length; k += 1) {
     const token = argv[k];
     if (token === '--') {
-      if (!(loose.length < positionals.length || filledLast)) extra.push(token);
-      for (const rest of argv.slice(k + 1)) positional(rest);
+      if (!(open() || filledLast)) extra.push(token);
+      for (const after of argv.slice(k + 1)) {
+        const refused = positional(after);
+        if (refused) return refused;
+      }
       break;
     }
-    if (!token.startsWith('-') || token === '-' || NEGATIVE.test(token)) { positional(token); continue; }
+    if (!token.startsWith('-') || token === '-' || NEGATIVE.test(token)) {
+      const refused = positional(token);
+      if (refused) return refused;
+      continue;
+    }
     filledLast = false;
+    // An option ends a run of positionals: a rest that took values in it is consumed.
+    if (restTaken) restOpen = false;
     if (token === '-h') return { exit: 0, text: line };
     if (!token.startsWith('--')) { extra.push(token); continue; }
     const equals = token.indexOf('=');
@@ -98,9 +127,9 @@ export function pyArgs(argv: readonly string[], prog: string, options: readonly 
       given[flag] = [...(Array.isArray(values) ? values : []), inline];
     } else given[flag] = inline;
   }
-  const missing = [...positionals.filter((positional, k) => !positional.optional && k >= loose.length).map(positional => positional.name),
+  const missing = [...fixed.filter((positional, k) => !positional.optional && k >= loose.length).map(positional => positional.name),
     ...options.filter(option => option.required && given[option.name] === undefined).map(option => option.name)];
   if (missing.length) return refuse(`the following arguments are required: ${missing.join(', ')}`);
   if (extra.length) return refuse(`unrecognized arguments: ${extra.join(' ')}`);
-  return { options: given, positionals: loose };
+  return { options: given, positionals: [...loose, ...rest] };
 }

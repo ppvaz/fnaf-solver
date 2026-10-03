@@ -184,7 +184,7 @@ original mix perfectly.
 ## The winding tick (sample 33) as a phase reference — 2026-08-29
 
 A candidate use of recorded audio that is *not* a threat cue: the music-box
-winding ratchet. `readdump.py sounds 3 33` → **groups 637 and 644 only**, both
+winding ratchet. `readdump.ts sounds 3 33` → **groups 637 and 644 only**, both
 playing `Sample 'WinD'` (handle 33, `res/raw/s0033.wav`, a 0.284 s mono burst)
 on a `Time: 500 loops: 0` — a global "Every 500 ms" Fusion timer — while the
 wind button is held and `viewing == 11`. g637 is the mouse twin, g644 the

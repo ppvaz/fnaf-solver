@@ -271,15 +271,24 @@ export function pyEquals(a: PyValue, b: PyValue): boolean {
   return true;
 }
 
+/** What open(path, errors=errors).read() returns for these bytes: UTF-8 decoded, then universal newlines (\r\n and
+ *  \r read as \n). */
+export function pyReadText(bytes: Uint8Array, errors: 'strict' | 'replace' = 'strict'): string {
+  return pyDecodeUtf8(bytes, errors).replace(/\r\n?/g, '\n');
+}
+
 /** Python's UnicodeDecodeError, a ValueError there and so a RangeError here. */
 export class PyUnicodeDecodeError extends RangeError {}
 
 const STRICT = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
+const REPLACE = new TextDecoder('utf-8', { ignoreBOM: true });
 
 /** bytes.decode('utf-8', errors) as CPython decodes: the text, a BOM kept, or the UnicodeDecodeError's message for
  *  the first bad sequence. Strict refuses an encoded surrogate (ED A0-BF), as WHATWG UTF-8 does, so valid text takes
- *  the platform decoder; surrogatepass lets one through. */
-export function pyDecodeUtf8(bytes: Uint8Array, errors: 'strict' | 'surrogatepass' = 'strict'): string {
+ *  the platform decoder; surrogatepass lets one through; replace puts U+FFFD for each maximal bad subpart, as both
+ *  CPython and WHATWG do. */
+export function pyDecodeUtf8(bytes: Uint8Array, errors: 'strict' | 'surrogatepass' | 'replace' = 'strict'): string {
+  if (errors === 'replace') return REPLACE.decode(bytes);
   if (errors === 'strict') {
     try {
       return STRICT.decode(bytes);

@@ -5,8 +5,10 @@
  */
 export { pyArgs, pyArgsError, type PyArgs, type PyOption, type PyPositional } from './pyargs.ts';
 export {
-  PyJsonError, PyUnicodeDecodeError, pyDecodeUtf8, pyEquals, pyIsDict, pyIsList, pyLoads, pyLoadsBytes, pyReprOf, pyStr, pyStrRepr, pyTruthy,
+  PyJsonError, PyUnicodeDecodeError, pyDecodeUtf8, pyEquals, pyIsDict, pyIsList, pyLoads, pyLoadsBytes, pyReadText, pyReprOf, pyStr, pyStrRepr, pyTruthy,
   type PyValue,
 } from './pyjson.ts';
-export { PyFloat, pyDumps, pyFixed, pyFloat, pyInt, pyPath, pyRepr, pyRound, pySplit, pySplitLines, pyStrip, type PyJson } from './pyfmt.ts';
+export {
+  PY_NOT_SPACE, PY_SPACE, PY_WORD, PyFloat, pyAlign, pyCompare, pyDumps, pyFixed, pyFloat, pyInt, pyPath, pyRegExp, pyRepr, pyRound, pySplit, pySplitLines, pyStrip, type PyJson,
+} from './pyfmt.ts';
 export { PyCsvError, pyCsvDicts, pyCsvRows, pyMedian, pyPstdev } from './pystats.ts';

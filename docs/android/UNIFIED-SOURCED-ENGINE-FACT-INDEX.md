@@ -34,7 +34,7 @@ the same commit.
 | Event sheet | frame **3**, `04-Office` — **1332 groups**; dump ≈ 20,500 lines. Frame is **1600 × 768**, 9 layers, 205 placed instances |
 | Logic rate | **60 fps** — every frame constant in this file is a count of these ticks |
 | Toolchain | CTFAK (.NET 6, run in `mcr.microsoft.com/dotnet/sdk:6.0`) + `packages/source/decompile/EventTextDumper.cs` → `events-android.txt` |
-| Regenerate | `packages/source/decompile/regen-dump.sh /path/to/application.ccn`; AI table via `packages/source/decompile/aimap.py` |
+| Regenerate | `packages/source/decompile/regen-dump.sh /path/to/application.ccn`; AI table via `packages/source/decompile/aimap.ts` |
 | Never committed | the APK, the CCN, the dump — game content. Only derived rules live in the repo. |
 
 **The one rule that makes any of this readable — the XOR‑28 handle scramble.**
@@ -177,7 +177,7 @@ and edge cases are in the sections that follow.
   the Puppet (g815‑821) has no dial and **no cap**. Table application sits below
   every group that reads an AI counter, so a new hour's levels reach the rolls
   on the frame *after* the hour ticks over. `[SOURCED]` — full table in
-  `src/config.js:285‑316` (`AI_BY_NIGHT`), rebuild with `packages/source/decompile/aimap.py`.
+  `src/config.js:285‑316` (`AI_BY_NIGHT`), rebuild with `packages/source/decompile/aimap.ts`.
 - **`{oneIn: N}` (Golden Freddy only).** Source's `(Random(N)+1)/N` under integer
   division: 1 with probability 1/N. g804 zeroes GF below night 6 but runs once,
   at night start — so nights 3/4/5 write him at 12 AM and lose it, while **night
@@ -785,7 +785,7 @@ a small dispatch bank turns it into sound:
 
 ## 16. Coverage and provenance
 
-`packages/source/decompile/coverage.py` classifies all 1332 frame-3 groups and diffs them
+`packages/source/decompile/coverage.ts` classifies all 1332 frame-3 groups and diffs them
 against every group number cited in the repo (it **excludes**
 `ANDROID-GROUP-MAP.md` itself, so a cluster written up only there stays on the
 unread list until its numbers land in `ANDROID-SOURCE-STATUS.md`).

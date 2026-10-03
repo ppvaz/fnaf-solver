@@ -40,7 +40,7 @@ import { homedir } from 'node:os';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  PyFloat, type PyJson, type PyValue, pyDecodeUtf8, pyDumps, pyFixed, pyFloat, pyInt, pyIsDict, pyIsList, pyLoads, pyPath, pyReprOf, pySplitLines,
+  PyFloat, type PyJson, pyCompare, type PyValue, pyDecodeUtf8, pyDumps, pyFixed, pyFloat, pyInt, pyIsDict, pyIsList, pyLoads, pyPath, pyReprOf, pySplitLines,
   pyStrRepr, pyStrip, pyTruthy, PyJsonError,
 } from '@sixam/kernel/py';
 import { PRIVATE_PATH, SECRET_KEY } from './validate-session.ts';
@@ -226,20 +226,11 @@ function sha256File(path: string) {
   return digest.digest('hex');
 }
 
-/** Code-point order, as Python compares str. */
-const byCodePoint = (a: string, b: string) => {
-  const [x, y] = [[...a], [...b]];
-  for (let k = 0; k < Math.min(x.length, y.length); k += 1) {
-    const diff = (x[k].codePointAt(0) ?? 0) - (y[k].codePointAt(0) ?? 0);
-    if (diff) return diff;
-  }
-  return x.length - y.length;
-};
 /** Paths sorted as PosixPath sorts them: by their components. */
 const byComponents = (a: string, b: string) => {
   const [x, y] = [a.split('/'), b.split('/')];
   for (let k = 0; k < Math.min(x.length, y.length); k += 1) {
-    const diff = byCodePoint(x[k], y[k]);
+    const diff = pyCompare(x[k], y[k]);
     if (diff) return diff;
   }
   return x.length - y.length;
@@ -364,7 +355,7 @@ function cmdStart(run: string, argv: readonly string[]) {
   const spool = paths(run).spool;
   if (existsSync(spool)) die(`${nameOf(spool)} already exists; a session id is latched once per run name, never re-derived. Use a fresh run name.`, 2);
   const fields = new Map(parsePairs(argv));
-  const unknown = [...fields.keys()].filter(key => !['command', 'session_id', 'cohort_id', 'tool_version'].includes(key)).sort(byCodePoint);
+  const unknown = [...fields.keys()].filter(key => !['command', 'session_id', 'cohort_id', 'tool_version'].includes(key)).sort(pyCompare);
   if (unknown.length) die(`start does not take ${pyReprOf(unknown)}; use \`record\``, 2);
   const command = fields.get('command');
   if (!command) return die('start needs command=<the producer\'s argv[0], repo-relative>', 2);
@@ -391,7 +382,7 @@ function cmdStart(run: string, argv: readonly string[]) {
 
 function cmdRecord(run: string, argv: readonly string[]) {
   const named = (keys: readonly string[]) => keys.join(' ');
-  if (!argv.length) die(`record needs an op: ${named([...[...OPS.keys()].sort(byCodePoint), 'env', 'note'])}`, 2);
+  if (!argv.length) die(`record needs an op: ${named([...[...OPS.keys()].sort(pyCompare), 'env', 'note'])}`, 2);
   const [op, ...rest] = argv;
   readSpool(run);                       // refuses if no session was started
   const pairs = parsePairs(rest);
@@ -411,7 +402,7 @@ function cmdRecord(run: string, argv: readonly string[]) {
     return 0;
   }
   const entry = OPS.get(op);
-  if (entry === undefined) return die(`unknown op ${pyStrRepr(op)}; expected one of ${[...OPS.keys(), 'env', 'note'].sort(byCodePoint).join(', ')}`, 2);
+  if (entry === undefined) return die(`unknown op ${pyStrRepr(op)}; expected one of ${[...OPS.keys(), 'env', 'note'].sort(pyCompare).join(', ')}`, 2);
   const [schemaName, objName] = entry;
   const given = new Map(pairs);
   let derived: Dict = new Map();

@@ -178,8 +178,8 @@
         "why": "26 graders and recompile readers, nine on Pillow, numpy or SciPy (typed in place); the 17 stdlib-only ones are being ported one at a time (Pedro, 2026-10-02: unforced Python is ported to TypeScript (characterize, port, compare, switch), not typed in place)"
       },
       "py:packages/source/decompile": {
-        "count": 349,
-        "why": "seven stdlib-only readers of the event-sheet dump; Pedro, 2026-10-02: unforced Python is ported to TypeScript (characterize, port, compare, switch), not typed in place (Source’s truth.ts already reads the dump in TypeScript)"
+        "count": 123,
+        "why": "two stdlib-only readers of the event-sheet dump, nightmap.py and its test; Pedro, 2026-10-02: unforced Python is ported to TypeScript (characterize, port, compare, switch), not typed in place (Source’s truth.ts already reads the dump in TypeScript)"
       }
     }
   },

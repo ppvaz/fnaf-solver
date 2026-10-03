@@ -37,6 +37,21 @@ for (const [argv, message] of refusals) {
   assert.ok('exit' in result && result.exit === 2, `${argv.join(' ')} exits 2`);
   assert.equal(result.text.split('\n')[1], `t: error: ${message}`, argv.join(' '));
 }
+// A choices positional and a rest (nargs='*'), against argparse 3.12.12: an empty rest before an option waits for
+// the next run of values; one that took values is closed by the option after it.
+const commands = (argv: string[]) => pyArgs(argv, 't', [{ name: '--dump' }, { name: '--xor', type: 'int' }],
+  [{ name: 'command', choices: ['frames', 'objects', 'group'] }, { name: 'args', rest: true }]);
+const parsed = (argv: string[]) => { const result = commands(argv); return 'exit' in result ? result.text.split('\n')[1] : result; };
+assert.deepEqual(parsed(['group', '--dump', 'x', '3', '4']), { options: { '--dump': 'x' }, positionals: ['group', '3', '4'] });
+assert.deepEqual(parsed(['group', '--', '3', '--', '4']), { options: {}, positionals: ['group', '3', '--', '4'] });
+assert.deepEqual(parsed(['group', '3', '--']), { options: {}, positionals: ['group', '3'] });
+assert.deepEqual(parsed(['group', '-3']), { options: {}, positionals: ['group', '-3'] });
+assert.equal(parsed(['group', '3', '--xor', '0', '4']), 't: error: unrecognized arguments: 4');
+assert.equal(parsed(["it's"]), 't: error: argument command: invalid choice: "it\'s" (choose from frames, objects, group)');
+assert.equal(parsed([]), 't: error: the following arguments are required: command');
+const usageLine = commands(['-h']);
+assert.ok('exit' in usageLine && usageLine.text === 'usage: t [-h] [--dump DUMP] [--xor XOR] {frames,objects,group} [args ...]');
+
 // parser.error after the parse prints the same usage line.
 const spec = [{ name: '--rate', type: 'int', required: true }] as const;
 assert.deepEqual(pyArgsError('t', spec, [{ name: 'trace' }], '--rate is out of bounds'),

@@ -10,7 +10,7 @@ any detector on this phone can reach.
   packages/source/decompile/extract-samples.sh /path/to/base.apk
   packages/propose/parked/minus7/cue/reference-report.py [refdir] [--json out.json]
 
-Handles come from the event sheet: `packages/source/decompile/readdump.py sounds 3`.
+Handles come from the event sheet: `packages/source/decompile/readdump.ts sounds 3`.
 """
 import argparse
 import hashlib

@@ -2,7 +2,7 @@
 // negative value that rounds to zero is kept. pyRepr against repr(float), and pyDumps against json.dumps:
 // its separators, escapes, indent and floats. Each expected string was printed by CPython 3.12.
 import assert from 'node:assert/strict';
-import { PyFloat, pyDumps, pyFixed, pyFloat, pyInt, pyPath, pyRepr, pyRound, pySplit, pySplitLines } from '../src/pyfmt.ts';
+import { PyFloat, pyDumps, pyFixed, pyFloat, pyInt, pyPath, pyRegExp, pyRepr, pyRound, pySplit, pySplitLines } from '../src/pyfmt.ts';
 
 const CASES: [number, number, string][] = [
   [0.125, 2, '0.12'], [0.375, 2, '0.38'], [2.5, 0, '2'], [3.5, 0, '4'], [-0.125, 2, '-0.12'], [-2.5, 0, '-2'],
@@ -52,4 +52,28 @@ assert.deepEqual([pyInt('0x', 16), pyInt('_1'), pyInt('1__2'), pyInt('1.0'), pyI
 assert.equal(pyDumps({ b: 1, '\u{1F600}': 2, '\uffff': 3, a: { d: 4, c: 5 } }, undefined, { sortKeys: true }),
   '{"a": {"c": 5, "d": 4}, "b": 1, "\\uffff": 3, "\\ud83d\\ude00": 2}');
 assert.equal(pyDumps(1n << 70n), '1180591620717411303424');
-console.log(`pyfmt: ${CASES.length} fixed, ${REPRS.length} repr, 6 json.dumps and ${PATHS.length} path values print as Python prints them, and split, splitlines, float, int and round read as Python reads`);
+// pyRegExp: each pattern searched in each text as CPython's re searched it (re.I where the pattern names groups).
+const searches: [string, string, string[] | null][] = [
+  ["^Long\\[(\\d+)\\]$", "Long[\u0664\u0662]\n", ["Long[\u0664\u0662]", "\u0664\u0662"]],
+  ["\\bseq=(0x[0-9a-f]+)\\b", "xseq=0x1 seq=0x2", ["seq=0x2", "0x2"]],
+  ["a.c", "a\u2028c", ["a\u2028c"]],
+  ["a.c", "a\nc", null],
+  ["value=(?P<v>-?[\\d.]+)", "value=\u0661.5", ["value=\u0661.5", "\u0661.5"]],
+  ["IF\\s+night", "IF\u001fnight", ["IF\u001fnight"]],
+  ["IF\\s+night", "IF\ufeffnight", null],
+  ["(\\S+) Long", "x\u001f< Long", ["< Long", "<"]],
+  ["\\bAI$", "Golden Freddy AI", ["AI"]],
+  ["\\bAI$", "XAI", null],
+  ["(?:\\bg|\\bgroups?\\s*)(\\d{2,4})", "see \u017fee group 413", ["group 413", "413"]],
+  ["[^\\]]+\\]", "ab]", ["ab]"]],
+  ["\\w+", "\u00e9_1x", ["\u00e9_1x"]],
+  ["\\W", "ab-c", ["-"]],
+  ["\\Bb", "ab", ["b"]],
+  ["\\D+", "12ab3", ["ab"]],
+];
+for (const [pattern, text, want] of searches) {
+  const match = pyRegExp(pattern, pattern.includes('groups') ? 'i' : '').exec(text);
+  assert.deepEqual(match ? [...match] : null, want, `${pattern} in ${JSON.stringify(text)}`);
+}
+
+console.log(`pyfmt: ${CASES.length} fixed, ${REPRS.length} repr, 6 json.dumps and ${PATHS.length} path values print as Python prints them, and split, splitlines, float, int and round read as Python reads; ${searches.length} patterns search as re does`);

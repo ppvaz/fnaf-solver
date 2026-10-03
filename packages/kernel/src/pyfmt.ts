@@ -119,6 +119,11 @@ export function pyPath(text: string): string {
 
 // Python's whitespace (str.split, str.strip, float()): JavaScript's \s adds U+FEFF and lacks 0x1c-0x1f and NEL.
 const WS = '[\\t\\n\\v\\f\\r\\x1c-\\x1f \\x85\\xa0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000]';
+/** Python's \s, \S and \w in a str pattern, as regex source for a pattern built with the u flag; \b is
+ *  (?<!PY_WORD) before a word character and (?!PY_WORD) after one. */
+export const PY_SPACE = WS;
+export const PY_NOT_SPACE = `[^${WS.slice(1)}`;
+export const PY_WORD = '[\\p{L}\\p{N}_]';
 const FIELDS = new RegExp(`${WS}+`);
 const LINE_BREAK = /\r\n|[\n\r\v\f\x1c\x1d\x1e\x85\u2028\u2029]/;
 
@@ -189,4 +194,66 @@ export function pyRound(x: number): number | null {
   const floor = Math.floor(x);
   const rest = x - floor;
   return rest > 0.5 || (rest === 0.5 && floor % 2 !== 0) ? floor + 1 : floor;
+}
+
+/** format(text, '<N'), '>N' or '^N' (and %-Ns, %Ns): padded with spaces to N code points, as Python counts them. */
+export function pyAlign(text: string, width: number, align: '<' | '>' | '^' = '<'): string {
+  const room = Math.max(0, width - [...text].length);
+  if (align === '<') return text + ' '.repeat(room);
+  if (align === '>') return ' '.repeat(room) + text;
+  const left = Math.floor(room / 2);
+  return ' '.repeat(left) + text + ' '.repeat(room - left);
+}
+
+/** A Python str pattern (re, no MULTILINE or DOTALL) as a JavaScript RegExp with the u flag: \d, \D, \s, \S, \w,
+ *  \W, \b and \B as Python reads them over Unicode, `.` short of a newline only, `$` also before a final newline,
+ *  and (?P<name>...) as a named group. `i` stands for re.IGNORECASE, `g` for finditer/sub over every match. */
+export function pyRegExp(source: string, flags: '' | 'i' | 'g' | 'gi' = ''): RegExp {
+  const word = PY_WORD.slice(1, -1), space = WS.slice(1, -1);
+  const inClass: Record<string, string> = { d: '\\p{Nd}', D: '\\P{Nd}', s: space, w: word };
+  const outside: Record<string, string> = {
+    d: '\\p{Nd}', D: '\\P{Nd}', s: PY_SPACE, S: PY_NOT_SPACE, w: PY_WORD, W: `[^${word}]`,
+    b: `(?:(?<=${PY_WORD})(?!${PY_WORD})|(?<!${PY_WORD})(?=${PY_WORD}))`, B: `(?:(?<=${PY_WORD})(?=${PY_WORD})|(?<!${PY_WORD})(?!${PY_WORD}))`,
+  };
+  let out = '';
+  let classDepth = false;
+  for (let k = 0; k < source.length; k += 1) {
+    const char = source[k];
+    if (char === '\\') {
+      const next = source[k + 1];
+      k += 1;
+      const mapped = classDepth ? inClass[next] : outside[next];
+      if (classDepth && (next === 'S' || next === 'W')) throw new RangeError(`\\${next} inside a class is not translated`);
+      out += mapped ?? `\\${next}`;
+      continue;
+    }
+    if (classDepth) {
+      if (char === ']') classDepth = false;
+      out += char;
+      continue;
+    }
+    if (char === '[') {
+      classDepth = true;
+      out += char;
+      if (source[k + 1] === '^') { out += '^'; k += 1; }
+      if (source[k + 1] === ']') { out += '\\]'; k += 1; }
+      continue;
+    }
+    if (char === '.') out += '[^\\n]';
+    else if (char === '$') out += '(?=\\n?$)';
+    else if (char === '(' && source.startsWith('?P<', k + 1)) { out += '(?<'; k += 3; }
+    else out += char;
+  }
+  return new RegExp(out, `${flags}u`);
+}
+
+/** Python's str ordering, as a comparator: by code point, where JavaScript's < compares UTF-16 units and so puts
+ *  U+FFFF after U+10000. */
+export function pyCompare(a: string, b: string): number {
+  const [x, y] = [[...a], [...b]];
+  for (let k = 0; k < Math.min(x.length, y.length); k += 1) {
+    const diff = (x[k].codePointAt(0) ?? 0) - (y[k].codePointAt(0) ?? 0);
+    if (diff) return diff;
+  }
+  return x.length - y.length;
 }

@@ -32,12 +32,12 @@ Regenerate with:
 packages/source/decompile/regen-dump.sh /path/to/application.ccn
 ```
 
-The separate `packages/source/decompile/aimap.py` report reconstructs the AI counter table by
+The separate `packages/source/decompile/aimap.ts` report reconstructs the AI counter table by
 night and hour from the same canonical dump; it also still reads CTFAK's older
 rendered `03-04-Office.txt` form, chosen by content, for archived sheets. Set
-`$FNAF2_OFFICE_DUMP` or pass a path to use one of those. `packages/source/decompile/test-aimap.py`
+`$FNAF2_OFFICE_DUMP` or pass a path to use one of those. `packages/source/decompile/test-aimap.ts`
 checks it against a synthetic sheet, so that path stays covered without game
-content. General rule queries should use `readdump.py` below.
+content. General rule queries should use `readdump.ts` below.
 
 CTFAK is .NET 6 and this Mac has no `dotnet`, so the script runs it in the
 `mcr.microsoft.com/dotnet/sdk:6.0` image. `packages/source/decompile/EventTextDumper.cs` is our
@@ -131,9 +131,9 @@ Field meanings:
   `A 31` = set alterable value, `A 1` = set position (this is how movement happens).
 - **`OI`** — the object handle the event addresses. **Scrambled — see §4.**
 - **`NAME`** — the dumper's naive lookup of `OI` in the item table. **Wrong on
-  Android.** `packages/source/decompile/readdump.py` ignores it and resolves properly.
+  Android.** `packages/source/decompile/readdump.ts` ignores it and resolves properly.
 - **`COTHER`** — condition flags; **bit 0 set = the condition is negated**
-  ("NOT overlapping", "monitor is NOT up"). `readdump.py` prints `!` in front.
+  ("NOT overlapping", "monitor is NOT up"). `readdump.ts` prints `!` in front.
 - **`PARAMS`** — ` || `-separated parameter list, each `code:type:rendering`.
   The ones that carry meaning:
   - `AlterableValue` + `ExpressionParameter` — which slot, and the comparison or
@@ -191,8 +191,8 @@ event handle of instance OI s   =   s ^ 48
 true object of instance OI s    =   item_table[s ^ 48 ^ 28]  =  item_table[s ^ 44]
 ```
 
-`readdump.py` applies this (`--lo-xor`, default 48; `0` on PC builds), and
-`packages/source/decompile/test-instances.py` pins it. The two earlier rules were both wrong,
+`readdump.ts` applies this (`--lo-xor`, default 48; `0` on PC builds), and
+`packages/source/decompile/test-instances.ts` pins it. The two earlier rules were both wrong,
 and the way each one failed is the check to keep:
 
 | Reading of instance OI | Office camera markers placed | frame-3 instances joined to an event-referenced object |
@@ -293,16 +293,16 @@ Three things fall out of that, none of which are visible from playing:
 ```sh
 export FNAF2_DUMP=/private/tmp/fnaf2-android-dump/events-android.txt
 
-packages/source/decompile/readdump.py frames                    # confirm frame 3 is the office
-packages/source/decompile/readdump.py objects balloon           # event-space handles by name
-packages/source/decompile/readdump.py object 3 "balloon boy"    # every group touching him
-packages/source/decompile/readdump.py writes 3 "balloon boy" 0  # who sets his movement state
-packages/source/decompile/readdump.py group  3 413-418          # read the range
-packages/source/decompile/readdump.py find   3 "in office"      # text search over rendered groups
-packages/source/decompile/readdump.py instances 3 light         # placed scene objects: X, Y, layer, box
+packages/source/decompile/readdump.ts frames                    # confirm frame 3 is the office
+packages/source/decompile/readdump.ts objects balloon           # event-space handles by name
+packages/source/decompile/readdump.ts object 3 "balloon boy"    # every group touching him
+packages/source/decompile/readdump.ts writes 3 "balloon boy" 0  # who sets his movement state
+packages/source/decompile/readdump.ts group  3 413-418          # read the range
+packages/source/decompile/readdump.ts find   3 "in office"      # text search over rendered groups
+packages/source/decompile/readdump.ts instances 3 light         # placed scene objects: X, Y, layer, box
 ```
 
-`packages/source/decompile/test-instances.py` and `packages/source/decompile/test-aimap.py` check the reader
+`packages/source/decompile/test-instances.ts` and `packages/source/decompile/test-aimap.ts` check the reader
 against synthetic sheets, so both stay covered without game content.
 
 The productive order is almost always: **find who writes the state → read the
@@ -335,7 +335,7 @@ Then, before it enters the simulator:
   and the HUD's hitboxes are parked below the window until g1223 and
   g1072-1081 move or create them. Before trusting a position, scan the
   frame's `Position`, `SetX`/`SetY` and `Create` parameters for that handle
-  (`readdump.py object 3 <name>`). The 2026-08-26 "the port lays out its HUD
+  (`readdump.ts object 3 <name>`). The 2026-08-26 "the port lays out its HUD
   from code, so no placement is evidence" reading was an artifact of the wrong
   instance rule; see `ANDROID-SOURCE-STATUS.md` 2026-09-15 (second pass).
 - **No group comments or names.** Fusion's event-sheet comments are not in the
