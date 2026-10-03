@@ -558,16 +558,8 @@ for (const path of [...await files(join(ROOT, 'apps')), ...await files(join(ROOT
   if (!physicalActuatorOwners.has(path) && identifiers(await tree(path), node => node.text === 'HidWireTransport').length)
     assert.fail(`${path} reaches the HID transport outside the device runners`);
 }
-const cli = await readFile(join(ROOT, 'apps/desktop/src/device-cli.ts'), 'utf8');
-// The campaign is the only command that touches a phone; its live branch must
-// keep refusing without the explicit confirmation.
-assert.match(cli, /if \(!options\.confirmLive\) throw new Error\('live campaign requires --confirm-live'\);/,
-  'device live execution lost its explicit confirmation gate');
-// No second way onto the phone: the generic `live` command and the fixture
-// service behind it were retired on 2026-09-25, and must not come back as a
-// path around the campaign's gates.
-const commands = cli.match(/const COMMANDS = \[([^\]]*)\] as const;/)?.[1] ?? '';
-assert.ok(commands && !/'(live|dry-run|calibrate)'/.test(commands),
-  'device CLI must not regain a live command outside the campaign');
+// The campaign's live refusals (no --confirm-live; a --ports module outside the named compositions) and
+// the retired `live`, `dry-run` and `calibrate` commands are held by apps/desktop/test/device-cli.test.ts,
+// which runs the CLI: a regex over its source passed on a commented-out line and failed on a reworded one.
 console.log(`architecture: ${hostFree.length} host-free core, source, kernel and propose modules and ${production.length} package modules obey boundary checks ` +
   `(${parsed.size} modules parsed; rules: ${RULES.map(rule => rule.id).join(', ')})`);

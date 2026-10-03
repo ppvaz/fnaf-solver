@@ -103,6 +103,17 @@ try {
   assert.notEqual(refused.status, 0);
   assert.match(refused.stderr, /strategy minus-toys requires fnaf2\.camera-split \(the double-camera glitch\), which the run's constraints forbid/);
   assert.doesNotMatch(refused.stdout + refused.stderr, /preflight|adb/i, 'refused before any phone is opened');
+  // The live campaign refuses without --confirm-live, and a ports module outside the named compositions,
+  // both before any phone is opened: read by running it, not by matching its source text.
+  const unconfirmed = run(['campaign', '--bundle', join(bundles, 'k3'), '--nights', '7', '--profile', 'hid-mediaprojection', '--live']);
+  assert.notEqual(unconfirmed.status, 0);
+  assert.match(unconfirmed.stderr, /live campaign requires --confirm-live/);
+  assert.doesNotMatch(unconfirmed.stdout + unconfirmed.stderr, /preflight|adb/i, 'refused before any phone is opened');
+  const foreignPorts = run(['campaign', '--bundle', join(bundles, 'k3'), '--nights', '7', '--profile', 'hid-mediaprojection',
+    '--live', '--confirm-live', '--ports', join(bundles, 'my-ports.ts')]);
+  assert.notEqual(foreignPorts.status, 0);
+  assert.match(foreignPorts.stderr, /--ports must name one of the campaign port compositions/);
+  assert.doesNotMatch(foreignPorts.stdout + foreignPorts.stderr, /preflight|adb/i, 'refused before any phone is opened');
   const stray = run(['preflight', '--forbid-mechanic', 'fnaf2.camera-split']);
   assert.notEqual(stray.status, 0);
   assert.match(stray.stderr, /--forbid-mechanic belongs to campaign/);

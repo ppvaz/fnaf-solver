@@ -2,7 +2,7 @@
 /** CLI composition root for the campaign executor: nothing here touches a phone without --live --confirm-live. */
 import { existsSync } from 'node:fs';
 import { readFile, writeFile } from 'node:fs/promises';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
 import { AdbDeviceBridge } from '@sixam/play/campaign/adb-bridge';
@@ -21,6 +21,8 @@ import { isOneOf, isRecord } from '@sixam/kernel';
 import { stableHash } from '@sixam/kernel/contracts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
+/** The campaign port compositions --ports may name: device runners tools/architecture-test.ts holds. */
+const CAMPAIGN_PORT_MODULES = ['packages/play/src/campaign/modern-campaign-ports.ts'];
 const PROFILES = join(ROOT, 'packages/play/profiles/fnaf2/moto-g56');
 
 function help() {
@@ -363,6 +365,10 @@ async function campaign(options: Options, selected: Profile) {
     return;
   }
   if (!options.confirmLive) throw new Error('live campaign requires --confirm-live');
+  // A ports module composes the HID transport that presses the phone, so --ports names one of the
+  // compositions tools/architecture-test.ts holds as device runners, never an arbitrary file.
+  if (options.ports && !CAMPAIGN_PORT_MODULES.includes(relative(ROOT, resolve(options.ports))))
+    throw new Error(`--ports must name one of the campaign port compositions (${CAMPAIGN_PORT_MODULES.join(', ')}), got ${options.ports}`);
   // The bundle and qualification are host files; they are read before the
   // phone is queried so the preflight can compare the venue they bind.
   const bundle = await campaignBundle(options.bundle, spec, selected.id);
