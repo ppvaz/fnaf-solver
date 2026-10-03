@@ -10,8 +10,9 @@
 //
 // Scanned: every tracked file and every untracked file git does not ignore, with a .js, .mjs,
 // .cjs, .ts, .py or .sh name, outside the frozen set. A reference counts only when it is anchored
-// to the file's own directory (`import.meta.url`, `__dirname`, or a HERE bound to the file's
-// directory) and every segment is a literal; a glob in the last segment must match at least one
+// to the file's own location (`import.meta.url`, `__dirname`, a HERE bound to the file's directory,
+// or a ROOT that climbs from it: `resolve(HERE, '../..')`, `Path(__file__).parents[2]`,
+// `$(cd "$(dirname "$0")/../.." && pwd)`) and every segment is a literal; a glob in the last segment must match at least one
 // file, since a loop over a glob that matches nothing runs zero times in silence (grade-run.sh's
 // death-cause models, 2026-09-30). A target git ignores is a runtime output and is not required to
 // exist. A path that is meant to be absent is listed in INTENTIONAL with its reason.
@@ -20,7 +21,7 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join, normalize, resolve } from 'node:path';
+import { dirname, join, normalize, posix, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -34,50 +35,117 @@ const INTENTIONAL = new Map([
 
 const literals = (text: string) => [...text.matchAll(/(['"])([^'"]*)\1/g)].map(match => match[2]);
 
-// A binding of NAME to the file's own directory: the right-hand side reads the file's location
-// and climbs nowhere.
-function ownDir(text: string, name: string, lang: string) {
+const IDENT = /^[A-Za-z_$][\w$]*$/;
+const climb = (n: number) => Array.from({ length: n }, () => '..').join('/');
+const rel = (...parts: string[]) => { const out = posix.join(...parts.filter(Boolean)); return out === '.' ? '' : out; };
+
+/** NAME's binding in TEXT: the right-hand side of its first assignment. */
+function bindingOf(text: string, name: string, lang: string) {
   const escaped = name.replace(/\$/g, '\\$');
   const binding = lang === 'sh'
     ? new RegExp(`^\\s*(?:export\\s+|local\\s+)?${escaped}=(.*)$`, 'm')
     : new RegExp(`^\\s*(?:export\\s+)?(?:const|let|var)?\\s*${escaped}\\s*(?::[^=]+)?=\\s*(.*)$`, 'm');
-  const rhs = text.match(binding)?.[1];
-  if (!rhs) return false;
-  if (/\.\.|parents\[|\.parent\s*\.parent|dirname\(\s*(?:os\.path\.)?dirname/.test(rhs)) return false;
-  return lang === 'sh' ? /dirname\s+"?\$(?:0|\{BASH_SOURCE\[0\]\})/.test(rhs)
-    : lang === 'py' ? /__file__/.test(rhs)
-      : /import\.meta\.url|__dirname/.test(rhs);
+  return text.match(binding)?.[1]?.trim().replace(/;$/, '');
 }
 
-/** Every literal path FILE builds from its own directory, as [line, relative path]. */
+/** Where a JS expression points, relative to its file's directory, or null when it is not built from that location. */
+function jsAnchor(text: string, expr: string, depth: number): string | null {
+  const e = expr.trim();
+  if (/^(?:dirname\(\s*fileURLToPath\(\s*import\.meta\.url\s*\)\s*\)|__dirname)$/.test(e)) return '';
+  let m = e.match(/^(?:fileURLToPath\(\s*)?new URL\(\s*(['"])([^'"]*)\1\s*,\s*import\.meta\.url\s*\)\s*\)?$/);
+  if (m) return rel(m[2]);
+  m = e.match(/^(?:resolve|join)\(\s*([^,]+?)\s*,((?:\s*(['"])[^'"]*\3\s*,?)+)\s*\)$/);
+  if (m) {
+    const base = jsAnchor(text, m[1], depth);
+    return base === null ? null : rel(base, ...literals(m[2]));
+  }
+  return IDENT.test(e) ? anchor(text, e, 'js', depth + 1) : null;
+}
+
+/** Where a Python expression points: Path(__file__)'s parents, os.path.dirname of __file__, or a named anchor's. */
+function pyAnchor(text: string, expr: string, depth: number): string | null {
+  const e = expr.trim();
+  let m = e.match(/^Path\(\s*__file__\s*\)(?:\.resolve\(\))?((?:\.parent)+)$/);
+  if (m) return climb(m[1].split('.parent').length - 2);
+  m = e.match(/^Path\(\s*__file__\s*\)(?:\.resolve\(\))?\.parents\[(\d+)\]$/);
+  if (m) return climb(Number(m[1]));
+  m = e.match(/^((?:os\.path\.dirname\(\s*)+)os\.path\.(?:abspath|realpath)\(\s*__file__\s*\)\s*(\)+)$/);
+  if (m) return climb(m[1].split('dirname').length - 2);
+  m = e.match(/^([A-Za-z_]\w*)((?:\.parent)+)$/);
+  if (m) { const base = anchor(text, m[1], 'py', depth + 1); return base === null ? null : rel(base, climb(m[2].split('.parent').length - 1)); }
+  m = e.match(/^([A-Za-z_]\w*)\.parents\[(\d+)\]$/);
+  if (m) { const base = anchor(text, m[1], 'py', depth + 1); return base === null ? null : rel(base, climb(Number(m[2]) + 1)); }
+  return /^[A-Za-z_]\w*$/.test(e) ? anchor(text, e, 'py', depth + 1) : null;
+}
+
+/** Where a shell value points: `$(dirname "$0")`, `$(cd "$(dirname "$0")/../.." && pwd)`, or a named anchor plus a climb. */
+function shAnchor(text: string, value: string, depth: number): string | null {
+  const own = /^"?\$\(\s*cd\s+"?\$\(dirname "\$(?:0|\{BASH_SOURCE\[0\]\})"\)([^"&]*)"?\s*&&\s*pwd\s*\)"?$/.exec(value.trim())
+    ?? /^"?\$\(dirname "\$(?:0|\{BASH_SOURCE\[0\]\})"\)([^"]*)"?$/.exec(value.trim());
+  if (own) return /[$`]/.test(own[1]) ? null : rel(own[1].replace(/^\//, ''));
+  const named = /^"?\$\(\s*cd\s+"?\$\{?([A-Za-z_]\w*)\}?"?([^"&]*)"?\s*&&\s*pwd\s*\)"?$/.exec(value.trim());
+  if (named && !/[$`]/.test(named[2])) {
+    const base = anchor(text, named[1], 'sh', depth + 1);
+    return base === null ? null : rel(base, named[2].replace(/^\//, ''));
+  }
+  return null;
+}
+
+/**
+ * Where NAME points relative to the file's own directory ('' for the directory itself, '../..' for a
+ * root two levels up), or null when its binding is not built from the file's location.
+ */
+function anchor(text: string, name: string, lang: string, depth = 0): string | null {
+  if (depth > 4) return null;
+  const rhs = bindingOf(text, name, lang);
+  if (rhs === undefined) return null;
+  return lang === 'sh' ? shAnchor(text, rhs, depth) : lang === 'py' ? pyAnchor(text, rhs, depth) : jsAnchor(text, rhs, depth);
+}
+
+/** Every literal path FILE builds from its own location (its directory, or a root it climbs to), as [line, relative path]. */
 export function siblingReferences(file: string, text: string) {
   const lang = file.endsWith('.py') ? 'py' : file.endsWith('.sh') ? 'sh' : 'js';
   const found: [number, string][] = [];
   const add = (index: number, parts: string[]) => {
-    if (!parts.length || parts.some(part => /[${}<>|]/.test(part) || part === '')) return;
+    const [base, ...rest] = parts;
+    if (!rest.length || rest.some(part => /[${}<>|]/.test(part) || part === '')) return;
+    const path = join(...[base, ...rest].filter(Boolean));
     // A glob is allowed only in the last segment, where it must match at least one file.
-    if (join(...parts).split('/').slice(0, -1).some(part => part.includes('*'))) return;
-    found.push([text.slice(0, index).split('\n').length, join(...parts)]);
+    if (path.split('/').slice(0, -1).some(part => part.includes('*'))) return;
+    found.push([text.slice(0, index).split('\n').length, path]);
   };
   if (lang === 'js') {
-    for (const match of text.matchAll(/new URL\(\s*(['"])([^'"]+)\1\s*,\s*import\.meta\.url\s*\)/g)) add(match.index, [match[2]]);
+    for (const match of text.matchAll(/new URL\(\s*(['"])([^'"]+)\1\s*,\s*import\.meta\.url\s*\)/g)) add(match.index, ['', match[2]]);
     // `new URL('x', here)`, where `here` is the file's own directory as a URL.
-    for (const match of text.matchAll(/new URL\(\s*(['"])([^'"]+)\1\s*,\s*([A-Za-z_$][\w$]*)\s*\)/g))
-      if (match[3] !== 'import' && ownDir(text, match[3], 'js')) add(match.index, [match[2]]);
-    for (const match of text.matchAll(/\b(?:join|resolve)\(\s*([A-Za-z_$][\w$]*)\s*,((?:\s*(['"])[^'"]*\3\s*,?)+)\s*\)/g))
-      if (match[1] === '__dirname' || ownDir(text, match[1], 'js')) add(match.index, literals(match[2]));
-    // `${HERE}x`, where HERE is the directory with its trailing slash.
-    for (const match of text.matchAll(/`\$\{([A-Za-z_$][\w$]*)\}([^`$]+)`/g))
-      if (ownDir(text, match[1], 'js')) add(match.index, [match[2]]);
+    for (const match of text.matchAll(/new URL\(\s*(['"])([^'"]+)\1\s*,\s*([A-Za-z_$][\w$]*)\s*\)/g)) {
+      const base = match[3] === 'import' ? null : anchor(text, match[3], 'js');
+      if (base !== null) add(match.index, [base, match[2]]);
+    }
+    for (const match of text.matchAll(/\b(?:join|resolve)\(\s*([A-Za-z_$][\w$]*)\s*,((?:\s*(['"])[^'"]*\3\s*,?)+)\s*\)/g)) {
+      const base = match[1] === '__dirname' ? '' : anchor(text, match[1], 'js');
+      if (base !== null) add(match.index, [base, ...literals(match[2])]);
+    }
+    // `${HERE}x`, where HERE is a directory with its trailing slash.
+    // A Docker volume spec (`${ROOT}/x:/x:ro`) ends the host path at its colon.
+    for (const match of text.matchAll(/`\$\{([A-Za-z_$][\w$]*)\}([^`$:]+)(?=[`:])/g)) {
+      const base = anchor(text, match[1], 'js');
+      if (base !== null) add(match.index, [base, match[2]]);
+    }
   } else if (lang === 'py') {
-    for (const match of text.matchAll(/\b([A-Za-z_]\w*)((?:\s*\/\s*(['"])[^'"]*\3)+)/g))
-      if (ownDir(text, match[1], 'py')) add(match.index, literals(match[2]));
-    for (const match of text.matchAll(/os\.path\.join\(\s*([A-Za-z_]\w*)\s*,((?:\s*(['"])[^'"]*\3\s*,?)+)\s*\)/g))
-      if (ownDir(text, match[1], 'py')) add(match.index, literals(match[2]));
+    for (const match of text.matchAll(/\b([A-Za-z_]\w*)((?:\s*\/\s*(['"])[^'"]*\3)+)/g)) {
+      const base = anchor(text, match[1], 'py');
+      if (base !== null) add(match.index, [base, ...literals(match[2])]);
+    }
+    for (const match of text.matchAll(/os\.path\.join\(\s*([A-Za-z_]\w*)\s*,((?:\s*(['"])[^'"]*\3\s*,?)+)\s*\)/g)) {
+      const base = anchor(text, match[1], 'py');
+      if (base !== null) add(match.index, [base, ...literals(match[2])]);
+    }
   } else {
-    for (const match of text.matchAll(/"?\$\{?([A-Za-z_]\w*)\}?"?\/([^\s"'`;)|&<>]+)/g))
-      if (ownDir(text, match[1], 'sh')) add(match.index, [match[2]]);
-    for (const match of text.matchAll(/\$\(dirname "\$(?:0|\{BASH_SOURCE\[0\]\})"\)\/([^\s"'`;)|&<>]+)/g)) add(match.index, [match[1]]);
+    for (const match of text.matchAll(/"?\$\{?([A-Za-z_]\w*)\}?"?\/([^\s"'`;)|&<>]+)/g)) {
+      const base = anchor(text, match[1], 'sh');
+      if (base !== null) add(match.index, [base, match[2]]);
+    }
+    for (const match of text.matchAll(/\$\(dirname "\$(?:0|\{BASH_SOURCE\[0\]\})"\)\/([^\s"'`;)|&<>]+)/g)) add(match.index, ['', match[1]]);
   }
   return found;
 }
@@ -149,10 +217,17 @@ function planted() {
       'a/s.sh': 'HERE="$(cd "$(dirname "$0")" && pwd)"\npython3 "$HERE/gone.py"\nnode "$HERE/there.mjs"\nfor m in "$HERE"/th*.mjs; do :; done\nfor m in "$HERE"/none-*.json; do :; done\n',
       'a/t.sh': 'X_HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"\nsource "$X_HERE/gone.sh"\n',
       'a/up.sh': 'HERE="$(cd "$(dirname "$0")" && pwd)"\nnode "$HERE/../../../out.mjs"\n',
+      // A root the file climbs to is an anchor too (mistake register 14: pilot/replay.ts read a
+      // fixtures directory through ROOT long after it moved).
+      'a/rootok.js': "const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');\njoin(ROOT, 'a', 'there.mjs');",
+      'a/chain.js': "const HERE = dirname(fileURLToPath(import.meta.url));\nconst ROOT = resolve(HERE, '..');\njoin(ROOT, 'gone-chain.json');",
+      'a/r.py': 'ROOT = Path(__file__).resolve().parents[1]\nROOT / "gone-root.json"\nROOT / "a" / "there.mjs"\n',
+      'a/r.sh': 'ROOT="$(cd "$(dirname "$0")/.." && pwd)"\ncat "$ROOT/gone-root.txt"\nnode "$ROOT/a/there.mjs"\n',
     };
     for (const [file, text] of Object.entries(files)) writeFileSync(join(dir, file), text);
     const got = refusals(dir, Object.keys(files)).map(item => `${item.file} -> ${item.target}`).sort();
-    const want = ['a/join.js -> a/gone.json', 'a/p.py -> a/gone.py', 'a/q.py -> a/gone.txt',
+    const want = ['a/chain.js -> gone-chain.json', 'a/join.js -> a/gone.json', 'a/p.py -> a/gone.py', 'a/q.py -> a/gone.txt',
+      'a/r.py -> gone-root.json', 'a/r.sh -> gone-root.txt', 'a/root.js -> not-a-sibling.json',
       'a/s.sh -> a/gone.py', 'a/s.sh -> a/none-*.json', 'a/t.sh -> a/gone.sh', 'a/tpl.js -> a/gone.js', 'a/up.sh -> ../../out.mjs', 'a/url.mjs -> a/gone.mjs', 'a/urlvar.mjs -> a/gone-plan.mjs'];
     return JSON.stringify(got) === JSON.stringify(want) ? [] : [`planted: expected ${want.join(', ')}; got ${got.join(', ') || 'nothing'}`];
   } finally {
