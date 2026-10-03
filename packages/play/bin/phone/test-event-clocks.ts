@@ -70,14 +70,15 @@ if (problems.length) {
   console.error([...new Set(problems.map(problem => problem.replace(/ line \d+/, '')))].slice(0, 20).join('\n'));
   process.exit(1);
 }
+// The packs are committed: none found means the directory moved, not that every clock is declared.
+assert.ok(packs > 0 && rows > 0, `no campaign pack with events under ${PACKS}: the check would pass over nothing`);
 // The read side runs on packs as it runs on campaign directories: a pack keeps
 // the file names, so run-report (and phase-reconstruct, too slow for this lane)
 // project the committed night on any checkout.
 const win = 'night6-n6h2-01-20260920T024030Z';
-if (existsSync(join(PACKS, win))) {
-  const report = JSON.parse(execFileSync(process.execPath, [join(ROOT, 'packages/review/bin/grade/run-report.ts'),
-    '--run', join(PACKS, win), '--json'], { encoding: 'utf8' }));
-  assert.equal(report.night.reached, true, 'run-report read the packed night');
-  assert.equal(report.cycles.gates, 42, 'run-report counted the packed cycle gates');
-}
+assert.ok(existsSync(join(PACKS, win)), `the committed pack ${win} is missing, so run-report would not be read`);
+const report = JSON.parse(execFileSync(process.execPath, [join(ROOT, 'packages/review/bin/grade/run-report.ts'),
+  '--run', join(PACKS, win), '--json'], { encoding: 'utf8' }));
+assert.equal(report.night.reached, true, 'run-report read the packed night');
+assert.equal(report.cycles.gates, 42, 'run-report counted the packed cycle gates');
 console.log(`event clocks: ${rows} events in ${packs} campaign packs, every timestamp on a declared, plausible clock; run-report reads a pack`);
