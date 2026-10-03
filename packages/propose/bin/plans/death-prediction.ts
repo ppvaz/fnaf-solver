@@ -20,7 +20,9 @@
 // --period-ms is the binding's release period: 1000 for night 5, 5000 for the
 // nights that release on Withered Foxy's roll grid (see ANCHOR_AIMS).
 import { readFileSync, writeFileSync } from 'node:fs';
-import { pathToFileURL } from 'node:url';
+import { dirname, relative, resolve } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { BINDINGS_DIR } from '@sixam/kernel';
 import { replay, KNOBS0 } from './minus-toys-plan.ts';
 import { DEATH_PREDICTION_SCHEMA, DEATH_TARGETED_STATUS, STRATEGY_REGISTRY } from './bundle.ts';
 import type { Winner } from './bundle.ts';
@@ -123,6 +125,33 @@ export function describe(prediction: ReturnType<typeof predictDeaths>) {
   return lines.join('\n');
 }
 
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../../..');
+
+/**
+ * Write a prediction into a candidate winner as its DEATH_TARGETED gate.
+ *
+ * Only a candidate: a committed binding is known by its file's stableHash
+ * (run-pack custody, the gate register, ANCHOR_AIMS), so rewriting one in
+ * place would orphan every record that names it. The gate carries the
+ * prediction without its wall-clock `generatedAt`, so the same prediction
+ * writes the same winner bytes.
+ *
+ * @param winnerPath the candidate's file, outside the committed bindings
+ */
+export function attachDeathTarget(winnerPath: string, winner: WinnerFile,
+  prediction: ReturnType<typeof predictDeaths>, root = ROOT) {
+  const where = relative(root, resolve(winnerPath));
+  if (where === BINDINGS_DIR || where.startsWith(`${BINDINGS_DIR}/`))
+    throw new Error(`${where} is a committed binding: attach to a candidate copy, then commit that as a new winner`);
+  // A prediction with no deaths is a PASS candidate, not a death target.
+  if (prediction.wins === prediction.replays) throw new Error('the model predicts no death: gate this winner as PASS instead');
+  const { generatedAt: _generatedAt, ...timeless } = prediction;
+  const gate = { status: DEATH_TARGETED_STATUS, claimLevel: 'MODEL_ONLY', prediction: timeless,
+    evidence: `death-targeting: the model predicts ${prediction.killers[0].killer} in ${(100 * prediction.killers[0].share).toFixed(0)}% ` +
+      `of phases; this bundle exists to test that prediction on the phone, not to win` };
+  writeFileSync(winnerPath, `${JSON.stringify({ ...winner, gate }, null, 2)}\n`);
+}
+
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const winnerPath = argValue('--winner');
   const night = Number(argValue('--night'));
@@ -138,12 +167,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const out = argValue('--out');
   if (out) writeFileSync(out, `${JSON.stringify(prediction, null, 2)}\n`);
   if (process.argv.includes('--attach')) {
-    // A prediction with no deaths is a PASS candidate, not a death target.
-    if (prediction.wins === prediction.replays) throw new Error('the model predicts no death: gate this winner as PASS instead');
-    const gate = { status: DEATH_TARGETED_STATUS, claimLevel: 'MODEL_ONLY', prediction,
-      evidence: `death-targeting: the model predicts ${prediction.killers[0].killer} in ${(100 * prediction.killers[0].share).toFixed(0)}% ` +
-        `of phases; this bundle exists to test that prediction on the phone, not to win` };
-    writeFileSync(winnerPath, `${JSON.stringify({ ...winner, gate }, null, 2)}\n`);
+    attachDeathTarget(winnerPath, winner, prediction);
     console.log(`attached ${DEATH_TARGETED_STATUS} gate to ${winnerPath}`);
   }
 }

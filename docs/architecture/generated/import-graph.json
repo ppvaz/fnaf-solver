@@ -2378,7 +2378,9 @@
       "imports": [
         "./bundle.ts",
         "./minus-toys-plan.ts",
+        "@sixam/kernel",
         "node:fs",
+        "node:path",
         "node:url"
       ]
     },
@@ -2547,6 +2549,16 @@
         "node:fs",
         "node:path",
         "node:url"
+      ]
+    },
+    {
+      "file": "packages/propose/bin/plans/test-death-prediction.ts",
+      "imports": [
+        "./bundle.ts",
+        "./death-prediction.ts",
+        "node:fs",
+        "node:os",
+        "node:path"
       ]
     },
     {

@@ -2279,6 +2279,12 @@
       "lifecycle": "supported"
     },
     {
+      "id": "packages/propose/bin/plans/test-death-prediction.ts",
+      "invocation": "packages/propose/bin/plans/test-death-prediction.ts",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
       "id": "packages/propose/parked/minus7/test-device-input-gaps.ts",
       "invocation": "packages/propose/parked/minus7/test-device-input-gaps.ts",
       "kind": "check",

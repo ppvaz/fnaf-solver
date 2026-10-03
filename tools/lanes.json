@@ -24,6 +24,7 @@
       "packages/propose/test/test-terminal-deadline.ts",
       "packages/propose/test/test-arm-observation.ts",
       "packages/propose/test/test-schedule-economy.ts",
+      "packages/propose/bin/plans/test-death-prediction.ts",
       "packages/propose/bindings/test-anchor-aim-band.ts",
       "packages/propose/test/test-encounter-fidelity.ts",
       "packages/propose/bin/census/test-winner-census.ts",
