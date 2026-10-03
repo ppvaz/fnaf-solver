@@ -20,6 +20,7 @@
     "./seeds": "./src/experiment/seeds.ts",
     "./census": "./src/experiment/census.ts",
     "./strategies/*": "./src/strategies/*/index.ts",
-    "./parked/minus7": "./parked/minus7/index.ts"
+    "./parked/minus7": "./parked/minus7/index.ts",
+    "./model-options": "./bin/recompile/model-options.ts"
   }
 }

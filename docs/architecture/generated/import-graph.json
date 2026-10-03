@@ -612,6 +612,7 @@
         "node:net",
         "node:os",
         "node:path",
+        "node:test",
         "node:url"
       ]
     },
@@ -914,7 +915,8 @@
       "file": "packages/kernel/test/pyjson.test.ts",
       "imports": [
         "../src/pyjson.ts",
-        "node:assert/strict"
+        "node:assert/strict",
+        "node:test"
       ]
     },
     {
@@ -2560,7 +2562,6 @@
     {
       "file": "packages/propose/bin/plans/night7-robustness.ts",
       "imports": [
-        "../../../play/src/campaign/night-anchor.ts",
         "../census/winner-census.ts",
         "../census/winner-phase-census.ts",
         "../flags.ts",
@@ -2569,6 +2570,7 @@
         "./bundle.ts",
         "./night7-presets.ts",
         "@sixam/kernel",
+        "@sixam/play/campaign/night-anchor",
         "@sixam/source/fnaf2",
         "node:fs",
         "node:os",
@@ -2603,7 +2605,8 @@
         "./death-prediction.ts",
         "node:fs",
         "node:os",
-        "node:path"
+        "node:path",
+        "node:test"
       ]
     },
     {
@@ -2656,12 +2659,12 @@
     {
       "file": "packages/propose/bin/plans/test-night-matrix.ts",
       "imports": [
-        "../../../review/src/stat.ts",
         "../census/pool.ts",
         "../lookup.ts",
         "./gate-worker.ts",
         "./human-gate.ts",
         "./recipe.ts",
+        "@sixam/review/stat",
         "@sixam/source/fnaf2",
         "node:fs",
         "node:path",
@@ -3150,7 +3153,6 @@
         "./model-options.ts",
         "./sweep-common.ts",
         "@sixam/kernel",
-        "@sixam/source/fnaf2",
         "node:fs",
         "node:os",
         "node:path",
@@ -3379,7 +3381,8 @@
       "file": "packages/propose/bin/test-bin-helpers.ts",
       "imports": [
         "./flags.ts",
-        "./lookup.ts"
+        "./lookup.ts",
+        "node:test"
       ]
     },
     {
@@ -5731,6 +5734,7 @@
       "imports": [
         "./gate-kit.ts",
         "./module-refs.ts",
+        "@sixam/kernel",
         "@sixam/review/lanes",
         "node:assert/strict",
         "node:child_process",
@@ -5772,6 +5776,7 @@
         "@sixam/propose/seeds",
         "@sixam/research",
         "@sixam/review/evidence-pack",
+        "@sixam/review/lanes",
         "@sixam/source/fnaf2",
         "node:assert/strict",
         "node:child_process",
@@ -5852,7 +5857,7 @@
     {
       "file": "tools/legacy-model.ts",
       "imports": [
-        "../packages/propose/bin/recompile/model-options.ts",
+        "@sixam/propose/model-options",
         "@sixam/source/fnaf2"
       ]
     },

@@ -23,7 +23,7 @@ const REGISTERS = new Set(['test', 'describe', 'it', 'suite']);
 export function registersTests(path: string, text: string) {
   const file = parse(path, text);
   const local = new Set<string>();
-  let namespace = null as string | null;
+  let namespace: string | null = null;
   for (const statement of file.statements) {
     if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier)) continue;
     if (statement.moduleSpecifier.text !== 'node:test' && statement.moduleSpecifier.text !== 'test') continue;

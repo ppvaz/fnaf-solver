@@ -62,11 +62,11 @@ import type { buildRobustnessRecord } from '../../../../packages/propose/bin/pla
 import type { buildFieldRecord } from './night7-robustness-field.ts';
 import type { Loss } from '../census/winner-census.ts';
 import { found } from '../lookup.ts';
-import { withModelOptions } from '../recompile/model-options.ts';
+import { useModelOptions } from '../recompile/model-options.ts';
 import { LEGACY_SIM_OPTIONS } from '@sixam/source/fnaf2';
 
 // These records and bands were measured on fnaf2-legacy, the default before 2026-10-02.
-withModelOptions({ ...LEGACY_SIM_OPTIONS }, () => {
+useModelOptions({ ...LEGACY_SIM_OPTIONS });
 const check: (ok: unknown, message: string) => asserts ok = (ok, message) => { if (!ok) throw new Error(message); };
 const ROOT = fileURLToPath(new URL('../../../../', import.meta.url));
 /** The winner files a record's schedules name, following retired bindings through their rename. */
@@ -369,4 +369,3 @@ let fieldLine = '';
 
 console.log('night7-presets: presets match the menu model, the device lane bites, ' +
   `the hall pulse clears both floors by more than 33 ms, and ${populationLine}${planeLine}${robustLine}${fieldLine}`);
-});

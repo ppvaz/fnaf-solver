@@ -44,7 +44,7 @@ import type { Preset } from './night7-presets.ts';
 import { forkBlocks, gitState } from '../census/winner-census.ts';
 import type { BlockRow, ForkedChild, Loss } from '../census/winner-census.ts';
 import type { AnchorAim } from '../census/winner-phase-census.ts';
-import { DEFAULT_LATCH_HOLD_MS, DEFAULT_MIN_LEAD_MS } from '../../../play/src/campaign/night-anchor.ts';
+import { DEFAULT_LATCH_HOLD_MS, DEFAULT_MIN_LEAD_MS } from '@sixam/play/campaign/night-anchor';
 import { heldOutSeeds, nightBindings } from '../census/winner-phase-census.ts';
 import { winnerTag } from '@sixam/kernel';
 import { found } from '../lookup.ts';

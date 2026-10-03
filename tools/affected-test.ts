@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /** Select the smallest deterministic validation set for the current diff. */
 import assert from 'node:assert/strict';
+import { isRecord } from '@sixam/kernel';
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, posix, resolve } from 'node:path';
@@ -138,9 +139,14 @@ function packageMap() {
   const map = new Map<string, { dir: string, exports: Readonly<Record<string, string>> }>();
   for (const group of ['packages', 'apps'])
     for (const file of repoFiles(ROOT).filter(path => new RegExp(`^${group}/[^/]+/package\\.json$`).test(path))) {
-      const manifest: { name?: unknown, exports?: unknown } = JSON.parse(readFileSync(join(ROOT, file), 'utf8'));
-      const exports = typeof manifest.exports === 'string' ? { '.': manifest.exports }
-        : manifest.exports && typeof manifest.exports === 'object' ? manifest.exports as Record<string, string> : {};
+      const manifest: unknown = JSON.parse(readFileSync(join(ROOT, file), 'utf8'));
+      if (!isRecord(manifest)) throw new Error(`${file}: manifest is not an object`);
+      const exports: Record<string, string> = {};
+      if (typeof manifest.exports === 'string') exports['.'] = manifest.exports;
+      else if (isRecord(manifest.exports)) for (const [key, value] of Object.entries(manifest.exports)) {
+        if (typeof value !== 'string') throw new Error(`${file}: export ${key} is not a string`);
+        exports[key] = value;
+      }
       if (typeof manifest.name === 'string') map.set(manifest.name, { dir: dirname(file), exports });
     }
   return map;

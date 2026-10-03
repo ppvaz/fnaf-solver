@@ -10,7 +10,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { isRecord } from '@sixam/kernel';
+import { isRecord, present } from '@sixam/kernel';
 import { ROOT, repoFiles, report } from './gate-kit.ts';
 import { moduleReferences, parse } from './module-refs.ts';
 
@@ -43,7 +43,7 @@ export function workspaces(root: string): Workspace[] {
 /** The workspace a file belongs to: the deepest one whose directory holds it, else the root. */
 const ownerOf = (spaces: readonly Workspace[], path: string) =>
   spaces.filter(space => space.dir && path.startsWith(`${space.dir}/`)).sort((a, b) => b.dir.length - a.dir.length)[0]
-  ?? spaces.find(space => space.dir === '') as Workspace;   // the root is always listed first
+  ?? present(spaces.find(space => space.dir === ''), 'root workspace');   // the root is always listed first
 
 /** Every import of a workspace package its file's workspace does not declare, as `file -> package`. */
 export function undeclared(root: string, files: readonly string[]) {

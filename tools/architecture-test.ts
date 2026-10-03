@@ -21,6 +21,7 @@ import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
 import { loadBaseline, ratchet } from './gate-kit.ts';
+import { readLanes } from '@sixam/review/lanes';
 import { moduleReferences, parse } from './module-refs.ts';
 
 const ROOT = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '..'));
@@ -510,6 +511,7 @@ try {
   assert.equal((error as NodeJS.ErrnoException).code, 'ENOENT');
 }
 const production = await files(join(ROOT, 'packages'));
+const laneTests = new Set(Object.values(readLanes(ROOT)).flatMap(lane => lane.node));
 for (const path of production) {
   const file = await tree(path);
   const found = violations(repoPath(path), file);
@@ -517,7 +519,7 @@ for (const path of production) {
   // A package's own test folder is not production: its tests may load
   // `node:test` and their fixtures (the device app's tests moved into
   // packages/play/test with ADR 0002's Play move). Its boundary rules still hold.
-  if (/^packages\/[^/]+\/test\//.test(repoPath(path))) continue;
+  if (/^packages\/[^/]+\/test\//.test(repoPath(path)) || laneTests.has(repoPath(path))) continue;
   const reports = moduleReferences(file).filter(ref => ref.specifier !== null && /(?:test|report)/.test(ref.specifier));
   assert.equal(reports.length, 0, `${path} imports a test/report module: ${reports.map(ref => ref.specifier).join(', ')}`);
 }

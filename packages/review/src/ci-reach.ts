@@ -20,7 +20,7 @@ export function simpleCommands(text: string) {
   let words: string[] = [];
   let word = '';
   let inWord = false;
-  let quote = null as string | null;
+  let quote: string | null = null;
   let depth = 0;
   const endWord = () => { if (inWord) words.push(word); word = ''; inWord = false; };
   const endCommand = () => { endWord(); if (words.length) commands.push(words); words = []; };

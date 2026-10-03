@@ -62,7 +62,6 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, 
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { Sim } from '@sixam/source/fnaf2';
 import { STRATEGY_REGISTRY, compileBundle, validateWinner } from '../plans/bundle.ts';
 import { PRESET_KNOBS, loadPresets, runNight } from '../plans/night7-presets.ts';
 import { simOptionsFrom } from '../../../source/recompile/model-draw-trace.ts';

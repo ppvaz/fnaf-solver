@@ -20,6 +20,9 @@ import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { test } from 'node:test';
+test("trainer HTTP serving and refusals", async () => {
+
 
 const traceDir = mkdtempSync(join(tmpdir(), 'serve-test-'));
 process.env.FNAF_TRACE_DIR = traceDir;
@@ -134,3 +137,5 @@ try {
 console.log('serve: binds 127.0.0.1, writes from this machine\'s own page or a loopback client, refuses a foreign origin, '
   + 'a rebound Host and an off-host client, sends no Access-Control-Allow-Origin, and serves a .ts module as JavaScript '
   + 'with its types erased; a failed rebuild after a layout save is not answered ok, and two saves at once never mix');
+
+});

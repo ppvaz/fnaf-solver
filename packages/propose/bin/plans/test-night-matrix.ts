@@ -31,7 +31,7 @@ import * as C from '@sixam/source/fnaf2';
 import { build, capture, devicePlan, replay, resolveAttack, TEMPLATE_NIGHT,
          idleUntilMs } from './recipe.ts';
 import { modelGate, GATE_MIN_SURVIVAL, HUMAN_SLACK_MS, GATE_RUNS } from './human-gate.ts';
-import { contractVerdict, formatRate } from '../../../review/src/stat.ts';
+import { contractVerdict, formatRate } from '@sixam/review/stat';
 import { pool, closePool } from '../census/pool.ts';
 import type { survivors } from './gate-worker.ts';
 import { found } from '../lookup.ts';

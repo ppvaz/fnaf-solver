@@ -5,6 +5,6 @@
 // heavier graph reaches the very scripts it preloads for, and their main guards would run before the
 // injection is in place.
 import { LEGACY_SIM_OPTIONS } from '@sixam/source/fnaf2';
-import { useModelOptions } from '../packages/propose/bin/recompile/model-options.ts';
+import { useModelOptions } from '@sixam/propose/model-options';
 
 useModelOptions({ ...LEGACY_SIM_OPTIONS });

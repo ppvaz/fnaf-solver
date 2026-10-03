@@ -25,7 +25,7 @@
 // is the wrong thing to starve for wall clock. `--parallel` opts in and takes
 // the group from about 280 s to about 200 s.
 import { spawn } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join, relative } from 'node:path';
 import { chromeBinary, chromeAvailable } from './chrome.ts';
 import { startDevServer } from '../apps/trainer/test/dev-server.ts';
@@ -318,7 +318,7 @@ const ENGINE: Check[] = [
   // zero row must reproduce the exact figure and the 110-300 ms row must
   // reproduce plans/12, so a drifted cell fails instead of being re-read. The
   // knee is the 2->3 frame boundary -- free to 41 ms, gone at 42.
-  ['lateness sweep', ['../packages/propose/parked/minus7/latenesssweep.ts', '--runs=200', '--assert'], 600_000],
+  ['lateness sweep', ['../packages/propose/parked/minus7/latenesssweep.ts', '--runs=200', '--assert'], { timeoutMs: 600_000 }],
   ['camtrace', ['../packages/review/bin/grade/test-camtrace.py']],
   // Plan 09's read-only corpus index: classify existing artifacts without
   // rewriting them, preserve basename joins, and surface unknown/empty files.
@@ -501,18 +501,20 @@ interface ToolRun { code: number | null, out: string, ms: number, timedOut: bool
 // is the sourced model, under which those facts do not hold (Minus Toys at KNOBS0 goes 0/200 to Golden
 // Freddy), so these run with the legacy model preloaded until they are re-derived on it or archived.
 const LEGACY_MODEL_CHECKS = new Set(['minus toys', 'minus toys worst', 'mangle reactive', 'hidpilot vocal bound',
-  'hidpilot bang', 'hidpilot bang false', 'recipe', 'policytest']);
+  'hidpilot bang', 'hidpilot bang false', 'recipe', 'policytest', 'minus toys margin', 'minus toys jitter', 'minus toys plan', 'night matrix']);
 const LEGACY_MODEL_PRELOAD = join(ROOT, 'tools/legacy-model.ts');
 
-function runTool(argv: string[], { timeoutMs = 120_000, streamLabel = null as string | null, nodeArgs = [] as string[] } = {}) {
+function runTool(argv: string[], { timeoutMs = 120_000, streamLabel = null as string | null, legacyModel = false } = {}) {
   return new Promise<ToolRun>((resolve) => {
     const started = Date.now();
     // Most checks are node; the cue front end is stdlib Python, like the rest
     // of the device tooling, so dispatch on the extension.
     const runner = argv[0].endsWith('.py') ? 'python3'
       : argv[0].endsWith('.sh') ? 'bash' : process.execPath;
-    const child = spawn(runner, [...(runner === process.execPath ? nodeArgs : []), join(TOOLS, argv[0]), ...argv.slice(1)],
-      { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] });
+    const child = spawn(runner, [join(TOOLS, argv[0]), ...argv.slice(1)],
+      { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'], env: legacyModel
+        ? { ...process.env, NODE_OPTIONS: `${process.env.NODE_OPTIONS ?? ''} --import=${pathToFileURL(LEGACY_MODEL_PRELOAD).href}` }
+        : process.env });
     let out = '';
     let timedOut = false;
     let settled = false;
@@ -553,7 +555,7 @@ async function runGroup(group: readonly Check[], judge: boolean, { progress = fa
     const r = await runTool(argv, {
       timeoutMs,
       streamLabel: progress ? name : null,
-      nodeArgs: LEGACY_MODEL_CHECKS.has(name) ? ['--import', LEGACY_MODEL_PRELOAD] : [],
+      legacyModel: LEGACY_MODEL_CHECKS.has(name),
     });
     if (progress) process.stderr.write(`    ... ${name} finished in ${secs(r.ms)}${r.timedOut ? ' (TIMEOUT)' : ''}\n`);
     return r;

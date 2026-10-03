@@ -21,7 +21,10 @@ export function present<T>(value: T | null | undefined, what = 'a looked-up valu
   return value;
 }
 /** One of a closed list's members. */
-export const isOneOf = <T>(values: readonly T[], value: unknown): value is T => (values as readonly unknown[]).includes(value);
+export const isOneOf = <T>(values: readonly T[], value: unknown): value is T => {
+  const choices: readonly unknown[] = values;
+  return choices.includes(value);
+};
 
 /**
  * An unknown value and why it is unknown.

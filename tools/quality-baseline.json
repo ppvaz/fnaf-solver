@@ -231,10 +231,6 @@
       "copy:FUSION_POLL_MS": {
         "count": 2,
         "why": "device-lane.ts is in the files the parallel Propose fixer holds for this same finding (E15, floors restated); recipe.ts is a bundle-hashed source, so an edit changes engine.sourceSha256 and refuses every bundle built before it"
-      },
-      "copy:MIN_CONTACT_MS": {
-        "count": 1,
-        "why": "test-hid-trace.ts, in the parallel Propose fixer's files under E15, beside its released floor of 20 that cycle-library.ts states as 33"
       }
     }
   },
@@ -317,11 +313,11 @@
         "why": "fixtures the lab and FNaF 1 winner tests build by construction and read back typed (lab 14, test-fnaf1-winner 14)"
       },
       "cast:apps/trainer/src": {
-        "count": 51,
+        "count": 50,
         "why": "the browser app’s DOM lookups and stored settings (main 12, ui 8), where an `as HTMLElement` names an element the page is built with"
       },
       "cast:apps/trainer/test": {
-        "count": 48,
+        "count": 44,
         "why": "fixtures and DevTools replies the trainer tests read; the browser checks’ replies move behind the checked client of audit T1"
       },
       "cast:apps/wiki": {
@@ -353,15 +349,15 @@
         "why": "fixtures the campaign and sensor tests construct by hand and pass as typed requests and frames"
       },
       "cast:packages/propose/bin": {
-        "count": 442,
+        "count": 436,
         "why": "the census, recompile and plan tools’ reads of committed records, predeclarations and model traces (phone-encounter-replay 33, phone-input-bracket-sweep 27, bundle 20), the largest boundary still read by assertion; sweep-common’s checked predeclaration reader (audit E5) is the pattern"
       },
       "cast:packages/propose/bindings": {
-        "count": 7,
+        "count": 6,
         "why": "the fact and gate registers’ reads of committed bindings; validators over unknown at that boundary replace them (CLAUDE.md, Types)"
       },
       "cast:packages/propose/parked": {
-        "count": 62,
+        "count": 60,
         "why": "parked Minus 7 work, frozen with the results it produced; it is neither typed nor ported until revived"
       },
       "cast:packages/propose/src": {
@@ -369,7 +365,7 @@
         "why": "the controller’s and experiment library’s reads of Sim snapshots and seed records (cycle-controller 5, cycle-library 4); validators over unknown at that boundary replace them (CLAUDE.md, Types)"
       },
       "cast:packages/propose/test": {
-        "count": 112,
+        "count": 111,
         "why": "fixtures the plan, bundle, actuator and controller tests construct and pass as typed plans (test-actuator 18, test-bundle 15)"
       },
       "cast:packages/review/bin": {
@@ -409,7 +405,7 @@
         "why": "the Sim tests’ fixtures and snapshot reads (simtest 28)"
       },
       "cast:tools": {
-        "count": 33,
+        "count": 32,
         "why": "the gates’ reads of the repository’s own JSON tables (test-mistake-register 10, architecture-test 5); validators over unknown at that boundary replace them (CLAUDE.md, Types)"
       }
     }

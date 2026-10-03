@@ -13,7 +13,7 @@ import { test } from 'node:test';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import ts from 'typescript';
-import { isList, isRecord } from '@sixam/kernel';
+import { isList, isRecord, present } from '@sixam/kernel';
 import { ROOT, loadBaseline, ratchet, repoFiles, report } from './gate-kit.ts';
 import { parse } from './module-refs.ts';
 
@@ -72,7 +72,7 @@ test('each measured constant is defined once, in its registered file', async () 
   const owned = new Set<string>();
   for (const path of repoFiles(ROOT).filter(file => /\.(?:m?js|cjs|ts|mts|java)$/.test(file) && !file.endsWith('.d.ts'))) {
     for (const [line, name] of literalDefinitions(path, readFileSync(join(ROOT, path), 'utf8'), names)) {
-      const owner = owners.get(name) as { name: string, file: string };   // names are the register's keys
+      const owner = present(owners.get(name), `owner of ${name}`);   // names are the register's keys
       if (path === owner.file) { owned.add(owner.name); continue; }
       const key = `copy:${owner.name}`;
       const entry = copies.get(key) ?? { count: 0, detail: '' };

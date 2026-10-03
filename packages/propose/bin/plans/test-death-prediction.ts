@@ -8,6 +8,9 @@ import { join } from 'node:path';
 import { attachDeathTarget } from './death-prediction.ts';
 import type { predictDeaths } from './death-prediction.ts';
 import { DEATH_PREDICTION_SCHEMA } from './bundle.ts';
+import { test } from 'node:test';
+test("death predictions retain seed and epoch provenance", async () => {
+
 
 const check = (ok: unknown, message: string) => { if (!ok) throw new Error(message); };
 const refusal = (fn: () => unknown) => {
@@ -54,3 +57,5 @@ try {
 }
 console.log('death prediction: --attach refuses a committed binding, writes a candidate without the wall clock, ' +
   'and refuses a deathless prediction');
+
+});

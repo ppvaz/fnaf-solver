@@ -2,6 +2,9 @@
 // what CPython printed for the same input (repr of the value, or str() of the error).
 import assert from 'node:assert/strict';
 import { pyLoads, pyLoadsBytes, pyReprOf } from '../src/pyjson.ts';
+import { test } from 'node:test';
+test("CPython JSON values and decoding refusals", async () => {
+
 
 const repr = (text: string) => pyReprOf(pyLoads(text));
 // Keys keep their order (an integer-like key does not move first), an int stays an int at any size and a float
@@ -33,3 +36,5 @@ assert.equal(pyReprOf(bytes('22f09f988022')), "'\u{1F600}'");
 assert.equal(pyReprOf(bytes('efbbbf7b2261223a20317d')), "{'a': 1}");
 
 console.log(`pyjson: 3 values read and printed, ${refusals.length} refusals and 6 byte bodies as CPython's json.loads and repr give them`);
+
+});

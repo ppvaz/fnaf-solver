@@ -2,6 +2,9 @@
 // and a command line that reads only the flags it names (flags.ts).
 import { found } from './lookup.ts';
 import { refuseUnknownFlags } from './flags.ts';
+import { test } from 'node:test';
+test("CLI flags and sample budgets", async () => {
+
 
 const check = (ok: unknown, message: string) => { if (!ok) throw new Error(message); };
 const refusal = (fn: () => unknown) => {
@@ -25,3 +28,5 @@ check(/unknown flags --seed, --floor/.test(refusal(() => refuseUnknownFlags(['--
 
 console.log('bin helpers: found() returns what a lookup found and refuses a miss; ' +
   'refuseUnknownFlags passes the flags a command reads and names every other');
+
+});
