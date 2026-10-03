@@ -4197,6 +4197,24 @@
       }
     },
     {
+      "id": "packages/review/test/ci-reach.test.ts",
+      "lane": "test:unit",
+      "owner": "package boundary",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.ts per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": true,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
       "id": "packages/review/test/encounter-fidelity-record.test.ts",
       "lane": "test:unit",
       "owner": "package boundary",

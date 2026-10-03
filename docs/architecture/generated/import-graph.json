@@ -4344,7 +4344,7 @@
     {
       "file": "packages/review/bin/grade/test-grade-run-coverage.ts",
       "imports": [
-        "../../src/lanes.ts",
+        "../../src/ci-reach.ts",
         "node:child_process",
         "node:fs",
         "node:path",
@@ -4472,6 +4472,16 @@
       "imports": [
         "@sixam/kernel",
         "@sixam/source"
+      ]
+    },
+    {
+      "file": "packages/review/src/ci-reach.ts",
+      "imports": [
+        "./lanes.ts",
+        "@sixam/kernel",
+        "node:child_process",
+        "node:fs",
+        "node:path"
       ]
     },
     {
@@ -4643,7 +4653,7 @@
     {
       "file": "packages/review/src/roadmap.ts",
       "imports": [
-        "./lanes.ts",
+        "./ci-reach.ts",
         "./mistakes.ts",
         "./refusals.ts",
         "./registers.ts",
@@ -4734,6 +4744,14 @@
         "node:os",
         "node:path",
         "node:url"
+      ]
+    },
+    {
+      "file": "packages/review/test/ci-reach.test.ts",
+      "imports": [
+        "../src/ci-reach.ts",
+        "node:assert/strict",
+        "node:test"
       ]
     },
     {
@@ -5983,6 +6001,7 @@
         "../packages/play/bin/phone/capabilities.ts",
         "../packages/propose/bin/plans/basin-edge.ts",
         "../packages/review/bin/grade/run-report.ts",
+        "../packages/review/src/ci-reach.ts",
         "../packages/review/src/lanes.ts",
         "../packages/review/src/mistakes.ts",
         "../packages/review/src/refusals.ts",

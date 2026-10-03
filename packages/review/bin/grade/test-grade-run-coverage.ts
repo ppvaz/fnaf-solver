@@ -16,7 +16,7 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { readLanes } from '../../src/lanes.ts';
+import { ciReach, readCiExemptions } from '../../src/ci-reach.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '../../../..');
@@ -248,57 +248,18 @@ for (const ref of referenced)
     complain(`grade-run.sh invokes ${ref}, which does not exist -- ` +
       'that step will silently grade nothing');
 
-// What actually runs a gate: this suite's registry, and CI's workflow. Read
-// rather than assumed -- that distinction is the whole point of this block.
-//
-// Registry entries only, never prose -- for the same reason grade-run.sh is
-// read invocation-line-only above. Caught by its own positive control: the
-// first version of this check used a substring match, and a COMMENT here
-// naming `test-select-adb.sh` was enough to report the file as run while its
-// registry entry was deleted. A check that a mention satisfies is a check
-// that measures documentation.
-const scriptNames = (text: string) => {
-  const found = new Set<string>();
-  for (const line of text.split('\n')) {
-    if (/^\s*(#|\/\/)/.test(line)) continue;
-    for (const m of line.matchAll(/['"`]([\w./-]+\.(?:py|mjs|ts|sh))['"`]/g)) {
-      found.add(m[1]);
-      found.add(lastPart(m[1]));
-    }
-  }
-  return found;
-};
-const suitePath = join(ROOT, 'tools', 'test.ts');
-const ciPath = join(ROOT, '.github', 'workflows', 'ci.yml');
-const registered = scriptNames(readFileSync(suitePath, 'utf8'));
-// CI invokes gates as shell command lines rather than quoted strings.
-const ci = existsSync(ciPath) ? readFileSync(ciPath, 'utf8') : '';
-const ciNames = new Set<string>();
-for (const line of ci.split('\n')) {
-  if (/^\s*#/.test(line)) continue;
-  for (const m of line.matchAll(/([\w./-]+\.(?:py|mjs|ts|sh))/g))
-    ciNames.add(lastPart(m[1]));
-}
-// The third registry. CI's lanes are `npm run test:contracts` and
-// `npm run test:core`, so a gate whose only registration is a package.json
-// script command line IS run -- and reading only tools/test.ts and ci.yml
-// reported eleven such gates as "a gate that nothing runs", including every
-// Companion gate and three of the calibration gates. A checker that knows
-// one of two registries measures the registry it knows, not the coverage.
-const pkgPath = join(ROOT, 'package.json');
-const scriptNamesRun = new Set<string>();
-for (const command of Object.values(JSON.parse(readFileSync(pkgPath, 'utf8')).scripts ?? {}))
-  for (const m of String(command).matchAll(/([\w./-]+\.(?:py|mjs|ts|sh))/g))
-    scriptNamesRun.add(lastPart(m[1]));
-// And the lanes those scripts run as data (`node tools/lanes.ts LANE`): each lane's node files and steps.
-for (const lane of Object.values(readLanes(ROOT)))
-  for (const path of [...lane.node, ...lane.steps.flat()])
-    if (/\.(?:py|mjs|ts|sh)$/.test(path)) scriptNamesRun.add(lastPart(path));
-
-const runs = (gate: string) => {
-  const base = lastPart(gate);
-  return registered.has(gate) || ciNames.has(base) || scriptNamesRun.has(base);
-};
+// What actually runs a gate: a CI step, read the way CI runs it (packages/review/src/ci-reach.ts, the
+// reader the mistake register and the S7 row share) -- ci.yml's command lines, their npm scripts, the
+// lanes as data and tools/test.ts's own selection. Never a name found in some text: the first version of
+// this check matched substrings, and a COMMENT naming `test-select-adb.sh` reported the file as run while
+// its registry entry was deleted; a later one counted any package.json script, a lane CI never runs and a
+// tools/test.ts BACKLOG or REPORTS entry as "run".
+// A gate tools/test.ts's BACKLOG or tools/ci-exemptions.json keeps out of CI is accounted for by that
+// recorded decision, as the mistake register's item 13 accounts for it; anything else must be reached.
+const { reached, backlog } = ciReach(ROOT);
+const exempt = readCiExemptions(ROOT);
+const runs = (path: string) => reached.has(path) || backlog.has(path) || exempt.has(path);
+const NOT_RUN = "no CI step reaches it (ci.yml, its npm scripts, tools/lanes.json, tools/test.ts's selection)";
 
 for (const name of readdirSync(HERE).sort()) {
   if (!/\.(py|mjs|ts|sh)$/.test(name)) continue;
@@ -308,10 +269,8 @@ for (const name of readdirSync(HERE).sort()) {
     // five files -- including two that four exclusions below named as their
     // justification. A gate nobody runs excusing a script from coverage is
     // the drawer problem wearing the uniform of the fix for it.
-    if (!runs(name))
-      complain(`${name} is a gate that nothing runs -- it is in none of ` +
-        'tools/test.ts, package.json scripts, or .github/workflows/ci.yml. ' +
-        'Register it, or delete it.');
+    if (!runs(key(name)))
+      complain(`${name} is a gate that nothing runs: ${NOT_RUN}. Register it in a lane CI runs, or delete it.`);
     continue;
   }
   if (referenced.has(key(name))) continue;
@@ -331,17 +290,19 @@ for (const name of EXCLUDED.keys())
 // four did. Any `test-*` file a reason names is now resolved and checked,
 // wherever that gate lives now: a gate moves with its context, not always
 // with the script it excuses.
-const tracked = new Set(execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard'],
-  { cwd: ROOT, maxBuffer: 1 << 28 }).toString().split('\n')
-  .filter(file => existsSync(join(ROOT, file))).map(file => file.split('/').pop()));
+// A reason names a gate by its file name; it runs if a CI step reaches any tracked file of that name.
+const tracked = new Map<string, string[]>();
+for (const file of execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard'],
+  { cwd: ROOT, maxBuffer: 1 << 28 }).toString().split('\n').filter(file => file && existsSync(join(ROOT, file))))
+  tracked.set(lastPart(file), [...(tracked.get(lastPart(file)) ?? []), file]);
 for (const [name, reason] of [...EXCLUDED, ...SIBLING_EXCLUDED]) {
   for (const m of reason.matchAll(/\btest-[\w.-]+\.(?:py|mjs|ts|sh)\b/g)) {
     const gate = m[0];
     if (!tracked.has(gate))
       complain(`${name} is excused because of ${gate}, which does not exist`);
-    else if (!runs(gate))
-      complain(`${name} is excused because of ${gate}, which nothing runs -- ` +
-        'register that gate in tools/test.ts or ci.yml, or excuse this differently');
+    else if (!(tracked.get(gate) ?? []).some(runs))
+      complain(`${name} is excused because of ${gate}, which nothing runs (${NOT_RUN}) -- ` +
+        'register that gate in a lane CI runs, or excuse this differently');
   }
   if (!reason.trim())
     complain(`${name} is excluded with no reason at all -- an exclusion is a ` +
@@ -372,9 +333,8 @@ for (const dir of SIBLINGS) {
     if (!/\.(py|mjs|ts|sh)$/.test(name)) continue;
     const rel = `${dir}/${name}`;
     if (name.startsWith('test-') || /\.test\.m?[jt]s$/.test(name)) {
-      if (!runs(name))
-        complain(`${rel} is a gate that nothing runs -- register it in ` +
-          'tools/test.ts or .github/workflows/ci.yml, or delete it.');
+      if (!runs(key(rel)))
+        complain(`${rel} is a gate that nothing runs: ${NOT_RUN}. Register it in a lane CI runs, or delete it.`);
       continue;
     }
     if (referenced.has(key(rel))) continue;
@@ -387,8 +347,8 @@ for (const dir of TEST_DIRS) {
   const path = join(HERE, dir);
   if (!existsSync(path)) { complain(`${dir} is gone: the test scan has nothing to read`); continue; }
   for (const name of readdirSync(path).sort())
-    if (/\.(py|mjs|ts|sh)$/.test(name) && (name.startsWith('test-') || dir.endsWith('/test')) && !runs(name))
-      complain(`${dir}/${name} is a gate that nothing runs -- register it in tools/test.ts or ci.yml, or delete it.`);
+    if (/\.(py|mjs|ts|sh)$/.test(name) && (name.startsWith('test-') || dir.endsWith('/test')) && !runs(key(`${dir}/${name}`)))
+      complain(`${dir}/${name} is a gate that nothing runs: ${NOT_RUN}. Register it in a lane CI runs, or delete it.`);
 }
 
 if (!failed) console.log(`grade-run.sh coverage: ${referenced.size} scripts invoked, ` +

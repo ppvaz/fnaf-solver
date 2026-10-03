@@ -82,6 +82,7 @@
       "packages/review/test/solver.test.ts",
       "packages/review/test/lab-queries.test.ts",
       "packages/review/test/run-audit.test.ts",
+      "packages/review/test/ci-reach.test.ts",
       "packages/review/test/encounter-fidelity-record.test.ts",
       "packages/play/bin/phone/test-control-anchor.ts",
       "packages/play/bin/probe/seedpin/test-seedpin.ts",

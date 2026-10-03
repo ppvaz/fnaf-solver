@@ -24,7 +24,7 @@ import { join } from 'node:path';
 import { isUnknown, unknown } from '@sixam/kernel';
 import type { Unknown } from '@sixam/kernel';
 import { MISTAKE_ENTRIES } from './refusals.ts';
-import { readLanes } from './lanes.ts';
+import { ciReach } from './ci-reach.ts';
 import { readMistakes, stepFamily } from './mistakes.ts';
 import { GAMES, gameKey } from './registers.ts';
 import { VERBS } from './solver.ts';
@@ -147,29 +147,10 @@ export function mistakeGates(root: string) {
   return gates;
 }
 
-/** The CI-run scripts that hold the lanes (.github/workflows/ci.yml runs each). */
-const CI_SCRIPTS = ['test:unit', 'test:unit:slow', 'test:contracts', 'test:core'];
-
-/**
- * Whether a CI lane runs a file: a script's own command line, or, where the script runs a lane of
- * tools/lanes.json (`node tools/lanes.ts LANE`), that lane's node files and steps, nested lanes included.
- */
-function ciLaneText(root: string) {
-  const scripts: Readonly<Record<string, string>> = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).scripts;
-  const table = readLanes(root);
-  const texts: string[] = [];
-  const visit = (name: string, seen: Set<string>) => {
-    if (seen.has(name) || !table[name]) return;
-    seen.add(name);
-    texts.push(...table[name].node);
-    for (const step of table[name].steps) if (step[0] === 'lane') visit(step[1], seen); else texts.push(step.join(' '));
-  };
-  for (const script of CI_SCRIPTS) {
-    const text = scripts[script] ?? '';
-    texts.push(text);
-    for (const match of text.matchAll(/node tools\/lanes\.ts ([\w:-]+)/g)) visit(match[1], new Set());
-  }
-  return (file: string) => texts.some(text => text.includes(file));
+/** Whether a CI step runs a file (ci-reach.ts: the reader the mistake register and the coverage gate share). */
+function ciRuns(root: string) {
+  const { reached } = ciReach(root);
+  return (file: string) => reached.has(file);
 }
 
 const workspaceNames = (root: string) => ['packages', 'apps'].flatMap(group => (existsSync(join(root, group)) ? readdirSync(join(root, group)) : [])
@@ -256,7 +237,7 @@ export function stepStatus(root: string, { promotions, packs }: {promotions: Pro
     const row = base(STEPS[6]);
     const register = readMistakes(root);
     const gates = mistakeGates(root);
-    const inLane = ciLaneText(root);
+    const inLane = ciRuns(root);
     if (!gates || !register.entries.length) row.unmet.push(`the register or ${MISTAKE_GATES_FILE}'s REGISTER_GATES could not be read`);
     else {
       const bare = register.entries.filter(entry => !(gates[entry.n] ?? []).some(inLane)).map(entry => entry.n);
