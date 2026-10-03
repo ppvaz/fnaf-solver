@@ -1,5 +1,7 @@
 package com.ppvaz.fnafcompanion;
 
+import static com.ppvaz.fnafcompanion.Check.check;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -21,16 +23,8 @@ import java.util.regex.Pattern;
  * cannot silently go stale in either direction.</p>
  */
 public final class TeachPanelTest {
-    private static int failures;
     private static final int W = PixelWatch.NATIVE_WIDTH;
     private static final int H = PixelWatch.NATIVE_HEIGHT;
-
-    private static void check(String what, boolean ok) {
-        if (!ok) {
-            System.out.println("FAIL " + what);
-            failures++;
-        }
-    }
 
     /** Answers with a synthetic image and remembers every pixel read. */
     static final class RecordingFrame implements NativeFrame {
@@ -226,10 +220,6 @@ public final class TeachPanelTest {
         check("distance counts pixels outside", TeachPanel.distance(TeachPanel.RIGHT - 1
                 + TeachPanel.GUARD_PX, TeachPanel.TOP) == TeachPanel.GUARD_PX);
 
-        if (failures > 0) {
-            System.out.println("TeachPanelTest: " + failures + " failure(s)");
-            System.exit(1);
-        }
-        System.out.println("TeachPanelTest: every native reader clears the teach panel or is withheld");
+        Check.done("TeachPanelTest: every native reader clears the teach panel or is withheld");
     }
 }

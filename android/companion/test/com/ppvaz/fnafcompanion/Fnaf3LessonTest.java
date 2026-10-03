@@ -1,16 +1,9 @@
 package com.ppvaz.fnafcompanion;
 
+import static com.ppvaz.fnafcompanion.Check.check;
+
 /** Host-only contract for the FNaF 3 teach lesson: vocabulary, clocks, refusals. */
 public final class Fnaf3LessonTest {
-    private static int failures;
-
-    private static void check(String what, boolean condition) {
-        if (!condition) {
-            System.out.println("FAIL " + what);
-            failures++;
-        }
-    }
-
     private static boolean refuses(Fnaf3Lesson lesson, String... field) {
         try {
             lesson.apply(field, 0, 0L);
@@ -104,10 +97,6 @@ public final class Fnaf3LessonTest {
         check("panel clears the feed", Fnaf3Lesson.BOTTOM + Fnaf3Lesson.GUARD_PX <= 130);
         check("panel clears the HUD", Fnaf3Lesson.RIGHT + Fnaf3Lesson.GUARD_PX <= 2140);
 
-        if (failures > 0) {
-            System.out.println("Fnaf3LessonTest: " + failures + " failure(s)");
-            System.exit(1);
-        }
-        System.out.println("Fnaf3LessonTest: all checks passed");
+        Check.done("Fnaf3LessonTest: all checks passed");
     }
 }

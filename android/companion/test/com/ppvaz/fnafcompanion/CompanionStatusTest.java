@@ -1,5 +1,7 @@
 package com.ppvaz.fnafcompanion;
 
+import static com.ppvaz.fnafcompanion.Check.check;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -14,15 +16,6 @@ import java.util.Map;
  * decodes (packages/play/test/testdata/companion-status-v1.txt).
  */
 public final class CompanionStatusTest {
-    private static int failures;
-
-    private static void check(String what, boolean condition) {
-        if (!condition) {
-            System.out.println("FAIL " + what);
-            failures++;
-        }
-    }
-
     private static CompanionStatus base(String session, String capture, String reason) {
         return new CompanionStatus().put("app", "0.2.0").put("code", "16")
                 .put("session", session).put("capture", capture).put("captureReason", reason);
@@ -137,11 +130,7 @@ public final class CompanionStatusTest {
                                 + " port=49707 socket=com.fnaf2.cuehelper.control.3"
                                 + " token=0123456789abcdef0123456789abcdef"));
 
-        if (failures > 0) {
-            System.out.println("CompanionStatusTest: " + failures + " failure(s)");
-            System.exit(1);
-        }
-        System.out.println("CompanionStatusTest: the writer emits every companion-status-v1 vector and the endpoint handshake");
+        Check.done("CompanionStatusTest: the writer emits every companion-status-v1 vector and the endpoint handshake");
     }
 
     private static boolean refuses(Runnable body) {

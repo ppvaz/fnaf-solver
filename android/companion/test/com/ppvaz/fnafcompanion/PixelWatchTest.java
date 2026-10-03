@@ -1,16 +1,9 @@
 package com.ppvaz.fnafcompanion;
 
+import static com.ppvaz.fnafcompanion.Check.check;
+
 /** Host-only regression for the FNaF 2 legacy camera watch and control strokes. */
 public final class PixelWatchTest {
-    private static int failures;
-
-    private static void check(String what, boolean condition) {
-        if (!condition) {
-            System.out.println("FAIL " + what);
-            failures++;
-        }
-    }
-
     static final class Frame implements NativeFrame {
         private final int width;
         private final int height;
@@ -135,10 +128,6 @@ public final class PixelWatchTest {
                         PixelWatch.MASK_BUTTON_Y + PixelWatch.MASK_BUTTON_HEIGHT,
                         PixelWatch.CONTROL_BUTTON_STEP) == 255);
 
-        if (failures > 0) {
-            System.out.println(failures + " check(s) failed");
-            System.exit(1);
-        }
-        System.out.println("PixelWatchTest: all checks passed");
+        Check.done("PixelWatchTest: all checks passed");
     }
 }

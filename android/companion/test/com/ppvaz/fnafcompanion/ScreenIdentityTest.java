@@ -1,9 +1,9 @@
 package com.ppvaz.fnafcompanion;
 
+import static com.ppvaz.fnafcompanion.Check.check;
+
 /** Phone-free regression for the Companion screen identity gate. */
 public final class ScreenIdentityTest {
-    private static int failures;
-
     private static final class ArrayFrame implements NativeFrame {
         private final int[] pixels = new int[PixelWatch.NATIVE_WIDTH
                 * PixelWatch.NATIVE_HEIGHT];
@@ -27,13 +27,6 @@ public final class ScreenIdentityTest {
             return x < 0 || y < 0 || x >= width() || y >= height()
                     ? PixelWatch.UNKNOWN
                     : pixels[y * width() + x];
-        }
-    }
-
-    private static void check(String what, boolean ok) {
-        if (!ok) {
-            System.out.println("FAIL " + what);
-            failures++;
         }
     }
 
@@ -228,10 +221,6 @@ public final class ScreenIdentityTest {
         check("unknown label is fail-closed",
                 "UNKNOWN".equals(ScreenIdentity.label(ScreenIdentity.UNKNOWN)));
 
-        if (failures > 0) {
-            System.out.println(failures + " check(s) failed");
-            System.exit(1);
-        }
-        System.out.println("ScreenIdentityTest: all checks passed");
+        Check.done("ScreenIdentityTest: all checks passed");
     }
 }

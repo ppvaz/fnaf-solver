@@ -1,16 +1,9 @@
 package com.ppvaz.fnafcompanion;
 
+import static com.ppvaz.fnafcompanion.Check.check;
+
 /** Host-only contract for the FNaF 1 Night 1 and 2 teaching strip: geometry, vocabulary, refusals. */
 public final class Fnaf1StripTest {
-    private static int failures;
-
-    private static void check(String what, boolean condition) {
-        if (!condition) {
-            System.out.println("FAIL " + what);
-            failures++;
-        }
-    }
-
     private static String show(Fnaf1Strip strip, String... words) {
         String[] field = new String[words.length + 1];
         field[0] = "show";
@@ -52,10 +45,6 @@ public final class Fnaf1StripTest {
         check("a refusal changes nothing", strip.status(true, false).contains("night=2 stage=night2-calibration run=n2-run-1")
                 && strip.status(true, false).contains("permission=DENIED"));
 
-        if (failures > 0) {
-            System.out.println("Fnaf1StripTest: " + failures + " failure(s)");
-            System.exit(1);
-        }
-        System.out.println("Fnaf1StripTest: the FNaF 1 Night 1-2 strip clears the door reader and refuses free text");
+        Check.done("Fnaf1StripTest: the FNaF 1 Night 1-2 strip clears the door reader and refuses free text");
     }
 }

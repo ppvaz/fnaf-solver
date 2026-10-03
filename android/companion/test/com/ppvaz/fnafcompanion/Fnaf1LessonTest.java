@@ -1,16 +1,9 @@
 package com.ppvaz.fnafcompanion;
 
+import static com.ppvaz.fnafcompanion.Check.check;
+
 /** Host-only contract for the FNaF 1 teach lesson: vocabulary, clocks, refusals. */
 public final class Fnaf1LessonTest {
-    private static int failures;
-
-    private static void check(String what, boolean condition) {
-        if (!condition) {
-            System.out.println("FAIL " + what);
-            failures++;
-        }
-    }
-
     private static boolean refuses(Fnaf1Lesson lesson, String... field) {
         try {
             lesson.apply(field, 0);
@@ -46,10 +39,6 @@ public final class Fnaf1LessonTest {
         for (Fnaf1Lesson.Step step : Fnaf1Lesson.Step.values()) {
             check(step + " fits a line", step.title.length() <= 48 && step.why.length() <= 60);
         }
-        if (failures > 0) {
-            System.out.println("Fnaf1LessonTest: " + failures + " failure(s)");
-            System.exit(1);
-        }
-        System.out.println("Fnaf1LessonTest: all checks passed");
+        Check.done("Fnaf1LessonTest: all checks passed");
     }
 }

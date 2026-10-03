@@ -1,18 +1,11 @@
 package com.ppvaz.fnafcompanion;
 
+import static com.ppvaz.fnafcompanion.Check.check;
+
 import java.nio.ByteBuffer;
 
 /** Host-only contract: the plane view reads exactly the pixels the plane holds. */
 public final class NativeFrameTest {
-    private static int failures;
-
-    private static void check(String what, boolean condition) {
-        if (!condition) {
-            System.out.println("FAIL " + what);
-            failures++;
-        }
-    }
-
     /** The per-pixel read the view replaced, kept as the reference. */
     private static int reference(ByteBuffer buffer, int width, int height,
             int rowStride, int pixelStride, int x, int y) {
@@ -85,10 +78,6 @@ public final class NativeFrameTest {
         check("a larger frame after a smaller one matches the per-pixel read",
                 mismatches(view, big, bigWidth, bigHeight, bigStride) == 0);
 
-        if (failures > 0) {
-            System.out.println("NativeFrameTest: " + failures + " failure(s)");
-            System.exit(1);
-        }
-        System.out.println("NativeFrameTest: the plane view reads every pixel as the plane holds it");
+        Check.done("NativeFrameTest: the plane view reads every pixel as the plane holds it");
     }
 }

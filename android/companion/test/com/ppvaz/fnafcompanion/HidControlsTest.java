@@ -1,5 +1,7 @@
 package com.ppvaz.fnafcompanion;
 
+import static com.ppvaz.fnafcompanion.Check.check;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -14,15 +16,6 @@ import java.util.Arrays;
  * host transport's transform.
  */
 public final class HidControlsTest {
-    private static int failures;
-
-    private static void check(String what, boolean condition) {
-        if (!condition) {
-            System.out.println("FAIL " + what);
-            failures++;
-        }
-    }
-
     private interface Body {
         void run() throws IOException;
     }
@@ -82,11 +75,7 @@ public final class HidControlsTest {
         check("other controls are themselves", "mask".equals(HidControls.planControl("mask")));
         refused("a token that is not a control name", "unknown plan control", () -> HidControls.planControl("cam 9"));
 
-        if (failures > 0) {
-            System.out.println("HidControlsTest: " + failures + " failure(s)");
-            System.exit(1);
-        }
-        System.out.println("hid controls: the runner reads the bundle's controls bound to its profile, refuses "
+        Check.done("hid controls: the runner reads the bundle's controls bound to its profile, refuses "
                 + "another profile, an unknown or unnamed control and a point off the axes, encodes contacts, "
                 + "and spells camN as cam:N without touching cameraFeedLight");
     }

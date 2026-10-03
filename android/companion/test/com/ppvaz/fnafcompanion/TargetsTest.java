@@ -1,5 +1,7 @@
 package com.ppvaz.fnafcompanion;
 
+import static com.ppvaz.fnafcompanion.Check.check;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -11,15 +13,6 @@ import java.util.regex.Pattern;
 
 /** Holds Targets.java to packages/play/profiles/fnaf2/moto-g56/companion-targets-v1.json, entry for entry. */
 public final class TargetsTest {
-    private static int failures;
-
-    private static void check(String what, boolean condition) {
-        if (!condition) {
-            System.out.println("FAIL " + what);
-            failures++;
-        }
-    }
-
     public static void main(String[] args) throws IOException {
         String model = new String(Files.readAllBytes(Paths.get(System.getProperty(
                 "targets.model", "packages/play/profiles/fnaf2/moto-g56/companion-targets-v1.json"))),
@@ -55,10 +48,6 @@ public final class TargetsTest {
         check("an unknown name does not resolve", Targets.resolve("com.example.other") == null
                 && Targets.resolve(null) == null);
 
-        if (failures > 0) {
-            System.out.println("TargetsTest: " + failures + " failure(s)");
-            System.exit(1);
-        }
-        System.out.println("TargetsTest: Targets.java matches companion-targets-v1.json");
+        Check.done("TargetsTest: Targets.java matches companion-targets-v1.json");
     }
 }

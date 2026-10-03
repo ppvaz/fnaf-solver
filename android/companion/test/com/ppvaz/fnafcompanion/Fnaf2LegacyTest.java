@@ -1,5 +1,7 @@
 package com.ppvaz.fnafcompanion;
 
+import static com.ppvaz.fnafcompanion.Check.check;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -13,15 +15,6 @@ import java.util.List;
  * camera-selection fields).
  */
 public final class Fnaf2LegacyTest {
-    private static int failures;
-
-    private static void check(String what, boolean condition) {
-        if (!condition) {
-            System.out.println("FAIL " + what);
-            failures++;
-        }
-    }
-
     private static final long SECOND = 1_000_000_000L;
 
     /** A dark office with the lit meter corner and both bottom chevrons drawn. */
@@ -182,10 +175,6 @@ public final class Fnaf2LegacyTest {
         check("reset unloads the watch", legacy.readLine(0L, null).startsWith("ERROR watch-not-loaded"));
         check("reset clears the identity", legacy.identity() == ScreenIdentity.UNKNOWN);
 
-        if (failures > 0) {
-            System.out.println("Fnaf2LegacyTest: " + failures + " failure(s)");
-            System.exit(1);
-        }
-        System.out.println("Fnaf2LegacyTest: GET/FRAME/READ/WATCH/TRACE serve the live FNaF 2 fields and no retired one");
+        Check.done("Fnaf2LegacyTest: GET/FRAME/READ/WATCH/TRACE serve the live FNaF 2 fields and no retired one");
     }
 }

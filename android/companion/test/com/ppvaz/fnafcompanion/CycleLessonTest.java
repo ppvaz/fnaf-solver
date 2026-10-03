@@ -1,5 +1,7 @@
 package com.ppvaz.fnafcompanion;
 
+import static com.ppvaz.fnafcompanion.Check.check;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -16,15 +18,7 @@ import java.util.List;
  * the host's id is the cross-language agreement on the canonical text.</p>
  */
 public final class CycleLessonTest {
-    private static int failures;
     private static final String K3_ID = "dca6427d63595573";
-
-    private static void check(String what, boolean ok) {
-        if (!ok) {
-            System.out.println("FAIL " + what);
-            failures++;
-        }
-    }
 
     private static void checkEquals(String what, Object expected, Object actual) {
         check(what + " (expected " + expected + ", got " + actual + ")",
@@ -182,11 +176,7 @@ public final class CycleLessonTest {
         checkEquals("a camdrop without lead/tail is refused", "lesson-row-camdrop",
                 refusal(edited(vector, 15, tokenPrefix + " row 14 steady 11150 camdrop 200")));
 
-        if (failures > 0) {
-            System.out.println("CycleLessonTest: " + failures + " failure(s)");
-            System.exit(1);
-        }
-        System.out.println("CycleLessonTest: the k3 lesson parses to the host's id and narrates its schedule");
+        Check.done("CycleLessonTest: the k3 lesson parses to the host's id and narrates its schedule");
     }
 
     /** The vector with one row removed and the begin row count reduced to match. */

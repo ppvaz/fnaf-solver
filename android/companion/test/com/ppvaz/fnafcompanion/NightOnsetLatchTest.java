@@ -1,16 +1,10 @@
 package com.ppvaz.fnafcompanion;
 
+import static com.ppvaz.fnafcompanion.Check.check;
+
 /** Phone-free regression for the night-onset latch the release anchoring reads. */
 public final class NightOnsetLatchTest {
-    private static int failures;
     private static final long FRAME_NS = 16_666_667L;
-
-    private static void check(String what, boolean ok) {
-        if (!ok) {
-            System.out.println("FAIL " + what);
-            failures++;
-        }
-    }
 
     private static long feed(NightOnsetLatch latch, long startNs, int frames, int identity) {
         long t = startNs;
@@ -69,10 +63,6 @@ public final class NightOnsetLatchTest {
         latch.onFrame(-5L, night);
         check("non-positive image times are ignored", latch.onsetNs() == NightOnsetLatch.NOT_LATCHED);
 
-        if (failures > 0) {
-            System.out.println(failures + " check(s) failed");
-            System.exit(1);
-        }
-        System.out.println("night onset latch: held-run onset, flicker rejection, survives in-night menu identity, reset and ordering pass");
+        Check.done("night onset latch: held-run onset, flicker rejection, survives in-night menu identity, reset and ordering pass");
     }
 }

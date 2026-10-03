@@ -1,16 +1,9 @@
 package com.ppvaz.fnafcompanion;
 
+import static com.ppvaz.fnafcompanion.Check.check;
+
 /** Host-only contract for the FNaF 4 teach lesson: vocabulary, clocks, refusals. */
 public final class Fnaf4LessonTest {
-    private static int failures;
-
-    private static void check(String what, boolean condition) {
-        if (!condition) {
-            System.out.println("FAIL " + what);
-            failures++;
-        }
-    }
-
     private static boolean refuses(Fnaf4Lesson lesson, String... field) {
         try {
             lesson.apply(field, 0);
@@ -107,10 +100,6 @@ public final class Fnaf4LessonTest {
         }
         check("the panel is inside the display", Fnaf4Lesson.LEFT >= 0 && Fnaf4Lesson.TOP >= 0
                 && Fnaf4Lesson.RIGHT <= PixelWatch.NATIVE_WIDTH && Fnaf4Lesson.BOTTOM <= PixelWatch.NATIVE_HEIGHT);
-        if (failures > 0) {
-            System.out.println("Fnaf4LessonTest: " + failures + " failure(s)");
-            System.exit(1);
-        }
-        System.out.println("Fnaf4LessonTest: all checks passed");
+        Check.done("Fnaf4LessonTest: all checks passed");
     }
 }

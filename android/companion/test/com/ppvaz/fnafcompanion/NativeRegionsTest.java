@@ -1,16 +1,9 @@
 package com.ppvaz.fnafcompanion;
 
+import static com.ppvaz.fnafcompanion.Check.check;
+
 /** Host-only contract for the native-region primitive. */
 public final class NativeRegionsTest {
-    private static int failures;
-
-    private static void check(String what, boolean condition) {
-        if (!condition) {
-            System.out.println("FAIL " + what);
-            failures++;
-        }
-    }
-
     /** A frame whose pixel encodes its own coordinates, so a copy can be audited. */
     private static final class Frame implements NativeFrame {
         private final int width;
@@ -86,10 +79,6 @@ public final class NativeRegionsTest {
         regions.clear();
         check("clear empties", regions.size() == 0 && "-1".equals(field(regions.read(), "seq")));
 
-        if (failures > 0) {
-            System.out.println("NativeRegionsTest: " + failures + " failure(s)");
-            System.exit(1);
-        }
-        System.out.println("NativeRegionsTest: all checks passed");
+        Check.done("NativeRegionsTest: all checks passed");
     }
 }

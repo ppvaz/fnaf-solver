@@ -1,16 +1,9 @@
 package com.ppvaz.fnafcompanion;
 
+import static com.ppvaz.fnafcompanion.Check.check;
+
 /** Synthetic signals for the playback-capture probe's derived numbers. */
 public final class AudioProbeAnalysisTest {
-    private static int failures;
-
-    private static void check(String what, boolean condition) {
-        if (!condition) {
-            System.out.println("FAIL " + what);
-            failures++;
-        }
-    }
-
     /** Stereo PCM: {@code seconds} of silence with a tone burst at each {@code burstMs}. */
     private static short[] signal(int rate, double seconds, int[] burstMs, int burstLenMs,
             double amplitude, double noise) {
@@ -98,10 +91,6 @@ public final class AudioProbeAnalysisTest {
             check("result token " + token + " is key=number or a list", token.matches("[a-zA-Z]+=[-0-9.,A-Z]+"));
         }
 
-        if (failures > 0) {
-            System.out.println("AudioProbeAnalysisTest: " + failures + " failure(s)");
-            System.exit(1);
-        }
-        System.out.println("AudioProbeAnalysisTest: silence, clicks, a steady bed and a faint burst give the derived numbers");
+        Check.done("AudioProbeAnalysisTest: silence, clicks, a steady bed and a faint burst give the derived numbers");
     }
 }

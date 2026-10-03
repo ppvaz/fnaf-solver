@@ -44,13 +44,15 @@ JAVA="$JDK_ROOT/bin/java"
 SOURCES=()
 while IFS= read -r source; do SOURCES+=("$source"); done \
   < <(grep -L '^import android\.' "$HERE"/src/com/ppvaz/fnafcompanion/*.java | sort)
+TEST_SOURCES=()
+while IFS= read -r source; do TEST_SOURCES+=("$source"); done < <(find "$HERE/test" -name '*.java' | sort)
 TESTS=()
 while IFS= read -r test; do TESTS+=("$test"); done < <(find "$HERE/test" -name '*Test.java' | sort)
 if [ "${#TESTS[@]}" -eq 0 ]; then
   echo "no host tests found under $HERE/test" >&2
   exit 1
 fi
-"$JAVAC" -encoding UTF-8 --release 17 -d "$TEST_TMP" "${SOURCES[@]}" "${TESTS[@]}"
+"$JAVAC" -encoding UTF-8 --release 17 -d "$TEST_TMP" "${SOURCES[@]}" "${TEST_SOURCES[@]}"
 
 # A test that is only compiled asserts nothing (tools/test-mistake-register.ts):
 # each one found is run, with the fixture its class reads.
