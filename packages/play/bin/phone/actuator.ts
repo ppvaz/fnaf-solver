@@ -102,14 +102,16 @@ export const LAUNCH_LATE_MAX_MS = 300;
 // The cycle loop, the classifier checkpoint: the same frame the BB model reads
 // is asked whether the cams are up, and a `cams=UP-DESYNCED` answer lowers,
 // verifies, and lowers once more before resuming the cycle from a floor.
-export const MONITOR_ANIM_DOWN_MS = 367; // src/config.js MONITOR_ANIM_DOWN, in ms
+// Source's MONITOR_ANIM_DOWN (22 frames at 60 fps), in ms: 367.
+export const MONITOR_ANIM_DOWN_MS = Math.round(C.MONITOR_ANIM_DOWN * 1000 / C.FPS);
 // The Moto g56 registers 33 ms contacts on monitor, mask, camera and hall
 // controls. 100 ms was a conservative swipe-era margin, not the device floor.
 export const TAP_CONTACT_MS = 33;
 export const FUSION_POLL_MS = 33;
-// The Companion's device-local read. CLAUDE.md prices it at 59 ms; the flip
-// gate's own comment says 42 ms for the same call. 59 is the published number
-// and the pessimistic one, so it is the default.
+// The Companion's device-local read, priced at 59 ms; the flip gate's own
+// comment says 42 ms for the same call, so 59 is the pessimistic default. Both
+// predate Companion 16 (UNKNOWN on the installed helper), and Propose's
+// observation language prices the same read at 59.5 (VISUAL_READ_COST_MS).
 export const CUE_READ_MS = 59;
 // The second checker invocation on the already-captured frame -- the
 // `cams=UP-DESYNCED` question. Free in capture terms, but night 6-29 blew a
@@ -129,10 +131,10 @@ export const CLASSIFY_MS = 260;
 // would make the gate look 110-300 ms more dangerous than the nights it was
 // measured on. `animAnchor: 'land'` exists to price that reading, and it is a
 // sensitivity control, not the default.
-export const CUE_ANIM_UP_MS = 202;
+const CUE_ANIM_UP_MS = 202;
 // `desyncs -le 12`, then the runner exits 48. A run that aborts is not a run
 // that survived, so the model has to be able to end a night this way.
-export const MAX_DESYNCS = 12;
+const MAX_DESYNCS = 12;
 
 const f = (msv: number) => Math.round(msv / 1000 * C.FPS);
 const toMs = (frames: number) => frames * 1000 / C.FPS;
