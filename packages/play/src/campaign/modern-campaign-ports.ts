@@ -832,6 +832,62 @@ function campaignPorts(cp: PortsContext, composed: ReturnType<typeof composeCamp
   };
 }
 
+/** The teach panel's channel (null when none opened) and what its narration reads, the Companion token live. */
+interface TeachPanel {
+  readonly teach: { channel: ReturnType<AdbCompanionPort['openLesson']>, lessonId: string | null } | null;
+  readonly bundle: CampaignPortOptions['bundle'];
+  readonly onEvent: (event: CampaignEventRow) => void;
+  readonly token: () => string;
+}
+
+/** Narrate the night's lesson on the teach panel before the attempt; a refusal is evented, never thrown. */
+async function armLesson(panel: TeachPanel, target: CampaignTarget) {
+  const { teach, bundle, onEvent, token } = panel;
+  if (!teach) return;
+  teach.lessonId = null;
+  try {
+    const lesson = lessonForNight(bundle, target.night);
+    let reply = '';
+    for (const line of lessonLines(token(), lesson)) reply = await teach.channel.send(line);
+    teach.lessonId = lesson.id;
+    onEvent({ type: 'teach.lesson', status: 'armed', id: lesson.id, night: target.night,
+      rows: lesson.rows.length, reply });
+  } catch (error) {
+    onEvent({ type: 'teach.lesson', status: 'refused', night: target.night, error: messageOf(error) });
+  }
+}
+
+/** Start the armed lesson from the anchored release's onset; an unanchored night skips it. */
+async function startLessonOrigin(panel: TeachPanel, release: AnchorResult | undefined) {
+  const { teach, onEvent, token } = panel;
+  if (!teach?.lessonId) return;
+  if (release?.status !== 'released') {
+    onEvent({ type: 'teach.origin', status: 'skipped', reason: release?.status ?? 'unanchored' });
+    return;
+  }
+  try {
+    const reply = await teach.channel.send(lessonOriginLine(token(), release));
+    onEvent({ type: 'teach.origin', status: 'running', id: teach.lessonId,
+      onsetDeviceMs: release.onsetDeviceMs, afterOnsetMs: release.afterOnsetMs, reply });
+  } catch (error) {
+    onEvent({ type: 'teach.origin', status: 'refused', error: messageOf(error) });
+  }
+}
+
+/** Clear the armed lesson from the panel. */
+async function clearLesson(panel: TeachPanel, reason: string) {
+  const { teach, onEvent, token } = panel;
+  if (!teach?.lessonId) return;
+  const id = teach.lessonId;
+  teach.lessonId = null;
+  try {
+    await teach.channel.send(`LESSON ${token()} clear`);
+    onEvent({ type: 'teach.clear', id, reason });
+  } catch (error) {
+    onEvent({ type: 'teach.clear', id, reason, status: 'failed', error: messageOf(error) });
+  }
+}
+
 /** Refuse options a live composition cannot run: their types, the night anchor's aim and bound, the arm mode, the profile. */
 function checkPortOptions({ teachOverlay, venueBindings, nightAnchorAimMs, allowSaveReset, captureRestarted, startResidueMs,
   nightAnchorPeriodMs, nightAnchorMaxK, armMode, profile }: { teachOverlay: boolean, venueBindings: unknown,
@@ -951,45 +1007,7 @@ export async function createCampaignPorts(options: CampaignPortOptions) {
     try { teach = { channel: cuePort.openLesson({ lessonLine: LESSON_LINE }), lessonId: null }; }
     catch (error) { onEvent({ type: 'teach.unavailable', error: messageOf(error) }); }
   }
-  const teachArm = async (target: CampaignTarget) => {
-    if (!teach) return;
-    teach.lessonId = null;
-    try {
-      const lesson = lessonForNight(bundle, target.night);
-      let reply = '';
-      for (const line of lessonLines(cueEndpoint.token, lesson)) reply = await teach.channel.send(line);
-      teach.lessonId = lesson.id;
-      onEvent({ type: 'teach.lesson', status: 'armed', id: lesson.id, night: target.night,
-        rows: lesson.rows.length, reply });
-    } catch (error) {
-      onEvent({ type: 'teach.lesson', status: 'refused', night: target.night, error: messageOf(error) });
-    }
-  };
-  const teachOrigin = async (release: AnchorResult | undefined) => {
-    if (!teach?.lessonId) return;
-    if (release?.status !== 'released') {
-      onEvent({ type: 'teach.origin', status: 'skipped', reason: release?.status ?? 'unanchored' });
-      return;
-    }
-    try {
-      const reply = await teach.channel.send(lessonOriginLine(cueEndpoint.token, release));
-      onEvent({ type: 'teach.origin', status: 'running', id: teach.lessonId,
-        onsetDeviceMs: release.onsetDeviceMs, afterOnsetMs: release.afterOnsetMs, reply });
-    } catch (error) {
-      onEvent({ type: 'teach.origin', status: 'refused', error: messageOf(error) });
-    }
-  };
-  const teachClear = async (reason: string) => {
-    if (!teach?.lessonId) return;
-    const id = teach.lessonId;
-    teach.lessonId = null;
-    try {
-      await teach.channel.send(`LESSON ${cueEndpoint.token} clear`);
-      onEvent({ type: 'teach.clear', id, reason });
-    } catch (error) {
-      onEvent({ type: 'teach.clear', id, reason, status: 'failed', error: messageOf(error) });
-    }
-  };
+  const panel: TeachPanel = { teach, bundle, onEvent, token: () => cueEndpoint.token };
   const [cameraRule, { monitorRule, maskRule }] = await Promise.all([
     readJson(CAMERA_RULE).then(parseCameraRule), loadControlRules()]);
   const { ensureArmWatch, observeArm, observeControlState } = createControlObserver(
@@ -1077,7 +1095,8 @@ export async function createCampaignPorts(options: CampaignPortOptions) {
   const cp: PortsContext = { spec, serial, bridge, cuePort, onEvent, localExecutor, titleModel, modelPath,
     calibration, calibrationPath, configReadback, allowSaveReset, startResidueMs, nightAnchorAimMs, nightAnchorMaxK,
     nightAnchorPeriodMs, nightAnchorStrict, nightAnchorAuthorizeOnLatch, tap, prearm, openMenuHid, closeMenuHid,
-    refreshCueEndpoint, teachArm, teachOrigin, teachClear, artifactRequestFor,
+    refreshCueEndpoint, artifactRequestFor, teachArm: target => armLesson(panel, target),
+    teachOrigin: release => startLessonOrigin(panel, release), teachClear: reason => clearLesson(panel, reason),
     // Set when save() observes the game roll a 6 AM straight into the next
     // night's gameplay (story Nights 1..4 on this build). The next night's
     // menu step is then satisfied by the roll: there is no title to read.
