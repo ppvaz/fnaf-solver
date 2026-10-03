@@ -7,11 +7,12 @@
 // wrapper, so a caller gets one answer however it asks.
 import { claimEnvelope, isClaimLevel, isList, isRecord, refusalEnvelope, unknown, unknownsIn } from '@sixam/kernel';
 import type { Unknown } from '@sixam/kernel';
+import { PACKAGES } from '@sixam/source';
 import { PACKS_DIR } from './evidence-pack.ts';
 import { GRAPH_FILE } from './evidence-promotion.ts';
 
 export const PLAN12 = 'plans/12-end-to-end-evidence-campaign.md';
-export const FNAF2 = 'com.scottgames.fnaf2';
+export const FNAF2 = PACKAGES.fnaf2;
 /** What a promotion never measures (CLAUDE.md, S1: "A promotion is one clear, not a reliability claim"). */
 export const ONE_CLEAR = 'reliability: a promotion is one clear on the phone, not a rate';
 

@@ -39,7 +39,7 @@
 //
 // route and rung stay FNaF 2's vocabularies, so a v2 entry of another game
 // carries neither.
-import { nightsOf } from '@sixam/source';
+import { CONTROL_CATALOGS, PACKAGES, nightsOf } from '@sixam/source';
 import { isList, isOneOf } from '@sixam/kernel';
 
 type Fields = Readonly<Record<string, unknown>>;
@@ -103,10 +103,11 @@ export const ROUTES = ['Minus 7', 'Minus 3', 'Minus Toys', 'Minus Two', 'Minus 6
 
 export const STATUSES = ['standing', 'superseded', 'retracted'];
 
-/** The games a v2 entry may name: the short names of the four build-296 targets. */
-export const GAMES = ['fnaf1', 'fnaf2', 'fnaf3', 'fnaf4'];
-/** How a page names each game. */
-export const GAME_TITLES = Object.freeze({ fnaf1: 'FNaF 1', fnaf2: 'FNaF 2', fnaf3: 'FNaF 3', fnaf4: 'FNaF 4' });
+/** The games a v2 entry may name: Source's short names of the build-296 targets. */
+export const GAMES = Object.keys(PACKAGES);
+/** How a page names each game: its control catalog's title. */
+export const GAME_TITLES = Object.freeze(Object.fromEntries(Object.entries(PACKAGES)
+  .map(([game, pkg]) => [game, CONTROL_CATALOGS[pkg].title])));
 export const gameTitle = (game: string) => (GAME_TITLES as Readonly<Record<string, string>>)[game] ?? game;
 /** The game every v1 entry is read as. */
 export const V1_GAME = 'fnaf2';

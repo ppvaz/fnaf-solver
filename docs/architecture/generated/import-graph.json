@@ -4246,7 +4246,8 @@
         "./evidence-pack.ts",
         "./evidence-promotion.ts",
         "./promotions-query.ts",
-        "@sixam/kernel"
+        "@sixam/kernel",
+        "@sixam/source"
       ]
     },
     {
@@ -4701,11 +4702,16 @@
     {
       "file": "packages/source/src/clockwork/games.ts",
       "imports": [
+        "../games/fnaf1/controls.ts",
         "../games/fnaf1/fnaf1.ts",
+        "../games/fnaf2/controls.ts",
         "../games/fnaf2/fnaf2.ts",
+        "../games/fnaf3/controls.ts",
         "../games/fnaf3/fnaf3.ts",
+        "../games/fnaf4/controls.ts",
         "../games/fnaf4/fnaf4.ts",
         "./night-model.ts",
+        "@sixam/kernel/contracts",
         "@sixam/source"
       ]
     },

@@ -18,6 +18,11 @@ import * as fnaf1 from '../games/fnaf1/fnaf1.ts';
 import * as fnaf2 from '../games/fnaf2/fnaf2.ts';
 import * as fnaf3 from '../games/fnaf3/fnaf3.ts';
 import * as fnaf4 from '../games/fnaf4/fnaf4.ts';
+import { FNAF1_PACKAGE } from '../games/fnaf1/controls.ts';
+import { FNAF2_PACKAGE } from '../games/fnaf2/controls.ts';
+import { FNAF3_PACKAGE } from '../games/fnaf3/controls.ts';
+import { FNAF4_PACKAGE } from '../games/fnaf4/controls.ts';
+import type { GamePackage } from '@sixam/kernel/contracts';
 import { nightSchedule, peakLevel, canAct, rollChance, rollsInHour } from './night-model.ts';
 import type { NightModel } from './night-model.ts';
 
@@ -35,12 +40,17 @@ export const GAME_IDS = Object.keys(GAMES);
 
 /** The package name each game ships under. The only reliable identifier: all
  *  four report plausible-looking and differing `versionName`s on one runtime. */
-export const PACKAGES = {
-  fnaf1: 'com.scottgames.fivenightsatfreddys',
-  fnaf2: 'com.scottgames.fnaf2',
-  fnaf3: 'com.scottgames.fnaf3',
-  fnaf4: 'com.scottgames.fnaf4',
-};
+export const PACKAGES = Object.freeze({
+  fnaf1: FNAF1_PACKAGE,
+  fnaf2: FNAF2_PACKAGE,
+  fnaf3: FNAF3_PACKAGE,
+  fnaf4: FNAF4_PACKAGE,
+} satisfies Record<string, GamePackage>);
+
+// The kernel's GamePackage union and this table name the same games: a package the kernel
+// registers and no game here ships under fails the type check.
+type Unshipped = Exclude<GamePackage, (typeof PACKAGES)[keyof typeof PACKAGES]>;
+true satisfies ([Unshipped] extends [never] ? true : never);
 
 const BY_ID: Readonly<Record<string, NightModel>> = GAMES;
 

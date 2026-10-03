@@ -7,7 +7,7 @@
 // guessing, and the rule that attributes a record to a game is named beside the attribution.
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { GAME_PACKAGES, controlCatalogFor } from '@sixam/source';
+import { GAME_PACKAGES, PACKAGES, controlCatalogFor } from '@sixam/source';
 import { isList, isRecord, isUnknown, unknown } from '@sixam/kernel';
 import type { EnvelopeLabel } from '@sixam/kernel';
 import type { ControlDescriptor } from '@sixam/kernel/contracts';
@@ -35,9 +35,10 @@ const isIdentified = (item: unknown): item is JsonObject & { readonly id: string
 
 // --- games ---------------------------------------------------------------------------------
 
-/** A registered game by its package, with the short name its catalog title gives it ("FNaF 2" -> fnaf2). */
+/** A registered game by its package, with its catalog title and Source's short name for it (fnaf2). */
 export const GAMES = Object.freeze(GAME_PACKAGES.map(pkg => Object.freeze({
-  package: pkg, title: controlCatalogFor(pkg).title, alias: controlCatalogFor(pkg).title.toLowerCase().replace(/\s+/g, ''),
+  package: pkg, title: controlCatalogFor(pkg).title,
+  alias: Object.entries(PACKAGES).find(([, shipped]) => shipped === pkg)?.[0] ?? pkg,
 })));
 
 /** The game a caller names by package or short name, or null. */
@@ -54,7 +55,7 @@ export const executorGames = () => GAMES.filter(game => controlCatalogFor(game.p
  * -- Minus 7 to 10/20, and Plan 12's FNaF 2 ladder -- so every v1 entry is attributed to FNaF 2,
  * and to no other game, by that rule.
  */
-export const CHRONICLE_GAME = 'com.scottgames.fnaf2';
+export const CHRONICLE_GAME = PACKAGES[V1_GAME];
 export const CHRONICLE_ATTRIBUTION = 'a chronicle-entries-v2 entry names its game; chronicle-entries-v1 has no game field, and its ' +
   `ROUTES and RUNGS vocabularies (${CHRONICLE_SCHEMA_MODULE}) are FNaF 2's, so every v1 entry is attributed to ${CHRONICLE_GAME}`;
 /** The kinds that record a negative result. */
