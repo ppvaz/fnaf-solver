@@ -5,7 +5,7 @@
 import assert from 'node:assert/strict';
 import {
   ANNOTATION_KINDS, ANNOTATION_STATUSES, CLAIM_LEVELS, CUSTODY_CLASSES, GAME_RUN_FIELDS, OUTCOME_KINDS, RUN_MODES,
-  SOURCE_LABELS, SUBJECT_KINDS, aborted, death, interval, invalid, isClaimLevel, isSourceLabel, isUnknown, sixAm, timeout,
+  SOURCE_LABELS, SUBJECT_KINDS, aborted, death, interval, invalid, isClaimLevel, isSourceLabel, isUnknown, mulberry32, sixAm, timeout,
   unknown, validateAnnotation, validateClaimLevel, validateGameRun, validateInterval, validateOutcome, validateSourceLabel,
 } from '../src/index.ts';
 
@@ -105,5 +105,10 @@ refuses(() => validateAnnotation({ ...promotion, subject: { kind: 'Run', id: 'x'
 refuses(() => validateAnnotation({ ...promotion, instrument: 'plan12-promotion' }), /name@version/, 'an unversioned instrument');
 refuses(() => validateAnnotation({ ...promotion, inputs: ['not a hash'] }), /content hash/, 'an input that is not a hash');
 refuses(() => validateAnnotation({ ...promotion, status: 'open' }), /status/, 'a status outside the three');
+
+// mulberry32 keeps the draws the lanes and tests that pasted it were measured with.
+const draws = mulberry32(1);
+assert.deepEqual([draws(), draws(), draws()], [0.6270739405881613, 0.002735721180215478, 0.5274470399599522]);
+assert.equal(mulberry32(1 ^ 0x9e3779b9)(), 0.18967728852294385, 'a negative seed is read unsigned');
 
 console.log('kernel: labels are closed enums that never promote one another, UNKNOWN carries its reason, and Interval, Outcome, GameRun with custody, and Annotation refuse what ADR 0002 rules out');

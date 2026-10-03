@@ -7,18 +7,15 @@
 //   node apps/trainer/test/browser.test.ts [url]   # default: the dev server on :8731
 import assert from 'node:assert/strict';
 import { after, before, test } from 'node:test';
-import { launch, pageUrl } from './cdp.ts';
+import { is, openApp } from './cdp.ts';
 import type { Page } from './cdp.ts';
 
 let page: Page;
 before(async () => {
-  page = await launch();
-  await page.open(pageUrl());
-  await page.waitFor('the app', '!!window.app', value => value === true, 10_000);
+  page = await openApp();
 });
 after(async () => { await page?.close(); });
 
-const is = (want: unknown) => (value: unknown) => value === want;
 /** Pointer down then up on the control `selector`, as one tap; `id` is the pointer. */
 const tap = (selector: string, id = 1) => page.evaluate(`(() => {
   const el = document.querySelector(${JSON.stringify(selector)});

@@ -33,7 +33,7 @@ import { execFileSync, spawn } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { isList, isRecord } from '@sixam/kernel';
+import { isList, isRecord, mulberry32 } from '@sixam/kernel';
 import { HID_DESCRIPTOR, HID_FEATURE_REPORTS, report } from '@sixam/play';
 import { DEFAULT_READY_DELAY_MS } from '@sixam/play/campaign/hid-schedule';
 import { parseInputEvents, touchEdges } from '../grade/tap-stall-audit.ts';
@@ -108,17 +108,6 @@ export const REPEATS = 3;
 // Long, well-separated contacts first and last: the clock between the kernel
 // and the game loop is fitted on them, never on the contacts being graded.
 export const SYNC = Object.freeze({ count: 3, holdMs: 200, gapMs: 600 });
-
-function mulberry32(seed: number) {
-  let a = seed >>> 0;
-  return () => {
-    a = (a + 0x6d2b79f5) >>> 0;
-    let t = a;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
 
 /**
  * The contact plan: times are ms after the readiness delay ends. `sweep`

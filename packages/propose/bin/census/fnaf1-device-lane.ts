@@ -32,6 +32,7 @@
 //   node packages/propose/bin/census/fnaf1-device-lane.ts --population [--route tree|winner] [--jobs 7] [--out FILE]
 //        # grid420, every seed, three lanes: the tree's, or the committed winner's pinned one
 
+import { mulberry32 } from '@sixam/kernel';
 import { sha256 } from '../recompile/sweep-common.ts';
 import { parseArgs } from 'node:util';
 import { execFileSync } from 'node:child_process';
@@ -90,17 +91,8 @@ export function loadTiming(path = TIMING_PATH) {
   return model;
 }
 
-/** mulberry32 -- the lane's own stream, so latency draws never touch the game's RNG. */
-function laneRng(seed: number) {
-  let a = (seed ^ 0x9e3779b9) >>> 0;
-  return () => {
-    a = (a + 0x6d2b79f5) >>> 0;
-    let t = a;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
+/** The lane's own stream, so latency draws never touch the game's RNG. */
+const laneRng = (seed: number) => mulberry32(seed ^ 0x9e3779b9);
 
 /** A band `{ min, mode, max }` drawn triangularly, or pinned at `max` in the worst lane. */
 function drawer(rng: () => number, lane: string) {

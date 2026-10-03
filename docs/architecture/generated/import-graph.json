@@ -786,6 +786,7 @@
         "./game-run.ts",
         "./labels.ts",
         "./outcome.ts",
+        "./random.ts",
         "./seed.ts",
         "./time/interval.ts",
         "./types.ts"
@@ -1340,6 +1341,7 @@
         "../../src/campaign/physical-ports.ts",
         "./fnaf3-detectors.ts",
         "./fnaf3-run.ts",
+        "@sixam/kernel",
         "node:fs",
         "node:os",
         "node:path",
@@ -2130,6 +2132,7 @@
         "../../../play/games/fnaf1/fnaf1-winner.ts",
         "../recompile/sweep-common.ts",
         "./winner-census.ts",
+        "@sixam/kernel",
         "@sixam/source/fnaf1",
         "node:child_process",
         "node:fs",
@@ -5981,9 +5984,11 @@
       "file": "tools/test-duplication.ts",
       "imports": [
         "./gate-kit.ts",
+        "./x.ts",
         "node:assert/strict",
         "node:crypto",
         "node:fs",
+        "node:module",
         "node:path"
       ]
     },

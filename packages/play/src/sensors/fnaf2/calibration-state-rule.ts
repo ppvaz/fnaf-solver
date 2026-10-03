@@ -14,7 +14,7 @@
  * CONTRACT:calibration-state-v1.
  */
 import { isList, isRecord } from '@sixam/kernel';
-import { measureMonitorUp, monitorRuleDigest, parseMonitorRule, cellFeatures, anchorReadsUp } from './monitor-rule.ts';
+import { measureMonitorUp, monitorRuleDigest, parseMonitorRule, anchorReadsUp, gridMeanLuma } from './monitor-rule.ts';
 import type { Anchor } from './monitor-rule.ts';
 import { ruleDigest } from './rule-digest.ts';
 import type { Reading } from './rule-digest.ts';
@@ -174,11 +174,7 @@ export function measureMaskOn(snapshot: unknown, rule: MaskRule | null, { maxAge
       !rule.adapter.anchors.some(anchor => Number.isInteger(source[anchor.cell])))
     return unknown('grid-unavailable');
   if (Number(fields.seq) !== Number(fields.gridSeq)) return unknown('grid-seq-mismatch');
-  const total = source.reduce<number>((sum, cell) => {
-    if (!Number.isInteger(cell)) return NaN;
-    return sum + cellFeatures.luma(cell);
-  }, 0);
-  const guardValue = Math.floor(total / source.length);
+  const guardValue = gridMeanLuma(source);
   if (!Number.isFinite(guardValue)) return unknown('feature-missing');
   if (guardValue < rule.adapter.guard.min) return unknown('frame-dark');
   let sawOn = false;

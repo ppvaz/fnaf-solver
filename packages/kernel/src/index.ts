@@ -10,6 +10,7 @@ export { CLAIM_LEVELS, SOURCE_LABELS, isClaimLevel, isList, isOneOf, isRecord, i
 export { interval, validateInterval } from './time/interval.ts';
 export { BINDINGS_DIR, WINNER_FILE, winnerTag } from './bindings.ts';
 export { SEED_BELIEFS, SEED_PROVENANCES, validateSeed, validateSeedProvenance } from './seed.ts';
+export { mulberry32 } from './random.ts';
 export { OUTCOME_KINDS, aborted, death, invalid, sixAm, timeout, validateOutcome } from './outcome.ts';
 export { CUSTODY_CLASSES, GAME_RUN_FIELDS, RUN_MODES, validateGameRun } from './game-run.ts';
 export { ANNOTATION_KINDS, ANNOTATION_STATUSES, SUBJECT_KINDS, validateAnnotation } from './annotation.ts';

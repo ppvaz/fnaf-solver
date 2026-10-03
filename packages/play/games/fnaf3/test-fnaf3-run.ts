@@ -8,6 +8,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { gunzipSync } from 'node:zlib';
+import { mulberry32 } from '@sixam/kernel';
 import { parseArgs, searchOrder, NEXT, VENT_OF, SystemsClock, chooseReboot, teachFeed, raiseMonitor, controlsOf, readDetectors } from './fnaf3-run.ts';
 import { FEED, PICTURE_MASK, Reader, boxSamples, medianLuma, occupancy, decodePng, sampleBlocks, boxLuma, stateScore, IMAGE_GEOMETRY, CAMERA_FRAMES } from './fnaf3-detectors.ts';
 import { loadRegionSet, pngFromRegion } from '../../bin/phone/native-regions.ts';
@@ -118,13 +119,7 @@ ok('cams 8, 6, 4 and 3 lead into no vent', [8, 6, 4, 3].every((n) => NEXT[n].eve
 // --- occupancy --------------------------------------------------------------------
 {
   // mulberry32: a float LCG past 2^53 repeats its pattern frame to frame.
-  let s = 12345;
-  const rand = () => {
-    s = (s + 0x6d2b79f5) | 0;
-    let t = Math.imul(s ^ (s >>> 15), 1 | s);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
+  const rand = mulberry32(12345);
   const room = new Uint32Array(FEED.cols * FEED.rows).map((_, i) => { const v = 40 + (i % 17) * 3; return (v << 16) | (v << 8) | v; });
   // Static: a random fifth of the samples bright white, new every frame.
   const staticOf = (base: Uint32Array) => base.map((px) => (rand() < 0.2 ? 0xf0f0f0 : px));

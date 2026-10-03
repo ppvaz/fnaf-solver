@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { after, before, test } from 'node:test';
-import { launch, pageUrl } from './cdp.ts';
+import { is, openApp } from './cdp.ts';
 import type { Page } from './cdp.ts';
 
 // This test exercises the save-to-config path, which really does rewrite
@@ -26,13 +26,10 @@ process.on('exit', restore);
 
 let page: Page;
 before(async () => {
-  page = await launch();
-  await page.open(pageUrl());
-  await page.waitFor('the app', '!!window.app', value => value === true, 10_000);
+  page = await openApp();
 });
 after(async () => { await page?.close(); });
 
-const is = (want: unknown) => (value: unknown) => value === want;
 const shown = (id: string) => `document.getElementById(${JSON.stringify(id)}).classList.contains("shown")`;
 /** Press `selector` with pointer `id`, move it by (dx, dy) and let go: a drag, as the page sees one. */
 const drag = (selector: string, dx: number, dy: number, id: number) => page.evaluate(`(() => {

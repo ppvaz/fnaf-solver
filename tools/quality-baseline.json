@@ -25,30 +25,120 @@
   },
   "duplication": {
     "recorded": "2026-09-30",
-    "why": "Pairs of files sharing a run of 6 or more normalised lines when tools/test-duplication.ts landed; an entry only shrinks.",
+    "why": "Pairs of files sharing a run of 6 or more normalised lines, types erased and tests included. A pair is accepted only with a reason specific to it: a copy that is meant (frozen parked work, an independent check, a boundary the ownership rules forbid crossing) or one waiting on a named change; every other pair is paid.",
     "entries": {
+      "clone:packages/play/games/fnaf3/fnaf3-run.ts <> packages/play/games/fnaf4/fnaf4-run.ts": {
+        "count": 33,
+        "why": "the two Fusion night runners’ command lines, the same live/dry/label flags each states before it touches a phone; their teardowns already share night-kit (audit PG10), and one runner CLI in night-kit would take the rest"
+      },
+      "clone:packages/play/games/fnaf3/fnaf3-run.ts <> packages/propose/src/games/policy-fnaf3.ts": {
+        "count": 15,
+        "why": "Springtrap’s search order over the camera adjacency, the rule the device runner plays and the policy the census scores; Play may not import Propose, so the runner keeps its copy until the adjacency and search order move into Source’s FNaF 3 rulebook, which both may import"
+      },
+      "clone:packages/propose/parked/minus7/model.ts <> packages/propose/src/strategies/minus-toys/model.ts": {
+        "count": 15,
+        "why": "parked Minus 7 work keeps the jitter and cycle runner it was measured with; parked code is frozen with its results and the live strategy owns the maintained copy"
+      },
+      "clone:packages/propose/bin/plans/minus3-frame-light.ts <> packages/propose/src/strategies/minus-3/route.ts": {
+        "count": 14,
+        "why": "the device-proven frame-light recipe that cleared story Nights 3 and 4 (victory-night3/4-20260908), its opening rows written out as they ran rather than derived from the strategy route they vary"
+      },
+      "clone:packages/play/bin/phone/night-kit.ts <> packages/play/games/fnaf1/fnaf1-menu-probe.ts": {
+        "count": 12,
+        "why": "the run-record writers (events, numbered captures) of the FNaF 1 probe, the FNaF 1 runner and the FNaF 3/4 kit; they write different record files (probe.json, run.json) that Review’s packs read by name, so one writer waits on that format decision (audit PG9)"
+      },
+      "clone:packages/play/games/fnaf1/fnaf1-menu-probe.ts <> packages/play/games/fnaf1/fnaf1-night-run.ts": {
+        "count": 12,
+        "why": "the run-record writers (events, numbered captures) of the FNaF 1 probe, the FNaF 1 runner and the FNaF 3/4 kit; they write different record files (probe.json, run.json) that Review’s packs read by name, so one writer waits on that format decision (audit PG9)"
+      },
+      "clone:apps/desktop/test/companion-mcp.test.ts <> packages/review/test/solver.test.ts": {
+        "count": 9,
+        "why": "the before/after tree hash with which each test proves its server or verb writes nothing under docs/evidence; the tests live in different packages (the desktop composition root and Review), which share no test helper"
+      },
+      "clone:packages/propose/bin/factreplay.ts <> packages/propose/bin/nightloop-run.ts": {
+        "count": 9,
+        "why": "the exact replay of a cycle on a snapshot; factreplay writes its gate verdicts into the offline stream it replays, so taking nightloop-run’s gate (whose death reason names the cause) changes recorded stream content and waits for a stream-format revision"
+      },
+      "clone:packages/propose/parked/minus7/periodicsweep.ts <> packages/propose/parked/minus7/phasesweep.ts": {
+        "count": 9,
+        "why": "two parked Minus 7 sweeps over the same survival tally; parked code is frozen with the results it produced"
+      },
+      "clone:packages/propose/bin/nightloop-run.ts <> packages/propose/test/cycle-controller.test.ts": {
+        "count": 8,
+        "why": "the test’s exact gate is a different rule on purpose: it stops at the defensive primitive’s local obligation instead of replaying the cycle’s full duration, and shares only the snapshot walk"
+      },
+      "clone:packages/propose/bin/recompile/pilot/batch.ts <> packages/propose/bin/recompile/pilot/search.ts": {
+        "count": 8,
+        "why": "the batch and search drivers’ command lines, which share their pilot flags; the child reading they used to copy is pilot-child.ts since audit E18, and a strict parseArgs for both would take the rest"
+      },
+      "clone:packages/propose/bin/factreplay.ts <> packages/propose/test/cycle-controller.test.ts": {
+        "count": 7,
+        "why": "the test’s exact gate is a different rule on purpose: it stops at the defensive primitive’s local obligation instead of replaying the cycle’s full duration, and shares only the snapshot walk"
+      },
+      "clone:packages/propose/bin/plans/minus-3-plan.ts <> packages/propose/src/strategies/minus-3/model.ts": {
+        "count": 7,
+        "why": "the win/split/loss tally of a Minus 3 census; minus-3-plan.ts is a bundle-hashed source (engine.sourceSha256), so taking the model’s tally re-hashes every Minus 3 bundle and waits for the next deliberate re-emit"
+      },
+      "clone:packages/review/bin/grade/post-night-static.ts <> packages/review/bin/grade/static-terminal-window.ts": {
+        "count": 7,
+        "why": "two graders’ record serializer and --check entry, which re-derives a committed record and compares it byte for byte; each grader pins its own record’s bytes"
+      },
+      "clone:apps/desktop/test/test-evidence-cli.ts <> packages/review/test/promotions-query.test.ts": {
+        "count": 6,
+        "why": "the child-process stdout/stderr collection each test runs its CLI through; the tests live in different packages (the desktop composition root and Review), which share no test helper"
+      },
+      "clone:apps/desktop/test/test-fnaf1-winner.ts <> packages/propose/bin/census/test-fnaf1-census.ts": {
+        "count": 6,
+        "why": "the hand-rolled ok/eq/throws check harness these tests each carry; the lanes’ move to node:test and node:assert (audit G6) replaces it"
+      },
+      "clone:apps/desktop/test/test-fnaf1-winner.ts <> packages/propose/bin/census/test-fnaf1-device-lane.ts": {
+        "count": 6,
+        "why": "the hand-rolled ok/eq/throws check harness these tests each carry; the lanes’ move to node:test and node:assert (audit G6) replaces it"
+      },
+      "clone:apps/desktop/test/test-fnaf1-winner.ts <> packages/propose/bin/census/test-fnaf4-census.ts": {
+        "count": 6,
+        "why": "the hand-rolled ok/eq/throws check harness these tests each carry; the lanes’ move to node:test and node:assert (audit G6) replaces it"
+      },
+      "clone:packages/propose/bin/census/test-fnaf1-census.ts <> packages/propose/bin/census/test-fnaf1-device-lane.ts": {
+        "count": 6,
+        "why": "the hand-rolled ok/eq/throws check harness these tests each carry; the lanes’ move to node:test and node:assert (audit G6) replaces it"
+      },
+      "clone:packages/propose/bin/census/test-fnaf1-census.ts <> packages/propose/bin/census/test-fnaf4-census.ts": {
+        "count": 6,
+        "why": "the hand-rolled ok/eq/throws check harness these tests each carry; the lanes’ move to node:test and node:assert (audit G6) replaces it"
+      },
+      "clone:packages/propose/bin/census/test-fnaf1-device-lane.ts <> packages/propose/bin/census/test-fnaf4-census.ts": {
+        "count": 6,
+        "why": "the hand-rolled ok/eq/throws check harness these tests each carry; the lanes’ move to node:test and node:assert (audit G6) replaces it"
+      },
       "clone:packages/play/bin/grade/tap-stall-audit.ts <> packages/propose/bin/report/phase-reconstruct.ts": {
         "count": 6,
-        "why": "the 8 lines this pair carried when the gate landed; between the Play and Propose migrations one side had type annotations and only 6 matched, with both sides .ts again the original 8 matched, and typing Play's bins (2026-10-01) left 6"
+        "why": "a --name value flag reader both report tools define; node:util parseArgs replaces it in each (audit E19 did so for Propose’s census and recompile tools, not yet for report/ or Play’s grade/)"
       },
-      "clone:packages/play/bin/phone/night-kit.ts <> packages/play/games/fnaf1/fnaf1-menu-probe.ts": 12,
-      "clone:packages/play/bin/phone/night-kit.ts <> packages/play/games/fnaf1/fnaf1-night-run.ts": 6,
-      "clone:packages/play/bin/recompile/practice-audit.ts <> packages/propose/bin/census/fnaf1-device-lane.ts": 6,
-      "clone:packages/play/games/fnaf1/fnaf1-menu-probe.ts <> packages/play/games/fnaf1/fnaf1-night-run.ts": 12,
-      "clone:packages/play/games/fnaf3/fnaf3-run.ts <> packages/play/games/fnaf4/fnaf4-run.ts": 33,
-      "clone:packages/play/games/fnaf3/fnaf3-run.ts <> packages/propose/src/games/policy-fnaf3.ts": 8,
-      "clone:packages/play/src/sensors/fnaf2/calibration-state-rule.ts <> packages/play/src/sensors/fnaf2/monitor-rule.ts": 7,
-      "clone:packages/propose/bin/factreplay.ts <> packages/propose/bin/nightloop-run.ts": 9,
-      "clone:packages/propose/bin/minus-toys/cycle.ts <> packages/propose/parked/minus7/cycle.ts": 6,
-      "clone:packages/propose/bin/plans/minus-3-plan.ts <> packages/propose/src/strategies/minus-3/model.ts": 7,
-      "clone:packages/propose/bin/plans/minus3-frame-light.ts <> packages/propose/src/strategies/minus-3/route.ts": 6,
-      "clone:packages/propose/bin/recompile/compare-schedule-replay.ts <> packages/propose/bin/recompile/phone-encounter-replay.ts": 6,
-      "clone:packages/propose/bin/recompile/phone-clock-sweep.ts <> packages/propose/bin/recompile/phone-encounter-replay.ts": 6,
-      "clone:packages/propose/bin/recompile/pilot/batch.ts <> packages/propose/bin/recompile/pilot/search.ts": 8,
-      "clone:packages/propose/parked/minus7/hid-device-pilot.ts <> packages/propose/parked/minus7/stock-device-pilot.ts": 6,
-      "clone:packages/propose/parked/minus7/model.ts <> packages/propose/src/strategies/minus-toys/model.ts": 9,
-      "clone:packages/propose/parked/minus7/periodicsweep.ts <> packages/propose/parked/minus7/phasesweep.ts": 9,
-      "clone:packages/review/bin/grade/post-night-static.ts <> packages/review/bin/grade/static-terminal-window.ts": 7
+      "clone:packages/play/bin/phone/night-kit.ts <> packages/play/games/fnaf1/fnaf1-night-run.ts": {
+        "count": 6,
+        "why": "the run-record writers (events, numbered captures) of the FNaF 1 probe, the FNaF 1 runner and the FNaF 3/4 kit; they write different record files (probe.json, run.json) that Review’s packs read by name, so one writer waits on that format decision (audit PG9)"
+      },
+      "clone:packages/propose/bin/minus-toys/cycle.ts <> packages/propose/parked/minus7/cycle.ts": {
+        "count": 6,
+        "why": "a flag reader the live cycle tool shares with the parked copy it was promoted from; parked code is frozen"
+      },
+      "clone:packages/propose/bin/recompile/compare-schedule-replay.ts <> packages/propose/bin/recompile/phone-encounter-replay.ts": {
+        "count": 6,
+        "why": "the reader of a model draw trace’s seeded-frame headers; compare-schedule-replay pins the phone replay’s input format independently of the replay that writes it"
+      },
+      "clone:packages/propose/bin/recompile/phone-clock-sweep.ts <> packages/propose/bin/recompile/phone-encounter-replay.ts": {
+        "count": 6,
+        "why": "the `check RESULT.json` mode each recompile study offers, re-deriving its own record’s arithmetic; each study checks a different record schema"
+      },
+      "clone:packages/propose/parked/minus7/hid-device-pilot.ts <> packages/propose/parked/minus7/stock-device-pilot.ts": {
+        "count": 6,
+        "why": "the --press-late-ms option of two parked pilots; hid-device-pilot.ts is a bundle-hashed source and parked code is frozen"
+      },
+      "clone:packages/propose/test/cycle-library.test.ts <> packages/propose/test/cycle-planner.test.ts": {
+        "count": 6,
+        "why": "the reduced state both tests start from (Night 1, monitor raised on CAM 11, controls known), stated in each so each reads as its own fixture"
+      }
     }
   },
   "pythonTypes": {

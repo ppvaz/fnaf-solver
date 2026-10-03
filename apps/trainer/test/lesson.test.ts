@@ -6,26 +6,20 @@
 //   node apps/trainer/test/lesson.test.ts [url] [--wind-only]
 import assert from 'node:assert/strict';
 import { after, before, test } from 'node:test';
-import { launch, pageUrl } from './cdp.ts';
+import { is, openApp } from './cdp.ts';
 import type { Page } from './cdp.ts';
 
 const WIND_ONLY = process.argv.includes('--wind-only');
 
 let page: Page;
 before(async () => {
-  page = await launch();
-  await page.open(pageUrl());
-  await page.waitFor('the app', '!!window.app', value => value === true, 10_000);
-  await page.evaluate('localStorage.removeItem("m7.progress"); location.reload(); true');
-  await page.waitFor('the app after a reload', '!!window.app && document.getElementById("menu").classList.contains("shown")',
-    value => value === true, 10_000);
+  page = await openApp({ freshProgress: true });
 });
 after(async () => {
   await page?.evaluate('clearInterval(window.__auto); window.__release && window.__release(); true').catch(() => {});
   await page?.close();
 });
 
-const is = (want: unknown) => (value: unknown) => value === want;
 const atLeast = (floor: number) => (value: unknown) => typeof value === 'number' && value >= floor;
 const show = async (label: string, expression: string) => { console.log(`  ${label}: ${JSON.stringify(await page.evaluate(expression))}`); };
 const PASSED = 'document.getElementById("passed").classList.contains("shown")';

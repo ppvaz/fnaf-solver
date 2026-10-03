@@ -213,3 +213,22 @@ export async function launch({ domains = ['Runtime', 'Page'] }: { domains?: read
     },
   };
 }
+
+/** The waitFor predicate for one exact value. */
+export const is = (want: unknown) => (value: unknown) => value === want;
+
+/**
+ * A page on the trainer with its app loaded. `freshProgress` clears the stored
+ * lesson progress and reloads, so a check starts from the menu with nothing passed.
+ */
+export async function openApp({ freshProgress = false }: { freshProgress?: boolean } = {}): Promise<Page> {
+  const page = await launch();
+  await page.open(pageUrl());
+  await page.waitFor('the app', '!!window.app', is(true), 10_000);
+  if (freshProgress) {
+    await page.evaluate('localStorage.removeItem("m7.progress"); location.reload(); true');
+    await page.waitFor('the app after a reload', '!!window.app && document.getElementById("menu").classList.contains("shown")',
+      is(true), 10_000);
+  }
+  return page;
+}

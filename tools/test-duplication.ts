@@ -8,29 +8,47 @@
 // with that reason.
 //
 // A clone is a run of at least WINDOW consecutive normalised lines that two
-// files share: trimmed, with blank, comment-only and punctuation-only lines
-// dropped, so formatting and comments do not hide a copy. Tests, fixtures and
-// frozen records are not scanned. Each pair of files is one finding, counted
-// in shared normalised lines; the pairs that existed when this landed are in
-// tools/quality-baseline.json (`duplication`) and only shrink (tools/gate-kit.ts).
+// files share: types erased by Node's own stripper (so a copy that gained
+// annotations in one file is still a copy), trimmed, with blank, comment-only
+// and punctuation-only lines dropped, so formatting and comments do not hide a
+// copy. Tests are scanned like any other code -- a test harness pasted into
+// six files drifts like any other copy -- and only test data and fixtures are
+// not. Each pair of files is one finding, counted in shared normalised lines;
+// a pair is accepted only as a `{count, why}` entry in
+// tools/quality-baseline.json (`duplication`) naming why its copies are meant,
+// and an entry only shrinks (tools/gate-kit.ts).
 //
 //   node tools/test-duplication.ts            exit 0 clean, 1 naming each pair
 //   node tools/test-duplication.ts --list     print every pair with its first shared line
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
+import { stripTypeScriptTypes } from 'node:module';
 import { join } from 'node:path';
 import { ROOT, loadBaseline, ratchet, repoFiles, report } from './gate-kit.ts';
 
 export const WINDOW = 6;
 const SCRIPT = /\.(?:js|mjs|cjs|ts|mts)$/;
-const scanned = (path: string) => SCRIPT.test(path) && /^(?:packages|apps|tools|android)\//.test(path) &&
-  !/(?:^|\/)(?:test|tests|testdata|fixtures?)\//.test(path) && !/(?:^|\/)test[^/]*\.|\.test\.|\.d\.ts$/.test(path);
+export const scanned = (path: string) => SCRIPT.test(path) && /^(?:packages|apps|tools|android)\//.test(path) &&
+  !/(?:^|\/)(?:testdata|fixtures?)\//.test(path) && !/\.d\.ts$/.test(path);
+
+/**
+ * A module's text with its types erased, positions kept (Node's `strip` mode
+ * blanks what it removes), so line numbers still name the source.
+ * @param path decides whether there are types to erase
+ */
+export function untyped(path: string, text: string) {
+  if (!/\.m?ts$/.test(path)) return text;
+  try { return stripTypeScriptTypes(text, { mode: 'strip' }); } catch { return text; }
+}
 
 /** The lines that carry code, each with its line number. */
 export function normalise(text: string) {
   const lines: { line: number, text: string }[] = [];
   let block = false;
+  // An import, or an export list, spread over several lines: naming the same
+  // modules is not copying code, so the whole statement is skipped.
+  let names = false;
   text.split('\n').forEach((raw, index) => {
     let line = raw.trim();
     if (block) {
@@ -38,11 +56,17 @@ export function normalise(text: string) {
       line = line.slice(line.indexOf('*/') + 2).trim();
       block = false;
     }
+    if (names) {
+      if (line.includes('}')) names = false;
+      return;
+    }
     if (line.startsWith('/*') && !line.includes('*/')) { block = true; return; }
     if (!line || line.startsWith('//') || line.startsWith('*') || line.startsWith('/*') || line.startsWith('#!')) return;
     if (/^[\s{}()[\];,.]*$/.test(line)) return;
     if (/^(?:import|export)\b.*\bfrom\b/.test(line) || /^import\s+['"]/.test(line)) return;
-    lines.push({ line: index + 1, text: line.replace(/\s+/g, ' ') });
+    if (/^(?:import|export)\s+(?:type\s+)?\{[^}]*$/.test(line) || /^import\s+[\w$]+\s*,\s*\{[^}]*$/.test(line)) { names = true; return; }
+    // Spaces a type stripper leaves before punctuation (`x as T,` becomes `x      ,`) are not code.
+    lines.push({ line: index + 1, text: line.replace(/\s+/g, ' ').replace(/ ([,;:)\]}])/g, '$1').replace(/([([{]) /g, '$1') });
   });
   return lines;
 }
@@ -55,7 +79,7 @@ export function clones(files: Map<string, string>) {
   const windows: Map<string, {path: string, at: number}[]> = new Map();
   const normalised = new Map<string, ReturnType<typeof normalise>>();
   for (const [path, text] of files) {
-    const lines = normalise(text);
+    const lines = normalise(untyped(path, text));
     normalised.set(path, lines);
     for (let at = 0; at + WINDOW <= lines.length; at += 1) {
       const key = createHash('sha1').update(lines.slice(at, at + WINDOW).map(({ text: code }) => code).join('\n')).digest('hex');
@@ -91,6 +115,16 @@ export function clones(files: Map<string, string>) {
     'a pasted block must be caught across comments and blank lines, and a shorter run must not');
   assert.equal(found.get('clone:packages/a/src/one.js <> packages/b/src/two.js')?.count, WINDOW + 3);
   assert.deepEqual(normalise('/*\n * doc\n */\nconst a = 1; // x\n}\n\n'), [{ line: 4, text: 'const a = 1; // x' }]);
+  assert.deepEqual(normalise("import {\n  a,\n  b,\n} from './x.ts';\nexport {\n  c,\n};\nconst d = 1;\n"), [{ line: 8, text: 'const d = 1;' }],
+    'an import or export list spread over lines is not code');
+  // A copy that differs only in its types is still a copy.
+  const untypedBlock = Array.from({ length: WINDOW }, (_, i) => `const value${i} = compute(state, ${i});`).join('\n');
+  const typedBlock = Array.from({ length: WINDOW }, (_, i) => `const value${i}: number = compute(state as State, ${i});`).join('\n');
+  assert.deepEqual([...clones(new Map([['packages/a/src/one.ts', untypedBlock], ['packages/b/src/two.ts', typedBlock]])).keys()],
+    ['clone:packages/a/src/one.ts <> packages/b/src/two.ts'], 'a copy that only gained types must be caught');
+  // Tests are scanned; test data and fixtures are not.
+  assert.ok(scanned('apps/trainer/test/browser.test.ts') && scanned('packages/play/test/campaign.test.ts'), 'tests must be scanned');
+  assert.ok(!scanned('packages/play/test/testdata/mock.ts') && !scanned('packages/source/recompile/fixtures/a.ts'), 'fixtures must not be');
 }
 
 const files = new Map(repoFiles().filter(scanned).map(path => [path, readFileSync(join(ROOT, path), 'utf8')]));

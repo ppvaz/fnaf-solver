@@ -22,7 +22,7 @@ import { extname, join, normalize } from 'node:path';
 import { after, before, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { isList } from '@sixam/kernel';
-import { launch } from './cdp.ts';
+import { is, launch } from './cdp.ts';
 import type { Page } from './cdp.ts';
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
@@ -67,7 +67,6 @@ let page: Page;
 before(async () => { page = await launch({ domains: ['Runtime', 'Page', 'Log', 'Network'] }); });
 after(async () => { await page?.close(); server?.close(); });
 
-const is = (want: unknown) => (value: unknown) => value === want;
 const text = async (expression: string) => String(await page.evaluate(expression));
 /**
  * A tap the page counts as a person's (user activation), dispatched as input

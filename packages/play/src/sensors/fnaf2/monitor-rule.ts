@@ -142,7 +142,19 @@ function anchorReadsUp(anchor: Anchor, cells: readonly unknown[]) {
   return 'in-band';
 }
 
-export { cellFeatures, anchorReadsUp };
+/**
+ * The whole-grid mean luma the darkness guard compares, floored, or NaN when a
+ * cell is not an integer sample.
+ */
+function gridMeanLuma(cells: readonly unknown[]) {
+  const total = cells.reduce<number>((sum, cell) => {
+    if (!Number.isInteger(cell)) return NaN;
+    return sum + cellFeatures.luma(cell);
+  }, 0);
+  return Math.floor(total / cells.length);
+}
+
+export { cellFeatures, anchorReadsUp, gridMeanLuma };
 
 /**
  * Derive the monitorUp measurement from one Companion observation.
@@ -172,11 +184,7 @@ export function measureMonitorUp(snapshot: unknown, rule: MonitorRule | null,
   if (rule.adapter.guard.feature === 'helper_grid_mean_luma') {
     // The darkness guard is the whole-grid mean luma, computed from the same
     // sensor rows the anchors read -- no dependency on a newer helper build.
-    const total = source.reduce<number>((sum, cell) => {
-      if (!Number.isInteger(cell)) return NaN;
-      return sum + cellFeatures.luma(cell);
-    }, 0);
-    const guardValue = Math.floor(total / source.length);
+    const guardValue = gridMeanLuma(source);
     if (!Number.isFinite(guardValue)) return unknown('feature-missing');
     if (guardValue < rule.adapter.guard.min) return unknown('frame-dark');
   }
