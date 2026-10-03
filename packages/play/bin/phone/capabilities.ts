@@ -6,7 +6,7 @@
 // On 2026-09-11 an agent proposed capturing Android's input-dispatch trace to
 // settle why a mask press was lost, wired it in, ran a full night, and only
 // then learned the handset advertises `android.inputmethod` and no
-// `android.input.inputevent` -- so `inputtrace.py` had no app dispatch source
+// `android.input.inputevent` -- so `inputtrace.py` (now `inputtrace.ts`) had no app dispatch source
 // to parse and correctly reported NO APP DISPATCH SLICES. The run was not
 // wasted, but the question was not answered either, and nothing in the
 // repository would have said so in advance.
@@ -65,7 +65,7 @@ type Device = ReturnType<typeof probe>;
 /** An instrument, what it needs of the phone, and whether this phone has it (null: unread). */
 interface Instrument { tool: string, needs: string, capture: string, available: (d: Device) => boolean | null, ifMissing: string }
 const INSTRUMENTS: readonly Instrument[] = [
-  { tool: 'packages/play/bin/probe/inputtrace.py',
+  { tool: 'packages/play/bin/probe/inputtrace.ts',
     needs: 'a Perfetto app input-dispatch data source (android.input.inputevent)',
     capture: 'packages/play/bin/probe/atrace-input.sh RUN SECONDS -- COMMAND',
     available: d => (d.perfettoDataSources === null ? null

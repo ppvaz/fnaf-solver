@@ -271,7 +271,7 @@ SURVIVAL_ARGS=(python3 "$HERE/grade-night.py" "$VIDEO")
 #     control for the rendered-video inference. A trace artifact without a
 #     host parser is a diagnostic failure, not evidence that the input landed.
 if [ -f "$INPUT_TRACE" ]; then
-  INPUT_TRACE_ARGS=(python3 "$HERE/../../../play/bin/probe/inputtrace.py" "$INPUT_TRACE"
+  INPUT_TRACE_ARGS=(node "$HERE/../../../play/bin/probe/inputtrace.ts" "$INPUT_TRACE"
     --package com.scottgames.fnaf2)
   [ -f "$SF_LATENCY" ] && INPUT_TRACE_ARGS+=(--sf-latency "$SF_LATENCY")
   step "input dispatch / frame landing (Perfetto)" "${INPUT_TRACE_ARGS[@]}"

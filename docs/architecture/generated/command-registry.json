@@ -1177,8 +1177,8 @@
       "lifecycle": "supported"
     },
     {
-      "id": "packages/play/bin/probe/inputtrace.py",
-      "invocation": "packages/play/bin/probe/inputtrace.py TRACE [--trace-processor PATH] [--package PKG] [--sf-latency FILE]",
+      "id": "packages/play/bin/probe/inputtrace.ts",
+      "invocation": "packages/play/bin/probe/inputtrace.ts TRACE [--trace-processor PATH] [--package PKG] [--sf-latency FILE]",
       "kind": "check",
       "lifecycle": "supported"
     },
@@ -1189,8 +1189,8 @@
       "lifecycle": "supported"
     },
     {
-      "id": "packages/play/bin/probe/test-inputtrace.py",
-      "invocation": "packages/play/bin/probe/test-inputtrace.py",
+      "id": "packages/play/bin/probe/test-inputtrace.ts",
+      "invocation": "packages/play/bin/probe/test-inputtrace.ts",
       "kind": "check",
       "lifecycle": "supported"
     },

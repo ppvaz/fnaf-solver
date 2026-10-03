@@ -154,7 +154,7 @@
         "why": "the four stdlib-only tests of those lab scripts, ported with them (Pedro, 2026-10-02: unforced Python is ported to TypeScript (characterize, port, compare, switch), not typed in place)"
       },
       "py:packages/play/bin": {
-        "count": 378,
+        "count": 354,
         "why": "19 scripts, 8 of them Pillow, numpy or SciPy frame and audio analysis that stays Python and is typed in place; the 11 stdlib-only ones are ported (Pedro, 2026-10-02: unforced Python is ported to TypeScript (characterize, port, compare, switch), not typed in place)"
       },
       "py:packages/play/games": {

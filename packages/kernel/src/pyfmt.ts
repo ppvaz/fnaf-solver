@@ -122,6 +122,11 @@ const WS = '[\\t\\n\\v\\f\\r\\x1c-\\x1f \\x85\\xa0\\u1680\\u2000-\\u200a\\u2028\
 const FIELDS = new RegExp(`${WS}+`);
 const LINE_BREAK = /\r\n|[\n\r\v\f\x1c\x1d\x1e\x85\u2028\u2029]/;
 
+const EDGES = new RegExp(`^${WS}+|${WS}+$`, 'g');
+
+/** `text.strip()`: Python's whitespace taken off both ends. */
+export const pyStrip = (text: string): string => text.replace(EDGES, '');
+
 /** `text.split()`: the fields between runs of Python's whitespace. */
 export const pySplit = (text: string): string[] => text.split(FIELDS).filter(field => field !== '');
 

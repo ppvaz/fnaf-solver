@@ -110,30 +110,93 @@
       "packages/propose/bin/policy/test-policy-interpreter.ts",
       "apps/desktop/test/test-deathchart.ts",
       "packages/propose/test/policyartifacttest.ts",
-      "packages/propose/test/policysearchtest.ts"
+      "packages/propose/test/policysearchtest.ts",
+      "packages/kernel/test/pystats.test.ts"
     ],
     "steps": [
-      ["python3","packages/review/bin/recompile/test-phone-input-ledger.py"],
-      ["python3","packages/source/decompile/test-instances.py"],
-      ["python3","packages/source/decompile/test-nightmap.py"],
-      ["python3","packages/play/games/fnaf1/test-fnaf1-menus.py"],
-      ["python3","packages/play/games/fnaf1/test-fnaf1-door-light.py"],
-      ["python3","packages/play/games/fnaf1/test-fnaf1-title-stars.py"],
-      ["python3","packages/play/bin/audio/test-bt-audio-collector.py"],
-      ["python3","packages/play/games/fnaf1/test-fnaf1-teach-overlay.py"],
-      ["python3","packages/play/src/sensors/screencap/test-sensor.py"],
-      ["node","tools/affected-test.ts","--self-check"],
-      ["python3","packages/source/decompile/test-aimap.py"],
-      ["packages/play/bin/audio/test-bt-audio-link.sh"],
-      ["python3","packages/play/bin/calibrate/test-monitor-calibrate.py"],
-      ["python3","packages/review/bin/grade/test-camtrace.py"],
-      ["python3","packages/review/bin/grade/test-sweepcheck.py"],
-      ["python3","packages/review/bin/legacy/test-validate-session.py"],
-      ["python3","packages/play/test/test-intro-card.py"],
-      ["packages/play/bin/phone/test-select-adb.sh"],
-      ["bash","packages/play/bin/audio/test-capture-bt-audio.sh"],
-      ["python3","packages/play/bin/calibrate/test-camera-calibrate.py"],
-      ["python3","packages/review/bin/recompile/test-audio-records.py"]
+      [
+        "python3",
+        "packages/review/bin/recompile/test-phone-input-ledger.py"
+      ],
+      [
+        "python3",
+        "packages/source/decompile/test-instances.py"
+      ],
+      [
+        "python3",
+        "packages/source/decompile/test-nightmap.py"
+      ],
+      [
+        "python3",
+        "packages/play/games/fnaf1/test-fnaf1-menus.py"
+      ],
+      [
+        "python3",
+        "packages/play/games/fnaf1/test-fnaf1-door-light.py"
+      ],
+      [
+        "python3",
+        "packages/play/games/fnaf1/test-fnaf1-title-stars.py"
+      ],
+      [
+        "python3",
+        "packages/play/bin/audio/test-bt-audio-collector.py"
+      ],
+      [
+        "python3",
+        "packages/play/games/fnaf1/test-fnaf1-teach-overlay.py"
+      ],
+      [
+        "python3",
+        "packages/play/src/sensors/screencap/test-sensor.py"
+      ],
+      [
+        "node",
+        "tools/affected-test.ts",
+        "--self-check"
+      ],
+      [
+        "python3",
+        "packages/source/decompile/test-aimap.py"
+      ],
+      [
+        "packages/play/bin/audio/test-bt-audio-link.sh"
+      ],
+      [
+        "python3",
+        "packages/play/bin/calibrate/test-monitor-calibrate.py"
+      ],
+      [
+        "python3",
+        "packages/review/bin/grade/test-camtrace.py"
+      ],
+      [
+        "python3",
+        "packages/review/bin/grade/test-sweepcheck.py"
+      ],
+      [
+        "python3",
+        "packages/review/bin/legacy/test-validate-session.py"
+      ],
+      [
+        "python3",
+        "packages/play/test/test-intro-card.py"
+      ],
+      [
+        "packages/play/bin/phone/test-select-adb.sh"
+      ],
+      [
+        "bash",
+        "packages/play/bin/audio/test-capture-bt-audio.sh"
+      ],
+      [
+        "python3",
+        "packages/play/bin/calibrate/test-camera-calibrate.py"
+      ],
+      [
+        "python3",
+        "packages/review/bin/recompile/test-audio-records.py"
+      ]
     ]
   },
   "unit:slow": {
@@ -144,10 +207,23 @@
       "packages/propose/test/test-winners-rebuild.ts"
     ],
     "steps": [
-      ["python3","apps/lab/test/test-overnight-window.py"],
-      ["python3","apps/lab/test/test-night-job.py"],
-      ["node","tools/test.ts","--gates"],
-      ["python3","packages/play/bin/audio/test-fnaf4-cues.py"]
+      [
+        "python3",
+        "apps/lab/test/test-overnight-window.py"
+      ],
+      [
+        "python3",
+        "apps/lab/test/test-night-job.py"
+      ],
+      [
+        "node",
+        "tools/test.ts",
+        "--gates"
+      ],
+      [
+        "python3",
+        "packages/play/bin/audio/test-fnaf4-cues.py"
+      ]
     ]
   },
   "contracts": {
@@ -261,21 +337,63 @@
       "packages/review/bin/grade/test-office-seed-bracket.ts"
     ],
     "steps": [
-      ["python3","packages/review/bin/grade/test-framesource.py"],
-      ["python3","packages/review/bin/grade/test-decode-once.py"],
-      ["python3","packages/review/bin/grade/test-grade-night.py"],
-      ["python3","packages/review/bin/grade/test-cycle-ledger.py"],
-      ["python3","packages/kernel/test/contract-vectors.py"],
-      ["python3","packages/play/bin/companion/test-companion-setup.py"],
-      ["python3","packages/play/test/test-companion-device-lock.py"],
-      ["python3","apps/lab/test/test-companion-queue.py"],
-      ["python3","apps/lab/test/test-process-tree.py"],
-      ["python3","packages/play/bin/companion/test-teach-panel-clearance.py"],
-      ["python3","packages/review/bin/grade/test-death-cause.py"],
-      ["packages/play/bin/phone/test-game-teardown.sh"],
-      ["packages/play/bin/audio/test-bt-audio-link.sh"],
-      ["android/companion/test.sh"],
-      ["lane","device:calibration"]
+      [
+        "python3",
+        "packages/review/bin/grade/test-framesource.py"
+      ],
+      [
+        "python3",
+        "packages/review/bin/grade/test-decode-once.py"
+      ],
+      [
+        "python3",
+        "packages/review/bin/grade/test-grade-night.py"
+      ],
+      [
+        "python3",
+        "packages/review/bin/grade/test-cycle-ledger.py"
+      ],
+      [
+        "python3",
+        "packages/kernel/test/contract-vectors.py"
+      ],
+      [
+        "python3",
+        "packages/play/bin/companion/test-companion-setup.py"
+      ],
+      [
+        "python3",
+        "packages/play/test/test-companion-device-lock.py"
+      ],
+      [
+        "python3",
+        "apps/lab/test/test-companion-queue.py"
+      ],
+      [
+        "python3",
+        "apps/lab/test/test-process-tree.py"
+      ],
+      [
+        "python3",
+        "packages/play/bin/companion/test-teach-panel-clearance.py"
+      ],
+      [
+        "python3",
+        "packages/review/bin/grade/test-death-cause.py"
+      ],
+      [
+        "packages/play/bin/phone/test-game-teardown.sh"
+      ],
+      [
+        "packages/play/bin/audio/test-bt-audio-link.sh"
+      ],
+      [
+        "android/companion/test.sh"
+      ],
+      [
+        "lane",
+        "device:calibration"
+      ]
     ]
   },
   "core": {
@@ -286,9 +404,7 @@
       "packages/play/test/estimator.test.ts",
       "packages/source/test/seed-recoverytest.ts"
     ],
-    "steps": [
-
-    ]
+    "steps": []
   },
   "device:calibration": {
     "node": [
@@ -296,12 +412,18 @@
       "packages/play/test/calibration-state-rule.test.ts",
       "packages/play/bin/probe/test-intersection-state-gate.ts",
       "packages/play/bin/probe/test-hid-intersection-probe.ts",
-      "packages/review/bin/grade/test-actuation-frame-metric.ts"
+      "packages/review/bin/grade/test-actuation-frame-metric.ts",
+      "packages/play/bin/probe/test-inputtrace.ts"
     ],
     "steps": [
-      ["python3","packages/play/bin/calibrate/test-mask-calibrate.py"],
-      ["python3","packages/play/bin/probe/test-inputtrace.py"],
-      ["python3","packages/review/bin/grade/test-input-frame-align.py"]
+      [
+        "python3",
+        "packages/play/bin/calibrate/test-mask-calibrate.py"
+      ],
+      [
+        "python3",
+        "packages/review/bin/grade/test-input-frame-align.py"
+      ]
     ]
   }
 }

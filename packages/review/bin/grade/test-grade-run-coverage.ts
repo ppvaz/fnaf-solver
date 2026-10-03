@@ -102,7 +102,7 @@ const SIBLING_EXCLUDED = new Map([
   ['custom-night-readback.py', 'a Custom Night observer the campaign composes before a Night 7 run (dial readback); not a grader'],
   ['arm-verification.ts', 'shared camera-pair constants for strategy arming headers and host verification; not a run grader, covered by test-minus-toys-plan.ts'],
   ['pan-shift.py', 'measuring stick for pan-probe.sh; the scroll is better read from the dump'],
-  ['atrace-input.sh', 'trace capture wrapper that brackets a command and writes device evidence; inputtrace.py grades the resulting trace when present'],
+  ['atrace-input.sh', 'trace capture wrapper that brackets a command and writes device evidence; inputtrace.ts grades the resulting trace when present'],
   // packages/play/bin/calibrate
   ['camera-calibrate.py', 'native cameraSelected rule builder, gated by test-camera-calibrate.py; labelled calibration frames are inputs, not a night-run artifact'],
   ['monitor-calibrate.py', 'native monitorUp rule builder, gated by test-monitor-calibrate.py; labelled calibration frames are inputs, not a night-run artifact'],

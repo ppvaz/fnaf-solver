@@ -361,7 +361,7 @@ try {
   refused(await call('check', { rule: 'directional-reuse', constant: 'SEAM_BANDS', use: { first: 'monitor', then: 'mask' } }),
     'directional-reuse', 'SEAM_BANDS in reverse');
   claimed(await call('check', { rule: 'directional-reuse', constant: 'SEAM_BANDS', use: { first: 'mask', then: 'monitor' } }), 'SEAM_BANDS as measured');
-  refused(await call('check', { rule: 'capabilities-first', instrument: 'packages/play/bin/probe/inputtrace.py' }), 'capabilities-first',
+  refused(await call('check', { rule: 'capabilities-first', instrument: 'packages/play/bin/probe/inputtrace.ts' }), 'capabilities-first',
     'an instrument before capabilities');
   refused(await call('check', { rule: 'unknown-as-number', operands: { gap: 400, floor: { kind: 'UNKNOWN', reason: 'not traced' } } }),
     'unknown-as-number', 'UNKNOWN in arithmetic');

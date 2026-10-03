@@ -1,9 +1,9 @@
 // pyLoads, pyLoadsBytes and pyReprOf against Python 3.12's json.loads and repr(): each expected string below is
 // what CPython printed for the same input (repr of the value, or str() of the error).
 import assert from 'node:assert/strict';
-import { pyLoads, pyLoadsBytes, pyReprOf } from '../src/pyjson.ts';
+import { PyUnicodeDecodeError, pyDecodeUtf8, pyLoads, pyLoadsBytes, pyReprOf } from '../src/pyjson.ts';
 import { test } from 'node:test';
-test("CPython JSON values and decoding refusals", async () => {
+test("CPython JSON values and UTF-8 errors", async () => {
 
 
 const repr = (text: string) => pyReprOf(pyLoads(text));
@@ -29,12 +29,17 @@ for (const [text, message] of refusals) assert.throws(() => pyLoads(text), { mes
 const bytes = (hex: string) => pyLoadsBytes(Buffer.from(hex, 'hex'));
 assert.throws(() => bytes('22ff22'), { message: "'utf-8' codec can't decode byte 0xff in position 1: invalid start byte" });
 assert.throws(() => bytes('22e28222'), { message: "'utf-8' codec can't decode bytes in position 1-2: invalid continuation byte" });
-// A surrogate is let through only whole; a broken one is refused as the strict decoder refuses its lead.
-assert.throws(() => bytes('22eda04322'), { message: "'utf-8' codec can't decode byte 0xed in position 1: invalid continuation byte" });
-assert.throws(() => bytes('22eda0'), { message: "'utf-8' codec can't decode byte 0xed in position 1: invalid continuation byte" });
 assert.equal(pyReprOf(bytes('22f09f988022')), "'\u{1F600}'");
 assert.equal(pyReprOf(bytes('efbbbf7b2261223a20317d')), "{'a': 1}");
 
-console.log(`pyjson: 3 values read and printed, ${refusals.length} refusals and 6 byte bodies as CPython's json.loads and repr give them`);
+// bytes.decode('utf-8'): strict refuses the encoded surrogate that surrogatepass lets through, as a ValueError, and
+// keeps a BOM.
+const hex = (text: string) => Buffer.from(text, 'hex');
+assert.throws(() => pyDecodeUtf8(hex('61eda080')), (error: Error) => error instanceof PyUnicodeDecodeError
+  && error.message === "'utf-8' codec can't decode byte 0xed in position 1: invalid continuation byte");
+assert.equal(pyDecodeUtf8(hex('eda080'), 'surrogatepass'), String.fromCharCode(0xd800));
+assert.equal(pyDecodeUtf8(hex('efbbbf61')), `${String.fromCharCode(0xfeff)}a`);
+
+console.log(`pyjson: 3 values read and printed, ${refusals.length} refusals, 4 byte bodies and 3 decodes as CPython's json.loads, repr and bytes.decode give them`);
 
 });

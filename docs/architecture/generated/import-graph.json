@@ -812,7 +812,8 @@
       "imports": [
         "./pyargs.ts",
         "./pyfmt.ts",
-        "./pyjson.ts"
+        "./pyjson.ts",
+        "./pystats.ts"
       ]
     },
     {
@@ -825,6 +826,18 @@
       "file": "packages/kernel/src/pyfmt.ts",
       "imports": [
         "./labels.ts"
+      ]
+    },
+    {
+      "file": "packages/kernel/src/pyjson.ts",
+      "imports": [
+        "./pyfmt.ts"
+      ]
+    },
+    {
+      "file": "packages/kernel/src/pyjson.ts",
+      "imports": [
+        "./pyfmt.ts"
       ]
     },
     {
@@ -915,6 +928,14 @@
       "file": "packages/kernel/test/pyjson.test.ts",
       "imports": [
         "../src/pyjson.ts",
+        "node:assert/strict",
+        "node:test"
+      ]
+    },
+    {
+      "file": "packages/kernel/test/pystats.test.ts",
+      "imports": [
+        "../src/pystats.ts",
         "node:assert/strict",
         "node:test"
       ]
@@ -1122,6 +1143,19 @@
       ]
     },
     {
+      "file": "packages/play/bin/probe/inputtrace.ts",
+      "imports": [
+        "@sixam/kernel",
+        "@sixam/kernel/py",
+        "node:child_process",
+        "node:crypto",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "packages/play/bin/probe/intersection-state-gate.ts",
       "imports": [
         "../../src/campaign/physical-ports.ts",
@@ -1145,6 +1179,19 @@
         "../phone/hid-sweep-probe.ts",
         "./hid-intersection-probe.ts",
         "node:assert/strict"
+      ]
+    },
+    {
+      "file": "packages/play/bin/probe/test-inputtrace.ts",
+      "imports": [
+        "./inputtrace.ts",
+        "node:assert/strict",
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:test",
+        "node:url"
       ]
     },
     {

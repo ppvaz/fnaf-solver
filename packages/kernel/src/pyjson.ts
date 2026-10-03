@@ -221,11 +221,25 @@ export function pyReprOf(value: PyValue | number): string {
   return `[${(value as readonly PyValue[]).map(pyReprOf).join(', ')}]`;
 }
 
-/** CPython's UTF-8 decoder with errors='surrogatepass': the text, or the UnicodeDecodeError's message for the first bad sequence. */
-function utf8(bytes: Uint8Array): string {
+/** Python's UnicodeDecodeError, a ValueError there and so a RangeError here. */
+export class PyUnicodeDecodeError extends RangeError {}
+
+const STRICT = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
+
+/** bytes.decode('utf-8', errors) as CPython decodes: the text, a BOM kept, or the UnicodeDecodeError's message for
+ *  the first bad sequence. Strict refuses an encoded surrogate (ED A0-BF), as WHATWG UTF-8 does, so valid text takes
+ *  the platform decoder; surrogatepass lets one through. */
+export function pyDecodeUtf8(bytes: Uint8Array, errors: 'strict' | 'surrogatepass' = 'strict'): string {
+  if (errors === 'strict') {
+    try {
+      return STRICT.decode(bytes);
+    } catch {
+      // The sequence is bad; the decoder below names it as CPython does.
+    }
+  }
   let out = '';
   const fail = (start: number, stop: number, reason: string): never => {
-    throw new Error(stop - start === 1
+    throw new PyUnicodeDecodeError(stop - start === 1
       ? `'utf-8' codec can't decode byte 0x${bytes[start].toString(16).padStart(2, '0')} in position ${start}: ${reason}`
       : `'utf-8' codec can't decode bytes in position ${start}-${stop - 1}: ${reason}`);
   };
@@ -235,8 +249,9 @@ function utf8(bytes: Uint8Array): string {
     const size = lead >= 0xc2 && lead <= 0xdf ? 2 : lead >= 0xe0 && lead <= 0xef ? 3 : lead >= 0xf0 && lead <= 0xf4 ? 4 : 0;
     if (!size) fail(k, k + 1, 'invalid start byte');
     // The second byte's range depends on the lead (no overlongs, no code points past U+10FFFF); a surrogate
-    // (ED A0-BF) is let through, as surrogatepass does.
-    const [low, high] = lead === 0xe0 ? [0xa0, 0xbf] : lead === 0xf0 ? [0x90, 0xbf] : lead === 0xf4 ? [0x80, 0x8f] : [0x80, 0xbf];
+    // (ED A0-BF) is let through only by surrogatepass.
+    const [low, high] = lead === 0xe0 ? [0xa0, 0xbf] : lead === 0xf0 ? [0x90, 0xbf] : lead === 0xf4 ? [0x80, 0x8f]
+      : lead === 0xed && errors === 'strict' ? [0x80, 0x9f] : [0x80, 0xbf];
     for (let n = 1; n < size; n += 1) {
       const byte = bytes[k + n];
       if (k + n < bytes.length && (n === 1 ? byte >= low && byte <= high : byte >= 0x80 && byte <= 0xbf)) continue;
@@ -265,8 +280,8 @@ export function pyLoadsBytes(bytes: Uint8Array): PyValue {
   else if (bytes.length === 2 && !bytes[0]) encoding = 'utf-16-be';
   else if (bytes.length === 2 && !bytes[1]) encoding = 'utf-16-le';
   else encoding = 'utf-8';
-  if (encoding === 'utf-8') return pyLoads(utf8(bytes));
-  if (encoding === 'utf-8-sig') return pyLoads(utf8(bytes.subarray(3)));
+  if (encoding === 'utf-8') return pyLoads(pyDecodeUtf8(bytes, 'surrogatepass'));
+  if (encoding === 'utf-8-sig') return pyLoads(pyDecodeUtf8(bytes.subarray(3), 'surrogatepass'));
   // UTF-16 and UTF-32 bodies: decoded leniently; Python's codec messages for a broken one are not reproduced.
   const label = encoding.startsWith('utf-32') ? null : encoding === 'utf-16' ? (bytes[0] === 0xff ? 'utf-16le' : 'utf-16be') : encoding.replace('utf-16-', 'utf-16');
   if (label) return pyLoads(new TextDecoder(label, { ignoreBOM: false }).decode(bytes));

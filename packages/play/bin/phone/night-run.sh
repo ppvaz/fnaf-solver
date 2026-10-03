@@ -168,7 +168,7 @@ CAUSE_MODEL_PATH="packages/play/profiles/fnaf2/moto-g56/death-cause-withered-chi
 TRACE_TOOL="packages/play/bin/probe/atrace-input.sh"
 for path in "$BUNDLE/manifest.json" "$QUALIFICATION" "$TITLE_MODEL_PATH" \
             packages/propose/bin/report/phase-reconstruct.ts packages/review/bin/grade/run-timeline.py \
-            packages/play/src/sensors/screencap/title-observe.py packages/play/bin/probe/inputtrace.py \
+            packages/play/src/sensors/screencap/title-observe.py packages/play/bin/probe/inputtrace.ts \
             "$TRACE_TOOL" apps/desktop/src/device-cli.ts apps/desktop/src/evidence.ts; do
   [ -e "$path" ] || die "missing required input: $path"
 done
@@ -256,7 +256,7 @@ CAMPAIGN_DIR=""
 #
 # Perfetto cannot answer the same question on this handset: it advertises
 # `android.inputmethod` and no `android.input.inputevent`, so there is no app
-# dispatch source to capture and `inputtrace.py` correctly reports
+# dispatch source to capture and `inputtrace.ts` correctly reports
 # NO APP DISPATCH SLICES.
 #
 # OPT-IN, deliberately. The trace drains the same ImageReader the executor's
@@ -837,7 +837,7 @@ fi
 # Perfetto input dispatch, bracketing the campaign.
 #
 # This is the one instrument that can say whether the GAME received a press or
-# whether it never arrived -- `inputtrace.py` reports app MotionEvents, contact
+# whether it never arrived -- `inputtrace.ts` reports app MotionEvents, contact
 # lengths and latched contacts. grade-run.sh has always had the slot and has
 # always printed "input trace: none" because nothing captured one.
 #

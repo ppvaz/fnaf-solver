@@ -782,6 +782,24 @@
       }
     },
     {
+      "id": "packages/kernel/test/pystats.test.ts",
+      "lane": "test:unit",
+      "owner": "@sixam/kernel",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.ts per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
       "id": "packages/kernel/test/venue-identity.test.ts",
       "lane": "test:unit",
       "owner": "@sixam/kernel",
@@ -1314,7 +1332,7 @@
       }
     },
     {
-      "id": "packages/play/bin/probe/test-inputtrace.py",
+      "id": "packages/play/bin/probe/test-inputtrace.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
