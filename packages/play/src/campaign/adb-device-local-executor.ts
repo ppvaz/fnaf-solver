@@ -731,6 +731,218 @@ function startSharedSchedule(c: RunContext, requestedAt: number): Promise<void> 
   return run.sharedReleaseTask;
 }
 
+// Native camera reads must not wait behind a full screencap + Python
+// lifecycle classification. An UNKNOWN frame is a reason to leave the
+// one-shot observation unresolved, not permission to destroy a
+// potentially successful arm.
+async function observeArmOnce(c: RunContext, verification: ArmVerification, startedAt: number) {
+  const { ex, run, schedule } = c;
+  const armReadyAtMs = schedule.armObservation?.armReadyAtMs;
+  if (armReadyAtMs === undefined || !Number.isInteger(armReadyAtMs)) {
+    run.armObservationStatus = 'UNRESOLVED';
+    ex.onEvent({ type: 'arm.unresolved', mode: 'observe-once', reason: 'arm-window-unavailable' });
+    return;
+  }
+  while (controlStillRunning(c) && run.nightAnchoredAt === null)
+    await ex.clock.sleep(ex.pollMs);
+  if (!controlStillRunning(c) || run.nightAnchoredAt === null)
+    return;
+  // Read only where the plan shows the camera map (arm-observation.ts): the
+  // old single read at armReadyAtMs + settle fell after k2/k3's opening
+  // camdrop and read the office on 52 of 53 Night 7 nights. A read that
+  // is not definitive tries the next window; the pair holds all night.
+  const readTimes = armObservationTimes(schedule.monitorTransitions,
+    { notBeforeMs: armReadyAtMs, settleMs: ex.armSettleMs });
+  if (!readTimes.length) {
+    run.armObservationStatus = 'UNRESOLVED';
+    ex.onEvent({ type: 'arm.unresolved', mode: 'observe-once', reason: 'no-planned-camera-window' });
+    return;
+  }
+  const origin = run.nightReleasedAt ?? run.nightAnchoredAt;
+  let sample: ArmSample | null = null;
+  let elapsedMs = 0;
+  let highlights: unknown = null;
+  let attempt = 0;
+  for (const [index, readAtMs] of readTimes.entries()) {
+    attempt = index + 1;
+    if (!await waitUntil(c, origin + readAtMs)) return;
+    sample = null;
+    try { sample = await c.observeArm(); }
+    catch { /* an unavailable frame remains unresolved */ }
+    // A halt while the camera was being read: the arm stays unresolved and
+    // a mismatch may no longer stop a run the observer now owns.
+    if (run.actuationHalt) return;
+    elapsedMs = ex.clock.now() - startedAt;
+    ex.onEvent({ type: 'arm.sample', mode: 'observe-once', elapsedMs, attempt, planAtMs: readAtMs, sample });
+    run.lastArmObservation = sample;
+    highlights = sample?.highlights;
+    if (sample?.sequence !== undefined && sample?.sequence !== null && isList(highlights)) break;
+  }
+  const sequence = sample?.sequence;
+  if (sequence === undefined || sequence === null || !isList(highlights)) {
+    run.armObservationStatus = 'UNRESOLVED';
+    ex.onEvent({ type: 'arm.unresolved', mode: 'observe-once', elapsedMs, attempts: readTimes.length,
+      reason: sample?.reason ?? 'no-definitive-camera-frame' });
+    return;
+  }
+  const key = JSON.stringify([...highlights].sort());
+  const expected = JSON.stringify([...verification.cameras].sort());
+  if (key === expected) {
+    run.armObservation = sample;
+    run.armObservationStatus = 'PASS';
+    ex.onEvent({ type: 'arm.verified', mode: 'observe-once', attempt, elapsedMs });
+    return;
+  }
+  run.armObservationStatus = 'FAILED';
+  run.armFailure = invalidRun(`camera arm verification identified a mismatch ` +
+    `(expected=${expected} observed=${key})`, 'camera-pair-mismatch');
+  ex.onEvent({ type: 'arm.failed', mode: 'observe-once', attempt, elapsedMs,
+    reason: 'camera-pair-mismatch', expected: JSON.parse(expected), observed: JSON.parse(key) });
+  await stopRun(c);
+}
+
+/**
+ * Verify the camera arm by repeated reads from the night's release: a pair
+ * confirmed twice releases the gated remainder, a mismatch or a missing frame
+ * re-arms up to MAX_ARM_ATTEMPTS, and the last failure stops the run.
+ */
+async function verifyArm(c: RunContext, startedAt: number) {
+  const { ex, run, schedule, armVerification, armControl, sharedMode } = c;
+  const gate = schedule.gated;
+  // Unverified until both exist: an arm-verified plan always compiles gated.
+  if (!gate || !armVerification) return;
+  // The arm taps only begin once night_go releases them, so the arm
+  // observation window is anchored to that same first night frame --
+  // not to the shell spawn, which now precedes night entry.
+  let nextCheckAt = Infinity;
+  let deadlineAt = Infinity;
+  let lastSequence: unknown = null;
+  let candidate: string | null = null;
+  let confirmations = 0;
+  const retryArm = async (reason: string) => {
+    if (sharedMode) await feedShared(c, gate.rearm);
+    else await touchArm(c, 'retry');
+    const rearmAt = ex.clock.now();
+    run.armAttempt += 1;
+    run.startControlEffectLedger('rearm', rearmAt,
+      gate.monitorTransitions.rearm, gate.maskTransitions.rearm,
+      { originUncertaintyMs: 50, attempt: run.armAttempt,
+        phaseEndMs: gate.rearmDurationMs });
+    // Anchor to the actual retry signal, not a theoretical first-attempt
+    // timeline that observation latency can outrun.
+    nextCheckAt = ex.clock.now() + gate.rearmDurationMs + ex.armSettleMs;
+    deadlineAt = nextCheckAt + ex.armObservationWindowMs;
+    candidate = null;
+    confirmations = 0;
+    ex.onEvent({ type: 'arm.retry', attempt: run.armAttempt,
+      elapsedMs: ex.clock.now() - startedAt, reason });
+  };
+  while (!run.armVerified && controlStillRunning(c)) {
+    await ex.clock.sleep(ex.pollMs);
+    if (!controlStillRunning(c)) break;
+    if (nextCheckAt === Infinity) {
+      if (run.nightAnchoredAt === null) continue;
+      nextCheckAt = (run.nightReleasedAt ?? run.nightAnchoredAt) + gate.armReadyAtMs + ex.armSettleMs;
+      deadlineAt = nextCheckAt + ex.armObservationWindowMs;
+    }
+    if (ex.clock.now() < nextCheckAt) continue;
+    let sample: ArmSample | null = null;
+    try { sample = await c.observeArm(); }
+    catch { /* an unavailable frame remains UNKNOWN */ }
+    // No arm release, retry or failure stop after a halt.
+    if (run.actuationHalt) break;
+    const elapsedMs = ex.clock.now() - startedAt;
+    ex.onEvent({ type: 'arm.sample', elapsedMs, attempt: run.armAttempt, sample });
+    run.lastArmObservation = sample;
+    const highlights = sample?.highlights ?? sample?.cameraHighlights;
+    const sequence = sample?.sequence;
+    const fresh = sequence !== undefined && sequence !== null && sequence !== lastSequence;
+    if (fresh) lastSequence = sequence;
+    if (fresh && isList(highlights)) {
+      const key = JSON.stringify([...highlights].sort());
+      confirmations = key === candidate ? confirmations + 1 : 1;
+      candidate = key;
+      if (confirmations >= ARM_CONFIRM_SAMPLES) {
+        const sameHighlights = key === JSON.stringify([...armVerification.cameras].sort());
+        if (sameHighlights) {
+            if (run.stopObserver || run.actuationHalt) break;
+            let armGoAt: number | null = null;
+            if (armControl) {
+              armGoAt = ex.clock.now();
+              if (sharedMode) {
+                await feedShared(c, gate.remainderSegments[0]);
+                if (!gate.gates.length) {
+                  for (const segment of gate.remainderSegments.slice(1)) await feedShared(c, segment);
+                }
+              } else {
+                await touchRemote(ex.adb, ex.serial, armControl.go);
+              }
+              // The parked prefix has already consumed armReadyAtMs. Any
+              // extra wall time before go is phase error, not harmless
+              // observation latency: the game clock keeps running.
+              const phaseLagMs = run.nightReleasedAt === null ? null
+                : armGoAt - run.nightReleasedAt - gate.armReadyAtMs;
+              if (phaseLagMs !== null && phaseLagMs > gate.phaseBudgetMs) {
+                ex.onEvent({ type: 'phase.invalid', reason: 'late-arm-release',
+                  phaseLagMs, phaseBudgetMs: gate.phaseBudgetMs,
+                  armAttempt: run.armAttempt, nightReleasedAt: run.nightReleasedAt, armGoAt });
+                run.armFailure = invalidRun(
+                  'phase-invalid: arm release lag ' + phaseLagMs +
+                  'ms exceeds budget ' + gate.phaseBudgetMs + 'ms', 'late-arm-release');
+                await stopRun(c);
+                break;
+              }
+              // A gated stream has a timing-critical host-owned release at
+              // every cycle boundary. `observeControlState` is synchronous
+              // at the physical port and its diagnostic ledger can spend
+              // six reads in one burst; on the 2026-09-11 Night 5 run it
+              // occupied the event loop for ~870 ms exactly when the first
+              // post-gate contact was due, delaying the gate release and
+              // shifting the phone-local stream. The gate itself retains
+              // the bounded state evidence, so do not run a competing
+              // remainder ledger while the stream is parked. Ungated
+              // schedules still get the full diagnostic ledger below.
+              startGateLedger(c, armGoAt, gate);
+            }
+            run.armVerified = true;
+            run.armObservation = sample;
+            ex.onEvent({ type: 'arm.verified', attempt: run.armAttempt, elapsedMs,
+              ...(armGoAt === null ? {} : { armGoAt }) });
+        } else if (run.armAttempt < MAX_ARM_ATTEMPTS) {
+            await retryArm('camera-pair-mismatch');
+        } else {
+            deadlineAt = ex.clock.now();
+        }
+      }
+    } else {
+      candidate = null;
+      confirmations = 0;
+    }
+    if (!run.armVerified && ex.clock.now() >= deadlineAt) {
+        // A native watch can return a fresh sequence while the camera
+        // panel is still between frames. That is not evidence that the
+        // authored arm is wrong, but waiting longer on the same raised
+        // monitor cannot repair it. Replay the physical arm sequence so
+        // the next bounded window gets a new panel transition; keep the
+        // fail-closed result once all attempts are spent.
+        if (run.armAttempt < MAX_ARM_ATTEMPTS) {
+          await retryArm('camera-observation-unavailable');
+          continue;
+        }
+        run.armFailure = invalidRun(`camera arm verification missed after ${run.armAttempt} attempt(s) ` +
+          `(expected=${JSON.stringify(armVerification.cameras)} ` +
+          `viewing=${armVerification.viewing} last=${JSON.stringify(run.lastArmObservation)})`,
+          // Why, from what the camera last showed: a definitive set is a
+          // wrong pair; anything else never showed one.
+          isList(run.lastArmObservation?.highlights ?? run.lastArmObservation?.cameraHighlights) &&
+            run.lastArmObservation?.sequence !== undefined && run.lastArmObservation?.sequence !== null
+            ? 'camera-pair-mismatch' : 'camera-observation-unavailable');
+        await stopRun(c);
+        break;
+    }
+  }
+}
+
 export class AdbDeviceLocalArtifactExecutor {
   declare serial: string;
   declare adb: string;
@@ -981,215 +1193,14 @@ export class AdbDeviceLocalArtifactExecutor {
       }
       if (sharedMode && releaseAlreadyGranted)
         void startSharedSchedule(c, releaseAlreadyGrantedAt ?? this.clock.now());
-      // Native camera reads must not wait behind a full screencap + Python
-      // lifecycle classification. An UNKNOWN frame is a reason to leave the
-      // one-shot observation unresolved, not permission to destroy a
-      // potentially successful arm.
-      const observeArmOnce = async (verification: ArmVerification) => {
-        const armReadyAtMs = schedule.armObservation?.armReadyAtMs;
-        if (armReadyAtMs === undefined || !Number.isInteger(armReadyAtMs)) {
-          run.armObservationStatus = 'UNRESOLVED';
-          this.onEvent({ type: 'arm.unresolved', mode: 'observe-once', reason: 'arm-window-unavailable' });
-          return;
-        }
-        while (controlStillRunning(c) && run.nightAnchoredAt === null)
-          await this.clock.sleep(this.pollMs);
-        if (!controlStillRunning(c) || run.nightAnchoredAt === null)
-          return;
-        // Read only where the plan shows the camera map (arm-observation.ts): the
-        // old single read at armReadyAtMs + settle fell after k2/k3's opening
-        // camdrop and read the office on 52 of 53 Night 7 nights. A read that
-        // is not definitive tries the next window; the pair holds all night.
-        const readTimes = armObservationTimes(schedule.monitorTransitions,
-          { notBeforeMs: armReadyAtMs, settleMs: this.armSettleMs });
-        if (!readTimes.length) {
-          run.armObservationStatus = 'UNRESOLVED';
-          this.onEvent({ type: 'arm.unresolved', mode: 'observe-once', reason: 'no-planned-camera-window' });
-          return;
-        }
-        const origin = run.nightReleasedAt ?? run.nightAnchoredAt;
-        let sample: ArmSample | null = null;
-        let elapsedMs = 0;
-        let highlights: unknown = null;
-        let attempt = 0;
-        for (const [index, readAtMs] of readTimes.entries()) {
-          attempt = index + 1;
-          if (!await waitUntil(c, origin + readAtMs)) return;
-          sample = null;
-          try { sample = await this.#observeArm(); }
-          catch { /* an unavailable frame remains unresolved */ }
-          // A halt while the camera was being read: the arm stays unresolved and
-          // a mismatch may no longer stop a run the observer now owns.
-          if (run.actuationHalt) return;
-          elapsedMs = this.clock.now() - startedAt;
-          this.onEvent({ type: 'arm.sample', mode: 'observe-once', elapsedMs, attempt, planAtMs: readAtMs, sample });
-          run.lastArmObservation = sample;
-          highlights = sample?.highlights;
-          if (sample?.sequence !== undefined && sample?.sequence !== null && isList(highlights)) break;
-        }
-        const sequence = sample?.sequence;
-        if (sequence === undefined || sequence === null || !isList(highlights)) {
-          run.armObservationStatus = 'UNRESOLVED';
-          this.onEvent({ type: 'arm.unresolved', mode: 'observe-once', elapsedMs, attempts: readTimes.length,
-            reason: sample?.reason ?? 'no-definitive-camera-frame' });
-          return;
-        }
-        const key = JSON.stringify([...highlights].sort());
-        const expected = JSON.stringify([...verification.cameras].sort());
-        if (key === expected) {
-          run.armObservation = sample;
-          run.armObservationStatus = 'PASS';
-          this.onEvent({ type: 'arm.verified', mode: 'observe-once', attempt, elapsedMs });
-          return;
-        }
-        run.armObservationStatus = 'FAILED';
-        run.armFailure = invalidRun(`camera arm verification identified a mismatch ` +
-          `(expected=${expected} observed=${key})`, 'camera-pair-mismatch');
-        this.onEvent({ type: 'arm.failed', mode: 'observe-once', attempt, elapsedMs,
-          reason: 'camera-pair-mismatch', expected: JSON.parse(expected), observed: JSON.parse(key) });
-        await stopRun(c);
-      };
       run.startGateLedgerHook = (armGoAt, gated) => startGateLedger(c, armGoAt, gated);
       if (run.pendingGateLedgerAt !== null && schedule.gated) {
         const origin = run.pendingGateLedgerAt;
         run.pendingGateLedgerAt = null;
         startGateLedger(c, origin, schedule.gated);
       }
-      const armObservationTask = armObserveOnce && armVerification ? observeArmOnce(armVerification) : (async () => {
-        const gate = schedule.gated;
-        // Unverified until both exist: an arm-verified plan always compiles gated.
-        if (!gate || !armVerification) return;
-        // The arm taps only begin once night_go releases them, so the arm
-        // observation window is anchored to that same first night frame --
-        // not to the shell spawn, which now precedes night entry.
-        let nextCheckAt = Infinity;
-        let deadlineAt = Infinity;
-        let lastSequence: unknown = null;
-        let candidate: string | null = null;
-        let confirmations = 0;
-        const retryArm = async (reason: string) => {
-          if (sharedMode) await feedShared(c, gate.rearm);
-          else await touchArm(c, 'retry');
-          const rearmAt = this.clock.now();
-          run.armAttempt += 1;
-          run.startControlEffectLedger('rearm', rearmAt,
-            gate.monitorTransitions.rearm, gate.maskTransitions.rearm,
-            { originUncertaintyMs: 50, attempt: run.armAttempt,
-              phaseEndMs: gate.rearmDurationMs });
-          // Anchor to the actual retry signal, not a theoretical first-attempt
-          // timeline that observation latency can outrun.
-          nextCheckAt = this.clock.now() + gate.rearmDurationMs + this.armSettleMs;
-          deadlineAt = nextCheckAt + this.armObservationWindowMs;
-          candidate = null;
-          confirmations = 0;
-          this.onEvent({ type: 'arm.retry', attempt: run.armAttempt,
-            elapsedMs: this.clock.now() - startedAt, reason });
-        };
-        while (!run.armVerified && controlStillRunning(c)) {
-          await this.clock.sleep(this.pollMs);
-          if (!controlStillRunning(c)) break;
-          if (nextCheckAt === Infinity) {
-            if (run.nightAnchoredAt === null) continue;
-            nextCheckAt = (run.nightReleasedAt ?? run.nightAnchoredAt) + gate.armReadyAtMs + this.armSettleMs;
-            deadlineAt = nextCheckAt + this.armObservationWindowMs;
-          }
-          if (this.clock.now() < nextCheckAt) continue;
-          let sample: ArmSample | null = null;
-          try { sample = await this.#observeArm(); }
-          catch { /* an unavailable frame remains UNKNOWN */ }
-          // No arm release, retry or failure stop after a halt.
-          if (run.actuationHalt) break;
-          const elapsedMs = this.clock.now() - startedAt;
-          this.onEvent({ type: 'arm.sample', elapsedMs, attempt: run.armAttempt, sample });
-          run.lastArmObservation = sample;
-          const highlights = sample?.highlights ?? sample?.cameraHighlights;
-          const sequence = sample?.sequence;
-          const fresh = sequence !== undefined && sequence !== null && sequence !== lastSequence;
-          if (fresh) lastSequence = sequence;
-          if (fresh && isList(highlights)) {
-            const key = JSON.stringify([...highlights].sort());
-            confirmations = key === candidate ? confirmations + 1 : 1;
-            candidate = key;
-            if (confirmations >= ARM_CONFIRM_SAMPLES) {
-              const sameHighlights = key === JSON.stringify([...armVerification.cameras].sort());
-              if (sameHighlights) {
-                  if (run.stopObserver || run.actuationHalt) break;
-                  let armGoAt: number | null = null;
-                  if (armControl) {
-                    armGoAt = this.clock.now();
-                    if (sharedMode) {
-                      await feedShared(c, gate.remainderSegments[0]);
-                      if (!gate.gates.length) {
-                        for (const segment of gate.remainderSegments.slice(1)) await feedShared(c, segment);
-                      }
-                    } else {
-                      await touchRemote(this.adb, this.serial, armControl.go);
-                    }
-                    // The parked prefix has already consumed armReadyAtMs. Any
-                    // extra wall time before go is phase error, not harmless
-                    // observation latency: the game clock keeps running.
-                    const phaseLagMs = run.nightReleasedAt === null ? null
-                      : armGoAt - run.nightReleasedAt - gate.armReadyAtMs;
-                    if (phaseLagMs !== null && phaseLagMs > gate.phaseBudgetMs) {
-                      this.onEvent({ type: 'phase.invalid', reason: 'late-arm-release',
-                        phaseLagMs, phaseBudgetMs: gate.phaseBudgetMs,
-                        armAttempt: run.armAttempt, nightReleasedAt: run.nightReleasedAt, armGoAt });
-                      run.armFailure = invalidRun(
-                        'phase-invalid: arm release lag ' + phaseLagMs +
-                        'ms exceeds budget ' + gate.phaseBudgetMs + 'ms', 'late-arm-release');
-                      await stopRun(c);
-                      break;
-                    }
-                    // A gated stream has a timing-critical host-owned release at
-                    // every cycle boundary. `observeControlState` is synchronous
-                    // at the physical port and its diagnostic ledger can spend
-                    // six reads in one burst; on the 2026-09-11 Night 5 run it
-                    // occupied the event loop for ~870 ms exactly when the first
-                    // post-gate contact was due, delaying the gate release and
-                    // shifting the phone-local stream. The gate itself retains
-                    // the bounded state evidence, so do not run a competing
-                    // remainder ledger while the stream is parked. Ungated
-                    // schedules still get the full diagnostic ledger below.
-                    startGateLedger(c, armGoAt, gate);
-                  }
-                  run.armVerified = true;
-                  run.armObservation = sample;
-                  this.onEvent({ type: 'arm.verified', attempt: run.armAttempt, elapsedMs,
-                    ...(armGoAt === null ? {} : { armGoAt }) });
-              } else if (run.armAttempt < MAX_ARM_ATTEMPTS) {
-                  await retryArm('camera-pair-mismatch');
-              } else {
-                  deadlineAt = this.clock.now();
-              }
-            }
-          } else {
-            candidate = null;
-            confirmations = 0;
-          }
-          if (!run.armVerified && this.clock.now() >= deadlineAt) {
-              // A native watch can return a fresh sequence while the camera
-              // panel is still between frames. That is not evidence that the
-              // authored arm is wrong, but waiting longer on the same raised
-              // monitor cannot repair it. Replay the physical arm sequence so
-              // the next bounded window gets a new panel transition; keep the
-              // fail-closed result once all attempts are spent.
-              if (run.armAttempt < MAX_ARM_ATTEMPTS) {
-                await retryArm('camera-observation-unavailable');
-                continue;
-              }
-              run.armFailure = invalidRun(`camera arm verification missed after ${run.armAttempt} attempt(s) ` +
-                `(expected=${JSON.stringify(armVerification.cameras)} ` +
-                `viewing=${armVerification.viewing} last=${JSON.stringify(run.lastArmObservation)})`,
-                // Why, from what the camera last showed: a definitive set is a
-                // wrong pair; anything else never showed one.
-                isList(run.lastArmObservation?.highlights ?? run.lastArmObservation?.cameraHighlights) &&
-                  run.lastArmObservation?.sequence !== undefined && run.lastArmObservation?.sequence !== null
-                  ? 'camera-pair-mismatch' : 'camera-observation-unavailable');
-              await stopRun(c);
-              break;
-          }
-        }
-      })();
+      const armObservationTask = armObserveOnce && armVerification
+        ? observeArmOnce(c, armVerification, startedAt) : verifyArm(c, startedAt);
       run.armObserver = armVerification ? armObservationTask.catch(async error => {
         run.armFailure = error;
         await stopRun(c);
