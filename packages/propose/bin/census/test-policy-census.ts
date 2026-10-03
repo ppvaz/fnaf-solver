@@ -32,14 +32,13 @@ import type { Loss } from './winner-census.ts';
 
 import { withModelOptions } from '../recompile/rebuild-options-census.ts';
 import { simOptionsFrom } from '../../../source/recompile/model-draw-trace.ts';
+import { found } from '../lookup.ts';
 
 const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '../../../..');
 
 // The record was taken on the legacy model (fnaf2-legacy, before 2026-10-02), so its replays run there.
 withModelOptions(simOptionsFrom({}), () => {
 const EVIDENCE = join(ROOT, 'docs/evidence');
-/** A value the test reads where the record has it; a missing one fails the check that reads it. */
-const found = <T>(value: T | null | undefined) => value as T;
 const sha256 = (text: string) => createHash('sha256').update(text).digest('hex');
 
 const records = readdirSync(EVIDENCE).filter((name) => /-census-\d{8}\.json$/.test(name)).sort()

@@ -12,6 +12,14 @@ export const isRecord = (value: unknown): value is Record<string, unknown> =>
 export const isText = (value: unknown): value is string => typeof value === 'string' && value.trim().length > 0;
 /** A list, whose items are still to be checked (Array.isArray would call them `any`). */
 export const isList = (value: unknown): value is readonly unknown[] => Array.isArray(value);
+/**
+ * A value a lookup must find, or a refusal naming what was missing: the check `x!`
+ * only promises, and an `as T` hides until the next property read.
+ */
+export function present<T>(value: T | null | undefined, what = 'a looked-up value'): T {
+  if (value === null || value === undefined) fail(`${what} was not found`);
+  return value;
+}
 /** One of a closed list's members. */
 export const isOneOf = <T>(values: readonly T[], value: unknown): value is T => (values as readonly unknown[]).includes(value);
 

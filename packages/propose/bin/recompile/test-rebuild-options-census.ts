@@ -35,11 +35,10 @@ import { KIND, OPTIONS_FILE, bindingSubjects, mcnemarExact, optionSets, seedBloc
   from './rebuild-options-census.ts';
 import { committedWinners } from '../census/winner-census.ts';
 import { currentPath } from '@sixam/review/renamed-path';
+import { found } from '../lookup.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
 const EVIDENCE = join(ROOT, 'docs/evidence');
-// A lookup the record says succeeds; the assertion that follows reads it.
-const found = <T>(value: T | undefined) => value as T;
 /** A subject the tree offers. */
 type Subject = ReturnType<typeof subjects>[number];
 

@@ -8,10 +8,9 @@ import { join } from 'node:path';
 import { HID_FEATURE_REPORTS } from '@sixam/play';
 import { MONITOR_POINT, READY_DELAY_MS, SYNC, chain, jsonl, plan, readPlanFile, stream } from './practice-audit.ts';
 import { frameRow, updateRow } from './capture-latency.ts';
+import { present as found } from '@sixam/kernel';
 
 const check = (ok: unknown, message: string) => { if (!ok) throw new Error(message); };
-/** A statistic the fixture produces by construction. */
-const found = <T>(value: T | null | undefined) => value as T;
 
 const sweep = plan(1);
 check(sweep.contacts.length === 126 && sweep.contacts.filter(c => c.sync).length === 2 * SYNC.count,

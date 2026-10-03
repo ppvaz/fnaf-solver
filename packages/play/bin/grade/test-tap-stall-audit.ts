@@ -6,10 +6,9 @@
 // tap at +24449 arrives with the mask button absent and lowers the monitor.
 import { type Graded, type InTrace, type Plan, type PlanAction, audit, clockBracket, expandContacts, exposure, formatReport, formatTransitions,
   hallCells, hallLumaOf, parseInputEvents, parseStrokeTrace, requestPlans, touchEdges, HALL_ROI, SCHEMA } from './tap-stall-audit.ts';
+import { present as found } from '@sixam/kernel';
 
 const check = (condition: unknown, message: string) => { if (!condition) throw new Error(message); };
-/** A row, field or grade the fixture builds by construction. */
-const found = <T>(value: T | null | undefined) => value as T;
 /** A contact graded inside the trace, at one end of the bracket. */
 const graded = (grade: Graded['atEarly']) => grade as InTrace;
 const expectFailure = (fn: () => unknown, message: string) => {
@@ -169,8 +168,10 @@ check(maskTap.status === 'MISSING', 'and the mask never came on');
 // Holds with no readable effect are UNGRADED, never MISSING.
 check(row('toys-5@10570').status === 'UNGRADED', 'a wind hold is ungraded');
 // The hall is graded from the grid cells over FOXY_HALL, on office frames only.
-check(row('toys-2@9500').status === 'LIT' && found(graded(row('toys-2@9500').atLate).landedAfterMs) <= 60,
-  `the cycle-0 hall tap reads LIT within two frames, got ${JSON.stringify(row('toys-2@9500').atLate)}`);
+// The hall's own landing time: a bracket end does not time a hold (its landedAfterMs is null, and `null <= 60`
+// passed this check whatever the hall did).
+check(row('toys-2@9500').status === 'LIT' && found(row('toys-2@9500').landedAfterMs) <= 60,
+  `the cycle-0 hall tap reads LIT within two frames, got ${row('toys-2@9500').landedAfterMs} ms`);
 check(row('toys-2@19500').status === 'DARK', `the refused cycle-1 hall tap reads DARK, got ${row('toys-2@19500').status}`);
 check(report.summary.hall.lit === 1 && report.summary.hall.dark === 1 && report.summary.hall.darkAt.includes('toys-2@19500'),
   `hall summary counts one lit and one dark, got ${JSON.stringify(report.summary.hall)}`);

@@ -9,12 +9,11 @@ import type { Attacker, LedgerName } from './compare-schedule-replay.ts';
 import { ATTACKERS, LEDGERS, compareScheduleReplay, counterSeries, mismatchRuns, rebuiltAttacker, transitions, watchSeries } from './compare-schedule-replay.ts';
 import { drawTrace } from '../../../source/recompile/model-draw-trace.ts';
 import { controlPoints, expandRows, frameOf, harnessInput, harnessRows, winnerSchedule, modelContacts } from './schedule-to-input.ts';
+import { found } from '../lookup.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
 const read = (path: string) => readFileSync(join(ROOT, path), 'utf8');
 const json = (path: string) => JSON.parse(read(path));
-// A lookup or optional field the fixture knows is there; the assertion reads it.
-const found = <T>(value: T | null | undefined) => value as T;
 
 // --- window points: the profile's native points through the FULL stretch ---
 const profile = { geometry: 'phone-landscape-2400x1080-v1', viewScroll: { windowWidth: 1024, windowHeight: 768 },

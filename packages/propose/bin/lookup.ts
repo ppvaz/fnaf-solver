@@ -1,12 +1,6 @@
 /**
- * A value a lookup must find. A miss fails here, naming what was missing,
- * instead of reaching the caller as `undefined` behind an `as T` (which is
- * `x!` under another name) and failing later as a TypeError, or not at all.
- *
- * @param value what `find`, a map read or an index returned
- * @param what what was looked up, for the failure
+ * Propose's bins read a value a lookup must find through `found`: the kernel's
+ * `present`, which refuses a miss by name instead of letting `undefined` through
+ * an `as T` (which is `x!` under another name).
  */
-export function found<T>(value: T | null | undefined, what = 'a looked-up value'): T {
-  if (value === null || value === undefined) throw new Error(`${what} was not found`);
-  return value;
-}
+export { present as found } from '@sixam/kernel';

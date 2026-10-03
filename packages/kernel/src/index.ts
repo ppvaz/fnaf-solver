@@ -5,7 +5,7 @@
  * in types.ts.
  */
 export type * from './types.ts';
-export { CLAIM_LEVELS, SOURCE_LABELS, isClaimLevel, isList, isOneOf, isRecord, isSourceLabel, isUnknown, unknown,
+export { CLAIM_LEVELS, SOURCE_LABELS, isClaimLevel, isList, isOneOf, isRecord, isSourceLabel, isUnknown, present, unknown,
   validateClaimLevel, validateSourceLabel } from './labels.ts';
 export { interval, validateInterval } from './time/interval.ts';
 export { BINDINGS_DIR, WINNER_FILE, winnerTag } from './bindings.ts';

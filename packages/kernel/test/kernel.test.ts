@@ -5,7 +5,7 @@
 import assert from 'node:assert/strict';
 import {
   ANNOTATION_KINDS, ANNOTATION_STATUSES, CLAIM_LEVELS, CUSTODY_CLASSES, GAME_RUN_FIELDS, OUTCOME_KINDS, RUN_MODES,
-  SOURCE_LABELS, SUBJECT_KINDS, aborted, death, interval, invalid, isClaimLevel, isSourceLabel, isUnknown, mulberry32, sixAm, timeout,
+  SOURCE_LABELS, SUBJECT_KINDS, aborted, death, interval, invalid, isClaimLevel, isSourceLabel, isUnknown, mulberry32, present, sixAm, timeout,
   unknown, validateAnnotation, validateClaimLevel, validateGameRun, validateInterval, validateOutcome, validateSourceLabel,
 } from '../src/index.ts';
 
@@ -105,6 +105,10 @@ refuses(() => validateAnnotation({ ...promotion, subject: { kind: 'Run', id: 'x'
 refuses(() => validateAnnotation({ ...promotion, instrument: 'plan12-promotion' }), /name@version/, 'an unversioned instrument');
 refuses(() => validateAnnotation({ ...promotion, inputs: ['not a hash'] }), /content hash/, 'an input that is not a hash');
 refuses(() => validateAnnotation({ ...promotion, status: 'open' }), /status/, 'a status outside the three');
+
+// present() is the check a non-null assertion only promises.
+assert.equal(present(0, 'a zero'), 0);
+refuses(() => present(undefined, 'the golden-freddy preset'), /the golden-freddy preset was not found/, 'a missing value');
 
 // mulberry32 keeps the draws the lanes and tests that pasted it were measured with.
 const draws = mulberry32(1);

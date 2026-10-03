@@ -19,13 +19,12 @@ import type { MappedResponse, ScheduleMs, SideState } from './phone-encounter-re
 import { drawTrace, measuredClock } from '../../../source/recompile/model-draw-trace.ts';
 import { committedVersion } from './phone-input-bracket-sweep.ts';
 import { currentPath } from '@sixam/review/renamed-path';
+import { found } from '../lookup.ts';
 
 const ROOT = fileURLToPath(new URL('../../../../', import.meta.url));
 
 // A repository path, or one a committed record names where the file stood when it was written.
 const read = (rel: string) => readFileSync(new URL(`../../../../${currentPath(ROOT, rel) ?? rel}`, import.meta.url), 'utf8');
-// A lookup or optional field the fixture knows is there; the assertion reads it.
-const found = <T>(value: T | null | undefined) => value as T;
 /** A committed night, record row or result row, as the checks below find it. */
 type Named = { readonly name: string };
 

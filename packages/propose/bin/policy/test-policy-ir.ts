@@ -3,10 +3,9 @@ import { createHash } from 'node:crypto';
 import assert from 'node:assert/strict';
 import { canonicalPolicy, roundTripPolicy, validatePolicy } from '@sixam/propose/policy';
 import { minimalPolicy } from './policy-ir.ts';
+import { found } from '../lookup.ts';
 
 const check: (condition: unknown, message: string) => asserts condition = (condition, message) => { if (!condition) throw new Error(message); };
-/** A field the test reads where the program has it; a missing one fails the check that reads it. */
-const found = <T>(value: T | null | undefined) => value as T;
 const program = minimalPolicy();
 const canonical = canonicalPolicy(program);
 const hash = createHash('sha256').update(canonical).digest('hex');
