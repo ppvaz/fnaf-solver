@@ -209,7 +209,9 @@ export async function launch({ domains = ['Runtime', 'Page'] }: { domains?: read
         chrome.kill();
         if (!await Promise.race([gone, sleep(5_000).then(() => false)])) chrome.kill('SIGKILL');
       }
-      rmSync(profile, { recursive: true, force: true });
+      // Chrome's helper processes can still be writing into the profile after the browser process exits: on
+      // the Linux Pages runner (2026-10-04) the removal hit ENOTEMPTY, which rmSync retries when asked to.
+      rmSync(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     },
   };
 }

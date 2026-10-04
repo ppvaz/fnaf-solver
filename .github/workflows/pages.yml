@@ -55,6 +55,7 @@ jobs:
       # is published: the 2026-09-30 trainer that failed on load shipped
       # because nothing ran this here. The runner image carries Chrome.
       - name: The published entry loads in a browser
+        timeout-minutes: 10
         run: node apps/trainer/test/pages.test.ts
       - uses: actions/upload-pages-artifact@v3
         with:

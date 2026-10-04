@@ -65,7 +65,14 @@ const url = given ?? `http://127.0.0.1:${typeof address === 'object' && address 
 
 let page: Page;
 before(async () => { page = await launch({ domains: ['Runtime', 'Page', 'Log', 'Network'] }); });
-after(async () => { await page?.close(); server?.close(); });
+// The server is closed even when the browser's cleanup throws: left open, it kept the Pages step alive for an hour.
+after(async () => {
+  try {
+    await page?.close();
+  } finally {
+    server?.close();
+  }
+});
 
 const text = async (expression: string) => String(await page.evaluate(expression));
 /**
