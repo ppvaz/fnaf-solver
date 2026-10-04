@@ -3,7 +3,7 @@
 // which update took each input.
 //
 // The retail game only lets us infer a press from its effect on a captured
-// frame. The FNaF 2 practice rebuild (apply-practice-mod.py) writes, from
+// frame. The FNaF 2 practice rebuild (apply-practice-mod.ts) writes, from
 // inside its office loop, every left-button state edge with the update that
 // saw it (practice-input.jsonl) and every office update's SDL clock and RNG
 // state (practice-state.jsonl). This tool sends one stream of contacts
@@ -540,7 +540,7 @@ async function live(args: string[]) {
   const inputText = runAs(serial, `tail -n +${i0 + 1} ${FILES}/practice-input.jsonl`, 60000);
   const stateText = runAs(serial, `tail -n +${stateStart + 1} ${FILES}/practice-state.jsonl`, 120000);
   writeFileSync(join(out, 'practice-input.jsonl'), inputText);
-  // The calibration build (apply-calib-mod.py) also writes these; the plain
+  // The calibration build (apply-calib-mod.ts) also writes these; the plain
   // practice build does not, and the grade then omits the chain.
   if (cu0 > 0 || ci0 > 0) {
     writeFileSync(join(out, 'calib-updates.jsonl'), runAs(serial, `tail -n +${cu0 + 1} ${FILES}/calib-updates.jsonl`, 120000));

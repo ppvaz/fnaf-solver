@@ -302,7 +302,7 @@ because SDL blocks the event pump while paused. On the host,
 
 ## FNaF 2 practice APK, first layer
 
-`apply-practice-mod.py --gamesrc DIR` adds the first, read-only practice layer
+`apply-practice-mod.ts --gamesrc DIR` adds the first, read-only practice layer
 to a **private copy** of FNaF 2's generated `gamesrc`. The office HUD shows the
 raw camera, view, mask, danger, blackout, music-box and battery values. The
 `practice-state.jsonl` file records those values every office update, the

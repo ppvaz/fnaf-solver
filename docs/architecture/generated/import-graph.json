@@ -5213,6 +5213,38 @@
       ]
     },
     {
+      "file": "packages/source/recompile/android/apply-calib-mod.ts",
+      "imports": [
+        "@sixam/kernel/py",
+        "node:child_process",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/source/recompile/android/apply-practice-mod.ts",
+      "imports": [
+        "@sixam/kernel/py",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/source/recompile/android/test-apply-mods.ts",
+      "imports": [
+        "./apply-calib-mod.ts",
+        "./apply-practice-mod.ts",
+        "node:assert/strict",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:test",
+        "node:url"
+      ]
+    },
+    {
       "file": "packages/source/recompile/game-builds.ts",
       "imports": [
         "./record-io.ts",

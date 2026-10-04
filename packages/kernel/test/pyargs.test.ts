@@ -2,7 +2,7 @@
 // spec (prog 't'; trace, extra nargs='?'; --start-ns int, --json store_true, --only choices, --ref append,
 // --out required), and each expected verdict and message is the one argparse gave.
 import assert from 'node:assert/strict';
-import { pyArgs, pyArgsError, pySubcommands } from '../src/pyargs.ts';
+import { PySystemExit, pyArgs, pyArgsError, pyExitStatus, pySubcommands } from '../src/pyargs.ts';
 
 const parse = (argv: string[]) => pyArgs(argv, 't', [{ name: '--start-ns', type: 'int' }, { name: '--json', takes: 'flag' },
   { name: '--only', choices: ['gif', 'all'] }, { name: '--ref', append: true }, { name: '--out', required: true }],
@@ -72,3 +72,9 @@ const help = parse(['-h']);
 assert.ok('exit' in help && help.exit === 0 && help.text.startsWith('usage: t [-h]'), '-h prints the usage and exits 0');
 
 console.log(`pyargs: 2 command lines parse and ${refusals.length} refuse as argparse did, with its messages; -h exits 0`);
+
+// SystemExit(message) leaves a script with status 1 and its message on stderr; any other error is not swallowed.
+const reported: string[] = [];
+assert.equal(pyExitStatus(new PySystemExit('no base/run.cpp under x'), text => reported.push(text)), 1);
+assert.deepEqual(reported, ['no base/run.cpp under x']);
+assert.throws(() => pyExitStatus(new TypeError('a bug'), () => assert.fail('reported a bug as an exit')), TypeError);

@@ -1,25 +1,22 @@
-#!/usr/bin/env python3
-"""Add the first read-only practice layer to a private generated FNaF 2 build.
+#!/usr/bin/env node
+// Add the first read-only practice layer to a private generated FNaF 2 build.
+//
+// The input tree is a copy of Chowdren's generated game source. It must remain
+// outside the repository because it is derived from the owned game CCN.
+//
+//   apply-practice-mod.ts --gamesrc DIR
+//
+// Ported from apply-practice-mod.py: the same edit, messages and exit codes.
+import { readFileSync, statSync, writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { PY_SPACE, PySystemExit as Exit, pyArgs, pyExitStatus, pyOptionText, pyPath, pyReadText } from '@sixam/kernel/py';
 
-The input tree is a copy of Chowdren's generated game source. It must remain
-outside the repository because it is derived from the owned game CCN.
-"""
+export const MARKER = '// FNAF2_PRACTICE_MOD_V1';
+const INCLUDES = '#include "bitarray.h"\n';
+const HANDLER = new RegExp(`(void Frames::handle_frame_4_events\\(\\)${PY_SPACE}*\\{[^]*?)(\\n\\}\\nvoid Frames::handle_frame_4_pre_events\\(\\))`, 'u');
 
-from __future__ import annotations
-
-import argparse
-from pathlib import Path
-import re
-
-
-MARKER = "// FNAF2_PRACTICE_MOD_V1"
-INCLUDES = '#include "bitarray.h"\n'
-HANDLER = re.compile(
-    r"(void Frames::handle_frame_4_events\(\)\s*\{.*?)(\n\}\nvoid Frames::handle_frame_4_pre_events\(\))",
-    re.DOTALL,
-)
-
-HOOK = r'''    // FNAF2_PRACTICE_MOD_V2: read-only encounter trace and accepted input edges.
+export const HOOK = String.raw`    // FNAF2_PRACTICE_MOD_V2: read-only encounter trace and accepted input edges.
     if (index == 3) {
         static bool previous_left_button = false;
         static unsigned long long practice_update = 0;
@@ -133,34 +130,45 @@ HOOK = r'''    // FNAF2_PRACTICE_MOD_V2: read-only encounter trace and accepted 
         }
         previous_left_button = left_button;
     }
-'''
+`;
 
+const isFile = (path: string) => {
+  try {
+    return statSync(path).isFile();
+  } catch {
+    return false;
+  }
+};
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--gamesrc", required=True, type=Path,
-                        help="private generated gamesrc copy, outside the repository")
-    args = parser.parse_args()
-    source = args.gamesrc / "events_14.cpp"
-    if not source.is_file():
-        raise SystemExit(f"missing generated office event source: {source}")
-    text = source.read_text()
-    if MARKER in text:
-        print(f"practice layer already present: {source}")
-        return
-    if INCLUDES not in text:
-        raise SystemExit("generated event source no longer has the expected include anchor")
-    match = HANDLER.search(text)
-    if not match:
-        raise SystemExit("generated office event handler no longer has the expected anchor")
+/** Patch events_14.cpp under `gamesrc` in place; the lines it prints. */
+export function applyPractice(gamesrc: string): string {
+  const source = pyPath(`${pyPath(gamesrc)}/events_14.cpp`);
+  if (!isFile(source)) throw new Exit(`missing generated office event source: ${source}`);
+  let text = pyReadText(readFileSync(source));
+  if (text.includes(MARKER)) return `practice layer already present: ${source}`;
+  if (!text.includes(INCLUDES)) throw new Exit('generated event source no longer has the expected include anchor');
+  if (!HANDLER.test(text)) throw new Exit('generated office event handler no longer has the expected anchor');
 
-    text = text.replace(INCLUDES, INCLUDES + "#include <cstdio>\n#include <SDL.h>\n#include \"harness.h\"\n", 1)
-    match = HANDLER.search(text)
-    assert match is not None
-    text = text[:match.start(2)] + "\n" + HOOK + text[match.start(2):]
-    source.write_text(text)
-    print(f"enabled read-only practice HUD and input edge log: {source}")
+  text = text.replace(INCLUDES, () => `${INCLUDES}#include <cstdio>\n#include <SDL.h>\n#include "harness.h"\n`);
+  const match = HANDLER.exec(text);
+  if (match === null) throw new Error('the handler anchor went missing after the include edit');
+  const at = match.index + match[1].length;
+  writeFileSync(source, `${text.slice(0, at)}\n${HOOK}${text.slice(at)}`);
+  return `enabled read-only practice HUD and input edge log: ${source}`;
+}
 
+function main(argv: readonly string[]): number {
+  const parsed = pyArgs(argv, 'apply-practice-mod.ts', [{ name: '--gamesrc', required: true }]);
+  if ('exit' in parsed) {
+    (parsed.exit ? console.error : console.log)(parsed.text);
+    return parsed.exit;
+  }
+  try {
+    console.log(applyPractice(pyOptionText(parsed, '--gamesrc') ?? ''));
+    return 0;
+  } catch (error) {
+    return pyExitStatus(error, console.error);
+  }
+}
 
-if __name__ == "__main__":
-    main()
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) process.exitCode = main(process.argv.slice(2));

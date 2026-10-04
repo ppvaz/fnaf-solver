@@ -4577,6 +4577,24 @@
       }
     },
     {
+      "id": "packages/source/recompile/android/test-apply-mods.ts",
+      "lane": "test:unit",
+      "owner": "@sixam/source",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.ts per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
       "id": "packages/source/recompile/test-child-events.py",
       "lane": "test:unit",
       "owner": "@sixam/source",

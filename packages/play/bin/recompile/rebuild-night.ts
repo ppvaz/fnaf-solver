@@ -5,7 +5,7 @@
 //
 // The file's rows are in frame ticks. On the phone each frame's ticks start
 // when that frame's first update ends: the calibration build logs
-// `Calib: frame N update 1 done` then (apply-calib-mod.py), and the first
+// `Calib: frame N update 1 done` then (apply-calib-mod.ts), and the first
 // update carries the frame's load stall, which the game clock does not count.
 // So the stream is sent in three parts to one `/system/bin/hid` on the phone,
 // and a shell on the phone releases each part when its frame's marker prints:

@@ -1,45 +1,48 @@
-#!/usr/bin/env python3
-"""Turn a private copy of the Android rebuild runtime into a device timing instrument.
+#!/usr/bin/env node
+// Turn a private copy of the Android rebuild runtime into a device timing instrument.
+//
+// Everything is stamped on the phone's CLOCK_MONOTONIC, the clock the kernel's
+// input events, Android's MotionEvent and `getevent -lt` share, so the whole
+// chain from a HID report to the pixel that shows its effect is on one clock:
+//
+// - calib-updates.jsonl: one row per main-loop update in EVERY frame: loop
+//   start, end of the SDL event pump, end of events, end of the buffer swap
+//   (ns); the exact dt and timer_units the events ran with; the RNG draw
+//   count and state; the polled left button; and each frame load's seed.
+// - calib-input.jsonl: every touch as Java saw it (the MotionEvent's own
+//   event time and the moment onTouch ran) and as native SDL queued it
+//   (finger and synthesized mouse events, with the update then running).
+// - Play-mode multi-touch: fingers after the first (which SDL makes the mouse)
+//   drive Multiple Touch pointers 1.., as the host harness's `down 1` rows do
+//   and the retail runtime's Multiple Touch does (debug.rebuild.multitouch).
+// - A logcat line (tag Calib) at the end of each frame's first update, so an
+//   on-device trigger can start a schedule after a frame's load stall.
+// - A beacon: the update index as a 16-cell Gray code along the top 8 px of the
+//   1024 x 768 frame, so any capture (the Companion's REGION reads, a
+//   screenrecord, a camera) can say which update each captured frame shows.
+//
+// debug.rebuild.calib = 0 turns logging off and debug.rebuild.calib_beacon
+// = 0 the beacon (both read once at start, default on). Game logic is not
+// touched, except that a second finger now reaches Multiple Touch: the other
+// hooks read state and the beacon draws after the frame.
+//
+//   apply-calib-mod.ts --chowdren DIR --sdl DIR
+//
+// DIR are private copies (the runtime tree and the SDL2 source whose
+// android-project Java build-apk.sh compiles), outside the repository.
+//
+// Ported from apply-calib-mod.py: the same edits, messages and exit codes. The
+// header and Java comments it writes name this file, where they named the .py.
+import { execFileSync } from 'node:child_process';
+import { readFileSync, realpathSync, statSync, writeFileSync } from 'node:fs';
+import { basename, dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { PySystemExit as Exit, pyArgs, pyExitStatus, pyOptionText, pyPath, pyReadText, pyStrRepr } from '@sixam/kernel/py';
 
-Everything is stamped on the phone's CLOCK_MONOTONIC, the clock the kernel's
-input events, Android's MotionEvent and `getevent -lt` share, so the whole
-chain from a HID report to the pixel that shows its effect is on one clock:
+const HERE = dirname(fileURLToPath(import.meta.url));
+export const MARKER = 'FNAF2_CALIB_V1';
 
-- ``calib-updates.jsonl``: one row per main-loop update in EVERY frame: loop
-  start, end of the SDL event pump, end of events, end of the buffer swap
-  (ns); the exact ``dt`` and ``timer_units`` the events ran with; the RNG draw
-  count and state; the polled left button; and each frame load's seed.
-- ``calib-input.jsonl``: every touch as Java saw it (the MotionEvent's own
-  event time and the moment ``onTouch`` ran) and as native SDL queued it
-  (finger and synthesized mouse events, with the update then running).
-- Play-mode multi-touch: fingers after the first (which SDL makes the mouse)
-  drive Multiple Touch pointers 1.., as the host harness's ``down 1`` rows do
-  and the retail runtime's Multiple Touch does (``debug.rebuild.multitouch``).
-- A logcat line (tag ``Calib``) at the end of each frame's first update, so an
-  on-device trigger can start a schedule after a frame's load stall.
-- A beacon: the update index as a 16-cell Gray code along the top 8 px of the
-  1024 x 768 frame, so any capture (the Companion's REGION reads, a
-  screenrecord, a camera) can say which update each captured frame shows.
-
-``debug.rebuild.calib`` = 0 turns logging off and ``debug.rebuild.calib_beacon``
-= 0 the beacon (both read once at start, default on). Game logic is not
-touched, except that a second finger now reaches Multiple Touch: the other
-hooks read state and the beacon draws after the frame.
-
-Usage: apply-calib-mod.py --chowdren DIR --sdl DIR
-  DIR are private copies (the runtime tree and the SDL2 source whose
-  android-project Java build-apk.sh compiles), outside the repository.
-"""
-
-from __future__ import annotations
-
-import argparse
-import subprocess
-from pathlib import Path
-
-MARKER = "FNAF2_CALIB_V1"
-
-CALIB_IMPL = r'''// FNAF2_CALIB_V1: device timing instrument (packages/source/recompile/android/apply-calib-mod.py).
+export const CALIB_IMPL = String.raw`// FNAF2_CALIB_V1: device timing instrument (packages/source/recompile/android/apply-calib-mod.ts).
 // Included once, from run.cpp, before harness.cpp.
 #ifndef CHOWDREN_CALIB_IMPL_H
 #define CHOWDREN_CALIB_IMPL_H
@@ -78,7 +81,7 @@ static char calib_row[512];
 // (SDL_touch.c tracks one finger), and play mode mirrors the mouse into
 // pointer 0. Every other finger is queued here by the event watch (the UI
 // thread) and applied in order to pointers 1.. at the start of the next
-// update's events, as the host harness applies its `down 1` rows; the retail
+// update's events, as the host harness applies its ${'`'}down 1${'`'} rows; the retail
 // Multiple Touch takes every finger. debug.rebuild.multitouch = 0 turns it off.
 // harness.cpp's touch functions live in its anonymous namespace, so the hook
 // passes them in.
@@ -349,9 +352,9 @@ static inline void calib_play_fingers(CalibTouchNew, CalibTouchEnd, CalibTouchMo
 #define CALIB_DRAW_BEACON() do {} while (0)
 #endif
 #endif
-'''
+`;
 
-JAVA_NATIVE = '''    // FNAF2_CALIB_V1: MotionEvent timing for the calibration build (apply-calib-mod.py).
+export const JAVA_NATIVE = String.raw`    // FNAF2_CALIB_V1: MotionEvent timing for the calibration build (apply-calib-mod.ts).
     public static native void nativeCalibTouch(long eventTimeNs, long receiptNs, int action,
                                                int pointers, float x, float y);
     static boolean calibTouchLinked = true;
@@ -368,105 +371,133 @@ JAVA_NATIVE = '''    // FNAF2_CALIB_V1: MotionEvent timing for the calibration b
         }
     }
 
-'''
+`;
 
+const under = (directory: string, name: string) => pyPath(`${pyPath(directory)}/${name}`);
+const read = (path: string) => pyReadText(readFileSync(path));
 
-def replace_once(text: str, old: str, new: str, where: str) -> str:
-    if text.count(old) != 1:
-        raise SystemExit(f"{where}: expected exactly one anchor, found {text.count(old)}: {old[:60]!r}")
-    return text.replace(old, new, 1)
+function replaceOnce(text: string, old: string, replacement: string, where: string) {
+  const count = text.split(old).length - 1;
+  if (count !== 1) throw new Exit(`${where}: expected exactly one anchor, found ${count}: ${pyStrRepr([...old].slice(0, 60).join(''))}`);
+  return text.replace(old, () => replacement);
+}
 
+/** Path(path).resolve(): absolute, every symlink in the part that exists resolved, the rest appended. */
+function resolved(path: string) {
+  const tail: string[] = [];
+  for (let head = resolve(path); ; head = dirname(head)) {
+    try {
+      return join(realpathSync(head), ...tail);
+    } catch {
+      if (dirname(head) === head) return resolve(path);
+      tail.unshift(basename(head));
+    }
+  }
+}
 
-def refuse_repo(path: Path) -> None:
-    top = subprocess.run(["git", "-C", str(Path(__file__).parent), "rev-parse", "--show-toplevel"],
-                         capture_output=True, text=True, check=True).stdout.strip()
-    if Path(top) in path.resolve().parents or path.resolve() == Path(top):
-        raise SystemExit(f"{path} is inside the repository; patch a private copy")
+export function refuseRepo(path: string) {
+  const top = execFileSync('git', ['-C', HERE, 'rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim();
+  const real = resolved(path);
+  if (real === top || real.startsWith(top === '/' ? '/' : `${top}/`)) throw new Exit(`${pyPath(path)} is inside the repository; patch a private copy`);
+}
 
+export function patchRuntime(base: string, say: (line: string) => void = console.log) {
+  writeFileSync(under(base, 'calib_impl.h'), CALIB_IMPL);
+  const run = under(base, 'run.cpp');
+  let text = read(run);
+  if (text.includes(MARKER)) {
+    say(`calibration layer already present: ${run}`);
+  } else {
+    text = replaceOnce(text, '#include "harness.cpp"\n',
+      '#include "calib_impl.h" // FNAF2_CALIB_V1\n#include "harness.cpp"\n', 'run.cpp');
+    text = replaceOnce(text, '    keyboard.update();\n    mouse.update();\n',
+      '    calib_loop_start();\n    keyboard.update();\n    mouse.update();\n', 'run.cpp');
+    text = replaceOnce(text, '    platform_poll_events();\n\n    // player controls\n',
+      '    platform_poll_events();\n    calib_after_poll();\n\n    // player controls\n', 'run.cpp');
+    text = replaceOnce(text, '        int ret = update_frame();\n',
+      '        int ret = update_frame();\n'
+      + '        calib_after_update(frame->index, fps_limit.dt, timer_units,\n'
+      + '                           mouse.is_pressed(SDL_BUTTON_LEFT));\n', 'run.cpp');
+    text = replaceOnce(text,
+      '    harness_after_draw(window_width, window_height);\n'
+      + '    PROFILE_BEGIN(platform_swap_buffers);\n'
+      + '    platform_swap_buffers();\n'
+      + '    PROFILE_END();\n}\n',
+      '    CALIB_DRAW_BEACON();\n'
+      + '    harness_after_draw(window_width, window_height);\n'
+      + '    PROFILE_BEGIN(platform_swap_buffers);\n'
+      + '    platform_swap_buffers();\n'
+      + '    PROFILE_END();\n'
+      + '    calib_after_swap();\n}\n', 'run.cpp');
+    writeFileSync(run, text);
+    say(`calibration hooks in ${run}`);
+  }
+  const harness = under(base, 'harness.cpp');
+  text = read(harness);
+  if (!text.includes(MARKER)) {
+    text = replaceOnce(text, '    fusion_graine = seed;\n    fusion_draws = 0;\n',
+      '    fusion_graine = seed;\n    fusion_draws = 0;\n'
+      + '    calib_seed(index, seed); // FNAF2_CALIB_V1\n', 'harness.cpp');
+    text = replaceOnce(text, '        h_play_down = down;\n        return;\n',
+      '        h_play_down = down;\n        calib_play_fingers(new_touch, end_touch, move_touch); // FNAF2_CALIB_V1\n        return;\n',
+      'harness.cpp');
+    text = replaceOnce(text, 'void harness_before_events(int frame_index)\n{\n',
+      'void harness_before_events(int frame_index)\n{\n'
+      + '    calib_mark_events(); // FNAF2_CALIB_V1\n', 'harness.cpp');
+    writeFileSync(harness, text);
+    say(`seed and events hooks in ${harness}`);
+  }
+}
 
-def patch_runtime(base: Path) -> None:
-    (base / "calib_impl.h").write_text(CALIB_IMPL)
-    run = base / "run.cpp"
-    text = run.read_text()
-    if MARKER in text:
-        print(f"calibration layer already present: {run}")
-    else:
-        text = replace_once(text, '#include "harness.cpp"\n',
-                            '#include "calib_impl.h" // FNAF2_CALIB_V1\n#include "harness.cpp"\n', "run.cpp")
-        text = replace_once(text, "    keyboard.update();\n    mouse.update();\n",
-                            "    calib_loop_start();\n    keyboard.update();\n    mouse.update();\n", "run.cpp")
-        text = replace_once(text, "    platform_poll_events();\n\n    // player controls\n",
-                            "    platform_poll_events();\n    calib_after_poll();\n\n    // player controls\n",
-                            "run.cpp")
-        text = replace_once(text, "        int ret = update_frame();\n",
-                            "        int ret = update_frame();\n"
-                            "        calib_after_update(frame->index, fps_limit.dt, timer_units,\n"
-                            "                           mouse.is_pressed(SDL_BUTTON_LEFT));\n", "run.cpp")
-        text = replace_once(text,
-                            "    harness_after_draw(window_width, window_height);\n"
-                            "    PROFILE_BEGIN(platform_swap_buffers);\n"
-                            "    platform_swap_buffers();\n"
-                            "    PROFILE_END();\n}\n",
-                            "    CALIB_DRAW_BEACON();\n"
-                            "    harness_after_draw(window_width, window_height);\n"
-                            "    PROFILE_BEGIN(platform_swap_buffers);\n"
-                            "    platform_swap_buffers();\n"
-                            "    PROFILE_END();\n"
-                            "    calib_after_swap();\n}\n", "run.cpp")
-        run.write_text(text)
-        print(f"calibration hooks in {run}")
-    harness = base / "harness.cpp"
-    text = harness.read_text()
-    if MARKER not in text:
-        text = replace_once(text, "    fusion_graine = seed;\n    fusion_draws = 0;\n",
-                            "    fusion_graine = seed;\n    fusion_draws = 0;\n"
-                            "    calib_seed(index, seed); // FNAF2_CALIB_V1\n", "harness.cpp")
-        text = replace_once(text, "        h_play_down = down;\n        return;\n",
-                            "        h_play_down = down;\n        calib_play_fingers(new_touch, end_touch, move_touch); // FNAF2_CALIB_V1\n        return;\n",
-                            "harness.cpp")
-        text = replace_once(text, "void harness_before_events(int frame_index)\n{\n",
-                            "void harness_before_events(int frame_index)\n{\n"
-                            "    calib_mark_events(); // FNAF2_CALIB_V1\n", "harness.cpp")
-        harness.write_text(text)
-        print(f"seed and events hooks in {harness}")
+export function patchJava(sdl: string, say: (line: string) => void = console.log) {
+  const java = under(sdl, 'android-project/app/src/main/java/org/libsdl/app');
+  const activity = under(java, 'SDLActivity.java');
+  let text = read(activity);
+  if (!text.includes(MARKER)) {
+    const anchor = '    public static native void onNativeTouch(int touchDevId, int pointerFingerId,\n';
+    text = replaceOnce(text, anchor, JAVA_NATIVE + anchor, 'SDLActivity.java');
+    if (!text.includes('import android.view.MotionEvent;'))
+      text = replaceOnce(text, 'import android.os.Build;\n', 'import android.os.Build;\nimport android.view.MotionEvent;\n', 'SDLActivity.java');
+    writeFileSync(activity, text);
+    say(`MotionEvent hook declared in ${activity}`);
+  }
+  const surface = under(java, 'SDLSurface.java');
+  text = read(surface);
+  if (!text.includes(MARKER)) {
+    text = replaceOnce(text,
+      '    public boolean onTouch(View v, MotionEvent event) {\n',
+      '    public boolean onTouch(View v, MotionEvent event) {\n'
+      + '        SDLActivity.calibTouch(event); // FNAF2_CALIB_V1\n', 'SDLSurface.java');
+    writeFileSync(surface, text);
+    say(`onTouch stamped in ${surface}`);
+  }
+}
 
+const isFile = (path: string) => {
+  try {
+    return statSync(path).isFile();
+  } catch {
+    return false;
+  }
+};
 
-def patch_java(sdl: Path) -> None:
-    java = sdl / "android-project/app/src/main/java/org/libsdl/app"
-    activity = java / "SDLActivity.java"
-    text = activity.read_text()
-    if MARKER not in text:
-        anchor = "    public static native void onNativeTouch(int touchDevId, int pointerFingerId,\n"
-        text = replace_once(text, anchor, JAVA_NATIVE + anchor, "SDLActivity.java")
-        if "import android.view.MotionEvent;" not in text:
-            text = replace_once(text, "import android.os.Build;\n",
-                                "import android.os.Build;\nimport android.view.MotionEvent;\n", "SDLActivity.java")
-        activity.write_text(text)
-        print(f"MotionEvent hook declared in {activity}")
-    surface = java / "SDLSurface.java"
-    text = surface.read_text()
-    if MARKER not in text:
-        text = replace_once(text,
-                            "    public boolean onTouch(View v, MotionEvent event) {\n",
-                            "    public boolean onTouch(View v, MotionEvent event) {\n"
-                            "        SDLActivity.calibTouch(event); // FNAF2_CALIB_V1\n", "SDLSurface.java")
-        surface.write_text(text)
-        print(f"onTouch stamped in {surface}")
+function main(argv: readonly string[]): number {
+  const parsed = pyArgs(argv, 'apply-calib-mod.ts', [{ name: '--chowdren', required: true }, { name: '--sdl', required: true }]);
+  if ('exit' in parsed) {
+    (parsed.exit ? console.error : console.log)(parsed.text);
+    return parsed.exit;
+  }
+  const chowdren = pyOptionText(parsed, '--chowdren') ?? '', sdl = pyOptionText(parsed, '--sdl') ?? '';
+  try {
+    for (const path of [chowdren, sdl]) refuseRepo(path);
+    const base = under(chowdren, 'base');
+    if (!isFile(under(base, 'run.cpp'))) throw new Exit(`no base/run.cpp under ${pyPath(chowdren)}`);
+    patchRuntime(base);
+    patchJava(sdl);
+    return 0;
+  } catch (error) {
+    return pyExitStatus(error, console.error);
+  }
+}
 
-
-def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--chowdren", required=True, type=Path, help="private runtime copy (has base/run.cpp)")
-    parser.add_argument("--sdl", required=True, type=Path, help="private SDL2 source copy (has android-project/)")
-    args = parser.parse_args()
-    for path in (args.chowdren, args.sdl):
-        refuse_repo(path)
-    base = args.chowdren / "base"
-    if not (base / "run.cpp").is_file():
-        raise SystemExit(f"no base/run.cpp under {args.chowdren}")
-    patch_runtime(base)
-    patch_java(args.sdl)
-
-
-if __name__ == "__main__":
-    main()
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) process.exitCode = main(process.argv.slice(2));

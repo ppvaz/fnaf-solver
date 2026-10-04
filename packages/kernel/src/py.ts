@@ -4,7 +4,7 @@
  * which the trainer bundles for the browser: none of this runs there.
  */
 export {
-  pyArgs, pyArgsError, pyOptionList, pyOptionText, pySubcommands, type PyArgs, type PyOption, type PyPositional, type PySubcommand,
+  PySystemExit, pyArgs, pyArgsError, pyExitStatus, pyOptionList, pyOptionText, pySubcommands, type PyArgs, type PyOption, type PyPositional, type PySubcommand,
 } from './pyargs.ts';
 export {
   PyJsonError, PyKeyError, PyUnicodeDecodeError, pyCompareNumbers, pyDecodeUtf8, pyEquals, pyGet, pyIsDict, pyIsList, pyItem, pyLen, pyLoads,

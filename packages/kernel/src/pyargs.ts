@@ -48,6 +48,17 @@ function usage(prog: string, options: readonly PyOption[], positionals: readonly
   return `usage: ${prog} ${parts.join(' ')}`;
 }
 
+/** raise SystemExit(message): the script stops, the message on stderr, exit status 1. */
+export class PySystemExit extends Error {}
+
+/** What the interpreter does with an error that leaves a script's main: a PySystemExit is reported (to stderr) and is exit
+ *  status 1; anything else propagates, as an uncaught exception does. */
+export function pyExitStatus(error: unknown, report: (text: string) => void): 1 {
+  if (!(error instanceof PySystemExit)) throw error;
+  report(error.message);
+  return 1;
+}
+
 /** parser.error(message), for a check the script makes after parsing: the usage line and the message, exit 2. */
 export function pyArgsError(prog: string, options: readonly PyOption[], positionals: readonly PyPositional[], message: string) {
   return { exit: 2 as const, text: `${usage(prog, options, positionals)}\n${prog}: error: ${message}` };

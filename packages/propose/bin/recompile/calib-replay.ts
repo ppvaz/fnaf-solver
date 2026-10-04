@@ -3,7 +3,7 @@
 // the phone, replayed by the host harness with the phone's own seed, clock and
 // input updates, and compared update for update.
 //
-// The calibration build (android/apply-calib-mod.py) logs, for every update,
+// The calibration build (android/apply-calib-mod.ts) logs, for every update,
 // the exact `dt` the events ran with, the polled left button, the RNG draw
 // count and state, and each frame load's seed. `build` turns the first visit
 // to one frame (the office, 3) into a harness run directory:

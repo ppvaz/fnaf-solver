@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // The Companion's capture latency, read off the calibration build's beacon.
 //
-// The calibration build (apply-calib-mod.py) draws each update's index as a
+// The calibration build (apply-calib-mod.ts) draws each update's index as a
 // 16-cell Gray code along the top of the frame and logs, on CLOCK_MONOTONIC,
 // when that update's buffer swap returned. The Companion copies registered
 // rectangles out of every MediaProjection frame and reports each frame's
@@ -106,7 +106,7 @@ function range(values: number[]) {
 
 /** A frames.jsonl row, as live() writes it. */
 interface FrameRow { seq: number, imageNs: string, snapshotNs: string, rttMs: number, u16: number | null, margin: number }
-/** A calibration update row (apply-calib-mod.py): its index, and the CLOCK_MONOTONIC ns its events ended and its swap returned. */
+/** A calibration update row (apply-calib-mod.ts): its index, and the CLOCK_MONOTONIC ns its events ended and its swap returned. */
 interface UpdateRow { u: number, te: number, ts: number }
 
 const finiteNumber = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value);
@@ -177,7 +177,7 @@ function gradeCmd(args: string[]) {
     schema: SCHEMA, step: 'ROADMAP S4', claimLevel: 'DEVICE_MEASURED', fidelity: 'rebuilt-runtime display, Companion capture',
     evidenceId: `capture-latency-${sha256(JSON.stringify(inputs)).slice(0, 16)}`,
     question: 'How long after the game swaps a frame does the Companion\'s MediaProjection image of it carry, and which updates does the capture never show?',
-    instrument: { region: BEACON_REGION, beacon: '16-cell Gray code of the update index, top 8 frame rows (apply-calib-mod.py)' },
+    instrument: { region: BEACON_REGION, beacon: '16-cell Gray code of the update index, top 8 frame rows (apply-calib-mod.ts)' },
     inputsSha256: inputs,
     notClaimed: ['The retail runtime\'s own swap-to-display path; the capture side (SurfaceFlinger, MediaProjection, the helper) is the phone\'s.',
       'Photon time: the image timestamp is the compositor\'s, not the panel\'s.'],

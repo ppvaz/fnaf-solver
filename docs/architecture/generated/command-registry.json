@@ -637,15 +637,21 @@
       "lifecycle": "supported"
     },
     {
-      "id": "android/apply-practice-mod.py",
-      "invocation": "android/apply-practice-mod.py",
+      "id": "android/apply-practice-mod.ts",
+      "invocation": "android/apply-practice-mod.ts",
       "kind": "Device action (host side, no phone): patches a private generated FNaF 2 source copy with the read-only office encounter HUD, `practice-state.jsonl` actor/RNG trace, and `practice-input.jsonl` SDL button-edge trace. `--gamesrc DIR`; generated source and all logs stay outside Git.",
       "lifecycle": "supported"
     },
     {
-      "id": "android/apply-calib-mod.py",
-      "invocation": "android/apply-calib-mod.py",
+      "id": "android/apply-calib-mod.ts",
+      "invocation": "android/apply-calib-mod.ts",
       "kind": "Device action (host side, no phone): turns private copies of the Android runtime and SDL's Java classes into a device timing instrument. Every update logs, on CLOCK_MONOTONIC, loop start, pump end, events end and swap end, the exact `dt` and `timer_units`, RNG draws and state and the polled button (`calib-updates.jsonl`, with each frame load's seed). Every touch logs its MotionEvent event time, Java receipt and native SDL queue time (`calib-input.jsonl`), and a 16-cell Gray-code beacon of the update index is drawn along the frame's top 8 px. `--chowdren DIR --sdl DIR`; `debug.rebuild.calib` / `debug.rebuild.calib_beacon` = 0 turn them off. Refuses paths inside the repository.",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "android/test-apply-mods.ts",
+      "invocation": "android/test-apply-mods.ts",
+      "kind": "Check (unit lane): both patchers over fixture sources: each hook lands at its anchor, a moved or doubled anchor is refused by name, a patched calibration tree is left as it is, and a path inside the repository is refused.",
       "lifecycle": "supported"
     },
     {

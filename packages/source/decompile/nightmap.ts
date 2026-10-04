@@ -46,7 +46,8 @@ import { homedir } from 'node:os';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  PyFloat, type PyJson, pyAlign, pyArgs, pyCompare, pyDumps, pyFloat, pyInt, pyPath, pyReadText, pyRegExp, pySplitLines, pyStrRepr, pyStrip,
+  PyFloat, PySystemExit as Exit, type PyJson, pyAlign, pyArgs, pyCompare, pyDumps, pyExitStatus, pyFloat, pyInt, pyPath, pyReadText, pyRegExp,
+  pySplitLines, pyStrRepr, pyStrip,
 } from '@sixam/kernel/py';
 
 // --- sheet resolution -------------------------------------------------------
@@ -61,9 +62,6 @@ const GAMES = new Map([
   ['fnaf3', { sheet: 'fnaf3/events/03-04-Office.txt', night: 'night number', hour: 'hour' }],
   ['fnaf4', { sheet: 'fnaf4/events/03-04-level.txt', night: 'Night', hour: 'hour' }],
 ]);
-
-/** SystemExit with a message: printed to stderr, exit 1. */
-class Exit extends Error {}
 
 function resolveSheet(game: string | null, sheet: string | null) {
   if (sheet) return pyPath(sheet);
@@ -607,9 +605,7 @@ function main(argv: readonly string[]): number {
     }
     return 0;
   } catch (error) {
-    if (!(error instanceof Exit)) throw error;
-    console.error(error.message);
-    return 1;
+    return pyExitStatus(error, console.error);
   }
 }
 
