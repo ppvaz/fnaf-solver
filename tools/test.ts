@@ -357,7 +357,7 @@ const ENGINE: Check[] = [
   // fail-closed behaviour -- shadow evidence cannot arm control, silence is
   // UNKNOWN, an unsupported rate refuses -- was asserted by nothing that ran.
   ['cue detector (java)', ['../android/companion/test.sh']],
-  ['fnaf1 teach overlay clearance', ['../packages/play/games/fnaf1/test-fnaf1-teach-overlay.py']],
+  ['fnaf1 teach overlay clearance', ['../packages/play/games/fnaf1/test-fnaf1-teach-overlay.ts']],
   // One screen->raw transform, the HID transport's: the Companion's Java copy
   // left on 2026-09-30, and its route bundles' hid-controls.txt are held to
   // what the transport derives from their profiles. Its shell and Python copies

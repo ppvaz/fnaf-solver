@@ -93,6 +93,7 @@
       "packages/play/bin/phone/test-event-clocks.ts",
       "packages/play/games/fnaf1/test-fnaf1-menu-probe.ts",
       "packages/play/games/fnaf1/test-fnaf1-night-run.ts",
+      "packages/play/games/fnaf1/test-fnaf1-teach-overlay.ts",
       "packages/play/games/fnaf3/test-fnaf3-run.ts",
       "packages/play/games/fnaf4/test-fnaf4-fredbear.ts",
       "packages/play/bin/companion/test-audio-players.ts",
@@ -138,10 +139,6 @@
       [
         "python3",
         "packages/play/games/fnaf1/test-fnaf1-title-stars.py"
-      ],
-      [
-        "python3",
-        "packages/play/games/fnaf1/test-fnaf1-teach-overlay.py"
       ],
       [
         "python3",

@@ -158,8 +158,8 @@
         "why": "15 scripts, 8 of them Pillow, numpy or SciPy frame and audio analysis that stays Python and is typed in place; the 7 stdlib-only ones are ported (Pedro, 2026-10-02: unforced Python is ported to TypeScript (characterize, port, compare, switch), not typed in place)"
       },
       "py:packages/play/games": {
-        "count": 127,
-        "why": "eight FNaF 1 detectors and helpers, six on Pillow or numpy (typed in place), two stdlib-only (ported; Pedro, 2026-10-02: unforced Python is ported to TypeScript (characterize, port, compare, switch), not typed in place)"
+        "count": 125,
+        "why": "seven FNaF 1 and FNaF 4 detectors and their tests, each on Pillow or numpy or reading its frames through sensor.py's Pillow open_frame (typed in place); the stdlib-only ones are ported (Pedro, 2026-10-02: unforced Python is ported to TypeScript (characterize, port, compare, switch), not typed in place)"
       },
       "py:packages/play/src": {
         "count": 225,

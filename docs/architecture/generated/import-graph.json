@@ -1351,6 +1351,17 @@
       ]
     },
     {
+      "file": "packages/play/games/fnaf1/test-fnaf1-teach-overlay.ts",
+      "imports": [
+        "@sixam/kernel",
+        "@sixam/kernel/py",
+        "node:assert/strict",
+        "node:fs",
+        "node:test",
+        "node:url"
+      ]
+    },
+    {
       "file": "packages/play/games/fnaf3/fnaf3-detectors.ts",
       "imports": [
         "../../bin/phone/native-regions.ts",

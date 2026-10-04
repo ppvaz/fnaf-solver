@@ -1357,8 +1357,8 @@
       "lifecycle": "supported"
     },
     {
-      "id": "packages/play/games/fnaf1/test-fnaf1-teach-overlay.py",
-      "invocation": "packages/play/games/fnaf1/test-fnaf1-teach-overlay.py",
+      "id": "packages/play/games/fnaf1/test-fnaf1-teach-overlay.ts",
+      "invocation": "packages/play/games/fnaf1/test-fnaf1-teach-overlay.ts",
       "kind": "check",
       "lifecycle": "supported"
     },

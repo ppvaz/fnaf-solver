@@ -13,7 +13,7 @@ package com.ppvaz.fnafcompanion;
  * {@link #TOP}..{@link #BOTTOM}. It ends at native y=50 and FNaF 1's door-light
  * reader starts at y=60 (fnaf1-door-light.py), so {@link #GUARD_PX} remains
  * even when a screenshot includes application overlays
- * (packages/play/games/fnaf1/test-fnaf1-teach-overlay.py checks it against the
+ * (packages/play/games/fnaf1/test-fnaf1-teach-overlay.ts checks it against the
  * reader, the title gate and every measured control).</p>
  *
  * <p>Pure Java: no Android types, so android/companion/test.sh runs it on the

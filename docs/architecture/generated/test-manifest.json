@@ -1493,7 +1493,7 @@
       }
     },
     {
-      "id": "packages/play/games/fnaf1/test-fnaf1-teach-overlay.py",
+      "id": "packages/play/games/fnaf1/test-fnaf1-teach-overlay.ts",
       "lane": "test:unit",
       "owner": "@sixam/play",
       "timeoutMs": 180000,
