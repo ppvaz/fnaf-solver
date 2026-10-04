@@ -41,6 +41,12 @@ jobs:
         with:
           source: ./
           destination: ./_site
+      # build.ts and pages.test.ts import @sixam/kernel, which resolves only
+      # through the workspace links npm ci makes: from 57c35f36 (the bundler's
+      # port, its first such import) every Pages run failed on it. It runs after
+      # Jekyll, so the site build never sees node_modules.
+      - name: Install the pinned workspace toolchain
+        run: npm ci
       - name: The trainer, bundled with its types stripped
         run: |
           node apps/trainer/test/build.ts
