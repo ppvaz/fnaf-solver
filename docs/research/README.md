@@ -22,6 +22,7 @@ machine route would actually need.
 
 | Report | Question it answers | Distilled into |
 |---|---|---|
+| [ANDROID-AI-OPERATOR-VISUAL-STUDIO-20261005.md](ANDROID-AI-OPERATOR-VISUAL-STUDIO-20261005.md) *(2026-10-05)* | What already combines Android AI operation, MCPs, visual authoring and game automation? | — (documentary comparison; runtime qualification remains open) |
 | [FNAF-BOT-CENSUS.md](FNAF-BOT-CENSUS.md) | What FNaF gameplay bots exist publicly at all? | — (stands alone) |
 | [FNAF-BOT-IMPLEMENTATION-COMPARISON.md](FNAF-BOT-IMPLEMENTATION-COMPARISON.md) | How does this project compare to them, and where is it actually strongest? | — (stands alone) |
 | [ANDROID-BOT-LANDSCAPE.md](ANDROID-BOT-LANDSCAPE.md) | Has anyone else driven a real-time bot on a physical Android handset, and how? Is this architecture normal? | [`HID-MULTITOUCH.md`](../device/HID-MULTITOUCH.md) §"Prior art" |

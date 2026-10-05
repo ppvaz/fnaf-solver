@@ -3318,3 +3318,45 @@ Commit scope requested by Pedro: retain this research and its generated record,
 plus the cited host diagnostic result and declaration as frozen inputs;
 other pending implementation work stays outside this commit. This research
 is bookkeeping, with consequential:bookkeeping = 0:1; S4 remains open.
+
+## 2026-10-05 — Android AI operator and visual studio (S4/S6 research)
+
+Pedro requested retaining and committing the two online research passes on
+agent-first Android operation and visual authoring for general/game automation.
+The [integral report](../docs/research/ANDROID-AI-OPERATOR-VISUAL-STUDIO-20261005.md)
+and generated [bibliographic result](../docs/evidence/android-ai-operator-visual-studio-20261005.json)
+retain the comparison, 25 primary-source URLs and report/supporting-record hashes:
+`android-ai-operator-visual-studio-3d928dd244aed05b`.
+This is **MODEL_ONLY documentary synthesis**, classified as bookkeeping.
+No competitor was installed, MCP connected or phone operated; S4/S6 remain open.
+
+MAS and Melaya are the closest documented precedents found. Visual authoring,
+MCP, pixel-driven games and validation loops already have precedents. MAS's
+validation is a smoke test and its Studio runtime does not read task.yaml;
+its UI Builder edits arguments/dashboards while logic stays Python.
+Candidate differentiation requires measured temporal execution, runtime gates,
+acceptance evidence and common human/agent plans. Physical-device performance,
+contact continuity, cross-device reproducibility, authoring productivity and
+build-versus-integrate advantage remain UNKNOWN.
+
+Validation: npm ci passed; Node 22.22.2 tools/test-docs.ts passed (894 Markdown
+links, 507 HTML links, 74 indexed pages). Report hash, supporting-record hash,
+generated evidence ID, source dates and whitespace checks passed. Git diff
+--check passed for the edited indexes. The requested commit is blocked by the
+session's read-only .git boundary: git add could not create .git/index.lock.
+The required npm run push-gate was attempted under Node 22.22.2 against HEAD
+3add162a; it could not create .git/worktrees and ran no CI lane or generated
+gate record. This is an environment refusal, not a passing gate.
+No hook was bypassed and no commit or push occurred.
+Consequential:bookkeeping commits = 0:0. Open: allow Git metadata writes,
+selectively stage this research/index/progress change without unrelated pending
+work, commit it and run push-gate on that commit.
+
+Retry requested by Pedro after Git write permissions were restored. The
+research commit retains only the report, bibliographic result, index entries
+and this session's progress; other pending implementation changes are excluded.
+The retry's npm ci and documentation checks passed. This is a bookkeeping
+commit (session consequential:bookkeeping = 0:1 upon creation), not S4/S6
+closure. Clean-commit validation is performed by push-gate, which retains its
+actual verdict in artifacts/lab/push-gate.jsonl; no green result is inferred
+from the working-tree documentation check. Runtime qualification remains open.

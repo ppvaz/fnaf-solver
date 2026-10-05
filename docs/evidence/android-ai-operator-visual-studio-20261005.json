@@ -1,0 +1,202 @@
+{
+  "schema": "android-ai-operator-literature-review-v1",
+  "date": "2026-10-05",
+  "step": [
+    "S4",
+    "S6"
+  ],
+  "claimLevel": "MODEL_ONLY",
+  "provenanceKind": "primary-source-literature-review",
+  "classification": "bookkeeping",
+  "question": "What precedents combine Android AI operation, MCPs, visual automation authoring and game execution?",
+  "verdict": "CLOSE_PRECEDENTS_DOCUMENTED; TEMPORAL_DIFFERENTIATION_UNQUALIFIED",
+  "scope": {
+    "deviceTouched": false,
+    "productsInstalled": false,
+    "mcpConnected": false,
+    "newDeviceMeasurement": false,
+    "productionChanged": false,
+    "stepClosureClaim": false
+  },
+  "subject": {
+    "commit": "3add162a61a9bababbd0643c59a96ca1d837bb4c"
+  },
+  "report": "docs/research/ANDROID-AI-OPERATOR-VISUAL-STUDIO-20261005.md",
+  "reportSha256": "e96883df1a5c680b1a773c416d1a004efb0e90e1607bf1c0492d73cf5718225c",
+  "externalSources": [
+    {
+      "url": "https://www.automationmacro.com/agent",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false,
+      "verification": "documentary-only"
+    },
+    {
+      "url": "https://melaya.org/en/product/agentic-framework",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false,
+      "verification": "documentary-only"
+    },
+    {
+      "url": "https://github.com/mobile-dev-inc/Maestro",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false,
+      "verification": "documentary-only"
+    },
+    {
+      "url": "https://airtest.netease.com/tutorial/Tutorial.html",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false,
+      "verification": "documentary-only"
+    },
+    {
+      "url": "https://androidmacro.com/",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false,
+      "verification": "documentary-only"
+    },
+    {
+      "url": "https://www.kok-emm.com/docs",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false,
+      "verification": "documentary-only"
+    },
+    {
+      "url": "https://github.com/Nain57/Smart-AutoClicker/wiki",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false,
+      "verification": "documentary-only"
+    },
+    {
+      "url": "https://sowe.com/macroai/docs/en/faq/getting-started",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false,
+      "verification": "documentary-only"
+    },
+    {
+      "url": "https://llamalab.com/automate/",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false,
+      "verification": "documentary-only"
+    },
+    {
+      "url": "https://www.automationmacro.com/docs/agent",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false,
+      "verification": "documentary-only"
+    },
+    {
+      "url": "https://www.automationmacro.com/mcp",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false,
+      "verification": "documentary-only"
+    },
+    {
+      "url": "https://www.automationmacro.com/docs/ui-builder",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false,
+      "verification": "documentary-only"
+    },
+    {
+      "url": "https://github.com/melaya-labs/melaya-mcp",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false,
+      "verification": "documentary-only"
+    },
+    {
+      "url": "https://melaya.org/en/use-cases/gaming",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false,
+      "verification": "documentary-only"
+    },
+    {
+      "url": "https://github.com/AirtestProject/AirtestIDE",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false,
+      "verification": "documentary-only"
+    },
+    {
+      "url": "https://www.kok-emm.com/docs/basic/unit-test",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false,
+      "verification": "documentary-only"
+    },
+    {
+      "url": "https://github.com/Nain57/Smart-AutoClicker/wiki/Smart-Scenario-%E2%80%90-Engine",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false,
+      "verification": "documentary-only"
+    },
+    {
+      "url": "https://github.com/danielealbano/android-remote-control-mcp",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false,
+      "verification": "documentary-only"
+    },
+    {
+      "url": "https://github.com/EF-Code/android-agent-mcp",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false,
+      "verification": "documentary-only"
+    },
+    {
+      "url": "https://github.com/mobile-next/mobile-mcp",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false,
+      "verification": "documentary-only"
+    },
+    {
+      "url": "https://github.com/droidrun/droidrun",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false,
+      "verification": "documentary-only"
+    },
+    {
+      "url": "https://github.com/antonpinchuk/mobile-mcp-opengl",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false,
+      "verification": "documentary-only"
+    },
+    {
+      "url": "https://github.com/google-deepmind/android_env",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false,
+      "verification": "documentary-only"
+    },
+    {
+      "url": "https://github.com/google-research/android_world",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false,
+      "verification": "documentary-only"
+    },
+    {
+      "url": "https://github.com/google/artemis",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false,
+      "verification": "documentary-only"
+    }
+  ],
+  "supportingEvidence": {
+    "path": "docs/evidence/android-execution-decision-limits-20261005/result.json",
+    "sha256": "8e69092fecb3f5ae150593a3b0425cb8a5a08607e584a07a277d69215ce6c9c1",
+    "evidenceId": "android-execution-decision-limits-5f963707b037b4a6",
+    "qualifiesCompetitors": false
+  },
+  "findings": [
+    "MAS and Melaya are the closest documented product precedents found in this review.",
+    "Visual authoring, MCP, pixel-based game automation and validation loops already have precedents.",
+    "MAS documents smoke validation; Studio runtime does not read the validation task.yaml.",
+    "MAS UI Builder authors argument forms and runtime dashboards; workflow logic remains Python.",
+    "Candidate differentiation requires measured runtime gates, temporal control and shared human/agent executable plans."
+  ],
+  "open": [
+    "physical-device game performance",
+    "runtime gate coverage",
+    "timing under sustained load",
+    "contact continuity and game acceptance",
+    "cross-device/version reproducibility",
+    "visual-authoring productivity",
+    "build-versus-integrate advantage"
+  ],
+  "integrityMethod": "reportSha256 is SHA-256 of UTF-8 report bytes; evidenceId is android-ai-operator-visual-studio- plus first 16 hex characters of SHA-256(JSON.stringify(record excluding evidenceId)), preserving property order. This binds the documentary record, not remote source bodies or measured runtime outcomes.",
+  "evidenceId": "android-ai-operator-visual-studio-3d928dd244aed05b"
+}
