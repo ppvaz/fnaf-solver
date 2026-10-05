@@ -2259,6 +2259,26 @@
       ]
     },
     {
+      "file": "packages/propose/bin/census/runtime-cost.ts",
+      "imports": [
+        "../nightloop-run.ts",
+        "../plans/bundle.ts",
+        "../recompile/sweep-common.ts",
+        "./pool.ts",
+        "@sixam/kernel",
+        "@sixam/propose/fnaf2",
+        "@sixam/source/fnaf2",
+        "node:child_process",
+        "node:fs",
+        "node:inspector",
+        "node:inspector/promises",
+        "node:os",
+        "node:path",
+        "node:url",
+        "node:worker_threads"
+      ]
+    },
+    {
       "file": "packages/propose/bin/census/test-census-workers.ts",
       "imports": [
         "./census.ts",
@@ -6236,6 +6256,16 @@
       ]
     },
     {
+      "file": "tools/resource-delta.ts",
+      "imports": [
+        "@sixam/kernel",
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "tools/retrieval-benchmark.ts",
       "imports": [
         "node:assert/strict",
@@ -6457,6 +6487,14 @@
         "node:fs",
         "node:os",
         "node:path"
+      ]
+    },
+    {
+      "file": "tools/test-resource-delta.ts",
+      "imports": [
+        "./resource-delta.ts",
+        "node:assert/strict",
+        "node:test"
       ]
     },
     {

@@ -103,6 +103,13 @@ Paths in the tables are relative to the repository root.
 | `tools/test-change-locality.ts` | check | In `test:unit`. Pins which paths are contexts, the three-context limit, the `Contexts:` line (a token reason and a commented line are refused) and that the hook runs the check. |
 | `tools/retrieval-benchmark.ts` | check | Runs a small deterministic newcomer-query benchmark over the maintained README/architecture/evidence routes and requires each expected authority in the top five; it measures route discoverability, not claim truth or semantic search quality. |
 
+## Resource delta pilot
+
+| Tool | Kind | Purpose and interface |
+|---|---|---|
+| `tools/resource-delta.ts --baseline MAP --candidate MAP --out REPORT [--expectations FILE]` | check/report | `npm run test:resources`: compare repeated compatible `resource-map-v1` observations. Missing or incompatible measurements, unexpected increases and finite budget breaches require review (exit 1). A concrete reason and `maxRatio` can account for an increase within its budget. `--diagnostic RESULT --out DIR` projects the runtime-cost diagnostic into baseline/no-op/regression maps and verifies the pilot controls. Empirical ranges, not WCET or confidence intervals; memory retains its measured scope. |
+| `tools/test-resource-delta.ts` | check | Unit-lane refutation controls for no-op noise, time/RSS regressions, tail spikes, mismatched context/claim levels, missing measurements, malformed maps and expectations that cannot erase budget breaches. |
+
 ## Simulator checks and reports
 
 | Tool | Kind | Purpose and interface |

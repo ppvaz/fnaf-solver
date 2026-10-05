@@ -163,6 +163,11 @@
       "lifecycle": "supported"
     },
     {
+      "id": "test:resources",
+      "command": "node tools/resource-delta.ts",
+      "lifecycle": "supported"
+    },
+    {
       "id": "device:preflight",
       "command": "node apps/desktop/src/device-cli.ts preflight",
       "lifecycle": "supported"
@@ -441,6 +446,18 @@
     {
       "id": "tools/retrieval-benchmark.ts",
       "invocation": "tools/retrieval-benchmark.ts",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "tools/resource-delta.ts",
+      "invocation": "tools/resource-delta.ts --baseline MAP --candidate MAP --out REPORT [--expectations FILE]",
+      "kind": "check/report",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "tools/test-resource-delta.ts",
+      "invocation": "tools/test-resource-delta.ts",
       "kind": "check",
       "lifecycle": "supported"
     },
@@ -1666,6 +1683,12 @@
       "id": "packages/play/bin/recompile/test-practice-audit.ts",
       "invocation": "packages/play/bin/recompile/test-practice-audit.ts",
       "kind": "Check (FIXTURE, no device): the plans are fixed by their seed, the stream uses the transport's vocabulary (feature report, ready delay, trap-2 release filler), cut and glued log rows are read safely, and chain verdicts follow the pumps. In `npm run test:unit`.",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/propose/bin/census/runtime-cost.ts",
+      "invocation": "packages/propose/bin/census/runtime-cost.ts --out DIR",
+      "kind": "report",
       "lifecycle": "supported"
     },
     {

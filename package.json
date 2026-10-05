@@ -42,6 +42,7 @@
     "catalog": "node tools/generate-catalog.ts",
     "push-gate": "node tools/push-gate.ts",
     "test:retrieval": "node tools/retrieval-benchmark.ts",
+    "test:resources": "node tools/resource-delta.ts",
     "device:preflight": "node apps/desktop/src/device-cli.ts preflight",
     "device:campaign": "node apps/desktop/src/device-cli.ts campaign",
     "device:clockmap": "node apps/desktop/src/device-cli.ts clockmap",

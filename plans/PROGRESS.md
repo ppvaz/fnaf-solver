@@ -3360,3 +3360,30 @@ commit (session consequential:bookkeeping = 0:1 upon creation), not S4/S6
 closure. Clean-commit validation is performed by push-gate, which retains its
 actual verdict in artifacts/lab/push-gate.jsonl; no green result is inferred
 from the working-tree documentation check. Runtime qualification remains open.
+
+## 2026-10-05 — Retain and publish the host resource pilot (S7 support)
+
+Pedro requested committing and pushing the remaining implementation.
+The frozen `packages/propose/bin/census/runtime-cost.ts` instrument now ships
+alongside `tools/resource-delta.ts`, its refutation tests, `test:resources`,
+unit-lane registration and generated catalogs. This makes the diagnostic and
+comparator available from a checkout; it does not make resource measurement
+automatic for every agent iteration or impose a universal resource policy.
+
+Working-tree verification: `npm ci`, typecheck and resource refutation controls
+pass. All seven maps/control files reproduce byte for byte from the retained
+[`runtime-cost-ea4b967107908ae7`](../docs/evidence/runtime-cost-20261005/result.json),
+including no-op `resource-delta-372dd63217dacc53` (PASS), planted regression
+`resource-delta-6a88853ff6061cb6` (REVIEW_REQUIRED) and bounded explanation
+`resource-delta-8d325510215fb530` (REVIEW_REQUIRED). The 597 declaration source
+hashes still match. The frozen evidence and instrument were not rewritten.
+These are **MODEL_ONLY** host observations; no new timing run or phone
+qualification is claimed. The commit's clean-checkout verification, including
+the k3 campaign dry-run, is performed by the pre-push hook and retains its
+generated `push-gate-run-v1` verdict in `artifacts/lab/push-gate.jsonl`.
+
+Open: automatic candidate measurement/agent feedback, a complete function and
+allocation map, workload/noise calibration, real optimization with trace
+equivalence, external-tool adoption and device deadlines. This diagnostic/gate
+pilot closes no roadmap step and remains bookkeeping (this request's
+consequential:bookkeeping = 0:1 upon commit creation).
