@@ -19,6 +19,9 @@ as Android renders text.
       --bold Roboto-Bold.ttf --out <anaconda>/Chowdren/fonts/AndroidSans.dat \\
       --sizes 13,16,21,24,32,43 --bold-sizes 43
 
+For a variable Roboto font, pass the same file to --regular and --bold and
+--bold-variation Bold (after checking that font's named instances).
+
 No font data enters the repository; the .dat is a build input next to the
 converter.
 """
@@ -31,8 +34,10 @@ CHARSET = [chr(c) for c in range(32, 127)] + ['©', 'é']
 BOLD = 1
 
 
-def font_bytes(path: str, size: int, bold: bool) -> bytes:
+def font_bytes(path: str, size: int, bold: bool, variation: str | None = None) -> bytes:
     font = ImageFont.truetype(path, size)
+    if variation is not None:
+        font.set_variation_by_name(variation.encode('utf-8'))
     ascent, descent = font.getmetrics()
     glyphs = []
     max_advance = 0.0
@@ -65,9 +70,10 @@ def main() -> None:
     ap.add_argument('--out', required=True)
     ap.add_argument('--sizes', default='13,16,21,24,32,43')
     ap.add_argument('--bold-sizes', default='43')
+    ap.add_argument('--bold-variation', help='Named instance when --bold is a variable font (e.g. Bold)')
     args = ap.parse_args()
     fonts = [font_bytes(args.regular, int(s), False) for s in args.sizes.split(',')]
-    fonts += [font_bytes(args.bold, int(s), True) for s in args.bold_sizes.split(',')]
+    fonts += [font_bytes(args.bold, int(s), True, args.bold_variation) for s in args.bold_sizes.split(',')]
     with open(args.out, 'wb') as fp:
         fp.write(struct.pack('<I', len(fonts)))
         for f in fonts:

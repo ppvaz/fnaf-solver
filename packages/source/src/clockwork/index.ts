@@ -15,3 +15,4 @@ export * from './rng.ts';
 export * from './control-registry.ts';
 export * from './vocabulary.ts';
 export * from './control-contracts.ts';
+export * from './crowd-command.ts';

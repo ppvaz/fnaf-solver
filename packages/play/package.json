@@ -9,6 +9,7 @@
   },
   "exports": {
     ".": "./src/index.ts",
+    "./recompile/*": "./src/recompile/*.ts",
     "./phone/*": "./src/phone/*.ts",
     "./venues/phone/*": "./src/venues/phone/*.ts",
     "./sensors/fnaf2/*": "./src/sensors/fnaf2/*.ts",

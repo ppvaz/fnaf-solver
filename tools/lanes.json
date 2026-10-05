@@ -123,7 +123,9 @@
       "packages/review/bin/recompile/test-audio-records.ts",
       "packages/source/recompile/test-recompile-records.ts",
       "packages/source/recompile/android/test-apply-mods.ts",
-      "packages/review/bin/recompile/test-phone-input-ledger.ts"
+      "packages/review/bin/recompile/test-phone-input-ledger.ts",
+      "apps/desktop/test/crowd.test.ts",
+      "apps/desktop/test/local-recompile.test.ts"
     ],
     "steps": [
       [

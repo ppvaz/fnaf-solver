@@ -554,6 +554,51 @@ measured. A retail unpaused clear still follows S5's original protocol.
 
 ## Records, verification and next action
 
+### Alternate format: GPTPlays (Pedro, 2026-10-05)
+
+An LLM receives the goal of finishing the game and owns the next move. Viewers
+talk with it: questions, hints and memes can influence its choices. Audience
+messages do not directly actuate the game. This is an alternate player over
+the same qualified runtime/action/pause interfaces, rather than a requirement
+to put an LLM between every crowd vote and its selected action.
+
+Use two independent loops. The player observes a presented state and selects
+a bounded named action, which the runtime executes and acknowledges. The
+presenter answers chat and describes accepted actions or uncertainty without
+holding up the player. A slow conversation must not become an accidental
+game-clock policy. The operator retains pause, abort and restart.
+
+For the first experiment, use only the mature FNaF 2 recompile and Night 1.
+Give the player its goal, allowed controls, visible observation and a bounded
+memory of its prior actions. Decide before running whether it may see internal
+runtime state, source mechanics or committed winning schedules: those are
+different assistance conditions, not interchangeable results. A player with
+a winning schedule is a useful presentation baseline, but it does not measure
+discovery from pixels. The other three quadrants remain available for later
+qualified runtimes.
+
+Start with a local participant message box and an operator command console.
+Then add the LLM as an action producer using the same round tokens and
+admission checks. Incoming chat is conversation data; a viewer claiming to
+be the operator or proposing a shell command receives no additional authority.
+The player can consider a hint, choose a legal experiment or explain why it
+ignored it. Separate accepted actions from proposed actions in the ledger and
+never invent the reason for a decision that was not recorded.
+
+Compare a run without audience hints with a run under a declared hint policy,
+on the same pinned game configuration. Retain actions, results, selected hints,
+operator interventions, decision latency and API cost; state the chat retention
+rules before collecting participant content. Record terminal outcome, time
+spent playing versus waiting and how viewers understood the agent's decisions.
+The initial pass is a coherent observe/act/acknowledge loop and an honest
+conversation about it; a clear, audience retention and commercial potential
+remain separate measurements.
+
+The existing local grid is the transport console for this experiment. It does
+not yet have a chat service, LLM connection or a qualified native rendered-pause
+bridge. These remain implementation and qualification work after the owned
+FNaF 2 has been rebuilt locally.
+
 Each generated experiment/session record binds its declaration, source/binary
 hashes, input policy, play mode, per-game night/dials, seed treatment, save hashes,
 timing config, state/input trace hashes, pause reasons/acknowledgments, game and

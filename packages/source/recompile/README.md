@@ -79,13 +79,15 @@ git checkout 9b00bb4227cc3ddd6f7baefe06120368bd7226e9
 # 2. Apply the mobile patch
 git apply /path/to/repo/packages/source/recompile/mmfparser-chowdren-mobile.patch
 
-# 3. Build the Cython image (see IN-ENGINE-PILOT-RECOMPILE.md
-#    "Public toolchain recheck" for the Debian-archive apt fix)
-docker build ...   # -> fnaf2-chowdren-phase1:local
+# 3. Build both images from the repository, on macOS or Linux
+docker build --target converter -t fnaf2-chowdren-phase1:local \
+    -f /path/to/repo/packages/source/recompile/Dockerfile /path/to/repo/packages/source/recompile
+docker build --target runtime -t fnaf2-play:local \
+    -f /path/to/repo/packages/source/recompile/Dockerfile /path/to/repo/packages/source/recompile
 
 # 4. Rebuild the .so modules after any .pyx edit
-docker run --rm -v "$PWD:/work" -w /work fnaf2-chowdren-phase1:local \
-    bash -lc 'pip install "Cython<3" >/dev/null; python build.py build_ext --inplace'
+docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/work" -w /work fnaf2-chowdren-phase1:local \
+    python build.py build_ext --inplace
 
 # 5. Convert (assets cached in <gamesrc> after the first run)
 docker run --rm -e MMFPARSER_ANDROID_RAW_DIR=/input/android-res-raw \
@@ -94,6 +96,43 @@ docker run --rm -e MMFPARSER_ANDROID_RAW_DIR=/input/android-res-raw \
     python -u -m chowdren.run --config /input/fnaf2-config.py \
         /input/application.ccn /input/gamesrc
 ```
+
+## Local build on macOS and Linux
+
+The local host builder is now `npm run recompile:local -- --apk
+/external/base.apk --toolchain /external/anaconda --out /external/new-build`
+([desktop interface](../../../apps/desktop/README.md#scripts)). Prepare the
+pinned tree and font bank above first. It extracts the CCN and raw resources,
+converts and compiles in Docker on this host, retaining bounded step logs and
+hash-based build custody. Its new output directory stays outside Git.
+On a phone whose Roboto is variable, `make-android-fonts.py --bold-variation
+Bold` selects its observed named Bold instance; the regular sizes keep the
+font's default instance. A compiled binary alone does not qualify boot or pause.
+
+The host needs Node 22, Git, unzip, and Docker Desktop on macOS or Docker
+Engine on Linux. The pinned Python image supports Linux arm64 and amd64;
+conversion and compilation use the same architecture and immutable image IDs.
+Generated files use the host UID/GID, so Linux users keep ownership too.
+Rebuild the Cython modules when changing the target architecture. Paths to the
+owned APK, patched toolchain, fonts and output are supplied by the operator;
+there are no host-specific paths in the builder. Font regeneration additionally
+needs Python 3 with Pillow. Each Docker step has a deadline and removes its own
+container on interruption; logs remain in the external output directory.
+
+The 2026-10-05 local rebuild is retained as
+[`local-recompile-894915c9914e5cb8`](../../../docs/evidence/local-recompile-20261005.json).
+The Linux arm64 binary built on the macOS host renders the title with the
+committed `night1-before.ini` fixture (`cine=1`), then stops after 60 title
+updates: [`recompile-game-builds-a792b596696d07e4`](../../../docs/evidence/local-recompile-title-boot-20261005.json).
+The fresh-save no-input boot instead enters `14-dream` and reaches its 40-second
+deadline (exit 124); that negative is retained
+[separately](../../../docs/evidence/local-recompile-fresh-boot-20261005.json).
+Both are MODEL_ONLY. Rendering uses Xvfb and software GL inside Docker; it
+needs no host display server. Streaming pause and audio freeze remain open.
+The zlib setting uses the patch's existing compression option; the
+[comparison](../../../docs/evidence/recompile-image-compression-20261005.json)
+found equal decompressed bytes for all 311 images shared with the interrupted
+Zopfli run. This is a subset comparison, not retail-game equivalence.
 
 ## State (2026-08-28)
 

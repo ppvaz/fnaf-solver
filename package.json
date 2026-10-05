@@ -15,6 +15,7 @@
   "scripts": {
     "bootstrap": "npm ci",
     "probe": "node apps/desktop/src/probe.ts",
+    "twitch:poc": "node apps/desktop/src/crowd.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "npm run typecheck && npm run test:unit && npm run test:contracts && npm run test:core",
     "test:device:calibration": "node tools/lanes.ts device:calibration",
@@ -50,7 +51,8 @@
     "device:capabilities": "node packages/play/bin/phone/capabilities.ts",
     "device:facts": "node packages/propose/bindings/fact-register.ts",
     "device:emit": "node packages/propose/bin/plans/emit.ts",
-    "device:mcp": "node apps/desktop/src/companion-mcp.ts"
+    "device:mcp": "node apps/desktop/src/companion-mcp.ts",
+    "recompile:local": "node apps/desktop/src/local-recompile.ts"
   },
   "devDependencies": {
     "@types/node": "22.10.2",

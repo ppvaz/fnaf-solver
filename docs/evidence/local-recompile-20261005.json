@@ -1,0 +1,42 @@
+{
+  "schema": "local-recompile-build-v1",
+  "label": "MODEL_ONLY",
+  "package": "com.scottgames.fnaf2",
+  "base": "9b00bb4227cc3ddd6f7baefe06120368bd7226e9",
+  "imageCompression": "zlib-9",
+  "imageWorkers": 2,
+  "conversionCpus": 2,
+  "compileJobs": 2,
+  "hostOS": "darwin",
+  "target": {
+    "os": "linux",
+    "arch": "arm64"
+  },
+  "images": {
+    "converter": "sha256:71ada955581d5118a032a167feabcee8abe50c7358fe6419d327c0ac94b7b012",
+    "build": "sha256:7bc22529fce1adeb25ca4d65c193915c0b7eb520e17e203c53abdd27084504e4"
+  },
+  "sha256": {
+    "apk": "351550b0e9c30c2b5cb01510ffd3f496376fe0b4d8fb70cb015b44647fda0373",
+    "ccn": "835655e698142299eda5bd6a5ac2c899bf2199f2a6ad51d7779589f2bb4c0b23",
+    "assets": "92b083cebee9c4773926682e0782b15281bbe2fe8d4b7242da403ca8bf34871c",
+    "binary": "364ae0183156e240b7e3247e6945238083f12b3431cfc0d39228bc5971b17189",
+    "mobilePatch": "64064abaa9d984f299108f35f0884c68416049e2b139561a57464874e71af4d0",
+    "fontBank": "1e50f594ff96516a16cfa7d8c8dfd39ccb60a61d0becca99d8410a3caacc032d",
+    "config": "d7611fab628faa6c23a563063b5cd7383a32192c2bcb3b94c8d83716013b2ede",
+    "builder": "6c907e05d92ab017ad74e088d97d250ba8aacd069dc51a87cabcf481198ca76a"
+  },
+  "logs": {
+    "convert": "1445676aeca01b10b20bede08a8a03e0b1ffc6c165b014a4f88355e4bba2e863",
+    "configure": "69c1ae5095f594e9cfd3a277b8a258f123484e6636ea0d99095a8c5b82d7f1ef",
+    "compile": "2e95f431210a657accbb42f35acb157548bba0084ab6468727c4a80073c3e544"
+  },
+  "rawResources": 95,
+  "open": [
+    "boot qualification",
+    "rendered pause",
+    "audio freeze",
+    "retail encounter fidelity"
+  ],
+  "evidenceId": "local-recompile-894915c9914e5cb8"
+}

@@ -1,0 +1,70 @@
+{
+ "claimLevel": "MODEL_ONLY",
+ "evidenceId": "recompile-game-builds-da539ced497aea42",
+ "fidelity": "rebuilt-runtime",
+ "question": "Does each build-296 game convert, build for the host, boot under the harness without input, and package as an Android APK, with its sounds reaching the mixer?",
+ "rows": [
+  {
+   "apk": {
+    "status": "NOT_BUILT"
+   },
+   "audio": "UNKNOWN",
+   "blocker": "Fresh save enters 14-dream; no input was sent, and the title was not reached before the 40-second deadline (exit 124). Separate title qualification uses the committed cine=1 fixture. No rebuilt APK or audio audition in this run.",
+   "boot": {
+    "audioInitialized": true,
+    "env": {
+     "CHOWDREN_BINARY": "/input/gamesrc/build-local/Chowdren",
+     "CHOWDREN_HARNESS": "1",
+     "CHOWDREN_MAX_TICKS": "60",
+     "CHOWDREN_SEED": "24850",
+     "CHOWDREN_SNAP": "1:20",
+     "CHOWDREN_STOP_FRAME": "1",
+     "CHOWDREN_TIMEOUT_SECONDS": "40"
+    },
+    "exitCode": 124,
+    "glErrors": 0,
+    "reachedTitle": "NO",
+    "samplePlays": 4,
+    "status": "CRASH",
+    "stop": null,
+    "updates": 2029,
+    "visits": [
+     {
+      "frame": 0,
+      "name": "01-Initialize & Setup",
+      "updates": 180
+     },
+     {
+      "frame": 13,
+      "name": "14-dream",
+      "updates": 1849
+     }
+    ]
+   },
+   "conversion": {
+    "ccnSha256": "835655e698142299eda5bd6a5ac2c899bf2199f2a6ad51d7779589f2bb4c0b23",
+    "eventFiles": 32,
+    "exitCode": 0,
+    "frames": 29,
+    "mp3Decoded": 1,
+    "omittedActions": 98,
+    "playSites": {
+     "invalid": 0,
+     "resolved": 121
+    },
+    "silencedSounds": 0,
+    "status": "OK",
+    "truncatedFramesSkipped": 4
+   },
+   "firstFailedStep": "boot",
+   "game": "fnaf2",
+   "host": {
+    "assetsSha256": "92b083cebee9c4773926682e0782b15281bbe2fe8d4b7242da403ca8bf34871c",
+    "binarySha256": "364ae0183156e240b7e3247e6945238083f12b3431cfc0d39228bc5971b17189",
+    "pinned": null,
+    "status": "OK"
+   }
+  }
+ ],
+ "schema": "recompile-game-builds-v1"
+}

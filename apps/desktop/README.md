@@ -119,11 +119,59 @@ prints every remedy without running it, and never writes the owner's override.
 
 ## Scripts
 
+`npm run recompile:local -- --apk /external/base.apk --toolchain
+/external/anaconda --out /external/new-build` extracts the owned APK's CCN and
+raw resources, converts them with the pinned mobile toolchain and compiles
+the Linux arm64 desktop binary in Docker on this host. The toolchain is prepared
+using [the recompile recipe](../../packages/source/recompile/README.md#environment):
+Anaconda `9b00bb4`, the committed mobile patch, built mmfparser modules and
+`Chowdren/fonts/AndroidSans.dat`. Docker images are
+`fnaf2-chowdren-phase1:local` and `fnaf2-play:local`. The output must be new and
+outside the repository, including through symlinks. Each step has a deadline,
+a retained log and cleanup of its own container. `build.json` binds APK, CCN,
+assets, binary, font bank, patch, converter config, builder and logs by SHA-256,
+with a generated evidence ID and MODEL_ONLY label. Boot, pause and phone fidelity
+remain open until measured. The APK can be copied by read-only ADB from the
+installed package using this host's local profile; this builder takes a local
+file and sends no phone inputs.
+
+The local four-game presentation is `npm run twitch:poc` (default
+`http://127.0.0.1:8740`). Its 2x2 grid has independent await-input, manual and
+global holds, bounded named commands, round tokens and a retained event ledger.
+Without a configured bridge all four tiles say **Awaiting runtime**. This is
+the operator console for qualifying the transport; Twitch and an LLM player
+are not connected. See [Plan 29](../../plans/29-twitch-plays-fnaf.md).
+
+`--runtime-map /external/runtimes.json` reads an object such as
+`{"FNAF2":"http://127.0.0.1:8752/"}`; `--port` chooses the grid's local port
+and `--out` chooses a session directory (default ignored `artifacts/twitch-poc/`).
+Runtime bridges must implement `GET status`, `GET frame.jpg`, `POST action`,
+`POST hold` and `POST close`. Their checked interface is
+[`crowd-runtime.ts`](../../packages/play/src/recompile/crowd-runtime.ts).
+They declare MODEL_ONLY or FIXTURE, their own available command vocabulary,
+rendered/audio pause and stop on disconnect. They start on a presented paused
+frame; an action returns a presented paused/terminal observation. Status
+sequence and game tick must stay monotonic. Resume removes a manual/global
+hold; await-input remains paused until another action. These declarations
+do not replace the native pause comparison. No bridge for the existing
+before-draw pilot is claimed here.
+
+The command box attaches the current token: `FNAF2 wind 1s`, `FNAF2 pause`,
+`FNAF2 resume`, `ALL pause`. API producers must supply it explicitly, for
+example `{"text":"FNAF2 wind 1s @1"}` to `POST /api/command`. The grid admits
+one action per game at a time; it refuses stale rounds and queues no actions.
+A manual pause can interrupt an outstanding action. A failed bridge is closed
+and requires an operator restart. `Ctrl-C` closes the bridges and writes a
+hash-derived `crowd-session-v1` result beside `events.jsonl`. Session results
+label native pause, audio, Twitch latency and retail play as unmeasured.
+
 Entry points and checks that lived in `tools/` until the ADR 0002 layout
 moved them here, with the description their tool index gave them.
 
 | Script | Kind | What it does |
 |---|---|---|
+| `npm run recompile:local -- --apk FILE --toolchain DIR --out DIR` | host build | Extracts an owned local FNaF 2 APK, converts through the prepared pinned Chowdren tree, compiles in Docker and writes hashed MODEL_ONLY build custody outside Git. `src/local-recompile.ts`; refusal checks `test/local-recompile.test.ts` in `test:unit`. |
+| `npm run twitch:poc -- [--port 8740] [--runtime-map FILE] [--out DIR]` | host app | Loopback-only four-game grid, command routing, acknowledged pause overlays and retained session events; no phone or external chat connection. `src/crowd.ts` and `src/crowd-server.ts`; regression `test/crowd.test.ts` in `test:unit`. |
 | `npm run device:emit -- --winner winner.json --out artifacts/run-001 [--forbid-mechanic ID ...]` | compiler/check | Converts a `winner-v1` into an immutable `device-bundle-v1`: `manifest.json`, one `night-N.plan` per requested night, the resolved `profile.json`, and hashed transport-neutral `artifact.json` semantic blocks. It validates interpreter syntax, controls, contacts/timings, policy/night/profile identity, content hashes, and a bounded exact-engine replay before returning `READY`; the strategy registry contains `minus-toys`, `minus3`, and `minus7`. `--forbid-mechanic fnaf2.camera-split` refuses `minus-toys` and `minus3`, which require the split. |
 | `npm run device:campaign -- --guided [--json]` | guided preflight | Prints the single Custom Night calibration session: measured menu/dial points, readback boxes, and start control. It does not touch a phone. |
 | `npm run device:campaign -- --live --confirm-live --bundle DIR --calibration FILE --qualification FILE` | supported-live gate | Runs closed ADB preflight plus campaign gates; it remains `HOLD` until a matching Night 6/7 bundle, measured Custom Night calibration, external `DEVICE_MEASURED` qualification, device-local executor, and positive lifecycle/save proof ports are composed. `--forbid-mechanic ID` (repeatable) refuses, before any phone is opened, a bundle whose strategy requires that mechanic; the spec carries the bundle's required and forbidden mechanics and its first event names them (Pedro, 2026-09-30: a RunSpec's constraints travel with the bundle). |

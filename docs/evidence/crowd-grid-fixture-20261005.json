@@ -1,0 +1,81 @@
+{
+  "schema": "crowd-grid-fixture-v1",
+  "label": "FIXTURE",
+  "steps": [
+    "S6"
+  ],
+  "sources": {
+    "apps/desktop/src/crowd.ts": "1b86ceaf0533484f5ff1b768091e3a55f54353ba577ae30c4f9883a85b609552",
+    "apps/desktop/src/crowd-server.ts": "35c143072b29b77b0c8de30ed7cc1d732cd7d254d1cd6cad8a57d4ea2d10b728",
+    "apps/desktop/src/local-recompile.ts": "6c907e05d92ab017ad74e088d97d250ba8aacd069dc51a87cabcf481198ca76a",
+    "packages/source/src/clockwork/crowd-command.ts": "5fcc7a816672c408d4b26310cc6c6d886dd733dafe52249d8054f1a8e39acfe7",
+    "packages/play/src/recompile/crowd-grid.ts": "df1c17ed6b36cae2b7bbe2fc9794ef661a33fa464d06444e2f8b76eed30bee95",
+    "packages/play/src/recompile/crowd-runtime.ts": "2e50db6430b3cf825a01292c96b412a4d77c8517db384b6cad5efcc536dcef96",
+    "packages/play/src/recompile/crowd-http.ts": "5d9b607932c2d42dfcc00a83175f328de7470e3cad702f50ad161f4247e44395",
+    "apps/desktop/web/crowd/index.html": "f709394053a4dce98ebc601c3a17191d1df4754f619ec39714cb6692b068d590",
+    "apps/desktop/web/crowd/app.js": "55b6da5445ae0adec970388107717c3316a015b2331e063453ac8b435349d5ec",
+    "apps/desktop/web/crowd/style.css": "43d436c1b3f4cb7d8962eaf51516b1e7e4819fce402a4cac4e321babd327970e",
+    "apps/desktop/test/crowd.test.ts": "5e5cf2728374556518cc764d063837fbaa2a8d86e01e68322289f672234ad94c",
+    "apps/desktop/test/local-recompile.test.ts": "932087691ab8fb1a4cf4f74eb50dc8ae41dd080d824b780f111a0a0807c1becc"
+  },
+  "tests": [
+    {
+      "host": "macOS host",
+      "nodeMajor": 22,
+      "passed": 13,
+      "failed": 0,
+      "tapSha256": "787b6d48e360063a36c6391f2146c6e4d6945caaec05ec274a40fbe34034e91a"
+    },
+    {
+      "host": "Linux container",
+      "nodeMajor": 22,
+      "passed": 13,
+      "failed": 0,
+      "tapSha256": "36166298d9905b59c0907739019f5869d7dc42a3214fa0cf5bdbc22a23e0c62e"
+    }
+  ],
+  "browser": [
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 1000,
+        "mobile": false
+      },
+      "tiles": 4,
+      "horizontalOverflow": false,
+      "allTilesInViewport": true,
+      "screenshotSha256": "527ffe0f22e441b9fae2f18371336142fc2808c501f35e65bb3ed21a9c9f6b56"
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "mobile": true
+      },
+      "tiles": 4,
+      "horizontalOverflow": false,
+      "allTilesInViewport": false,
+      "screenshotSha256": "9d826cf6cdce5dc6f43b7e346a0d0522323f83603682cbfcbdc4fc00b96b0e4f"
+    }
+  ],
+  "consoleProblems": [],
+  "verified": [
+    "game-prefixed command routing",
+    "single action per game",
+    "stale rounds refused",
+    "independent manual/global holds",
+    "failed bridge abort and late-reply rejection",
+    "loopback HTTP admission",
+    "repository and symlink content boundary",
+    "Docker deadline removes only its named build container"
+  ],
+  "unmeasured": [
+    "native presented-frame pause",
+    "native audio freeze",
+    "four simultaneous runtimes",
+    "Twitch chat connection",
+    "LLM decisions",
+    "retail game fidelity"
+  ],
+  "evidenceId": "crowd-grid-fixture-1001ff854c53b5b0"
+}

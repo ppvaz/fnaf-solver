@@ -28,6 +28,11 @@
       "lifecycle": "supported"
     },
     {
+      "id": "twitch:poc",
+      "command": "node apps/desktop/src/crowd.ts",
+      "lifecycle": "supported"
+    },
+    {
       "id": "typecheck",
       "command": "tsc --noEmit -p tsconfig.json",
       "lifecycle": "supported"
@@ -205,6 +210,11 @@
     {
       "id": "device:mcp",
       "command": "node apps/desktop/src/companion-mcp.ts",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "recompile:local",
+      "command": "node apps/desktop/src/local-recompile.ts",
       "lifecycle": "supported"
     }
   ],
@@ -723,6 +733,18 @@
       "id": "fixtures/fnaf4-night8-before.ini",
       "invocation": "fixtures/fnaf4-night8-before.ini",
       "kind": "The FNaF 4 save for Night 8 (`beat5`-`beat7`, `beat8=0`, `test=1`): the Extras Nightmare button then takes eight taps to arm 20/20/20/20 (`shadow` 2).",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "npm",
+      "invocation": "npm run recompile:local -- --apk FILE --toolchain DIR --out DIR",
+      "kind": "host build",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "npm",
+      "invocation": "npm run twitch:poc -- [--port 8740] [--runtime-map FILE] [--out DIR]",
+      "kind": "host app",
       "lifecycle": "supported"
     },
     {

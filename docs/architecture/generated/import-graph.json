@@ -60,6 +60,30 @@
       ]
     },
     {
+      "file": "apps/desktop/src/crowd-server.ts",
+      "imports": [
+        "@sixam/kernel",
+        "@sixam/play/recompile/crowd-grid",
+        "@sixam/source",
+        "node:fs/promises",
+        "node:http"
+      ]
+    },
+    {
+      "file": "apps/desktop/src/crowd.ts",
+      "imports": [
+        "./crowd-server.ts",
+        "@sixam/kernel",
+        "@sixam/play/recompile/crowd-grid",
+        "@sixam/play/recompile/crowd-http",
+        "@sixam/source",
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "apps/desktop/src/device-cli.ts",
       "imports": [
         "../../../packages/propose/bin/plans/bundle.ts",
@@ -160,6 +184,18 @@
       ]
     },
     {
+      "file": "apps/desktop/src/local-recompile.ts",
+      "imports": [
+        "@sixam/kernel",
+        "@sixam/source/truth",
+        "node:child_process",
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "apps/desktop/src/mcp.ts",
       "imports": [
         "@sixam/kernel",
@@ -205,6 +241,20 @@
       ]
     },
     {
+      "file": "apps/desktop/test/crowd.test.ts",
+      "imports": [
+        "../src/crowd-server.ts",
+        "@sixam/play/recompile/crowd-grid",
+        "@sixam/play/recompile/crowd-http",
+        "@sixam/play/recompile/crowd-runtime",
+        "@sixam/source",
+        "node:assert/strict",
+        "node:events",
+        "node:http",
+        "node:test"
+      ]
+    },
+    {
       "file": "apps/desktop/test/device-cli.test.ts",
       "imports": [
         "@sixam/kernel/contracts",
@@ -228,6 +278,19 @@
         "node:fs",
         "node:os",
         "node:path"
+      ]
+    },
+    {
+      "file": "apps/desktop/test/local-recompile.test.ts",
+      "imports": [
+        "../src/local-recompile.ts",
+        "node:assert/strict",
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:test",
+        "node:url"
       ]
     },
     {
@@ -1780,6 +1843,27 @@
       "file": "packages/play/src/player/plain-clone.ts",
       "imports": [
         "@sixam/kernel"
+      ]
+    },
+    {
+      "file": "packages/play/src/recompile/crowd-grid.ts",
+      "imports": [
+        "./crowd-runtime.ts",
+        "@sixam/source"
+      ]
+    },
+    {
+      "file": "packages/play/src/recompile/crowd-http.ts",
+      "imports": [
+        "./crowd-runtime.ts",
+        "@sixam/source"
+      ]
+    },
+    {
+      "file": "packages/play/src/recompile/crowd-runtime.ts",
+      "imports": [
+        "@sixam/kernel",
+        "@sixam/source"
       ]
     },
     {
@@ -5377,6 +5461,7 @@
       "imports": [
         "./control-contracts.ts",
         "./control-registry.ts",
+        "./crowd-command.ts",
         "./games.ts",
         "./rng.ts",
         "./vocabulary.ts"

@@ -3449,3 +3449,57 @@ READY with venue UNKNOWN because no phone is opened. `git diff --check` passed.
 This S5/S6 proposal closes no step; this request's consequential:bookkeeping
 commit ratio is 0:1 upon creation. Clean-commit verification is retained by the
 required push gate in `artifacts/lab/push-gate.jsonl`.
+
+## 2026-10-05 — Local FNaF 2 rebuild and portable four-game grid (S2/S6)
+
+Pedro requested a quick FNaF 2 PoC, preparing the four-game grid regardless of
+runtime availability, extracting the owned APK and recompiling on this host,
+and keeping macOS/Linux host compatibility. Read-only extraction obtained
+the installed FNaF 2 v2.0.7, versionCode 26, its base APK and five splits;
+no game inputs were sent to the phone. Game content, fonts, generated C++,
+binary, captures and logs remain in an external experiment directory.
+
+`npm run recompile:local` now extracts the CCN and 95 raw resources from the
+local APK, verifies the pinned patched toolchain, converts and compiles in
+Docker, and retains hashed build custody. The content-free Dockerfile fixes
+the missing FFmpeg dependency and builds converter/runtime images for Linux
+arm64 or amd64. The host command uses Node 22, supplied external paths and the
+host UID/GID on both macOS and Linux. Step deadlines remove only their own
+named containers; an ignored Docker-client termination is a tested refusal.
+The owned variable Roboto bank was generated using its observed Bold instance.
+
+Generated records:
+
+- [`local-recompile-894915c9914e5cb8`](../docs/evidence/local-recompile-20261005.json),
+  MODEL_ONLY: conversion and Linux arm64 compilation on the macOS host passed.
+- [`recompile-game-builds-da539ced497aea42`](../docs/evidence/local-recompile-fresh-boot-20261005.json),
+  MODEL_ONLY: fresh-save boot enters `14-dream` and reaches the 40-second
+  no-input deadline, exit 124. Its generator calls a nonzero exit `CRASH`;
+  this observation is a deadline, not evidence of a native crash.
+- [`recompile-game-builds-a792b596696d07e4`](../docs/evidence/local-recompile-title-boot-20261005.json),
+  MODEL_ONLY: with committed `night1-before.ini` (`cine=1`), the binary reaches
+  and renders `02-title`, completes 60 title updates and exits 0. The mixer
+  initializes and traces two plays; audibility and audio freeze are UNKNOWN.
+- [`recompile-image-compression-601c473f20a5eb89`](../docs/evidence/recompile-image-compression-20261005.json),
+  MODEL_ONLY: all 311 images shared with the interrupted Zopfli conversion
+  have equal decompressed bytes under zlib-9. No full-game equivalence claim.
+- [`crowd-grid-fixture-1001ff854c53b5b0`](../docs/evidence/crowd-grid-fixture-20261005.json),
+  FIXTURE: 13 tests passed on macOS and in a Linux Node 22 container. Desktop
+  shows all four tiles; mobile stacks them without horizontal overflow.
+
+`npm run twitch:poc` serves the 2x2 grid, prefixed commands, independent
+await-input/manual/global holds, acknowledged pause overlays, round-token
+refusals and a session ledger. Four offline tiles await their bridges; no native
+game pause is claimed from those fixture tests. The existing before-draw pilot
+does not meet the new bridge contract. [Plan 29](29-twitch-plays-fnaf.md) also
+records Pedro's GPTPlays alternative: a goal-directed LLM player with a separate
+audience conversation loop and declared rules for considering hints/memes.
+
+Open: native presented-frame pause and audio freeze, bridge connection to this
+binary, four simultaneous runtimes, Twitch/LLM connections, retail encounter
+fidelity, full rebuild on a separate Linux host and an amd64 build. S2 and S6
+advance but remain open. GitHub visibility was rechecked as PRIVATE. Validation:
+Node 22 affected tests and the committed k3 emit/campaign dry run passed;
+clean-commit CI lanes are required by `npm run push-gate` before publication.
+This implementation/evidence commit is consequential; this request's
+consequential:bookkeeping ratio is 1:0 upon creation.
