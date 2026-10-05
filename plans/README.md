@@ -217,8 +217,10 @@ progress log written before 2026-09-09.
     7 `DEVICE_MEASURED`, debt 11 of 13, still zero promotion edges), which
     supersedes CLAUDE.md's 2026-09-17 numbers. Starts after ROADMAP S1's first
     promotion edge (restated 2026-09-25).
-29. [29-twitch-plays-fnaf.md](29-twitch-plays-fnaf.md) — collective FNaF 2 play
-    through Twitch chat and the recompile: qualify pause trace invariance and
-    rendered/audio behavior, implement bounded voting with round IDs, then test
-    Night 1 and a shared pause budget before deciding on public broadcasts.
+29. [29-twitch-plays-fnaf.md](29-twitch-plays-fnaf.md) — one chat controlling a
+    2x2 grid of FNaF 1-4 recompiles through game-prefixed commands, independent
+    await-input/manual pauses and dark tile overlays. Qualify pause invariance,
+    routing, simultaneous execution and audio/presentation before trialing live
+    play and a shared pause budget for public broadcasts.
+    Includes sourced TPP history and community/monetization precedents.
     Supports S5/S6 without replacing phone fidelity or retail human-clear gates.

@@ -3414,3 +3414,38 @@ push gate failed because experimental warnings changed CLI stderr.
 The plan/index/progress commit is bookkeeping; session consequential:bookkeeping
 = 0:1 upon creation. Its clean-commit push-gate record is generated under
 `artifacts/lab/push-gate.jsonl`; publication requires that gate to pass.
+
+## 2026-10-05 — Complement the Twitch Plays plan with the four-game grid
+
+Pedro requested adding the 2x2 FNaF 1-4 grid, game-prefixed chat commands, dark
+`--- PAUSED ---` / `Awaiting input` overlays, and both automatic await-input
+and explicit manual pause/resume, then pushing the document. [Plan 29](29-twitch-plays-fnaf.md)
+now treats that grid as the intended product, with independent tile clocks and
+rounds, direct-input/voting policies, global hold semantics, selectable audio
+and a dedicated simultaneous-execution milestone. It replaces the earlier
+mandatory shared voting turn and automatic no-vote advance; empty await-input
+rounds remain frozen until input or a declared abort deadline.
+
+Pedro also requested the original Twitch Plays history, creator decisions,
+community milestones and capitalization. The plan now retains a sourced
+documentary synthesis: creator interviews/AMAs, platform announcements,
+governance handover, community-described paused sidegames, and the distinction
+between actual revenue mechanisms, charitable merchandise and the hypothetical
+$100,000 advertising figure. Proposed lessons are explicitly design inferences;
+revenue and commercial viability remain UNKNOWN. At Pedro's explicit request,
+GitHub repository `ppvaz/fnaf-solver` was changed to PRIVATE and verified through
+the repository API on 2026-10-05. This is the current requested visibility,
+not a standing publication rule.
+
+The generated basis remains
+[`recompile-phone-encounters-7f49b8e5a17f9754`](../docs/evidence/rebuild-release20-full06-20261001.json)
+at the MODEL_ONLY ceiling. No new runtime, four-game capacity, audience or
+phone measurement is claimed. Open: all pause comparisons, per-game command
+qualification, four-game rendering/resource/audio measurements, audience
+coordination and public broadcast decisions. P0 is still the next experiment.
+Validation under Node 22.22.2: `npm ci`, affected architecture/reference/document
+gates and the committed k3 winner emit/campaign dry run passed; the latter reports
+READY with venue UNKNOWN because no phone is opened. `git diff --check` passed.
+This S5/S6 proposal closes no step; this request's consequential:bookkeeping
+commit ratio is 0:1 upon creation. Clean-commit verification is retained by the
+required push gate in `artifacts/lab/push-gate.jsonl`.
