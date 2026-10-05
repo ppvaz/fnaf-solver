@@ -229,6 +229,9 @@ Fusion build 296, August 2025.
   — FNaF 4's controls read off the labels the game draws on itself on Night 1,
   the rule that destroys those labels at 3 AM, and the two configuration
   settings that decide whether any control map is valid.
+- [`research/ANDROID-EXECUTION-DECISION-LIMITS-20261005.md`](research/ANDROID-EXECUTION-DECISION-LIMITS-20261005.md)
+  — conditional execution/decision limits for Host↔Android and Android-only,
+  primary platform sources, scoped device measurements and the open full-loop benchmark.
 - [`research/ANDROID-BOT-LANDSCAPE.md`](research/ANDROID-BOT-LANDSCAPE.md) and
   [`research/ANDROID-INPUT-AND-OBSERVATION.md`](research/ANDROID-INPUT-AND-OBSERVATION.md)
   — the two integral survey reports, retained in full. **No number in either is

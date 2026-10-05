@@ -3192,3 +3192,40 @@ Its generated successor,
 normalizes the temporary root only when hashing retained output; each paired
 stdout/exit comparison still happens before that extra normalization. It
 names what it supersedes and retains the portable fixtures and generator.
+
+## 2026-10-05 — Android execution and decision limits (S4 research)
+
+Pedro's requested comparison of Host↔Android and Android-only interaction is
+retained in [the research report](../docs/research/ANDROID-EXECUTION-DECISION-LIMITS-20261005.md)
+and the generated [android-execution-decision-limits-5f963707b037b4a6](../docs/evidence/android-execution-decision-limits-20261005/result.json).
+This is **MODEL_ONLY literature/code synthesis**, with existing device and
+fixture measurements explicitly scoped to their original conditions; no phone
+was touched, backend qualified or S4 closing condition advanced.
+
+The current host lane already schedules HID actions on the phone. The
+Companion+Termux route still uses local ADB shell authority. Capture FPS,
+fixture event receipt, retail acceptance and visual confirmation are distinct;
+`FUSION_POLL_MS=33` does not establish measured retail polling. Local reflexes
+with asynchronous host computation are a reasoned architecture direction,
+not a measured ranking. No universal numeric ceiling is established.
+
+Open: retail polling, per-control deadlines, event-to-acceptance distributions,
+paired placement benchmarks, sustained Android policy cost and self-contained
+actuator qualification. The report specifies the separating experiment.
+No commits were made for this research (consequential:bookkeeping = 0:0).
+
+Validation for this research: `npm ci` passed; `node tools/test-docs.ts`
+passed (871 Markdown links, 507 HTML links, 72 indexed pages); the generated
+research record reproduced byte for byte and its content hash and binomial
+calculation were checked. `npm run push-gate` completed against committed HEAD
+`1be1bf7`, not these working-tree documents: its Type and architecture lane
+failed because Node 23 experimental type-stripping warnings changed stderr
+in `probe.test.ts` and `test-evidence-cli.ts`; 134/136 isolated unit commands
+passed and the contracts rerun passed. The other fast lanes, including the
+committed-winner campaign dry run, passed. Slow census gates were skipped by
+the default gate. No hook was bypassed and no changes were committed.
+
+Commit scope requested by Pedro: retain this research and its generated record,
+plus the cited host diagnostic result and declaration as frozen inputs;
+other pending implementation work stays outside this commit. This research
+is bookkeeping, with consequential:bookkeeping = 0:1; S4 remains open.

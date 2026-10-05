@@ -1,0 +1,187 @@
+{
+  "schema": "android-execution-decision-limits-v1",
+  "date": "2026-10-05",
+  "step": [
+    "S4"
+  ],
+  "claimLevel": "MODEL_ONLY",
+  "provenanceKind": "literature-and-code-synthesis-with-scoped-existing-measurements",
+  "question": "What execution and decision limits apply to Host↔Android and Android-only interaction?",
+  "verdict": "CONDITIONAL_LIMITS_IDENTIFIED; UNIVERSAL_NUMERIC_CEILING_UNKNOWN",
+  "scope": {
+    "deviceTouched": false,
+    "newDeviceMeasurement": false,
+    "productionChanged": false,
+    "stepClosureClaim": false
+  },
+  "subject": {
+    "commit": "1be1bf7b949a5d378f2bd1a5ed43150d8607aad4",
+    "dirtyInputs": "?? docs/evidence/runtime-cost-20261005/result.json\n?? docs/research/ANDROID-EXECUTION-DECISION-LIMITS-20261005.md",
+    "sourceHashes": {
+      "docs/research/ANDROID-EXECUTION-DECISION-LIMITS-20261005.md": "4588ba87cdd9ef2aa853a9f3cab604094e18d90bb1d7991a694d71cbee13d115",
+      "CLAUDE.md": "909d14b971139f01945a9ca0768fc785d8f75f9dd88aae14adb934c736a4c6a7",
+      "plans/ROADMAP.md": "6dc9a9cc3a29b409f1a31ee34c147cd341e7b43ca5acf0a9595af0f4cb48c87d",
+      "docs/device/ACCESSIBILITY-VS-HID-BENCHMARK.md": "6c82d773045d74c302756962c0c513d022b1c8382d46f14c552dd4869a9d81e2",
+      "docs/device/REAL-TIME-CLOSED-LOOP-ARCHITECTURE.md": "ba2c4649dcfb0d2db5ac76ba072adac1f254ec0444016e887757368747d4ac9d",
+      "docs/device/HID-MULTITOUCH.md": "5ed6ac6980c20d8ee07b4401bf1439cd49cb6f5206a79cb5804bf38c2ea05046",
+      "docs/device/accessibility-hid-pilot-20260906.json": "d0668c196f8533e684a51bf3b5d120bbd9ba0c4f2f777f2e9a00ddd68f667871",
+      "docs/device/accessibility-game-acceptance-20260906.json": "d0af9de72658f6d0d7b898979126674ceec140885213a3e7715311e43a958063",
+      "docs/evidence/companion-capture-cpu-20261001.json": "e8237efe92f08f55d01ecb13aa7b57d403b860864a47b39716c27f4785d09a4c",
+      "docs/evidence/companion16-region-under-trace-20261001.json": "a2cae312ab3c74f4ab2d2a4a2d599df2ebbde3b1035c5b3728d7c09c68163505",
+      "docs/evidence/clock-map-20260905-moto-g56-helper.json": "7fa4d1a8a01f93b36d62f28721e258538288fb8f27304b6b71eec90f8c2b5469",
+      "docs/evidence/phone-release-latency-20261001.json": "1c10546637bac07cc115058f8f93f5f431c9d978d3f96820d1dbcfaf43c4f5d1",
+      "docs/evidence/runtime-cost-20261005/result.json": "a55d6015db856d53e451fab4601652aede34b26005c745b0844ae5289c236f23",
+      "android/companion/src/com/ppvaz/fnafcompanion/CaptureService.java": "7a525b5234f9829324d196a2af8dd5ab0495a72e73ed71f5d727c5f85700fc73",
+      "android/companion/src/com/ppvaz/fnafcompanion/NightRunner.java": "185013de7422d10aab5bdc0049b9b287b9fa3310155c86cae7cbb7e9f8653579",
+      "android/companion/src/com/ppvaz/fnafcompanion/TermuxBridge.java": "9c6dc931f1d1416f132d3170d66fb9cb6f321d5542ad7acdff294f19e6853f15",
+      "packages/play/src/campaign/hid-schedule.ts": "4d406d55c3d364a95ac7c86bc1649d830cedaf87e1f18e0022b0e0828286b6a8",
+      "packages/propose/bin/plans/recipe.ts": "45ebc5d2ed17a5b8a1bb41497ef5003190b0b97551332719edfe2e1146b48fec",
+      "packages/propose/bin/plans/artifact-commands.ts": "c21d516a6d93b94077bb50d75158599a142dbcfd801b39a884ea8d2dc3529559"
+    }
+  },
+  "report": "docs/research/ANDROID-EXECUTION-DECISION-LIMITS-20261005.md",
+  "externalSources": [
+    {
+      "url": "https://www.cassandra.org/arc/papers/aij98.pdf",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false
+    },
+    {
+      "url": "https://source.android.com/docs/core/graphics/architecture",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false
+    },
+    {
+      "url": "https://source.android.com/docs/security/app-sandbox",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false
+    },
+    {
+      "url": "https://source.android.com/docs/security/features/selinux",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false
+    },
+    {
+      "url": "https://android.googlesource.com/platform/frameworks/base/+/refs/heads/android15-release/services/core/java/com/android/server/input/InputManagerService.java",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false
+    },
+    {
+      "url": "https://developer.android.com/media/grow/media-projection",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false
+    },
+    {
+      "url": "https://developer.android.com/reference/android/view/WindowManager.LayoutParams#FLAG_SECURE",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false
+    },
+    {
+      "url": "https://developer.android.com/media/platform/av-capture",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false
+    },
+    {
+      "url": "https://developer.android.com/reference/android/accessibilityservice/AccessibilityService",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false
+    },
+    {
+      "url": "https://android.googlesource.com/platform/frameworks/base/+/refs/heads/main/core/java/android/accessibilityservice/AccessibilityService.java",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false
+    },
+    {
+      "url": "https://android.googlesource.com/platform/frameworks/base/+/refs/heads/main/core/java/android/accessibilityservice/GestureDescription.java",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false
+    },
+    {
+      "url": "https://docs.kernel.org/hid/uhid.html",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false
+    },
+    {
+      "url": "https://www.microsoft.com/en-us/research/wp-content/uploads/2010/06/maui.pdf",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false
+    },
+    {
+      "url": "https://developer.android.com/games/optimize/adpf/thermal",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false
+    },
+    {
+      "url": "https://docs.kernel.org/core-api/real-time/theory.html",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false
+    },
+    {
+      "url": "https://github.com/Genymobile/scrcpy",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false
+    },
+    {
+      "url": "https://web.cs.ucla.edu/~todd/research/icse13.pdf",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false
+    },
+    {
+      "url": "https://arxiv.org/abs/2105.13231",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false
+    },
+    {
+      "url": "https://arxiv.org/abs/1611.08520",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false
+    },
+    {
+      "url": "https://developer.android.com/reference/android/os/SystemClock",
+      "consultedOn": "2026-10-05",
+      "archivedSourceBody": false
+    }
+  ],
+  "derivations": {
+    "idealPeriodicObservation": [
+      {
+        "hz": 60,
+        "periodMs": 16.666666666666668,
+        "meanWaitMsIfUniformPhase": 8.333333333333334,
+        "guaranteedAndroidBound": false
+      },
+      {
+        "hz": 120,
+        "periodMs": 8.333333333333334,
+        "meanWaitMsIfUniformPhase": 4.166666666666667,
+        "guaranteedAndroidBound": false
+      }
+    ],
+    "zeroFailureBinomial": {
+      "confidence": 0.95,
+      "assumptions": "IID, stationary trials; no extrapolation across conditions",
+      "upperFailureProbabilityAt1000": 0.0029912495450953314,
+      "trialsForUpperFailureProbability001": 2995
+    }
+  },
+  "findings": [
+    "No universal full-loop latency or accepted-action-rate ceiling follows from Android APIs or these project measurements.",
+    "The current host lane already executes precompiled HID schedules locally.",
+    "The Companion+Termux candidate still uses local ADB shell authority.",
+    "Frame rate, fixture event receipt, game acceptance and visual confirmation are distinct quantities.",
+    "FUSION_POLL_MS=33 is not retained measurement of retail polling frequency.",
+    "The local fast path with asynchronous host computation is a recommendation, not a measured architecture ranking."
+  ],
+  "open": [
+    "retail polling frequency",
+    "per-control response deadlines",
+    "event-to-acceptance distribution",
+    "paired placement benchmark",
+    "Android policy runtime and sustained contention",
+    "self-contained actuator qualification",
+    "global policy ceiling"
+  ],
+  "reproducer": "node docs/evidence/android-execution-decision-limits-20261005/generate.mjs",
+  "generatorSha256": "240fd8351fe93ac239ed3426b718124ab9d29e9ec1ddeb231729a8107433e17a",
+  "evidenceId": "android-execution-decision-limits-5f963707b037b4a6"
+}

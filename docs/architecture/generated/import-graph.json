@@ -715,6 +715,16 @@
       ]
     },
     {
+      "file": "docs/evidence/android-execution-decision-limits-20261005/generate.mjs",
+      "imports": [
+        "node:child_process",
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "packages/kernel/src/annotation.ts",
       "imports": [
         "./labels.ts",
