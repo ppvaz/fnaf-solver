@@ -232,6 +232,9 @@ Fusion build 296, August 2025.
 - [`research/ANDROID-EXECUTION-DECISION-LIMITS-20261005.md`](research/ANDROID-EXECUTION-DECISION-LIMITS-20261005.md)
   — conditional execution/decision limits for Host↔Android and Android-only,
   primary platform sources, scoped device measurements and the open full-loop benchmark.
+- [`research/RESOURCE-GATES-AGENT-HARNESS-20261005.md`](research/RESOURCE-GATES-AGENT-HARNESS-20261005.md)
+  — resource maps and gates for agent implementation loops: existing tools,
+  external results, the host pilot and the experiment for choosing infrastructure.
 - [`research/ANDROID-BOT-LANDSCAPE.md`](research/ANDROID-BOT-LANDSCAPE.md) and
   [`research/ANDROID-INPUT-AND-OBSERVATION.md`](research/ANDROID-INPUT-AND-OBSERVATION.md)
   — the two integral survey reports, retained in full. **No number in either is

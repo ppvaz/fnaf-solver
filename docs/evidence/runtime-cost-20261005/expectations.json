@@ -1,0 +1,41 @@
+{
+  "schema": "resource-expectations-v1",
+  "baselineId": "runtime-cost-ea4b967107908ae7/baseline",
+  "changes": [
+    {
+      "metric": "nightloop/night1/seedIndex0",
+      "maxRatio": 3,
+      "reason": "Diagnostic control deliberately executes the same night twice; it must preserve its returned trace."
+    },
+    {
+      "metric": "nightloop/night1/seedIndex1",
+      "maxRatio": 3,
+      "reason": "Diagnostic control deliberately executes the same night twice; it must preserve its returned trace."
+    },
+    {
+      "metric": "nightloop/night1/seedIndex2",
+      "maxRatio": 3,
+      "reason": "Diagnostic control deliberately executes the same night twice; it must preserve its returned trace."
+    },
+    {
+      "metric": "nightloop/night7/seedIndex0",
+      "maxRatio": 3,
+      "reason": "Diagnostic control deliberately executes the same night twice; it must preserve its returned trace."
+    },
+    {
+      "metric": "nightloop/night7/seedIndex1",
+      "maxRatio": 3,
+      "reason": "Diagnostic control deliberately executes the same night twice; it must preserve its returned trace."
+    },
+    {
+      "metric": "nightloop/night7/seedIndex2",
+      "maxRatio": 3,
+      "reason": "Diagnostic control deliberately executes the same night twice; it must preserve its returned trace."
+    },
+    {
+      "metric": "nightloop/process-maxRSS",
+      "maxRatio": 2.5,
+      "reason": "Diagnostic control deliberately allocates and touches a retained 64 MiB buffer; it must remain at process scope."
+    }
+  ]
+}

@@ -1,0 +1,87 @@
+{
+  "schema": "resource-map-v1",
+  "claimLevel": "MODEL_ONLY",
+  "evidenceId": "runtime-cost-ea4b967107908ae7/baseline",
+  "context": {
+    "hardware": "[\"darwin\",\"Apple M1\",8,8589934592]",
+    "runtime": "v23.11.0",
+    "instrument": "runtime-cost-v1/whole-night-wall-and-process-high-water",
+    "workload": "{\"model\":\"fnaf2-sourced\",\"cases\":[{\"night\":1,\"seedIndex\":0,\"trace\":true},{\"night\":1,\"seedIndex\":1,\"trace\":true},{\"night\":1,\"seedIndex\":2,\"trace\":true},{\"night\":7,\"seedIndex\":0,\"trace\":true},{\"night\":7,\"seedIndex\":1,\"trace\":true},{\"night\":7,\"seedIndex\":2,\"trace\":true}]}"
+  },
+  "coverage": [
+    "six full runNight scenarios (two nights, three seeds)",
+    "process RSS; includes warmup; no per-function peaks"
+  ],
+  "metrics": [
+    {
+      "id": "nightloop/night1/seedIndex0",
+      "unit": "ms",
+      "scope": "path",
+      "samples": [
+        2342.0616670000004,
+        1955.2201250000003,
+        2112.990291
+      ]
+    },
+    {
+      "id": "nightloop/night1/seedIndex1",
+      "unit": "ms",
+      "scope": "path",
+      "samples": [
+        2353.361583,
+        1956.6957920000004,
+        1969.1279159999995
+      ]
+    },
+    {
+      "id": "nightloop/night1/seedIndex2",
+      "unit": "ms",
+      "scope": "path",
+      "samples": [
+        1929.722041000001,
+        1986.259708999999,
+        1881.811917
+      ]
+    },
+    {
+      "id": "nightloop/night7/seedIndex0",
+      "unit": "ms",
+      "scope": "path",
+      "samples": [
+        850.5210420000003,
+        911.616833,
+        907.4108340000002
+      ]
+    },
+    {
+      "id": "nightloop/night7/seedIndex1",
+      "unit": "ms",
+      "scope": "path",
+      "samples": [
+        201.2611250000009,
+        206.18362499999967,
+        207.2249580000007
+      ]
+    },
+    {
+      "id": "nightloop/night7/seedIndex2",
+      "unit": "ms",
+      "scope": "path",
+      "samples": [
+        193.11058299999968,
+        208.35445900000013,
+        215.01729200000045
+      ]
+    },
+    {
+      "id": "nightloop/process-maxRSS",
+      "unit": "MiB",
+      "scope": "process",
+      "samples": [
+        189.546875,
+        214.390625,
+        190.984375
+      ]
+    }
+  ]
+}

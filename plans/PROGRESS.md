@@ -3193,6 +3193,95 @@ normalizes the temporary root only when hashing retained output; each paired
 stdout/exit comparison still happens before that extra normalization. It
 names what it supersedes and retains the portable fixtures and generator.
 
+## 2026-10-05 — Host resource map and agent delta-gate pilot (S7)
+
+Pedro's proposed implementation loop now has a measured, bounded pilot:
+[`runtime-cost-ea4b967107908ae7`](../docs/evidence/runtime-cost-20261005/result.json)
+pins the instrument and model sources, six full controller-night scenarios,
+three repeated baselines and no-op controls, and a planted second execution
+plus a touched, retained 64 MiB buffer. This is **MODEL_ONLY**, on the recorded
+host/runtime. The CPU sample attributes 77.5% to copies/cloning; this is a share
+of sampled time in this loop, not allocated bytes, a universal simulator cost,
+or proof that every copy can be removed. Removing diagnostics reduced the
+observed time by 6.2%, but that variant also enabled method timing; its causal
+effect remains **INCONCLUSIVE**. The snapshot-checked 512-seed replay block is
+a throughput diagnostic, not a held-out win-rate census: four workers gave
+2.56x serial throughput, six gave 2.63x while peak process RSS rose from
+322.4 to 476.9 MiB.
+
+`npm run test:resources` compares compatible maps and returns actionable
+`REVIEW_REQUIRED` for unexpected increases, missing data, incompatible
+contexts or exceeded finite budgets. A reason does not erase a budget breach.
+Its controls are registered in the unit lane. The measured no-op passes
+([`resource-delta-372dd63217dacc53`](../docs/evidence/runtime-cost-20261005/noop.json));
+the planted increase requires review
+([`resource-delta-6a88853ff6061cb6`](../docs/evidence/runtime-cost-20261005/regression.json)).
+The bounded explanation still refuses one observed time outside its declared
+3x budget
+([`resource-delta-8d325510215fb530`](../docs/evidence/runtime-cost-20261005/expected.json)).
+The empirical ranges are neither confidence intervals nor WCET proofs. Memory
+is process RSS; there are no measured per-function allocation peaks here.
+
+The explicitly requested parallel audit retains **FIXTURE** results as
+[`types-contracts-health-0a796b4b289be972`](../docs/evidence/types-contracts-health-20261005.json).
+Static ratchets pass, with 1,659 accepted unchecked casts and 1,733 accepted
+strict mypy errors. Runtime counterexamples remain at region-read and device
+profile validation boundaries; the cast ratchet also misses an unguarded
+validator-shaped final assertion. Its original contracts run had one MCP
+test failure while evidence files were being written; the isolated rerun
+passed. This does not certify every runtime contract or the Android sources
+excluded from host Java tests.
+
+Open: a complete workload/function map, isolated diagnostics comparison,
+device deadlines and allocation peaks, Android qualification, and integration
+of measured candidate runs into every implementation loop. This is a manual
+pilot, not a universal mandatory resource gate. No device is attached; queued
+menu preflight is not device performance evidence.
+
+Verification: typecheck, affected controller/replay/winner checks, resource
+refutation controls, source-pin recheck (597 hashes), documentation/catalog
+checks and the k3 campaign dry-run pass on the working tree. The push gate
+over clean HEAD confirms two existing unit failures under Node 23.11.0:
+experimental type-stripping warnings change the CLI stderr expected by
+`probe.test.ts` and `test-evidence-cli.ts`. Both pass separately under the
+installed Node 22.22.2; CI pins 22.23.2, so this is not an exact CI-runtime
+certification or a green whole push-gate verdict. The gate's generated run
+record retains the complete lane verdicts.
+
+The requested [research report](../docs/research/RESOURCE-GATES-AGENT-HARNESS-20261005.md)
+retains the map/gate proposal, primary-source precedents and the recommendation
+to pilot existing infrastructure (CodSpeed first, Bencher as an alternative)
+with a small project harness. Its local foundation is the generated
+`runtime-cost-ea4b967107908ae7` and the resource-delta controls above; writing
+the report produces no new performance measurement. External reported gains
+are distinguished from these host results. Adoption, V8 allocation coverage,
+loop productivity and device budgets remain **UNKNOWN** until the separating
+experiment. No external tool was installed or mandatory gate introduced.
+
+Research validation: `npm ci`, working-tree documentation links/indexes and
+`git diff --check` pass. The follow-up push gate under installed Node 22.22.2
+retains a generated `push-gate-run-v1` record for HEAD
+`cd7ba78e91615cf32757fac7b47f3f5664315873` at `2026-10-05T19:02:18.324Z`:
+types/unit/contracts, model, trainer, k3 campaign dry-run and the other fast
+lanes pass; Documentation and catalog links fails because committed
+`import-graph.json` omits the Android research generator added by that commit.
+The catalog was regenerated in the working tree. This is not a green verdict
+for that HEAD or for the uncommitted report, nor exact CI Node 22.23.2
+certification; slow census gates were skipped. The remaining catalog change
+must be committed and that commit checked before pushing. No commit was made
+for this resource-gate report (consequential:bookkeeping = 0:0).
+
+Commit requested for the resource-gate research: retain the report, its index
+entries, the cited comparator maps/control results and the contracts audit.
+The host diagnostic result/declaration already live in the preceding Android
+research commit. The experimental comparator/instrument, npm command, lane
+registration and their generated catalogs remain pending implementation work;
+the report names that availability limit explicitly. This is bookkeeping
+(consequential:bookkeeping = 0:1), without promotion of a host result to device
+evidence. Adoption, full function/allocation coverage and measured loop benefit
+remain open. The earlier catalog omission was corrected in amended HEAD
+`3add162a`; the new research commit still requires its own push-gate result.
+
 ## 2026-10-05 — Android execution and decision limits (S4 research)
 
 Pedro's requested comparison of Host↔Android and Android-only interaction is

@@ -1,0 +1,670 @@
+{
+  "schema": "types-contracts-health-v1",
+  "generatedAt": "2026-10-05T18:18:21.556181+00:00",
+  "claimLevel": "FIXTURE",
+  "subject": {
+    "head": "1be1bf7b949a5d378f2bd1a5ed43150d8607aad4",
+    "node": "v23.11.0",
+    "ciNodePin": "22.23.2",
+    "python": "Python 3.12.12",
+    "workingTreeAtStart": [
+      " M package.json",
+      " M tools/lanes.json",
+      "?? docs/evidence/runtime-cost-20261005/",
+      "?? packages/propose/bin/census/runtime-cost.ts",
+      "?? tools/resource-delta.ts",
+      "?? tools/test-resource-delta.ts"
+    ],
+    "sourceHashes": {
+      "tsconfig.json": {
+        "sha256": "8d5923af245905bf552ac0c7e8f2a30ade9ce24f115fb45e20af533120e83c91",
+        "unchangedFromHead": true
+      },
+      "tools/test-type-debt.ts": {
+        "sha256": "9bcc85d86242ece9e2a95644777494c79c9c55c300c0f59ee061de41a5fed8d3",
+        "unchangedFromHead": true
+      },
+      "tools/quality-baseline.json": {
+        "sha256": "8f052e053caa44cb075ea3dada9554c09d80b787ab214f5ab3b3e527187bc7f4",
+        "unchangedFromHead": true
+      },
+      "packages/kernel/src/contracts/index.ts": {
+        "sha256": "d641c8781bb2bb1f22b2ff19ed0e4ef620441fede3663a551d1837b568d8c826",
+        "unchangedFromHead": true
+      },
+      "packages/kernel/src/contracts/types.ts": {
+        "sha256": "591d1683cb54d6b57c6670861d31516c5fef3eace8f605df647b1931f44a1a98",
+        "unchangedFromHead": true
+      },
+      "packages/kernel/contracts/register.json": {
+        "sha256": "fd2edfd5cbe1bf04b9ac0c41146cd960d6ff4ec9940b53deea6cc833e3a07857",
+        "unchangedFromHead": true
+      },
+      "packages/source/src/clockwork/control-contracts.ts": {
+        "sha256": "91b2c248fc3011e2ed89d611d4430453502cdcec48635d5f8d1fcfb0c5b78452",
+        "unchangedFromHead": true
+      },
+      "packages/play/src/venues/phone/companion.ts": {
+        "sha256": "6f8a06e8f18c1f011c1145e798859c6e790ac529bc6bedca896ebc10486e04ac",
+        "unchangedFromHead": true
+      },
+      "android/companion/test.sh": {
+        "sha256": "e42f6494cc3dbf5631a1614a3951415441c7eadf67d25c61eb0dd2e965a8a086",
+        "unchangedFromHead": true
+      },
+      "apps/desktop/test/companion-mcp.test.ts": {
+        "sha256": "0996fad01f2e7a31278ae5304b43c4f8482dbd7a7bae70555ca3961ba54d3336",
+        "unchangedFromHead": true
+      },
+      ".github/workflows/ci.yml": {
+        "sha256": "83f381d002a8b9a600c9b573f2512825a0aaaec69f3dfc47c5afb5ed838db30a",
+        "unchangedFromHead": true
+      }
+    }
+  },
+  "scope": {
+    "roadmapSteps": [
+      "S4",
+      "S7"
+    ],
+    "purpose": "Assess current type and contract foundations for resource delta quality gates, with device boundaries prioritized",
+    "deviceTouched": false,
+    "productionChanged": false,
+    "stepClosureClaim": false
+  },
+  "verdict": "STATIC_RATCHETS_PASS_WITH_CONFIRMED_RUNTIME_BOUNDARY_GAPS",
+  "measures": {
+    "explicitAnyAndNonNullAssertions": 0,
+    "uncheckedCasts": 1659,
+    "castAreas": 27,
+    "mypyStrictErrorsAccepted": 1733,
+    "pythonCasts": 4,
+    "relativeCrossWorkspaceImportsAccepted": 104,
+    "architectureModulesParsed": 689,
+    "registeredContracts": 54,
+    "contractsNodeTests": 120,
+    "contractsNodePass": 119,
+    "contractsNodeFail": 1,
+    "companionMcpRepeatPass": 1,
+    "companionJavaSourceFiles": 35,
+    "javaSourcesExcludedFromHostCompilationByAndroidImports": 16
+  },
+  "checks": [
+    {
+      "name": "typecheck",
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "exit": 0,
+      "elapsedSeconds": 8.589,
+      "log": "artifacts/types-contracts-health-20261005/typecheck.log",
+      "logSha256": "1d59c62f3c72e7aa82e7e740c69b692e74477e8342a480e2cfd071cfc7da207e",
+      "observedOutput": "\n> fnaf-solver@0.1.0 typecheck\n> tsc --noEmit -p tsconfig.json\n\n"
+    },
+    {
+      "name": "type-debt",
+      "command": [
+        "node",
+        "tools/test-type-debt.ts",
+        "--list"
+      ],
+      "exit": 0,
+      "elapsedSeconds": 2.247,
+      "log": "artifacts/types-contracts-health-20261005/type-debt.log",
+      "logSha256": "c3e303315f902e7e9ba1838983e241c3c91275b7c5d9386fad4f4a7c86f6e643",
+      "observedOutput": "(node:10360) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\n29\tcast:apps/desktop/bin\n64\tcast:apps/desktop/src\n40\tcast:apps/desktop/test\n50\tcast:apps/trainer/src\n44\tcast:apps/trainer/test\n10\tcast:apps/wiki\n6\tcast:packages/kernel/src\n7\tcast:packages/kernel/test\n93\tcast:packages/play/bin\n206\tcast:packages/play/games\n55\tcast:packages/play/src\n88\tcast:packages/play/test\n436\tcast:packages/propose/bin\n6\tcast:packages/propose/bindings\n60\tcast:packages/propose/parked\n21\tcast:packages/propose/src\n111\tcast:packages/propose/test\n31\tcast:packages/review/bin\n51\tcast:packages/review/src\n65\tcast:packages/review/test\n9\tcast:packages/review/venue-grid\n1\tcast:packages/source/bin\n11\tcast:packages/source/decompile\n6\tcast:packages/source/recompile\n15\tcast:packages/source/src\n112\tcast:packages/source/test\n32\tcast:tools\ntype-debt: 0 areas carry 0 explicit any and non-null assertions and 27 carry 1659 unchecked casts, none growing\n"
+    },
+    {
+      "name": "architecture",
+      "command": [
+        "node",
+        "tools/architecture-test.ts"
+      ],
+      "exit": 0,
+      "elapsedSeconds": 2.508,
+      "log": "artifacts/types-contracts-health-20261005/architecture.log",
+      "logSha256": "b8ce35734071705e0240ddbb06e0756b198f4a1ba968a6faf495cb4bdbb24cec",
+      "observedOutput": "(node:10916) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\narchitecture: 101 host-free core, source, kernel and propose modules and 578 package modules obey boundary checks (689 modules parsed; rules: kernel, kernel-test, source, source-test, play, play-test, propose, propose-bin, propose-test, propose-importers, play-importers, review, tools-importers; Source's exports held to the source rule; 104 relative imports into another workspace, none growing)\n"
+    },
+    {
+      "name": "python-types",
+      "command": [
+        "node",
+        "tools/test-python-types.ts",
+        "--list"
+      ],
+      "exit": 1,
+      "elapsedSeconds": 0.235,
+      "log": "artifacts/types-contracts-health-20261005/python-types.log",
+      "logSha256": "4fed4ba5c147f21e3a1d34b8bb5145e554b35d4b7ef22d0356a7bf5a8be5649d",
+      "observedOutput": "(node:11517) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\nfile:///Users/pedro.junior-ext/Projects/fnaf2-1020/tools/test-python-types.ts:26\n    throw new Error(`python_types.py failed${/No module named 'mypy'/.test(run.stderr) ? ' (install CI\\'s pin: python3 -m pip install mypy==2.3.1)' : ''}:\\n${run.stderr}`);\n          ^\n\nError: python_types.py failed (install CI's pin: python3 -m pip install mypy==2.3.1):\nTraceback (most recent call last):\n  File \"/Users/pedro.junior-ext/Projects/fnaf2-1020/tools/python_types.py\", line 27, in <module>\n    from mypy import api\nModuleNotFoundError: No module named 'mypy'\n\n    at check (file:///Users/pedro.junior-ext/Projects/fnaf2-1020/tools/test-python-types.ts:26:11)\n    at file:///Users/pedro.junior-ext/Projects/fnaf2-1020/tools/test-python-types.ts:54:38\n    at ModuleJob.run (node:internal/modules/esm/module_job:274:25)\n    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:98:5)\n\nNode.js v23.11.0\n"
+    },
+    {
+      "name": "python-types-ci",
+      "command": [
+        "node",
+        "tools/test-python-types.ts",
+        "--list"
+      ],
+      "exit": 0,
+      "elapsedSeconds": 3.085,
+      "log": "artifacts/types-contracts-health-20261005/python-types-ci.log",
+      "pathPrepend": "/Users/pedro.junior-ext/.cache/fnaf2-ci-py312/bin",
+      "logSha256": "f0c1865915e95b65110d7343a558c288cab6e4b4a8723d1679094341115788b5",
+      "observedOutput": "(node:49549) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\n4\tpy-cast:packages/source/recompile\n104\tpy:apps/lab\n41\tpy:apps/lab/test\n349\tpy:packages/play/bin\n125\tpy:packages/play/games\n225\tpy:packages/play/src\n54\tpy:packages/play/test\n381\tpy:packages/propose/parked\n454\tpy:packages/review/bin\npython-types: 8 areas carry 1733 mypy --strict errors and 4 typing.cast calls, none growing\n"
+    },
+    {
+      "name": "contracts-ci",
+      "command": [
+        "npm",
+        "run",
+        "test:contracts"
+      ],
+      "exit": 1,
+      "elapsedSeconds": 99.726,
+      "log": "artifacts/types-contracts-health-20261005/contracts-ci.log",
+      "pathPrepend": "/Users/pedro.junior-ext/.cache/fnaf2-ci-py312/bin",
+      "logSha256": "959a01a91094bb0da5a6e9a4b8a09859d613aa74567188bb2f03c6336459126e",
+      "observedOutput": "e: legal camdrop overlap, gated hall phase, and no mask input OK\n✔ packages/play/bin/probe/test-hid-intersection-probe.ts (182.921458ms)\n(node:75385) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\nintersection state gate: atomic freshness, button tells, and illegal-state refusal pass\n✔ packages/play/bin/probe/test-intersection-state-gate.ts (333.989959ms)\n(node:75458) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\ncalibration-state rule: binding and both-positive resolution pass\n✔ packages/play/test/calibration-state-rule.test.ts (274.502625ms)\n(node:75519) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\nclock map: interval-arithmetic fit, budgets, and refusal gates pass\n✔ packages/play/test/clock-map.test.ts (283.166083ms)\n(node:75614) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\nactuation frame metric: native unknown-frame percentage and safe complements pass\n✔ packages/review/bin/grade/test-actuation-frame-metric.ts (271.177667ms)\n(node:75669) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\ninput-frame-align: clock mapping, channel pairing, native frame landing, animation intervals, and no-effect reporting pass\n✔ dispatch and native frame alignment (25.12175ms)\n(node:75730) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\ninputtrace: dispatch/delivery/frame correlation and SurfaceFlinger parsing pass\n✔ input dispatch, delivery and frame correlations (524.708209ms)\nℹ tests 7\nℹ suites 0\nℹ pass 7\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2421.570375\n\n▶ python3 packages/play/bin/calibrate/test-mask-calibrate.py\nmask calibrate: occlusion fit, row spread, unproven-guard gate, refusals, and JS round-trip pass\n\nlane device:calibration: 7 node test files and 1 steps pass\n\nlane contracts: 1 failed:\n  ✖ 107 node test files (the summary above names each failure)\n"
+    },
+    {
+      "name": "ci-reach",
+      "command": [
+        "node",
+        "--test",
+        "packages/review/test/ci-reach.test.ts"
+      ],
+      "exit": 0,
+      "elapsedSeconds": 0.168,
+      "log": "artifacts/types-contracts-health-20261005/ci-reach.log",
+      "pathPrepend": "/Users/pedro.junior-ext/.cache/fnaf2-ci-py312/bin",
+      "logSha256": "9cf643baf538e634631c384ca2dff603947db05a9fffd26accb8169a9565cc55",
+      "observedOutput": "(node:76283) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\n✔ CI reaches what it executes, through scripts, lanes, nested lanes and tools/test.ts selection (1.74775ms)\n✔ a mention, a script CI never calls, a lane CI never runs, a report and a deselected entry are not reached (0.334667ms)\n✔ the command reader keeps quoted words and $(...) whole (0.634084ms)\nℹ tests 3\nℹ suites 0\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 129.435583\n"
+    },
+    {
+      "name": "probes",
+      "command": [
+        "node",
+        "artifacts/types-contracts-health-20261005/probe.mjs"
+      ],
+      "exit": 0,
+      "elapsedSeconds": 0.207,
+      "log": "artifacts/types-contracts-health-20261005/probes.log",
+      "pathPrepend": "/Users/pedro.junior-ext/.cache/fnaf2-ci-py312/bin",
+      "logSha256": "882d0095f95b6cae1540894e452834e1b6e1042f8a37a5af024c0167f03b145c",
+      "observedOutput": "(node:76312) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\n{\"id\":\"profile-nested-type-mismatch\",\"accepted\":true,\"expectedConstraint\":\"calibrations values are strings, controlMap points have numeric x/y\"}\n{\"id\":\"resolved-profile-nested-type-mismatch\",\"accepted\":true,\"expectedConstraint\":\"same nested types after resolution\"}\n{\"id\":\"artifact-size-nan\",\"accepted\":true,\"expectedConstraint\":\"resource sizes must be finite\"}\n{\"id\":\"manifest-artifacts-array\",\"accepted\":true,\"expectedConstraint\":\"artifacts is a Record<string,unknown>\"}\n{\"id\":\"region-seq-non-finite\",\"accepted\":true,\"expectedConstraint\":\"seq is a finite safe integer\"}\n{\"id\":\"region-duplicate-seq\",\"accepted\":true,\"expectedConstraint\":\"duplicate measurement key is ambiguous\"}\n{\"id\":\"region-over-step-limit\",\"accepted\":true,\"expectedConstraint\":\"step <= 64\"}\n{\"id\":\"region-over-sample-limit\",\"accepted\":true,\"expectedConstraint\":\"samples <= 8192\"}\n{\"id\":\"region-over-count-limit\",\"accepted\":true,\"expectedConstraint\":\"regions <= 16\"}\n"
+    },
+    {
+      "name": "companion-mcp-repeat",
+      "command": [
+        "node",
+        "--test",
+        "apps/desktop/test/companion-mcp.test.ts"
+      ],
+      "exit": 0,
+      "pathPrepend": "/Users/pedro.junior-ext/.cache/fnaf2-ci-py312/bin",
+      "observedOutput": "(node:82512) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\nfnaf-solver stdio MCP: 14 tools; the Companion queue unchanged, jobs, lab.* and every verb and resource in claim-envelope-v1, truth over a synthetic local dump and refused without one, a refused promote, the four refusals, and no write under docs/evidence\n✔ apps/desktop/test/companion-mcp.test.ts (17083.069917ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 17088.902791\n",
+      "logSha256": "d0324eb184f374f7fa8013dce7b9ce869cde003dfa46ff81797ce05784e81df4"
+    },
+    {
+      "name": "type-inference-strict-compile",
+      "command": [
+        "node",
+        "node_modules/typescript/bin/tsc",
+        "--noEmit",
+        "--strict",
+        "--skipLibCheck",
+        "--module",
+        "NodeNext",
+        "--moduleResolution",
+        "NodeNext",
+        "artifacts/types-contracts-health-20261005/type-inference-probe.ts"
+      ],
+      "exit": 0,
+      "observedOutput": ""
+    },
+    {
+      "name": "type-inference-runtime",
+      "command": [
+        "node",
+        "artifacts/types-contracts-health-20261005/type-inference-probe.ts"
+      ],
+      "exit": 1,
+      "expectedExit": 1,
+      "observedOutput": "file:///Users/pedro.junior-ext/Projects/fnaf2-1020/artifacts/types-contracts-health-20261005/type-inference-probe.ts:3\nconsole.log(typed.toUpperCase());\n                  ^\n\nTypeError: Cannot read properties of undefined (reading 'toUpperCase')\n    at file:///Users/pedro.junior-ext/Projects/fnaf2-1020/artifacts/types-contracts-health-20261005/type-inference-probe.ts:3:19\n    at ModuleJob.run (node:internal/modules/esm/module_job:274:25)\n    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:98:5)\n\nNode.js v23.11.0\n"
+    }
+  ],
+  "findings": [
+    {
+      "id": "T1",
+      "priority": 1,
+      "status": "CONFIRMED",
+      "where": "packages/play/src/venues/phone/companion.ts:81",
+      "finding": "REGION decoder accepts values beyond its declared step, sample and region limits; duplicate seq and non-finite seq are also accepted. Host line length is bounded, so this does not establish unbounded allocation or actual bad device replies.",
+      "fixtureIds": [
+        "region-seq-non-finite",
+        "region-duplicate-seq",
+        "region-over-step-limit",
+        "region-over-sample-limit",
+        "region-over-count-limit"
+      ]
+    },
+    {
+      "id": "T2",
+      "priority": 1,
+      "status": "CONFIRMED",
+      "where": "packages/kernel/src/contracts/index.ts:62; packages/source/src/clockwork/control-contracts.ts:95",
+      "finding": "Both validateProfile and resolveDeviceProfile return a typed profile accepting non-string calibration values and non-numeric control coordinates. HID serialization has later finitePoint checks; this does not prove unsafe touches pass all execution gates.",
+      "fixtureIds": [
+        "profile-nested-type-mismatch",
+        "resolved-profile-nested-type-mismatch"
+      ]
+    },
+    {
+      "id": "T3",
+      "priority": 2,
+      "status": "CONFIRMED",
+      "where": "tools/test-type-debt.ts:58",
+      "finding": "Cast gate exemption is syntax based: a closing return value as unknown as T is excluded even without guards. Library JSON.parse any propagation also escapes the explicit any and annotated parse counters. Strict compilation can pass a program that crashes on the asserted type.",
+      "counterProbes": [
+        {
+          "id": "unchecked-final-return",
+          "input": "function unchecked(value: unknown): number { return value as unknown as number; }",
+          "countedUncheckedCasts": 0
+        },
+        {
+          "id": "json-any-propagation",
+          "input": "const value = JSON.parse(text); value.nonexistent().deep.property;",
+          "countedUncheckedCasts": 0
+        }
+      ],
+      "runtimeFixtureSource": "const payload = JSON.parse('{}');\nconst typed: string = payload.missing;\nconsole.log(typed.toUpperCase());\n"
+    },
+    {
+      "id": "T4",
+      "priority": 2,
+      "status": "CONFIRMED",
+      "where": "packages/kernel/src/contracts/index.ts:95",
+      "finding": "validateArtifactRef accepts NaN size; validateManifest accepts an array for artifacts although it returns Record<string,unknown>. V1 contracts intentionally leave other fields unknown; that documented openness is distinct from these checked-field gaps.",
+      "fixtureIds": [
+        "artifact-size-nan",
+        "manifest-artifacts-array"
+      ]
+    },
+    {
+      "id": "T5",
+      "priority": 2,
+      "status": "COVERAGE_LIMIT",
+      "where": "android/companion/test.sh:56; .github/workflows/ci.yml",
+      "finding": "Companion host contract tests compile and pass, but exclude Java sources importing Android (16/35 source files). Current CI has no Android APK build step discovered by searching its workflows. Device state, installed APK identity, Android runtime behavior and resource budgets remain unmeasured here."
+    },
+    {
+      "id": "T6",
+      "priority": 3,
+      "status": "CONFIRMED",
+      "where": "tools/quality-baseline.json",
+      "finding": "Ratchets pass with debt: 1659 unchecked casts, 1733 strict Python errors and 104 deep imports. Zero explicit any and non-null assertions is achieved, but does not make boundary validation complete."
+    },
+    {
+      "id": "T7",
+      "priority": 3,
+      "status": "CATALOG_LIMIT",
+      "where": "tools/generate-catalog.ts:65; packages/kernel/src/contracts/index.ts:17",
+      "finding": "54 contract rows have fixture links, but catalog presence proves neither rejection coverage nor validator completeness. artifact-ref-v1 and claim-evidence-v1 point at the evidence CLI source as conformance fixtures. CONTRACTS omits claim-envelope-v1, while register contains it; no equality gate was found.",
+      "directReachAnalysis": {
+        "label": "FIXTURE",
+        "contractCount": 54,
+        "ciReachedFiles": 303,
+        "contractsWithNoDirectCiReachedFixture": [
+          {
+            "contractId": "trainer-trace-v1",
+            "checks": [
+              {
+                "path": "apps/trainer/test/tracereport.ts",
+                "directlyReachedByCi": false
+              }
+            ]
+          },
+          {
+            "contractId": "artifact-ref-v1",
+            "checks": [
+              {
+                "path": "apps/desktop/src/evidence.ts",
+                "directlyReachedByCi": false
+              }
+            ]
+          },
+          {
+            "contractId": "claim-evidence-v1",
+            "checks": [
+              {
+                "path": "apps/desktop/src/evidence.ts",
+                "directlyReachedByCi": false
+              }
+            ]
+          },
+          {
+            "contractId": "fact-message-v1",
+            "checks": [
+              {
+                "path": "packages/source/test/fixtures/fact-message-v1.jsonl",
+                "directlyReachedByCi": false
+              }
+            ]
+          }
+        ],
+        "note": "Direct reach only: fixture vectors, Java tests and nested imports may be exercised through another file. This checks catalog mapping, not semantic conformance."
+      }
+    }
+  ],
+  "fixtures": [
+    {
+      "id": "profile-nested-type-mismatch",
+      "input": {
+        "schema": "device-profile-v1",
+        "id": "probe",
+        "targetBuild": "com.scottgames.fnaf2:2.0.7+26",
+        "actuator": "probe",
+        "visualSensor": "probe",
+        "visualDetector": "probe",
+        "clock": "device-monotonic-ms",
+        "calibrations": {
+          "bad": 123
+        },
+        "controlMap": {
+          "mask": {
+            "x": "bad",
+            "y": null
+          }
+        }
+      },
+      "expectedConstraint": "calibrations values are strings, controlMap points have numeric x/y",
+      "accepted": true,
+      "summary": {
+        "schema": "device-profile-v1",
+        "id": "probe",
+        "targetBuild": "com.scottgames.fnaf2:2.0.7+26",
+        "actuator": "probe",
+        "visualSensor": "probe",
+        "visualDetector": "probe",
+        "clock": "device-monotonic-ms",
+        "calibrations": {
+          "bad": 123
+        },
+        "controlMap": {
+          "mask": {
+            "x": "bad",
+            "y": null
+          }
+        }
+      }
+    },
+    {
+      "id": "resolved-profile-nested-type-mismatch",
+      "input": {
+        "schema": "device-profile-v1",
+        "id": "probe",
+        "targetBuild": "com.scottgames.fnaf2:2.0.7+26",
+        "actuator": "probe",
+        "visualSensor": "probe",
+        "visualDetector": "probe",
+        "clock": "device-monotonic-ms",
+        "calibrations": {
+          "bad": 123
+        },
+        "controlMap": {
+          "mask": {
+            "x": "bad",
+            "y": null
+          }
+        }
+      },
+      "expectedConstraint": "same nested types after resolution",
+      "accepted": true,
+      "summary": {
+        "schema": "device-profile-v1",
+        "id": "probe",
+        "targetBuild": "com.scottgames.fnaf2:2.0.7+26",
+        "actuator": "probe",
+        "visualSensor": "probe",
+        "visualDetector": "probe",
+        "clock": "device-monotonic-ms",
+        "calibrations": {
+          "bad": 123
+        },
+        "controlMap": {
+          "mask": {
+            "x": "bad",
+            "y": null
+          }
+        }
+      }
+    },
+    {
+      "id": "artifact-size-nan",
+      "input": {
+        "schema": "artifact-ref-v1",
+        "hash": "h",
+        "mediaType": "x",
+        "producer": "p",
+        "size": "NaN"
+      },
+      "expectedConstraint": "resource sizes must be finite",
+      "accepted": true,
+      "summary": {
+        "schema": "artifact-ref-v1",
+        "hash": "h",
+        "mediaType": "x",
+        "producer": "p",
+        "size": "NaN"
+      }
+    },
+    {
+      "id": "manifest-artifacts-array",
+      "input": {
+        "schema": "session-manifest-v1",
+        "id": "probe",
+        "profileHash": "h",
+        "targetBuild": "b",
+        "events": [],
+        "artifacts": []
+      },
+      "expectedConstraint": "artifacts is a Record<string,unknown>",
+      "accepted": true,
+      "summary": {
+        "schema": "session-manifest-v1",
+        "id": "probe",
+        "profileHash": "h",
+        "targetBuild": "b",
+        "events": [],
+        "artifacts": []
+      }
+    },
+    {
+      "id": "region-seq-non-finite",
+      "input": "JS expression: 'OK seq=' + '9'.repeat(400)",
+      "expectedConstraint": "seq is a finite safe integer",
+      "accepted": true,
+      "summary": {
+        "seq": "Infinity",
+        "regions": 0,
+        "samples": 0,
+        "geometry": []
+      }
+    },
+    {
+      "id": "region-duplicate-seq",
+      "input": "OK seq=1 seq=2",
+      "expectedConstraint": "duplicate measurement key is ambiguous",
+      "accepted": true,
+      "summary": {
+        "seq": "2",
+        "regions": 0,
+        "samples": 0,
+        "geometry": []
+      }
+    },
+    {
+      "id": "region-over-step-limit",
+      "input": "OK seq=1 r=0,0,1,1,65:000000",
+      "expectedConstraint": "step <= 64",
+      "accepted": true,
+      "summary": {
+        "seq": "1",
+        "regions": 1,
+        "samples": 1,
+        "geometry": [
+          {
+            "width": 1,
+            "height": 1,
+            "step": 65
+          }
+        ]
+      }
+    },
+    {
+      "id": "region-over-sample-limit",
+      "input": "JS expression: 'OK seq=1 r=0,0,8193,1,1:' + '000000'.repeat(8193)",
+      "expectedConstraint": "samples <= 8192",
+      "accepted": true,
+      "summary": {
+        "seq": "1",
+        "regions": 1,
+        "samples": 8193,
+        "geometry": [
+          {
+            "width": 8193,
+            "height": 1,
+            "step": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "region-over-count-limit",
+      "input": "OK seq=1 r0=0,0,1,1,1:000000 r1=0,0,1,1,1:000000 r2=0,0,1,1,1:000000 r3=0,0,1,1,1:000000 r4=0,0,1,1,1:000000 r5=0,0,1,1,1:000000 r6=0,0,1,1,1:000000 r7=0,0,1,1,1:000000 r8=0,0,1,1,1:000000 r9=0,0,1,1,1:000000 r10=0,0,1,1,1:000000 r11=0,0,1,1,1:000000 r12=0,0,1,1,1:000000 r13=0,0,1,1,1:000000 r14=0,0,1,1,1:000000 r15=0,0,1,1,1:000000 r16=0,0,1,1,1:000000",
+      "expectedConstraint": "regions <= 16",
+      "accepted": true,
+      "summary": {
+        "seq": "1",
+        "regions": 17,
+        "samples": 17,
+        "geometry": [
+          {
+            "width": 1,
+            "height": 1,
+            "step": 1
+          },
+          {
+            "width": 1,
+            "height": 1,
+            "step": 1
+          },
+          {
+            "width": 1,
+            "height": 1,
+            "step": 1
+          },
+          {
+            "width": 1,
+            "height": 1,
+            "step": 1
+          },
+          {
+            "width": 1,
+            "height": 1,
+            "step": 1
+          },
+          {
+            "width": 1,
+            "height": 1,
+            "step": 1
+          },
+          {
+            "width": 1,
+            "height": 1,
+            "step": 1
+          },
+          {
+            "width": 1,
+            "height": 1,
+            "step": 1
+          },
+          {
+            "width": 1,
+            "height": 1,
+            "step": 1
+          },
+          {
+            "width": 1,
+            "height": 1,
+            "step": 1
+          },
+          {
+            "width": 1,
+            "height": 1,
+            "step": 1
+          },
+          {
+            "width": 1,
+            "height": 1,
+            "step": 1
+          },
+          {
+            "width": 1,
+            "height": 1,
+            "step": 1
+          },
+          {
+            "width": 1,
+            "height": 1,
+            "step": 1
+          },
+          {
+            "width": 1,
+            "height": 1,
+            "step": 1
+          },
+          {
+            "width": 1,
+            "height": 1,
+            "step": 1
+          },
+          {
+            "width": 1,
+            "height": 1,
+            "step": 1
+          }
+        ]
+      }
+    }
+  ],
+  "fixtureReproducer": {
+    "language": "JavaScript ES module",
+    "source": "import { writeFileSync } from 'node:fs';\nimport { pathToFileURL } from 'node:url';\nimport { resolve } from 'node:path';\nconst load = path => import(pathToFileURL(resolve(path)).href);\nconst { validateArtifactRef, validateProfile, validateManifest, CONTRACTS } = await load('packages/kernel/src/contracts/index.ts');\nconst { resolveDeviceProfile } = await load('packages/source/src/clockwork/control-contracts.ts');\nconst { parseRegionRead, REGION_LIMITS } = await load('packages/play/src/venues/phone/companion.ts');\nconst rows = [];\nfunction attempt(id, input, fn, expectedConstraint) {\n  try { const result = fn(input); rows.push({ id, input, expectedConstraint, accepted: true,\n    summary: id.startsWith('region') ? { seq: String(result.seq), regions: Object.keys(result.regions).length,\n      samples: Object.values(result.regions).reduce((sum, value) => sum + value.pixels.length, 0),\n      geometry: Object.values(result.regions).map(({width,height,step}) => ({width,height,step})) } : result }); }\n  catch (error) { rows.push({ id, input, expectedConstraint, accepted: false, error: error.message }); }\n}\nconst profile = { schema: 'device-profile-v1', id: 'probe', targetBuild: 'com.scottgames.fnaf2:2.0.7+26',\n  actuator: 'probe', visualSensor: 'probe', visualDetector: 'probe', clock: 'device-monotonic-ms',\n  calibrations: { bad: 123 }, controlMap: { mask: { x: 'bad', y: null } } };\nattempt('profile-nested-type-mismatch', profile, validateProfile, 'calibrations values are strings, controlMap points have numeric x/y');\nattempt('resolved-profile-nested-type-mismatch', profile, resolveDeviceProfile, 'same nested types after resolution');\nattempt('artifact-size-nan', {schema:'artifact-ref-v1',hash:'h',mediaType:'x',producer:'p',size:NaN}, validateArtifactRef, 'resource sizes must be finite');\nattempt('manifest-artifacts-array', {schema:'session-manifest-v1',id:'probe',profileHash:'h',targetBuild:'b',events:[],artifacts:[]}, validateManifest, 'artifacts is a Record<string,unknown>');\nattempt('region-seq-non-finite', 'OK seq=' + '9'.repeat(400), parseRegionRead, 'seq is a finite safe integer');\nattempt('region-duplicate-seq', 'OK seq=1 seq=2', parseRegionRead, 'duplicate measurement key is ambiguous');\nattempt('region-over-step-limit', 'OK seq=1 r=0,0,1,1,65:000000', parseRegionRead, 'step <= ' + REGION_LIMITS.step);\nattempt('region-over-sample-limit', 'OK seq=1 r=0,0,8193,1,1:' + '000000'.repeat(8193), parseRegionRead, 'samples <= ' + REGION_LIMITS.samples);\nattempt('region-over-count-limit', 'OK seq=1 ' + Array.from({length:17},(_,i) => 'r'+i+'=0,0,1,1,1:000000').join(' '), parseRegionRead, 'regions <= ' + REGION_LIMITS.regions);\nconst output = { label:'FIXTURE', limits:REGION_LIMITS, contractIdArrayIncludesClaimEnvelope:CONTRACTS.includes('claim-envelope-v1'), probes:rows };\nwriteFileSync('artifacts/types-contracts-health-20261005/probes.json', JSON.stringify(output, (_, value) =>\n  typeof value === 'number' && !Number.isFinite(value) ? String(value) : value, 2) + '\\n');\nfor (const row of rows) console.log(JSON.stringify({id:row.id,accepted:row.accepted,expectedConstraint:row.expectedConstraint}));\n",
+    "command": "mkdir -p artifacts/types-contracts-health-20261005 && node artifacts/types-contracts-health-20261005/probe.mjs"
+  },
+  "limits": [
+    "FIXTURE and static validation only; no DEVICE_MEASURED claim, timing worst case or allocation guarantee.",
+    "Working tree contains concurrent pilot edits. Boundary source hashes above match HEAD; typecheck includes pilot files.",
+    "Initial Python gate failed because default python3 lacked mypy; rerun with repository CI interpreter passed. Initial failure is retained as instrument failure.",
+    "Contracts lane exit1 was retained: sole MCP no-write assertion saw docs/evidence tree hash change during concurrent pilot activity. That test passed in isolation on repeat. Concurrent cause is an inference, not a measured attribution.",
+    "Local Node v23.11.0 differs from CI pin 22.23.2; macOS contracts skipped Linux RLIMIT_AS starvation block explicitly.",
+    "An incomplete contracts invocation was stopped to avoid contention with resource measurement; no verdict inferred from it.",
+    "push-gate and full clean checkout verification are owned by root agent; not repeated by this audit.",
+    "No exhaustive check that every function is strictly typed or every runtime boundary validator is sound."
+  ],
+  "open": [
+    "Pay highest priority REGION/profile boundary gaps with existing contract tests.",
+    "Ensure resource gate retains baseline debt and runtime refusal coverage instead of treating strict typecheck as sufficient.",
+    "Measure Android framework code and installed Companion on actual device under resolved profile/capabilities/lease."
+  ],
+  "commits": {
+    "consequential": 0,
+    "bookkeeping": 0,
+    "reason": "Audit only; no commit by parallel agent"
+  },
+  "evidenceId": "types-contracts-health-0a796b4b289be972"
+}

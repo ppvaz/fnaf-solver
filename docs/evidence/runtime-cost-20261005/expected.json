@@ -1,0 +1,226 @@
+{
+  "schema": "resource-delta-v1",
+  "baselineId": "runtime-cost-ea4b967107908ae7/baseline",
+  "candidateId": "runtime-cost-ea4b967107908ae7/regression",
+  "claimLevel": "MODEL_ONLY",
+  "status": "REVIEW_REQUIRED",
+  "coverage": [
+    "six full runNight scenarios (two nights, three seeds)",
+    "process RSS; includes warmup; no per-function peaks"
+  ],
+  "incompatible": [],
+  "rows": [
+    {
+      "id": "nightloop/night1/seedIndex0",
+      "unit": "ms",
+      "scope": "path",
+      "baseline": {
+        "min": 1955.2201250000003,
+        "median": 2112.990291,
+        "max": 2342.0616670000004,
+        "n": 3
+      },
+      "candidate": {
+        "min": 3894.22175,
+        "median": 3946.335416,
+        "max": 3959.60375,
+        "n": 3
+      },
+      "medianDeltaPercent": 86.76543062260573,
+      "observedMaxRatio": 1.6906488013494307,
+      "ratioRange": {
+        "lo": 1.6627323715981384,
+        "hi": 2.025144739137748
+      },
+      "tolerance": 1.2,
+      "status": "EXPECTED_INCREASE",
+      "expectation": {
+        "metric": "nightloop/night1/seedIndex0",
+        "maxRatio": 3,
+        "reason": "Diagnostic control deliberately executes the same night twice; it must preserve its returned trace."
+      }
+    },
+    {
+      "id": "nightloop/night1/seedIndex1",
+      "unit": "ms",
+      "scope": "path",
+      "baseline": {
+        "min": 1956.6957920000004,
+        "median": 1969.1279159999995,
+        "max": 2353.361583,
+        "n": 3
+      },
+      "candidate": {
+        "min": 3945.242791999999,
+        "median": 3982.854458,
+        "max": 4043.688833,
+        "n": 3
+      },
+      "medianDeltaPercent": 102.26489227223982,
+      "observedMaxRatio": 1.7182607476090512,
+      "ratioRange": {
+        "lo": 1.6764286544402214,
+        "hi": 2.0665904478011976
+      },
+      "tolerance": 1.2,
+      "status": "EXPECTED_INCREASE",
+      "expectation": {
+        "metric": "nightloop/night1/seedIndex1",
+        "maxRatio": 3,
+        "reason": "Diagnostic control deliberately executes the same night twice; it must preserve its returned trace."
+      }
+    },
+    {
+      "id": "nightloop/night1/seedIndex2",
+      "unit": "ms",
+      "scope": "path",
+      "baseline": {
+        "min": 1881.811917,
+        "median": 1929.722041000001,
+        "max": 1986.259708999999,
+        "n": 3
+      },
+      "candidate": {
+        "min": 3820.4645419999997,
+        "median": 3863.4600840000003,
+        "max": 3943.3804999999993,
+        "n": 3
+      },
+      "medianDeltaPercent": 100.20811297765545,
+      "observedMaxRatio": 1.9853297542773654,
+      "ratioRange": {
+        "lo": 1.9234466292041177,
+        "hi": 2.095523183999477
+      },
+      "tolerance": 1.2,
+      "status": "EXPECTED_INCREASE",
+      "expectation": {
+        "metric": "nightloop/night1/seedIndex2",
+        "maxRatio": 3,
+        "reason": "Diagnostic control deliberately executes the same night twice; it must preserve its returned trace."
+      }
+    },
+    {
+      "id": "nightloop/night7/seedIndex0",
+      "unit": "ms",
+      "scope": "path",
+      "baseline": {
+        "min": 850.5210420000003,
+        "median": 907.4108340000002,
+        "max": 911.616833,
+        "n": 3
+      },
+      "candidate": {
+        "min": 1723.0239170000004,
+        "median": 1772.8413330000003,
+        "max": 1790.1194579999992,
+        "n": 3
+      },
+      "medianDeltaPercent": 95.37361320506339,
+      "observedMaxRatio": 1.963675299971122,
+      "ratioRange": {
+        "lo": 1.8900747053230427,
+        "hi": 2.1047327104224642
+      },
+      "tolerance": 1.2,
+      "status": "EXPECTED_INCREASE",
+      "expectation": {
+        "metric": "nightloop/night7/seedIndex0",
+        "maxRatio": 3,
+        "reason": "Diagnostic control deliberately executes the same night twice; it must preserve its returned trace."
+      }
+    },
+    {
+      "id": "nightloop/night7/seedIndex1",
+      "unit": "ms",
+      "scope": "path",
+      "baseline": {
+        "min": 201.2611250000009,
+        "median": 206.18362499999967,
+        "max": 207.2249580000007,
+        "n": 3
+      },
+      "candidate": {
+        "min": 390.44658400000117,
+        "median": 396.7405829999989,
+        "max": 410.9745830000011,
+        "n": 3
+      },
+      "medianDeltaPercent": 92.42099512024755,
+      "observedMaxRatio": 1.9832291774429975,
+      "ratioRange": {
+        "lo": 1.884167755507519,
+        "hi": 2.041996848621408
+      },
+      "tolerance": 1.2,
+      "status": "EXPECTED_INCREASE",
+      "expectation": {
+        "metric": "nightloop/night7/seedIndex1",
+        "maxRatio": 3,
+        "reason": "Diagnostic control deliberately executes the same night twice; it must preserve its returned trace."
+      }
+    },
+    {
+      "id": "nightloop/night7/seedIndex2",
+      "unit": "ms",
+      "scope": "path",
+      "baseline": {
+        "min": 193.11058299999968,
+        "median": 208.35445900000013,
+        "max": 215.01729200000045,
+        "n": 3
+      },
+      "candidate": {
+        "min": 391.81583300000057,
+        "median": 413.07920899999954,
+        "max": 580.2507500000011,
+        "n": 3
+      },
+      "medianDeltaPercent": 98.25791633285816,
+      "observedMaxRatio": 2.6986236530222873,
+      "ratioRange": {
+        "lo": 1.8222526632881217,
+        "hi": 3.0047589364897833
+      },
+      "tolerance": 1.2,
+      "status": "BUDGET_EXCEEDED",
+      "expectation": {
+        "metric": "nightloop/night7/seedIndex2",
+        "maxRatio": 3,
+        "reason": "Diagnostic control deliberately executes the same night twice; it must preserve its returned trace."
+      }
+    },
+    {
+      "id": "nightloop/process-maxRSS",
+      "unit": "MiB",
+      "scope": "process",
+      "baseline": {
+        "min": 189.546875,
+        "median": 190.984375,
+        "max": 214.390625,
+        "n": 3
+      },
+      "candidate": {
+        "min": 255.296875,
+        "median": 257.15625,
+        "max": 260.359375,
+        "n": 3
+      },
+      "medianDeltaPercent": 34.64779514030924,
+      "observedMaxRatio": 1.2144158589024123,
+      "ratioRange": {
+        "lo": 1.1908024196487137,
+        "hi": 1.3735883274256038
+      },
+      "tolerance": 1.2,
+      "status": "EXPECTED_INCREASE",
+      "expectation": {
+        "metric": "nightloop/process-maxRSS",
+        "maxRatio": 2.5,
+        "reason": "Diagnostic control deliberately allocates and touches a retained 64 MiB buffer; it must remain at process scope."
+      }
+    }
+  ],
+  "note": "Observed costs only. Range is min/max over repeats, not a confidence interval or WCET. Peaks remain at the scope measured.",
+  "evidenceId": "resource-delta-8d325510215fb530"
+}

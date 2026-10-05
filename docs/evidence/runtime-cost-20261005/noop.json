@@ -1,0 +1,198 @@
+{
+  "schema": "resource-delta-v1",
+  "baselineId": "runtime-cost-ea4b967107908ae7/baseline",
+  "candidateId": "runtime-cost-ea4b967107908ae7/noop",
+  "claimLevel": "MODEL_ONLY",
+  "status": "PASS",
+  "coverage": [
+    "six full runNight scenarios (two nights, three seeds)",
+    "process RSS; includes warmup; no per-function peaks"
+  ],
+  "incompatible": [],
+  "rows": [
+    {
+      "id": "nightloop/night1/seedIndex0",
+      "unit": "ms",
+      "scope": "path",
+      "baseline": {
+        "min": 1955.2201250000003,
+        "median": 2112.990291,
+        "max": 2342.0616670000004,
+        "n": 3
+      },
+      "candidate": {
+        "min": 2006.4393329999994,
+        "median": 2026.4858330000002,
+        "max": 2790.348584,
+        "n": 3
+      },
+      "medianDeltaPercent": -4.093935422630857,
+      "observedMaxRatio": 1.191406965630508,
+      "ratioRange": {
+        "lo": 0.8566979090563797,
+        "hi": 1.427127589534196
+      },
+      "tolerance": 1.2,
+      "status": "WITHIN_TOLERANCE",
+      "expectation": null
+    },
+    {
+      "id": "nightloop/night1/seedIndex1",
+      "unit": "ms",
+      "scope": "path",
+      "baseline": {
+        "min": 1956.6957920000004,
+        "median": 1969.1279159999995,
+        "max": 2353.361583,
+        "n": 3
+      },
+      "candidate": {
+        "min": 1867.8261670000002,
+        "median": 2022.179083,
+        "max": 2043.3589579999998,
+        "n": 3
+      },
+      "medianDeltaPercent": 2.6941452898482376,
+      "observedMaxRatio": 0.868272420507172,
+      "ratioRange": {
+        "lo": 0.7936843111966446,
+        "hi": 1.0442905669620817
+      },
+      "tolerance": 1.2,
+      "status": "WITHIN_TOLERANCE",
+      "expectation": null
+    },
+    {
+      "id": "nightloop/night1/seedIndex2",
+      "unit": "ms",
+      "scope": "path",
+      "baseline": {
+        "min": 1881.811917,
+        "median": 1929.722041000001,
+        "max": 1986.259708999999,
+        "n": 3
+      },
+      "candidate": {
+        "min": 1957.0589170000003,
+        "median": 2013.3989579999998,
+        "max": 2091.8827919999994,
+        "n": 3
+      },
+      "medianDeltaPercent": 4.3362160571393416,
+      "observedMaxRatio": 1.053176874364117,
+      "ratioRange": {
+        "lo": 0.9852986032653805,
+        "hi": 1.1116322375803083
+      },
+      "tolerance": 1.2,
+      "status": "WITHIN_TOLERANCE",
+      "expectation": null
+    },
+    {
+      "id": "nightloop/night7/seedIndex0",
+      "unit": "ms",
+      "scope": "path",
+      "baseline": {
+        "min": 850.5210420000003,
+        "median": 907.4108340000002,
+        "max": 911.616833,
+        "n": 3
+      },
+      "candidate": {
+        "min": 882.9960839999985,
+        "median": 935.3802910000013,
+        "max": 1064.6950410000009,
+        "n": 3
+      },
+      "medianDeltaPercent": 3.0823366827909204,
+      "observedMaxRatio": 1.1679194618381963,
+      "ratioRange": {
+        "lo": 0.9686044092606159,
+        "hi": 1.2518150503324061
+      },
+      "tolerance": 1.2,
+      "status": "WITHIN_TOLERANCE",
+      "expectation": null
+    },
+    {
+      "id": "nightloop/night7/seedIndex1",
+      "unit": "ms",
+      "scope": "path",
+      "baseline": {
+        "min": 201.2611250000009,
+        "median": 206.18362499999967,
+        "max": 207.2249580000007,
+        "n": 3
+      },
+      "candidate": {
+        "min": 211.68366699999933,
+        "median": 217.66212500000074,
+        "max": 225.93837499999972,
+        "n": 3
+      },
+      "medianDeltaPercent": 5.567124935358514,
+      "observedMaxRatio": 1.090304841562564,
+      "ratioRange": {
+        "lo": 1.0215162741159711,
+        "hi": 1.1226130977852713
+      },
+      "tolerance": 1.2,
+      "status": "WITHIN_TOLERANCE",
+      "expectation": null
+    },
+    {
+      "id": "nightloop/night7/seedIndex2",
+      "unit": "ms",
+      "scope": "path",
+      "baseline": {
+        "min": 193.11058299999968,
+        "median": 208.35445900000013,
+        "max": 215.01729200000045,
+        "n": 3
+      },
+      "candidate": {
+        "min": 204.29083300000093,
+        "median": 212.31262500000048,
+        "max": 241.00737499999923,
+        "n": 3
+      },
+      "medianDeltaPercent": 1.8997270415990197,
+      "observedMaxRatio": 1.1208743853029213,
+      "ratioRange": {
+        "lo": 0.9501135052896141,
+        "hi": 1.2480277945201979
+      },
+      "tolerance": 1.2,
+      "status": "WITHIN_TOLERANCE",
+      "expectation": null
+    },
+    {
+      "id": "nightloop/process-maxRSS",
+      "unit": "MiB",
+      "scope": "process",
+      "baseline": {
+        "min": 189.546875,
+        "median": 190.984375,
+        "max": 214.390625,
+        "n": 3
+      },
+      "candidate": {
+        "min": 184.4375,
+        "median": 193.453125,
+        "max": 222.078125,
+        "n": 3
+      },
+      "medianDeltaPercent": 1.2926450134991496,
+      "observedMaxRatio": 1.0358574447926536,
+      "ratioRange": {
+        "lo": 0.8602871510822826,
+        "hi": 1.1716264116725743
+      },
+      "tolerance": 1.2,
+      "status": "WITHIN_TOLERANCE",
+      "expectation": null
+    }
+  ],
+  "note": "Observed costs only. Range is min/max over repeats, not a confidence interval or WCET. Peaks remain at the scope measured.",
+  "evidenceId": "resource-delta-372dd63217dacc53"
+}
