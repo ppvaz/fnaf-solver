@@ -3387,3 +3387,30 @@ allocation map, workload/noise calibration, real optimization with trace
 equivalence, external-tool adoption and device deadlines. This diagnostic/gate
 pilot closes no roadmap step and remains bookkeeping (this request's
 consequential:bookkeeping = 0:1 upon commit creation).
+
+## 2026-10-05 — Twitch Plays FNaF plan (S5/S6 proposal)
+
+Pedro requested a plan and its publication. [Plan 29](29-twitch-plays-fnaf.md)
+specifies collective FNaF 2 play through the recompile, beginning with a local
+pause characterization and trace comparison, followed by deterministic chat
+voting, a small Night 1 pilot and a limited-pause format trial. It preserves
+S2's phone-fidelity gap and S5's retail unpaused-clear conditions.
+
+The existing generated basis is
+[`recompile-phone-encounters-7f49b8e5a17f9754`](../docs/evidence/rebuild-release20-full06-20261001.json):
+**MODEL_ONLY**, a rebuilt FNaF 2 replay with encounter disagreement against the
+phone. The [pilot development record](../docs/evidence/rebuild-pilot-dev-blocks-20260930.json)
+also supports reusing the runtime controller. Neither measures a streaming
+pause or audience play. No new experiment result or promotion is claimed.
+
+Open: rendered pause/state alignment, audio freeze, trace invariance, fail-safe
+disconnect handling, FNaF 2 chat execution, stream latency, participant protocol
+and consent, pilot pacing and audience response. P0 is the next experiment.
+Working-tree verification: `npm ci`, affected architecture/reference/documentation
+checks, whitespace checks, and the committed k3 Night 7 bundle emission and
+campaign dry run passed. No phone was opened. The previously failing probe and
+evidence CLI checks pass under the installed Node 22.22.2; the earlier Node 23
+push gate failed because experimental warnings changed CLI stderr.
+The plan/index/progress commit is bookkeeping; session consequential:bookkeeping
+= 0:1 upon creation. Its clean-commit push-gate record is generated under
+`artifacts/lab/push-gate.jsonl`; publication requires that gate to pass.
