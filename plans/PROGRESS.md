@@ -3586,3 +3586,56 @@ The committed k3 emit/campaign dry run passed without phone input; publication
 requires clean-commit `npm run push-gate`. The combined interface, native
 recompile and trace-comparison commit is consequential; this request's
 consequential:bookkeeping ratio is 1:0 upon creation.
+
+## 2026-10-05 — FNaF 4 room lighting and frame-time inspection (S2/S6)
+
+Pedro observed apparent default-room lighting trouble and asked about FPS.
+This is research: compare native snapshots with the corresponding retained
+assets and profile bounded office updates before changing the renderer.
+Generated record
+[`fnaf4-render-inspection-9934b9f28d62b36b`](../docs/evidence/fnaf4-render-inspection-20261005.json)
+retains the predeclarations, inputs, snapshots and logs by hash, including the
+negative named-hitzone pan trial. Original binary, assets, prepared toolchain
+and canonical runtime patch were preserved.
+
+Without office inputs, the initial view is lateral. All 587,520 compared opaque
+pixels match sprite 26 exactly. A new in-viewport pan produces the lit centred
+room; all 767,292 compared opaque pixels match the aligned sprite 12 exactly.
+There is no measured RGB loss in these comparisons. This checks the recompile
+asset bank, not an independent retail decoder or phone screenshot. The previous
+concept selected a door/listening view and held clips, which made the lighting
+and motion presentation misleading. No brightness or renderer fix was applied.
+
+Two software-GL runs enable the existing profiler in an external runtime copy,
+with two CPUs, 300 drawn office updates each and 30 warmup updates discarded.
+Both semantic traces equal the uninstrumented 1,542-update replay. Without
+pixel readback, mean update plus draw is 9.45 ms; 9 of 270 samples exceed
+16.67 ms. With readback every second draw, mean is 10.90 ms, p95 16.67 ms,
+p99 22.35 ms and 14 of 270 exceed the budget. These are unpaced processing
+times, not presented FPS. The fixed-step harness assigns its displayed 60 FPS;
+actual native presented FPS remains UNKNOWN. These host results are MODEL_ONLY.
+
+The committed content-free `fixtures/fnaf4-concept.input` reproduces a fresh
+bounded capture: 2,600 updates, including 1,359 office updates, exit 0. The
+20-second 720x1280 H.264/AAC MP4 now exports at 30 FPS (2,802,917 bytes) and
+advances all four separate native clips at their recorded rate except during
+the explicitly illustrated pause. It includes the native pan to the centred
+room. Its chat, pause and GPTPlays remain FIXTURE editing. All 600 browser
+frames completed without JavaScript errors; Chrome profile cleanup initially
+failed with ENOTEMPTY after rendering. The owned profile was subsequently
+removed, frames moved into their intended directory, and the MP4 encoded and
+fully decoded successfully. That negative and recovery remain in the record.
+Native media, generated sources and binaries remain external; Git holds hashes
+and content-free inputs only. Free host space was 6.0 GiB at delivery; no new
+images, swap or general pruning were used.
+
+Open: independent retail lighting comparison, paced native presented FPS,
+GPU-backed performance, the full encoder cost and four simultaneous runtimes,
+native presented-frame pause/audio freeze, and game-to-grid/Twitch/LLM bridges.
+S2/S6 remain open. Validation: Node 22 `npm ci`, native comparisons/profile
+runs, affected gates, type checking, documentation/catalog checks and the
+committed k3 campaign dry run passed. Publication requires clean-commit
+`npm run push-gate`. No Sim,
+default-model or binding changes require the slow census lane here. This
+retained native trace/pixel evidence commit is consequential; this request's
+consequential:bookkeeping ratio is 1:0 upon creation.

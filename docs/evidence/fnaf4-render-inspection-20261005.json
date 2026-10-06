@@ -1,0 +1,277 @@
+{
+  "schema": "fnaf4-render-inspection-v1",
+  "label": "MODEL_ONLY",
+  "steps": [
+    "S2",
+    "S6"
+  ],
+  "baselineEvidenceId": "crowd-four-game-demo-477ba7af90c60fc3",
+  "sources": {
+    "packages/source/recompile/fixtures/fnaf4-concept.input": "b592805181dd903d25000ca3bb7d8c54a5025e84a7518cabc5cbea102305df5b",
+    "packages/source/recompile/fixtures/fnaf4-night8-before.ini": "a58acc2d42e40653a3797dc783d54daef47f6f726140eccc36a905b261e95231",
+    "packages/source/recompile/run-harness.sh": "dc67778a8cda68db72a40768eab8e3a51ba6290f2c0087d6cb4aa484cbbb4045"
+  },
+  "baseline": {
+    "binarySha256": "4a2f6a9976f8d1f94c71c22960cbc2812c88d6c69bd2fca836abf76863f3f68f",
+    "assetsSha256": "5dc071f6c60080ca5f533bcc5ec7b2a6b374c5b1cf3085c594f8d52f8dc4f3b5",
+    "runtimePatchChanged": false,
+    "toolchainChanged": false
+  },
+  "question": "Are the apparent default-room lighting error and FPS drops in the edited grid caused by native rendering or presentation?",
+  "room": {
+    "noOfficeInputs": {
+      "updates": 1542,
+      "officeUpdates": 301,
+      "exitCode": 0,
+      "snapshotTicks": [
+        1,
+        30,
+        120,
+        240
+      ],
+      "diagnostic": {
+        "question": "Does the default FNaF 4 room remain dark without any office inputs, and do its rendering timings exceed 16.67ms?",
+        "binarySha256": "4a2f6a9976f8d1f94c71c22960cbc2812c88d6c69bd2fca836abf76863f3f68f",
+        "inputsSha256": "b2bf5a04b2013bd11bc1d3c914d9e684ffedccee5aa36f7dc987000dfab1077e",
+        "ticks": 301,
+        "snapshotTicks": [
+          1,
+          30,
+          120,
+          240
+        ],
+        "deadlineSeconds": 150,
+        "label": "MODEL_ONLY"
+      }
+    },
+    "lateralSpriteComparison": {
+      "nativeWidth": 1024,
+      "nativeHeight": 768,
+      "results": [
+        {
+          "index": 12,
+          "width": 1300,
+          "height": 768,
+          "opaqueComparedPixels": 767292,
+          "exactRgbMatches": 28562,
+          "exactRgbMatchFraction": 0.03722442042924988,
+          "excluded": "clock rectangle x>=850 and y<110; nonopaque asset pixels",
+          "decodedRgbaSha256": "e35ce0a97212de496110c8b59c824554e2818cfc913addd5ec091d22e95ab1e3"
+        },
+        {
+          "index": 26,
+          "width": 765,
+          "height": 768,
+          "opaqueComparedPixels": 587520,
+          "exactRgbMatches": 587520,
+          "exactRgbMatchFraction": 1,
+          "excluded": "clock rectangle x>=850 and y<110; nonopaque asset pixels",
+          "decodedRgbaSha256": "2fe0ff89b67443107a5dc57882bda4a9f63b3e4626366a1785412ccf6fb7f2dc"
+        }
+      ]
+    },
+    "centerSpriteComparison": {
+      "nativeWidth": 1024,
+      "nativeHeight": 768,
+      "results": [
+        {
+          "index": 12,
+          "width": 1300,
+          "height": 768,
+          "opaqueComparedPixels": 767292,
+          "exactRgbMatches": 767292,
+          "exactRgbMatchFraction": 1,
+          "excluded": "clock rectangle x>=850 and y<110; nonopaque asset pixels",
+          "decodedRgbaSha256": "e35ce0a97212de496110c8b59c824554e2818cfc913addd5ec091d22e95ab1e3"
+        }
+      ],
+      "frameLeftPixels": 144,
+      "alignment": "12 held updates * 12 pixels from the verified Source pan rule; window centre changes from 512 to 656"
+    },
+    "interpretation": "The selected lateral and centered views preserve the retained asset RGB exactly in the compared opaque regions. The original concept starts after a door entry and holds lateral/dark views. The new native replay pans to the lit center before the door/light route.",
+    "limits": [
+      "Comparison against this recompile asset bank, not a phone screenshot or independent decoder",
+      "Only the specified opaque sprite regions and sampled native frames",
+      "No brightness/gamma adjustment applied"
+    ]
+  },
+  "profiling": {
+    "runs": [
+      {
+        "name": "render",
+        "drawnOfficeUpdates": 300,
+        "discardedInitial": 30,
+        "samples": 270,
+        "frameBudgetMs": 16.666666666666668,
+        "updatePlusDrawMs": {
+          "mean": 9.449314225925926,
+          "p50": 8.448082,
+          "p95": 15.729982999999999,
+          "p99": 21.409175,
+          "max": 27.824541999999997
+        },
+        "samplesOverBudget": 9,
+        "meanProcessingCapacityFps": 105.82778560335274,
+        "semanticTraceEqual": true,
+        "limits": [
+          "CPU software renderer on Docker, two CPUs",
+          "Fixed-step harness, unpaced; this is processing capacity, not presented FPS",
+          "Readback run discards bytes to /dev/null; no encoder or streaming transport",
+          "Default idle room only; excludes room transitions and attacks"
+        ]
+      },
+      {
+        "name": "readback",
+        "drawnOfficeUpdates": 300,
+        "discardedInitial": 30,
+        "samples": 270,
+        "frameBudgetMs": 16.666666666666668,
+        "updatePlusDrawMs": {
+          "mean": 10.897519811111113,
+          "p50": 10.126297000000001,
+          "p95": 16.674033,
+          "p99": 22.345775,
+          "max": 28.30135
+        },
+        "samplesOverBudget": 14,
+        "meanProcessingCapacityFps": 91.76399927076983,
+        "semanticTraceEqual": true,
+        "limits": [
+          "CPU software renderer on Docker, two CPUs",
+          "Fixed-step harness, unpaced; this is processing capacity, not presented FPS",
+          "Readback run discards bytes to /dev/null; no encoder or streaming transport",
+          "Default idle room only; excludes room transitions and attacks"
+        ]
+      }
+    ],
+    "renderer": "llvmpipe LLVM 7.0 software GL",
+    "host": "macOS Docker Linux arm64",
+    "cpus": 2,
+    "threadLimit": 2,
+    "instrumentation": "Only the existing CHOWDREN_USER_PROFILER was enabled in an external run.cpp copy; no original source or binary changed",
+    "drawnOfficeUpdatesPerRun": 300,
+    "discardedInitialUpdates": 30,
+    "profileBinarySha256": "d5178f9b9146a68dcc7bca893f8e1e5eb6db78c20802ec39d69c533577c7f58d",
+    "profileRunCppSha256": "407ed73d6a2c188a1e30b489b264b1aec0309555f4bc40461f9d91c2281cc047",
+    "originalRunCppSha256": "6463a81a8a58bcf0783ead3a6e5da1d583029e2438812a09705f0d787b4055b2",
+    "bothTracesEqualToUninstrumented": true,
+    "nativePresentedFps": "UNKNOWN",
+    "whyFramerate60IsNotMeasurement": "FPSLimiter::finish assigns current_framerate=framerate in fixed-step harness mode.",
+    "fpsLimiterSha256": "bd495334db1f80d7236a86eebd9bc63c72abccbeed0628212ca890f7680ccd32"
+  },
+  "nativeReplay": {
+    "seed": 24850,
+    "updates": 2600,
+    "frameCounts": {
+      "0": 180,
+      "1": 364,
+      "2": 126,
+      "3": 1359,
+      "10": 570,
+      "11": 1
+    },
+    "exitCode": 0,
+    "pan": {
+      "point": {
+        "x": 980,
+        "y": 120
+      },
+      "source": "retained fnaf4-night8-win.input and Source viewport/pan rules",
+      "downTick": 60,
+      "upTick": 72
+    },
+    "retainedOfficeRouteShiftTicks": 180,
+    "maxTotalUpdates": 2600,
+    "nativeDeadlineSeconds": 180,
+    "mediaDeadlineSeconds": 210,
+    "terminal": "UNKNOWN",
+    "phoneInteraction": false
+  },
+  "negative": {
+    "trial": "fnaf4-room-demo",
+    "question": "Can the named right hitzone centre pan the initial view?",
+    "observed": "The tick-120 room remains lateral; the named centre trial did not produce the intended pan.",
+    "disposition": "Replaced with an in-viewport point already retained in the original replay; original failed-trial artifacts preserved.",
+    "logSha256": "241baafa7dbeb5a88b4ae030e8de6bffcd12edd0eb64099c37f00a5df71f74b0",
+    "traceSha256": "8cec9639043b92f9fcdf84103aeac4f96c1566be1b7b16d761197975408d2d20",
+    "snapshotSha256": "7ba71a77787efd3666ce367b33532ba53d4a7a2638699c77708d8546a8008af6"
+  },
+  "artifacts": {
+    "fnaf4-room-diagnostic/predeclaration.json": "0ae54b0a67e542573e1fa10727922737397f24d4ade4f0078ee9b3caa5761bb7",
+    "fnaf4-room-diagnostic/capture.log": "745188301f0a73a02d20d63ac9bde8c076a7cf3a2aaab98a0c74b7ea69fff749",
+    "fnaf4-room-diagnostic/trace": "c542fee5f8cde94e9fa2e83d70dc12d50bd681d055f7126f8de9ebd638d6cee7",
+    "fnaf4-room-diagnostic/frame3-tick240.ppm": "7ba71a77787efd3666ce367b33532ba53d4a7a2638699c77708d8546a8008af6",
+    "fnaf4-room-diagnostic/pixel-comparison.json": "e616ab2649e4a02b2267124757cfe44487c9b048658dcea63774b61ca965a0fd",
+    "fnaf4-room-diagnostic/center-pixel-comparison.json": "941558035a21b3d5adb4f468dd412f9c0c4d3bae0bc397e58289b52c9ed2ee74",
+    "fnaf4-profile/predeclaration.json": "be60f6372fe7b3da324e2142927cf96f12f274a76a215f8be74e4de9e944bfae",
+    "fnaf4-profile/configure.log": "7558c6e4f7ffab995cd539cd1a677836f8561401a80bf1700e0a664c2e6acecd",
+    "fnaf4-profile/compile.log": "c0bf077b0b01d1652b4ab16ce0de9b65ab4fa5df774d855c837e3fefd3d255ad",
+    "fnaf4-profile/render/capture.log": "9ed8caf72f15ae4e298e521abd48b0a2f9db72ca5c1daa78eaf1639d96e1c282",
+    "fnaf4-profile/render/log.txt": "085b72658be93287ca3a9aa7ee9b0ab11de52d4e20bdbece63b817372ec5a29f",
+    "fnaf4-profile/render/trace": "c542fee5f8cde94e9fa2e83d70dc12d50bd681d055f7126f8de9ebd638d6cee7",
+    "fnaf4-profile/readback/capture.log": "4d1599529f1c8a553078479a6eb3bc221e5ab80db80bb0902302fef631b5bb4c",
+    "fnaf4-profile/readback/log.txt": "9693af0b89638587d0169a89fb1e97ec4d4aa0ace9415c80aba8382b4b1f6696",
+    "fnaf4-profile/readback/trace": "c542fee5f8cde94e9fa2e83d70dc12d50bd681d055f7126f8de9ebd638d6cee7",
+    "fnaf4-profile/summary.json": "dd4297c1836bb024b928e340e452c27b592e25bd99585ae9d8c84612e40f8afe",
+    "fnaf4-room-demo-v2/env.json": "cdcd6df9702dcc6e6ce082bfa83d8d6012b47af1e8a0f8801fc64c29959137d6",
+    "fnaf4-room-demo-v2/predeclaration.json": "7182495006486f4bc9af59b6b9613692e9e7a5d1307cfa157a9861540b873b61",
+    "fnaf4-room-demo-v2/run.input": "b592805181dd903d25000ca3bb7d8c54a5025e84a7518cabc5cbea102305df5b",
+    "fnaf4-room-demo-v2/capture.log": "0d2439c79a05dd6e06a6b793f6e90e8861f4d85ea920e2a533ff75a3af76de8a",
+    "fnaf4-room-demo-v2/trace": "3d3ac1ef3c1b7d1ffbd7dbbb47e92d3b24db27da404e660551b1fedc7a20b8a3",
+    "fnaf4-room-demo-v2/audio-trace": "27f70da9a104bfdc2f151d58d608bd73bf5d19ddcc96acc9757c7652ebd0a677",
+    "fnaf4-room-demo-v2/game.mp4": "a56a8f177879e0a0b911d94c6a3a0cbcd6a6ee4842e7a977a0d5e20396e0fc74",
+    "fnaf4-room-demo-v2/frame3-tick120.ppm": "fa09eb97179921fa2ec4af0c0153f203ab5062088f6e1eaaf0eb2356aa1c491d"
+  },
+  "tools": {
+    "diagnose-fnaf4-room.mjs": "531c7c26b67b897e805110fab6bcf56781166af31b15977086857fc165aa4513",
+    "profile-fnaf4.mjs": "58debe08d92e8dc83be7a7644708313aabbcd2ec610595e8b19aa48e36c69b60",
+    "fnaf4-profile/summarize.mjs": "094da22d6b2113bfa9e10cb492d3374e339086682673769b6ba32a669b07c6b2",
+    "fnaf4-room-diagnostic/compare-room.mjs": "18a4d5b1483c2932e4e80928422d5a1d56b9c80838a3912fbfaa1df990bc90c4",
+    "fnaf4-room-diagnostic/compare-center.mjs": "87775ae2ed00a6c166ff1f1f5057b776b45959fc1d1ad26e54b2946c87c2522c",
+    "capture-fnaf4-room-demo-v2.mjs": "fb5235c3ee0f9de0d94c33c0dd17af330f9fd46ba23c4a728cb1b78c3b930f39",
+    "record-fnaf4-inspection.mjs": "6410ec48d865959b3807a4b70ffba873baf03d7645d1d7c84ae067f00b90c01e"
+  },
+  "video": {
+    "label": "FIXTURE",
+    "file": "twitch-plays-fnaf-grid-v2.mp4",
+    "sha256": "e1f1dda670289c8eebff0615ef3229429b8a605b95734520e891651d009b0cb1",
+    "bytes": 2802917,
+    "durationSeconds": 20,
+    "width": 720,
+    "height": 1280,
+    "fps": 30,
+    "videoCodec": "h264",
+    "pixelFormat": "yuv420p",
+    "audioCodec": "aac",
+    "decodeErrors": 0,
+    "sceneSha256": "881e685f1706e1bdd5493adcee63eca4020f74d62543d7cd1b46bf1588ef0414",
+    "rendererSha256": "15ec5be6806e6f1cebd108e708dc5829b52e457c8f8072d636872bcea3f40a11",
+    "browser": {
+      "width": 720,
+      "height": 1280,
+      "frames": 600,
+      "fps": 30,
+      "problems": []
+    },
+    "browserCleanup": {
+      "renderCompleted": true,
+      "frames": 600,
+      "browserProblems": [],
+      "initialCloseExitCode": 1,
+      "reason": "Chrome helper profile removal ENOTEMPTY after frame rendering completed",
+      "ownProfileRemoved": true,
+      "intermediateFramesMovedToCorrectDirectory": true
+    },
+    "browserCleanupSha256": "86d0f635b7e58d70b2e094f38bdf79211cca9163cdadb0b5eb51fd94a6ac431c",
+    "correction": "All four native clips advance continuously at their recorded rate except the explicitly illustrated global pause. Includes the native pan to the lit FNaF 4 room centre. No per-game slowdowns or silent holds.",
+    "disclosure": "Separate real native captures; chat, pause and GPTPlays are illustrative editing."
+  },
+  "open": [
+    "Native presented FPS with pacing, full capture encoder, and four simultaneous games",
+    "GPU-backed native host performance",
+    "Independent retail lighting/encounter comparison",
+    "Native presented-frame pause and audio freeze",
+    "Game-to-grid bridge and Twitch/LLM connection"
+  ],
+  "evidenceId": "fnaf4-render-inspection-9934b9f28d62b36b"
+}

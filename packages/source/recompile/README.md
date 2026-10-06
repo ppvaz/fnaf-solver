@@ -67,6 +67,7 @@ directory (`/private/tmp/fnaf2-recompile.*` on the dev machine).
 | `results/phone-input-ledger-full-06-20260928.json`, `results/phone-audio-cues-full-06-20260928.json`, `results/rebuild-audio-full-06-landed-20260928.json`, `results/hall-shift-sensitivity-full-06-20260928.json`, `docs/evidence/full06-input-registration-20260928.json` | full-06 landed: the phone's hall flash ends 3-5 updates before the replayed hall release in every flashed cycle (monitor raises -2..+1, mask presses 0..-1); the eyehole confirms B, C, empty, empty in windows 3-6; audio aligned at -0.246 s has Balloon Boy hopping at 40.0/45.1/50.0 s and at the office at 60.38 s while the rebuild (audio-trace build 66d6e2f6, same draws as the retained replay) holds him at CAM 10 through the 40 and 45 s rolls and brings him at 70.3 s; moving every hall contact 2-5 updates earlier never empties window 6. |
 | `fixtures/fnaf3-aggressive-nightmare.ini`, `fixtures/fnaf3-aggressive-nightmare-win.input`, `results/fnaf3-aggressive-nightmare-20260929.json` | The unlocked FNaF 3 save (`beatgame`, `beat6`, `goodend`, `hyper=1`; the three easing cheats off), the 332 touch rows the guard applied, and the record: the rebuilt FNaF 3 (pinned `239c59cb-c5e092a3`) reaches 6 AM on Aggressive Nightmare at seed 24850 and writes `4thstar=1`, and the rows replayed with no pilot give the same 30,000-update trace. MODEL_ONLY, rebuilt-runtime. |
 | `fixtures/fnaf4-night8-before.ini` | The FNaF 4 save for Night 8 (`beat5`-`beat7`, `beat8=0`, `test=1`): the Extras Nightmare button then takes eight taps to arm 20/20/20/20 (`shadow` 2). |
+| `fixtures/fnaf4-concept.input` | Host-only menu navigation, a bounded pan toward the room centre using a retained in-viewport point, and the Night 8 route shifted by 180 office updates. The short concept capture applies only its prefix. No device, win or native pause claim. |
 | `fixtures/fnaf4-night8-win.input`, `results/fnaf4-night8-20260929.json` | The 584 touch rows the FNaF 4 `warden` applied, and the record: the rebuilt FNaF 4 (pinned `6d3a6667-615f2ea0`) reaches 6 AM on Night 8, the 20/20/20/20 Nightmare, at seed 24850, and writes `beat8=1`; the rows replayed with no pilot give the same 30,000-update trace. MODEL_ONLY, rebuilt-runtime. |
 | `fixtures/fnaf4-challenges-before.ini`, `fixtures/fnaf4-night7-s6-win.input`, `fixtures/fnaf4-night7-s5-win.input`, `results/fnaf4-night7-s6-20260929.json`, `results/fnaf4-night7-s5-20260929.json` | The save the Night 8 win wrote (`beat8=1`), which unlocks the challenges, and the two challenge wins on Night 7: Blind + Mad Freddy + Insta-Foxy (the game writes `s1`-`s3` and `s6`, 546 rows) and All Nightmare + Blind (`s1`, `s4`, `s5`, 522 rows). Both replay with no pilot to an equal trace on the pinned binary. MODEL_ONLY, rebuilt-runtime. |
 
@@ -149,6 +150,18 @@ encoded native video bytes. The baseline's 1,309 complete pre-crash rows match
 too. This is MODEL_ONLY replay evidence, not retail encounter equivalence.
 The 20-second grid video combines separate native captures; chat, pause and
 GPTPlays are labeled illustrations, not live integrations.
+The [FNaF 4 render inspection](../../../docs/evidence/fnaf4-render-inspection-20261005.json)
+compares native room snapshots with the retained recompile assets: all 587,520
+compared opaque pixels in the lateral view and 767,292 in the centred view
+preserve RGB exactly. This rules out brightness loss in those comparisons;
+it does not establish retail fidelity. The corrected concept shows the native
+pan to the centre and advances every clip at its recorded rate, exported at
+30 FPS. Chat, pause and GPTPlays remain illustrative editing.
+In a bounded software-GL profile, 14 of 270 office updates with pixel readback
+exceeded the 16.7 ms budget, versus 9 without readback. Native presented FPS
+is UNKNOWN: the fixed-step harness's displayed `Framerate: 60` is assigned,
+not measured. Four simultaneous games, GPU rendering and full capture costs
+remain unmeasured. No brightness or renderer patch was applied.
 The zlib setting uses the patch's existing compression option; the
 [comparison](../../../docs/evidence/recompile-image-compression-20261005.json)
 found equal decompressed bytes for all 311 images shared with the interrupted

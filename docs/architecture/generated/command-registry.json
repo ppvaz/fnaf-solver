@@ -760,6 +760,12 @@
       "lifecycle": "supported"
     },
     {
+      "id": "fixtures/fnaf4-concept.input",
+      "invocation": "fixtures/fnaf4-concept.input",
+      "kind": "Host-only menu navigation, a bounded pan toward the room centre using a retained in-viewport point, and the Night 8 route shifted by 180 office updates. The short concept capture applies only its prefix. No device, win or native pause claim.",
+      "lifecycle": "supported"
+    },
+    {
       "id": "npm",
       "invocation": "npm run recompile:local -- [--game fnaf1\\|fnaf2\\|fnaf3\\|fnaf4] [--image-workers 1\\|2] --apk FILE --toolchain DIR --out DIR",
       "kind": "host build",
