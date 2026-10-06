@@ -36,6 +36,8 @@ directory (`/private/tmp/fnaf2-recompile.*` on the dev machine).
 | `native-frame.py` | Scales harness snaps (1024 x 768) to the phone's 2400 x 1080 MediaProjection frame as Display Mode FULL does, with bilinear filtering as the phone's frames show, and prints per-rectangle distances to a phone frame. Frames stay outside the repository. |
 | `sprite-override.py`, `sprite-override.patch` | Host tool, no gate. The patch (on `Chowdren/base/image.cpp`, independent of the mobile patch) adds `CHOWDREN_IMAGE_OVERRIDE=<id>=<png>[,<id>=<png>...]`: when image `<id>` loads from `Assets.dat` its pixels come from the PNG, scale-fitted into the image's own width and height (aspect kept, premultiplied bilinear) and anchored bottom-centre; hotspot and action point stay the asset's, and a PNG of exactly that size is copied as it is. The script writes such a PNG: `CUTOUT --out PNG (--size WxH \| --assets FILE --target ID) [--base PNG \| --base-image ID] [--box X,Y,W,H \| --box diff] [--fit contain\|height] [--gain G\|R,G,B] [--image-count N]` trims an RGBA cutout, fits it into the box at its bottom centre, and composites it over a base image when one is named (`--box diff` is where the target differs from the base). Cutouts, output PNGs and anything read from `Assets.dat` stay outside the repository. |
 | `game-config.py` | Chowdren `--config` for the other build-296 mobile CCNs (FNaF 1, 3, 4): the FNaF 2 config's overrides with extension identity resolved by item name (`Multiple Touch`, `Layer object`, `*.KYSO`, `Ini`...), since each game numbers its extension object types differently. |
+| `targets.ts` | Source-owned local build targets: game package, converter config, characterized object/item XORs and selected runtime patches for FNaF 1-4, exported as `@sixam/source/recompile/targets`. The portable desktop builder records the selected game, decoder settings and patch hashes. |
+| `empty-path-start.patch` | Content-free FNaF 1 runtime correction: starting an empty PathMovement stops it before accessing node 0. The builder applies it to an external copy of `Chowdren/base`, preserving the prepared toolchain and the canonical mobile patch. C++ negative-control and nonempty start/restart regression run on macOS and Linux. |
 | `run-harness.sh` | Container wrapper with GL readiness checking and a process deadline that escalates to kill. Run from the external gamesrc directory. |
 | `android/gles2-renderer.patch` | Content-free runtime patch (Chowdren/base only), applied after `mmfparser-chowdren-mobile.patch`: the GL ES 2.0 renderer. The desktop shader layer (`desktop/glslshader.cpp`) on ES 2.0, the packed GLSL 1.20 shaders rewritten at load time as GLSL ES 1.00 (`base/gles2shader.h`), vertex attributes in place of client arrays, and `copy_rect` from the RGBA8 screen FBO; `-DUSE_GLES2=ON` builds the desktop game on a GLES2 context for host checks. The desktop GL build is unchanged (every change is under `CHOWDREN_USE_GLES2`). `git apply` in the anaconda tree; see `android/README.md`. With it, `android/game-CMakeLists.txt` builds GLES2 by default (`-DCHOWDREN_GLES1=ON` keeps the fixed-function 1.1 target) and `android/build-apk.sh` declares ES 2.0 when `libmain.so` links `libGLESv2.so`. |
 | `android/gles2-shader-check.cpp` | Check (host, no phone, no game content): compiles and links every `base/shaders` pair through `gles2shader.h` on a headless Mesa GL ES 2.0 context (EGL surfaceless), and renders the Perspective shader's PANORAMA branch over a generated texture against the Android runtime's formula. `gles2-shader-check SHADER_DIR [--dump DIR] > result.json`; exit 0 only if all link and PANORAMA matches. Build line in its header. |
@@ -54,6 +56,8 @@ directory (`/private/tmp/fnaf2-recompile.*` on the dev machine).
 | `test-child-events.py`, `fixtures/child-events.cpp` | Emit and compile synthetic nested events with the patched converter; exercise parent gating, nested/sibling selections, and one-shot timer dispatch. FIXTURE only; Python2.7 and a C++ compiler required. |
 | `probes/*.gdb`, `run-debug-probe.sh` | Checkpoint-bound debugger probes, used inside the bounded harness wrapper. Generated function IDs are not portable between patch checkpoints. |
 | `fixtures/night1-newgame.input`, `fixtures/night1-before.ini` | Exact host-only navigation and initial save used by the retained runs, matching their provenance hashes. No game assets. |
+| `fixtures/night1-concept.input` | Host-only Continue navigation and named-instance monitor, CAM 11, music-box and mask contacts used in the 2026-10-05 concept video. The binary renders those transitions; chat, pause and GPTPlays in the edited video are illustrative (`docs/evidence/crowd-minimal-demo-20261005.json`). No device or native pause claim. |
+| `fixtures/fnaf1-concept.input` | Host-only named-instance New Game, confirmation, left/right door and monitor contacts for the four-game concept capture. Source's empty-path correction permits the office to initialize. No device or native pause claim. |
 | `fixtures/night7-dials20-5x2.input` | The all-20 Custom Night navigation on the corrected 5 x 2 portrait grid (binary `036076d3` on): portraits 4-9 toggled, then Ready. A dump before Ready reads all ten dials at 20. |
 
 | `results/phone-clock-sweep-zero-full-04-20260928.json`, `results/phone-clock-sweep-zero-full-06-20260928.json` | MODEL_ONLY outcomes for the measured schedule-phase and clock-zero corrections; the joint candidate does not improve on either retained control. |
@@ -101,10 +105,17 @@ docker run --rm -e MMFPARSER_ANDROID_RAW_DIR=/input/android-res-raw \
 
 The local host builder is now `npm run recompile:local -- --apk
 /external/base.apk --toolchain /external/anaconda --out /external/new-build`
-([desktop interface](../../../apps/desktop/README.md#scripts)). Prepare the
+([desktop interface](../../../apps/desktop/README.md#scripts)); default FNaF 2,
+or select another game with `--game fnaf1`, `fnaf3` or `fnaf4`. Prepare the
 pinned tree and font bank above first. It extracts the CCN and raw resources,
 converts and compiles in Docker on this host, retaining bounded step logs and
 hash-based build custody. Its new output directory stays outside Git.
+Image conversion defaults to two workers; `--image-workers 1` lowers concurrent
+compression work. FNaF 4 still exceeded this host's 4 GiB Docker VM with one
+worker. A bounded research run with temporary 4 GiB swap completed; that swap
+was removed and its absence verified. The builder never changes VM memory or
+swap automatically. FNaF 1's runtime overlay copies only `Chowdren/base` and
+records the selected fix, rather than copying or modifying the whole toolchain.
 On a phone whose Roboto is variable, `make-android-fonts.py --bold-variation
 Bold` selects its observed named Bold instance; the regular sizes keep the
 font's default instance. A compiled binary alone does not qualify boot or pause.
@@ -129,6 +140,15 @@ deadline (exit 124); that negative is retained
 [separately](../../../docs/evidence/local-recompile-fresh-boot-20261005.json).
 Both are MODEL_ONLY. Rendering uses Xvfb and software GL inside Docker; it
 needs no host display server. Streaming pause and audio freeze remain open.
+The other owned APKs also compiled on this host, and bounded captures entered
+their offices: [four-game record](../../../docs/evidence/crowd-four-game-demo-20261005.json).
+FNaF 1 initially crashed on an empty movement path. The separate Source patch
+stops that path, as the selected Android runtime methods do; a production
+overlay build matches the experimental correction's 2,300-update trace and
+encoded native video bytes. The baseline's 1,309 complete pre-crash rows match
+too. This is MODEL_ONLY replay evidence, not retail encounter equivalence.
+The 20-second grid video combines separate native captures; chat, pause and
+GPTPlays are labeled illustrations, not live integrations.
 The zlib setting uses the patch's existing compression option; the
 [comparison](../../../docs/evidence/recompile-image-compression-20261005.json)
 found equal decompressed bytes for all 311 images shared with the interrupted

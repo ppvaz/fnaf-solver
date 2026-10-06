@@ -14,6 +14,7 @@
     "./fnaf4": "./src/games/fnaf4/index.ts",
     "./truth": "./decompile/truth.ts",
     "./truth/read": "./src/truth/index.ts",
+    "./recompile/targets": "./recompile/targets.ts",
     "./games/*": "./src/games/*"
   }
 }

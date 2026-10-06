@@ -1,0 +1,165 @@
+{
+  "schema": "crowd-minimal-demo-v1",
+  "label": "FIXTURE",
+  "steps": [
+    "S2",
+    "S6"
+  ],
+  "sources": {
+    "apps/desktop/web/crowd/index.html": "0c14cbd86290fcc29f6871fbe3a1383cb4ba38610e9c3a8c5b7badcdcd78c432",
+    "apps/desktop/web/crowd/style.css": "e64a01ef5148340700fdae960683c3dd74734230f23dedb030aeec7dec158362",
+    "apps/desktop/web/crowd/app.js": "a3bf573afc454e6c6c681385a287a1f2b342f75b4f12b83129c405221cac3613",
+    "apps/desktop/test/crowd.test.ts": "5e5cf2728374556518cc764d063837fbaa2a8d86e01e68322289f672234ad94c",
+    "packages/source/recompile/fixtures/night1-concept.input": "a0e1295a40c0de72d559565704f7beba928a4f8837f24a07b93ffb4fa75c2ffa"
+  },
+  "tests": {
+    "host": "macOS",
+    "nodeMajor": 22,
+    "passed": 10,
+    "failed": 0,
+    "tapSha256": "7aa51823076944e0320f77bf0c0b26d87d1f7db91cfa72a735266d97df7c0538"
+  },
+  "browser": {
+    "runs": [
+      {
+        "name": "desktop",
+        "width": 1440,
+        "height": 1000,
+        "bounds": [
+          {
+            "left": 24,
+            "top": 62,
+            "right": 710,
+            "bottom": 432
+          },
+          {
+            "left": 730,
+            "top": 62,
+            "right": 1416,
+            "bottom": 432
+          },
+          {
+            "left": 24,
+            "top": 452,
+            "right": 710,
+            "bottom": 822
+          },
+          {
+            "left": 730,
+            "top": 452,
+            "right": 1416,
+            "bottom": 822
+          }
+        ],
+        "tiles": 4,
+        "controlsInitiallyCollapsed": true,
+        "offlineInputDisabled": true,
+        "gameSelectionPassed": true,
+        "horizontalOverflow": false,
+        "allTilesInViewport": true,
+        "screenshotSha256": "13dfebfd8bf6173d7c509c5fc88930056d959a7a14b162b31da023b5239e661f"
+      },
+      {
+        "name": "mobile",
+        "width": 390,
+        "height": 844,
+        "bounds": [
+          {
+            "left": 16,
+            "top": 54,
+            "right": 374,
+            "bottom": 381.5
+          },
+          {
+            "left": 16,
+            "top": 401.5,
+            "right": 374,
+            "bottom": 729
+          },
+          {
+            "left": 16,
+            "top": 749,
+            "right": 374,
+            "bottom": 1076.5
+          },
+          {
+            "left": 16,
+            "top": 1096.5,
+            "right": 374,
+            "bottom": 1424
+          }
+        ],
+        "tiles": 4,
+        "controlsInitiallyCollapsed": true,
+        "offlineInputDisabled": true,
+        "gameSelectionPassed": true,
+        "horizontalOverflow": false,
+        "allTilesInViewport": false,
+        "screenshotSha256": "7f530f8f27176d4cb2604c42bea49ce88f53be1b98dcb1362dba15d9e3d61017"
+      }
+    ],
+    "problems": [],
+    "recordSha256": "cf70ea4bd353ffb667feb10f4fe28092aa0bb7475dfddc66a5e891d80169ef85",
+    "checkerSha256": "20b38b6c1bdb6e0ffabde465f8b80c1eb86dcdda861bbb91f292ecc62c36263c"
+  },
+  "nativeFootage": {
+    "label": "MODEL_ONLY",
+    "custodyEvidenceId": "local-recompile-894915c9914e5cb8",
+    "binarySha256": "364ae0183156e240b7e3247e6945238083f12b3431cfc0d39228bc5971b17189",
+    "assetsSha256": "92b083cebee9c4773926682e0782b15281bbe2fe8d4b7242da403ca8bf34871c",
+    "seed": 24850,
+    "saveBeforeSha256": "0f37873becee49c3c53624e7820edf20bae3f907fe4cd0bd8c5f01923f2d84a0",
+    "inputs": "packages/source/recompile/fixtures/night1-concept.input",
+    "inputRows": 14,
+    "traceSha256": "41cc6726817871d5eb946d8840d5b0b01e0db114a479ea00c972c92aef4ff3bd",
+    "updates": 2100,
+    "frames": {
+      "0": 180,
+      "1": 216,
+      "2": 189,
+      "3": 1509,
+      "7": 6
+    },
+    "exitCode": 0,
+    "logSha256": "7b5190276d6c61caa68f91348d461dae7a7195346a1bcb2f3eb0ad364ddddcd0",
+    "captureToolSha256": "fe650baf05af95de0ffb8dddc640b49d3f1e672e7b0561390bc3bea1bf57ccc5",
+    "videoSha256": "a066937b35c5f0538629e49aa434515d171cc819ddce12ca8d2bf7a758535715",
+    "visuallyObserved": [
+      "office to monitor",
+      "camera 11 selected",
+      "music-box control highlighted while held",
+      "mask view appears and disappears"
+    ],
+    "musicBoxCounterMeasurement": "UNKNOWN",
+    "phoneInteraction": false
+  },
+  "video": {
+    "file": "twitch-plays-fnaf-minimal.mp4",
+    "sha256": "d2cdb1def2625085e84978e89232f85bb667cc1366bee7ebd6ec30a6bcb25fcb",
+    "bytes": 4371115,
+    "durationSeconds": 20,
+    "width": 720,
+    "height": 1280,
+    "fps": 24,
+    "videoCodec": "h264",
+    "pixelFormat": "yuv420p",
+    "audioCodec": "aac",
+    "audio": "original procedural soundtrack; no narration",
+    "decodeErrors": 0,
+    "sceneSha256": "54c9bcce0a6e3fb24ccc620b1759bfb8546c27bd64ddb7acd88fd30e891b2133",
+    "rendererSha256": "0414b4bba91f3d54ef19f9bea9cc5e060b526eb4af8d0a8b31aa2cc5f6960c1a",
+    "renderRecordSha256": "9e9a630d109de0c0721f450fe55599095b679d5abf603af202f65130e052e3c1",
+    "conceptLabelsVisible": true
+  },
+  "unmeasured": [
+    "native pause after presentation",
+    "native audio freeze",
+    "live chat routing to native binary",
+    "four simultaneous games",
+    "Twitch connection",
+    "LLM decisions",
+    "retail encounter fidelity"
+  ],
+  "disclosure": "Native footage replays local fixture inputs. Chat, pause and GPTPlays are an edited concept, not a connected runtime.",
+  "evidenceId": "crowd-minimal-demo-5085af2d91f9795c"
+}

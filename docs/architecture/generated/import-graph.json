@@ -186,7 +186,9 @@
     {
       "file": "apps/desktop/src/local-recompile.ts",
       "imports": [
+        "./lane-kit.ts",
         "@sixam/kernel",
+        "@sixam/source/recompile/targets",
         "@sixam/source/truth",
         "node:child_process",
         "node:crypto",

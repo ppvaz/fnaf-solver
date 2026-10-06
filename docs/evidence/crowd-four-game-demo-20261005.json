@@ -1,0 +1,507 @@
+{
+  "schema": "crowd-four-game-demo-v1",
+  "label": "FIXTURE",
+  "steps": [
+    "S2",
+    "S6"
+  ],
+  "sources": {
+    "apps/desktop/src/local-recompile.ts": "7df4ca3aaedb118d1e2e37740e2311496f5ef6fb71999be953bec65b0c042429",
+    "apps/desktop/test/local-recompile.test.ts": "8944643d3d0650f6e867da66b5da46d22dcdf6b16eccccd4a085039be9621a61",
+    "packages/source/recompile/targets.ts": "b73ff595329ee95f73e30638f7f6e606140de532f6db3101450efca352e9b5dc",
+    "packages/source/recompile/empty-path-start.patch": "e3dae9f239c5a655c95625ae7c8753d1a5ecaeed1a7c710a7748201f92911434",
+    "packages/source/recompile/fixtures/fnaf1-concept.input": "ed6e014ff311a709db8107b19e72e1df3505dfe8edc696117204be050813f4c5",
+    "packages/source/recompile/fixtures/fnaf3-aggressive-nightmare.ini": "a3fad9efee8285676e77ace130dfad0568dc60e0df7183f568b6c6f4864317a4",
+    "packages/source/recompile/fixtures/fnaf3-aggressive-nightmare-win.input": "f87351138c1b76338107c4941543c0c727b0c077536e0baad89b86c0c5b79356",
+    "packages/source/recompile/fixtures/fnaf4-night8-before.ini": "a58acc2d42e40653a3797dc783d54daef47f6f726140eccc36a905b261e95231",
+    "packages/source/recompile/fixtures/fnaf4-night8-win.input": "07b08b0af93bfb149104359df4e60e6ee2cc5863463fa852b6f0d878f470e9a2"
+  },
+  "extraction": {
+    "mode": "read-only",
+    "capabilityPreflightSha256": "7f3fa5ff7cecf7eb0ce9fae87ec2ad68dd3cabaeceae205a2f9abe511a22afc4",
+    "lease": "kernel-released per-device exclusive lease",
+    "baseApksOnly": true,
+    "splitApksCopied": false,
+    "ownedApksExternal": true,
+    "phoneGameInputs": false,
+    "toolSha256": "1749db6321c9c7d15f5fef3989e75ac9162ba5137a05549112e6602fccdd0791",
+    "versions": [
+      {
+        "game": "fnaf1",
+        "version": "2.0.7",
+        "versionCode": 40
+      },
+      {
+        "game": "fnaf3",
+        "version": "2.0.4",
+        "versionCode": 18
+      },
+      {
+        "game": "fnaf4",
+        "version": "2.0.4",
+        "versionCode": 11
+      }
+    ]
+  },
+  "builds": [
+    {
+      "schema": "local-recompile-build-v1",
+      "label": "MODEL_ONLY",
+      "game": "fnaf1",
+      "package": "com.scottgames.fivenightsatfreddys",
+      "base": "9b00bb4227cc3ddd6f7baefe06120368bd7226e9",
+      "decoder": {
+        "oiXor": 0,
+        "loXor": 0
+      },
+      "imageCompression": "zlib-9",
+      "imageWorkers": 2,
+      "conversionCpus": 2,
+      "compileJobs": 2,
+      "hostOS": "darwin",
+      "target": {
+        "os": "linux",
+        "arch": "arm64"
+      },
+      "images": {
+        "converter": "sha256:71ada955581d5118a032a167feabcee8abe50c7358fe6419d327c0ac94b7b012",
+        "build": "sha256:7bc22529fce1adeb25ca4d65c193915c0b7eb520e17e203c53abdd27084504e4"
+      },
+      "sha256": {
+        "apk": "f5796a0d1ffd113f70df40f037b96d40ff15132771357c2635bebe7ed7e8c467",
+        "ccn": "70a1ec40284d4f5232d0ecedcbd94a68c51cd937983ad17d2cbf329aad35b6d4",
+        "assets": "03db43ad35ff32901acd555ef71bed3b96fb1728a5e33cfd8b67d0ea57c25efe",
+        "binary": "6a13abdefa0ac3fd05ea3994629f7f6bd0dc854e303492d912fc784eaf155bac",
+        "mobilePatch": "64064abaa9d984f299108f35f0884c68416049e2b139561a57464874e71af4d0",
+        "fontBank": "1e50f594ff96516a16cfa7d8c8dfd39ccb60a61d0becca99d8410a3caacc032d",
+        "config": "24bec1909f5e21d9037f263bade42eba25d0d0f4730d75a9c98a24c32a1820c4",
+        "builder": "9f25c79f57de43154d93f7f658cd92b4c305e1c561ac77654b4cea03dc3b98a7"
+      },
+      "logs": {
+        "convert": "d5bdb5d652764c7fab5f3c12527ffe55818f2df34c2046fc85cf71de456cd64c",
+        "configure": "486212a9de64b4c18bf95e708e705650a7d28400ce245f9a0eecf6b6f04866fb",
+        "compile": "33f4fc6ffdfcb85a296806b1e6ee80a55259a587b981cc65c4561765154dbdf6"
+      },
+      "rawResources": 81,
+      "open": [
+        "boot qualification",
+        "rendered pause",
+        "audio freeze",
+        "retail encounter fidelity"
+      ],
+      "evidenceId": "local-recompile-5618fee66c80cebf",
+      "recordSha256": "bcad6a08cc92148b80f86a8bdb543e1bed092d85d6cb45837f0b20ef0f012ff8"
+    },
+    {
+      "schema": "local-recompile-build-v1",
+      "label": "MODEL_ONLY",
+      "game": "fnaf3",
+      "package": "com.scottgames.fnaf3",
+      "base": "9b00bb4227cc3ddd6f7baefe06120368bd7226e9",
+      "decoder": {
+        "oiXor": 29,
+        "loXor": 50
+      },
+      "imageCompression": "zlib-9",
+      "imageWorkers": 2,
+      "conversionCpus": 2,
+      "compileJobs": 2,
+      "hostOS": "darwin",
+      "target": {
+        "os": "linux",
+        "arch": "arm64"
+      },
+      "images": {
+        "converter": "sha256:71ada955581d5118a032a167feabcee8abe50c7358fe6419d327c0ac94b7b012",
+        "build": "sha256:7bc22529fce1adeb25ca4d65c193915c0b7eb520e17e203c53abdd27084504e4"
+      },
+      "sha256": {
+        "apk": "5d49d0e2b9d4fba12f35577b6b4dfc093638b680f3675dd6d1049de9b8dd2708",
+        "ccn": "a8203d6130a21894ca342ab88b7bd67569919ae32d3bacf7efd9389d5b8eadba",
+        "assets": "201f7f2cca4e64ad1248e129faef8e679e9f192e7eb1e9deb5f8946739ea7511",
+        "binary": "3a7bfbd70dc498d90eeffe74662e5e8b28f3c28fc8f21fe99e96d300f4fd6b99",
+        "mobilePatch": "64064abaa9d984f299108f35f0884c68416049e2b139561a57464874e71af4d0",
+        "fontBank": "1e50f594ff96516a16cfa7d8c8dfd39ccb60a61d0becca99d8410a3caacc032d",
+        "config": "24bec1909f5e21d9037f263bade42eba25d0d0f4730d75a9c98a24c32a1820c4",
+        "builder": "9f25c79f57de43154d93f7f658cd92b4c305e1c561ac77654b4cea03dc3b98a7"
+      },
+      "logs": {
+        "convert": "c07f727ce93ca859e2ce880b4fb0b9f0c03ea975c2cba921ad8b6d01eca48880",
+        "configure": "bee1ccb456650bc05c33fc552a2fd4cc27c732a60456abd42b9eff9295b25dc7",
+        "compile": "6fe48af5f650d99744e3339d3b8c1638b6b013e7c161991e7a10914525daede9"
+      },
+      "rawResources": 96,
+      "open": [
+        "boot qualification",
+        "rendered pause",
+        "audio freeze",
+        "retail encounter fidelity"
+      ],
+      "evidenceId": "local-recompile-3a0af604e17a556f",
+      "recordSha256": "70138287b3c197614d384c149b5f5aec2ae62251a1f3796744a44df955e757ce"
+    },
+    {
+      "schema": "local-recompile-build-v1",
+      "label": "MODEL_ONLY",
+      "game": "fnaf4",
+      "package": "com.scottgames.fnaf4",
+      "base": "9b00bb4227cc3ddd6f7baefe06120368bd7226e9",
+      "decoder": {
+        "oiXor": 29,
+        "loXor": 62
+      },
+      "imageCompression": "zlib-9",
+      "imageWorkers": 1,
+      "conversionCpus": 2,
+      "compileJobs": 2,
+      "hostOS": "darwin",
+      "target": {
+        "os": "linux",
+        "arch": "arm64"
+      },
+      "images": {
+        "converter": "sha256:71ada955581d5118a032a167feabcee8abe50c7358fe6419d327c0ac94b7b012",
+        "build": "sha256:7bc22529fce1adeb25ca4d65c193915c0b7eb520e17e203c53abdd27084504e4"
+      },
+      "sha256": {
+        "apk": "96dae280bf4543a0ad5261f3b550e51165dfe3b09ea0e25840cfdf4aee9e4357",
+        "ccn": "5b032de7f243b9a8de15c38cadd0dc1c256f18d0552823b80f1c5f61ff8616f1",
+        "assets": "5dc071f6c60080ca5f533bcc5ec7b2a6b374c5b1cf3085c594f8d52f8dc4f3b5",
+        "binary": "4a2f6a9976f8d1f94c71c22960cbc2812c88d6c69bd2fca836abf76863f3f68f",
+        "mobilePatch": "64064abaa9d984f299108f35f0884c68416049e2b139561a57464874e71af4d0",
+        "fontBank": "1e50f594ff96516a16cfa7d8c8dfd39ccb60a61d0becca99d8410a3caacc032d",
+        "config": "24bec1909f5e21d9037f263bade42eba25d0d0f4730d75a9c98a24c32a1820c4",
+        "builder": "645ad205639f04dc6fbcf6963d86adf3304bdbcb4c6ecc9ac4a776f6de7f2bcb"
+      },
+      "logs": {
+        "convert": "b52e908a88d1e8ab6b127b167cd453e3be4763530dfd3f73b4eb4782d15cdd7f",
+        "configure": "7ba5256ee1a679b1f7762b4eb31b61e85a240a188e6b5f3a9343326a6902ab38",
+        "compile": "2b53a75c779a5173c63e7cc79dd68dc11aeb61e7281aba2abc42837d956e4789"
+      },
+      "rawResources": 91,
+      "open": [
+        "boot qualification",
+        "rendered pause",
+        "audio freeze",
+        "retail encounter fidelity"
+      ],
+      "evidenceId": "local-recompile-71e87fa6ae9a912d",
+      "recordSha256": "d906be61de149bafe24db266ccc151316acb3641584a65fce858c217b63be3c2"
+    }
+  ],
+  "fnaf1Correction": {
+    "experiment": {
+      "schema": "empty-path-experiment-v1",
+      "label": "MODEL_ONLY",
+      "question": "Does an empty path cause FNaF 1 office initialization to crash, and does stopping that path permit bounded native office replay?",
+      "baselineExit": 139,
+      "baselineTraceRows": 1310,
+      "correctedExit": 0,
+      "correctedTraceRows": 2300,
+      "equalCompletePrefixRows": 1309,
+      "limits": [
+        "No retail encounter fidelity claim",
+        "Complete prefix only; the baseline final trace row can be truncated by the crash",
+        "Concept chat is not native input"
+      ],
+      "sha256": {
+        "fnaf1-clip/capture.log": "30744fa9b0b106c9ad2f17b0570ba5392f5237c8f708f7ee733a3128047bd616",
+        "fnaf1-clip/trace": "5653208813eb261429278aaa104842d727da1487d4def5d1b11d0b682e04f79f",
+        "fnaf1-debug/debug.log": "3fe1598ebb62d24afc44763470db4726df05e198ead61c8e3e03bdb5bade5249",
+        "fnaf1-owned/CMovePath.java": "9ecda3b2b2737fb6df304faec84e74bae815447c6a17ed49158ffd5227c7cf23",
+        "fnaf1-clip-fixed-v2/trace": "880dc3bd0f286d96d172ee148baf375f9929d362dbd224a870452df3be8d0ccc",
+        "fnaf1-clip-fixed-v2/capture.log": "ce8ec7eb05ed1e22b00db9fb6d631255c8130cbf0f5076ce58336f5eaa8c981c",
+        "fnaf1-clip-fixed-v2/game.mp4": "e4264732b6188ef72d7d79f86a1426299a467de627ebf488a9b865cbdd9c93fe",
+        "anaconda/Chowdren/base/movement.cpp": "24651fd4758a724e4e89434c35f18469e26ae82ee6ece8ef615be525098356ae",
+        "presentation-research/anaconda/Chowdren/base/movement.cpp": "494b68bbb2f0205789e01a30708dfe74e20523c27b1e97c3d7856adef6358395",
+        "fnaf1-path-fixed/gamesrc/build-local/Chowdren": "e61f81df1cfc0a5db09baade3d7353afe777853ea2fdb2ef6345be94053f740a"
+      },
+      "evidenceId": "empty-path-experiment-2c4cfed894198aad"
+    },
+    "androidRuntime": {
+      "init": "empty path stops",
+      "method": "CMovePath.init and mtGoAvant",
+      "decompilationScope": "selected readable methods only; jadx reported two other decompilation errors",
+      "sourceSha256": "9ecda3b2b2737fb6df304faec84e74bae815447c6a17ed49158ffd5227c7cf23"
+    },
+    "production": {
+      "schema": "runtime-overlay-build-v1",
+      "label": "MODEL_ONLY",
+      "runtimePatches": [
+        {
+          "name": "empty-path-start.patch",
+          "sha256": "e3dae9f239c5a655c95625ae7c8753d1a5ecaeed1a7c710a7748201f92911434"
+        }
+      ],
+      "binarySha256": "7be7babfbb83a4ad9b2345a25d4c106e881700cf48cf428a5b72149bec636a28",
+      "baselineBuildSha256": "bcad6a08cc92148b80f86a8bdb543e1bed092d85d6cb45837f0b20ef0f012ff8",
+      "runtimeSourceSha256": "494b68bbb2f0205789e01a30708dfe74e20523c27b1e97c3d7856adef6358395",
+      "configureLogSha256": "a6611657d461337dccc1354b1de81254043cbe71da02d54f7e7f8be9a5712f99",
+      "compileLogSha256": "407008bf6d6f2a4bfb51ede56e87d86cec89b8166b4db0056812c090748c2bdd"
+    },
+    "productionBuildToolSha256": "5ed1e053124cb1b9c0e6edc6d7eae4b854c7e0c20e5b79bcbb1b6b5f2c53bf40",
+    "nativeProductionCaptureToolSha256": "502b583c84f00092d7e164adac41d120c1af7cc4e60920d61c481f11c805d451",
+    "nativeComparison": {
+      "baselineCompletePrefixRows": 1309,
+      "baselineFinalRow": "truncated by segmentation fault",
+      "experimentalAndProductionEqualUpdates": 2300,
+      "experimentalAndProductionVideoBytesEqual": true
+    },
+    "productionOverlayOnly": true,
+    "canonicalMobilePatchUnchanged": true
+  },
+  "captures": [
+    {
+      "game": "fnaf1",
+      "label": "MODEL_ONLY",
+      "exitCode": 0,
+      "seed": 24850,
+      "maxTotalUpdates": 2300,
+      "updates": 2300,
+      "officeUpdates": 962,
+      "frameUpdates": {
+        "0": 271,
+        "3": 276,
+        "4": 190,
+        "5": 962,
+        "9": 61,
+        "12": 540
+      },
+      "rawVideo": {
+        "width": 1280,
+        "height": 720,
+        "fps": 30,
+        "everyUpdates": 2
+      },
+      "nativeDeadlineSeconds": 200,
+      "sha256": {
+        "trace": "880dc3bd0f286d96d172ee148baf375f9929d362dbd224a870452df3be8d0ccc",
+        "audioTrace": "706fc6ddbb3f0441148b2bc17eb57ac26eacd357a812a08b53d9a5c6f481675d",
+        "environment": "5a178b6389b13fdb15b16a4a0dae11ea58ef12bdd974c6b8fb0dc61f3c9ec805",
+        "input": "ed6e014ff311a709db8107b19e72e1df3505dfe8edc696117204be050813f4c5",
+        "log": "587c969e75b736575679881710c894be1f99427a5726eb5d398d8906490b3dd2",
+        "video": "e4264732b6188ef72d7d79f86a1426299a467de627ebf488a9b865cbdd9c93fe"
+      },
+      "audioAudibility": "UNKNOWN",
+      "terminalResult": "UNKNOWN",
+      "retailEncounterFidelity": "UNKNOWN",
+      "phoneInputs": false
+    },
+    {
+      "game": "fnaf3",
+      "label": "MODEL_ONLY",
+      "exitCode": 0,
+      "seed": 24850,
+      "maxTotalUpdates": 1500,
+      "updates": 1500,
+      "officeUpdates": 878,
+      "frameUpdates": {
+        "0": 180,
+        "1": 217,
+        "2": 219,
+        "3": 878,
+        "7": 6
+      },
+      "rawVideo": {
+        "width": 1024,
+        "height": 768,
+        "fps": 30,
+        "everyUpdates": 2
+      },
+      "nativeDeadlineSeconds": 180,
+      "sha256": {
+        "trace": "2bf71233be3b39a000f4c66711c6ab5e2301e2404e9e4be9c033f9951b931686",
+        "audioTrace": "c58c2d59d18eea1e4a97e845292ade0587cb3ecc07dcd5543e1d34cd74a40e55",
+        "environment": "1ddb08c8432074ba8c7b44b00653456b21ccddf53d4e34c255abc0a4843134ba",
+        "input": "f87351138c1b76338107c4941543c0c727b0c077536e0baad89b86c0c5b79356",
+        "log": "09ccf60763c9702375401bad7d391a231c995907eee01ad0052adcfd60c94e10",
+        "video": "672ca276666d2d7f971886ea47439032226a1c66f0d7ac7a926e60cb0b9402ea"
+      },
+      "audioAudibility": "UNKNOWN",
+      "terminalResult": "UNKNOWN",
+      "retailEncounterFidelity": "UNKNOWN",
+      "phoneInputs": false
+    },
+    {
+      "game": "fnaf4",
+      "label": "MODEL_ONLY",
+      "exitCode": 0,
+      "seed": 24850,
+      "maxTotalUpdates": 2400,
+      "updates": 2400,
+      "officeUpdates": 1159,
+      "frameUpdates": {
+        "0": 180,
+        "1": 364,
+        "2": 126,
+        "3": 1159,
+        "10": 570,
+        "11": 1
+      },
+      "rawVideo": {
+        "width": 1024,
+        "height": 768,
+        "fps": 30,
+        "everyUpdates": 2
+      },
+      "nativeDeadlineSeconds": 200,
+      "sha256": {
+        "trace": "71e27e204a47c75488ddb0c42d6f685ed4150d8bd412d37664b18a35b41fd6c5",
+        "audioTrace": "35a35c3413bee963043f36050e8ad9c0f1319c4fb1d3838a3a62c41a90b8a49a",
+        "environment": "c82e378303560cad41a8d387148d7800a7723f817437bbbcd23e2f23440925e5",
+        "input": "07b08b0af93bfb149104359df4e60e6ee2cc5863463fa852b6f0d878f470e9a2",
+        "log": "851326d6bca30cddb3fcddf809c52f8ef1d19b5d105ca94b6813a1cd26fba4e3",
+        "video": "803d0bcb9ee81356e0c667e98bd009eef9e6cd5bc816fd3f8db793a28d86eceb"
+      },
+      "audioAudibility": "UNKNOWN",
+      "terminalResult": "UNKNOWN",
+      "retailEncounterFidelity": "UNKNOWN",
+      "phoneInputs": false
+    }
+  ],
+  "fnaf2FootageEvidenceId": "crowd-minimal-demo-5085af2d91f9795c",
+  "measuredVisibleResponses": [
+    "FNaF 1: office initialized, door states and monitor changed",
+    "FNaF 3: office, camera panel and CAM 07 selection",
+    "FNaF 4: door approach/return and illuminated hallway"
+  ],
+  "negatives": [
+    {
+      "game": "fnaf1",
+      "result": "crash on office initialization",
+      "exitCode": 139,
+      "logSha256": "30744fa9b0b106c9ad2f17b0570ba5392f5237c8f708f7ee733a3128047bd616"
+    },
+    {
+      "game": "fnaf1",
+      "result": "headless check reached deadline under concurrent conversion pressure; inconclusive",
+      "logSha256": "e5e316419c92e520c74532c82c5a6bf08db5cb569ee50f93fe8fef8cb451387d"
+    },
+    {
+      "game": "fnaf1",
+      "result": "earlier encoded captures used 1024x768 instead of native 1280x720; excluded from video",
+      "logs": [
+        "ed10ca2a061d3bcb022fecc4d388749d103e4fb579a9577dbbd394c3827e91b2",
+        "d8d466d82ffbd9609305c9a6e03ec885332d9f949de9f054d9396fea117ee17b"
+      ]
+    },
+    {
+      "game": "fnaf3",
+      "result": "initial SDL initialization refused",
+      "exitCode": 1,
+      "logSha256": "600761a5cf5cb6df9c0bfbc628bec53ce028bf8e08d20ab29dbaf73d60a58b5f"
+    },
+    {
+      "game": "fnaf3",
+      "result": "3000-update capture reached deadline; excluded from completed capture claim",
+      "exitCode": 124,
+      "logSha256": "7099e945d56f733e42979e0626345cfae49d63243a18e4f67c96a59524d16c85"
+    },
+    {
+      "game": "fnaf4",
+      "result": "conversion exceeded VM memory at two and one workers",
+      "exitCode": 137,
+      "logs": [
+        "1ab9984ef4be02bfaad631e98e368a236a12d8a36560a169d89cdc43a28935c8",
+        "7ee32b31de93b571b0ce8875a2bb50f244e3478d881902eeb28cc402480b6782"
+      ]
+    }
+  ],
+  "resourceRoute": {
+    "dockerVmMemoryBytes": 4106604544,
+    "fnaf4SuccessfulWorkers": 1,
+    "temporarySwapGiB": 4,
+    "temporarySwapDeadlineSeconds": 1800,
+    "existingServicesPreserved": true,
+    "verification": {
+      "temporarySwapAbsent": true,
+      "ownedContainerAbsent": true,
+      "ownedVolumeAbsent": true,
+      "existingSwapPreserved": true,
+      "sha256": "2a8004ef9b27329c291562e944cbcf91bdd6b2429dcefe15e56773f9403b861a"
+    },
+    "intermediateCleanup": [
+      {
+        "directory": "fnaf4-local",
+        "convertLogSha256": "1ab9984ef4be02bfaad631e98e368a236a12d8a36560a169d89cdc43a28935c8",
+        "retained": [
+          "convert.log",
+          "game-config.py"
+        ],
+        "removed": [
+          "gamesrc/",
+          "android-res-raw/",
+          "application.ccn",
+          "game-config.pyc"
+        ]
+      },
+      {
+        "directory": "fnaf4-local-v2",
+        "convertLogSha256": "7ee32b31de93b571b0ce8875a2bb50f244e3478d881902eeb28cc402480b6782",
+        "retained": [
+          "convert.log",
+          "game-config.py"
+        ],
+        "removed": [
+          "gamesrc/",
+          "android-res-raw/",
+          "application.ccn",
+          "game-config.pyc"
+        ]
+      }
+    ],
+    "debugImageRemoved": "fnaf2-play-debug:local",
+    "generalDockerPrune": false
+  },
+  "tests": [
+    {
+      "host": "macOS",
+      "passed": 4,
+      "failed": 0,
+      "tapSha256": "a154aa935f14350bc9973055163fbbf1b8f54c2d57692ef3b702f59ba531b861"
+    },
+    {
+      "host": "Linux arm64 container",
+      "passed": 4,
+      "failed": 0,
+      "tapSha256": "b6beb0544a7a20b836de635dcfda82adb9d249f18a427e545ac6b159933f08cb"
+    }
+  ],
+  "video": {
+    "file": "twitch-plays-fnaf-grid.mp4",
+    "sha256": "c69d3c12029c8e574c854ea073ac9bd5b09887c5b74c0e72796bb12fe220476f",
+    "bytes": 2291633,
+    "durationSeconds": 20,
+    "width": 720,
+    "height": 1280,
+    "fps": 24,
+    "videoCodec": "h264",
+    "pixelFormat": "yuv420p",
+    "audioCodec": "aac",
+    "decodeErrors": 0,
+    "audio": "original procedural soundtrack; no narration",
+    "sceneSha256": "c9bddb45032d102dd693c9806e960980e752c15c676afc72b16e5b6968936103",
+    "rendererSha256": "a36a703c648be1dd951c9c229f4042df75078d30a0e61f00fcf3d6a93115cb5a",
+    "browser": {
+      "width": 720,
+      "height": 1280,
+      "frames": 480,
+      "fps": 24,
+      "problems": []
+    },
+    "simultaneousRuntimeClaim": false
+  },
+  "disclosure": "Real recompiled native game recordings replay local fixtures. The grid is edited from separate captures. Chat, pause and GPTPlays are an illustrative concept.",
+  "open": [
+    "native presented-frame pause",
+    "native audio freeze",
+    "live chat routing to native binaries",
+    "four simultaneous runtimes",
+    "Twitch connection",
+    "LLM decisions",
+    "retail encounter fidelity",
+    "full build on independent Linux host",
+    "amd64 build"
+  ],
+  "evidenceId": "crowd-four-game-demo-477ba7af90c60fc3"
+}

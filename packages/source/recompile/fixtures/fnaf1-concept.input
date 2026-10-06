@@ -1,0 +1,15 @@
+# Source-named menu and control centres; host only.
+3 200 downobj 0 btnNewGame.Active
+3 203 up 0
+3 260 downobj 0 btnYes.Active
+3 263 up 0
+5 180 downobj 0 door open left
+5 183 up 0
+5 360 downobj 0 door open left
+5 363 up 0
+5 500 downobj 0 door open right
+5 503 up 0
+5 650 downobj 0 door open right
+5 653 up 0
+5 800 downobj 0 monitorFlipTrigger.Active
+5 803 up 0

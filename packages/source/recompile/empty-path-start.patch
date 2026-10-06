@@ -1,0 +1,14 @@
+diff --git a/Chowdren/base/movement.cpp b/Chowdren/base/movement.cpp
+--- a/Chowdren/base/movement.cpp
++++ b/Chowdren/base/movement.cpp
+@@ -649,6 +649,10 @@ void PathMovement::start()
+ void PathMovement::start()
+ {
++    if (nodes.empty()) {
++        set_speed(0);
++        return;
++    }
+     if (current_node == -1)
+         set_current_node(0);
+     else if (current_node == -2)
+         return;

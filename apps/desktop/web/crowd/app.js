@@ -9,16 +9,15 @@ const tiles = new Map();
 let selected = 'FNAF2', status = null, pending = 0, polling = false;
 let latestEvents = [], frameSequence = 0;
 
-for (const [index, game] of games.entries()) {
+for (const game of games) {
   const tile = document.createElement('article');
   tile.className = 'tile'; tile.dataset.game = game;
-  tile.innerHTML = `<header class="tile-header"><div class="tile-title"><span class="tile-index">0${index + 1}</span><h2>${game}</h2></div><span class="tile-hour">— AM</span></header>
-    <div class="screen"><div class="no-signal"><span class="signal-number">0${index + 1}</span><span class="signal-caption">NO GAME SIGNAL</span></div><img alt="${game} runtime frame" hidden><span class="screen-corner">NO SIGNAL</span>
-      <div class="overlay"><strong class="overlay-title">--- OFFLINE ---</strong><span class="overlay-subtitle">Awaiting runtime</span><span class="overlay-detail">${game} / NOT CONNECTED</span></div></div>
-    <div class="tile-footer"><span class="tile-status">OFFLINE</span><div class="tile-buttons"><button data-action="pause" disabled>Ⅱ Pause</button><button data-action="resume" disabled>▷ Resume</button></div></div>
+  tile.innerHTML = `<header class="tile-header"><h2><button data-select="${game}" aria-pressed="false" aria-label="Select ${game}">${game}</button></h2><span class="tile-hour">— AM</span></header>
+    <div class="screen"><div class="no-signal"></div><img alt="${game} runtime frame" hidden><span class="screen-corner">NO SIGNAL</span>
+      <div class="overlay"><strong class="overlay-title">--- OFFLINE ---</strong><span class="overlay-subtitle">Awaiting runtime</span></div></div>
+    <div class="tile-footer"><span class="tile-status">OFFLINE</span><div class="tile-buttons"><button data-action="pause" disabled>Pause</button><button data-action="resume" disabled>Resume</button></div></div>
     <div class="tile-last">No command applied</div>`;
   tile.querySelectorAll('[data-action]').forEach(button => button.addEventListener('click', () => send(`${game} ${button.dataset.action}`)));
-  tile.querySelector('.tile-header').addEventListener('click', () => select(game));
   byId('games').append(tile); tiles.set(game, tile);
 }
 
@@ -31,7 +30,7 @@ function select(game) {
 }
 
 function drawQuickActions() {
-  byId('quick-label').textContent = selected + ' · QUICK ACTIONS';
+  byId('quick-label').textContent = selected;
   const tile = status?.tiles.find(tile => tile.game === selected);
   const container = byId('quick-actions'); container.replaceChildren();
   for (const action of suggestions[selected]) {
@@ -44,9 +43,8 @@ function drawQuickActions() {
 function render(next) {
   status = next;
   const online = next.tiles.filter(tile => !['OFFLINE', 'FAULT'].includes(tile.phase)).length;
-  byId('active-count').textContent = `${online} / 4 CONNECTED`;
-  byId('connection').textContent = 'LOCAL CONNECTION';
-  document.querySelector('.signal-dot').classList.add('connected');
+  byId('active-count').textContent = `${online} / 4`;
+  byId('connection').textContent = 'Local';
   document.querySelectorAll('[data-select]').forEach(button => { button.disabled = false; });
   byId('command').disabled = !online;
   document.querySelector('.send').disabled = !online;
@@ -74,8 +72,6 @@ function renderTile(info) {
   subtitle.textContent = terminal ? 'Attempt complete' : info.phase === 'OFFLINE' ? 'Awaiting runtime'
     : info.phase === 'FAULT' ? 'Awaiting operator' : info.phase === 'PAUSING' ? 'Awaiting acknowledgment'
       : info.manual || info.global ? 'Awaiting resume' : 'Awaiting input';
-  tile.querySelector('.overlay-detail').textContent = info.phase === 'OFFLINE' ? `${info.game} / NOT CONNECTED`
-    : `${info.game} / ROUND ${info.round}${info.global ? ' / GLOBAL HOLD' : ''}`;
   tile.querySelector('.tile-last').textContent = info.fault ?? info.lastAction ?? 'No command applied';
   tile.querySelector('.tile-last').title = info.fault ?? info.lastAction ?? '';
   for (const button of tile.querySelectorAll('[data-action]'))
@@ -135,8 +131,7 @@ async function poll() {
     if (!response.ok) throw new Error('Session unavailable');
     render(await response.json());
   } catch {
-    byId('connection').textContent = 'DISCONNECTED';
-    document.querySelector('.signal-dot').classList.remove('connected');
+    byId('connection').textContent = 'Disconnected';
     document.querySelectorAll('button').forEach(button => { button.disabled = true; });
     byId('command').disabled = true;
     for (const tile of tiles.values()) {

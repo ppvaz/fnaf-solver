@@ -1,0 +1,15 @@
+# Native object-centre inputs; chat illustration is separate.
+1 200 down 0 72 536
+1 203 up 0
+3 180 downobj 0 flip panel button
+3 183 up 0
+3 300 downobj 0 cam 11
+3 303 up 0
+3 360 downobj 0 musicButtonHitbox.Active
+3 540 up 0
+3 600 downobj 0 flip panel button
+3 603 up 0
+3 660 downobj 0 flip mask button
+3 663 up 0
+3 840 downobj 0 flip mask button
+3 843 up 0

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#0b0d0e">
+  <meta name="theme-color" content="#080808">
   <title>Twitch Plays FNaF</title>
   <link rel="stylesheet" href="./style.css">
   <script type="module" src="./app.js"></script>
@@ -11,33 +11,28 @@
 <body>
   <div class="shell">
     <header class="masthead">
-      <div class="brand"><span class="brand-mark" aria-hidden="true">◉</span><div><p class="eyebrow">FOUR GAMES. ONE CHAT.</p><h1>Twitch Plays <span>FNaF</span></h1></div></div>
-      <div class="session"><span class="signal-dot"></span><span id="connection">CONNECTING</span><span class="session-divider">/</span><span>LOCAL SESSION</span></div>
+      <h1>Twitch Plays FNaF</h1>
+      <div class="session"><span id="connection">Connecting</span><span id="active-count">0 / 4</span></div>
     </header>
-    <div class="session-bar"><p>CAN WE GET <strong>ALL FOUR TO 6 AM?</strong></p><span id="active-count">0 / 4 CONNECTED</span></div>
     <main class="workspace">
       <section class="games" id="games" aria-label="Four game views"></section>
       <aside class="console">
-        <div class="console-heading"><span class="eyebrow">CONTROL ROOM</span><span class="console-light" aria-hidden="true"></span></div>
-        <h2>Command channel</h2><p class="console-intro">Choose a game.<br>Make the next move together.</p>
-        <div class="destination" role="group" aria-label="Command destination">
-          <button data-select="FNAF1">01</button><button data-select="FNAF2" aria-pressed="true">02</button><button data-select="FNAF3">03</button><button data-select="FNAF4">04</button>
-        </div>
         <form id="command-form">
-          <label for="command">GAME + ACTION</label>
-          <div class="command-input"><span aria-hidden="true">&gt;</span><input id="command" name="command" value="FNAF2 wind 1s" autocomplete="off" spellcheck="false" maxlength="160" aria-describedby="command-help"></div>
-          <p id="command-help">The displayed round is attached when you send.</p>
-          <button class="send" type="submit">SEND COMMAND <span aria-hidden="true">↗</span></button>
+          <label for="command">Chat</label>
+          <input id="command" name="command" value="FNAF2 wind 1s" autocomplete="off" spellcheck="false" maxlength="160">
+          <button class="send" type="submit">Send</button>
         </form>
-        <p id="feedback" role="status" aria-live="polite">Awaiting runtime connections.</p>
-        <div class="quick-controls"><span class="eyebrow" id="quick-label">FNAF2 · QUICK ACTIONS</span><div id="quick-actions"></div></div>
-        <div class="global-controls"><span class="eyebrow">ALL GAMES</span><div><button id="pause-all">Ⅱ Pause all</button><button id="resume-all">▷ Resume all</button></div></div>
-        <div class="ledger-heading"><span class="eyebrow">SESSION LOG</span><span id="event-count">00</span></div>
-        <ol class="ledger" id="ledger"><li class="empty-log">Your first move starts here.</li></ol>
-        <p class="console-note">Local commands · direct input<br>Twitch chat is not connected.</p>
+        <p id="feedback" role="status" aria-live="polite">Awaiting runtime.</p>
+        <details>
+          <summary>Controls &amp; history</summary>
+          <div class="quick-controls"><span id="quick-label">FNAF2</span><div id="quick-actions"></div></div>
+          <div class="global-controls"><button id="pause-all">Pause all</button><button id="resume-all">Resume all</button></div>
+          <div class="ledger-heading"><span>History</span><span id="event-count">0</span></div>
+          <ol class="ledger" id="ledger"><li>No commands yet.</li></ol>
+        </details>
       </aside>
     </main>
-    <footer><span>AWAIT-INPUT MODE</span><span>Each game waits for its own next command.</span><span class="footer-code">TPF / 001</span></footer>
+    <footer>Local prototype · Twitch chat is not connected.</footer>
   </div>
 </body>
 </html>

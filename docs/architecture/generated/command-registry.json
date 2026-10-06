@@ -640,6 +640,18 @@
       "lifecycle": "supported"
     },
     {
+      "id": "targets.ts",
+      "invocation": "targets.ts",
+      "kind": "Source-owned local build targets: game package, converter config, characterized object/item XORs and selected runtime patches for FNaF 1-4, exported as `@sixam/source/recompile/targets`. The portable desktop builder records the selected game, decoder settings and patch hashes.",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "empty-path-start.patch",
+      "invocation": "empty-path-start.patch",
+      "kind": "Content-free FNaF 1 runtime correction: starting an empty PathMovement stops it before accessing node 0. The builder applies it to an external copy of `Chowdren/base`, preserving the prepared toolchain and the canonical mobile patch. C++ negative-control and nonempty start/restart regression run on macOS and Linux.",
+      "lifecycle": "supported"
+    },
+    {
       "id": "run-harness.sh",
       "invocation": "run-harness.sh",
       "kind": "Container wrapper with GL readiness checking and a process deadline that escalates to kill. Run from the external gamesrc directory.",
@@ -724,6 +736,18 @@
       "lifecycle": "supported"
     },
     {
+      "id": "fixtures/night1-concept.input",
+      "invocation": "fixtures/night1-concept.input",
+      "kind": "Host-only Continue navigation and named-instance monitor, CAM 11, music-box and mask contacts used in the 2026-10-05 concept video. The binary renders those transitions; chat, pause and GPTPlays in the edited video are illustrative (`docs/evidence/crowd-minimal-demo-20261005.json`). No device or native pause claim.",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "fixtures/fnaf1-concept.input",
+      "invocation": "fixtures/fnaf1-concept.input",
+      "kind": "Host-only named-instance New Game, confirmation, left/right door and monitor contacts for the four-game concept capture. Source's empty-path correction permits the office to initialize. No device or native pause claim.",
+      "lifecycle": "supported"
+    },
+    {
       "id": "fixtures/night7-dials20-5x2.input",
       "invocation": "fixtures/night7-dials20-5x2.input",
       "kind": "The all-20 Custom Night navigation on the corrected 5 x 2 portrait grid (binary `036076d3` on): portraits 4-9 toggled, then Ready. A dump before Ready reads all ten dials at 20.",
@@ -737,7 +761,7 @@
     },
     {
       "id": "npm",
-      "invocation": "npm run recompile:local -- --apk FILE --toolchain DIR --out DIR",
+      "invocation": "npm run recompile:local -- [--game fnaf1\\|fnaf2\\|fnaf3\\|fnaf4] [--image-workers 1\\|2] --apk FILE --toolchain DIR --out DIR",
       "kind": "host build",
       "lifecycle": "supported"
     },

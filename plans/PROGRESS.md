@@ -3503,3 +3503,86 @@ Node 22 affected tests and the committed k3 emit/campaign dry run passed;
 clean-commit CI lanes are required by `npm run push-gate` before publication.
 This implementation/evidence commit is consequential; this request's
 consequential:bookkeeping ratio is 1:0 upon creation.
+
+## 2026-10-05 — Minimal crowd interface and short concept video (S2/S6)
+
+Pedro requested a WhatsApp video covering Twitch Plays first and GPTPlays
+second, then rejected the crowded UI and asked for a minimalist presentation.
+The grid now emphasizes the four game views and one command field. Extra
+controls and history are collapsed; game selection is keyboard accessible.
+The per-game, manual and global hold rules and offline refusals still apply.
+
+Generated record
+[`crowd-minimal-demo-5085af2d91f9795c`](../docs/evidence/crowd-minimal-demo-20261005.json)
+retains the changed interface hashes, ten passing crowd tests and desktop/mobile
+browser observations: four tiles, collapsed controls, working game selection,
+disabled offline input, no horizontal overflow or JavaScript errors. This
+interface measurement is FIXTURE. No second host measurement was added;
+HTML/CSS/JavaScript introduce no operating-system dependency.
+
+The 20-second, 720x1280 H.264/AAC MP4 is retained externally, named by hash and
+size in that record. It presents Twitch Plays first and GPTPlays last, using
+an original procedural soundtrack and no narration. New MODEL_ONLY footage
+from the owned local recompile shows actual monitor, CAM 11, held music-box
+control and mask transitions under committed `fixtures/night1-concept.input`.
+The retained 2,100-update trace and bounded capture end with exit 0. Music-box
+counter measurement is UNKNOWN. The video's chat, pause and IA are explicitly
+illustrative editing; they do not demonstrate a live connection. No game
+assets, frames, generated C++, binary or MP4 enter Git.
+
+Open: native pause after presentation and audio freeze, the game-to-grid bridge,
+four simultaneous runtimes, Twitch/LLM connections and retail encounter fidelity.
+The earlier continuation of bridge qualification remains open; this delivery
+answers the user's intervening video and UI requests. S2/S6 remain open.
+Validation: Node 22 `npm ci`, affected gates, ten crowd tests, browser checks,
+full MP4 decode, and the committed k3 emit/campaign dry run passed. Clean-commit
+CI verification runs through `npm run push-gate` before publication. This
+interface and retained runtime-evidence commit is consequential; this request's
+consequential:bookkeeping ratio is 1:0 upon creation.
+
+## 2026-10-05 — Four native recompiles in the minimal concept video (S2/S6)
+
+Pedro asked to show the other games and to watch disk space. The local builder
+now selects Source's FNaF 1-4 decoder/config settings with `--game`, retaining
+FNaF 2 as default, and exposes one or two image workers. The owned FNaF 1,
+3 and 4 base APKs were extracted read-only from the observed wireless device
+under its exclusive lease, after capability inspection; no game inputs were
+sent to the phone. APKs, generated C++, assets and binaries remain external.
+
+Generated record
+[`crowd-four-game-demo-477ba7af90c60fc3`](../docs/evidence/crowd-four-game-demo-20261005.json)
+retains the three successful build records, their hashes, native capture traces
+and known negatives. FNaF 1 initially crashed at office initialization because
+PathMovement started with no nodes. The experiment proved a stop-before-access
+guard, matching the selected Android runtime methods. The production design
+applies Source's separate patch to a small external `Chowdren/base` overlay;
+the original prepared tree and canonical mobile patch are preserved. The
+production build matches all 2,300 experimental trace rows and encoded native
+video bytes, and the baseline's 1,309 complete rows before its truncated crash
+row. Native office updates: FNaF 1 962, FNaF 3 878, FNaF 4 1,159; all three
+bounded captures exited 0. These are MODEL_ONLY, not phone or fidelity claims.
+
+FNaF 4 conversion exceeded the 4 GiB Docker VM with two workers and again with
+one. A bounded research route using temporary 4 GiB swap completed at one
+worker. Its swap, container and volume were subsequently verified absent;
+existing swap and services were preserved. Only this session's failed FNaF 4
+intermediates and temporary debug image were removed. Their logs and configs
+remain. No general Docker prune was performed. Free host space was 6.3 GiB
+after compilation and video delivery.
+
+The new 20-second 720x1280 H.264/AAC video is 2,291,633 bytes and fully decodes
+without errors. Four separately captured native games appear in a minimal
+2x2 grid, with Twitch Plays first and GPTPlays last. The visible footer states
+that chat, pause and IA are illustrative and that the captures are separate.
+The video and its native sources stay outside Git, named by hashes in the
+record. This presentation is FIXTURE. The production/runtime-overlay tests
+pass on macOS and Linux arm64 in a container, including a C++ negative control,
+nonempty start/restart behavior and refusal of a drifted base.
+
+Open: native presented-frame pause/audio freeze, game-to-grid bridge, four
+simultaneous runtimes, Twitch/LLM connections, retail encounter fidelity,
+independent full Linux-host rebuild and amd64 build. S2/S6 remain open. Affected gates, ten crowd tests, type checking and documentation links passed.
+The committed k3 emit/campaign dry run passed without phone input; publication
+requires clean-commit `npm run push-gate`. The combined interface, native
+recompile and trace-comparison commit is consequential; this request's
+consequential:bookkeeping ratio is 1:0 upon creation.
