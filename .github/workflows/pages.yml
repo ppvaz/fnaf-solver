@@ -1,5 +1,8 @@
 name: Pages
 
+# Builds and tests the site on every run; publishes only while the repository
+# is public. Pedro chose to keep it private and skip publishing (2026-10-05).
+# Private repositories need no Pages configuration to validate the trainer.
 # Publishes https://ppvaz.github.io/fnaf-solver/. Until 2026-09-30 Pages was a
 # legacy branch build of master:/, which served the trainer's sources as
 # committed. The sources run under Node's type stripping (Pedro, 2026-09-30:
@@ -36,6 +39,7 @@ jobs:
         with:
           node-version: '22.23.2'
       - uses: actions/configure-pages@v5
+        if: ${{ !github.event.repository.private }}
       - name: The site as the branch build made it
         uses: actions/jekyll-build-pages@v1
         with:
@@ -58,10 +62,15 @@ jobs:
         timeout-minutes: 10
         run: node apps/trainer/test/pages.test.ts
       - uses: actions/upload-pages-artifact@v3
+        if: ${{ !github.event.repository.private }}
         with:
           path: ./_site
+      - name: Private repository publishing status
+        if: ${{ github.event.repository.private }}
+        run: echo 'Site built and browser-tested. Publishing skipped because the repository is private.' >> "$GITHUB_STEP_SUMMARY"
 
   deploy:
+    if: ${{ !github.event.repository.private }}
     needs: build
     runs-on: ubuntu-latest
     environment:

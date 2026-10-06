@@ -1,0 +1,186 @@
+{
+  "schema": "ci-workflow-verification-v1",
+  "step": "S6",
+  "claimLevel": "FIXTURE",
+  "recordedAt": "2026-10-06T02:26:12.696Z",
+  "commit": "4d2818d39943bddbc8bd5a0aae87d879a2910558",
+  "repository": {
+    "full_name": "ppvaz/fnaf-solver",
+    "has_pages": false,
+    "visibility": "private"
+  },
+  "failedRun": {
+    "conclusion": "failure",
+    "databaseId": 37397647617,
+    "headSha": "4d2818d39943bddbc8bd5a0aae87d879a2910558",
+    "jobs": [
+      {
+        "completedAt": "2026-10-06T01:09:10Z",
+        "conclusion": "failure",
+        "databaseId": 112057330183,
+        "name": "build",
+        "startedAt": "2026-10-06T01:08:39Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-10-06T01:08:42Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-10-06T01:08:40Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-06T01:08:59Z",
+            "conclusion": "success",
+            "name": "Pull ghcr.io/actions/jekyll-build-pages:v1.0.13",
+            "number": 2,
+            "startedAt": "2026-10-06T01:08:42Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-06T01:09:01Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@v5",
+            "number": 3,
+            "startedAt": "2026-10-06T01:08:59Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-06T01:09:08Z",
+            "conclusion": "success",
+            "name": "Run actions/setup-node@v5",
+            "number": 4,
+            "startedAt": "2026-10-06T01:09:01Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-06T01:09:08Z",
+            "conclusion": "failure",
+            "name": "Run actions/configure-pages@v5",
+            "number": 5,
+            "startedAt": "2026-10-06T01:09:08Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-06T01:09:08Z",
+            "conclusion": "skipped",
+            "name": "The site as the branch build made it",
+            "number": 6,
+            "startedAt": "2026-10-06T01:09:08Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-06T01:09:08Z",
+            "conclusion": "skipped",
+            "name": "Install the pinned workspace toolchain",
+            "number": 7,
+            "startedAt": "2026-10-06T01:09:08Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-06T01:09:08Z",
+            "conclusion": "skipped",
+            "name": "The trainer, bundled with its types stripped",
+            "number": 8,
+            "startedAt": "2026-10-06T01:09:08Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-06T01:09:08Z",
+            "conclusion": "skipped",
+            "name": "The published entry loads in a browser",
+            "number": 9,
+            "startedAt": "2026-10-06T01:09:08Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-06T01:09:08Z",
+            "conclusion": "skipped",
+            "name": "Run actions/upload-pages-artifact@v3",
+            "number": 10,
+            "startedAt": "2026-10-06T01:09:08Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-06T01:09:08Z",
+            "conclusion": "skipped",
+            "name": "Post Run actions/setup-node@v5",
+            "number": 19,
+            "startedAt": "2026-10-06T01:09:08Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-06T01:09:08Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v5",
+            "number": 20,
+            "startedAt": "2026-10-06T01:09:08Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-06T01:09:08Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 21,
+            "startedAt": "2026-10-06T01:09:08Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/ppvaz/fnaf-solver/actions/runs/37397647617/job/112057330183"
+      },
+      {
+        "completedAt": "2026-10-06T01:09:10Z",
+        "conclusion": "skipped",
+        "databaseId": 112057488675,
+        "name": "deploy",
+        "startedAt": "2026-10-06T01:09:11Z",
+        "status": "completed",
+        "steps": [],
+        "url": "https://github.com/ppvaz/fnaf-solver/actions/runs/37397647617/job/112057488675"
+      }
+    ],
+    "url": "https://github.com/ppvaz/fnaf-solver/actions/runs/37397647617"
+  },
+  "mainCI": {
+    "conclusion": "success",
+    "databaseId": 37397646954,
+    "headSha": "4d2818d39943bddbc8bd5a0aae87d879a2910558",
+    "url": "https://github.com/ppvaz/fnaf-solver/actions/runs/37397646954"
+  },
+  "diagnosis": "Pages configuration is absent on the private repository; configure-pages failed before build or browser checks.",
+  "decision": "Keep private; build/test and skip publishing (Pedro, 2026-10-05).",
+  "candidate": {
+    "file": ".github/workflows/pages.yml",
+    "sha256": "f6068cd34e3b43581eb832fd496ebf70e017e6ab15035ad0fee374cdf90ea502",
+    "behavior": "Jekyll build and trainer browser checks always run. Pages configuration, publication artifact and deploy run only for public repositories."
+  },
+  "verification": {
+    "command": "node apps/trainer/test/pages.test.ts",
+    "status": "PASS",
+    "passed": 6,
+    "failed": 0,
+    "outputSha256": "77bfbfd4afda32ffbd9a26a048ebcda5af3024136ecae7f4ee0451dac7790102",
+    "output": [
+      "✔ the entry loads at 390x844 (4007.145416ms)",
+      "✔ the entry loads at 640x360 (65.748958ms)",
+      "✔ the entry loads at 844x390 (78.605541ms)",
+      "✔ the first screen names what it teaches and labels every route statement (7.131584ms)",
+      "✔ a lesson runs on the bundled Sim and quits cleanly (3335.644583ms)",
+      "✔ no console error, exception, failed or 4xx request (2.481083ms)",
+      "ℹ tests 6",
+      "ℹ suites 0",
+      "ℹ pass 6",
+      "ℹ fail 0",
+      "ℹ cancelled 0",
+      "ℹ skipped 0",
+      "ℹ todo 0",
+      "ℹ duration_ms 12541.178958"
+    ]
+  },
+  "open": [
+    "Hosted build verification after push",
+    "S6 four-game solver completion; this CI repair makes no device or fidelity claim"
+  ],
+  "evidenceId": "ci-workflow-0d71a9371b3d07a1"
+}

@@ -3639,3 +3639,23 @@ committed k3 campaign dry run passed. Publication requires clean-commit
 default-model or binding changes require the slow census lane here. This
 retained native trace/pixel evidence commit is consequential; this request's
 consequential:bookkeeping ratio is 1:0 upon creation.
+
+## 2026-10-05 — Private Pages workflow keeps building and testing (S6)
+
+Pedro asked to fix the repeated red check and chose to keep the repository
+private, build/test, and skip publishing. The main CI run at 4d2818d3 passed;
+the Pages run failed at configure-pages because repository metadata reports
+private visibility and has_pages=false. The failure occurred before Jekyll,
+the trainer build and browser verification. The workflow now always builds
+and browser-tests while Pages configuration, upload and deployment run only
+for public repositories. A private run records its skipped publication in
+the Actions summary. No visibility or Pages settings were changed.
+
+Generated FIXTURE record [ci-workflow-0d71a9371b3d07a1](../docs/evidence/pages-private-ci-20261005.json)
+retains the GitHub run metadata, workflow hash and six passing local browser
+checks, including a running lesson and three phone viewports. npm ci passed.
+Hosted verification and the clean-commit push gate remain pending at record
+creation; their Actions and generated push-gate records carry the final verdict.
+S6 remains open; this is a publishing-workflow repair, with no device or
+fidelity claim. The session's consequential:bookkeeping commit ratio is 0:1
+upon creation; the workflow repair is bookkeeping supporting S6.
