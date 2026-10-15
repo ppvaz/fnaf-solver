@@ -1,0 +1,113 @@
+{
+  "schema": "evidence-record-v1",
+  "date": "2026-10-15",
+  "step": "ROADMAP S2",
+  "claimLevel": "DEVICE_MEASURED",
+  "fidelity": "rebuilt-runtime, in-process scheduled inputs, replayed clock",
+  "predeclaration": {
+    "sha256": "cd84cae31861cb45bebcbeba61552f8176b83fc7c83b7483f71596cbd41f3ceb",
+    "schema": "diagnostic-predeclaration-v1",
+    "date": "2026-10-15T22:44:29.835Z",
+    "step": "ROADMAP S2",
+    "claimLevel": "DEVICE_MEASURED",
+    "buildFlags": "Release -O3 -UNDEBUG; names and assertions enabled for research",
+    "fidelity": "rebuilt-runtime, in-process scheduled inputs, replayed clock",
+    "difficultyReadback": "ten named difficulty Counters at custom-night update 199 must equal 20",
+    "question": "Does the bounded research APK apply every due input on its requested update, and reproduce the host RNG/counter projection for the known monitor seam?",
+    "seed": 27656,
+    "officeBound": 6000,
+    "totalUpdateBound": 9000,
+    "wallDeadlineSeconds": 190,
+    "apkSha256": "06feae1de4128e8006890b22ddc163b1fec4687b3407c1bb32c33277dc9f65b8",
+    "librarySha256": "689083092757c128835f7dcc8df090fcdd119ed641c5f60a57bd3862c0437b18",
+    "runtimeSha256": "afc9ac628f2c39993b855918466c098f2abfe5192043212f31c6f0bf5b0f0337",
+    "toolSha256": "4ec7690e0b806122ae69d8e371fd6af4b2ab5a2c80a0845eb571957a11edad40",
+    "saveSha256": "c0f497ff64b6f757f943965a48d2795419fb934ddf54eb5f3dee000439484844",
+    "clockSha256": "8de9eb15750a828ab08082ad03428dc76bfdad267f59e5ee30f5c5817083e85c",
+    "handsetHash": "f88a35e75d347b6b",
+    "display": "Physical size: 1080x2400",
+    "power": {
+      "level": 46,
+      "temperatureTenthsC": 297,
+      "chargingRequired": true
+    },
+    "originalVenue": [
+      "versionCode=26 minSdk=23 targetSdk=36",
+      "versionName=2.0.7",
+      "lastUpdateTime=2026-10-15 18:44:02",
+      "firstInstallTime=2026-10-15 18:44:02"
+    ],
+    "variants": [
+      {
+        "name": "baseline",
+        "source": "replay-k3-late1-phonedt",
+        "host": "press+0-release+0",
+        "expectedUpdates": 6000,
+        "expectedNextFrame": null,
+        "inputSha256": "07194a95b7225ce7b6e6096d52d833bc69f45b9a85e8045fa1eb4df7a9ea447d"
+      },
+      {
+        "name": "press-one-update-earlier",
+        "source": "replay-k3-single-down0-5403",
+        "host": "press-1-release+0",
+        "expectedUpdates": 5934,
+        "expectedNextFrame": 4,
+        "inputSha256": "71544824ff9ca87266d65e8061e1aa128bee98c71ecc8dfb23af845e707c35b4"
+      }
+    ],
+    "rules": {
+      "application": "every applied row must name requested == applied; due input coverage checked independently",
+      "comparison": "first office visit, per-update RNG draw count/state and viewing/killer/danger Counters; other globals and wall-clock metadata excluded",
+      "stop": "stop after first failed control; no reliability or stock-equivalence claim"
+    }
+  },
+  "results": [
+    {
+      "name": "baseline",
+      "difficultyCounterNames": [
+        "cust_freddy AI",
+        "cust_bonie AI",
+        "cust_chica AI",
+        "cust_foxy AI",
+        "cust_BB AI",
+        "cust_toy freddy AI",
+        "cust_toy bonnie AI",
+        "cust_toy chica AI",
+        "cust_mangle AI",
+        "cust_golden freddy AI"
+      ],
+      "difficultyAtCustomUpdate199": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "objectMisses": [],
+      "officeUpdates": 6000,
+      "nextFrame": null,
+      "expectedUpdates": 6000,
+      "expectedNextFrame": null,
+      "applications": 168,
+      "expectedApplications": 168,
+      "lateApplications": 0,
+      "missingApplications": 0,
+      "firstDifference": null,
+      "traceSha256": "e2723dbc0a7ce4253ce2ed2355a6647b2fe3d249128d6b7f39adec3d775d4038",
+      "controlPassed": false
+    }
+  ],
+  "originalVenueUnchanged": true,
+  "verdict": "DIVERGENT_OR_INCOMPLETE",
+  "open": [
+    "This controls only the research APK in-process input boundary. External UHID landing on the original is unqualified.",
+    "Comparison covers RNG draws/state and three Counters, not complete runtime equivalence.",
+    "No new night win or reliability cohort was measured."
+  ],
+  "id": "frame-input-device-d1a0a9578d80563c"
+}

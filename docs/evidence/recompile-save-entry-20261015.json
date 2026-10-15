@@ -1,0 +1,247 @@
+{
+  "schema": "evidence-record-v1",
+  "date": "2026-10-15",
+  "step": "ROADMAP S2b",
+  "claimLevel": "MODEL_ONLY",
+  "exploratory": true,
+  "question": "Can an existing rebuilt FNaF 2 enter Custom Night through its normal menu using only a prepared save, while the same navigation remains at title with a fresh-progress save?",
+  "commit": "c7efa7d30f4b6109288e0bfe72a442f0fedd5f96",
+  "experiment": {
+    "toolSha256": "b511597de8e4fafb5add551439f77dd4354e9dace0b59e6ba00c80e7ddf14415",
+    "readbackToolSha256": "aa8f7c4bde6dfd51b604397c7ea1545a03e64c22ff55791f1331ae5d69b66a50",
+    "rawResultSha256": "e5eae91bb0bf4977fc2b28855b233a2b2a017f2ee9c46582bd80682e8b76fc08",
+    "readbackResultSha256": "6a743e2a221920cd9fe461f2a8b70021a59c04d20faf7c85372733e41f904147",
+    "container": "sha256:fbe0dbba726165327d3ffa7dafd48222f1534828d8d7ae522ffca0fcad822535",
+    "binary": "7ab9a755efa80383467a53f1914a7c23232341f39e6abda68b491a41a79c1737",
+    "assets": "7163d6283de2a10e2cd2842a1402ea6e724b52abc7b5efcb0fc227abe9ef78a8",
+    "runner": "dc67778a8cda68db72a40768eab8e3a51ba6290f2c0087d6cb4aa484cbbb4045",
+    "externalDirectory": "stock-fidelity-20261015",
+    "seed": 24850,
+    "officeUpdateBound": 120,
+    "totalUpdateBound": 2400,
+    "processDeadlineSeconds": 60
+  },
+  "variants": [
+    {
+      "name": "locked",
+      "exit": 0,
+      "signal": null,
+      "error": null,
+      "frames": [
+        0,
+        1
+      ],
+      "officeUpdates": 0,
+      "firstOffice": null,
+      "lastOffice": null,
+      "stop": [
+        "# stop total ticks 2400 frame 1 tick 2220"
+      ],
+      "inputs": {
+        "save": "0f37873becee49c3c53624e7820edf20bae3f907fe4cd0bd8c5f01923f2d84a0",
+        "input": "37144300ab0d7b396e5b50fd9f1b0779733bb8a2fac5fb96c7fef7dcafc6a150"
+      },
+      "outputs": {
+        "log": "9c19aaa33c10fad29ca718df8eea218f519d03779786449f710b2f6118a3cfd9",
+        "trace": "52b9728b63fb111281009d517f84ad2484c3027b7cebc92ad2d314ddd51829d1",
+        "saveAfter": "0f37873becee49c3c53624e7820edf20bae3f907fe4cd0bd8c5f01923f2d84a0"
+      }
+    },
+    {
+      "name": "unlocked",
+      "exit": 0,
+      "signal": null,
+      "error": null,
+      "frames": [
+        0,
+        1,
+        12,
+        2,
+        7,
+        3
+      ],
+      "officeUpdates": 120,
+      "firstOffice": [
+        3,
+        0,
+        2,
+        30314,
+        16.6667,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2.0419,
+        1.33333,
+        0,
+        1,
+        85,
+        8,
+        0,
+        0,
+        0,
+        120,
+        1,
+        1,
+        0,
+        0,
+        0
+      ],
+      "lastOffice": [
+        3,
+        119,
+        48,
+        46930,
+        2000,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2.0419,
+        1.33333,
+        0,
+        1,
+        85,
+        8,
+        0,
+        0,
+        0,
+        120,
+        1,
+        1,
+        0,
+        0,
+        0
+      ],
+      "stop": [
+        "# stop target frame 3 ticks 120 total 927"
+      ],
+      "inputs": {
+        "save": "c0f497ff64b6f757f943965a48d2795419fb934ddf54eb5f3dee000439484844",
+        "input": "37144300ab0d7b396e5b50fd9f1b0779733bb8a2fac5fb96c7fef7dcafc6a150"
+      },
+      "outputs": {
+        "log": "421b224c4e639d2bd154406ae7ab5f8d14f76bad00a4800a92061a1ca5f04fcb",
+        "trace": "42900dd93218adfd7f5c79aba09be31bbf7982f1f9ee5b89dd09480a1da1bf32",
+        "saveAfter": "c0f497ff64b6f757f943965a48d2795419fb934ddf54eb5f3dee000439484844"
+      }
+    }
+  ],
+  "repeat": [
+    {
+      "name": "unlocked-dial-readback",
+      "exit": 0,
+      "signal": null,
+      "error": null,
+      "frames": [
+        0,
+        1,
+        12,
+        2,
+        7,
+        3
+      ],
+      "officeUpdates": 120,
+      "firstOffice": [
+        3,
+        0,
+        2,
+        30314,
+        16.6667,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2.04171,
+        1.33333,
+        0,
+        1,
+        85,
+        8,
+        0,
+        0,
+        0,
+        120,
+        1,
+        1,
+        0,
+        0,
+        0
+      ],
+      "lastOffice": [
+        3,
+        119,
+        48,
+        46930,
+        2000,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2.04171,
+        1.33333,
+        0,
+        1,
+        85,
+        8,
+        0,
+        0,
+        0,
+        120,
+        1,
+        1,
+        0,
+        0,
+        0
+      ],
+      "stop": [
+        "# stop target frame 3 ticks 120 total 927"
+      ],
+      "inputs": {
+        "save": "c0f497ff64b6f757f943965a48d2795419fb934ddf54eb5f3dee000439484844",
+        "input": "37144300ab0d7b396e5b50fd9f1b0779733bb8a2fac5fb96c7fef7dcafc6a150"
+      },
+      "outputs": {
+        "log": "4d0dbd325105444becdae5158e88cd8eed1876165de4ed2c4d2cd48aaa4cc5c9",
+        "trace": "e5cb4d98380332da081b22d50a8d0e7d425bc58fed4c770fe8dcdfedb99c3caa",
+        "saveAfter": "c0f497ff64b6f757f943965a48d2795419fb934ddf54eb5f3dee000439484844"
+      }
+    }
+  ],
+  "verdict": {
+    "savePreparedNightEntry": "SUPPORTED",
+    "customNightFrameVisited": true,
+    "difficultyDials": "UNKNOWN: the retained navigation requests all-20, but this probe did not read Counter values",
+    "stockFidelity": "UNKNOWN: no retail comparison performed",
+    "androidInstallation": "NOT_RUN",
+    "stockPackageModified": false,
+    "stockSaveModified": false
+  },
+  "open": [
+    "Qualify original-APK clock, random stream, object selection, touch acceptance, rendering and audio against the research runtime.",
+    "Verify the selected difficulty from game-owned Counter values before a 10/20 claim.",
+    "Repeat prepared-save entry on the separately packaged research APK under device preflight and lease.",
+    "The fresh original installation still needs ordinary progress before stock Custom Night observations; a research save does not unlock the original package."
+  ],
+  "id": "recompile-save-entry-23d2100f955f9e54"
+}

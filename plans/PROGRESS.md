@@ -3659,3 +3659,104 @@ creation; their Actions and generated push-gate records carry the final verdict.
 S6 remains open; this is a publishing-workflow repair, with no device or
 fidelity claim. The session's consequential:bookkeeping commit ratio is 0:1
 upon creation; the workflow repair is bookkeeping supporting S6.
+
+## 2026-10-15 — Prepared-save entry and stock-fidelity investigation (S2)
+
+Pedro reported another fresh original installation and requested a separate
+research APK with programmatic night access and stock fidelity. This is research:
+first separate menu/progress preparation from runtime equivalence. No phone
+installation, stock-package change or stock-save write was performed.
+
+Generated MODEL_ONLY record
+[`recompile-save-entry-23d2100f955f9e54`](../docs/evidence/recompile-save-entry-20261015.json)
+retains two bounded runs of the existing pinned rebuild with identical binary,
+assets, seed and navigation. With `night1-before.ini`, navigation stays at the
+title through the 2,400-update bound. With `night7-before.ini`, it visits Custom
+Night and reaches 120 office updates, exiting 0 at the target bound. A third
+run repeats that entry while retaining a pre-Ready instance dump. Difficulty
+dials are UNKNOWN: the navigation requests all-20 but this probe does not read
+the Counter values. All raw traces, instance dumps and scripts stay external;
+the record carries their hashes. This demonstrates prepared-save entry on the
+host, not stock fidelity, an Android install or a 10/20 result.
+
+The tool survey follows Pedro's linked 2026-10-13 Akita article. Upstream REA
+documents static Android inspection through JADX and native inspection through
+Ghidra/Hopper/IDA; these can help audit the original runtime's semantics. The
+N64 recompiler translates MIPS instructions and is not a Fusion CCN backend.
+Tool selection does not establish behavioral equivalence. Existing S2 encounter
+disagreements and the separate research APK's device qualification remain open.
+The newly installed original still needs ordinary progress before a stock
+Custom Night comparison; preparing the research save does not unlock it.
+
+Pedro corrected the diagnosis: input landing already changes draw interleaving.
+The 2026-09-29 calibration replay reproduced two rebuilt-phone nights draw for
+draw (18,814 and 16,113 updates), and isolated a k3 death to one monitor release
+landing a tick late. The 2026-10-01
+[`s2-draw-sensitivity-ffde3e5ae1319d23`](../docs/evidence/full06-draw-sensitivity-20261001.json)
+also shows press landing moving draw interleaving in the production model.
+Those findings stand. The remaining retail comparison has uncertain actual
+acceptance times; its disagreement alone does not establish a faulty runtime.
+Prioritize measuring accepted input updates and seed/clock together before
+proposing another runtime repair. Research-save entry is already independent
+of proving full stock equivalence.
+
+The next control experiment should distinguish in-process frame-indexed input
+on the research APK from delivery through the stock game's physical input
+route. The existing rebuild runner anchors each frame's stream at update 1,
+then schedules delays at nominal 60 Hz and reads actual landings afterwards;
+this is not continuous feedback on every input. Start with the known k3
+monitor press/release seam, retain requested/polled/accepted updates separately,
+and test phase and load sensitivity before a new full night.
+
+Node 22.23.2 was found locally and `npm ci` passed with it. The clean-commit
+`push-gate` was started against existing HEAD c7efa7d3; its generated record
+owns the final verdict and does not validate these uncommitted evidence/log
+additions. No production, model or binding changes were made. No commits were
+created; consequential:bookkeeping commit ratio is not applicable.
+
+The push gate completed on c7efa7d3 with every fast lane passing, including
+the committed-winner campaign dry run. Its record reports CI Python
+dependencies and slow census gates unverified. Documentation links passed
+against the current working tree and the generated evidence ID was rechecked.
+
+### Landing seam diagnostic, same session
+
+Generated MODEL_ONLY record
+[`landing-seam-prefix-7c53ee7f8d19dff9`](../docs/evidence/landing-seam-prefix-20261015.json)
+predeclares and measures 25 independent press/release offsets (-2 through +2
+updates) at k3's known monitor seam, using the original pinned host binary,
+seed 27656 and retained phone clock. Both controls reproduce: the late-by-one
+baseline survives the 6,000-update prefix; advancing only its monitor press
+reproduces the death after 5,934 updates and first draw difference at tick
+5,415. This is a single-seed prefix diagnostic, not a night win, a strategy
+census, physical input control or stock equivalence. The first container
+launch failed on a nested bind mount before game execution; the revised run
+uses a symlink to the read-only asset mount, with that failed launch retained
+externally. No phone inputs were issued.
+
+Read-only device inspection confirms the original was freshly installed on
+2026-10-15 and the Companion, practice APK and rebuild APK are absent. The
+phone is connected and awake, but advertises no android.input.inputevent
+source. Restore and qualify the research instruments before a physical
+landing-control experiment. The matrix's generated record owns its cell
+outcomes; interpretation and a controller implementation remain open.
+
+### Bounded research APK entry control, same session
+
+Generated DEVICE_MEASURED record [`frame-input-device-eb005f4c896b089b`](../docs/evidence/frame-input-device-20261015.json) retains the separately named research APK experiment. Its title requests were processed on their requested updates, but the trace also records `# miss 1 200 btnCustomNight.Active`: no named-object press was created. Execution stayed in frames 0/1 and hit the 9,000-update bound without entering the office. The office comparator then refused with `office absent`; the second variant was not run. This is INCONCLUSIVE for office landing and host/device equivalence. Cleanup stopped the research process, removed its enable file and restored the original menu; a native Companion snapshot verifies Continue Night 1. Companion 17 is now installed and native capture works. Entry qualification remains open before repeating the office comparison; no new win, stock-fidelity or reliability claim follows.
+
+### Accepted demonstration milestones and entry diagnosis
+
+The seven demonstration milestones and their closing criteria now live in [ROADMAP](ROADMAP.md#demonstration-milestones-pedro-2026-10-15), mapped onto S1–S7. They cover night access, fidelity, input timing, reliability, prediction, alternative strategies and reproducibility.
+
+The initial device trace contains `# miss 1 200 btnCustomNight.Active`; the subsequent `# applied` line recorded dispatch through the harness even though object lookup failed. Android Release defines NDEBUG, which strips generated object names and makes the runtime name getter return Unspecified. Rebuilding the private research library with Release `-O3 -UNDEBUG` preserves names and also enables assertions; that is an explicitly instrumented rebuilt runtime, not stock equivalence.
+
+Generated DEVICE_MEASURED record [`frame-input-device-d1a0a9578d80563c`](../docs/evidence/frame-input-device-named-20261015.json) reaches 6,000 office updates, processes all 168 due office inputs on their requested updates without object misses, and matches the host projection of RNG draws/state and three Counters throughout that prefix. Its declared control still fails: the ten difficulty Counters were read before Ready at custom update 199, when they are zero. The retained trace shows them populated to 20 on release at update 203 and at office update 0. This observation motivates a new predeclared first-office-update readback; it does not retroactively change the failed control. An APK signing-key mismatch prevented an earlier update before game execution; the retry reused the existing research package key, without reinstalling the original.
+
+### First-office readback and bounded host/device projection match
+
+Generated DEVICE_MEASURED record [`frame-input-device-1118d03227cea78b`](../docs/evidence/frame-input-device-office-20261015.json) passes both newly predeclared controls at seed 27656, with replayed office clock and in-process scheduled inputs. Both entries read back all ten difficulty Counters as 20 on office update 0. The reference reaches its 6,000-update bound with all 168 due office rows applied on their requested updates; advancing only the known monitor press by one update reproduces the host transition to frame 4 after 5,934 office updates, with all 164 due rows applied on their requested updates. There are no object misses, late applications or missing due rows. Each entire measured prefix matches its host projection of RNG draw count/state and viewing, killer and danger Counters. An independent offline comparison re-derived both projections, difficulty readings, application timing, raw-trace hashes and the generated record identity.
+
+Custody remains external under `/home/pedro/fnaf-apks/landing-control-20261015/office-readback/`, alongside the declared scripts and raw logs; game assets, generated source, libraries and APKs are not committed. Cleanup force-stopped the research process, removed its enable file and relaunched the original. A native Companion snapshot verifies its menu at Continue Night 1; the original package version/install metadata compare unchanged.
+
+This advances M1/S2 with two controlled research-night entries. It does not close portable clean-install entry qualification, physical UHID acceptance, complete runtime equivalence, a new night win or reliability on the original. Next: design a repository-owned portable entry instrument from this experiment, then qualify external delivery against this in-process reference. npm ci, documentation links and the committed k3 campaign dry-run passed; the clean-commit push gate will own its final verdict. No model, winner or production controller changed.

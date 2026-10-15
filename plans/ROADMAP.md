@@ -36,6 +36,33 @@ searched.
 
 ## The path
 
+### Demonstration milestones (Pedro, 2026-10-15)
+
+The objective is reliable control of FNaF 2 10/20, with reproducible
+explanations of decisions, timing margins and alternative winning strategies.
+These milestones refine the existing S1–S7 path without replacing its closing
+conditions. Each requires retained evidence, declared constraints and measured
+uncertainty. MODEL_ONLY and DEVICE_MEASURED remain separate claims.
+
+| Milestone | Capability and closing demonstration | Existing path |
+| --- | --- | --- |
+| M1 — Programmatic night access | Enter the requested night in the separate research APK from a documented installation and known initial state, repeatedly, without hidden manual preparation. Read back the requested difficulty settings. | S2 |
+| M2 — Establish fidelity boundaries | Compare original, recompile and simulator on declared controlled encounters. Retain matching traces, locate divergences and state the measured scope of equivalence. | S2 |
+| M3 — Input timing control | Measure accepted input timing, variation and required margins on the phone. Demonstrate planned versus accepted commands within declared tolerances, with synchronization or correction where needed. | S2, S4 |
+| M4 — Win reliably | Integrate observation, decision and execution. Evaluate 10/20 on the original under a predeclared protocol, report uncertainty and preserve failures for attribution. Individual wins do not establish reliability. | S1, S3, S4 |
+| M5 — Explain and anticipate | Register predictions before events and score them against observations. Test counterfactuals in the laboratory and distinguish prediction, observation and UNKNOWN. | S2, S3, S5 |
+| M6 — Alternative strategies and restrictions | Demonstrate distinct winning styles or restrictions: fewer actions, deliberate pauses or an advantage conceded to the game. Measure each style's cost, feasible conditions and failure boundaries before presenting it as available freedom. | S3, S4, S5 |
+| M7 — Reproducible demonstration | Show predictions, timing margins, accepted actions and outcomes with their explanations. Link claims to code and evidence; another person can reproduce the demonstration from repository instructions and legitimately obtained game inputs. | S5, S6, S7 |
+
+The dependency is reproduction → comparison → control → reliable strategies →
+reproducible demonstration. Presentation follows measured capabilities.
+M1/S2's [device entry control](../docs/evidence/frame-input-device-office-20261015.json)
+now enters 10/20 twice and matches the declared host projections at one seed.
+The [initial attempt](../docs/evidence/frame-input-device-20261015.json) stayed
+in the menu and remains retained. A portable entry instrument and clean-install
+qualification remain open for M1; external input acceptance on the original
+and broader equivalence remain open for M2/M3.
+
 The order below is the dependency order, not a calendar. Each step names what
 closes it and the artifact that closes it. That artifact is what makes a commit
 consequential. The "stands" line is a snapshot taken on 2026-09-25. **Trust the
