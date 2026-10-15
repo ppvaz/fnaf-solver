@@ -1,0 +1,703 @@
+{
+  "schema": "evidence-record-v1",
+  "date": "2026-10-15",
+  "step": "ROADMAP S2 / M3",
+  "claimLevel": "DEVICE_MEASURED",
+  "fidelity": "rebuilt-runtime; ordinary phone clock; external primary-pointer HID; one Night 1 monitor contact",
+  "externalRoot": "/home/pedro/fnaf-apks/external-landing-20261015",
+  "preparation": {
+    "schema": "research-landing-preparation-v1",
+    "date": "2026-10-15T23:30:41.882Z",
+    "step": "M3/S2",
+    "claimLevel": "DEVICE_MEASURED",
+    "package": "org.fnaf2frameprobe.play",
+    "apkSha256": "7426e3ba7dcc50f1b39fe83a2063172256c8a0ce220cc930d2a1211b746e3ac1",
+    "handsetHash": "f88a35e75d347b6b",
+    "localProfile": {
+      "source": "/home/pedro/Projects/fnaf2-1020/tools/device/local-profile.json",
+      "sha256": "5375c2ee793ade231f251e036230a104f9155368c1e165584477dfa94635c89f"
+    },
+    "geometryProfile": {
+      "path": "packages/play/profiles/fnaf2/moto-g56/hid-mediaprojection.json",
+      "sha256": "f7c3eb948ffd041f52c5d515978686690eba90856b9d9ec5d8dd161b2e4b1c42"
+    },
+    "capabilities": {
+      "androidRelease": "16",
+      "sdk": "36",
+      "model": "moto g56 5G",
+      "displayGeometry": "1080x2400",
+      "hidBinary": true,
+      "screenrecord": true,
+      "perfettoDataSources": [
+        "android.game_interventions",
+        "android.gpu.memory",
+        "android.heapprofd",
+        "android.inputmethod",
+        "android.java_hprof",
+        "android.java_hprof.oom",
+        "android.kernel_wakelocks",
+        "android.log",
+        "android.packages_list",
+        "android.polled_state",
+        "android.power",
+        "android.protolog",
+        "android.sdk_sysprop_guard",
+        "android.statsd",
+        "android.surfaceflinger.frame",
+        "android.surfaceflinger.frametimeline",
+        "android.surfaceflinger.layers",
+        "android.system_property",
+        "linux.ftrace",
+        "linux.inode_file_map",
+        "linux.perf",
+        "linux.process_stats",
+        "linux.sys_stats",
+        "linux.sysfs_power",
+        "linux.system_info",
+        "track_event"
+      ],
+      "cueHelper": "versionName=0.2.1",
+      "targetInstalled": true
+    },
+    "power": {
+      "temperatureTenthsC": 312,
+      "charging": true
+    },
+    "saveSha256": "0f37873becee49c3c53624e7820edf20bae3f907fe4cd0bd8c5f01923f2d84a0",
+    "mode": "ordinary research play; replay enable file removed",
+    "session": "research-landing-20261015",
+    "toolSha256": "f139603a93d2c2a9b49cb4a127e88a2be937d8bfe06d5986b95c18f23d48f1de"
+  },
+  "predeclaration": {
+    "schema": "research-external-contact-v1",
+    "date": "2026-10-15T23:33:15.656Z",
+    "step": "M3/S2",
+    "claimLevel": "DEVICE_MEASURED",
+    "phase": "single monitor raise on research Night 1",
+    "point": {
+      "x": 1780,
+      "y": 995
+    },
+    "contactMs": 160,
+    "coordinateWitness": {
+      "path": "/home/pedro/fnaf-apks/explore/research-landing-20261015/0004-research-office.png",
+      "sha256": "015497b958f326bfa03d39ea372803739cefdef9693a34b30d6880204d0727c7"
+    },
+    "profile": {
+      "path": "/home/pedro/Projects/fnaf2-1020/packages/play/profiles/fnaf2/moto-g56/hid-mediaprojection.json",
+      "sha256": "f7c3eb948ffd041f52c5d515978686690eba90856b9d9ec5d8dd161b2e4b1c42"
+    },
+    "runner": {
+      "path": "packages/play/bin/phone/explore-step.ts",
+      "sha256": "4fa0275e20a20223cdbdfda83a73110ababe9f02ee565ffeb94731ea9ce185ac"
+    },
+    "baseline": [
+      {
+        "u": 8939,
+        "f": 3,
+        "fu": 4339,
+        "ev": 1,
+        "t0": 195609152569966,
+        "tp": 195609152621427,
+        "te": 195609153847504,
+        "dt": 0.015879308,
+        "tu": 48,
+        "rd": 1965,
+        "rs": 37809,
+        "m": 0,
+        "ts": 195609160843581
+      },
+      {
+        "u": 8940,
+        "f": 3,
+        "fu": 4340,
+        "ev": 1,
+        "t0": 195609169381735,
+        "tp": 195609169427812,
+        "te": 195609170389427,
+        "dt": 0.017502769,
+        "tu": 53,
+        "rd": 1965,
+        "rs": 37809,
+        "m": 0,
+        "ts": 195609177038581
+      }
+    ],
+    "expected": "one SDL down/up pair, one polled down/up pair on office updates, monitor view reaches 11; missing measurements remain UNKNOWN",
+    "wallDeadlineSeconds": 50,
+    "clockScope": "SDL monotonic timestamps and calibration poll/update timestamps; host-to-device latency not inferred"
+  },
+  "contact": {
+    "schema": "research-calib-contact-v1",
+    "step": "M3/S2",
+    "claimLevel": "DEVICE_MEASURED",
+    "inputs": [
+      {
+        "path": "/home/pedro/fnaf-apks/external-landing-20261015/calib/calib-updates.jsonl",
+        "sha256": "575c520c9c935c1c80cbc6855fc121db37b6ed4a50b7fcab7e1cbdb440249c69",
+        "ignoredPartialTail": false
+      },
+      {
+        "path": "/home/pedro/fnaf-apks/external-landing-20261015/calib/calib-input.jsonl",
+        "sha256": "4cc7afa68070024915e73ee32611a0a2beff84cfc106792d533aa628f426e42a",
+        "ignoredPartialTail": false
+      },
+      {
+        "path": "/home/pedro/fnaf-apks/external-landing-20261015/calib/practice-state.jsonl",
+        "sha256": "fce87a2069f95ca626a7970b4eabc3784bd0a86b243bf545d7b53cc10f18857f",
+        "ignoredPartialTail": true
+      }
+    ],
+    "result": {
+      "status": "MEASURED",
+      "scope": "one primary-pointer monitor raise; research runtime; first office visit",
+      "officeUpdates": 4640,
+      "edges": [
+        {
+          "edge": "down",
+          "officeUpdate": 4416,
+          "harnessTick": 4415,
+          "globalUpdate": 9016,
+          "receiptReportedUpdate": 9015,
+          "sdlReceiptMonoNs": 195610432938966,
+          "pollEndMonoNs": 195610435651504,
+          "eventsEndMonoNs": 195610436147273,
+          "nativePoint": {
+            "x": 1780,
+            "y": 994
+          },
+          "receiptToPollMs": 2.712538,
+          "receiptToEventsEndMs": 3.208307
+        },
+        {
+          "edge": "up",
+          "officeUpdate": 4425,
+          "harnessTick": 4424,
+          "globalUpdate": 9025,
+          "receiptReportedUpdate": 9024,
+          "sdlReceiptMonoNs": 195610571177966,
+          "pollEndMonoNs": 195610584993658,
+          "eventsEndMonoNs": 195610585273427,
+          "nativePoint": {
+            "x": 1780,
+            "y": 994
+          },
+          "receiptToPollMs": 13.815692,
+          "receiptToEventsEndMs": 14.095461
+        }
+      ],
+      "heldUpdates": 9,
+      "effect": {
+        "stateUpdate": 4428,
+        "camera": 9,
+        "updatesAfterPress": 12,
+        "sdlEventToStateMs": 202
+      },
+      "hostToDeviceLatency": "UNKNOWN",
+      "requestedUpdateAccuracy": "NOT_TESTED"
+    },
+    "id": "calib-contact-c9f769310000d376"
+  },
+  "predeclaredCameraExpectation": {
+    "expected": 11,
+    "observed": 9,
+    "passed": false,
+    "explanation": "Night 1 opens Show Stage, camera 9; the declared camera 11 expectation was incorrect. The monitor-raise observation is retained separately."
+  },
+  "hostReplay": {
+    "claimLevel": "MODEL_ONLY",
+    "predeclaration": {
+      "schema": "diagnostic-predeclaration-v1",
+      "date": "2026-10-15T23:36:17.208Z",
+      "step": "M3/S2",
+      "claimLevel": "MODEL_ONLY",
+      "question": "Does the pinned host reproduce the research phone prefix using its measured seed, clock and externally delivered monitor press/release updates?",
+      "seed": 34176,
+      "officeBound": 4640,
+      "totalBound": 6640,
+      "deadlineSeconds": 60,
+      "scope": "RNG draws/state and viewing/danger Counters; one externally delivered contact on research Night 1; no reliability or original-game claim",
+      "inputs": {
+        "binary": "66d6e2f6b23f9af9c967f06337b55dd6afec9b2c27e686cebd304ea03eafec95",
+        "assets": "d9cc45ffa293fc0e93a4cce22f0c1f0fe47330628885c4c521d97d556f5eaaaa",
+        "input": "f781d4f6a8857e9261de075aeaaff60c52814164845aab497d639460ca3cb87d",
+        "clock": "59aef3e299e8ed51b27da7a93e762a4982496637b127dd89e9af7ede82211874",
+        "save": "0f37873becee49c3c53624e7820edf20bae3f907fe4cd0bd8c5f01923f2d84a0",
+        "phoneUpdates": "575c520c9c935c1c80cbc6855fc121db37b6ed4a50b7fcab7e1cbdb440249c69",
+        "phoneInput": "4cc7afa68070024915e73ee32611a0a2beff84cfc106792d533aa628f426e42a",
+        "runner": "dc67778a8cda68db72a40768eab8e3a51ba6290f2c0087d6cb4aa484cbbb4045",
+        "tool": "ce1e23899a7aa483a8abc94aace9648481bda69e0abb9cab6662995aea3e81de",
+        "image": "sha256:fbe0dbba726165327d3ffa7dafd48222f1534828d8d7ae522ffca0fcad822535"
+      }
+    },
+    "comparison": {
+      "schema": "recompile-calib-replay-v1",
+      "step": "ROADMAP S2",
+      "claimLevel": "MODEL_ONLY",
+      "fidelity": "rebuilt-runtime",
+      "question": "Given the phone's seed, per-update dt and polled input updates, does the host harness reproduce the calibration build's office night draw for draw?",
+      "seed": 34176,
+      "inputsSha256": {
+        "calibUpdates": "575c520c9c935c1c80cbc6855fc121db37b6ed4a50b7fcab7e1cbdb440249c69",
+        "frametimes": "59aef3e299e8ed51b27da7a93e762a4982496637b127dd89e9af7ede82211874",
+        "runInput": "f781d4f6a8857e9261de075aeaaff60c52814164845aab497d639460ca3cb87d",
+        "trace": "e7fbf86684d121640d0efc7e742afe54861794a5ad673a20633a8f6706a7c9be"
+      },
+      "result": {
+        "compared": 4640,
+        "phoneUpdates": 4640,
+        "hostUpdates": 4640,
+        "agree": 4630,
+        "firstDivergence": {
+          "update": 3028,
+          "phone": {
+            "draws": 1372,
+            "state": 43792
+          },
+          "host": {
+            "draws": 1373,
+            "state": 59505
+          }
+        }
+      },
+      "evidenceId": "calib-replay-fad9681cf4f123e8"
+    },
+    "rngMismatches": [
+      {
+        "update": 3028,
+        "phone": {
+          "draws": 1372,
+          "state": 43792
+        },
+        "host": {
+          "draws": 1373,
+          "state": 59505
+        }
+      },
+      {
+        "update": 3156,
+        "phone": {
+          "draws": 1425,
+          "state": 5825
+        },
+        "host": {
+          "draws": 1427,
+          "state": 31817
+        }
+      },
+      {
+        "update": 3198,
+        "phone": {
+          "draws": 1443,
+          "state": 53897
+        },
+        "host": {
+          "draws": 1445,
+          "state": 47761
+        }
+      },
+      {
+        "update": 3300,
+        "phone": {
+          "draws": 1484,
+          "state": 61776
+        },
+        "host": {
+          "draws": 1500,
+          "state": 59664
+        }
+      },
+      {
+        "update": 3546,
+        "phone": {
+          "draws": 1600,
+          "state": 27776
+        },
+        "host": {
+          "draws": 1602,
+          "state": 3896
+        }
+      },
+      {
+        "update": 3600,
+        "phone": {
+          "draws": 1620,
+          "state": 16176
+        },
+        "host": {
+          "draws": 1636,
+          "state": 59120
+        }
+      },
+      {
+        "update": 4410,
+        "phone": {
+          "draws": 1992,
+          "state": 29280
+        },
+        "host": {
+          "draws": 1995,
+          "state": 52777
+        }
+      },
+      {
+        "update": 4458,
+        "phone": {
+          "draws": 2013,
+          "state": 33393
+        },
+        "host": {
+          "draws": 2015,
+          "state": 1785
+        }
+      },
+      {
+        "update": 4542,
+        "phone": {
+          "draws": 2058,
+          "state": 2584
+        },
+        "host": {
+          "draws": 2060,
+          "state": 2128
+        }
+      },
+      {
+        "update": 4614,
+        "phone": {
+          "draws": 2087,
+          "state": 54041
+        },
+        "host": {
+          "draws": 2089,
+          "state": 4129
+        }
+      }
+    ],
+    "contactWindow": {
+      "firstUpdate": 4415,
+      "lastUpdate": 4430,
+      "projection": "RNG draws/state, viewing and in danger Counters",
+      "matched": true,
+      "rows": [
+        {
+          "update": 4415,
+          "phone": {
+            "draws": 1995,
+            "state": 52777,
+            "camera": 0,
+            "danger": 0
+          },
+          "host": {
+            "draws": 1995,
+            "state": 52777,
+            "camera": 0,
+            "danger": 0
+          }
+        },
+        {
+          "update": 4416,
+          "phone": {
+            "draws": 1995,
+            "state": 52777,
+            "camera": 0,
+            "danger": 0
+          },
+          "host": {
+            "draws": 1995,
+            "state": 52777,
+            "camera": 0,
+            "danger": 0
+          }
+        },
+        {
+          "update": 4417,
+          "phone": {
+            "draws": 1997,
+            "state": 59441,
+            "camera": 0,
+            "danger": 0
+          },
+          "host": {
+            "draws": 1997,
+            "state": 59441,
+            "camera": 0,
+            "danger": 0
+          }
+        },
+        {
+          "update": 4418,
+          "phone": {
+            "draws": 1997,
+            "state": 59441,
+            "camera": 0,
+            "danger": 0
+          },
+          "host": {
+            "draws": 1997,
+            "state": 59441,
+            "camera": 0,
+            "danger": 0
+          }
+        },
+        {
+          "update": 4419,
+          "phone": {
+            "draws": 1997,
+            "state": 59441,
+            "camera": 0,
+            "danger": 0
+          },
+          "host": {
+            "draws": 1997,
+            "state": 59441,
+            "camera": 0,
+            "danger": 0
+          }
+        },
+        {
+          "update": 4420,
+          "phone": {
+            "draws": 1997,
+            "state": 59441,
+            "camera": 0,
+            "danger": 0
+          },
+          "host": {
+            "draws": 1997,
+            "state": 59441,
+            "camera": 0,
+            "danger": 0
+          }
+        },
+        {
+          "update": 4421,
+          "phone": {
+            "draws": 1997,
+            "state": 59441,
+            "camera": 0,
+            "danger": 0
+          },
+          "host": {
+            "draws": 1997,
+            "state": 59441,
+            "camera": 0,
+            "danger": 0
+          }
+        },
+        {
+          "update": 4422,
+          "phone": {
+            "draws": 1997,
+            "state": 59441,
+            "camera": 0,
+            "danger": 0
+          },
+          "host": {
+            "draws": 1997,
+            "state": 59441,
+            "camera": 0,
+            "danger": 0
+          }
+        },
+        {
+          "update": 4423,
+          "phone": {
+            "draws": 1999,
+            "state": 39097,
+            "camera": 0,
+            "danger": 0
+          },
+          "host": {
+            "draws": 1999,
+            "state": 39097,
+            "camera": 0,
+            "danger": 0
+          }
+        },
+        {
+          "update": 4424,
+          "phone": {
+            "draws": 1999,
+            "state": 39097,
+            "camera": 0,
+            "danger": 0
+          },
+          "host": {
+            "draws": 1999,
+            "state": 39097,
+            "camera": 0,
+            "danger": 0
+          }
+        },
+        {
+          "update": 4425,
+          "phone": {
+            "draws": 1999,
+            "state": 39097,
+            "camera": 0,
+            "danger": 0
+          },
+          "host": {
+            "draws": 1999,
+            "state": 39097,
+            "camera": 0,
+            "danger": 0
+          }
+        },
+        {
+          "update": 4426,
+          "phone": {
+            "draws": 1999,
+            "state": 39097,
+            "camera": 0,
+            "danger": 0
+          },
+          "host": {
+            "draws": 1999,
+            "state": 39097,
+            "camera": 0,
+            "danger": 0
+          }
+        },
+        {
+          "update": 4427,
+          "phone": {
+            "draws": 1999,
+            "state": 39097,
+            "camera": 0,
+            "danger": 0
+          },
+          "host": {
+            "draws": 1999,
+            "state": 39097,
+            "camera": 0,
+            "danger": 0
+          }
+        },
+        {
+          "update": 4428,
+          "phone": {
+            "draws": 2001,
+            "state": 10177,
+            "camera": 9,
+            "danger": 0
+          },
+          "host": {
+            "draws": 2001,
+            "state": 10177,
+            "camera": 9,
+            "danger": 0
+          }
+        },
+        {
+          "update": 4429,
+          "phone": {
+            "draws": 2001,
+            "state": 10177,
+            "camera": 9,
+            "danger": 0
+          },
+          "host": {
+            "draws": 2001,
+            "state": 10177,
+            "camera": 9,
+            "danger": 0
+          }
+        },
+        {
+          "update": 4430,
+          "phone": {
+            "draws": 2001,
+            "state": 10177,
+            "camera": 9,
+            "danger": 0
+          },
+          "host": {
+            "draws": 2001,
+            "state": 10177,
+            "camera": 9,
+            "danger": 0
+          }
+        }
+      ]
+    },
+    "cameraCompared": 4640,
+    "cameraDivergenceUpdates": [],
+    "fullPrefixEquivalent": false,
+    "divergenceCause": "UNKNOWN"
+  },
+  "cleanup": {
+    "researchStopped": true,
+    "originalSnapshotSha256": "ebc285a7b2f700504ff8db87329274cf1b965fc3949a4e282436be758e6948e7",
+    "originalMenuVisuallyVerified": "Continue Night 1",
+    "originalSaveWritten": false
+  },
+  "sources": {
+    "packages/review/bin/recompile/calib-contact.ts": "534eeabc03d34ce96fe2dd15b8f8a0badc6bab9716a2aaa7fbad5bd0299747fe",
+    "packages/play/bin/phone/explore-step.ts": "4fa0275e20a20223cdbdfda83a73110ababe9f02ee565ffeb94731ea9ce185ac"
+  },
+  "retained": [
+    {
+      "path": "prepare.mjs",
+      "sha256": "f139603a93d2c2a9b49cb4a127e88a2be937d8bfe06d5986b95c18f23d48f1de"
+    },
+    {
+      "path": "continue.mjs",
+      "sha256": "11847a55bb2eda9bbbefaf6defc00623b93ef9683a15afd25640af314ba811b3"
+    },
+    {
+      "path": "monitor.mjs",
+      "sha256": "64e24af3b76b09e1cb759d78f64c6f2fbbd48a4542ae06b3f31a1cc2c8a658e1"
+    },
+    {
+      "path": "replay.mjs",
+      "sha256": "ce1e23899a7aa483a8abc94aace9648481bda69e0abb9cab6662995aea3e81de"
+    },
+    {
+      "path": "record.mjs",
+      "sha256": "90682cdf22a83d5d031426bd88568f6097f4ba4c4613793c6b28bd8275bc85ba"
+    },
+    {
+      "path": "preparation.json",
+      "sha256": "37517eb152ab5a35a1d5c37dc8269c794d6735235d8a817162f7f0ef694bd169"
+    },
+    {
+      "path": "continue-predeclaration.json",
+      "sha256": "66966bb0a839cc97a6aae11f0b1132acce6af775e6228a4fa163c0d3b7d0654e"
+    },
+    {
+      "path": "monitor-predeclaration.json",
+      "sha256": "9cefc38d65632919bcf0c24dcb1e94debbc07c83e9992b51d9c5fbfc82de08db"
+    },
+    {
+      "path": "device-status.json",
+      "sha256": "19ff8047931ac78485549942b27b4d9d247d508c010ed8425727621d5065890c"
+    },
+    {
+      "path": "host-predeclaration.json",
+      "sha256": "c2b681f6da5ce7c4a35d746a1b9c42d860e4517076317960d2810542192ca87c"
+    },
+    {
+      "path": "contact-ledger.json",
+      "sha256": "646baa94e809c08871b3b7d6441b799d46a601db28326315f0edb00340da59c1"
+    },
+    {
+      "path": "host-comparison.json",
+      "sha256": "b0cb931be873fbc6cedbaf355a3fd31effb7d2a89a6adfeb9e8b6161ba7c5fdf"
+    },
+    {
+      "path": "host-replay/trace",
+      "sha256": "e7fbf86684d121640d0efc7e742afe54861794a5ad673a20633a8f6706a7c9be"
+    }
+  ],
+  "verdict": "EXTERNAL_ACCEPTANCE_MEASURED; FULL_PREFIX_RNG_DIVERGENT; DECLARED_CAMERA_EXPECTATION_FAILED",
+  "open": [
+    "No update was targeted before sending; predictive landing control and error distribution remain untested.",
+    "Host-to-device latency is UNKNOWN. One contact is not a latency distribution.",
+    "Ten RNG divergences remain unexplained; this is not complete equivalence.",
+    "Research instrumentation, names and assertions can affect timing. No original/recompile stock-fidelity claim.",
+    "No new night win or reliability cohort."
+  ],
+  "id": "research-external-landing-21148b2354c0b219"
+}

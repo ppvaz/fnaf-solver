@@ -4676,6 +4676,16 @@
       ]
     },
     {
+      "file": "packages/review/bin/recompile/calib-contact.ts",
+      "imports": [
+        "@sixam/kernel",
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "packages/review/bin/recompile/compare-draw-trace.ts",
       "imports": [
         "../../../source/recompile/model-draw-trace.ts",
@@ -4715,6 +4725,14 @@
         "node:path",
         "node:test",
         "node:url"
+      ]
+    },
+    {
+      "file": "packages/review/bin/recompile/test-calib-contact.ts",
+      "imports": [
+        "./calib-contact.ts",
+        "node:assert/strict",
+        "node:test"
       ]
     },
     {

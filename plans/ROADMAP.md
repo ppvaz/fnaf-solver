@@ -65,6 +65,12 @@ starting with a newly installed research package. The operator workflow still
 needs integration; external input acceptance on the original and broader
 equivalence remain open for M2/M3.
 
+M3/S2's [external contact measurement](../docs/evidence/research-external-landing-20261015.json)
+now distinguishes SDL receipt, polled acceptance and camera response on the
+research APK with replay disabled. The host matches the contact window, but
+ten RNG updates differ elsewhere in the prefix. Predictive update targeting,
+repeatability and original/recompile equivalence remain open.
+
 The order below is the dependency order, not a calendar. Each step names what
 closes it and the artifact that closes it. That artifact is what makes a commit
 consequential. The "stands" line is a snapshot taken on 2026-09-25. **Trust the

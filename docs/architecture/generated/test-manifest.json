@@ -4203,6 +4203,24 @@
       }
     },
     {
+      "id": "packages/review/bin/recompile/test-calib-contact.ts",
+      "lane": "test:unit",
+      "owner": "package boundary",
+      "timeoutMs": 180000,
+      "timeoutSource": "tools/test.ts per-test watchdog",
+      "deterministic": true,
+      "determinismSignals": [],
+      "fixedSleeps": [],
+      "sharedResources": [],
+      "subprocesses": false,
+      "measurement": {
+        "status": "NOT_MEASURED",
+        "runs": 0,
+        "durationMs": null,
+        "flakiness": null
+      }
+    },
+    {
       "id": "packages/review/bin/recompile/test-child-diagnosis.ts",
       "lane": "test:unit",
       "owner": "package boundary",

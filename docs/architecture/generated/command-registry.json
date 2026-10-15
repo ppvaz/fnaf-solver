@@ -3148,6 +3148,18 @@
       "lifecycle": "supported"
     },
     {
+      "id": "packages/review/bin/recompile/calib-contact.ts",
+      "invocation": "packages/review/bin/recompile/calib-contact.ts --calib DIR --out FILE [--claim-level DEVICE_MEASURED\\|FIXTURE]",
+      "kind": "Read-only ledger for one external primary-pointer monitor raise in the first office visit. Separates SDL receipt tags, polled press/release updates and observed camera response; incomplete or ambiguous observations remain UNKNOWN. Defaults to FIXTURE; a device label requires explicit provenance selection. No predictive timing or original-game equivalence claim.",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/review/bin/recompile/test-calib-contact.ts",
+      "invocation": "packages/review/bin/recompile/test-calib-contact.ts",
+      "kind": "FIXTURE checks for receipt versus accepted update, monitor response, incomplete coverage, ambiguous events, secondary pointers and partial final log rows. In the unit lane.",
+      "lifecycle": "supported"
+    },
+    {
       "id": "packages/review/bin/recompile/audio-report.ts",
       "invocation": "packages/review/bin/recompile/audio-report.ts",
       "kind": "Report: `record` joins the probe, the generated `assets.h` and play sites, an audition run (`CHOWDREN_AUDIO_AUDITION`) and bounded game runs (`CHOWDREN_AUDIO_TRACE` plus openal-soft's wave backend) into a `recompile-audio-v1` record. Each sound gets its file, format, event ids, audition RMS/peak and play counts. `check` re-derives the totals and the evidenceId. No audio is written.",
