@@ -1,0 +1,181 @@
+{
+  "schema": "evidence-record-v1",
+  "date": "2026-10-15",
+  "step": "ROADMAP S2",
+  "claimLevel": "DEVICE_MEASURED",
+  "fidelity": "rebuilt-runtime, in-process scheduled inputs, replayed clock",
+  "predeclaration": {
+    "sha256": "ef342e893158a38b3290527af7a85c0ddfef8dc2d104774f7a6d0be668219774",
+    "schema": "diagnostic-predeclaration-v1",
+    "date": "2026-10-15T23:08:57.725Z",
+    "step": "ROADMAP S2",
+    "claimLevel": "DEVICE_MEASURED",
+    "buildFlags": "build-lib.sh --frame-probe; Release with -UNDEBUG; names and assertions enabled",
+    "fidelity": "rebuilt-runtime, in-process scheduled inputs, replayed clock",
+    "priorControl": "frame-input-device-1118d03227cea78b",
+    "preparation": "new research package; pm clear on only that package before each run; fixed prepared save/input/clock copied before launch",
+    "initialResearchPackagePresent": false,
+    "profile": {
+      "source": "/home/pedro/Projects/fnaf2-1020/tools/device/local-profile.json",
+      "sha256": "5375c2ee793ade231f251e036230a104f9155368c1e165584477dfa94635c89f"
+    },
+    "capabilitiesSha256": "2c0f8ec8ad79033ce636496dff56fe46a5d216de91b3639096062de4eb080e32",
+    "sourceFiles": {
+      "packages/source/recompile/android/apply-frame-probe.ts": "3f60e0504f7be4b4d73d9aa74fe0cb776c94c67001e9af7568465ed7b3e5ccbc",
+      "packages/source/recompile/android/frame-probe.h": "0c9e6637f9dd3e5373e80e8952c043aa5b184f7768ec2f579639938bafecac3c",
+      "packages/source/recompile/android/build-lib.sh": "714319236ff3dde3150f406f7d4f52d8c2f6a35eba88bacc4ca8d18f6b62fe49",
+      "packages/source/recompile/android/game-CMakeLists.txt": "ac6b8d0845319c85b5f35b2446e195c1dac66af48b26927dade31acc379d30b8"
+    },
+    "difficultyReadback": "ten named difficulty Counters at first office update 0 must equal 20",
+    "question": "Does the bounded research APK apply every due input on its requested update, and reproduce the host RNG/counter projection for the known monitor seam?",
+    "seed": 27656,
+    "officeBound": 6000,
+    "totalUpdateBound": 9000,
+    "wallDeadlineSeconds": 190,
+    "apkSha256": "7426e3ba7dcc50f1b39fe83a2063172256c8a0ce220cc930d2a1211b746e3ac1",
+    "librarySha256": "c82c14c5ea20df0a7f2e1130a701403c9dd90f6df5a698cea16b55e71f4a6415",
+    "runtimeSha256": "67d85e90f19c0ae650b2e2ae043cd361c10481ed5f42feda42f8dad681b16661",
+    "toolSha256": "bf70b3e4c0f10a9e6b797ed2905ec983ae7caa0a0de30404a77c09304d3cc978",
+    "saveSha256": "c0f497ff64b6f757f943965a48d2795419fb934ddf54eb5f3dee000439484844",
+    "clockSha256": "8de9eb15750a828ab08082ad03428dc76bfdad267f59e5ee30f5c5817083e85c",
+    "handsetHash": "f88a35e75d347b6b",
+    "display": "Physical size: 1080x2400",
+    "power": {
+      "level": 48,
+      "temperatureTenthsC": 308,
+      "chargingRequired": true
+    },
+    "originalVenue": [
+      "versionCode=26 minSdk=23 targetSdk=36",
+      "versionName=2.0.7",
+      "lastUpdateTime=2026-10-15 18:44:02",
+      "firstInstallTime=2026-10-15 18:44:02"
+    ],
+    "variants": [
+      {
+        "name": "baseline",
+        "source": "replay-k3-late1-phonedt",
+        "host": "press+0-release+0",
+        "expectedUpdates": 6000,
+        "expectedNextFrame": null,
+        "inputSha256": "07194a95b7225ce7b6e6096d52d833bc69f45b9a85e8045fa1eb4df7a9ea447d"
+      },
+      {
+        "name": "press-one-update-earlier",
+        "source": "replay-k3-single-down0-5403",
+        "host": "press-1-release+0",
+        "expectedUpdates": 5934,
+        "expectedNextFrame": 4,
+        "inputSha256": "71544824ff9ca87266d65e8061e1aa128bee98c71ecc8dfb23af845e707c35b4"
+      }
+    ],
+    "rules": {
+      "application": "every applied row must name requested == applied; due input coverage checked independently",
+      "comparison": "first office visit, per-update RNG draw count/state and viewing/killer/danger Counters; other globals and wall-clock metadata excluded",
+      "stop": "stop after first failed control; no reliability or stock-equivalence claim"
+    }
+  },
+  "results": [
+    {
+      "name": "baseline",
+      "researchDataClearedBeforeRun": true,
+      "difficultyCounterNames": [
+        "cust_freddy AI",
+        "cust_bonie AI",
+        "cust_chica AI",
+        "cust_foxy AI",
+        "cust_BB AI",
+        "cust_toy freddy AI",
+        "cust_toy bonnie AI",
+        "cust_toy chica AI",
+        "cust_mangle AI",
+        "cust_golden freddy AI"
+      ],
+      "difficultyAtOfficeUpdate0": [
+        20,
+        20,
+        20,
+        20,
+        20,
+        20,
+        20,
+        20,
+        20,
+        20
+      ],
+      "objectMisses": [],
+      "officeUpdates": 6000,
+      "nextFrame": null,
+      "expectedUpdates": 6000,
+      "expectedNextFrame": null,
+      "applications": 168,
+      "expectedApplications": 168,
+      "lateApplications": 0,
+      "missingApplications": 0,
+      "firstDifference": null,
+      "traceSha256": "22768ee45408ae77e93f31f86a1ea45b9f1034e4316588e859ae794deb8d49e6",
+      "controlPassed": true
+    },
+    {
+      "name": "press-one-update-earlier",
+      "researchDataClearedBeforeRun": true,
+      "difficultyCounterNames": [
+        "cust_freddy AI",
+        "cust_bonie AI",
+        "cust_chica AI",
+        "cust_foxy AI",
+        "cust_BB AI",
+        "cust_toy freddy AI",
+        "cust_toy bonnie AI",
+        "cust_toy chica AI",
+        "cust_mangle AI",
+        "cust_golden freddy AI"
+      ],
+      "difficultyAtOfficeUpdate0": [
+        20,
+        20,
+        20,
+        20,
+        20,
+        20,
+        20,
+        20,
+        20,
+        20
+      ],
+      "objectMisses": [],
+      "officeUpdates": 5934,
+      "nextFrame": 4,
+      "expectedUpdates": 5934,
+      "expectedNextFrame": 4,
+      "applications": 164,
+      "expectedApplications": 164,
+      "lateApplications": 0,
+      "missingApplications": 0,
+      "firstDifference": null,
+      "traceSha256": "08787da0b9a32cf2cbfb21801cb4832bc739f230229603c5eeadaed87086c6db",
+      "controlPassed": true
+    }
+  ],
+  "failure": null,
+  "disabledControl": {
+    "enableFileRemoved": true,
+    "observationSeconds": 5,
+    "traceUnchanged": true,
+    "snapshotSha256": "e012157b283e91e15905cd95aee6dda7da301a859d708d78c393209262988a50"
+  },
+  "cleanup": {
+    "researchStopped": true,
+    "enableFileRemoved": true,
+    "originalSnapshotSha256": "f5745790cf79bef8d946c8efad4ffcec6d17bc65e826dcc50babf4192af59bdc"
+  },
+  "externalRoot": "/home/pedro/fnaf-apks/frame-probe-portable-20261015",
+  "originalVenueUnchanged": true,
+  "verdict": "MATCHED_PROJECTION",
+  "open": [
+    "This controls only the research APK in-process input boundary. External UHID landing on the original is unqualified.",
+    "Comparison covers RNG draws/state and three Counters, not complete runtime equivalence.",
+    "No new night win or reliability cohort was measured."
+  ],
+  "id": "frame-probe-portable-device-11879bc4c6900725"
+}

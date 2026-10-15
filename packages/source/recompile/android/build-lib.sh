@@ -4,7 +4,7 @@
 # never distributed; see build-apk.sh.
 #
 #   packages/source/recompile/android/build-lib.sh --gamesrc DIR --chowdren DIR --sdl-src DIR \
-#       --sdl-lib DIR --openal-src DIR --openal-lib FILE --work DIR [--jobs N] [--gles1]
+#       --sdl-lib DIR --openal-src DIR --openal-lib FILE --work DIR [--jobs N] [--gles1] [--frame-probe]
 #
 # --gamesrc is the converter's output (its CMakeLists.txt names the sources),
 # --chowdren the Chowdren tree whose base/ the game was converted against
@@ -16,9 +16,11 @@
 # carries the generated game. Runs niced with -j2 unless --jobs says otherwise.
 # --gles1 builds the GL ES 1.1 target (game-CMakeLists.txt's CHOWDREN_GLES1)
 # in place of the default ES 2.0 one.
+# --frame-probe preserves object names and enables assertions for the bounded
+# research replay instrument installed by apply-frame-probe.ts.
 set -euo pipefail
 
-GAMESRC= CHOWDREN= SDL_SRC= SDL_LIB= OPENAL_SRC= OPENAL_LIB= WORK= JOBS=2 GLES1=OFF
+GAMESRC= CHOWDREN= SDL_SRC= SDL_LIB= OPENAL_SRC= OPENAL_LIB= WORK= JOBS=2 GLES1=OFF FRAME_PROBE=OFF
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --gamesrc) GAMESRC=$2; shift 2 ;;
@@ -30,6 +32,7 @@ while [[ $# -gt 0 ]]; do
         --work) WORK=$2; shift 2 ;;
         --jobs) JOBS=$2; shift 2 ;;
         --gles1) GLES1=ON; shift ;;
+        --frame-probe) FRAME_PROBE=ON; shift ;;
         *) echo "unknown argument: $1" >&2; exit 2 ;;
     esac
 done
@@ -45,6 +48,9 @@ for f in "$GAMESRC/CMakeLists.txt" "$CHOWDREN/base/run.cpp" "$SDL_SRC/include/SD
          "$OPENAL_SRC/include/AL/al.h" "$OPENAL_LIB"; do
     [[ -e "$f" ]] || { echo "missing: $f" >&2; exit 1; }
 done
+if [[ "$FRAME_PROBE" == ON && ! -f "$CHOWDREN/base/frame-probe.h" ]]; then
+    echo "missing frame-probe.h; first run apply-frame-probe.ts on the external runtime" >&2; exit 2
+fi
 NDK="${ANDROID_NDK_ROOT:-$HOME/.local/toolchains/android-sdk/ndk/26.3.11579264}"
 CMAKE="${CMAKE:-$HOME/.local/toolchains/cmake-3.28.6-linux-x86_64/bin/cmake}"
 [[ -x "$CMAKE" && -f "$NDK/build/cmake/android.toolchain.cmake" ]] || { echo "missing cmake or NDK" >&2; exit 1; }
@@ -58,7 +64,8 @@ ln -sfn "$(realpath "$OPENAL_SRC")" "$WORK/game/openal"
 
 "$CMAKE" -S "$WORK/game" -B "$WORK/build" -DCMAKE_TOOLCHAIN_FILE="$NDK/build/cmake/android.toolchain.cmake" \
     -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-24 -DANDROID_STL=c++_static -DCMAKE_BUILD_TYPE=Release \
-    -DSDL2_PREBUILT="$(realpath "$SDL_LIB")" -DOPENAL_LIB="$(realpath "$OPENAL_LIB")" -DCHOWDREN_GLES1="$GLES1" > "$WORK/build/cmake.log" 2>&1
+    -DSDL2_PREBUILT="$(realpath "$SDL_LIB")" -DOPENAL_LIB="$(realpath "$OPENAL_LIB")" -DCHOWDREN_GLES1="$GLES1" \
+    -DCHOWDREN_FRAME_PROBE="$FRAME_PROBE" > "$WORK/build/cmake.log" 2>&1
 nice -n 19 "$CMAKE" --build "$WORK/build" -j "$JOBS" > "$WORK/build/make.log" 2>&1
 LIB="$WORK/build/libmain.so"
 [[ -f "$LIB" ]] || { echo "no libmain.so; see $WORK/build/make.log" >&2; exit 1; }

@@ -42,7 +42,10 @@ directory (`/private/tmp/fnaf2-recompile.*` on the dev machine).
 | `android/gles2-renderer.patch` | Content-free runtime patch (Chowdren/base only), applied after `mmfparser-chowdren-mobile.patch`: the GL ES 2.0 renderer. The desktop shader layer (`desktop/glslshader.cpp`) on ES 2.0, the packed GLSL 1.20 shaders rewritten at load time as GLSL ES 1.00 (`base/gles2shader.h`), vertex attributes in place of client arrays, and `copy_rect` from the RGBA8 screen FBO; `-DUSE_GLES2=ON` builds the desktop game on a GLES2 context for host checks. The desktop GL build is unchanged (every change is under `CHOWDREN_USE_GLES2`). `git apply` in the anaconda tree; see `android/README.md`. With it, `android/game-CMakeLists.txt` builds GLES2 by default (`-DCHOWDREN_GLES1=ON` keeps the fixed-function 1.1 target) and `android/build-apk.sh` declares ES 2.0 when `libmain.so` links `libGLESv2.so`. |
 | `android/gles2-shader-check.cpp` | Check (host, no phone, no game content): compiles and links every `base/shaders` pair through `gles2shader.h` on a headless Mesa GL ES 2.0 context (EGL surfaceless), and renders the Perspective shader's PANORAMA branch over a generated texture against the Android runtime's formula. `gles2-shader-check SHADER_DIR [--dump DIR] > result.json`; exit 0 only if all link and PANORAMA matches. Build line in its header. |
 | `android/build-apk.sh`, `android/game-CMakeLists.txt` | Device action (host side, no phone): packages the host-built `libmain.so` + `libSDL2.so` and the pinned `Assets.dat` into a debug-signed APK with javac, d8, aapt2, zipalign and apksigner, no Gradle. `--libs DIR --sdl DIR --sdl-lib DIR --assets FILE --out FILE [--package org.fnaf<N>rebuild.play] [--label TEXT]` (default package `org.fnaf2rebuild.play`). The activity theme lays the window into the display cutout (`windowLayoutInDisplayCutoutMode=shortEdges`, API 28+). `REBUILD_KEYSTORE` names the debug key; reuse the installed build's key to keep the save. Refuses an `--out` inside the repository, because the APK carries game art. A personal research build for Pedro's own phone, never distributed (his 2026-09-27 exception to "no separate APKs"). |
-| `android/build-lib.sh` | Device action (host side, no phone): cross-builds one converted game's `libmain.so` for arm64-v8a with the NDK and `game-CMakeLists.txt`. `--gamesrc DIR --chowdren DIR --sdl-src DIR --sdl-lib DIR --openal-src DIR --openal-lib FILE --work DIR [--jobs N]` (niced, `-j2` by default). It refuses a work directory inside the repository. The build fails unless the static openal-soft is linked (`alcOpenDevice` defined) and its OpenSL ES backend imports `slCreateEngine` from `libOpenSLES.so`. |
+| `android/build-lib.sh` | Device action (host side, no phone): cross-builds one converted game's `libmain.so` for arm64-v8a with the NDK and `game-CMakeLists.txt`. `--gamesrc DIR --chowdren DIR --sdl-src DIR --sdl-lib DIR --openal-src DIR --openal-lib FILE --work DIR [--jobs N] [--frame-probe]` (niced, `-j2` by default). The frame probe preserves object names and enables assertions in the research build. It refuses a work directory inside the repository. The build fails unless the static openal-soft is linked (`alcOpenDevice` defined) and its OpenSL ES backend imports `slCreateEngine` from `libOpenSLES.so`. |
+| `android/apply-frame-probe.ts` | Host-only patcher: installs the bounded opt-in replay instrument into an external Chowdren copy. `--chowdren DIR`; requires `build-lib.sh --frame-probe`. Refuses repository destinations, partial installs and pre-existing experimental hooks. A missing named input object is retained as a miss and never logged as applied. |
+| `android/frame-probe.h` | Private-file replay configuration for the separately packaged research APK. Absent `frame-probe.enabled` leaves ordinary research play enabled; malformed or unreadable configuration exits 3. Accepts only `frame-probe-v1 SEED UPDATES`, seed 0–65535, office bound 1–6000, total bound 9000. Uses the APK's own SDL private-storage directory and fixed input, clock and trace filenames. |
+| `android/test-frame-probe.ts` | FIXTURE: compiles the actual header and patched input loop; checks disabled mode, numeric boundaries, malformed configuration, release-name refusal, patch drift, symlink custody and rejection of missing named targets. Runs in the unit lane without game data or a phone. |
 | `android/apply-practice-mod.ts` | Device action (host side, no phone): patches a private generated FNaF 2 source copy with the read-only office encounter HUD, `practice-state.jsonl` actor/RNG trace, and `practice-input.jsonl` SDL button-edge trace. `--gamesrc DIR`; generated source and all logs stay outside Git. |
 | `android/apply-calib-mod.ts` | Device action (host side, no phone): turns private copies of the Android runtime and SDL's Java classes into a device timing instrument. Every update logs, on CLOCK_MONOTONIC, loop start, pump end, events end and swap end, the exact `dt` and `timer_units`, RNG draws and state and the polled button (`calib-updates.jsonl`, with each frame load's seed). Every touch logs its MotionEvent event time, Java receipt and native SDL queue time (`calib-input.jsonl`), and a 16-cell Gray-code beacon of the update index is drawn along the frame's top 8 px. `--chowdren DIR --sdl DIR`; `debug.rebuild.calib` / `debug.rebuild.calib_beacon` = 0 turn them off. Refuses paths inside the repository. |
 | `android/test-apply-mods.ts` | Check (unit lane): both patchers over fixture sources: each hook lands at its anchor, a moved or doubled anchor is refused by name, a patched calibration tree is left as it is, and a path inside the repository is refused. |
@@ -70,6 +73,52 @@ directory (`/private/tmp/fnaf2-recompile.*` on the dev machine).
 | `fixtures/fnaf4-concept.input` | Host-only menu navigation, a bounded pan toward the room centre using a retained in-viewport point, and the Night 8 route shifted by 180 office updates. The short concept capture applies only its prefix. No device, win or native pause claim. |
 | `fixtures/fnaf4-night8-win.input`, `results/fnaf4-night8-20260929.json` | The 584 touch rows the FNaF 4 `warden` applied, and the record: the rebuilt FNaF 4 (pinned `6d3a6667-615f2ea0`) reaches 6 AM on Night 8, the 20/20/20/20 Nightmare, at seed 24850, and writes `beat8=1`; the rows replayed with no pilot give the same 30,000-update trace. MODEL_ONLY, rebuilt-runtime. |
 | `fixtures/fnaf4-challenges-before.ini`, `fixtures/fnaf4-night7-s6-win.input`, `fixtures/fnaf4-night7-s5-win.input`, `results/fnaf4-night7-s6-20260929.json`, `results/fnaf4-night7-s5-20260929.json` | The save the Night 8 win wrote (`beat8=1`), which unlocks the challenges, and the two challenge wins on Night 7: Blind + Mad Freddy + Insta-Foxy (the game writes `s1`-`s3` and `s6`, 546 rows) and All Nightmare + Blind (`s1`, `s4`, `s5`, 522 rows). Both replay with no pilot to an equal trace on the pinned binary. MODEL_ONLY, rebuilt-runtime. |
+
+## Bounded Android frame probe
+
+This instrument reproduces frame-indexed inputs inside the separately packaged
+FNaF 2 research APK. It is a reference for later external-delivery measurements;
+it does not measure UHID acceptance or establish equivalence with the original.
+
+Apply it after the runtime's normal mobile/calibration patches, on an external
+copy:
+
+```sh
+node packages/source/recompile/android/apply-frame-probe.ts --chowdren /external/chowdren
+```
+
+Build that copy with `android/build-lib.sh --frame-probe` and the ordinary build
+arguments listed above, then package it with `android/build-apk.sh`. The option
+preserves object names and enables assertions; a patched Android runtime refuses
+to compile without names. Use a separate research package. Keep `REBUILD_KEYSTORE`
+at a stable external path when changing output directories, so an update retains
+the installed research package's signing identity.
+
+The enable file has one line: `frame-probe-v1 SEED OFFICE_UPDATES`. The seed is
+0–65535, the office bound is 1–6000, and the total bound is 9000 updates. The
+instrument reads only these files in the APK's own private SDL storage directory:
+
+- `freddy2`: prepared progress, supplied before launch;
+  `fixtures/night7-before.ini` unlocks research Custom Night.
+- `frame-probe.input`: declared frame-indexed input rows;
+  `fixtures/night7-dials20-5x2.input` supplies menu entry.
+- `frame-probe.clock`: declared office update deltas in milliseconds, in the
+  harness's frame-times format.
+- `frame-probe.enabled`: explicit bounded configuration, written last before
+  launch.
+- `frame-probe.trace`: RNG, Counter and input-application trace. A missing named
+  target is a `# miss`, without a corresponding `# applied`.
+
+Prepare and launch through an exclusively leased research runner with a wall
+deadline and fail-safe cleanup. Remove the enable file and restart to return to
+ordinary research play. Malformed or unreadable configuration exits with code 3;
+an absent enable file leaves the replay environment unchanged.
+
+Read difficulty after Ready has committed the selected levels: the first office
+update (`# counter 3 0`) contains viewing, killer and danger, followed by the ten
+difficulty Counters in the header's declared order. Values before Ready are not
+the committed difficulty settings. Compare only the predeclared trace projection
+and label the result as instrumented rebuilt-runtime evidence.
 
 ## Environment
 

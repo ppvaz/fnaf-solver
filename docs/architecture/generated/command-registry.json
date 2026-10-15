@@ -672,7 +672,25 @@
     {
       "id": "android/build-lib.sh",
       "invocation": "android/build-lib.sh",
-      "kind": "Device action (host side, no phone): cross-builds one converted game's `libmain.so` for arm64-v8a with the NDK and `game-CMakeLists.txt`. `--gamesrc DIR --chowdren DIR --sdl-src DIR --sdl-lib DIR --openal-src DIR --openal-lib FILE --work DIR [--jobs N]` (niced, `-j2` by default). It refuses a work directory inside the repository. The build fails unless the static openal-soft is linked (`alcOpenDevice` defined) and its OpenSL ES backend imports `slCreateEngine` from `libOpenSLES.so`.",
+      "kind": "Device action (host side, no phone): cross-builds one converted game's `libmain.so` for arm64-v8a with the NDK and `game-CMakeLists.txt`. `--gamesrc DIR --chowdren DIR --sdl-src DIR --sdl-lib DIR --openal-src DIR --openal-lib FILE --work DIR [--jobs N] [--frame-probe]` (niced, `-j2` by default). The frame probe preserves object names and enables assertions in the research build. It refuses a work directory inside the repository. The build fails unless the static openal-soft is linked (`alcOpenDevice` defined) and its OpenSL ES backend imports `slCreateEngine` from `libOpenSLES.so`.",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "android/apply-frame-probe.ts",
+      "invocation": "android/apply-frame-probe.ts",
+      "kind": "Host-only patcher: installs the bounded opt-in replay instrument into an external Chowdren copy. `--chowdren DIR`; requires `build-lib.sh --frame-probe`. Refuses repository destinations, partial installs and pre-existing experimental hooks. A missing named input object is retained as a miss and never logged as applied.",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "android/frame-probe.h",
+      "invocation": "android/frame-probe.h",
+      "kind": "Private-file replay configuration for the separately packaged research APK. Absent `frame-probe.enabled` leaves ordinary research play enabled; malformed or unreadable configuration exits 3. Accepts only `frame-probe-v1 SEED UPDATES`, seed 0–65535, office bound 1–6000, total bound 9000. Uses the APK's own SDL private-storage directory and fixed input, clock and trace filenames.",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "android/test-frame-probe.ts",
+      "invocation": "android/test-frame-probe.ts",
+      "kind": "FIXTURE: compiles the actual header and patched input loop; checks disabled mode, numeric boundaries, malformed configuration, release-name refusal, patch drift, symlink custody and rejection of missing named targets. Runs in the unit lane without game data or a phone.",
       "lifecycle": "supported"
     },
     {

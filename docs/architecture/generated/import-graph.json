@@ -5339,6 +5339,15 @@
       ]
     },
     {
+      "file": "packages/source/recompile/android/apply-frame-probe.ts",
+      "imports": [
+        "./apply-calib-mod.ts",
+        "node:fs",
+        "node:path",
+        "node:url"
+      ]
+    },
+    {
       "file": "packages/source/recompile/android/apply-practice-mod.ts",
       "imports": [
         "@sixam/kernel/py",
@@ -5353,6 +5362,19 @@
         "./apply-calib-mod.ts",
         "./apply-practice-mod.ts",
         "node:assert/strict",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:test",
+        "node:url"
+      ]
+    },
+    {
+      "file": "packages/source/recompile/android/test-frame-probe.ts",
+      "imports": [
+        "./apply-frame-probe.ts",
+        "node:assert/strict",
+        "node:child_process",
         "node:fs",
         "node:os",
         "node:path",

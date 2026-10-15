@@ -59,9 +59,11 @@ reproducible demonstration. Presentation follows measured capabilities.
 M1/S2's [device entry control](../docs/evidence/frame-input-device-office-20261015.json)
 now enters 10/20 twice and matches the declared host projections at one seed.
 The [initial attempt](../docs/evidence/frame-input-device-20261015.json) stayed
-in the menu and remains retained. A portable entry instrument and clean-install
-qualification remain open for M1; external input acceptance on the original
-and broader equivalence remain open for M2/M3.
+in the menu and remains retained. A [repository-owned frame probe](../packages/source/recompile/android/apply-frame-probe.ts)
+now [repeats entry from cleared research data](../docs/evidence/frame-probe-portable-device-20261015.json),
+starting with a newly installed research package. The operator workflow still
+needs integration; external input acceptance on the original and broader
+equivalence remain open for M2/M3.
 
 The order below is the dependency order, not a calendar. Each step names what
 closes it and the artifact that closes it. That artifact is what makes a commit
