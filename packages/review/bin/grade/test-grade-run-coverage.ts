@@ -81,6 +81,7 @@ const SIBLING_EXCLUDED = new Map([
   ['native-frame.ts', 'Companion SNAP puller: one native frame as a PNG for title/menu readers and calibration; an observation path, not a post-run grader'],
   ['night-kit.ts', 'the region recorder, run record, actor and video every night runner shares; a library of executors, not a post-run grader'],
   ['explore-step.ts', 'one bounded exploration step (a contact and a native SNAP) for learning a game\'s controls; an operator tool, not a post-run grader'],
+  ['contact-deadline.ts', 'bounded host monotonic scheduling used by explore-step.ts before a contact; an executor helper, not a post-run grader; test-contact-deadline.ts exercises future bounds and expired/late readiness refusals in the unit lane'],
   ['hid-sweep-probe.ts', 'device probe'],
   ['session.sh', 'sourced helper that threads one session id through the producers, gated by test-session-manifest.sh'],
   ['coords.sh', 'coordinate helper'],

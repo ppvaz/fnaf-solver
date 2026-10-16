@@ -71,6 +71,13 @@ research APK with replay disabled. The host matches the contact window, but
 ten RNG updates differ elsewhere in the prefix. Predictive update targeting,
 repeatability and original/recompile equivalence remain open.
 
+The [first predictive landing test](../docs/evidence/research-targeted-landing-20261015.json)
+declares future accepted updates from the research display beacon. An
+uncorrected calibration lands three updates late; two fresh-start validations
+with that fixed correction land exactly on their declared updates. This
+advances M3 within the research instrument, with only two validation contacts.
+Load, longer runs, release targeting and transfer to the original remain open.
+
 The order below is the dependency order, not a calendar. Each step names what
 closes it and the artifact that closes it. That artifact is what makes a commit
 consequential. The "stands" line is a snapshot taken on 2026-09-25. **Trust the

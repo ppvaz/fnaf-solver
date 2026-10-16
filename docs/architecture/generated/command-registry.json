@@ -1558,6 +1558,18 @@
       "lifecycle": "supported"
     },
     {
+      "id": "packages/play/bin/phone/contact-deadline.ts",
+      "invocation": "packages/play/bin/phone/contact-deadline.ts",
+      "kind": "module",
+      "lifecycle": "supported"
+    },
+    {
+      "id": "packages/play/bin/phone/test-contact-deadline.ts",
+      "invocation": "packages/play/bin/phone/test-contact-deadline.ts",
+      "kind": "check",
+      "lifecycle": "supported"
+    },
+    {
       "id": "packages/play/bin/phone/native-regions.ts",
       "invocation": "packages/play/bin/phone/native-regions.ts set\\|latency\\|record\\|png --model M.json --set NAME [...]",
       "kind": "device action",

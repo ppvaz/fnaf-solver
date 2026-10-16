@@ -1,0 +1,1452 @@
+{
+  "schema": "evidence-record-v1",
+  "date": "2026-10-15",
+  "step": "ROADMAP S2 / M3",
+  "claimLevel": "DEVICE_MEASURED",
+  "fidelity": "instrumented research runtime; ordinary clock; external HID contacts; native beacon feedback",
+  "externalRoot": "/home/pedro/fnaf-apks/targeted-landing-20261015",
+  "protocol": {
+    "schema": "diagnostic-predeclaration-v1",
+    "date": "2026-10-15",
+    "step": "M3/S2",
+    "claimLevel": "DEVICE_MEASURED",
+    "question": "Can a future update declared from the research display clock be targeted by an external HID contact, and does one calibration transfer to two fresh starts?",
+    "runs": [
+      "uncorrected calibration",
+      "fixed-correction validation 1",
+      "fixed-correction validation 2"
+    ],
+    "preparation": "fresh process and Night 1 fixture save in research package only; frame-probe enable absent; Continue and office verified by native snapshots",
+    "estimator": "45 distinct increasing decoded beacon updates, at least 30 within 4 seconds; OLS update against host REGION receipt; period must be 10..30 ms/update and max residual <=2 updates",
+    "target": "last decoded global update +180; declare exact global and office update before sending",
+    "correction": "trial 1 zero; trials 2 and 3 subtract trial 1 signed landing error in updates, fixed without refitting delivery; stop if absolute correction >6 updates",
+    "toleranceUpdates": 1,
+    "contactMs": 160,
+    "expectedEffect": "monitor raise from camera 0 to Night 1 camera 9",
+    "safety": "exclusive serial lease, hashed local/geometry profile, capabilities, awake/unlocked/charging/<45C, exact research APK and Companion 17 check, bounded explorer with no press when deadline expired or >5 ms late, stop research and restore original menu after each target attempt",
+    "stop": "missing or ambiguous beacon, clock fit, polled edge or camera effect stops the run; a missed tolerance is a retained result, never silently re-targeted; two failed fixed-correction validations end this route",
+    "notClaimed": [
+      "original APK timing",
+      "stock fidelity",
+      "night win",
+      "reliability",
+      "separate identification of capture bias and delivery latency"
+    ]
+  },
+  "protocolSha256": "fe6bcbddb0d0cf0a4d8d53c336947b676f0943f0fc34e806e53b9f6c73b599a0",
+  "sources": {
+    "packages/play/bin/phone/explore-step.ts": "49741c30c6a05bb6aa13df1381f8b6191c38c0c4df8a4f40257e1a5f9c1f460a",
+    "packages/play/bin/phone/contact-deadline.ts": "9dda116fe8f95bf0d2955427687d6c6908d0deebb5155cf3a0a0cb84181b1df0",
+    "packages/play/src/campaign/timed-start.ts": "bf3f6a5d0ba348d8b33109f463cda963e68d3c15b618d557209dddbbf610b5a0",
+    "packages/play/bin/recompile/capture-latency.ts": "7bc172699acc0be5ec9009b68b93583557940ce07e75d733021d144adefa13c5",
+    "packages/review/bin/recompile/calib-contact.ts": "534eeabc03d34ce96fe2dd15b8f8a0badc6bab9716a2aaa7fbad5bd0299747fe"
+  },
+  "scripts": [
+    {
+      "path": "lease.mjs",
+      "sha256": "7e2f66388bcdc177f5ccb132c5ac6764583c5b877f7f77f0257119bc5b43869e"
+    },
+    {
+      "path": "common.mjs",
+      "sha256": "91f41c934cec881209327af0f767225c3f281844637ba34d2d1a7aab9804725c"
+    },
+    {
+      "path": "prepare.mjs",
+      "sha256": "b923d935102c1ee9b62da8792fd08727f33a106fd3a1bbf57972ba9d5789ebe2"
+    },
+    {
+      "path": "continue.mjs",
+      "sha256": "f4426287ad132207ccf1660b0024d321d19bef28a6739fb4fb98c4620ae054a9"
+    },
+    {
+      "path": "target.mjs",
+      "sha256": "3701b7fe2252dced6a8be2f22faaa8b50f09fce33747bd40ae3ea23fdbead5ed"
+    },
+    {
+      "path": "record.mjs",
+      "sha256": "10596a208f9b550ff99fc528c9f3bafeb6cd4984d0b32e2620c6dfcb1218f032"
+    }
+  ],
+  "trials": [
+    {
+      "trial": 1,
+      "preparation": {
+        "date": "2026-10-16T00:08:34.902Z",
+        "claimLevel": "DEVICE_MEASURED",
+        "trial": 1,
+        "session": "targeted-landing-20261015-1",
+        "package": "org.fnaf2frameprobe.play",
+        "apkSha256": "7426e3ba7dcc50f1b39fe83a2063172256c8a0ce220cc930d2a1211b746e3ac1",
+        "companionVersionCode": 17,
+        "handsetHash": "f88a35e75d347b6b",
+        "localProfile": {
+          "source": "/home/pedro/Projects/fnaf2-1020/tools/device/local-profile.json",
+          "sha256": "5375c2ee793ade231f251e036230a104f9155368c1e165584477dfa94635c89f"
+        },
+        "capabilities": {
+          "androidRelease": "16",
+          "sdk": "36",
+          "model": "moto g56 5G",
+          "displayGeometry": "1080x2400",
+          "hidBinary": true,
+          "screenrecord": true,
+          "perfettoDataSources": [
+            "android.game_interventions",
+            "android.gpu.memory",
+            "android.heapprofd",
+            "android.inputmethod",
+            "android.java_hprof",
+            "android.java_hprof.oom",
+            "android.kernel_wakelocks",
+            "android.log",
+            "android.packages_list",
+            "android.polled_state",
+            "android.power",
+            "android.protolog",
+            "android.sdk_sysprop_guard",
+            "android.statsd",
+            "android.surfaceflinger.frame",
+            "android.surfaceflinger.frametimeline",
+            "android.surfaceflinger.layers",
+            "android.system_property",
+            "linux.ftrace",
+            "linux.inode_file_map",
+            "linux.perf",
+            "linux.process_stats",
+            "linux.sys_stats",
+            "linux.sysfs_power",
+            "linux.system_info",
+            "track_event"
+          ],
+          "cueHelper": "versionName=0.2.1",
+          "targetInstalled": true
+        },
+        "temperature": 312,
+        "saveSha256": "0f37873becee49c3c53624e7820edf20bae3f907fe4cd0bd8c5f01923f2d84a0",
+        "toolSha256": "b923d935102c1ee9b62da8792fd08727f33a106fd3a1bbf57972ba9d5789ebe2",
+        "mode": "ordinary research Night 1; frame-probe replay disabled"
+      },
+      "predeclaration": {
+        "schema": "research-targeted-contact-v1",
+        "date": "2026-10-16T00:09:47.881Z",
+        "claimLevel": "DEVICE_MEASURED",
+        "trial": 1,
+        "session": "targeted-landing-20261015-1",
+        "protocolSha256": "fe6bcbddb0d0cf0a4d8d53c336947b676f0943f0fc34e806e53b9f6c73b599a0",
+        "witness": {
+          "path": "/home/pedro/fnaf-apks/explore/targeted-landing-20261015-1/0003-research-office.png",
+          "sha256": "2bae9eadf3ee8f8a978823f8db1c83eca608e2fdbf7943e55ea38d4b92f3c8fb"
+        },
+        "baseline": {
+          "u": 4020,
+          "f": 3,
+          "fu": 3128,
+          "ev": 1,
+          "t0": 197800107589250,
+          "tp": 197800107670404,
+          "te": 197800108962096,
+          "dt": 0.016484846,
+          "tu": 49,
+          "rd": 1416,
+          "rs": 65048,
+          "m": 0,
+          "ts": 197800117965788
+        },
+        "point": {
+          "x": 1780,
+          "y": 995
+        },
+        "contactMs": 160,
+        "profileSha256": "f7c3eb948ffd041f52c5d515978686690eba90856b9d9ec5d8dd161b2e4b1c42",
+        "targetGlobalUpdate": 4322,
+        "targetOfficeUpdate": 3430,
+        "toleranceUpdates": 1,
+        "correctionUpdates": 0,
+        "atHostMonoMs": 8863464.323999532,
+        "clockFit": {
+          "samples": 45,
+          "periodMs": 16.603096485246656,
+          "interceptMs": 8791705.740990296,
+          "residualMaxMs": 8.550951164215803,
+          "method": "OLS decoded global update against host REGION receipt; capture/transport bias is not separately identified"
+        },
+        "beaconSha256": "3a24a0adc438c1da6ae9ee06d3368501108cf122214773528c795440f28de534",
+        "runnerSha256": "49741c30c6a05bb6aa13df1381f8b6191c38c0c4df8a4f40257e1a5f9c1f460a",
+        "toolSha256": "3701b7fe2252dced6a8be2f22faaa8b50f09fce33747bd40ae3ea23fdbead5ed"
+      },
+      "result": {
+        "schema": "research-targeted-contact-result-v1",
+        "claimLevel": "DEVICE_MEASURED",
+        "trial": 1,
+        "predeclarationSha256": "58bfddf4fdda2bacbc821a788b1b66d94b8a3060bc40a6c2181dd06fd7256b54",
+        "targetGlobalUpdate": 4322,
+        "targetOfficeUpdate": 3430,
+        "acceptedGlobalUpdate": 4325,
+        "acceptedOfficeUpdate": 3433,
+        "errorUpdates": 3,
+        "toleranceUpdates": 1,
+        "ledger": {
+          "status": "MEASURED",
+          "scope": "one primary-pointer monitor raise; research runtime; first office visit",
+          "officeUpdates": 3668,
+          "edges": [
+            {
+              "edge": "down",
+              "officeUpdate": 3433,
+              "harnessTick": 3432,
+              "globalUpdate": 4325,
+              "receiptReportedUpdate": 4324,
+              "sdlReceiptMonoNs": 197805177375943,
+              "pollEndMonoNs": 197805190345173,
+              "eventsEndMonoNs": 197805190955712,
+              "nativePoint": {
+                "x": 1780,
+                "y": 994
+              },
+              "receiptToPollMs": 12.96923,
+              "receiptToEventsEndMs": 13.579769
+            },
+            {
+              "edge": "up",
+              "officeUpdate": 3442,
+              "harnessTick": 3441,
+              "globalUpdate": 4334,
+              "receiptReportedUpdate": 4333,
+              "sdlReceiptMonoNs": 197805335953481,
+              "pollEndMonoNs": 197805340300020,
+              "eventsEndMonoNs": 197805340649173,
+              "nativePoint": {
+                "x": 1780,
+                "y": 994
+              },
+              "receiptToPollMs": 4.346539,
+              "receiptToEventsEndMs": 4.695692
+            }
+          ],
+          "heldUpdates": 9,
+          "effect": {
+            "stateUpdate": 3446,
+            "camera": 9,
+            "updatesAfterPress": 13,
+            "sdlEventToStateMs": 230
+          },
+          "hostToDeviceLatency": "UNKNOWN",
+          "requestedUpdateAccuracy": "NOT_TESTED"
+        },
+        "rawInputs": [
+          {
+            "path": "calib/calib-updates.jsonl",
+            "sha256": "4f3a81a1749d3627f8f0ac5bc1c3ac782e9d48a2b0aab80ea3ceb78dcc0cf755"
+          },
+          {
+            "path": "calib/calib-input.jsonl",
+            "sha256": "aef8eb41ef12cb3bf4a09398f9240c409743ac1a318529dc61c71ea5a86e6d35"
+          },
+          {
+            "path": "calib/practice-state.jsonl",
+            "sha256": "0f74c5124a0cd04584ce02c0fbd4bd9ab96a6657145cb8af02db5a2a90da1b86"
+          },
+          {
+            "path": "calib/practice-input.jsonl",
+            "sha256": "ba4181aba4626b2f6ac68de6a37b58bcb6d3cc5a4cf3eb436c1cd51cad9eecca"
+          }
+        ],
+        "withinTolerance": false
+      },
+      "fitSamples": [
+        {
+          "u": 4098,
+          "hostReceiptMs": 8859753.781338
+        },
+        {
+          "u": 4099,
+          "hostReceiptMs": 8859762.245876
+        },
+        {
+          "u": 4100,
+          "hostReceiptMs": 8859782.882755
+        },
+        {
+          "u": 4101,
+          "hostReceiptMs": 8859795.832385
+        },
+        {
+          "u": 4102,
+          "hostReceiptMs": 8859811.003929
+        },
+        {
+          "u": 4103,
+          "hostReceiptMs": 8859827.045598
+        },
+        {
+          "u": 4104,
+          "hostReceiptMs": 8859847.297759
+        },
+        {
+          "u": 4105,
+          "hostReceiptMs": 8859858.433976
+        },
+        {
+          "u": 4106,
+          "hostReceiptMs": 8859878.129138
+        },
+        {
+          "u": 4107,
+          "hostReceiptMs": 8859893.482089
+        },
+        {
+          "u": 4108,
+          "hostReceiptMs": 8859908.251298
+        },
+        {
+          "u": 4109,
+          "hostReceiptMs": 8859925.71145
+        },
+        {
+          "u": 4110,
+          "hostReceiptMs": 8859940.917279
+        },
+        {
+          "u": 4111,
+          "hostReceiptMs": 8859960.537989
+        },
+        {
+          "u": 4112,
+          "hostReceiptMs": 8859976.607282
+        },
+        {
+          "u": 4113,
+          "hostReceiptMs": 8859992.201162
+        },
+        {
+          "u": 4114,
+          "hostReceiptMs": 8860009.726487
+        },
+        {
+          "u": 4115,
+          "hostReceiptMs": 8860025.485807
+        },
+        {
+          "u": 4116,
+          "hostReceiptMs": 8860043.404232
+        },
+        {
+          "u": 4117,
+          "hostReceiptMs": 8860060.647875
+        },
+        {
+          "u": 4118,
+          "hostReceiptMs": 8860079.416428
+        },
+        {
+          "u": 4119,
+          "hostReceiptMs": 8860093.260773
+        },
+        {
+          "u": 4120,
+          "hostReceiptMs": 8860108.86308
+        },
+        {
+          "u": 4121,
+          "hostReceiptMs": 8860125.177895
+        },
+        {
+          "u": 4122,
+          "hostReceiptMs": 8860141.827988
+        },
+        {
+          "u": 4123,
+          "hostReceiptMs": 8860159.937709
+        },
+        {
+          "u": 4124,
+          "hostReceiptMs": 8860180.164773
+        },
+        {
+          "u": 4125,
+          "hostReceiptMs": 8860193.358994
+        },
+        {
+          "u": 4126,
+          "hostReceiptMs": 8860209.331859
+        },
+        {
+          "u": 4127,
+          "hostReceiptMs": 8860224.78661
+        },
+        {
+          "u": 4128,
+          "hostReceiptMs": 8860244.770013
+        },
+        {
+          "u": 4129,
+          "hostReceiptMs": 8860261.32104
+        },
+        {
+          "u": 4130,
+          "hostReceiptMs": 8860274.377351
+        },
+        {
+          "u": 4131,
+          "hostReceiptMs": 8860296.300975
+        },
+        {
+          "u": 4132,
+          "hostReceiptMs": 8860310.4707
+        },
+        {
+          "u": 4133,
+          "hostReceiptMs": 8860328.855506
+        },
+        {
+          "u": 4134,
+          "hostReceiptMs": 8860346.121618
+        },
+        {
+          "u": 4135,
+          "hostReceiptMs": 8860356.578097
+        },
+        {
+          "u": 4136,
+          "hostReceiptMs": 8860375.240504
+        },
+        {
+          "u": 4137,
+          "hostReceiptMs": 8860394.207723
+        },
+        {
+          "u": 4138,
+          "hostReceiptMs": 8860410.02546
+        },
+        {
+          "u": 4139,
+          "hostReceiptMs": 8860426.02135
+        },
+        {
+          "u": 4140,
+          "hostReceiptMs": 8860442.058542
+        },
+        {
+          "u": 4141,
+          "hostReceiptMs": 8860460.514508
+        },
+        {
+          "u": 4142,
+          "hostReceiptMs": 8860475.817728
+        }
+      ],
+      "pollWitness": [
+        {
+          "u": 4324,
+          "fu": 3432,
+          "m": 0,
+          "tp": 197805174063635,
+          "te": 197805174981558
+        },
+        {
+          "u": 4325,
+          "fu": 3433,
+          "m": 1,
+          "tp": 197805190345173,
+          "te": 197805190955712
+        }
+      ],
+      "sendWitness": {
+        "atWallMs": 1792109391025,
+        "type": "tap",
+        "point": {
+          "x": 1780,
+          "y": 995
+        },
+        "holdMs": 160,
+        "gapMs": null,
+        "hostMs": 2978.073407,
+        "sendHostMonoMs": 8863464.397257,
+        "timing": {
+          "plannedHostMonoMs": 8863464.323999532,
+          "readyHostMonoMs": 8863464.329958
+        },
+        "deadline": {
+          "atWallMs": 1792109388312,
+          "type": "contact-deadline",
+          "plannedHostMonoMs": 8863464.323999532
+        }
+      },
+      "explorerEventsSha256": "e55780d57c7631fcd1477343afabf4bbdad1cd73d63eb5c5e91b8e6da6c35996",
+      "cleanup": {
+        "researchStopped": true,
+        "originalSnapshotSha256": "a9db3b68ff378a50b31526a1844191bd895a63006ecbbfaef3f5c39273b98948",
+        "originalMenuVisuallyVerified": "Continue Night 1"
+      },
+      "retained": [
+        {
+          "path": "trial-1/preparation.json",
+          "sha256": "3688ce434a469aabcc6f3f81ad76d0c2029dcc815aab81b7d808da0d8c6bdc07"
+        },
+        {
+          "path": "trial-1/continue-predeclaration.json",
+          "sha256": "51f34f504f3d19f7763da56c581c09434f63e7fe267246357587f798165e00f5"
+        },
+        {
+          "path": "trial-1/target-predeclaration.json",
+          "sha256": "58bfddf4fdda2bacbc821a788b1b66d94b8a3060bc40a6c2181dd06fd7256b54"
+        },
+        {
+          "path": "trial-1/beacon.jsonl",
+          "sha256": "3a24a0adc438c1da6ae9ee06d3368501108cf122214773528c795440f28de534"
+        },
+        {
+          "path": "trial-1/result.json",
+          "sha256": "f9a47f99ce401de97dcdb16e8e62545cfffab54dadbb97cd013295d9fa43cfca"
+        },
+        {
+          "path": "trial-1/cleanup.json",
+          "sha256": "92c5b225f663fc3755e3e739746da4a1412abf1ebf3654c046f0f84ee7aa4589"
+        },
+        {
+          "path": "trial-1/calib/calib-updates.jsonl",
+          "sha256": "4f3a81a1749d3627f8f0ac5bc1c3ac782e9d48a2b0aab80ea3ceb78dcc0cf755"
+        },
+        {
+          "path": "trial-1/calib/calib-input.jsonl",
+          "sha256": "aef8eb41ef12cb3bf4a09398f9240c409743ac1a318529dc61c71ea5a86e6d35"
+        },
+        {
+          "path": "trial-1/calib/practice-state.jsonl",
+          "sha256": "0f74c5124a0cd04584ce02c0fbd4bd9ab96a6657145cb8af02db5a2a90da1b86"
+        },
+        {
+          "path": "trial-1/calib/practice-input.jsonl",
+          "sha256": "ba4181aba4626b2f6ac68de6a37b58bcb6d3cc5a4cf3eb436c1cd51cad9eecca"
+        }
+      ]
+    },
+    {
+      "trial": 2,
+      "preparation": {
+        "date": "2026-10-16T00:10:06.525Z",
+        "claimLevel": "DEVICE_MEASURED",
+        "trial": 2,
+        "session": "targeted-landing-20261015-2",
+        "package": "org.fnaf2frameprobe.play",
+        "apkSha256": "7426e3ba7dcc50f1b39fe83a2063172256c8a0ce220cc930d2a1211b746e3ac1",
+        "companionVersionCode": 17,
+        "handsetHash": "f88a35e75d347b6b",
+        "localProfile": {
+          "source": "/home/pedro/Projects/fnaf2-1020/tools/device/local-profile.json",
+          "sha256": "5375c2ee793ade231f251e036230a104f9155368c1e165584477dfa94635c89f"
+        },
+        "capabilities": {
+          "androidRelease": "16",
+          "sdk": "36",
+          "model": "moto g56 5G",
+          "displayGeometry": "1080x2400",
+          "hidBinary": true,
+          "screenrecord": true,
+          "perfettoDataSources": [
+            "android.game_interventions",
+            "android.gpu.memory",
+            "android.heapprofd",
+            "android.inputmethod",
+            "android.java_hprof",
+            "android.java_hprof.oom",
+            "android.kernel_wakelocks",
+            "android.log",
+            "android.packages_list",
+            "android.polled_state",
+            "android.power",
+            "android.protolog",
+            "android.sdk_sysprop_guard",
+            "android.statsd",
+            "android.surfaceflinger.frame",
+            "android.surfaceflinger.frametimeline",
+            "android.surfaceflinger.layers",
+            "android.system_property",
+            "linux.ftrace",
+            "linux.inode_file_map",
+            "linux.perf",
+            "linux.process_stats",
+            "linux.sys_stats",
+            "linux.sysfs_power",
+            "linux.system_info",
+            "track_event"
+          ],
+          "cueHelper": "versionName=0.2.1",
+          "targetInstalled": true
+        },
+        "temperature": 312,
+        "saveSha256": "0f37873becee49c3c53624e7820edf20bae3f907fe4cd0bd8c5f01923f2d84a0",
+        "toolSha256": "b923d935102c1ee9b62da8792fd08727f33a106fd3a1bbf57972ba9d5789ebe2",
+        "mode": "ordinary research Night 1; frame-probe replay disabled"
+      },
+      "predeclaration": {
+        "schema": "research-targeted-contact-v1",
+        "date": "2026-10-16T00:11:01.633Z",
+        "claimLevel": "DEVICE_MEASURED",
+        "trial": 2,
+        "session": "targeted-landing-20261015-2",
+        "protocolSha256": "fe6bcbddb0d0cf0a4d8d53c336947b676f0943f0fc34e806e53b9f6c73b599a0",
+        "witness": {
+          "path": "/home/pedro/fnaf-apks/explore/targeted-landing-20261015-2/0003-research-office.png",
+          "sha256": "5f4b08b158f3679f9bcb132df27aa9ce567470fc635ae20099612c03ee569dc0"
+        },
+        "baseline": {
+          "u": 3000,
+          "f": 3,
+          "fu": 1763,
+          "ev": 1,
+          "t0": 197874617673485,
+          "tp": 197874617729870,
+          "te": 197874618700562,
+          "dt": 0.017425846,
+          "tu": 52,
+          "rd": 789,
+          "rs": 34225,
+          "m": 0,
+          "ts": 197874625802178
+        },
+        "point": {
+          "x": 1780,
+          "y": 995
+        },
+        "contactMs": 160,
+        "profileSha256": "f7c3eb948ffd041f52c5d515978686690eba90856b9d9ec5d8dd161b2e4b1c42",
+        "targetGlobalUpdate": 3257,
+        "targetOfficeUpdate": 2020,
+        "toleranceUpdates": 1,
+        "correctionUpdates": 3,
+        "atHostMonoMs": 8937175.481374968,
+        "clockFit": {
+          "samples": 45,
+          "periodMs": 16.654946608427416,
+          "interceptMs": 8882980.285111144,
+          "residualMaxMs": 4.312694067135453,
+          "method": "OLS decoded global update against host REGION receipt; capture/transport bias is not separately identified"
+        },
+        "beaconSha256": "ff175c7c015c5773ed0cf8c87b8b162653e74cee8b76a4de390d81c37fa1a028",
+        "runnerSha256": "49741c30c6a05bb6aa13df1381f8b6191c38c0c4df8a4f40257e1a5f9c1f460a",
+        "toolSha256": "3701b7fe2252dced6a8be2f22faaa8b50f09fce33747bd40ae3ea23fdbead5ed"
+      },
+      "result": {
+        "schema": "research-targeted-contact-result-v1",
+        "claimLevel": "DEVICE_MEASURED",
+        "trial": 2,
+        "predeclarationSha256": "c0bec26686df39321fdf23d57d1e4b5301cf11a0e62ad9ccf6391aeb358647aa",
+        "targetGlobalUpdate": 3257,
+        "targetOfficeUpdate": 2020,
+        "acceptedGlobalUpdate": 3257,
+        "acceptedOfficeUpdate": 2020,
+        "errorUpdates": 0,
+        "toleranceUpdates": 1,
+        "ledger": {
+          "status": "MEASURED",
+          "scope": "one primary-pointer monitor raise; research runtime; first office visit",
+          "officeUpdates": 2243,
+          "edges": [
+            {
+              "edge": "down",
+              "officeUpdate": 2020,
+              "harnessTick": 2019,
+              "globalUpdate": 3257,
+              "receiptReportedUpdate": 3256,
+              "sdlReceiptMonoNs": 197878890236255,
+              "pollEndMonoNs": 197878901005485,
+              "eventsEndMonoNs": 197878901717255,
+              "nativePoint": {
+                "x": 1780,
+                "y": 994
+              },
+              "receiptToPollMs": 10.76923,
+              "receiptToEventsEndMs": 11.481
+            },
+            {
+              "edge": "up",
+              "officeUpdate": 2029,
+              "harnessTick": 2028,
+              "globalUpdate": 3266,
+              "receiptReportedUpdate": 3265,
+              "sdlReceiptMonoNs": 197879047053562,
+              "pollEndMonoNs": 197879050926101,
+              "eventsEndMonoNs": 197879051272562,
+              "nativePoint": {
+                "x": 1780,
+                "y": 994
+              },
+              "receiptToPollMs": 3.872539,
+              "receiptToEventsEndMs": 4.219
+            }
+          ],
+          "heldUpdates": 9,
+          "effect": {
+            "stateUpdate": 2033,
+            "camera": 9,
+            "updatesAfterPress": 13,
+            "sdlEventToStateMs": 231
+          },
+          "hostToDeviceLatency": "UNKNOWN",
+          "requestedUpdateAccuracy": "NOT_TESTED"
+        },
+        "rawInputs": [
+          {
+            "path": "calib/calib-updates.jsonl",
+            "sha256": "f7989fd0d8b2e041ff7b0a778628c1b77aac8b3a9d52fe86b8afa6c9900e6c5a"
+          },
+          {
+            "path": "calib/calib-input.jsonl",
+            "sha256": "751d962659bcba24408b5597a3f05da0b005cc47b1efcd494622df7e322c46ae"
+          },
+          {
+            "path": "calib/practice-state.jsonl",
+            "sha256": "06da0258eeef1b8247a63c705751ac12c47709c35c7026c4d6c034133bdfcd9a"
+          },
+          {
+            "path": "calib/practice-input.jsonl",
+            "sha256": "9624dc90d64283df81e0af204e2b3eee53394ecf9d812b554fa0ac626aaa116a"
+          }
+        ],
+        "withinTolerance": true
+      },
+      "fitSamples": [
+        {
+          "u": 3033,
+          "hostReceiptMs": 8933498.591878
+        },
+        {
+          "u": 3034,
+          "hostReceiptMs": 8933511.253999
+        },
+        {
+          "u": 3035,
+          "hostReceiptMs": 8933525.72253
+        },
+        {
+          "u": 3036,
+          "hostReceiptMs": 8933545.53625
+        },
+        {
+          "u": 3037,
+          "hostReceiptMs": 8933561.100188
+        },
+        {
+          "u": 3038,
+          "hostReceiptMs": 8933578.458513
+        },
+        {
+          "u": 3039,
+          "hostReceiptMs": 8933593.703237
+        },
+        {
+          "u": 3040,
+          "hostReceiptMs": 8933610.820764
+        },
+        {
+          "u": 3041,
+          "hostReceiptMs": 8933627.144803
+        },
+        {
+          "u": 3042,
+          "hostReceiptMs": 8933645.966078
+        },
+        {
+          "u": 3043,
+          "hostReceiptMs": 8933662.197401
+        },
+        {
+          "u": 3044,
+          "hostReceiptMs": 8933676.251428
+        },
+        {
+          "u": 3045,
+          "hostReceiptMs": 8933693.629947
+        },
+        {
+          "u": 3046,
+          "hostReceiptMs": 8933712.774491
+        },
+        {
+          "u": 3047,
+          "hostReceiptMs": 8933726.024706
+        },
+        {
+          "u": 3048,
+          "hostReceiptMs": 8933745.025266
+        },
+        {
+          "u": 3049,
+          "hostReceiptMs": 8933759.990499
+        },
+        {
+          "u": 3050,
+          "hostReceiptMs": 8933775.799138
+        },
+        {
+          "u": 3051,
+          "hostReceiptMs": 8933793.819789
+        },
+        {
+          "u": 3052,
+          "hostReceiptMs": 8933810.620393
+        },
+        {
+          "u": 3053,
+          "hostReceiptMs": 8933827.285198
+        },
+        {
+          "u": 3054,
+          "hostReceiptMs": 8933842.574772
+        },
+        {
+          "u": 3055,
+          "hostReceiptMs": 8933860.036513
+        },
+        {
+          "u": 3056,
+          "hostReceiptMs": 8933881.651346
+        },
+        {
+          "u": 3057,
+          "hostReceiptMs": 8933894.013048
+        },
+        {
+          "u": 3058,
+          "hostReceiptMs": 8933914.221281
+        },
+        {
+          "u": 3059,
+          "hostReceiptMs": 8933926.007561
+        },
+        {
+          "u": 3060,
+          "hostReceiptMs": 8933948.734427
+        },
+        {
+          "u": 3061,
+          "hostReceiptMs": 8933960.665953
+        },
+        {
+          "u": 3062,
+          "hostReceiptMs": 8933977.578714
+        },
+        {
+          "u": 3063,
+          "hostReceiptMs": 8933993.788091
+        },
+        {
+          "u": 3064,
+          "hostReceiptMs": 8934009.980219
+        },
+        {
+          "u": 3065,
+          "hostReceiptMs": 8934031.122087
+        },
+        {
+          "u": 3066,
+          "hostReceiptMs": 8934044.541166
+        },
+        {
+          "u": 3067,
+          "hostReceiptMs": 8934060.669909
+        },
+        {
+          "u": 3068,
+          "hostReceiptMs": 8934077.224578
+        },
+        {
+          "u": 3069,
+          "hostReceiptMs": 8934098.475937
+        },
+        {
+          "u": 3070,
+          "hostReceiptMs": 8934109.876295
+        },
+        {
+          "u": 3071,
+          "hostReceiptMs": 8934127.584012
+        },
+        {
+          "u": 3072,
+          "hostReceiptMs": 8934142.615993
+        },
+        {
+          "u": 3073,
+          "hostReceiptMs": 8934160.414085
+        },
+        {
+          "u": 3074,
+          "hostReceiptMs": 8934177.213971
+        },
+        {
+          "u": 3075,
+          "hostReceiptMs": 8934192.994867
+        },
+        {
+          "u": 3076,
+          "hostReceiptMs": 8934209.699838
+        },
+        {
+          "u": 3077,
+          "hostReceiptMs": 8934228.213836
+        }
+      ],
+      "pollWitness": [
+        {
+          "u": 3256,
+          "fu": 2019,
+          "m": 0,
+          "tp": 197878885109562,
+          "te": 197878886100639
+        },
+        {
+          "u": 3257,
+          "fu": 2020,
+          "m": 1,
+          "tp": 197878901005485,
+          "te": 197878901717255
+        }
+      ],
+      "sendWitness": {
+        "atWallMs": 1792109464736,
+        "type": "tap",
+        "point": {
+          "x": 1780,
+          "y": 995
+        },
+        "holdMs": 160,
+        "gapMs": null,
+        "hostMs": 2938.369003,
+        "sendHostMonoMs": 8937176.465922,
+        "timing": {
+          "plannedHostMonoMs": 8937175.481374968,
+          "readyHostMonoMs": 8937176.3551
+        },
+        "deadline": {
+          "atWallMs": 1792109462070,
+          "type": "contact-deadline",
+          "plannedHostMonoMs": 8937175.481374968
+        }
+      },
+      "explorerEventsSha256": "0474ca09e308b0d05742dd31615303bc6b910bec40251ea3e42fcb8ec779cc58",
+      "cleanup": {
+        "researchStopped": true,
+        "originalSnapshotSha256": "8dabaa8072d5942c742d5494d12533cb6601c97bb50dd160f42e2a5e1fa84eef",
+        "originalMenuVisuallyVerified": "Continue Night 1"
+      },
+      "retained": [
+        {
+          "path": "trial-2/preparation.json",
+          "sha256": "b11e6113d3a8d0e1886aa868a41f218ffc9ffcf198364e0e3a4a1eb7643a4c06"
+        },
+        {
+          "path": "trial-2/continue-predeclaration.json",
+          "sha256": "6a710448c77e6282fce5f5794fd3f103f584c170f2ca52b2fcaff11816469423"
+        },
+        {
+          "path": "trial-2/target-predeclaration.json",
+          "sha256": "c0bec26686df39321fdf23d57d1e4b5301cf11a0e62ad9ccf6391aeb358647aa"
+        },
+        {
+          "path": "trial-2/beacon.jsonl",
+          "sha256": "ff175c7c015c5773ed0cf8c87b8b162653e74cee8b76a4de390d81c37fa1a028"
+        },
+        {
+          "path": "trial-2/result.json",
+          "sha256": "4c618b82cc045d9fb50efb13b2cefc3eb7565db50e2890963d4768203af44ab6"
+        },
+        {
+          "path": "trial-2/cleanup.json",
+          "sha256": "3f8dcc0d6b563cdf11b2db865dbdef408cbb3398229cccd5718fe1703f469913"
+        },
+        {
+          "path": "trial-2/calib/calib-updates.jsonl",
+          "sha256": "f7989fd0d8b2e041ff7b0a778628c1b77aac8b3a9d52fe86b8afa6c9900e6c5a"
+        },
+        {
+          "path": "trial-2/calib/calib-input.jsonl",
+          "sha256": "751d962659bcba24408b5597a3f05da0b005cc47b1efcd494622df7e322c46ae"
+        },
+        {
+          "path": "trial-2/calib/practice-state.jsonl",
+          "sha256": "06da0258eeef1b8247a63c705751ac12c47709c35c7026c4d6c034133bdfcd9a"
+        },
+        {
+          "path": "trial-2/calib/practice-input.jsonl",
+          "sha256": "9624dc90d64283df81e0af204e2b3eee53394ecf9d812b554fa0ac626aaa116a"
+        }
+      ]
+    },
+    {
+      "trial": 3,
+      "preparation": {
+        "date": "2026-10-16T00:11:29.853Z",
+        "claimLevel": "DEVICE_MEASURED",
+        "trial": 3,
+        "session": "targeted-landing-20261015-3",
+        "package": "org.fnaf2frameprobe.play",
+        "apkSha256": "7426e3ba7dcc50f1b39fe83a2063172256c8a0ce220cc930d2a1211b746e3ac1",
+        "companionVersionCode": 17,
+        "handsetHash": "f88a35e75d347b6b",
+        "localProfile": {
+          "source": "/home/pedro/Projects/fnaf2-1020/tools/device/local-profile.json",
+          "sha256": "5375c2ee793ade231f251e036230a104f9155368c1e165584477dfa94635c89f"
+        },
+        "capabilities": {
+          "androidRelease": "16",
+          "sdk": "36",
+          "model": "moto g56 5G",
+          "displayGeometry": "1080x2400",
+          "hidBinary": true,
+          "screenrecord": true,
+          "perfettoDataSources": [
+            "android.game_interventions",
+            "android.gpu.memory",
+            "android.heapprofd",
+            "android.inputmethod",
+            "android.java_hprof",
+            "android.java_hprof.oom",
+            "android.kernel_wakelocks",
+            "android.log",
+            "android.packages_list",
+            "android.polled_state",
+            "android.power",
+            "android.protolog",
+            "android.sdk_sysprop_guard",
+            "android.statsd",
+            "android.surfaceflinger.frame",
+            "android.surfaceflinger.frametimeline",
+            "android.surfaceflinger.layers",
+            "android.system_property",
+            "linux.ftrace",
+            "linux.inode_file_map",
+            "linux.perf",
+            "linux.process_stats",
+            "linux.sys_stats",
+            "linux.sysfs_power",
+            "linux.system_info",
+            "track_event"
+          ],
+          "cueHelper": "versionName=0.2.1",
+          "targetInstalled": true
+        },
+        "temperature": 312,
+        "saveSha256": "0f37873becee49c3c53624e7820edf20bae3f907fe4cd0bd8c5f01923f2d84a0",
+        "toolSha256": "b923d935102c1ee9b62da8792fd08727f33a106fd3a1bbf57972ba9d5789ebe2",
+        "mode": "ordinary research Night 1; frame-probe replay disabled"
+      },
+      "predeclaration": {
+        "schema": "research-targeted-contact-v1",
+        "date": "2026-10-16T00:12:24.717Z",
+        "claimLevel": "DEVICE_MEASURED",
+        "trial": 3,
+        "session": "targeted-landing-20261015-3",
+        "protocolSha256": "fe6bcbddb0d0cf0a4d8d53c336947b676f0943f0fc34e806e53b9f6c73b599a0",
+        "witness": {
+          "path": "/home/pedro/fnaf-apks/explore/targeted-landing-20261015-3/0003-research-office.png",
+          "sha256": "dfe6a62db85818942330ecbf5ce739e904174585468b8f1318681d4b141d1973"
+        },
+        "baseline": {
+          "u": 3000,
+          "f": 3,
+          "fu": 801,
+          "ev": 1,
+          "t0": 197957763837259,
+          "tp": 197957763887106,
+          "te": 197957764808952,
+          "dt": 0.017142384,
+          "tu": 51,
+          "rd": 356,
+          "rs": 24880,
+          "m": 0,
+          "ts": 197957770817875
+        },
+        "point": {
+          "x": 1780,
+          "y": 995
+        },
+        "contactMs": 160,
+        "profileSha256": "f7c3eb948ffd041f52c5d515978686690eba90856b9d9ec5d8dd161b2e4b1c42",
+        "targetGlobalUpdate": 3253,
+        "targetOfficeUpdate": 1054,
+        "toleranceUpdates": 1,
+        "correctionUpdates": 3,
+        "atHostMonoMs": 9020265.585196396,
+        "clockFit": {
+          "samples": 45,
+          "periodMs": 16.68025080567577,
+          "interceptMs": 8966054.77007795,
+          "residualMaxMs": 5.3610030468553305,
+          "method": "OLS decoded global update against host REGION receipt; capture/transport bias is not separately identified"
+        },
+        "beaconSha256": "94dde6036b7b8cdd0176be623337535396ecc0351a8abdca0eb8c99bb451ec19",
+        "runnerSha256": "49741c30c6a05bb6aa13df1381f8b6191c38c0c4df8a4f40257e1a5f9c1f460a",
+        "toolSha256": "3701b7fe2252dced6a8be2f22faaa8b50f09fce33747bd40ae3ea23fdbead5ed"
+      },
+      "result": {
+        "schema": "research-targeted-contact-result-v1",
+        "claimLevel": "DEVICE_MEASURED",
+        "trial": 3,
+        "predeclarationSha256": "72402751b434ebeacf194bba69f253b1724a2938be6030ad37b707ed2925d713",
+        "targetGlobalUpdate": 3253,
+        "targetOfficeUpdate": 1054,
+        "acceptedGlobalUpdate": 3253,
+        "acceptedOfficeUpdate": 1054,
+        "errorUpdates": 0,
+        "toleranceUpdates": 1,
+        "ledger": {
+          "status": "MEASURED",
+          "scope": "one primary-pointer monitor raise; research runtime; first office visit",
+          "officeUpdates": 1281,
+          "edges": [
+            {
+              "edge": "down",
+              "officeUpdate": 1054,
+              "harnessTick": 1053,
+              "globalUpdate": 3253,
+              "receiptReportedUpdate": 3252,
+              "sdlReceiptMonoNs": 197961978104337,
+              "pollEndMonoNs": 197961979711029,
+              "eventsEndMonoNs": 197961980440337,
+              "nativePoint": {
+                "x": 1780,
+                "y": 994
+              },
+              "receiptToPollMs": 1.606692,
+              "receiptToEventsEndMs": 2.336
+            },
+            {
+              "edge": "up",
+              "officeUpdate": 1064,
+              "harnessTick": 1063,
+              "globalUpdate": 3263,
+              "receiptReportedUpdate": 3262,
+              "sdlReceiptMonoNs": 197962138887029,
+              "pollEndMonoNs": 197962147051106,
+              "eventsEndMonoNs": 197962148178414,
+              "nativePoint": {
+                "x": 1780,
+                "y": 994
+              },
+              "receiptToPollMs": 8.164077,
+              "receiptToEventsEndMs": 9.291385
+            }
+          ],
+          "heldUpdates": 10,
+          "effect": {
+            "stateUpdate": 1066,
+            "camera": 9,
+            "updatesAfterPress": 12,
+            "sdlEventToStateMs": 203
+          },
+          "hostToDeviceLatency": "UNKNOWN",
+          "requestedUpdateAccuracy": "NOT_TESTED"
+        },
+        "rawInputs": [
+          {
+            "path": "calib/calib-updates.jsonl",
+            "sha256": "143d2b9686c3a7407fae5b0d22f1c2f4e4d33857c940e9ae6a312874f6e60b3a"
+          },
+          {
+            "path": "calib/calib-input.jsonl",
+            "sha256": "b69b8680e6f2c34344cfc5ded085abe2f721cfea7d749a35cc8cc69b3e5bbcb9"
+          },
+          {
+            "path": "calib/practice-state.jsonl",
+            "sha256": "7a51a1a7acd4a7511681b4a4d99e86b4eb0ee9be701add5b58c259b4d9f65bcf"
+          },
+          {
+            "path": "calib/practice-input.jsonl",
+            "sha256": "d9da1214618a698f188463c48ca2eb82dddbf0196635607d2f378e8afba43fb5"
+          }
+        ],
+        "withinTolerance": true
+      },
+      "fitSamples": [
+        {
+          "u": 3029,
+          "hostReceiptMs": 9016581.450289
+        },
+        {
+          "u": 3030,
+          "hostReceiptMs": 9016597.996046
+        },
+        {
+          "u": 3031,
+          "hostReceiptMs": 9016617.971273
+        },
+        {
+          "u": 3032,
+          "hostReceiptMs": 9016629.209877
+        },
+        {
+          "u": 3033,
+          "hostReceiptMs": 9016646.53324
+        },
+        {
+          "u": 3034,
+          "hostReceiptMs": 9016661.646198
+        },
+        {
+          "u": 3035,
+          "hostReceiptMs": 9016676.918976
+        },
+        {
+          "u": 3036,
+          "hostReceiptMs": 9016694.303184
+        },
+        {
+          "u": 3037,
+          "hostReceiptMs": 9016713.152113
+        },
+        {
+          "u": 3038,
+          "hostReceiptMs": 9016727.464616
+        },
+        {
+          "u": 3039,
+          "hostReceiptMs": 9016745.747603
+        },
+        {
+          "u": 3040,
+          "hostReceiptMs": 9016761.068043
+        },
+        {
+          "u": 3041,
+          "hostReceiptMs": 9016778.381742
+        },
+        {
+          "u": 3042,
+          "hostReceiptMs": 9016796.929644
+        },
+        {
+          "u": 3043,
+          "hostReceiptMs": 9016811.089333
+        },
+        {
+          "u": 3044,
+          "hostReceiptMs": 9016828.814202
+        },
+        {
+          "u": 3045,
+          "hostReceiptMs": 9016847.21396
+        },
+        {
+          "u": 3046,
+          "hostReceiptMs": 9016862.760141
+        },
+        {
+          "u": 3047,
+          "hostReceiptMs": 9016878.311222
+        },
+        {
+          "u": 3048,
+          "hostReceiptMs": 9016895.676875
+        },
+        {
+          "u": 3049,
+          "hostReceiptMs": 9016912.947512
+        },
+        {
+          "u": 3050,
+          "hostReceiptMs": 9016932.140862
+        },
+        {
+          "u": 3051,
+          "hostReceiptMs": 9016946.738964
+        },
+        {
+          "u": 3052,
+          "hostReceiptMs": 9016962.766475
+        },
+        {
+          "u": 3053,
+          "hostReceiptMs": 9016977.144591
+        },
+        {
+          "u": 3054,
+          "hostReceiptMs": 9016995.031962
+        },
+        {
+          "u": 3055,
+          "hostReceiptMs": 9017012.972817
+        },
+        {
+          "u": 3056,
+          "hostReceiptMs": 9017027.219772
+        },
+        {
+          "u": 3057,
+          "hostReceiptMs": 9017046.912923
+        },
+        {
+          "u": 3058,
+          "hostReceiptMs": 9017062.483319
+        },
+        {
+          "u": 3059,
+          "hostReceiptMs": 9017079.665461
+        },
+        {
+          "u": 3060,
+          "hostReceiptMs": 9017095.681786
+        },
+        {
+          "u": 3061,
+          "hostReceiptMs": 9017113.87512
+        },
+        {
+          "u": 3062,
+          "hostReceiptMs": 9017129.190083
+        },
+        {
+          "u": 3063,
+          "hostReceiptMs": 9017147.478052
+        },
+        {
+          "u": 3064,
+          "hostReceiptMs": 9017161.856093
+        },
+        {
+          "u": 3065,
+          "hostReceiptMs": 9017179.451348
+        },
+        {
+          "u": 3066,
+          "hostReceiptMs": 9017194.990255
+        },
+        {
+          "u": 3067,
+          "hostReceiptMs": 9017213.200848
+        },
+        {
+          "u": 3068,
+          "hostReceiptMs": 9017232.570991
+        },
+        {
+          "u": 3069,
+          "hostReceiptMs": 9017246.821188
+        },
+        {
+          "u": 3070,
+          "hostReceiptMs": 9017264.57255
+        },
+        {
+          "u": 3071,
+          "hostReceiptMs": 9017280.898342
+        },
+        {
+          "u": 3072,
+          "hostReceiptMs": 9017298.466959
+        },
+        {
+          "u": 3073,
+          "hostReceiptMs": 9017311.971023
+        }
+      ],
+      "pollWitness": [
+        {
+          "u": 3252,
+          "fu": 1053,
+          "m": 0,
+          "tp": 197961964157183,
+          "te": 197961964948875
+        },
+        {
+          "u": 3253,
+          "fu": 1054,
+          "m": 1,
+          "tp": 197961979711029,
+          "te": 197961980440337
+        }
+      ],
+      "sendWitness": {
+        "atWallMs": 1792109547826,
+        "type": "tap",
+        "point": {
+          "x": 1780,
+          "y": 995
+        },
+        "holdMs": 160,
+        "gapMs": null,
+        "hostMs": 2943.006277,
+        "sendHostMonoMs": 9020265.708662,
+        "timing": {
+          "plannedHostMonoMs": 9020265.585196396,
+          "readyHostMonoMs": 9020265.656141
+        },
+        "deadline": {
+          "atWallMs": 1792109545150,
+          "type": "contact-deadline",
+          "plannedHostMonoMs": 9020265.585196396
+        }
+      },
+      "explorerEventsSha256": "55b1f68e6ccc377ef51d766c6cf8ae31274a0c113d20186a72f243288e97bacd",
+      "cleanup": {
+        "researchStopped": true,
+        "originalSnapshotSha256": "cf5c635f012c0792d7715c95a9cc9730d79f2c82b190999009e720b8e26efbfb",
+        "originalMenuVisuallyVerified": "Continue Night 1"
+      },
+      "retained": [
+        {
+          "path": "trial-3/preparation.json",
+          "sha256": "4bd70809ae5e001ea35281c1b0e305575140863b5cca2e1b9662e2247275ef76"
+        },
+        {
+          "path": "trial-3/continue-predeclaration.json",
+          "sha256": "08ab42efff02278de3512e55abcc3f37331cf9ed040749d0ead6701f865b1170"
+        },
+        {
+          "path": "trial-3/target-predeclaration.json",
+          "sha256": "72402751b434ebeacf194bba69f253b1724a2938be6030ad37b707ed2925d713"
+        },
+        {
+          "path": "trial-3/beacon.jsonl",
+          "sha256": "94dde6036b7b8cdd0176be623337535396ecc0351a8abdca0eb8c99bb451ec19"
+        },
+        {
+          "path": "trial-3/result.json",
+          "sha256": "a7171b3c10655774ac2caed6b97ab5d7ee4526fb02f26d6742d6ac3c61b25f2a"
+        },
+        {
+          "path": "trial-3/cleanup.json",
+          "sha256": "e25480d4a4ecd9de96108a54ef3db45458e4a05e3fcc193169745ef42ef97e8a"
+        },
+        {
+          "path": "trial-3/calib/calib-updates.jsonl",
+          "sha256": "143d2b9686c3a7407fae5b0d22f1c2f4e4d33857c940e9ae6a312874f6e60b3a"
+        },
+        {
+          "path": "trial-3/calib/calib-input.jsonl",
+          "sha256": "b69b8680e6f2c34344cfc5ded085abe2f721cfea7d749a35cc8cc69b3e5bbcb9"
+        },
+        {
+          "path": "trial-3/calib/practice-state.jsonl",
+          "sha256": "7a51a1a7acd4a7511681b4a4d99e86b4eb0ee9be701add5b58c259b4d9f65bcf"
+        },
+        {
+          "path": "trial-3/calib/practice-input.jsonl",
+          "sha256": "d9da1214618a698f188463c48ca2eb82dddbf0196635607d2f378e8afba43fb5"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "calibrationErrorUpdates": 3,
+    "validationErrors": [
+      0,
+      0
+    ],
+    "validationsWithinTolerance": 2,
+    "validationCount": 2,
+    "toleranceUpdates": 1,
+    "exactValidationHits": 2
+  },
+  "verdict": "TWO_FIXED_CORRECTION_VALIDATIONS_WITHIN_DECLARED_TOLERANCE",
+  "open": [
+    "Two validation contacts are not a reliability estimate; test a predeclared larger cohort across load, phase and night positions.",
+    "Research beacon and instrumentation are required here. Transfer to the original is unmeasured.",
+    "Only press landing is targeted; releases still use the declared contact duration.",
+    "Capture/transport/delivery bias is compensated jointly, not separately identified. Host-to-device latency remains UNKNOWN.",
+    "Standalone contact-ledger requestedUpdateAccuracy is NOT_TESTED because it has no plan input; this record joins the predeclaration to the observed accepted update.",
+    "No complete stock equivalence or new night win."
+  ],
+  "id": "research-targeted-landing-d52085cebb94b85e"
+}

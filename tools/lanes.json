@@ -89,6 +89,7 @@
       "packages/review/test/ci-reach.test.ts",
       "packages/review/test/encounter-fidelity-record.test.ts",
       "packages/play/bin/phone/test-control-anchor.ts",
+      "packages/play/bin/phone/test-contact-deadline.ts",
       "packages/play/bin/probe/seedpin/test-seedpin.ts",
       "packages/play/bin/phone/test-night-run-dry.ts",
       "packages/play/bin/phone/test-event-clocks.ts",

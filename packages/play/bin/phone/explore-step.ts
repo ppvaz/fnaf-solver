@@ -5,6 +5,7 @@
  *
  *   explore-step.ts --session NAME snap [--label L]
  *   explore-step.ts --session NAME tap X Y [--hold MS] [--label L]
+ *     [--at-host-mono-ms MS] schedules a tap after HID readiness, within 10 s.
  *   explore-step.ts --session NAME double X Y [--gap MS] [--label L]
  *   explore-step.ts --session NAME hold X Y [SNAP_AT_MS] --hold MS [--label L]
  *   explore-step.ts --session NAME launch PACKAGE/ACTIVITY
@@ -29,6 +30,7 @@ import { performance } from 'node:perf_hooks';
 import { AdbCompanionPort, AdbHidProcess } from '../../src/campaign/physical-ports.ts';
 import { HidWireTransport } from '../../src/venues/phone/hid.ts';
 import { captureRoot, resolveSerial } from './local-profile.ts';
+import { contactDeadline, awaitContactDeadline } from './contact-deadline.ts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../../..');
 let SERIAL: string;                 // FNAF_SERIAL, else the local profile: resolved under the lease below
@@ -39,18 +41,26 @@ function fail(m: string): never { console.error(`explore-step: ${m}`); process.e
 const argv = process.argv.slice(2);
 let session = null as string | null; let label = null as string | null; let holdMs = CONTACT_MS; let gapMs = 120; let confirmLive = false;
 const rest: string[] = [];
+let atText: string | undefined;
 for (let i = 0; i < argv.length; i += 1) {
   if (argv[i] === '--session') session = argv[++i];
   else if (argv[i] === '--label') label = argv[++i];
   else if (argv[i] === '--hold') holdMs = Number(argv[++i]);
   else if (argv[i] === '--gap') gapMs = Number(argv[++i]);
   else if (argv[i] === '--confirm-live') confirmLive = true;
+  else if (argv[i] === '--at-host-mono-ms') {
+    atText = argv[++i];
+    if (atText === undefined) fail('--at-host-mono-ms needs a value');
+  }
   else rest.push(argv[i]);
 }
 if (!session || !/^[a-z0-9][a-z0-9-]{0,60}$/.test(session)) fail('--session is lowercase letters, digits, hyphens');
 if (process.env.FNAF_LEASE_HELD !== '1') fail('run under the serial lease');
 try { SERIAL = resolveSerial().serial; } catch (error) { fail((error as Error).message); }
 const [verb, ...args] = rest;
+const monoMs = () => Number(process.hrtime.bigint()) / 1e6;
+const deadline = contactDeadline(atText, monoMs());
+if (deadline !== null && verb !== 'tap') fail('--at-host-mono-ms is supported only for tap');
 // Anything that touches the game -- a contact, a launch, a stop -- needs the
 // operator's explicit --confirm-live on top of the lease; a snap only reads.
 if (verb !== 'snap' && !confirmLive) fail(`${verb} touches the phone: pass --confirm-live`);
@@ -80,8 +90,7 @@ async function snap(name: string | null) {
 async function withHid(fn: (hid: HidWireTransport) => Promise<void>) {
   const proc = new AdbHidProcess({ serial: SERIAL });
   const hid = new HidWireTransport({ write: (l) => proc.write(l), ready: () => proc.ready(), contactMs: CONTACT_MS });
-  await hid.start();
-  try { await fn(hid); } finally { try { await hid.abort(); } catch { /* released */ } await proc.close(); }
+  try { await hid.start(); await fn(hid); } finally { try { await hid.abort(); } catch { /* released */ } await proc.close(); }
 }
 
 if (verb === 'snap') {
@@ -89,13 +98,17 @@ if (verb === 'snap') {
 } else if (verb === 'tap' || verb === 'double') {
   const point = { x: coord(args[0], 2400), y: coord(args[1], 1080) };
   await withHid(async (hid) => {
+    if (deadline !== null) await event('contact-deadline', { plannedHostMonoMs: deadline });
+    const timing = deadline === null ? null : await awaitContactDeadline(deadline);
+    const sendHostMonoMs = monoMs();
     const at = performance.now();
     await hid.send({ command: { action: { kind: holdMs > CONTACT_MS ? 'hold' : 'press', durationMs: holdMs } }, point });
     if (verb === 'double') {
       await sleep(gapMs);
       await hid.send({ command: { action: { kind: 'press', durationMs: CONTACT_MS } }, point });
     }
-    await event(verb, { point, holdMs, gapMs: verb === 'double' ? gapMs : null, hostMs: at });
+    await event(verb, { point, holdMs, gapMs: verb === 'double' ? gapMs : null, hostMs: at,
+      sendHostMonoMs, timing });
   });
   await sleep(350);
   await snap(label ?? `${verb}-${point.x}-${point.y}`);

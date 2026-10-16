@@ -1115,10 +1115,17 @@
       ]
     },
     {
+      "file": "packages/play/bin/phone/contact-deadline.ts",
+      "imports": [
+        "../../src/campaign/timed-start.ts"
+      ]
+    },
+    {
       "file": "packages/play/bin/phone/explore-step.ts",
       "imports": [
         "../../src/campaign/physical-ports.ts",
         "../../src/venues/phone/hid.ts",
+        "./contact-deadline.ts",
         "./local-profile.ts",
         "node:child_process",
         "node:fs",
@@ -1177,6 +1184,14 @@
         "node:stream/promises",
         "node:url",
         "node:zlib"
+      ]
+    },
+    {
+      "file": "packages/play/bin/phone/test-contact-deadline.ts",
+      "imports": [
+        "./contact-deadline.ts",
+        "node:assert/strict",
+        "node:test"
       ]
     },
     {
