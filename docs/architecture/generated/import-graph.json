@@ -4767,6 +4767,16 @@
       ]
     },
     {
+      "file": "packages/review/bin/recompile/test-landing-records.ts",
+      "imports": [
+        "@sixam/kernel",
+        "node:assert/strict",
+        "node:crypto",
+        "node:fs",
+        "node:test"
+      ]
+    },
+    {
       "file": "packages/review/bin/recompile/test-phone-input-ledger.ts",
       "imports": [
         "./phone-input-ledger.ts",

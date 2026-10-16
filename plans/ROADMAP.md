@@ -78,6 +78,15 @@ with that fixed correction land exactly on their declared updates. This
 advances M3 within the research instrument, with only two validation contacts.
 Load, longer runs, release targeting and transfer to the original remain open.
 
+The [expanded diagnostic](../docs/evidence/research-landing-cohort-20261015.json)
+retains four contacts within ±1 update and an observation timeout that stops
+the declared eight-slot cohort. A separate [observation handoff test](../docs/evidence/research-landing-concurrent-handoff-20261015.json)
+then completes four concurrent-observation contacts within ±1 update by ending
+REGION reads on contact completion before SNAP. The fixed three-update
+correction is unchanged throughout. These records justify moving to integrated
+sequence execution in the research workflow; full-night reliability, release
+control and transfer to the original remain open.
+
 The order below is the dependency order, not a calendar. Each step names what
 closes it and the artifact that closes it. That artifact is what makes a commit
 consequential. The "stands" line is a snapshot taken on 2026-09-25. **Trust the

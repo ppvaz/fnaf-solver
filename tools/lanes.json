@@ -127,6 +127,7 @@
       "packages/source/recompile/android/test-frame-probe.ts",
       "packages/review/bin/recompile/test-phone-input-ledger.ts",
       "packages/review/bin/recompile/test-calib-contact.ts",
+      "packages/review/bin/recompile/test-landing-records.ts",
       "apps/desktop/test/crowd.test.ts",
       "apps/desktop/test/local-recompile.test.ts"
     ],

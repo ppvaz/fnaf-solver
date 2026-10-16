@@ -3172,6 +3172,12 @@
       "lifecycle": "supported"
     },
     {
+      "id": "packages/review/bin/recompile/test-landing-records.ts",
+      "invocation": "packages/review/bin/recompile/test-landing-records.ts",
+      "kind": "Re-derives the predictive-contact records from retained numeric clock samples, targets, poll transitions and send witnesses without external game inputs; corrupted targets and invented transitions fail. In the unit lane.",
+      "lifecycle": "supported"
+    },
+    {
       "id": "packages/review/bin/recompile/audio-report.ts",
       "invocation": "packages/review/bin/recompile/audio-report.ts",
       "kind": "Report: `record` joins the probe, the generated `assets.h` and play sites, an audition run (`CHOWDREN_AUDIO_AUDITION`) and bounded game runs (`CHOWDREN_AUDIO_TRACE` plus openal-soft's wave backend) into a `recompile-audio-v1` record. Each sound gets its file, format, event ids, audition RMS/peak and play counts. `check` re-derives the totals and the evidenceId. No audio is written.",
